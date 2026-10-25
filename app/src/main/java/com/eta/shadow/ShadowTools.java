@@ -45,8 +45,11 @@ public final class ShadowTools {
 
         android.content.Context ctx = ShadowSettings.app();
         if (needsEngine(name) && !ShadowSettings.engineReady(ctx)) {
-            android.util.Log.w("EtaShadow", "engine down, refusing " + name);
-            return ShadowSettings.engineFixHint();
+            // 引擎没在跑：先用打进包里的 dex 自己拉起来（需 root），拉不起来再拒绝。
+            if (!Engine.ensureRunning(ctx)) {
+                android.util.Log.w("EtaShadow", "engine down, refusing " + name);
+                return Engine.reasonHint();
+            }
         }
         if (needsObserver(name) && !ShadowSettings.observerReady()) {
             android.util.Log.w("EtaShadow", "observer down, refusing " + name);

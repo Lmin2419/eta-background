@@ -30,16 +30,20 @@ jobs:
       - name: 配置构建环境
         uses: ./.github/actions/setup-build
 
-      - name: 放入 root 引擎（可选，供 check_pair.sh 配对校验）
+      - name: 放入 root 引擎（供自启 + check_pair.sh 配对校验）
         run: |
           if [[ -f etax/engine/vdrive.dex ]]; then
+            # dex 和 version 放 assets 根：check_pair.sh 读的就是 assets/vdrive.dex、assets/vdrive.version
             cp etax/engine/vdrive.dex app/src/main/assets/vdrive.dex
-            if [[ -f etax/engine/vdrive.version ]]; then
-              cp etax/engine/vdrive.version app/src/main/assets/vdrive.version
-            fi
-            echo "已放入引擎 dex：$(sha256sum etax/engine/vdrive.dex | cut -c1-16)"
+            [[ -f etax/engine/vdrive.version ]] && cp etax/engine/vdrive.version app/src/main/assets/vdrive.version
+            # 启动脚本放 assets/eta-engine/：App 首次运行释放到 /data/local/tmp/eta/ 并用 su 跑 vd.sh
+            mkdir -p app/src/main/assets/eta-engine
+            for f in vd.sh install_vdrive.sh check_pair.sh; do
+              [[ -f "etax/engine/$f" ]] && cp "etax/engine/$f" "app/src/main/assets/eta-engine/$f"
+            done
+            echo "已内嵌引擎：dex=$(sha256sum etax/engine/vdrive.dex | cut -c1-16) build=$(cat etax/engine/vdrive.version 2>/dev/null)"
           else
-            echo "::warning::etax/engine/vdrive.dex 不存在：APK 不内嵌引擎，check_pair.sh 会报不配对（不影响功能）"
+            echo "::warning::etax/engine/vdrive.dex 不存在：APK 不内嵌引擎，screen_* 工具会提示引擎缺失"
           fi
 
       - name: 还原签名证书

@@ -48,6 +48,8 @@ public final class Boot {
             startServer();
         } catch (Throwable ignored) { }
         reportEngine();
+        // 预热后台虚拟屏引擎：打进包里的 dex + su 自启，让第一条 screen_* 不用等。
+        try { Engine.warm(svc); } catch (Throwable ignored) { }
         // Room may still be opening eta.db at this point, so drop the obsolete
         // switch row from a worker thread once the process has settled.
         new Thread(new Runnable() {
