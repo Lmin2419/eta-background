@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_view_description">查看說明</string>
+    <string name="ui_description_named">查看 %1$s 的說明</string>
+    <string name="skills_more_named">%1$s 的更多操作</string>
+    <string name="tools_manage_permissions">管理權限</string>
+    <string name="tools_view_enhancements">查看系統增強</string>
+</resources>

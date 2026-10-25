@@ -1,0 +1,36 @@
+# macOS 本地文件
+.DS_Store
+
+# IntelliJ / Android Studio 生成的工程状态
+*.iml
+/.idea/
+
+# Gradle / Kotlin 构建缓存
+/.gradle/
+/.kotlin/
+**/build/
+
+# Android 构建产物
+.cxx/
+.externalNativeBuild/
+/app/release/
+captures/
+*.apk
+*.aab
+output-metadata.json
+*.hprof
+
+# 日志与本地凭据
+*.log
+*.jks
+*.keystore
+keystore.properties
+google-services.json
+
+# 本地配置和临时分析产物
+/local.properties
+/.analysis/
+/.tmp/
+
+# 外部源码参考，仅供阅读，不参与当前仓库版本管理
+/reference/

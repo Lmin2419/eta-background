@@ -1,0 +1,256 @@
+package io.github.mangi.eta.ui.model
+
+import io.github.mangi.eta.data.model.CustomProviderSetting
+import io.github.mangi.eta.data.model.Model
+import io.github.mangi.eta.data.model.ProviderAuthModes
+import io.github.mangi.eta.data.model.ProviderSourceTypes
+import io.github.mangi.eta.data.model.enabledModel
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
+
+class AgentModelPickerProjectorTest {
+    @Test
+    fun project_keepsOnlyEnabledProvidersAndModelsAndResolvesSelection() {
+        val selected = model(id = "model-selected", displayName = "GPT 5.6", contextWindowOverride = 1_050_000)
+        val providers = listOf(
+            provider(
+                id = "disabled-provider",
+                name = "Disabled",
+                enabled = false,
+                models = listOf(model(id = "hidden-provider-model")),
+            ),
+            provider(
+                id = "no-enabled-models",
+                name = "No enabled models",
+                models = listOf(model(id = "disabled-only-model", enabled = false)),
+            ),
+            provider(
+                id = "openai",
+                name = "OpenAI",
+                sourceType = ProviderSourceTypes.OPENAI,
+                models = listOf(
+                    model(id = "disabled-model", enabled = false),
+                    selected,
+                ),
+            ),
+        )
+
+        val result = AgentModelPickerProjector.project(
+            providers = providers,
+            selectedProviderId = "openai",
+            selectedModelId = selected.id,
+        )
+
+        assertEquals(listOf("openai"), result.providerGroups.map { it.providerId })
+        assertEquals(listOf(selected.id), result.providerGroups.single().models.map { it.id })
+        assertEquals(selected.id, result.selectedModel?.id)
+        assertEquals(1_050_000, result.selectedModel?.contextWindow)
+    }
+
+    @Test
+    fun project_hidesProvidersWithoutApiKeyButPreservesCurrentSelection() {
+        val selected = model(id = "selected", displayName = "Selected")
+        val result = AgentModelPickerProjector.project(
+            providers = listOf(
+                provider(
+                    id = "missing-key",
+                    apiKey = "   ",
+                    models = listOf(selected),
+                ),
+                provider(
+                    id = "configured",
+                    models = listOf(model(id = "available")),
+                ),
+            ),
+            selectedProviderId = "missing-key",
+            selectedModelId = selected.id,
+        )
+
+        assertEquals(listOf("configured"), result.providerGroups.map { it.providerId })
+        assertEquals(selected.id, result.selectedModel?.id)
+        assertEquals("missing-key", result.selectedModel?.providerId)
+    }
+
+    @Test
+    fun project_showsBothOAuthProvidersWithoutApiKeys() {
+        val providers = listOf(
+            provider(
+                id = "chatgpt",
+                apiKey = "",
+                authMode = ProviderAuthModes.OPENAI_CHATGPT,
+                models = listOf(model("chatgpt-model")),
+            ),
+            provider(
+                id = "grok",
+                apiKey = "",
+                authMode = ProviderAuthModes.XAI_GROK,
+                models = listOf(model("grok-model")),
+            ),
+        )
+
+        val result = AgentModelPickerProjector.project(providers, "grok", "grok-model")
+
+        assertEquals(listOf("chatgpt", "grok"), result.providerGroups.map { it.providerId })
+        assertEquals(listOf("chatgpt-model", "grok-model"), result.providerGroups.flatMap { it.models }.map { it.id })
+        assertEquals("grok-model", result.selectedModel?.id)
+    }
+
+    @Test
+    fun project_doesNotTreatUnknownAuthModesAsConfiguredApiKeys() {
+        val result = AgentModelPickerProjector.project(
+            providers = listOf(provider("unknown", authMode = "unsupported", models = listOf(model("model")))),
+            selectedProviderId = null,
+            selectedModelId = null,
+        )
+
+        assertEquals(emptyList<AgentModelProviderGroupUi>(), result.providerGroups)
+    }
+
+    @Test
+    fun filterGroups_matchesModelNamesIdsAndProviderNames() {
+        fun option(id: String, providerId: String, providerName: String, displayName: String) =
+            AgentModelOptionUi(
+                id = id,
+                providerId = providerId,
+                providerName = providerName,
+                providerSourceType = ProviderSourceTypes.CUSTOM,
+                modelId = id,
+                displayName = displayName,
+                contextWindow = null,
+            )
+        val state = AgentModelPickerUiState(
+            providerGroups = listOf(
+                AgentModelProviderGroupUi(
+                    providerId = "deepseek",
+                    providerName = "DeepSeek",
+                    providerSourceType = ProviderSourceTypes.CUSTOM,
+                    models = listOf(
+                        option("deepseek-v4.1-flash", "deepseek", "DeepSeek", "DeepSeek V4.1 Flash"),
+                        option("deepseek-r2", "deepseek", "DeepSeek", "DeepSeek R2"),
+                    ),
+                ),
+                AgentModelProviderGroupUi(
+                    providerId = "zhipu",
+                    providerName = "智谱",
+                    providerSourceType = ProviderSourceTypes.CUSTOM,
+                    models = listOf(option("glm-5", "zhipu", "智谱", "GLM-5")),
+                ),
+            ),
+        )
+
+        assertEquals(state.providerGroups, state.filterGroups("  "))
+        assertEquals(
+            listOf("deepseek-v4.1-flash"),
+            state.filterGroups("v4flash").flatMap { it.models }.map { it.id },
+        )
+        assertEquals(listOf("glm-5"), state.filterGroups("智谱").flatMap { it.models }.map { it.id })
+        assertEquals(
+            listOf("deepseek-r2"),
+            state.filterGroups("deepseek r2").flatMap { it.models }.map { it.id },
+        )
+        assertEquals(emptyList<AgentModelProviderGroupUi>(), state.filterGroups("claude"))
+        assertEquals(3, state.modelCount)
+    }
+
+    @Test
+    fun latestContextUsage_usesLastMeasuredRoundAndSelectedWindow() {
+        val selected = AgentModelOptionUi(
+            id = "model",
+            providerId = "provider",
+            providerName = "Provider",
+            providerSourceType = ProviderSourceTypes.CUSTOM,
+            modelId = "model",
+            displayName = "Model",
+            contextWindow = 100_000,
+        )
+        val messages = listOf(
+            AgentMessageUi(id = "first", content = "one", usage = TokenUsageUi(contextTokens = 10_000)),
+            AgentMessageUi(id = "missing", content = "two"),
+            AgentMessageUi(id = "last", content = "three", usage = TokenUsageUi(contextTokens = 82_000)),
+        )
+
+        val usage = latestContextUsage(messages, selected)
+
+        assertEquals(82_000, usage.contextTokens)
+        assertEquals(100_000, usage.contextWindow)
+        assertEquals(0.82f, usage.progress ?: 0f, 0.0001f)
+        assertEquals("82K / 100K tokens · 82.0%", formatContextUsage(usage))
+    }
+
+    @Test
+    fun contextUsageProgress_handlesMissingInvalidAndOverflowValues() {
+        assertNull(contextUsageProgress(null, 100_000))
+        assertNull(contextUsageProgress(10_000, null))
+        assertNull(contextUsageProgress(10_000, 0))
+        assertEquals(0f, contextUsageProgress(0, 100_000) ?: -1f, 0f)
+        assertEquals(1f, contextUsageProgress(120_000, 100_000) ?: -1f, 0f)
+        assertEquals("1.05M", formatCompactTokenCount(1_050_000))
+        assertEquals(
+            "No usage data yet",
+            formatContextUsage(AgentContextUsageUi(contextTokens = null, contextWindow = 100_000)),
+        )
+        assertEquals(
+            "Context window unknown, so automatic compaction is off",
+            formatContextUsage(AgentContextUsageUi(contextTokens = 12_000, contextWindow = null)),
+        )
+    }
+
+    @Test
+    fun contextUsageFormattingUsesTheRequestedLocale() {
+        assertEquals(
+            "82K / 100K tokens · 82,0%",
+            formatContextUsage(
+                usage = AgentContextUsageUi(contextTokens = 82_000, contextWindow = 100_000),
+                locale = java.util.Locale.GERMANY,
+            ),
+        )
+    }
+
+    @Test
+    fun enabledModel_requiresBothProviderAndModelEnabled() {
+        val providers = listOf(
+            provider(id = "off", enabled = false, models = listOf(model(id = "in-disabled-provider"))),
+            provider(id = "on", models = listOf(model(id = "available"), model(id = "disabled", enabled = false))),
+        )
+
+        assertEquals("on", providers.enabledModel("available")?.provider?.id)
+        assertNull(providers.enabledModel("disabled"))
+        assertNull(providers.enabledModel("in-disabled-provider"))
+        assertNull(providers.enabledModel("deleted"))
+        assertNull(providers.enabledModel(null))
+    }
+
+    private fun provider(
+        id: String,
+        name: String = id,
+        sourceType: String = ProviderSourceTypes.CUSTOM,
+        enabled: Boolean = true,
+        apiKey: String = "test-key",
+        authMode: String = ProviderAuthModes.API_KEY,
+        models: List<Model>,
+    ) = CustomProviderSetting(
+        id = id,
+        name = name,
+        baseUrl = "https://example.com/$id",
+        sourceType = sourceType,
+        apiKey = apiKey,
+        authMode = authMode,
+        isEnabled = enabled,
+        models = models,
+    )
+
+    private fun model(
+        id: String,
+        modelId: String = id,
+        displayName: String = modelId,
+        enabled: Boolean = true,
+        contextWindowOverride: Int? = null,
+    ) = Model(
+        id = id,
+        modelId = modelId,
+        displayName = displayName,
+        isEnabled = enabled,
+        contextWindowOverride = contextWindowOverride,
+    )
+}

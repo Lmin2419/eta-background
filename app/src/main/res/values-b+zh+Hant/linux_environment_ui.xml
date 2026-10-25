@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linux_environment_configuration">環境設定</string>
+    <string name="linux_environment_files">檔案與目錄</string>
+    <string name="linux_environment_base_ready">基礎環境已就緒，下一步安裝基礎工具</string>
+    <string name="linux_environment_tools_ready">基礎工具已就緒，可按需安裝擴充工具</string>
+    <string name="linux_environment_shared_folders_summary">把 Android 目錄掛載到 Linux 環境</string>
+</resources>

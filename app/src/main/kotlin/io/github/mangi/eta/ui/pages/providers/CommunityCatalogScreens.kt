@@ -1,0 +1,393 @@
+package io.github.mangi.eta.ui.pages.providers
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CloudOff
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.SearchOff
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import io.github.mangi.eta.data.provider.CommunityCatalog
+import io.github.mangi.eta.data.provider.CommunityCatalogProvider
+import io.github.mangi.eta.data.provider.CommunityCatalogSource
+import io.github.mangi.eta.ui.app.CommunityCatalogStore
+import io.github.mangi.eta.ui.components.EtaCard
+import io.github.mangi.eta.ui.components.EtaCheckboxPreference
+import io.github.mangi.eta.ui.components.EtaPreference
+import io.github.mangi.eta.ui.components.EtaPreferenceDivider
+import io.github.mangi.eta.ui.components.EtaPreferenceGroupItem
+import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
+import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.ListEmptyState
+import io.github.mangi.eta.ui.components.MiuixScaffoldPage
+import io.github.mangi.eta.ui.model.formatCompactTokenCount
+import io.github.mangi.eta.ui.navigation.AppRoute
+import java.text.DateFormat
+import java.util.Date
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
+import top.yukonga.miuix.kmp.basic.InputField
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.PressFeedbackType
+
+@Composable
+internal fun CommunityCatalogScreen(
+    store: CommunityCatalogStore,
+    onNavigate: (AppRoute) -> Unit,
+    onBack: () -> Unit,
+) {
+    var query by rememberSaveable { mutableStateOf("") }
+    val catalog = store.catalog
+    val providers = remember(catalog, query) {
+        val term = query.trim()
+        catalog?.providers.orEmpty().filter { provider ->
+            term.isEmpty() ||
+                provider.name.contains(term, ignoreCase = true) ||
+                provider.id.contains(term, ignoreCase = true) ||
+                provider.baseUrl.contains(term, ignoreCase = true)
+        }
+    }
+
+    LaunchedEffect(Unit) { store.openCatalog() }
+
+    MiuixScaffoldPage(
+        title = "从目录添加",
+        onBack = onBack,
+        actions = {
+            IconButton(
+                onClick = store::refresh,
+                enabled = !store.loading && !store.refreshing,
+            ) {
+                Icon(Icons.Rounded.Refresh, contentDescription = "刷新模型目录")
+            }
+        },
+    ) {
+        item(key = "search") {
+            InputField(
+                query = query,
+                onQueryChange = { query = it },
+                onSearch = {},
+                expanded = false,
+                onExpandedChange = {},
+                label = "搜索提供商",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+
+        item(key = "catalog_status") {
+            ProviderSection(title = "目录状态") {
+                EtaPreference(
+                    title = "models.dev 社区目录",
+                    summary = "读取目录不会上传 Eta 的 API Key",
+                )
+                EtaPreferenceDivider(hasLeading = false)
+                EtaPreference(
+                    title = "模型是社区候选条目",
+                    summary = "能否调用以服务商账号权限和实际接口为准",
+                )
+                EtaPreferenceDivider(hasLeading = false)
+                EtaPreference(
+                    title = catalog?.sourceLabel() ?: if (store.loading) "正在读取本地目录" else "目录暂不可用",
+                    summary = catalog?.let(::catalogSummary),
+                )
+                if (store.refreshing) {
+                    EtaPreferenceDivider(hasLeading = false)
+                    EtaPreference(title = "正在更新在线目录")
+                }
+                store.refreshError?.let { error ->
+                    EtaPreferenceDivider(hasLeading = false)
+                    EtaPreference(
+                        title = "在线更新失败",
+                        summary = if (catalog != null) "$error；仍可使用当前目录" else error,
+                    )
+                }
+                if (store.loadError && catalog == null) {
+                    EtaPreferenceDivider(hasLeading = false)
+                    EtaPreference(title = "本地目录读取失败", summary = "请重试或检查应用安装包")
+                }
+            }
+        }
+
+        item(key = "results_title") {
+            EtaPreferenceGroupTitle("可导入提供商（${providers.size}）")
+        }
+        if (catalog == null && store.loading) {
+            item(key = "loading") { CatalogLoadingState() }
+        } else if (providers.isEmpty()) {
+            item(key = "empty") {
+                ListEmptyState(
+                    title = if (catalog == null) "没有可用的目录" else "没有找到匹配的提供商",
+                    summary = if (catalog == null) "点击右上角刷新后重试" else "试试其他名称或地址",
+                    icon = if (catalog == null) Icons.Rounded.CloudOff else Icons.Rounded.SearchOff,
+                )
+            }
+        } else {
+            items(providers, key = { "provider:${it.id}" }, contentType = { "provider" }) { provider ->
+                EtaCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    insideMargin = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    pressFeedbackType = PressFeedbackType.Sink,
+                    onClick = { onNavigate(AppRoute.CommunityCatalogProvider(provider.id)) },
+                ) {
+                    Text(
+                        text = provider.name,
+                        style = MiuixTheme.textStyles.body1,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = provider.baseUrl,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = "${provider.models.size} 个可导入模型",
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun CommunityCatalogProviderScreen(
+    catalogId: String,
+    store: CommunityCatalogStore,
+    onImported: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    var query by rememberSaveable(catalogId) { mutableStateOf("") }
+    var selectedIds by rememberSaveable(catalogId) { mutableStateOf(arrayListOf<String>()) }
+    var importError by remember { mutableStateOf<String?>(null) }
+    var importInFlight by remember { mutableStateOf(false) }
+    var selection by remember(catalogId) { mutableStateOf<CommunityCatalogProvider?>(null) }
+    val provider = selection ?: store.catalog?.providers?.firstOrNull { it.id == catalogId }
+    val filteredModels = remember(provider, query) {
+        val term = query.trim()
+        provider?.models.orEmpty().filter { model ->
+            term.isEmpty() ||
+                model.displayName.contains(term, ignoreCase = true) ||
+                model.modelId.contains(term, ignoreCase = true)
+        }
+    }
+
+    LaunchedEffect(catalogId) { store.ensureLoaded() }
+    LaunchedEffect(provider) {
+        if (selection == null && provider != null) selection = provider
+    }
+
+    MiuixScaffoldPage(
+        title = provider?.name ?: "选择模型",
+        onBack = onBack,
+        actions = {
+            EtaTextButton(
+                text = "导入（${selectedIds.size}）",
+                enabled = provider != null && selectedIds.isNotEmpty() && !importInFlight && !store.importing,
+                onClick = {
+                    val chosen = provider ?: return@EtaTextButton
+                    if (importInFlight) return@EtaTextButton
+                    importInFlight = true
+                    importError = null
+                    scope.launch {
+                        try {
+                            val addedId = store.importProvider(chosen, selectedIds.toSet())
+                            onImported(addedId)
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
+                        } catch (_: IllegalArgumentException) {
+                            importError = "模型选择已失效，请重新选择"
+                        } catch (_: Throwable) {
+                            importError = "保存提供商失败，请重试"
+                        } finally {
+                            importInFlight = false
+                        }
+                    }
+                },
+                insideMargin = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+            )
+        },
+    ) {
+        if (provider == null) {
+            item(key = "missing") {
+                if (store.loading) {
+                    CatalogLoadingState()
+                } else {
+                    ListEmptyState(
+                        title = "目录中没有这个提供商",
+                        summary = "目录可能已更新，请返回列表重新选择",
+                    )
+                }
+            }
+            return@MiuixScaffoldPage
+        }
+
+        item(key = "provider") {
+            ProviderSection(title = "提供商") {
+                EtaPreference(title = "名称", summary = provider.name)
+                EtaPreferenceDivider(hasLeading = false)
+                EtaPreference(title = null) {
+                    Text(
+                        text = "Base URL",
+                        style = MiuixTheme.textStyles.body1,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    SelectionContainer {
+                        Text(
+                            text = provider.baseUrl,
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            softWrap = true,
+                        )
+                    }
+                }
+            }
+        }
+        item(key = "selection_status") {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp)) {
+                Text(
+                    text = "已选 ${selectedIds.size} / ${provider.models.size} 个模型",
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
+                Text(
+                    text = "导入后需填写 API Key 并启用；模型请求将发送到上方 Base URL",
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
+                importError?.let { error ->
+                    Text(
+                        text = error,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.error,
+                    )
+                }
+            }
+        }
+        item(key = "model_search") {
+            InputField(
+                query = query,
+                onQueryChange = { query = it },
+                onSearch = {},
+                expanded = false,
+                onExpandedChange = {},
+                label = "搜索模型名称或 ID",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+        item(key = "model_actions") {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                EtaTextButton(
+                    text = "全选当前结果",
+                    enabled = filteredModels.isNotEmpty() && !store.importing,
+                    onClick = {
+                        selectedIds = ArrayList((selectedIds + filteredModels.map { it.modelId }).distinct())
+                    },
+                )
+                EtaTextButton(
+                    text = "清空已选",
+                    enabled = selectedIds.isNotEmpty() && !store.importing,
+                    onClick = { selectedIds = arrayListOf() },
+                )
+            }
+        }
+        item(key = "models_title") {
+            EtaPreferenceGroupTitle("模型（${filteredModels.size}）")
+        }
+        if (filteredModels.isEmpty()) {
+            item(key = "empty_models") {
+                ListEmptyState(title = "没有找到匹配的模型")
+            }
+        } else {
+            // 与提供商自己的模型页一致：逐项组合，画成一个连续分组。
+            itemsIndexed(filteredModels, key = { _, model -> "model:${model.modelId}" }, contentType = { _, _ -> "model" }) { index, model ->
+                EtaPreferenceGroupItem(
+                    isFirst = index == 0,
+                    isLast = index == filteredModels.lastIndex,
+                ) {
+                    EtaCheckboxPreference(
+                        title = model.displayName,
+                        summary = buildString {
+                            append(model.modelId)
+                            append(" · ")
+                            append(formatCompactTokenCount(model.contextWindow))
+                            append(" tokens 上下文")
+                            model.releaseDate?.let { append(" · "); append(it) }
+                        },
+                        checked = model.modelId in selectedIds,
+                        enabled = !store.importing,
+                        onCheckedChange = { checked ->
+                            selectedIds = if (checked) {
+                                ArrayList(selectedIds + model.modelId)
+                            } else {
+                                ArrayList(selectedIds.filterNot { it == model.modelId })
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CatalogLoadingState() {
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        InfiniteProgressIndicator(size = 28.dp)
+    }
+}
+
+private fun CommunityCatalog.sourceLabel(): String = when (source) {
+    CommunityCatalogSource.SNAPSHOT -> "内置目录快照"
+    CommunityCatalogSource.CACHE -> "本地缓存目录"
+    CommunityCatalogSource.ONLINE -> "在线目录"
+}
+
+private fun catalogSummary(catalog: CommunityCatalog): String {
+    val updated = catalog.fetchedAt?.let { timestamp ->
+        DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(timestamp))
+    }
+    return listOfNotNull("${catalog.providers.size} 家可导入提供商", updated?.let { "更新于 $it" })
+        .joinToString(" · ")
+}

@@ -1,0 +1,34 @@
+{
+  "skills": [
+    {
+      "id": "self-improving-agent",
+      "name": "self-improving-agent",
+      "description": "Built-in self-improvement loop. Use to record non-trivial failures, user corrections, and reusable best practices into structured learnings.",
+      "assetPath": "builtin_skills/self-improving-agent",
+      "hasScripts": false,
+      "hasReferences": false,
+      "hasAssets": false,
+      "hasEvals": false
+    },
+    {
+      "id": "skill-creator",
+      "name": "skill-creator",
+      "description": "Guide for creating and updating effective skills. Use when the user wants to add a new skill or improve an existing skill.",
+      "assetPath": "builtin_skills/skill-creator",
+      "hasScripts": false,
+      "hasReferences": false,
+      "hasAssets": false,
+      "hasEvals": false
+    },
+    {
+      "id": "skill-installer",
+      "name": "skill-installer",
+      "description": "从 curated 目录或公共 GitHub 仓库发现并安装 Skills。仅在用户明确请求列出可安装项、安装、更新，或调用 $skill-installer 时使用。",
+      "assetPath": "builtin_skills/skill-installer",
+      "hasScripts": false,
+      "hasReferences": false,
+      "hasAssets": false,
+      "hasEvals": false
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linux_environment_configuration">Environment configuration</string>
+    <string name="linux_environment_files">Files and directories</string>
+    <string name="linux_environment_base_ready">Base environment ready; install the base tools next</string>
+    <string name="linux_environment_tools_ready">Base tools ready; install extension tools as needed</string>
+    <string name="linux_environment_shared_folders_summary">Mount Android directories in the Linux environment</string>
+</resources>

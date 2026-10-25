@@ -1,0 +1,179 @@
+name: Eta Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 与打包并行且不接触签名 Secrets；失败不影响 APK 上传，但会阻止发版草稿
+  verify:
+    name: Lint 与单元测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: 配置构建环境
+        uses: ./.github/actions/setup-build
+
+      - name: Lint 与单元测试
+        run: >-
+          ./gradlew --no-daemon --no-configuration-cache --continue
+          :app:lintDebug :app:testDebugUnitTest
+
+      - name: 上传检查报告
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: verify-reports
+          path: |
+            app/build/reports/
+            app/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  build-apks:
+    name: 构建 Debug 与 Release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: 配置构建环境
+        uses: ./.github/actions/setup-build
+
+      - name: 还原发布证书
+        env:
+          ETA_RELEASE_KEYSTORE_BASE64: ${{ secrets.ETA_RELEASE_KEYSTORE_BASE64 }}
+          ETA_RELEASE_STORE_PASSWORD: ${{ secrets.ETA_RELEASE_STORE_PASSWORD }}
+          ETA_RELEASE_KEY_ALIAS: ${{ secrets.ETA_RELEASE_KEY_ALIAS }}
+          ETA_RELEASE_KEY_PASSWORD: ${{ secrets.ETA_RELEASE_KEY_PASSWORD }}
+        run: |
+          if [[ -z "$ETA_RELEASE_KEYSTORE_BASE64" ||
+                -z "$ETA_RELEASE_STORE_PASSWORD" ||
+                -z "$ETA_RELEASE_KEY_ALIAS" ||
+                -z "$ETA_RELEASE_KEY_PASSWORD" ]]; then
+            echo "::error::缺少 Release 签名 Secrets，请检查仓库的 Actions Secrets。"
+            exit 1
+          fi
+          printf '%s' "$ETA_RELEASE_KEYSTORE_BASE64" \
+            | base64 --decode \
+            > "$RUNNER_TEMP/eta-release.jks"
+
+      - name: 构建 Debug 与 Release APK
+        env:
+          ETA_RELEASE_STORE_FILE: ${{ runner.temp }}/eta-release.jks
+          ETA_RELEASE_STORE_PASSWORD: ${{ secrets.ETA_RELEASE_STORE_PASSWORD }}
+          ETA_RELEASE_KEY_ALIAS: ${{ secrets.ETA_RELEASE_KEY_ALIAS }}
+          ETA_RELEASE_KEY_PASSWORD: ${{ secrets.ETA_RELEASE_KEY_PASSWORD }}
+        # 发版标签保持纯净版本名；其余构建追加 +<短提交号>，与已发布版本区分
+        run: |
+          metadata_arg=()
+          if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then
+            metadata_arg=("-Peta.buildMetadata=${GITHUB_SHA::7}")
+          fi
+          ./gradlew --no-daemon --no-configuration-cache "${metadata_arg[@]}" \
+            :app:assembleDebug :app:assembleRelease
+
+      - name: 验证并整理 APK
+        id: apk
+        run: |
+          # 文件名由 Gradle 按 versionName 生成，例如 Eta-vX.Y.Z.apk、Eta-vX.Y.Z-debug+<sha>.apk
+          shopt -s nullglob
+          debug_apks=(app/build/outputs/apk/debug/Eta-v*.apk)
+          release_apks=(app/build/outputs/apk/release/Eta-v*.apk)
+          apksigner_path="$(find "$ANDROID_HOME/build-tools" \
+            -type f -name apksigner | sort -V | tail -n 1)"
+
+          if [[ ${#debug_apks[@]} -ne 1 ]]; then
+            echo "::error::Debug APK 数量异常（${#debug_apks[@]}）。"
+            exit 1
+          fi
+          if [[ ${#release_apks[@]} -ne 1 ]]; then
+            echo "::error::Release APK 数量异常（${#release_apks[@]}）。"
+            exit 1
+          fi
+          if [[ -z "$apksigner_path" ]]; then
+            echo "::error::未找到 apksigner。"
+            exit 1
+          fi
+
+          "$apksigner_path" verify "${release_apks[0]}"
+
+          # 发版标签必须与 versionName 一致，避免标签与安装包版本错位
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            version_name="$(jq -r '.elements[0].versionName' \
+              app/build/outputs/apk/release/output-metadata.json)"
+            if [[ "$GITHUB_REF_NAME" != "v$version_name" ]]; then
+              echo "::error::标签 $GITHUB_REF_NAME 与 versionName $version_name 不一致。"
+              exit 1
+            fi
+          fi
+          echo "debug_path=${debug_apks[0]}" >> "$GITHUB_OUTPUT"
+          echo "release_path=${release_apks[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: 上传 Debug APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: ${{ steps.apk.outputs.debug_path }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: 上传 Release APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: ${{ steps.apk.outputs.release_path }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+  # 构建 job 持有签名 Secrets，写 Release 的权限单独放在这里，且只在发版标签上运行
+  draft-release:
+    name: 创建 Release 草稿
+    needs: [verify, build-apks]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      # 未压缩上传的 Artifact 以文件名命名。文件名不经 job outputs 传递：
+      # 输出值只要包含任一 Secret 的子串就会被 Actions 整体丢弃，下载步骤随之退化为下载全部产物。
+      # 标签已在构建 job 中校验等于 v<versionName>，Gradle 产物名为 Eta-v<versionName>.apk，可直接由标签推导。
+      - name: 下载 Release APK
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: Eta-${{ github.ref_name }}.apk
+          path: ${{ runner.temp }}/release
+
+      # 只建草稿：草稿不会出现在 releases/latest，App 内更新检查要等维护者手动发布后才可见
+      - name: 创建 Release 草稿
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APK_PATH: ${{ runner.temp }}/release/Eta-${{ github.ref_name }}.apk
+        run: >-
+          gh release create "$GITHUB_REF_NAME" "$APK_PATH"
+          --repo "$GITHUB_REPOSITORY"
+          --draft
+          --verify-tag
+          --title "$GITHUB_REF_NAME"
+          --generate-notes
