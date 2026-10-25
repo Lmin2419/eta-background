@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.SystemClock;
 
 import java.util.ArrayList;
@@ -15,76 +14,104 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Feeds Eta's foreground notification with short per-sentence lines, keeps a
- * small history for the expanded view, and posts a final "已完成" notification
- * once the run is over (Eta itself cancels its own notification at that point).
+ * 功能一：通知栏流式输出。
+ *
+ * 运行中把回答按句切成短行喂给 Eta 自己的前台通知；运行结束时由
+ * AgentRuntimeService 显式调用 {@link #onRunFinished}，按成功 / 出错发一条收尾通知。
+ *
+ * 与旧版（逆向注入版）的区别：
+ *  - 不再有常驻看门狗线程，也不再每 3 秒查询一次通知列表；收尾完全由显式钩子驱动，
+ *    所以出错、终端会话仍在跑等情况下也能准确收尾。
+ *  - 收尾通知设置了锁屏公开版本：锁屏选「隐藏敏感内容」时只显示「任务完成 / 任务出错」。
+ *  - 用户主动停止的任务不再发收尾通知。
  */
 public final class ShadowNotice {
+    private static final String TAG = "EtaShadow";
     private static final int MAX_LINE = 80;
     private static final int MAX_HISTORY = 6;
     private static final int FLUSH_MIN_GAP = 1200;
     private static final int LONG_RUN = 40;
-    private static final int RESET_AFTER = 15000;
+    private static final long STEP_SHOW_MS = 1500L;
+    private static final long STREAM_STALE_MS = 5000L;
+    private static final String STOPPED = "已停止";
 
-    // Eta's own channel is IMPORTANCE_LOW, and Android hides LOW channels from the
-    // status bar. Use a dedicated DEFAULT channel (silent) so the completion icon
-    // is actually visible up top.
+    // Eta 自己的通道是 IMPORTANCE_LOW，状态栏不显示图标；收尾通知用独立的 DEFAULT 静音通道。
     private static final String CHANNEL = "eta_shadow_done";
     private static final int DONE_ID = 0x4D5A;
 
     private static final StringBuilder PENDING = new StringBuilder();
     private static final LinkedList<String> HISTORY = new LinkedList<>();
 
+    private static volatile boolean active = false;
+    private static volatile boolean sawStep = false;
     private static volatile String lastLine = "";
     private static volatile long lastKick = 0L;
-    private static volatile long lastDoneAt = 0L;
     private static volatile long lastAppend = 0L;
-
     private static volatile String step = "";
     private static volatile long stepAt = 0L;
 
-    private static volatile String title = "";
-
     private static final char[] BREAKS = {'。', '！', '？', '；', '\n', '.', '!', '?', ';'};
 
-    /**
-     * Eta cancels its notification when the run ends, and we deliberately do not
-     * hook that (it also fires at run start). Instead a tiny watchdog posts the
-     * summary once the stream and tool steps have both been quiet for a while.
-     */
-    static {
-        Thread dog = new Thread(new Runnable() {
-            public void run() {
-                while (true) {
-                    try { Thread.sleep(3000L); } catch (InterruptedException ignored) { }
-                    try {
-                        Context ctx = currentApp();
-                        long quietFrom = Math.max(lastAppend, stepAt);
-                        if (ctx != null
-                                && SystemClock.elapsedRealtime() - quietFrom > 10000L
-                                && !etaStillRunning(ctx)) {
-                            notifyDone();
-                        }
-                    } catch (Throwable ignored) { }
-                }
-            }
-        });
-        dog.setDaemon(true);
-        dog.start();
+    private ShadowNotice() {}
+
+    // ------------------------------------------------------------- lifecycle
+
+    /** 每次对话任务开始时调用（AgentRuntimeService 的运行线程）。 */
+    public static void onRunStarted() {
+        synchronized (ShadowNotice.class) {
+            PENDING.setLength(0);
+            HISTORY.clear();
+        }
+        lastLine = "";
+        step = "";
+        stepAt = 0L;
+        lastAppend = 0L;
+        sawStep = false;
+        active = true;
     }
 
-    // ------------------------------------------------------------------ stream
-
-    public static void append(String chunk) {
-        if (chunk == null || chunk.isEmpty()) return;
-        long now = SystemClock.elapsedRealtime();
-        if (now - lastAppend > RESET_AFTER) {
-            synchronized (ShadowNotice.class) {
-                PENDING.setLength(0);
-                HISTORY.clear();
+    /**
+     * 每次对话任务结束时调用，成功、出错、被停止、异常中断都会走到这里。
+     *
+     * @param ok    任务是否成功
+     * @param error 失败原因（成功时为 null）
+     */
+    public static void onRunFinished(Context ctx, boolean ok, String error) {
+        List<String> lines;
+        boolean didSomething;
+        synchronized (ShadowNotice.class) {
+            if (!ok && PENDING.length() > 0) {
+                // 出错时把半句也带上，用户能看到停在了哪里
+                String tailText = clean(PENDING.toString());
+                if (!tailText.isEmpty()) pushLine(clip(tailText));
             }
-            lastLine = "";
+            lines = new ArrayList<>(HISTORY);
+            didSomething = !lines.isEmpty() || sawStep;
+            PENDING.setLength(0);
+            HISTORY.clear();
         }
+        active = false;
+        lastLine = "";
+        step = "";
+
+        if (STOPPED.equals(error)) return;          // 用户自己点的停止，不打扰
+        if (ok && lines.isEmpty()) return;          // 成功但没有可展示的文字
+        if (!ok && !didSomething && error == null) return;
+
+        String status = ok ? "已完成" : "出错";
+        if (!ok) {
+            String reason = error == null || error.trim().isEmpty() ? "任务未完成" : error.trim();
+            lines.add(clip("❗ " + reason));
+        }
+        post(ctx, status, lines);
+    }
+
+    // ---------------------------------------------------------------- stream
+
+    /** 回答正文的流式增量（AgentLoop 中 TEXT 块）。 */
+    public static void append(String chunk) {
+        if (!active || chunk == null || chunk.isEmpty()) return;
+        long now = SystemClock.elapsedRealtime();
         lastAppend = now;
 
         boolean updated = false;
@@ -115,16 +142,10 @@ public final class ShadowNotice {
         }
     }
 
-    /** Reasoning is internal and often in another language: keep it out. */
-    public static void appendReasoning(String chunk) {
-        // intentionally ignored
-    }
-
+    /** 调用方需持有 ShadowNotice.class 锁。 */
     private static void pushLine(String line) {
         if (line.isEmpty()) return;
-        // Eta retries failed streams and replays the answer from the start.
-        // Drop anything we already showed, and clear the half-finished buffer so
-        // the replay cannot be glued onto the interrupted sentence.
+        // 流式重试会从头重放回答：已经显示过的句子直接丢弃，并清掉半句缓冲。
         for (String seen : HISTORY) {
             if (seen.equals(line) || line.contains(seen) || seen.contains(line)) {
                 lastLine = line;
@@ -156,38 +177,38 @@ public final class ShadowNotice {
                 .trim();
     }
 
-    /** Keep the tail, but start on a natural boundary instead of mid-word. */
+    /** 保留句尾，从自然断点开始截，避免截在词中间。 */
     private static String clip(String s) {
         if (s.length() <= MAX_LINE) return s;
         int start = s.length() - (MAX_LINE - 1);
         for (int i = start; i < s.length(); i++) {
             char c = s.charAt(i);
-            if (c == '\uFF0C' || c == ',' || c == '\u3001' || c == ' ' || c == '\u3002') {
+            if (c == '，' || c == ',' || c == '、' || c == ' ' || c == '。') {
                 start = i + 1;
                 break;
             }
         }
         if (start >= s.length()) start = s.length() - (MAX_LINE - 1);
-        return "\u2026" + s.substring(start);
+        return "…" + s.substring(start);
     }
 
-    // ----------------------------------------------------------------- display
+    // --------------------------------------------------------------- display
 
-    /** Notification body: current tool step briefly, else the latest sentence. */
+    /** 前台通知正文：刚执行的工具步骤优先，否则显示最新一句。 */
     public static String decorate(Object original) {
-        long now = SystemClock.elapsedRealtime();
-        if (!step.isEmpty() && now - stepAt < 1500L) return step;
         String base = original == null ? "" : original.toString();
-        if (now - lastAppend > 5000L) {
-            return base;
-        }
+        if (!active) return base;
+        long now = SystemClock.elapsedRealtime();
+        String s = step;
+        if (!s.isEmpty() && now - stepAt < STEP_SHOW_MS) return s;
+        if (now - lastAppend > STREAM_STALE_MS) return base;
         String line = lastLine;
         return line.isEmpty() ? base : line;
     }
 
-    /** Give the notification an expanded multi-line view (one line per sentence). */
+    /** 前台通知的多行展开视图（每句一行）。 */
     public static void applyStyle(Notification.Builder builder) {
-        if (builder == null) return;
+        if (builder == null || !active) return;
         try {
             List<String> lines;
             synchronized (ShadowNotice.class) {
@@ -201,31 +222,18 @@ public final class ShadowNotice {
         }
     }
 
-    // -------------------------------------------------------------- completion
+    // ------------------------------------------------------------ completion
 
-    /**
-     * Eta cancels its own foreground notification when the run ends, so post a
-     * normal one that keeps the last few lines visible.
-     */
-    public static void notifyDone() {
-        long now = SystemClock.elapsedRealtime();
-        List<String> lines;
-        // Cheap check first: nothing to report, or we just posted one.
-        synchronized (ShadowNotice.class) {
-            if (HISTORY.isEmpty()) return;
-            if (now - lastDoneAt < 30000L) return;
-            lines = new ArrayList<>(HISTORY);
-        }
-
+    private static void post(Context ctx, String status, List<String> lines) {
+        if (ctx == null || lines.isEmpty()) return;
         try {
-            Context ctx = currentApp();
-            if (ctx == null) return;
-
-            NotificationManager nm = (NotificationManager)
-                    ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationManager nm = ctx.getSystemService(NotificationManager.class);
             if (nm == null) return;
-
-            if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL) == null) {
+            if (!nm.areNotificationsEnabled()) {
+                android.util.Log.w(TAG, "notifications disabled, completion notice dropped");
+                return;
+            }
+            if (nm.getNotificationChannel(CHANNEL) == null) {
                 NotificationChannel ch = new NotificationChannel(
                         CHANNEL, "任务完成", NotificationManager.IMPORTANCE_DEFAULT);
                 ch.setSound(null, null);
@@ -234,97 +242,60 @@ public final class ShadowNotice {
                 nm.createNotificationChannel(ch);
             }
 
+            String title = "Eta 助手 · " + status;
+            int icon = ctx.getApplicationInfo().icon;
+            if (icon == 0) icon = android.R.drawable.ic_dialog_info;
+
             Notification.InboxStyle style = new Notification.InboxStyle();
             for (String line : lines) style.addLine(line);
 
-            Notification.Builder b = new Notification.Builder(ctx, CHANNEL);
-            try {
-                b.setSmallIcon(ctx.getApplicationInfo().icon);
-            } catch (Throwable t) {
-                b.setSmallIcon(android.R.drawable.ic_dialog_info);
-            }
-            b.setContentTitle("Eta 助手");
-            b.setContentText(lines.get(lines.size() - 1));
-            b.setStyle(style);
-            b.setAutoCancel(false);   // stay until the user swipes it away
-            b.setOnlyAlertOnce(true);
+            // 锁屏「隐藏敏感内容」时显示这个版本：只有状态，没有回答正文
+            Notification publicVersion = new Notification.Builder(ctx, CHANNEL)
+                    .setSmallIcon(icon)
+                    .setContentTitle(title)
+                    .setContentText("任务" + status)
+                    .build();
 
-            try {
-                Intent open = new Intent();
-                open.setComponent(new ComponentName(
-                        ctx.getPackageName(), "io.github.mangi.eta.ui.MainActivity"));
-                open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                b.setContentIntent(PendingIntent.getActivity(ctx, 1, open,
-                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
-            } catch (Throwable ignored) {
-            }
+            Notification.Builder b = new Notification.Builder(ctx, CHANNEL)
+                    .setSmallIcon(icon)
+                    .setContentTitle(title)
+                    .setContentText(lines.get(lines.size() - 1))
+                    .setStyle(style)
+                    .setVisibility(Notification.VISIBILITY_PRIVATE)
+                    .setPublicVersion(publicVersion)
+                    .setAutoCancel(false)   // 保留到用户手动划掉（与原版一致）
+                    .setOnlyAlertOnce(true);
+
+            Intent open = new Intent();
+            open.setComponent(new ComponentName(ctx.getPackageName(), "io.github.mangi.eta.ui.MainActivity"));
+            open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            b.setContentIntent(PendingIntent.getActivity(ctx, 1, open,
+                    PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
 
             nm.notify(DONE_ID, b.build());
-        } catch (Throwable ignored) {
-        } finally {
-            // Always reset, even if posting failed: the watchdog calls this every
-            // few seconds and must not spam the same notification.
-            synchronized (ShadowNotice.class) {
-                HISTORY.clear();
-                PENDING.setLength(0);
-            }
-            lastLine = "";
-            step = "";
-            lastDoneAt = now;
+        } catch (Throwable t) {
+            android.util.Log.w(TAG, "completion notice failed: " + t);
         }
     }
 
-    // ------------------------------------------------------------------ utils
+    // ----------------------------------------------------------------- utils
 
+    /** 让 Eta 的前台通知立即重绘（上游只在状态文字变化时才刷新）。 */
     private static void kick() {
         try {
-            Context ctx = currentApp();
+            Context ctx = ShadowSettings.app();
             if (ctx == null) return;
-            Class<?> cls = Class.forName("io.github.mangi.eta.agent.runtime.AgentExecutionService");
             Intent i = new Intent();
-            i.setComponent(new ComponentName(ctx, cls));
+            i.setComponent(new ComponentName(ctx.getPackageName(),
+                    "io.github.mangi.eta.agent.runtime.AgentExecutionService"));
             ctx.startService(i);
         } catch (Throwable ignored) {
         }
     }
 
-    /** True while Eta still shows its own "正在运行" foreground notification. */
-    private static boolean etaStillRunning(Context ctx) {
-        try {
-            NotificationManager nm = (NotificationManager)
-                    ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-            if (nm == null) return false;
-            for (android.service.notification.StatusBarNotification sbn : nm.getActiveNotifications()) {
-                if (!ctx.getPackageName().equals(sbn.getPackageName())) continue;
-                if (sbn.getId() == DONE_ID) continue;
-                return true;
-            }
-        } catch (Throwable ignored) {
-        }
-        return false;
-    }
-
-    private static Context currentApp() {
-        try {
-            Object app = Class.forName("android.app.ActivityThread")
-                    .getMethod("currentApplication").invoke(null);
-            return app instanceof Context ? (Context) app : null;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    public static synchronized void reset() {
-        PENDING.setLength(0);
-        HISTORY.clear();
-        lastLine = "";
-        step = "";
-    }
-
     /**
-     * Called from MainActivity.onCreate. The completion notification carries the
-     * target package; we hand that session back to the main display here, because
-     * a plain am-start only resumes the task on the hidden display.
+     * MainActivity.onCreate / onNewIntent 调用：完成通知带着目标包名，
+     * 在这里把隐藏屏上的任务移回主屏（单纯 am start 只会在隐藏屏上恢复它）。
      */
     public static void handleHandoverIntent(Intent intent) {
         if (intent == null) return;
@@ -335,33 +306,18 @@ public final class ShadowNotice {
             new Thread(new Runnable() {
                 public void run() {
                     try { ShadowTools.handoverToMain(pkg); }
-                    catch (Throwable t) { android.util.Log.w("EtaShadow", "handover: " + t); }
+                    catch (Throwable t) { android.util.Log.w(TAG, "handover: " + t); }
                 }
-            }).start();
+            }, "eta-shadow-handover").start();
         } catch (Throwable ignored) {
         }
     }
 
+    /** 工具步骤提示（ShadowTools 在执行 screen_* 前调用）。 */
     public static void setStep(String s) {
         step = s == null ? "" : s;
         stepAt = SystemClock.elapsedRealtime();
         lastAppend = stepAt;
-    }
-
-    public static String stepTail() {
-        return step;
-    }
-
-    public static void setTitle(String t) {
-        title = t == null ? "" : t;
-    }
-
-    public static String getTitle() {
-        return title;
-    }
-
-    public static String tail(int chars) {
-        String line = lastLine;
-        return line.length() <= chars ? line : line.substring(line.length() - chars);
+        sawStep = true;
     }
 }

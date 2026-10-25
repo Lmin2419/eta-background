@@ -5,7 +5,7 @@ internal object ModuleConfig {
     const val HOT_PATH_LOG_WINDOW_MS = 60_000L
 
     const val GOOGLE_PACKAGE = "com.google.android.googlequicksearchbox"
-    const val ETA_PACKAGE = "io.github.mangi.eta"
+    const val ETA_PACKAGE = io.github.mangi.eta.BuildConfig.APPLICATION_ID // etax: 跟随 applicationId
     const val BREENO_PACKAGE = "com.heytap.speechassist"
     const val COLOROS_MEMORY_PACKAGE = "com.oplus.aimemory"
     const val XIAOAI_PACKAGE = "com.miui.voiceassist"

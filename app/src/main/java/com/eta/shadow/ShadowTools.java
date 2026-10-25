@@ -6,12 +6,8 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 import android.os.SystemClock;
 
 /**
@@ -20,12 +16,11 @@ import android.os.SystemClock;
  * Eta's classes are R8-obfuscated, so everything here talks to the app through
  * reflection and to the engine/observer through their local sockets:
  *   8733 - resident engine (display, input, capture, handover)
- *   8738 - accessibility observer (node tree, text, waits); 8734 is the legacy port
+ *   8738 - accessibility observer (node tree, text, waits)
  */
 public final class ShadowTools {
     static final int ENGINE_PORT = 8733;
-    static final int OBSERVER_PORT = 8738;   // only the rebuilt bridge binds this
-    static final int OBSERVER_PORT_LEGACY = 8734;
+    static final int OBSERVER_PORT = 8738;
 
     private static volatile String mode;
     private static volatile int display = -1;
@@ -38,28 +33,29 @@ public final class ShadowTools {
     // ---------------------------------------------------------------- entry
 
     /**
-     * Called from AgentLocalTools.execute before the normal dispatch.
-     * Returns a ToolResult instance when the call is ours, otherwise null.
+     * Called from RoutingToolExecutor.execute before the normal dispatch.
+     * Returns the tool result text when the call is ours, otherwise null
+     * (the Kotlin side wraps it into ToolResult, no reflection needed).
      */
-    public static Object intercept(String name, Object call) {
+    public static String intercept(String name, String argumentsJson) {
         if ("terminal".equals(name)) {
-            return guardTerminal(call);
+            return guardTerminal(argumentsJson);
         }
         if (name == null || !name.startsWith("screen_")) return null;
 
         android.content.Context ctx = ShadowSettings.app();
         if (needsEngine(name) && !ShadowSettings.engineReady(ctx)) {
             android.util.Log.w("EtaShadow", "engine down, refusing " + name);
-            return toolResult(ShadowSettings.engineFixHint(), name);
+            return ShadowSettings.engineFixHint();
         }
         if (needsObserver(name) && !ShadowSettings.observerReady()) {
             android.util.Log.w("EtaShadow", "observer down, refusing " + name);
-            return toolResult(ShadowSettings.observerFixHint(), name);
+            return ShadowSettings.observerFixHint();
         }
         com.eta.shadow.ShadowNotice.setStep(label(name));
         String text;
         try {
-            JSONObject args = argumentsOf(call);
+            JSONObject args = argumentsOf(argumentsJson);
             text = run(name, args);
         } catch (Throwable e) {
             String msg = e.getMessage();
@@ -72,7 +68,7 @@ public final class ShadowTools {
                 text = "失败：" + e.getClass().getSimpleName() + (msg == null ? "" : "：" + msg);
             }
         }
-        return toolResult(text, name);
+        return text;
     }
 
     /**
@@ -80,9 +76,9 @@ public final class ShadowTools {
      * handful of shell commands that manipulate the UI and point at screen_* instead;
      * everything else (files, logs, package info) still passes through.
      */
-    private static Object guardTerminal(Object call) {
+    private static String guardTerminal(String argumentsJson) {
         try {
-            JSONObject args = argumentsOf(call);
+            JSONObject args = argumentsOf(argumentsJson);
             for (java.util.Iterator<String> it = args.keys(); it.hasNext(); ) {
                 Object v = args.opt(it.next());
                 if (!(v instanceof String)) continue;
@@ -92,10 +88,10 @@ public final class ShadowTools {
                     if (cmd.contains(p)) { hit = p; break; }
                 }
                 if (hit != null) {
-                    return toolResult("请改用 screen_* 工具做界面操作（检测到 shell 命令 `"
+                    return "请改用 screen_* 工具做界面操作（检测到 shell 命令 `"
                             + hit.trim() + "`）。"
                             + "screen_open 会自动判断：目标应用就是用户当前在看的，就在用户屏幕上操作；"
-                            + "否则移到后台虚拟屏操作，不打扰用户。", "terminal");
+                            + "否则移到后台虚拟屏操作，不打扰用户。";
                 }
             }
         } catch (Throwable ignored) {
@@ -173,44 +169,11 @@ public final class ShadowTools {
         }
     }
 
-    /** ToolCall is an obfuscated data class; find its JSON argument string. */
-    private static JSONObject argumentsOf(Object call) {
+    private static JSONObject argumentsOf(String json) {
         try {
-            for (Field f : call.getClass().getFields()) {
-                if (f.getType() != String.class) continue;
-                Object v = f.get(call);
-                if (v instanceof String) {
-                    String s = ((String) v).trim();
-                    if (s.startsWith("{")) return new JSONObject(s);
-                }
-            }
+            if (json != null && json.trim().startsWith("{")) return new JSONObject(json);
         } catch (Throwable ignored) { }
         return new JSONObject();
-    }
-
-    /** Build ToolResult(content, [], false). The class is R8-obfuscated to "wj". */
-    private static Object toolResult(String content, String name) {
-        String[] candidates = {"wj", "io.github.mangi.eta.agent.model.AgentModelClient$ToolResult"};
-        for (String candidate : candidates) {
-            try {
-                Class<?> cls = Class.forName(candidate);
-                for (Constructor<?> c : cls.getDeclaredConstructors()) {
-                    Class<?>[] p = c.getParameterTypes();
-                    c.setAccessible(true);
-                    if (p.length == 3 && p[0] == String.class && List.class.isAssignableFrom(p[1])
-                            && (p[2] == boolean.class || p[2] == Boolean.class)) {
-                        return c.newInstance(content, new ArrayList<Object>(), false);
-                    }
-                }
-                for (Constructor<?> c : cls.getDeclaredConstructors()) {
-                    Class<?>[] p = c.getParameterTypes();
-                    c.setAccessible(true);
-                    if (p.length == 1 && p[0] == String.class) return c.newInstance(content);
-                }
-            } catch (Throwable ignored) { }
-        }
-        android.util.Log.w("EtaShadow", "toolResult: cannot build ToolResult for " + name);
-        return null;
     }
 
     // ---------------------------------------------------------------- tools
@@ -428,12 +391,14 @@ public final class ShadowTools {
     }
 
     private static String observer(String json, int timeoutMs) throws Exception {
-        for (int port : new int[]{OBSERVER_PORT, OBSERVER_PORT_LEGACY}) {
-            try {
-                return send(port, json, timeoutMs);
-            } catch (Exception ignored) { }
+        // Only a refused connection means "observer down". A read timeout means the
+        // command may already have run, so it must not be retried anywhere else
+        // (the old build re-sent it to a legacy port that nothing binds).
+        try {
+            return send(OBSERVER_PORT, json, timeoutMs);
+        } catch (java.net.ConnectException e) {
+            throw new IllegalStateException("OBSERVER_DOWN: accessibility observer not reachable");
         }
-        throw new IllegalStateException("OBSERVER_DOWN: accessibility observer not reachable");
     }
 
     private static String send(int port, String json, int timeoutMs) throws Exception {

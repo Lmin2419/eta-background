@@ -1,0 +1,102 @@
+name: Etax Build
+
+# 只在 etax-* 分支或手动触发时运行，不影响上游自带的工作流
+on:
+  push:
+    branches:
+      - "etax-*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: etax-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: 从源码构建 Etax APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: 校验 etax 接线完整
+        run: bash etax/check_hooks.sh
+
+      - name: 配置构建环境
+        uses: ./.github/actions/setup-build
+
+      - name: 放入 root 引擎（可选，供 check_pair.sh 配对校验）
+        run: |
+          if [[ -f etax/engine/vdrive.dex ]]; then
+            cp etax/engine/vdrive.dex app/src/main/assets/vdrive.dex
+            if [[ -f etax/engine/vdrive.version ]]; then
+              cp etax/engine/vdrive.version app/src/main/assets/vdrive.version
+            fi
+            echo "已放入引擎 dex：$(sha256sum etax/engine/vdrive.dex | cut -c1-16)"
+          else
+            echo "::warning::etax/engine/vdrive.dex 不存在：APK 不内嵌引擎，check_pair.sh 会报不配对（不影响功能）"
+          fi
+
+      - name: 还原签名证书
+        id: sign
+        env:
+          ETAX_KEYSTORE_BASE64: ${{ secrets.ETAX_KEYSTORE_BASE64 }}
+        run: |
+          if [[ -n "$ETAX_KEYSTORE_BASE64" ]]; then
+            printf '%s' "$ETAX_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/etax.jks"
+            echo "has_key=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::没有配置 ETAX_KEYSTORE_BASE64：用临时证书签名，装机前需先卸载旧的 etax"
+            echo "has_key=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 构建 Release APK
+        env:
+          ETA_RELEASE_STORE_FILE: ${{ steps.sign.outputs.has_key == 'true' && format('{0}/etax.jks', runner.temp) || '' }}
+          ETA_RELEASE_STORE_PASSWORD: ${{ secrets.ETAX_STORE_PASSWORD }}
+          ETA_RELEASE_KEY_ALIAS: ${{ secrets.ETAX_KEY_ALIAS }}
+          ETA_RELEASE_KEY_PASSWORD: ${{ secrets.ETAX_KEY_PASSWORD }}
+        run: >-
+          ./gradlew --no-daemon --no-configuration-cache
+          "-Peta.buildMetadata=etax.${GITHUB_SHA::7}"
+          :app:assembleRelease
+
+      - name: 签名与整理
+        id: apk
+        run: |
+          shopt -s nullglob
+          apks=(app/build/outputs/apk/release/*.apk)
+          [[ ${#apks[@]} -eq 1 ]] || { echo "::error::Release APK 数量异常（${#apks[@]}）"; exit 1; }
+          apk="${apks[0]}"
+          bt="$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -mindepth 1 -type d | sort -V | tail -n 1)"
+          if [[ "${{ steps.sign.outputs.has_key }}" != "true" ]]; then
+            keytool -genkeypair -keystore "$RUNNER_TEMP/tmp.jks" -storepass android -keypass android \
+              -alias tmp -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=etax-temp" >/dev/null 2>&1
+            "$bt/zipalign" -f 4 "$apk" "$RUNNER_TEMP/aligned.apk"
+            out="$RUNNER_TEMP/Etax-tempkey.apk"
+            "$bt/apksigner" sign --ks "$RUNNER_TEMP/tmp.jks" --ks-pass pass:android \
+              --out "$out" "$RUNNER_TEMP/aligned.apk"
+            apk="$out"
+          fi
+          if ! "$bt/apksigner" verify "$apk" >/dev/null 2>&1; then
+            echo "::error::APK 没有签上：检查 ETAX_STORE_PASSWORD / ETAX_KEY_ALIAS / ETAX_KEY_PASSWORD 四个 Secrets 是否都填了"
+            exit 1
+          fi
+          "$bt/apksigner" verify --print-certs "$apk" | head -n 3
+          pkg="$("$bt/aapt2" dump packagename "$apk")"
+          [[ "$pkg" == "io.github.mangi.etax" ]] || { echo "::error::包名是 $pkg，应为 io.github.mangi.etax"; exit 1; }
+          sha256sum "$apk"
+          echo "path=$apk" >> "$GITHUB_OUTPUT"
+
+      - name: 上传 APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: ${{ steps.apk.outputs.path }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 30

@@ -130,6 +130,13 @@ internal class AgentLoop(
                         ) {
                             accumulatedReasoning.append(providerEvent.delta)
                         }
+                        // etax: 回答正文流进通知栏（三种模型接口共用这一处）
+                        if (purpose == ProviderRequestPurpose.CHAT &&
+                            providerEvent is ProviderEvent.BlockDelta &&
+                            providerEvent.kind == AssistantBlockKind.TEXT
+                        ) {
+                            com.eta.shadow.ShadowNotice.append(providerEvent.delta)
+                        }
                         providerEvent.toAgentEvent(attemptRound)?.let(onEvent)
                     },
                     discardAttemptReasoning = { accumulatedReasoning.setLength(reasoningLengthBeforeRound) },

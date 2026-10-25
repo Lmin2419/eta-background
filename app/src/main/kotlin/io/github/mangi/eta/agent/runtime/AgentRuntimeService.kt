@@ -439,8 +439,11 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             }
         }
         thread(name = "agent-runtime") {
+            var shadowResult: AgentRuntimeWire.RunResult? = null
+            val shadowChat = request.operation == AgentRuntimeWire.OP_CHAT
+            if (shadowChat) com.eta.shadow.ShadowNotice.onRunStarted() // etax
             try {
-                executeRun(session, request)
+                shadowResult = executeRun(session, request)
             } finally {
                 screenOnBinding.close()
                 mainHandler.post {
@@ -448,6 +451,14 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                 }
                 AgentExecutionService.updateRunStatus(this, null)
                 AgentExecutionService.release("run:${request.runId}")
+                // etax: 成功 / 出错 / 停止都走这里，明确发出收尾通知
+                if (shadowChat) {
+                    com.eta.shadow.ShadowNotice.onRunFinished(
+                        this,
+                        shadowResult?.ok == true,
+                        shadowResult?.error ?: if (shadowResult == null) "运行异常中断" else null,
+                    )
+                }
             }
         }
     }
@@ -455,7 +466,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private fun executeRun(
         session: AgentRuntimeSession,
         request: AgentRuntimeWire.RunRequest,
-    ) {
+    ): AgentRuntimeWire.RunResult {
         val outcome = AgentRuntimeRunExecutor(
             context = this,
             currentPermissions = ::currentRuntimePermissions,
@@ -465,7 +476,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             },
             persistArtifacts = ::persistRunArtifacts,
         ).execute(session, request)
-        if (!outcome.shouldUpdateHost) return
+        if (!outcome.shouldUpdateHost) return outcome.result
         postTerminalOverlay(
             session = session,
             result = outcome.result,
@@ -479,6 +490,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                 }
             },
         )
+        return outcome.result
     }
 
     private fun handleAcceptedRunEvent(

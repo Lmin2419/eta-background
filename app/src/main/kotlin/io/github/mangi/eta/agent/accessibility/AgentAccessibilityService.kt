@@ -96,6 +96,7 @@ class AgentAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         instance = this
+        com.eta.shadow.Boot.init(this) // etax: 后台虚拟屏观察者
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
@@ -110,12 +111,14 @@ class AgentAccessibilityService : AccessibilityService() {
     }
 
     private fun clearCurrentInstance() {
+        com.eta.shadow.Boot.detach(this) // etax
         if (instance === this) instance = null
         scrollEventObservationGate.clear()
         signalWindowChanged()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event != null) com.eta.shadow.Boot.onEvent(event) // etax
         when (event?.eventType) {
             AccessibilityEvent.TYPE_WINDOWS_CHANGED,
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {

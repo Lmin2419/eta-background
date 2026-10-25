@@ -23,7 +23,6 @@ public final class ShadowSettings {
 
     private static final int ENGINE_PORT = 8733;
     private static final int OBSERVER_PORT = 8738;
-    private static final int OBSERVER_PORT_LEGACY = 8734;
 
     private static volatile Boolean engineReady = null;
     private static volatile long lastProbe = 0L;
@@ -78,13 +77,17 @@ public final class ShadowSettings {
         return ok;
     }
 
-    /** Accessibility observer running inside the Eta process. */
+    /**
+     * Accessibility observer running inside the Eta process. It lives in this very
+     * process, so ask it directly instead of opening a socket to ourselves.
+     */
     public static boolean observerReady() {
+        if (Boot.serving()) return true;
         long now = SystemClock.elapsedRealtime();
         Boolean cached = observerReady;
         if (cached != null && now - lastObserverProbe < 3000L) return cached;
         lastObserverProbe = now;
-        boolean ok = portOpen(OBSERVER_PORT, 800) || portOpen(OBSERVER_PORT_LEGACY, 500);
+        boolean ok = portOpen(OBSERVER_PORT, 800);
         observerReady = ok;
         return ok;
     }

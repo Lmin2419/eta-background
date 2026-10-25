@@ -821,7 +821,7 @@ internal class AccessibilityServiceEnforcer(
     }
 
     private companion object {
-        const val APP_PACKAGE = "io.github.mangi.eta"
+        const val APP_PACKAGE = io.github.mangi.eta.BuildConfig.APPLICATION_ID // etax
         const val SERVICE_CLASS =
             "io.github.mangi.eta.agent.accessibility.AgentAccessibilityService"
         const val DISABLED = 0

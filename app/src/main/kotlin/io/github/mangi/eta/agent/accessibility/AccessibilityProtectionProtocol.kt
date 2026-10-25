@@ -16,8 +16,9 @@ internal object AccessibilityProtectionProtocol {
         "io.github.mangi.eta.action.SET_ACCESSIBILITY_PROTECTION"
     const val ACTION_RECOVER =
         "io.github.mangi.eta.action.RECOVER_ACCESSIBILITY_SERVICE"
+    // etax: 权限名与 Provider authority 跟随 applicationId，和清单保持一致
     const val PERMISSION =
-        "io.github.mangi.eta.permission.CONTROL_ACCESSIBILITY_PROTECTION"
+        "${io.github.mangi.eta.BuildConfig.APPLICATION_ID}.permission.CONTROL_ACCESSIBILITY_PROTECTION"
     const val RECEIVER_PACKAGE = "android"
 
     const val EXTRA_PROTOCOL_VERSION = "protocol_version"
@@ -30,7 +31,7 @@ internal object AccessibilityProtectionProtocol {
     const val SETTING_NAME = "eta_accessibility_protection_enabled"
     const val DEFAULT_ENABLED = false
 
-    const val HEALTH_AUTHORITY = "io.github.mangi.eta.accessibility.health"
+    const val HEALTH_AUTHORITY = "${io.github.mangi.eta.BuildConfig.APPLICATION_ID}.accessibility.health"
     const val HEALTH_METHOD = "accessibility_health"
     const val HEALTH_STATUS = "status"
     const val HEALTH_STATUS_CONNECTED = "connected"

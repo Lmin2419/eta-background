@@ -35,7 +35,9 @@ android {
     ndkVersion = libs.versions.ndk.get()
 
     defaultConfig {
-        applicationId = "io.github.mangi.eta"
+        // etax: 独立包名，可与官方 Eta 共存；显示名统一为「Eta 助手·后台版」
+        applicationId = "io.github.mangi.etax"
+        manifestPlaceholders["etaxLabel"] = "Eta 助手·后台版"
         minSdk = 33
         targetSdk = 37
         // versionCode 规则：yyyyMMdd + 两位当日序号（01 起），发版时随 versionName 一起手动递增。
@@ -139,7 +141,7 @@ androidComponents {
     onVariants { variant ->
         // 文件名只取 versionName：构建类型标记与 CI 构建元数据都由 versionNameSuffix 带出
         variant.outputs.forEach { output ->
-            output.outputFileName.set(output.versionName.map { "Eta-v$it.apk" })
+            output.outputFileName.set(output.versionName.map { "Etax-v$it.apk" })
         }
     }
 }

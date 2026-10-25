@@ -138,7 +138,7 @@ internal class EntrySurfaceGuard private constructor(
         private const val BREENO_PACKAGE_NAME = "com.heytap.speechassist"
         private const val XIAOAI_HANDOFF_SOURCE = "xiaoai"
         private const val XIAOAI_PACKAGE_NAME = "com.miui.voiceassist"
-        private const val ETA_PACKAGE_NAME = "io.github.mangi.eta"
+        private const val ETA_PACKAGE_NAME = io.github.mangi.eta.BuildConfig.APPLICATION_ID // etax
         private const val NANOS_PER_MILLISECOND = 1_000_000L
     }
 }

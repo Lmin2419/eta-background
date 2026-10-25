@@ -158,6 +158,7 @@ internal object AgentModelClient {
             for (index in 0 until additionalTools.length()) {
                 tools.put(additionalTools.opt(index))
             }
+            com.eta.shadow.ShadowSchema.append(tools) // etax: 注入 screen_* 工具表
             return tools
         }
         val tools = toolsFor(initialCapabilities)

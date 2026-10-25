@@ -284,8 +284,12 @@ internal class RoutingToolExecutor(
     private val local: AgentModelClient.ToolExecutor,
     private val mcp: McpToolExecutor,
 ) : AgentModelClient.ToolExecutor, AutoCloseable {
-    override fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult =
-        if (mcp.contains(toolCall.name)) mcp.execute(toolCall) else local.execute(toolCall)
+    override fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult {
+        // etax: screen_* 后台虚拟屏工具，以及 terminal 里的界面类 shell 命令拦截
+        com.eta.shadow.ShadowTools.intercept(toolCall.name, toolCall.argumentsJson)
+            ?.let { return AgentModelClient.ToolResult(it) }
+        return if (mcp.contains(toolCall.name)) mcp.execute(toolCall) else local.execute(toolCall)
+    }
 
     override fun close() {
         runCatching { mcp.close() }

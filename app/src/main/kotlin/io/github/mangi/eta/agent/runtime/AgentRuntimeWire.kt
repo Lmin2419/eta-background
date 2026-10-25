@@ -84,7 +84,7 @@ internal object AgentRuntimeWire {
     /** service -> client：返回是否成功重新订阅指定 run。 */
     const val MSG_ATTACH_RUN_RESPONSE = 12
 
-    private const val MODULE_PACKAGE = "io.github.mangi.eta"
+    private const val MODULE_PACKAGE = io.github.mangi.eta.BuildConfig.APPLICATION_ID // etax
     private const val SERVICE_CLASS = "io.github.mangi.eta.agent.runtime.AgentRuntimeService"
 
     private const val KEY_TYPE = "type"

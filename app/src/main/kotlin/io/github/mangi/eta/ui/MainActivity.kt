@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.eta.shadow.ShadowNotice.handleHandoverIntent(intent) // etax: 通知点击 → 移回主屏
         AndroidAgentLogger.info("Agent UI created: task=$taskId restored=${savedInstanceState != null}")
         var contentReady = false
         installStartupSplash { contentReady }
@@ -99,6 +100,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        com.eta.shadow.ShadowNotice.handleHandoverIntent(intent) // etax
         val fromLauncher = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
         AndroidAgentLogger.info("Agent UI new intent: task=$taskId launcher=$fromLauncher")
         setIntent(intent)

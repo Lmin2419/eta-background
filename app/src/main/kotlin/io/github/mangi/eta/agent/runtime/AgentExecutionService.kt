@@ -108,13 +108,17 @@ internal class AgentExecutionService : Service() {
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(getString(R.string.execution_title))
             .setContentText(
-                status?.localizedText(resources)
-                    ?: resources.getQuantityString(R.plurals.execution_summary, taskCount, taskCount)
+                // etax: 运行中显示最新一句流式输出
+                com.eta.shadow.ShadowNotice.decorate(
+                    status?.localizedText(resources)
+                        ?: resources.getQuantityString(R.plurals.execution_summary, taskCount, taskCount)
+                )
             )
             .setContentIntent(open)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .addAction(Notification.Action.Builder(null, getString(R.string.execution_stop), stop).build())
+        com.eta.shadow.ShadowNotice.applyStyle(builder) // etax: 多行展开；下方 Live Update 样式会覆盖它
         // 只有 Agent run 在跑时才申请提升为 Live Update；终端会话、Linux 启动等长驻任务不属于"正在进行、需要持续关注"的活动。
         if (status != null && Build.VERSION.SDK_INT_FULL >= Build.VERSION_CODES_FULL.BAKLAVA_1) {
             builder

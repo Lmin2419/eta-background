@@ -122,7 +122,7 @@ public final class Boot {
     /** Called from the service's onAccessibilityEvent so waits can see UI changes. */
     private static volatile long lastRebindAt = 0;
 
-    public static void onEvent(Object event) {
+    public static void onEvent(android.view.accessibility.AccessibilityEvent event) {
         eventCount++;
         long now = SystemClock.elapsedRealtime();
         lastEventAt = now;
@@ -133,12 +133,36 @@ public final class Boot {
             lastRebindAt = now;
             startServer();
         }
+        // 热路径（滚动时每秒上百次）：旧版每个事件都重新反射查找一次 getDisplayId，
+        // 这里只查找一次并缓存 Method，行为不变。
         try {
-            int d = (Integer) event.getClass().getMethod("getDisplayId").invoke(event);
+            java.lang.reflect.Method m = displayIdMethod;
+            if (m == null) {
+                m = event.getClass().getMethod("getDisplayId");
+                displayIdMethod = m;
+            }
+            int d = (Integer) m.invoke(event);
             synchronized (lastEventByDisplay) { lastEventByDisplay.put(d, now); }
         } catch (Throwable t) {
-            android.util.Log.w("EtaShadow", "startServer failed: " + t);
+            if (!displayIdWarned) {
+                displayIdWarned = true;
+                android.util.Log.w("EtaShadow", "event displayId unavailable: " + t);
+            }
         }
+    }
+
+    private static volatile java.lang.reflect.Method displayIdMethod;
+    private static volatile boolean displayIdWarned;
+
+    /** 无障碍服务解绑 / 销毁时调用：不再持有已失效的 service 引用。 */
+    public static void detach(AccessibilityService svc) {
+        if (svc != null && service == svc) service = null;
+    }
+
+    /** 观察者是否在本进程内正常服务（同进程，无需走端口探测）。 */
+    static boolean serving() {
+        ServerSocket s = server;
+        return service != null && s != null && !s.isClosed();
     }
 
     private static synchronized void startServer() {
