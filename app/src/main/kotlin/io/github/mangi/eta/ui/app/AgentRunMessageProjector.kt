@@ -49,6 +49,7 @@ internal class AgentRunMessageProjector(
         is AgentEvent.ToolStarted ->
             startTool(runId, event, finalizeTextRound(runId, event.round, finalizeThinkingRound(runId, event.round, messages)))
         is AgentEvent.ToolFinished -> finishTool(runId, event, messages)
+        is AgentEvent.SubagentProgress -> updateSubagentProgress(runId, event, messages)
         is AgentEvent.HostedToolStarted ->
             startHostedTool(runId, event, finalizeTextRound(runId, event.round, finalizeThinkingRound(runId, event.round, messages)))
         is AgentEvent.HostedToolFinished -> finishHostedTool(runId, event, messages)
@@ -440,9 +441,27 @@ internal class AgentRunMessageProjector(
             if (index == targetIndex && message is ToolActivityMessageUi) {
                 message.copy(
                     status = status,
+                    command = event.command ?: message.command,
                     resultSummary = event.resultSummary,
                     imageCount = event.imageCount,
                 )
+            } else {
+                message
+            }
+        }
+    }
+
+    fun updateSubagentProgress(
+        runId: String,
+        event: AgentEvent.SubagentProgress,
+        messages: List<AgentChatMessageUi>,
+    ): List<AgentChatMessageUi> {
+        val targetId = toolActivityMessageId(runId, event.round, event.toolCallId)
+        val targetIndex = messages.indexOfLast { it is ToolActivityMessageUi && it.id == targetId }
+        if (targetIndex < 0) return messages
+        return messages.mapIndexed { index, message ->
+            if (index == targetIndex && message is ToolActivityMessageUi) {
+                message.copy(command = event.snapshotJson)
             } else {
                 message
             }

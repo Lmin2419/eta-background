@@ -25,7 +25,7 @@ public final class ShadowSchema {
     public static void append(JSONArray tools) {
         android.content.Context ctx = ShadowSettings.app();
         boolean engine = ctx != null && ShadowSettings.engineReady(ctx);
-        android.util.Log.i("EtaShadow", "schema append engine=" + engine + " n=" + tools.length());
+        if (ctx != null) android.util.Log.i("EtaShadow", "schema append engine=" + engine + " n=" + tools.length());
         if (engine) {
             removeReplaced(tools);
         }
@@ -39,25 +39,25 @@ public final class ShadowSchema {
         } catch (Throwable ignored) { }
         try {
             tools.put(tool("screen_open",
-                    "打开应用并操作它。**它会自动判断该用哪条路径**："
-                    + "① 目标就是用户此刻正在看的应用 → 直接在用户屏幕上操作，不建虚拟屏；"
-                    + "② 否则 → 移到后台虚拟屏操作，完全不占用用户当前屏幕。"
+                    "在本任务独占的后台虚拟屏打开应用。同一应用被其他任务占用时等待释放。"
+                    + "不同应用最多使用两个虚拟屏；额外任务等待空闲位置，不会抢占正在执行的任务。"
                     + "所以凡是涉及界面的操作都走这个工具，不要用 terminal 执行 am/input/screencap。"
-                    + "只传包名即可（如 com.tencent.mm）。操作结束后用 screen_finish 收尾。",
+                    + "只传包名即可（如 com.tencent.mm）。暂停恢复后必须先重新观察页面再操作；操作结束后用 screen_finish 收尾。",
                     props3("component", "string", "包名或 package/activity，例如 com.tencent.mm",
                             "package", "string", "包名（与 component 二选一）",
-                            "app_name", "string", "应用显示名（前两者都没有时才用）"),
+                            "app_name", "string", "应用显示名（前两者都没有时才用）")
+                            .put("orientation", property("string", "auto 默认按应用方向；横屏游戏请选 landscape，竖屏应用 portrait。仅新建屏生效，不重建已有 App。").put("enum", new JSONArray().put("auto").put("landscape").put("portrait"))),
                     ""));
             tools.put(tool("screen_state", "查看后台操作会话与引擎状态（含 root 引擎是否就绪）。", new JSONObject(), ""));
-            tools.put(tool("screen_tap", "在当前屏幕点按坐标。",
-                    props3("x", "integer", "横坐标", "y", "integer", "纵坐标"), "x,y"));
+            tools.put(tool("screen_tap", "在当前屏幕点按坐标。截图坐标必须携带 coordinate_space=screenshot 和该截图 frame_id；节点 bounds 用 display。",
+                    coordinates(props3("x", "integer", "横坐标", "y", "integer", "纵坐标")), "x,y"));
             tools.put(tool("screen_swipe", "从一点滑到另一点。",
-                    props7("x1", "y1", "x2", "y2", "duration_ms"), "x1,y1,x2,y2"));
+                    coordinates(props7("x1", "y1", "x2", "y2", "duration_ms")), "x1,y1,x2,y2"));
             tools.put(tool("screen_press", "长按坐标（上下文菜单、拖拽把手）。",
-                    props3("x", "integer", "横坐标", "y", "integer", "纵坐标", "hold_ms", "integer", "按住毫秒"),
+                    coordinates(props3("x", "integer", "横坐标", "y", "integer", "纵坐标", "hold_ms", "integer", "按住毫秒")),
                     "x,y"));
             tools.put(tool("screen_drag", "按住后拖动再松开（排序、滑块）。",
-                    props7("x1", "y1", "x2", "y2", "duration_ms", "hold_ms"), "x1,y1,x2,y2"));
+                    coordinates(props7("x1", "y1", "x2", "y2", "duration_ms", "hold_ms")), "x1,y1,x2,y2"));
             tools.put(tool("screen_text", "往输入框写文本，中文可直接写入。有多个输入框时用 view_id 或 index 指定。",
                     props3("text", "string", "要写入的文本",
                             "view_id", "string", "输入框的 view id（可只写后半段）",
@@ -68,8 +68,8 @@ public final class ShadowSchema {
                     props3("text", "string", "要点击的文本",
                             "desc", "string", "contentDescription",
                             "index", "integer", "多个匹配时的序号")
-                            .put("view_id", props("view_id", "string", "view id（可只写后半段）"))
-                            .put("exact", props("exact", "boolean", "是否精确匹配文本/描述，默认 true")),
+                            .put("view_id", property("string", "view id（可只写后半段）"))
+                            .put("exact", property("boolean", "是否精确匹配文本/描述，默认 true")),
                     ""));
             tools.put(tool("screen_wait", "等待某段文字出现，或等待界面停止变化。",
                     props3("text", "string", "等待出现的文字",
@@ -83,18 +83,19 @@ public final class ShadowSchema {
                     props1("max_rows", "integer", "最多行数"), ""));
             tools.put(tool("screen_dump", "读取当前屏幕的原始节点列表（含 bounds 与 view id）。",
                     props1("limit", "integer", "最多节点数"), ""));
-            tools.put(tool("screen_shot", "把当前屏幕截图保存到文件。",
+            tools.put(tool("screen_shot", "截取当前显示方向的画面，返回逻辑尺寸、缩放比例和 frame_id。用 read_image 查看后，截图坐标操作请带 coordinate_space=screenshot 和 frame_id。游戏/画布通常没有按钮节点，应使用截图。转屏后必须重新截图。",
                     props3("path", "string", "保存路径", "scale", "number", "缩放比例"), ""));
             tools.put(tool("screen_diag", "当前屏幕的诊断快照（包名、节点数、最近文本）。", new JSONObject(), ""));
-            tools.put(tool("screen_finish", "结束后台操作并发通知。"
+            tools.put(tool("screen_finish", "结束后台操作，由该任务的运行通知展示完成结果。"
                     + "应用会留在后台虚拟屏里继续待命，用户的屏幕完全不动，"
-                    + "由用户点通知决定什么时候切过去。虚拟屏在闲置 5 分钟后自动回收。",
+                    + "原通知显示本轮结果，用户可继续指令或打开目标应用。等待用户决定也应保留页面，不应当作目标已全部达成。"
+                    + "保留的页面不会因一分钟超时被销毁；新任务需要屏幕容量时可能回收。"
+                    + "后台收尾不会自动打开目标应用或切换用户当前页面。",
                     props3("title", "string", "通知标题",
-                            "text", "string", "通知内容（点通知打开目标应用）",
-                            "open", "string", "点通知要打开的应用包名（留空则打开助手）")
-                            .put("mode", props("mode", "string",
+                            "text", "string", "结果摘要（点卡片打开目标应用，另有会话入口）",
+                            "open", "string", "结果涉及的应用包名（兼容旧参数；以本任务实际操作的应用为准）")
+                            .put("mode", property("string",
                                     "收尾方式：notify（默认，留在后台虚拟屏并发通知）、"
-                                    + "handover（移回主屏并释放虚拟屏）、"
                                     + "destroy（直接释放虚拟屏）")),
                     ""));
         } catch (Throwable ignored) { }
@@ -190,6 +191,17 @@ public final class ShadowSchema {
         } catch (Throwable t) {
             return new JSONObject();
         }
+    }
+
+    private static JSONObject property(String type, String description) throws Exception {
+        return new JSONObject().put("type", type).put("description", description);
+    }
+
+    private static JSONObject coordinates(JSONObject properties) throws Exception {
+        return properties.put("coordinate_space", new JSONObject().put("type", "string")
+                        .put("enum", new JSONArray().put("display").put("screenshot"))
+                        .put("description", "display 为节点/原始显示屏像素；screenshot 为最新截图中的像素，会自动换算"))
+                .put("frame_id", property("string", "截图坐标必须带最新 screen_shot 的 frameId；每次动作后重新观察"));
     }
 
     private static JSONObject enumProp(String name, String desc) {

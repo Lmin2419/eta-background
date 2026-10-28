@@ -24,12 +24,19 @@ internal class RuntimeRunRegistry(private val capacity: Int = MAX_ACTIVE_RUNS) {
     ) {
         val runId: String get() = session.runId
         val conversationId: String = AgentConversationIdentity.fromHandoff(initialRequest.handoff, initialRequest.runId)
+        val notice = com.eta.shadow.ShadowNotice(initialRequest.runId, conversationId)
         @Volatile var request: AgentRuntimeWire.RunRequest = initialRequest
             private set
         @Volatile var preparing: Boolean = true
             private set
+        @Volatile var queued: Boolean = true
+            internal set
+        var pausedForScreenOff: Boolean = false
         @Volatile var guiStatus: GuiControlStatus? = null
         var overlayState: AgentOverlayState = AgentOverlayState.Initial
+        var backgroundScreenPhase: BackgroundScreenPhase? = null
+        var lastBackgroundApp: String? = null
+        var entryPersistence: java.util.concurrent.CompletableFuture<Void> = java.util.concurrent.CompletableFuture.completedFuture(null)
         var hasExecutedForegroundTool: Boolean = false
         var completedContext: CompletedContext? = null
         internal var predecessors: List<Run> = emptyList()
@@ -110,9 +117,10 @@ internal class RuntimeRunRegistry(private val capacity: Int = MAX_ACTIVE_RUNS) {
             handoffSource = request.handoff?.source.orEmpty(),
             phase = when {
                 session.isCommitting -> AgentRuntimeWire.RunPhase.Committing
+                session.controller.isPaused -> AgentRuntimeWire.RunPhase.Paused
+                queued -> AgentRuntimeWire.RunPhase.Queued
                 preparing -> AgentRuntimeWire.RunPhase.Preparing
                 guiStatus == GuiControlStatus.Waiting -> AgentRuntimeWire.RunPhase.WaitingForGui
-                session.controller.isPaused -> AgentRuntimeWire.RunPhase.Paused
                 else -> AgentRuntimeWire.RunPhase.Running
             },
         )
@@ -141,7 +149,7 @@ internal class RuntimeRunRegistry(private val capacity: Int = MAX_ACTIVE_RUNS) {
             return Admission.Rejected("CONVERSATION_BUSY", "当前会话仍有任务在运行，请等待完成或停止后再试")
         }
         if (runs.size >= capacity) {
-            return Admission.Rejected("RUN_CAPACITY_REACHED", "同时运行的任务已达上限，请等待任务完成后再试")
+            return Admission.Rejected("RUN_CAPACITY_REACHED", "运行和等待中的任务已达上限，请等待完成或取消排队任务后再试")
         }
         val run = create()
         check(run.runId == request.runId && run.conversationId == conversationId)
@@ -156,6 +164,14 @@ internal class RuntimeRunRegistry(private val capacity: Int = MAX_ACTIVE_RUNS) {
 
     fun contains(run: Run): Boolean = synchronized(lock) { runs[run.runId] === run }
 
+    /** No model, worker thread or GUI resources are created until a slot is claimed. */
+    fun claimNext(readyIds: Set<String>): Run? = synchronized(lock) {
+        if (runs.values.count { !it.queued } >= EXECUTION_LIMIT) return null
+        runs.values.firstOrNull {
+            it.queued && it.runId in readyIds && !it.session.controller.isCancelled && !it.session.controller.isPaused
+        }?.also { it.queued = false }
+    }
+
     fun finish(runId: String, session: AgentRuntimeSession): Run? = synchronized(lock) {
         runs[runId]?.takeIf { it.session === session }?.also {
             runs.remove(runId)
@@ -169,6 +185,7 @@ internal class RuntimeRunRegistry(private val capacity: Int = MAX_ACTIVE_RUNS) {
         .map(Run::snapshot)
 
     companion object {
+        const val EXECUTION_LIMIT = 2
         const val MAX_ACTIVE_RUNS = 8
     }
 }

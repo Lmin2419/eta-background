@@ -283,15 +283,17 @@ internal class McpToolExecutor(
 internal class RoutingToolExecutor(
     private val local: AgentModelClient.ToolExecutor,
     private val mcp: McpToolExecutor,
+    private val shadow: io.github.mangi.eta.agent.runtime.BackgroundScreenTools? = null,
 ) : AgentModelClient.ToolExecutor, AutoCloseable {
     override fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult {
         // etax: screen_* 后台虚拟屏工具，以及 terminal 里的界面类 shell 命令拦截
-        com.eta.shadow.ShadowTools.intercept(toolCall.name, toolCall.argumentsJson)
+        shadow?.execute(toolCall.name, toolCall.argumentsJson)
             ?.let { return AgentModelClient.ToolResult(it) }
         return if (mcp.contains(toolCall.name)) mcp.execute(toolCall) else local.execute(toolCall)
     }
 
     override fun close() {
+        runCatching { shadow?.close() }
         runCatching { mcp.close() }
         (local as? AutoCloseable)?.let { runCatching { it.close() } }
     }

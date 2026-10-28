@@ -125,6 +125,8 @@ internal fun AgentChatInputBar(
     pendingFileReferences: List<PendingFileReferenceUi>,
     queuedMessages: List<QueuedMessageUi> = emptyList(),
     inputSyncVersion: Int = 0,
+    focusInputRequest: String? = null,
+    onInputFocusHandled: () -> Unit = {},
     isEditingMessage: Boolean,
     editHasLaterTurns: Boolean,
     preserveFollowingMessages: Boolean,
@@ -150,6 +152,14 @@ internal fun AgentChatInputBar(
     val keyboard = LocalSoftwareKeyboardController.current
     val hapticFeedback = LocalHapticFeedback.current
     val focusRequester = remember { FocusRequester() }
+    val windowFocused = androidx.compose.ui.platform.LocalWindowInfo.current.isWindowFocused
+    LaunchedEffect(focusInputRequest, windowFocused) {
+        if (focusInputRequest != null && windowFocused) {
+            focusRequester.requestFocus()
+            keyboard?.show()
+            onInputFocusHandled()
+        }
+    }
     val textFieldState = rememberTextFieldState(initialText = input)
     val speechSettings by remember { SpeechSettingsRepository.settingsFlow() }.collectAsState(initial = null)
     val recognitionEnabled = speechSettings?.recognitionEnabled == true

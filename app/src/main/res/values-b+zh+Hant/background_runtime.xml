@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="background_task_completed">本輪已結束</string>
+    <string name="background_continue_instruction">繼續指令</string>
+    <string name="background_handoff_unavailable">背景頁面仍在使用或暫時無法接管，請查看聊天後重試。</string>
+    <string name="background_waiting_model">等待模型回覆</string>
+    <string name="background_waiting_app">等待應用程式空閒</string>
+    <string name="background_releasing_screen">正在回收螢幕</string>
+    <string name="background_opening_app">正在開啟應用程式</string>
+    <string name="background_restoring_display">正在結束螢幕任務</string>
+    <string name="background_notifications_title">背景任務通知</string>
+    <string name="background_notifications_enabled">已開啟，點選管理系統任務通知</string>
+    <string name="background_notifications_disabled">通知已關閉，開啟後可查看背景任務進度</string>
+    <string name="background_diagnostics_title">匯出執行診斷</string>
+    <string name="background_diagnostics_summary">儲存任務狀態與螢幕恢復結果，不含聊天、金鑰或截圖</string>
+    <string name="background_diagnostics_saved">診斷檔案已儲存</string>
+    <string name="background_diagnostics_failed">診斷檔案儲存失敗</string>
+    <string name="background_task_queued">等待執行</string>
+    <string name="background_screen_off_paused">已熄屏暫停，解鎖後繼續</string>
+</resources>

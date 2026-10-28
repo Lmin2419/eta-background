@@ -113,6 +113,19 @@ internal class AgentRuntimeSession(
 
     private fun recordForReplay(event: AgentEvent) {
         val projected = event.replayProjection() ?: return
+        if (projected is AgentEvent.SubagentProgress) {
+            val existingIndex = replayEvents.indexOfLast {
+                it is AgentEvent.SubagentProgress &&
+                    it.round == projected.round &&
+                    it.toolCallId == projected.toolCallId
+            }
+            if (existingIndex >= 0) {
+                replayEvents[existingIndex] = projected
+            } else {
+                replayEvents += projected
+            }
+            return
+        }
         if (projected !is AgentEvent.AssistantBlockDelta) {
             replayEvents += projected
             return

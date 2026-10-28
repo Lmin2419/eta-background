@@ -13,6 +13,62 @@ import org.junit.Test
 
 class AgentRunControllerTest {
     @Test
+    fun childrenInheritPauseIncludingChildrenLinkedDuringPause() {
+        val parent = AgentRunController()
+        val child = AgentRunController()
+        parent.pause()
+        val binding = parent.linkChild(child)
+        val started = CountDownLatch(1)
+        val finished = CountDownLatch(1)
+        val worker = thread {
+            started.countDown()
+            child.throwIfCancelled()
+            finished.countDown()
+        }
+        try {
+            assertTrue(started.await(1, TimeUnit.SECONDS))
+            assertTrue(child.isPaused)
+            assertFalse(finished.await(100, TimeUnit.MILLISECONDS))
+            parent.steer("parent only")
+            assertNull(child.pollSteeringMessage())
+            parent.resume()
+            assertTrue(finished.await(1, TimeUnit.SECONDS))
+            parent.pause()
+            assertTrue(child.isPaused)
+            parent.resume()
+            assertFalse(child.isPaused)
+        } finally {
+            parent.cancel()
+            binding.close()
+            worker.join(1_000)
+        }
+    }
+
+    @Test
+    fun parentCancellationWakesPausedChildAndClosedChildIsDetached() {
+        val parent = AgentRunController()
+        val detached = AgentRunController()
+        parent.linkChild(detached).close()
+        val child = AgentRunController()
+        val binding = parent.linkChild(child)
+        parent.pause()
+        val failure = AtomicReference<Throwable?>()
+        val worker = thread { runCatching(child::throwIfCancelled).exceptionOrNull()?.let(failure::set) }
+        try {
+            parent.cancel("screen task stopped")
+            worker.join(1_000)
+            assertFalse(worker.isAlive)
+            assertTrue(failure.get() is AgentRunCancelledException)
+            assertEquals("screen task stopped", child.cancellationReason)
+            assertFalse(detached.isPaused)
+            assertFalse(detached.isCancelled)
+        } finally {
+            parent.cancel()
+            binding.close()
+        }
+    }
+
+    @Test
     fun cancellationWakesLongRetryWait() {
         val controller = AgentRunController()
         val started = CountDownLatch(1)

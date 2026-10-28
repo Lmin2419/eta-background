@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="background_task_completed">Turn ended</string>
+    <string name="background_continue_instruction">Continue task</string>
+    <string name="background_handoff_unavailable">The background page is busy or could not be opened. Check the conversation and try again.</string>
+    <string name="background_waiting_model">Waiting for model</string>
+    <string name="background_waiting_app">Waiting for app</string>
+    <string name="background_releasing_screen">Releasing screen</string>
+    <string name="background_opening_app">Opening app</string>
+    <string name="background_restoring_display">Finishing screen task</string>
+    <string name="background_notifications_title">Background task notifications</string>
+    <string name="background_notifications_enabled">Enabled; tap to manage system task notifications</string>
+    <string name="background_notifications_disabled">Disabled; enable notifications to see background task progress</string>
+    <string name="background_diagnostics_title">Export runtime diagnostics</string>
+    <string name="background_diagnostics_summary">Saves task and resource cleanup states, without chats, keys or screenshots</string>
+    <string name="background_diagnostics_saved">Diagnostics saved</string>
+    <string name="background_diagnostics_failed">Could not save diagnostics</string>
+    <string name="background_task_queued">Waiting to run</string>
+    <string name="background_screen_off_paused">Paused while screen is off; unlock to resume</string>
+</resources>

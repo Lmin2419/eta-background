@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+    <string name="execution_next_task">Next task</string>
+    <string name="execution_chip_tasks">%1$d tasks</string>
+    <string name="overlay_stop_task">Stop task</string>
+    <string name="overlay_task_count">%1$d tasks · %2$s</string>
+    <string name="overlay_open_conversation">Open ETA conversation</string>
+    <string name="background_reply_failed">Could not send. Wait for this conversation to finish or open ETA to check its history and model, then retry.</string>
     <string name="conversation_stop_and_delete">Stop task and delete</string>
     <string name="conversation_stop_and_delete_message">The task in this conversation will stop first. The conversation will be deleted after its results are saved.</string>
     <string name="conversation_delete_save_failed">Could not save or confirm the task results. The conversation has not been deleted.</string>

@@ -11,6 +11,17 @@ class AgentTraceFormatterTest {
     private val formatter = AgentTraceFormatter()
 
     @Test
+    fun currentContextIsPresentedAsTimeAndLocationWithoutRequiringAnOkField() {
+        assertEquals("读取时间与位置", formatter.summarizeArguments(
+            AgentModelClient.ToolCall("context", "get_current_context", "{}"),
+        ))
+        assertEquals("2026-10-28 12:30 +08:00 · 系统定位已关闭", formatter.summarizeResult(
+            "get_current_context",
+            AgentModelClient.ToolResult("""{"datetime":"2026-10-28T12:30:00+08:00","location":{"status":"location_disabled"}}"""),
+        ))
+    }
+
+    @Test
     fun terminalLifecyclesHaveDistinctLabelsAndKeepCommandRedaction() {
         listOf(
             "terminal" to """{"command":"echo secret-marker"}""",
@@ -160,6 +171,71 @@ class AgentTraceFormatterTest {
         )
         assertEquals("操作已提交，效果未确认", formatter.summarizeResult("set_device_state", result))
         assertFalse(formatter.isSuccessResult(result))
+    }
+
+    @Test
+    fun deviceStateResultShowsObservedChangesWithoutInventingPreviousState() {
+        listOf(
+            """{"target":"auto_rotate","before":false,"after":true}""" to "自动旋转：关闭 → 开启",
+            """{"target":"auto_brightness","before":true,"after":false}""" to "自动亮度：开启 → 关闭",
+            """{"target":"wifi","before":true,"after":true}""" to "Wi-Fi：保持开启",
+            """{"target":"auto_rotate","before":false,"after":false}""" to "自动旋转：保持关闭",
+            """{"target":"auto_rotate","before":null,"after":true}""" to "自动旋转：已开启",
+        ).forEach { (observed, expectedSummary) ->
+            val result = JSONObject(observed).put("ok", true).put("verified", true)
+            assertEquals(expectedSummary, formatter.summarizeResult("set_device_state", AgentModelClient.ToolResult(result.toString())))
+        }
+    }
+
+    @Test
+    fun deviceStateResultRequiresVerifiedBooleanReadback() {
+        listOf(
+            """{"ok":true,"verified":true,"target":"auto_rotate","expected":true}""" to "完成",
+            """{"ok":true,"verified":true,"target":"auto_rotate","after":"false"}""" to "完成",
+            """{"ok":true,"verified":true,"target":"private-target","after":true}""" to "完成",
+            """{"ok":true,"verified":false,"target":"auto_rotate","before":false,"after":true}""" to "已执行，效果未确认",
+            """{"ok":false,"status":"unconfirmed","verified":false,"target":"auto_rotate","before":false,"after":false,"expected":true}""" to "操作已提交，效果未确认",
+            """{"ok":false,"code":"ROOT_REQUIRED","target":"auto_rotate","before":false,"after":true}""" to "失败 · code=ROOT_REQUIRED",
+        ).forEach { (content, expectedSummary) ->
+            assertEquals(expectedSummary, formatter.summarizeResult("set_device_state", AgentModelClient.ToolResult(content)))
+        }
+    }
+
+    @Test
+    fun skillResultsShowReturnedCountsAndWhenInstalledSkillsBecomeAvailable() {
+        val listed = AgentModelClient.ToolResult(
+            """{"ok":true,"count":99,"items":[{"name":"private-name","installed":true},{"path":"private-path","installed":false}]}""",
+        )
+        assertEquals("找到 2 个技能 · 1 个已安装", formatter.summarizeResult("skills_inspect_github", listed))
+        val installed = AgentModelClient.ToolResult(
+            """{"ok":true,"installed":[{"name":"private-name"}],"available":"next_turn","message":"private-message"}""",
+        )
+        assertEquals("已安装 1 个技能 · 下一轮可用", formatter.summarizeResult("skills_install_from_github", installed))
+    }
+
+    @Test
+    fun genericQueryResultsShowPageSizeWithoutExposingRecords() {
+        val result = AgentModelClient.ToolResult(
+            """{"ok":true,"count":99,"items":[{"content":"private-record"},{"value":"private-value"}],"has_more":true,"partial":true}""",
+            sensitive = true,
+        )
+        assertEquals("完成 · 返回 2 条结果 · 可继续读取 · 采集范围有限", formatter.summarizeResult("search_messages", result))
+    }
+
+    @Test
+    fun specializedResultsKeepFailureAndSubmissionSemantics() {
+        assertEquals("自动息屏：30 秒 → 2 分钟", formatter.summarizeResult("set_screen_timeout", AgentModelClient.ToolResult(
+            """{"ok":true,"verified":true,"before":30000,"after":120000}""",
+        )))
+        assertEquals("已提交计时请求 · 5 分钟", formatter.summarizeResult("set_timer", AgentModelClient.ToolResult(
+            """{"ok":true,"status":"dispatched","verified":false,"duration_seconds":300}""",
+        )))
+        assertEquals("已追加 512 字节", formatter.summarizeResult("write_file", AgentModelClient.ToolResult(
+            """{"ok":true,"mode":"append","bytes_written":512}""",
+        )))
+        assertEquals("失败 · code=FILE_INPUT_FAILED", formatter.summarizeResult("write_file", AgentModelClient.ToolResult(
+            """{"ok":false,"code":"FILE_INPUT_FAILED","mode":"append","bytes_written":512}""",
+        )))
     }
 
     @Test
@@ -484,6 +560,22 @@ class AgentTraceFormatterTest {
             ),
         )
         assertEquals("终端 · 关闭终端", closed)
+
+        val multiLineOutput = (1..12).joinToString("\n") { "line-$it" }
+        val multiLinePreview = formatter.summarizeResult(
+            "terminal",
+            AgentModelClient.ToolResult(
+                content = JSONObject()
+                    .put("ok", true)
+                    .put("tool", "terminal")
+                    .put("exit_code", 0)
+                    .put("stdout", multiLineOutput)
+                    .toString(),
+            ),
+        )
+        assertTrue(multiLinePreview.contains("line-10"))
+        assertFalse(multiLinePreview.contains("line-11"))
+        assertTrue(multiLinePreview.endsWith("\n…"))
     }
 
     @Test
@@ -507,7 +599,7 @@ class AgentTraceFormatterTest {
 
     @Test
     fun terminalResultPreviewIsBounded() {
-        val longOutput = (1..10).joinToString("\n") { "line-$it-${"x".repeat(100)}" }
+        val longOutput = (1..15).joinToString("\n") { "line-$it-${"x".repeat(100)}" }
         val summary = formatter.summarizeResult(
             "run_command",
             AgentModelClient.ToolResult(
@@ -522,8 +614,8 @@ class AgentTraceFormatterTest {
         )
 
         val previewLines = summary.lines()
-        // 状态行 + 最多 3 行预览 + 省略标记
-        assertTrue(previewLines.size <= 5)
+        // 状态行 + 最多 10 行预览 + 省略标记（与 ToolActivityDetail 的 MAX_RESULT_LINES = 12 对齐）
+        assertTrue(previewLines.size <= 12)
         assertTrue(summary.endsWith("…"))
         assertTrue(summary.length < longOutput.length)
     }

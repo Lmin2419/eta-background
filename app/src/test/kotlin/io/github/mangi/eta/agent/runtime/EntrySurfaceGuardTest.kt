@@ -62,11 +62,11 @@ class EntrySurfaceGuardTest {
         )
 
         assertNotNull(guard)
-        assertEquals("io.github.mangi.eta", guard?.targetPackageName)
+        assertEquals(io.github.mangi.eta.BuildConfig.APPLICATION_ID, guard?.targetPackageName)
         assertTrue(guard?.dismissOnce() == true)
         assertTrue(guard?.dismissOnce() == true)
         assertEquals(1, dismissCalls.get())
-        assertEquals(setOf("io.github.mangi.eta"), guard?.consumeScreenshotExcludedPackages())
+        assertEquals(setOf(io.github.mangi.eta.BuildConfig.APPLICATION_ID), guard?.consumeScreenshotExcludedPackages())
     }
 
     @Test

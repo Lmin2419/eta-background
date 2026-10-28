@@ -18,6 +18,37 @@ import javax.net.ssl.SSLHandshakeException
 
 class AgentModelRetryTest {
     @Test
+    fun disconnectedRequestDoesNotRetryWhilePausedAndResumesOnlyOnUserAction() {
+        val controller = AgentRunController()
+        val entered = java.util.concurrent.CountDownLatch(1)
+        val calls = java.util.concurrent.atomic.AtomicInteger()
+        val executor = java.util.concurrent.Executors.newSingleThreadExecutor()
+        try {
+            val result = executor.submit<Result<Unit>> {
+                runCatching {
+                    complete(AgentModelRetry { _, _ -> }, provider { _, _ ->
+                        if (calls.incrementAndGet() == 1) {
+                            controller.pause()
+                            entered.countDown()
+                            throw IOException("network unavailable while screen is off")
+                        }
+                        response()
+                    }, controller)
+                    Unit
+                }
+            }
+            assertTrue(entered.await(2, java.util.concurrent.TimeUnit.SECONDS))
+            assertThrows(java.util.concurrent.TimeoutException::class.java) {
+                result.get(150, java.util.concurrent.TimeUnit.MILLISECONDS)
+            }
+            assertEquals(1, calls.get())
+            controller.resume()
+            result.get(2, java.util.concurrent.TimeUnit.SECONDS).getOrThrow()
+            assertEquals(2, calls.get())
+        } finally { controller.cancel(); executor.shutdownNow() }
+    }
+
+    @Test
     fun retriesAreBoundedAndBackoffIsPerModelRound() {
         val delays = mutableListOf<Long>()
         val retry = AgentModelRetry { _, delay -> delays += delay }

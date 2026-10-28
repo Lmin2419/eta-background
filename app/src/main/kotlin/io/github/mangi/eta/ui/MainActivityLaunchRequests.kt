@@ -9,6 +9,7 @@ import io.github.mangi.eta.ui.voice.ACTION_SPEECH_SETTINGS
 internal data class MainActivityLaunchRequests(
     val assistantConversationKey: String? = null,
     val conversationId: String? = null,
+    val composeReply: Boolean = false,
     val archivedConversation: ArchivedConversationRequest? = null,
     val speechSettings: Boolean = false,
     val terminal: Boolean = false,
@@ -18,6 +19,8 @@ internal data class MainActivityLaunchRequests(
         ACTION_SPEECH_SETTINGS -> copy(speechSettings = true)
         MainActivity.ACTION_OPEN_CONVERSATION_ID -> copy(
             conversationId = intent.nonBlankExtra(MainActivity.EXTRA_CONVERSATION_ID),
+            composeReply = intent.nonBlankExtra(MainActivity.EXTRA_CONVERSATION_ID) != null &&
+                intent.getBooleanExtra(MainActivity.EXTRA_COMPOSE_REPLY, false),
         )
         MainActivity.ACTION_OPEN_ARCHIVED_CONVERSATION -> {
             val source = intent.nonBlankExtra(MainActivity.EXTRA_HANDOFF_SOURCE)
@@ -38,6 +41,7 @@ internal data class MainActivityLaunchRequests(
         outState.putBundle(STATE_KEY, Bundle().apply {
             putString("assistant_conversation_key", assistantConversationKey)
             putString("conversation_id", conversationId)
+            putBoolean("compose_reply", composeReply)
             putString("archive_source", archivedConversation?.source)
             putString("archive_conversation_key", archivedConversation?.conversationKey)
             putBoolean("speech_settings", speechSettings)
@@ -57,6 +61,7 @@ internal data class MainActivityLaunchRequests(
             return MainActivityLaunchRequests(
                 assistantConversationKey = saved.getString("assistant_conversation_key"),
                 conversationId = saved.getString("conversation_id"),
+                composeReply = saved.getBoolean("compose_reply"),
                 archivedConversation = if (source != null && key != null) {
                     ArchivedConversationRequest(source, key)
                 } else null,

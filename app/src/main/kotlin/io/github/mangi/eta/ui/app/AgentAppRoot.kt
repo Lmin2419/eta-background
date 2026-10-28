@@ -81,6 +81,7 @@ import io.github.mangi.eta.ui.screens.mcp.McpServersScreen
 import io.github.mangi.eta.ui.screens.memory.AgentMemoryScreen
 import io.github.mangi.eta.ui.screens.permissions.PermissionHealthScreen
 import io.github.mangi.eta.ui.screens.skills.AgentSkillsScreen
+import io.github.mangi.eta.ui.screens.subagent.SubagentSettingsScreen
 import io.github.mangi.eta.ui.screens.terminal.LinuxEnvironmentScreen
 import io.github.mangi.eta.ui.screens.terminal.LinuxFilesScreen
 import io.github.mangi.eta.ui.screens.terminal.SharedFoldersScreen
@@ -112,6 +113,7 @@ import top.yukonga.miuix.kmp.window.WindowDialog
 fun AgentAppRoot(
     assistantConversationKey: String? = null,
     requestedConversationId: String? = null,
+    composeReply: Boolean = false,
     onRequestedConversationOpened: () -> Unit = {},
     requestedArchivedConversation: ArchivedConversationRequest? = null,
     onArchivedConversationOpened: () -> Unit = {},
@@ -219,11 +221,14 @@ fun AgentAppRoot(
         RuntimeConfigRepository.ensureDefaults(EtaApp.serviceInstance)
     }
 
-    LaunchedEffect(requestedConversationId) {
+    var pendingComposeId by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(requestedConversationId, composeReply) {
         val conversationId = requestedConversationId ?: return@LaunchedEffect
-        agentState.selectConversation(conversationId)
-        conversationPaneOpen = false
-        navigator.popToHome()
+        if (agentState.openConversationById(conversationId)) {
+            pendingComposeId = conversationId.takeIf { composeReply }
+            conversationPaneOpen = false
+            navigator.popToHome()
+        }
         onRequestedConversationOpened()
     }
 
@@ -379,6 +384,8 @@ fun AgentAppRoot(
                         state = agentState.homeState,
                         modelPickerState = agentState.modelPickerState,
                         conversationKey = agentState.conversationPaneState.selectedConversationId,
+                        focusInputRequest = pendingComposeId?.takeIf { it == agentState.conversationPaneState.selectedConversationId },
+                        onInputFocusHandled = { pendingComposeId = null },
                         onAction = { action ->
                             when (action) {
                                 is AgentHomeAction.ReasoningEffortChanged ->
@@ -467,6 +474,9 @@ fun AgentAppRoot(
             }
             entry<AppRoute.WebToolsSettings>(swipeDismiss = swipeDismiss) {
                 WebToolsSettingsScreen(onBack = ::popRoute)
+            }
+            entry<AppRoute.Subagents>(swipeDismiss = swipeDismiss) {
+                SubagentSettingsScreen(onBack = ::popRoute)
             }
             entry<AppRoute.Skills>(swipeDismiss = swipeDismiss) {
                 LaunchedEffect(Unit) {

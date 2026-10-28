@@ -3,6 +3,12 @@ package io.github.mangi.eta.agent.model
 import io.github.mangi.eta.agent.runtime.AgentEvent
 import io.github.mangi.eta.agent.runtime.AgentRunController
 import io.github.mangi.eta.agent.roleplay.RoleplayRunContext
+import io.github.mangi.eta.agent.subagent.AgentSubagentToolCatalog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -48,6 +54,7 @@ internal class AgentLoop(
     private var availableToolNames = emptySet<String>()
     private val accumulatedReasoning = StringBuilder()
     private val sensitiveToolCallIds = linkedSetOf<String>()
+    private val toolBatchLock = Any()
     private var pendingToolImageMessage: JSONObject? = null
     private val context = AgentContextSession(
         config, messages, systemCount, operationId, provider, runController,
@@ -131,13 +138,6 @@ internal class AgentLoop(
                         ) {
                             accumulatedReasoning.append(providerEvent.delta)
                         }
-                        // etax: 回答正文流进通知栏（三种模型接口共用这一处）
-                        if (purpose == ProviderRequestPurpose.CHAT &&
-                            providerEvent is ProviderEvent.BlockDelta &&
-                            providerEvent.kind == AssistantBlockKind.TEXT
-                        ) {
-                            com.eta.shadow.ShadowNotice.append(providerEvent.delta)
-                        }
                         providerEvent.toAgentEvent(attemptRound)?.let(onEvent)
                     },
                     discardAttemptReasoning = { accumulatedReasoning.setLength(reasoningLengthBeforeRound) },
@@ -186,22 +186,11 @@ internal class AgentLoop(
             )
 
             if (toolCalls.isNotEmpty()) {
-                val outcomes = toolCalls.map { call ->
-                    val outcome = when (providerResponse.stopReason) {
-                        AssistantStopReason.TOOL_USE -> executeTool(round, call)
-                        AssistantStopReason.OUTPUT_LIMIT -> rejectedToolOutcome(
-                            round, call, "TRUNCATED_TOOL_CALL",
-                            "模型输出达到长度上限，工具参数可能不完整；本次调用未执行，请重新提交完整参数。",
-                        )
-                        else -> rejectedToolOutcome(
-                            round, call, "UNEXPECTED_TOOL_CALL",
-                            "模型在 ${providerResponse.stopReason.name} 终止状态下返回了工具调用；本批调用未执行，请重新规划。",
-                        )
-                    }
+                val outcomes = executeToolBatch(round, toolCalls, providerResponse.stopReason)
+                outcomes.forEach { outcome ->
                     appendMessage(AgentConversationCodec.toolResultMessage(outcome.call, outcome.result))
-                    publishTranscript()
-                    outcome
                 }
+                publishTranscript()
                 appendToolImages(round, outcomes)
                 publishTranscript()
                 round += 1
@@ -288,6 +277,113 @@ internal class AgentLoop(
         AgentConversationCodec.userTextMessage(steeringPrompt(supplement))
             .put("_eta_message_id", "user-$operationId-supplement-${++supplementIndex}")
 
+    private fun executeToolBatch(
+        round: Int,
+        toolCalls: List<AgentModelClient.ToolCall>,
+        stopReason: AssistantStopReason,
+    ): List<ToolOutcome> {
+        if (stopReason != AssistantStopReason.TOOL_USE) {
+            return toolCalls.map { call ->
+                when (stopReason) {
+                    AssistantStopReason.OUTPUT_LIMIT -> rejectedToolOutcome(
+                        round, call, "TRUNCATED_TOOL_CALL",
+                        "模型输出达到长度上限，工具参数可能不完整；本次调用未执行，请重新提交完整参数。",
+                    )
+                    else -> rejectedToolOutcome(
+                        round, call, "UNEXPECTED_TOOL_CALL",
+                        "模型在 ${stopReason.name} 终止状态下返回了工具调用；本批调用未执行，请重新规划。",
+                    )
+                }
+            }
+        }
+
+        val outcomes = mutableListOf<ToolOutcome>()
+        var index = 0
+        while (index < toolCalls.size) {
+            val current = toolCalls[index]
+            if (current.name == AgentSubagentToolCatalog.TOOL_NAME && current.name in availableToolNames) {
+                val parallelBatch = mutableListOf<AgentModelClient.ToolCall>()
+                while (
+                    index < toolCalls.size &&
+                    toolCalls[index].name == AgentSubagentToolCatalog.TOOL_NAME &&
+                    toolCalls[index].name in availableToolNames
+                ) {
+                    parallelBatch += toolCalls[index].copy(round = round)
+                    index += 1
+                }
+                if (parallelBatch.size == 1) {
+                    outcomes += executeTool(round, parallelBatch.single())
+                } else {
+                    outcomes += executeParallelSubagents(round, parallelBatch)
+                }
+            } else {
+                outcomes += executeTool(round, current.copy(round = round))
+                index += 1
+            }
+        }
+        return outcomes
+    }
+
+    private fun executeParallelSubagents(
+        round: Int,
+        calls: List<AgentModelClient.ToolCall>,
+    ): List<ToolOutcome> {
+        runController.throwIfCancelled()
+        calls.forEach { toolCall ->
+            synchronized(toolBatchLock) {
+                onEvent(
+                    AgentEvent.ToolStarted(
+                        round = round,
+                        toolCallId = toolCall.id,
+                        name = toolCall.name,
+                        argsPreview = traceFormatter.summarizeArguments(toolCall),
+                        command = traceFormatter.displayCommand(toolCall),
+                    ),
+                )
+            }
+        }
+        val outcomes = runBlocking(Dispatchers.IO) {
+            supervisorScope {
+                calls.map { toolCall ->
+                    async {
+                        val result = try {
+                            toolExecutor.execute(toolCall)
+                        } catch (throwable: Exception) {
+                            if (runController.isCancelled) {
+                                AgentModelClient.ToolResult(
+                                    content = JSONObject()
+                                        .put("ok", false)
+                                        .put("code", "SUBAGENT_CANCELLED")
+                                        .put("message", "已停止")
+                                        .toString(),
+                                )
+                            } else {
+                                AgentModelClient.ToolResult(
+                                    content = JSONObject()
+                                        .put("ok", false)
+                                        .put("code", "TOOL_ERROR")
+                                        .put("message", throwable.message ?: throwable.javaClass.simpleName)
+                                        .toString(),
+                                )
+                            }
+                        }
+                        synchronized(toolBatchLock) {
+                            if (result.sensitive || AgentSensitiveToolPolicy.isSensitive(toolCall.name)) {
+                                sensitiveToolCallIds += toolCall.id
+                            }
+                            if (!runController.isCancelled) {
+                                emitToolFinished(round, toolCall, result)
+                            }
+                        }
+                        ToolOutcome(toolCall, result)
+                    }
+                }.awaitAll()
+            }
+        }
+        runController.throwIfCancelled()
+        return outcomes
+    }
+
     private fun executeTool(
         round: Int,
         toolCall: AgentModelClient.ToolCall,
@@ -301,18 +397,19 @@ internal class AgentLoop(
                 message = "工具未在本轮能力目录中提供，请使用当前可用工具",
             )
         }
+        val roundCall = if (toolCall.round == round) toolCall else toolCall.copy(round = round)
         onEvent(
             AgentEvent.ToolStarted(
                 round = round,
-                toolCallId = toolCall.id,
-                name = toolCall.name,
-                argsPreview = traceFormatter.summarizeArguments(toolCall),
-                command = traceFormatter.displayCommand(toolCall),
+                toolCallId = roundCall.id,
+                name = roundCall.name,
+                argsPreview = traceFormatter.summarizeArguments(roundCall),
+                command = traceFormatter.displayCommand(roundCall),
             )
         )
 
         val result = try {
-            toolExecutor.execute(toolCall)
+            toolExecutor.execute(roundCall)
         } catch (throwable: Exception) {
             runController.throwIfCancelled()
             AgentModelClient.ToolResult(
@@ -323,12 +420,12 @@ internal class AgentLoop(
                     .toString(),
             )
         }
-        if (result.sensitive || AgentSensitiveToolPolicy.isSensitive(toolCall.name)) {
-            sensitiveToolCallIds += toolCall.id
+        if (result.sensitive || AgentSensitiveToolPolicy.isSensitive(roundCall.name)) {
+            sensitiveToolCallIds += roundCall.id
         }
 
-        emitToolFinished(round, toolCall, result)
-        return ToolOutcome(toolCall, result)
+        emitToolFinished(round, roundCall, result)
+        return ToolOutcome(roundCall, result)
     }
 
     private fun rejectedToolOutcome(
@@ -373,6 +470,7 @@ internal class AgentLoop(
                 imageCount = result.images.size,
                 imageBytes = result.images.sumOf { it.bytes },
                 success = traceFormatter.isSuccessResult(result),
+                command = result.command,
             )
         )
     }

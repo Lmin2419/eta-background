@@ -10,6 +10,7 @@ import kotlin.concurrent.withLock
 
 internal class AgentRunController {
     private val resources = CopyOnWriteArraySet<CancellableResource>()
+    private val pauseListeners = CopyOnWriteArraySet<(Boolean) -> Unit>()
 
     @Volatile
     private var cancelled = false
@@ -27,8 +28,15 @@ internal class AgentRunController {
     val isPaused: Boolean
         get() = paused
 
-    fun cancel() {
+    @Volatile var resumeGeneration: Long = 0
+        private set
+
+    @Volatile var cancellationReason: String = "已停止"
+        private set
+
+    fun cancel(reason: String = "已停止") {
         lock.withLock {
+            if (!cancelled) cancellationReason = reason
             cancelled = true
             acceptingSteering = false
             steeringMessages.clear()
@@ -76,7 +84,10 @@ internal class AgentRunController {
      * 在工作线程的检查点调用，不会阻塞调用方线程。
      */
     fun pause() {
-        lock.withLock { paused = true }
+        lock.withLock {
+            paused = true
+            pauseListeners.forEach { it(true) }
+        }
     }
 
     /**
@@ -84,8 +95,24 @@ internal class AgentRunController {
      */
     fun resume() {
         lock.withLock {
+            if (paused) resumeGeneration++
             paused = false
+            pauseListeners.forEach { it(false) }
             pauseCondition.signalAll()
+        }
+    }
+
+    /** Child model calls obey the parent's screen-off/manual pause without sharing steering. */
+    fun linkChild(child: AgentRunController): ResourceBinding {
+        val cancellation = register { child.cancel(cancellationReason) }
+        val listener: (Boolean) -> Unit = { if (it) child.pause() else child.resume() }
+        lock.withLock {
+            pauseListeners.add(listener)
+            if (paused) child.pause()
+        }
+        return ResourceBinding {
+            lock.withLock { pauseListeners.remove(listener) }
+            cancellation.close()
         }
     }
 
@@ -138,7 +165,10 @@ internal class AgentRunController {
     private class CancellableResource(private val cancelBlock: () -> Unit) {
         private val cancelled = AtomicBoolean(false)
 
-        fun cancel() {
+        @Volatile var cancellationReason: String = "已停止"
+        private set
+
+    fun cancel(reason: String = "已停止") {
             if (cancelled.compareAndSet(false, true)) cancelBlock()
         }
     }

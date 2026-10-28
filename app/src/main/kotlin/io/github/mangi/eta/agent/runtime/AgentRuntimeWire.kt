@@ -119,6 +119,7 @@ internal object AgentRuntimeWire {
     private const val KEY_DEVICE_DIRECT_TOOLS = "device_direct_tools"
     private const val KEY_DEVICE_SENSITIVE_READ_TOOLS = "device_sensitive_read_tools"
     private const val KEY_DEVICE_SENSITIVE_ACTION_TOOLS = "device_sensitive_action_tools"
+    private const val KEY_SUBAGENT_TOOLS = "subagent_tools"
     private const val KEY_THINKING_ENABLED = "thinking_enabled"
     private const val KEY_REASONING_EFFORT = "reasoning_effort"
     private const val KEY_REASONING_CAPABILITIES_JSON = "reasoning_capabilities_json"
@@ -184,6 +185,7 @@ internal object AgentRuntimeWire {
     }
 
     enum class RunPhase(val wireValue: String) {
+        Queued("queued"),
         Preparing("preparing"),
         Running("running"),
         WaitingForGui("waiting_for_gui"),
@@ -342,6 +344,7 @@ internal object AgentRuntimeWire {
         putBoolean(KEY_DEVICE_DIRECT_TOOLS, request.config.deviceDirectTools)
         putBoolean(KEY_DEVICE_SENSITIVE_READ_TOOLS, request.config.deviceSensitiveReadTools)
         putBoolean(KEY_DEVICE_SENSITIVE_ACTION_TOOLS, request.config.deviceSensitiveActionTools)
+        putBoolean(KEY_SUBAGENT_TOOLS, request.config.subagentTools)
         putBoolean(KEY_THINKING_ENABLED, request.config.effectiveReasoningEffort.enablesReasoning)
         putString(KEY_REASONING_EFFORT, request.config.effectiveReasoningEffort.wireValue)
         request.config.reasoningCapabilities?.let {
@@ -493,6 +496,10 @@ internal object AgentRuntimeWire {
                     bundle.getBoolean(KEY_DEVICE_SENSITIVE_READ_TOOLS, false),
                 deviceSensitiveActionTools =
                     bundle.getBoolean(KEY_DEVICE_SENSITIVE_ACTION_TOOLS, false),
+                subagentTools = bundle.getBoolean(
+                    KEY_SUBAGENT_TOOLS,
+                    Prefs.Keys.BOOLEAN_DEFAULTS.getValue(Prefs.Keys.AGENT_SUBAGENT_ENABLED),
+                ),
                 thinkingEnabled = bundle.getBoolean(KEY_THINKING_ENABLED),
                 reasoningEffort = if (bundle.containsKey(KEY_REASONING_EFFORT)) {
                     ReasoningEffort.fromWireValue(bundle.getString(KEY_REASONING_EFFORT))
@@ -805,6 +812,16 @@ internal object AgentRuntimeWire {
                 putInt("image_count", event.imageCount)
                 putInt("image_bytes", event.imageBytes)
                 event.success?.let { putBoolean("success", it) }
+                event.command?.let { putString("command", it.boundedText(MAX_DRAIN_CONTENT_CHARS)) }
+            }
+
+            is AgentEvent.SubagentProgress -> {
+                putString(KEY_TYPE, "subagent_progress")
+                putInt("round", event.round)
+                putString("tool_call_id", event.toolCallId)
+                putString("subagent_id", event.subagentId)
+                putString("subagent_type", event.subagentType)
+                putString("snapshot_json", event.snapshotJson.boundedText(MAX_DRAIN_CONTENT_CHARS))
             }
 
             is AgentEvent.HostedToolStarted -> {
@@ -956,6 +973,15 @@ internal object AgentRuntimeWire {
             imageBytes = bundle.getInt("image_bytes"),
             // 旧版本 Runtime 不发送 success，缺省为 null 由消费端回退判断
             success = if (bundle.containsKey("success")) bundle.getBoolean("success") else null,
+            command = bundle.getString("command"),
+        )
+
+        "subagent_progress" -> AgentEvent.SubagentProgress(
+            round = bundle.getInt("round"),
+            toolCallId = bundle.getString("tool_call_id").orEmpty(),
+            subagentId = bundle.getString("subagent_id").orEmpty(),
+            subagentType = bundle.getString("subagent_type").orEmpty(),
+            snapshotJson = bundle.getString("snapshot_json").orEmpty(),
         )
 
         "hosted_tool_started" -> AgentEvent.HostedToolStarted(

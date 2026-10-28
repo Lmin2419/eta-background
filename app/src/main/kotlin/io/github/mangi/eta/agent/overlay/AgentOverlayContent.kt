@@ -54,7 +54,10 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -281,7 +284,7 @@ internal fun OverlaySupplementInput(
 
 /**
  * 任务结束后的结果卡片：底部浮起的圆角面板，顶部抓手提示可下滑关闭。
- * 关闭途径有三条：下滑、系统返回（由 Service 注册）、底部"完成"按钮；
+ * 关闭途径：无交互自动收起、下滑、系统返回（由 Service 注册）、底部"完成"按钮；
  * 次要操作"复制"放在同一行，正文可滚动，过长时底部渐隐提示还有内容。
  */
 @Composable
@@ -310,7 +313,16 @@ internal fun AgentResultCard(
     )
     val content = state.detailText.ifBlank { state.status.localizedText() }
     val density = LocalDensity.current
+    val scroll = rememberScrollState()
     var dragOffset by remember { mutableFloatStateOf(0f) }
+    var touching by remember { mutableStateOf(false) }
+    var interactionTick by remember { mutableIntStateOf(0) }
+    val interacting = touching || scroll.isScrollInProgress || dragOffset > 0f
+    LaunchedEffect(visible, interacting, interactionTick) {
+        if (!visible || interacting) return@LaunchedEffect
+        delay(ResultCardAutoDismissMs)
+        close()
+    }
     val settledOffset by animateFloatAsState(
         targetValue = dragOffset,
         animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMedium),
@@ -339,6 +351,17 @@ internal fun AgentResultCard(
                     .shadow(16.dp, RoundedCornerShape(ResultCardCorner), ambientColor = Color.Black.copy(alpha = 0.18f))
                     .clip(RoundedCornerShape(ResultCardCorner))
                     .background(MiuixTheme.colorScheme.surface)
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            awaitPointerEvent(PointerEventPass.Initial)
+                            touching = true
+                            do {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                            } while (event.changes.any { it.pressed })
+                            touching = false
+                            interactionTick++
+                        }
+                    }
                     .pointerInput(Unit) {
                         detectVerticalDragGestures(
                             onDragEnd = { if (dragOffset > dismissThreshold) close() else dragOffset = 0f },
@@ -386,7 +409,6 @@ internal fun AgentResultCard(
                 }
 
                 Box(modifier = Modifier.weight(1f, fill = false)) {
-                    val scroll = rememberScrollState()
                     StaticMarkdown(
                         content = content,
                         tone = MarkdownTone.Answer,
@@ -467,3 +489,4 @@ private fun ResultCardActions(content: String, onOpenEta: () -> Unit, onDone: ()
 
 private val ResultCardCorner = 28.dp
 private const val ResultCardExitMs = 200
+private const val ResultCardAutoDismissMs = 8_000L

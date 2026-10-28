@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.browser.BrowserSessionSnapshot
 import io.github.mangi.eta.agent.overlay.toolDisplayName
+import io.github.mangi.eta.agent.subagent.AgentSubagentToolCatalog
+import io.github.mangi.eta.agent.subagent.SubagentActivitySnapshot
 import io.github.mangi.eta.ui.model.ToolActivityMessageUi
 import io.github.mangi.eta.ui.model.ToolActivityStatusUi
 import kotlinx.coroutines.Dispatchers
@@ -102,6 +104,29 @@ internal fun ToolActivityRow(
     modifier: Modifier = Modifier,
     showTitle: Boolean = true,
 ) {
+    val running = message.status == ToolActivityStatusUi.Running
+    val elapsedSeconds = rememberRunningSeconds(message.id, running)
+    if (message.toolName == AgentSubagentToolCatalog.TOOL_NAME) {
+        val snapshot = remember(message.command, message.argumentsSummary, message.resultSummary, message.status) {
+            SubagentActivitySnapshot.decode(message.command) ?: SubagentActivitySnapshot(
+                subagentType = message.argumentsSummary.substringBefore(" · ").ifBlank { "subagent" },
+                description = message.argumentsSummary.substringAfter(" · ", message.argumentsSummary),
+                status = when (message.status) {
+                    ToolActivityStatusUi.Running -> SubagentActivitySnapshot.STATUS_RUNNING
+                    ToolActivityStatusUi.Failed -> SubagentActivitySnapshot.STATUS_FAILED
+                    else -> SubagentActivitySnapshot.STATUS_COMPLETED
+                },
+                output = message.resultSummary.orEmpty(),
+            )
+        }
+        SubagentActivityRow(
+            message = message,
+            snapshot = snapshot,
+            elapsedSeconds = elapsedSeconds,
+            modifier = modifier,
+        )
+        return
+    }
     var expanded by rememberSaveable(message.id) { mutableStateOf(false) }
     // 只有「当前浏览器」条目订阅实时会话快照，避免每个工具行都跟随快照重组。
     val browser = LocalAgentBrowserSession.current
@@ -110,7 +135,6 @@ internal fun ToolActivityRow(
     } else {
         null
     }
-    val running = message.status == ToolActivityStatusUi.Running
     val failed = message.status == ToolActivityStatusUi.Failed
     val title = message.argumentsSummary.ifBlank { toolDisplayName(message.toolName) }
     val outcome = remember(message.status, message.resultSummary) { message.outcomeLine() }
@@ -128,7 +152,6 @@ internal fun ToolActivityRow(
     val hasDetail = !message.command.isNullOrBlank() ||
         resultDetail != null ||
         showBrowserShortcut
-    val elapsedSeconds = rememberRunningSeconds(message.id, running)
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(

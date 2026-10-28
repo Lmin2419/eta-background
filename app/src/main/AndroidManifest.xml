@@ -83,6 +83,15 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".agent.runtime.CompletedAppActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/Theme.EtaVoiceAssistBridge" />
+
+        <activity
             android:name=".agent.voice.EtaVoiceAssistActivity"
             android:excludeFromRecents="true"
             android:exported="true"

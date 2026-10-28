@@ -50,6 +50,7 @@ internal object AgentRuntimeRequestConfigResolver {
             deviceDirectTools = entry.deviceDirectTools,
             deviceSensitiveReadTools = entry.deviceSensitiveReadTools,
             deviceSensitiveActionTools = entry.deviceSensitiveActionTools,
+            subagentTools = entry.subagentTools,
             thinkingEnabled = effort.enablesReasoning,
             reasoningEffort = effort,
             autoCompactionEnabled = runtimeConfig.autoCompactionEnabled && entry.autoCompactionEnabled,

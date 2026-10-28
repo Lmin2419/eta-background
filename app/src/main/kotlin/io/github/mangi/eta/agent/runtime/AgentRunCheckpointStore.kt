@@ -36,7 +36,8 @@ internal object AgentRunCheckpointStore {
         now: Long = System.currentTimeMillis(),
     ): Boolean {
         val handoff = request.handoff ?: return false
-        if (handoff.source != AgentRuntimeWire.AGENT_UI_HANDOFF_SOURCE) return false
+        if (handoff.source != AgentRuntimeWire.AGENT_UI_HANDOFF_SOURCE &&
+            AssistantRunRecovery.payload(handoff) == null) return false
         val runId = request.runId.takeIf(String::isNotBlank) ?: return false
         runBlocking(Dispatchers.IO) {
             EtaDatabase.get(context.applicationContext).runtimeRunDao().replaceInFlightRun(
@@ -54,6 +55,7 @@ internal object AgentRunCheckpointStore {
                 )
             )
         }
+        if (AssistantRunRecovery.payload(handoff) != null) AssistantRunRecovery.changed()
         return true
     }
 

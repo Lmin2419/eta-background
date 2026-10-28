@@ -15,6 +15,21 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = android.app.Application::class)
 class MainActivityLaunchRequestsTest {
+    @Test fun `继续指令保留会话与输入焦点请求且不会在消费后重放`() {
+        val intent = Intent(MainActivity.ACTION_OPEN_CONVERSATION_ID)
+            .putExtra(MainActivity.EXTRA_CONVERSATION_ID, "game-chat")
+            .putExtra(MainActivity.EXTRA_COMPOSE_REPLY, true)
+        val pending = MainActivityLaunchRequests().accept(intent)
+        assertEquals("game-chat", pending.conversationId)
+        assertEquals(true, pending.composeReply)
+        assertEquals(pending, MainActivityLaunchRequests.restore(savedState(pending), intent))
+        val consumed = pending.copy(conversationId = null, composeReply = false)
+        assertEquals(consumed, MainActivityLaunchRequests.restore(savedState(consumed), intent))
+        val history = pending.accept(Intent(MainActivity.ACTION_OPEN_CONVERSATION_ID)
+            .putExtra(MainActivity.EXTRA_CONVERSATION_ID, "another-chat"))
+        assertEquals(false, history.composeReply)
+    }
+
     @Test
     fun `重建不重新执行已消费的启动会话`() {
         val originalIntent = Intent(EtaAssistantOverlayService.ACTION_OPEN_CONVERSATION)

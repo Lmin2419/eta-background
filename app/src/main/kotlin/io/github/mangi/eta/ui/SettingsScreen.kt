@@ -7,6 +7,8 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.AccessibilityNew
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.GppMaybe
 import androidx.compose.material.icons.rounded.Hearing
+import androidx.compose.material.icons.rounded.Hub
 import androidx.compose.material.icons.rounded.ImportContacts
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Inventory
@@ -61,6 +64,8 @@ import io.github.mangi.eta.EtaApp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.accessibility.AccessibilityProtectionClient
 import io.github.mangi.eta.agent.accessibility.AgentAccessibilityService
+import io.github.mangi.eta.agent.runtime.AgentExecutionService
+import io.github.mangi.eta.agent.runtime.RuntimeDiagnostics
 import io.github.mangi.eta.config.PowerAssistantTarget
 import io.github.mangi.eta.config.Prefs
 import io.github.mangi.eta.data.repository.ProviderRepository
@@ -115,6 +120,20 @@ private fun SettingsPageContent(
     onBack: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
+    var exportingDiagnostics by remember { mutableStateOf(false) }
+    var taskNotificationsEnabled by remember { mutableStateOf(AgentExecutionService.taskNotificationsEnabled(context)) }
+    val exportDiagnostics = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) coroutineScope.launch {
+            exportingDiagnostics = true
+            val saved = runCatching { withContext(Dispatchers.IO) {
+                val report = RuntimeDiagnostics.snapshot(context.applicationContext)
+                requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).bufferedWriter().use { it.write(report) }
+            } }.isSuccess
+            exportingDiagnostics = false
+            Toast.makeText(context, context.getString(if (saved) R.string.background_diagnostics_saved
+                else R.string.background_diagnostics_failed), Toast.LENGTH_SHORT).show()
+        }
+    }
     val capabilities = rememberDeviceCapabilities()
     val enhancementHistory = remember(context.applicationContext) { EnhancementSettingsHistory(context) }
     var hasConnectedFramework by remember { mutableStateOf(enhancementHistory.hasConnected) }
@@ -181,6 +200,7 @@ private fun SettingsPageContent(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
+                taskNotificationsEnabled = AgentExecutionService.taskNotificationsEnabled(context)
                 overlayGranted = android.provider.Settings.canDrawOverlays(context)
                 accessibilityGranted = isAgentAccessibilityEnabled(context)
                 accessibilityProtectionEnabled =
@@ -303,6 +323,18 @@ private fun SettingsPageContent(
                             )
                         },
                         onClick = { onNavigate(AppRoute.Memory) },
+                    )
+
+                    EtaPreferenceDivider()
+                    EtaArrowPreference(
+                        title = "Subagent",
+                        startAction = {
+                            EtaPreferenceIcon(
+                                icon = Icons.Rounded.Hub,
+                                tint = EtaPreferenceColors.Blue,
+                            )
+                        },
+                        onClick = { onNavigate(AppRoute.Subagents) },
                     )
 
                     EtaPreferenceDivider()
@@ -779,6 +811,23 @@ private fun SettingsPageContent(
             item(key = "section_about") {
                 EtaPreferenceGroupTitle(stringResource(R.string.ui_about_bed172))
                 EtaPreferenceGroup {
+                    EtaArrowPreference(
+                        title = stringResource(R.string.background_notifications_title),
+                        summary = stringResource(if (taskNotificationsEnabled) R.string.background_notifications_enabled
+                            else R.string.background_notifications_disabled),
+                        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.Info, tint = EtaPreferenceColors.Blue) },
+                        onClick = { context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)) },
+                    )
+                    EtaPreferenceDivider()
+                    EtaArrowPreference(
+                        title = stringResource(R.string.background_diagnostics_title),
+                        summary = stringResource(R.string.background_diagnostics_summary),
+                        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.BugReport, tint = EtaPreferenceColors.Orange) },
+                        enabled = !exportingDiagnostics,
+                        onClick = { exportDiagnostics.launch("Etax-diagnostics-${System.currentTimeMillis()}.json") },
+                    )
+                    EtaPreferenceDivider()
                     EtaPreference(
                         title = stringResource(R.string.ui_about_version_title),
                         summary = appVersionSummary,

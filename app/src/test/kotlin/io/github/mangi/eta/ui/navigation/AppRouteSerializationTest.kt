@@ -26,6 +26,7 @@ class AppRouteSerializationTest {
             AppRoute.Tools,
             AppRoute.WebToolsSettings,
             AppRoute.Skills,
+            AppRoute.Subagents,
             AppRoute.Characters,
             AppRoute.CharacterDetail("character"),
             AppRoute.CharacterEditor(),

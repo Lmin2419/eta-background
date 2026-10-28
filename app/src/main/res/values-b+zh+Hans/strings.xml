@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+    <string name="execution_next_task">切换任务</string>
+    <string name="execution_chip_tasks">%1$d 个任务</string>
+    <string name="overlay_stop_task">停止当前任务</string>
+    <string name="overlay_task_count">%1$d 个任务 · %2$s</string>
+    <string name="overlay_open_conversation">打开 ETA 会话</string>
+    <string name="background_reply_failed">未能发送，请等待本会话任务结束，或打开 ETA 检查记录和模型配置后重试。</string>
   <string name="conversation_stop_and_delete">停止任务并删除</string>
   <string name="conversation_stop_and_delete_message">此会话的任务将先停止，结果保存后删除会话。</string>
   <string name="conversation_delete_save_failed">无法保存或确认任务结果，会话尚未删除。</string>

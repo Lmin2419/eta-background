@@ -8,6 +8,7 @@ import io.github.mangi.eta.ui.voice.SpeechPlaybackErrors
 import io.github.mangi.eta.ui.voice.LocalSpeechPlayback
 import io.github.mangi.eta.ui.voice.LocalSpeechPlaybackEnabled
 import android.os.PowerManager
+import android.animation.ValueAnimator
 import android.Manifest
 import android.app.ActivityOptions
 import android.app.PendingIntent
@@ -120,7 +121,7 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
             },
         )
     }
-    private val conversationKey = "eta_assistant_${UUID.randomUUID()}"
+    private var conversationKey = "eta_assistant_${UUID.randomUUID()}"
     private var conversationHistory = emptyList<AgentModelClient.ConversationMessage>()
 
     private var windowManager: WindowManager? = null
@@ -222,7 +223,9 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
         }
         dismissalJob?.cancel()
         dismissalJob = null
-        detachCurrentRun()   // ⑤: 重新唤起助手时，旧任务脱钩继续后台跑，不取消
+        detachCurrentRun()   // 独立唤醒不替换仍在后台执行的会话
+        conversationKey = "eta_assistant_${UUID.randomUUID()}"
+        conversationHistory = emptyList()
         if (entryScreenContext?.id != screenContextId) {
             EtaAssistantScreenContexts.release(entryScreenContext?.id)
             entryScreenContext = EtaAssistantScreenContexts.find(screenContextId)
@@ -254,7 +257,7 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
     }
 
     private fun presentEntryInput() {
-        if (!entryInputPending || windowView == null || activeRunId != null) return
+        if (!entryInputPending || handoffExitRequested || windowView == null || activeRunId != null) return
         val settings = speechSettings ?: return
         val canRecord = settings.recognitionEnabled &&
             checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -334,13 +337,13 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
                         recognitionEnabled = speechSettings?.recognitionEnabled,
                         entranceComplete = entryEntranceComplete,
                         onEntranceFinished = {
-                            if (generation == entryGeneration) {
+                            if (generation == entryGeneration && !handoffExitRequested) {
                                 entryEntranceComplete = true
                                 presentEntryInput()
                             }
                         },
                         onContentReady = {
-                            if (generation == entryGeneration) {
+                            if (generation == entryGeneration && !handoffExitRequested) {
                                 entryContentReady = true
                                 presentEntryInput()
                             }
@@ -369,6 +372,7 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
                             },
                         handoffRunning = handoffInProgress,
                         exitRequested = handoffExitRequested,
+                        onExitFinished = { finishDismissal(generation) },
                         onOpenConversation = ::openConversation,
                     )
                 }
@@ -799,21 +803,49 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
     }
 
     private fun dismissAndStop() {
-        if (dismissalJob?.isActive == true) return
-        entryGeneration++
+        if (handoffExitRequested) return
+        val generation = entryGeneration
+        entryInputPending = false
         EtaAssistantScreenContexts.release(entryScreenContext?.id)
         entryScreenContext = null
         detachCurrentRun()   // ⑤: 关闭/返回半窗也只脱钩，任务后台继续，停止走通知
         handoffExitRequested = true
+        releaseWindowInput()
+        // Compose 在实际退出动画结束后关闭窗口。兜底只负责无帧/窗口丢失的情况，
+        // 并遵守系统动画倍率；不能固定延时截断慢速动画。
         dismissalJob = scope.launch(Dispatchers.Main.immediate) {
-            delay(HANDOFF_EXIT_DURATION_MS)
-            removeWindow()
-            stopSelf()
+            delay((ASSISTANT_EXIT_DURATION_MS * ValueAnimator.getDurationScale()).toLong()
+                .plus(250L).coerceIn(250L, 3_000L))
+            finishDismissal(generation)
         }
     }
 
+    private fun releaseWindowInput() {
+        val view = windowView ?: return
+        entryInputPending = false
+        (getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)
+            ?.hideSoftInputFromWindow(view.windowToken, 0)
+        view.clearFocus()
+        val params = windowParams ?: return
+        params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        runCatching { windowManager?.updateViewLayout(view, params) }
+    }
+
+    private fun finishDismissal(generation: Long) {
+        if (generation != entryGeneration || !handoffExitRequested) return
+        // 使动画回调与兜底回调互斥，也防止旧窗口的回调关闭快速重新唤起的新窗口。
+        entryGeneration++
+        dismissalJob?.cancel()
+        dismissalJob = null
+        handoffInProgress = false
+        removeWindow()
+        stopSelf()
+    }
+
     private fun openConversation() {
-        if (handoffInProgress || activeRunId != null || uiState.messages.isEmpty()) return
+        if (handoffInProgress || handoffExitRequested || uiState.messages.isEmpty()) return
+        val generation = entryGeneration
         handoffInProgress = true
         AndroidAgentLogger.info("Eta assistant handoff requested")
         updateSoftInput(visible = false)
@@ -861,7 +893,7 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
             }
         scope.launch(Dispatchers.Main.immediate) {
             delay(HANDOFF_TIMEOUT_MS)
-            if (handoffInProgress) {
+            if (generation == entryGeneration && handoffInProgress && !handoffExitRequested) {
                 AndroidAgentLogger.warn("Eta assistant handoff timed out waiting for chat")
                 handoffInProgress = false
             }
@@ -872,13 +904,7 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
         if (!handoffInProgress) return
         if (handoffExitRequested) return
         AndroidAgentLogger.info("Eta assistant handoff chat ready")
-        handoffExitRequested = true
-        scope.launch(Dispatchers.Main.immediate) {
-            delay(HANDOFF_EXIT_DURATION_MS)
-            handoffInProgress = false
-            removeWindow()
-            stopSelf()
-        }
+        dismissAndStop()
     }
 
     internal companion object {
@@ -888,7 +914,6 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
         private const val EXTRA_SCREEN_CONTEXT_ID = "assistant_screen_context_id"
         private const val ACTION_HANDOFF_READY = "io.github.mangi.eta.agent.voice.HANDOFF_READY"
         private const val HANDOFF_TIMEOUT_MS = 5_000L
-        private const val HANDOFF_EXIT_DURATION_MS = 220L
         private const val HANDOFF_REQUEST_CODE = 0x455441
         private const val LEGACY_STOPPED_ERROR = "已停止"
         private const val SYNTHETIC_STOPPED = "eta_status:stopped"
@@ -949,9 +974,10 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
         }
 
         fun dismiss(context: Context) {
-            context.applicationContext.stopService(
-                Intent(context.applicationContext, EtaAssistantOverlayService::class.java),
-            )
+            // Home/系统返回也走同一退出动画；stopService 会立刻销毁 Compose、跳过过渡。
+            val service = activeService ?: return
+            if (Looper.myLooper() == Looper.getMainLooper()) service.dismissAndStop()
+            else mainHandler.post { if (activeService === service) service.dismissAndStop() }
         }
 
         fun notifyHandoffReady(context: Context) {

@@ -6,6 +6,14 @@ import org.junit.Test
 
 class AgentOverlayStateTest {
     @Test
+    fun waitingForModelEndsWhenResponseStarts() {
+        val waiting = AgentOverlayState.Initial.applyEvent(AgentEvent.ProviderRequestStarted(1))
+        assertEquals(AgentOverlayStatus.WaitingForModel, waiting.status)
+        assertEquals(AgentOverlayStatus.Reasoning,
+            waiting.applyEvent(AgentEvent.ProviderResponseStarted(1, 200)).status)
+    }
+
+    @Test
     fun internalStepsCollapseIntoThinkingAndDoNotFlickerDuringTools() {
         var state = AgentOverlayState.Initial.applyEvent(AgentEvent.RunStarted(0, 0, 10, false))
         val internalSteps = listOf(

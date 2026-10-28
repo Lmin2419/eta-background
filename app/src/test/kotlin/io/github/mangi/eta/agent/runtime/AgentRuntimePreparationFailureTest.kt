@@ -7,6 +7,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -17,6 +18,35 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class AgentRuntimePreparationFailureTest {
+    @Test
+    fun cancellationWaitsForEntryPersistenceBeforePublishingTerminalResult() {
+        val context = RuntimeEnvironment.getApplication()
+        EtaDatabase.closeForTests()
+        context.deleteDatabase("eta.db")
+        val serviceController = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        val write = java.util.concurrent.CompletableFuture<Void>()
+        try {
+            val delivered = CountDownLatch(1)
+            val request = AgentRuntimeWire.RunRequest(
+                runId = "cancel-during-entry-write", prompt = "测试",
+                config = AgentModelClient.ModelConfig(baseUrl = "https://example.invalid", apiKey = "test-key", model = "test-model", systemPrompt = ""),
+                images = emptyList(),
+            )
+            val run = RuntimeRunRegistry.Run(request, AgentRuntimeSession(request.runId, resultSink = { delivered.countDown() }))
+            run.entryPersistence = write
+            AgentRuntimeService::class.java.getDeclaredMethod("failBeforeExecution", RuntimeRunRegistry.Run::class.java, String::class.java)
+                .apply { isAccessible = true }.invoke(serviceController.get(), run, "已停止")
+            assertFalse(delivered.await(150, TimeUnit.MILLISECONDS))
+            write.complete(null)
+            assertTrue(delivered.await(10, TimeUnit.SECONDS))
+            AgentRuntimeResultStore.remove(context, request.runId)
+        } finally {
+            write.complete(null)
+            serviceController.destroy()
+            EtaDatabase.closeForTests()
+        }
+    }
+
     @Test
     fun failureWithoutCheckpointIsPersistedBeforeTerminalDelivery() {
         val context = RuntimeEnvironment.getApplication()

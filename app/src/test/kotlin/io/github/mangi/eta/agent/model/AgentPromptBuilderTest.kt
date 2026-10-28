@@ -53,6 +53,9 @@ class AgentPromptBuilderTest {
         assertTrue(terminal.contains("/eta/custom workspace"))
         assertTrue(terminal.contains("debian"))
         assertTrue(terminal.contains("identity=user"))
+        assertTrue(terminal.contains("不要用 & 起后台进程"))
+        assertTrue(terminal.contains("common_tools"))
+        assertTrue(terminal.contains("profiles"))
         assertTrue(terminal.contains("terminal_job"))
         assertTrue(terminal.contains("terminal_daemon"))
         assertFalse(terminal.contains("async=true"))
@@ -108,7 +111,7 @@ class AgentPromptBuilderTest {
         )
 
         assertEquals(
-            listOf("system", "system", "system", "user", "assistant", "user"),
+            listOf("system", "system", "system", "system", "user", "assistant", "user"),
             messages.roles(),
         )
         assertEquals("自定义系统约束", messages.getJSONObject(0).getString("content"))
@@ -142,11 +145,12 @@ class AgentPromptBuilderTest {
         assertTrue(messages.getJSONObject(2).getString("content").contains("只需 command"))
         assertTrue(messages.getJSONObject(2).getString("content").contains("同一轮最多读取一张"))
         assertTrue(messages.getJSONObject(2).getString("content").contains("观察返回内容后再读下一张"))
+        assertTrue(messages.getJSONObject(3).getString("content").contains("可调用 subagent 派发子智能体"))
         assertFalse(messages.systemContents().any { it.contains("网页浏览、读取") })
-        assertEquals("旧问题", messages.getJSONObject(3).getString("content"))
-        assertEquals("旧回答", messages.getJSONObject(4).getString("content"))
+        assertEquals("旧问题", messages.getJSONObject(4).getString("content"))
+        assertEquals("旧回答", messages.getJSONObject(5).getString("content"))
 
-        val currentContent = messages.getJSONObject(5).getJSONArray("content")
+        val currentContent = messages.getJSONObject(6).getJSONArray("content")
         assertEquals("当前问题", currentContent.getJSONObject(0).getString("text"))
         assertEquals(
             image.reference,
@@ -179,16 +183,36 @@ class AgentPromptBuilderTest {
             skillContext = SkillContext(installedSkills = listOf(skill)),
         )
 
-        assertEquals(listOf("system", "system", "system", "user"), messages.roles())
+        assertEquals(listOf("system", "system", "system", "system", "user"), messages.roles())
         val systemContents = messages.systemContents()
         assertTrue(systemContents.any { it.contains("browser_use") })
         assertFalse(systemContents.any { it.contains("只需 command") })
+        assertTrue(messages.getJSONObject(2).getString("content").contains("可调用 subagent 派发子智能体"))
         val skillMessage = systemContents.single { it.contains("id=screen-audit") }
+        assertEquals(skillMessage, messages.getJSONObject(3).getString("content"))
         assertTrue(skillMessage.contains("path=/skills/screen-audit/SKILL.md"))
         assertTrue(skillMessage.contains("capabilities=scripts, assets"))
         assertTrue(skillMessage.contains("description=检查屏幕 并输出 结论"))
         assertTrue(skillMessage.contains("先调用 skills_read"))
-        assertEquals("读取网页", messages.getJSONObject(3).getString("content"))
+        assertEquals("读取网页", messages.getJSONObject(4).getString("content"))
+    }
+
+    @Test
+    fun subagentGuidanceFollowsTheSwitchWithoutChangingOtherSystemMessages() {
+        val config = modelConfig("自定义系统约束", terminalTools = true, browserTools = true)
+        fun contents(enabled: Boolean) = AgentPromptBuilder.buildSystemMessages(
+            config = config.copy(subagentTools = enabled),
+            skillContext = SkillContext.EMPTY,
+            memoryContext = AgentMemoryContext.DISABLED,
+            rootAvailable = false,
+        ).systemContents()
+
+        val disabled = contents(false)
+        val enabled = contents(true)
+        val subagentGuidance = "可调用 subagent 派发子智能体"
+        assertFalse(disabled.any { it.contains(subagentGuidance) })
+        assertEquals(1, enabled.count { it.contains(subagentGuidance) })
+        assertEquals(disabled, enabled.filterNot { it.contains(subagentGuidance) })
     }
 
     @Test

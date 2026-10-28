@@ -5,4 +5,7 @@
     <string name="linux_environment_base_ready">基礎環境已就緒，下一步安裝基礎工具</string>
     <string name="linux_environment_tools_ready">基礎工具已就緒，可按需安裝擴充工具</string>
     <string name="linux_environment_shared_folders_summary">把 Android 目錄掛載到 Linux 環境</string>
+    <string name="linux_debian_repair_failed">Debian 套件檢查或修復未完成。請確認沒有其他套件管理工作後重試；若仍失敗，可在 Debian 終端機執行 dpkg --configure -a 和 apt-get --fix-broken install 查看錯誤。</string>
+    <string name="linux_debian_install_timeout">Debian 基礎工具安裝逾時，請重試；重試時會檢查並恢復未完成的套件操作。</string>
+    <string name="linux_debian_install_failed">Debian 基礎工具安裝失敗，請在 Debian 終端機檢查軟體來源、套件管理員占用和儲存空間。</string>
 </resources>

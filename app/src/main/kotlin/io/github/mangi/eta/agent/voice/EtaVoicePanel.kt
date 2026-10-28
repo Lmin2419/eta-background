@@ -40,8 +40,10 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -67,6 +69,7 @@ import io.github.mangi.eta.ui.components.AgentConversationMessages
 import io.github.mangi.eta.ui.model.AgentChatMessageUi
 import kotlin.math.abs
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
@@ -80,6 +83,8 @@ internal enum class EtaVoicePhase {
     PROCESSING,
     ERROR,
 }
+
+internal const val ASSISTANT_EXIT_DURATION_MS = 220
 
 internal data class EtaVoiceUiState(
     val messages: List<AgentChatMessageUi> = emptyList(),
@@ -164,6 +169,7 @@ internal fun EtaVoicePanel(
     canOpenConversation: Boolean,
     handoffRunning: Boolean,
     exitRequested: Boolean,
+    onExitFinished: () -> Unit = {},
     onInputChange: (String) -> Unit,
     onSuggestionClick: (String) -> Unit,
     onSubmit: () -> Unit,
@@ -180,19 +186,25 @@ internal fun EtaVoicePanel(
     val contentVisible = recognitionEnabled != null && (recognitionEnabled || entranceComplete)
     val contentReady by rememberUpdatedState(onContentReady)
     val textEntryOffsetPx = with(density) { if (recognitionEnabled == false) 16.dp.toPx() else 0f }
-    val exitAlpha by animateFloatAsState(
-        targetValue = if (exitRequested) 0f else 1f,
-        animationSpec = tween(220, easing = FastOutSlowInEasing),
-        label = "assistant_exit",
-    )
+    val exitProgress = remember { Animatable(1f) }
+    val exitFinished by rememberUpdatedState(onExitFinished)
+    val exitOffsetPx = with(density) { (if (handoffRunning) (-12).dp else 28.dp).toPx() }
+    LaunchedEffect(exitRequested) {
+        if (exitRequested) {
+            keyboard?.hide()
+            exitProgress.animateTo(0f, tween(ASSISTANT_EXIT_DURATION_MS, easing = FastOutSlowInEasing))
+            exitFinished()
+        }
+    }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(exitRequested) {
+        if (exitRequested) return@LaunchedEffect
         delay(180)
         scrimProgress.animateTo(1f, tween(280, easing = LinearOutSlowInEasing))
     }
 
-    LaunchedEffect(contentVisible) {
-        if (!contentVisible) return@LaunchedEffect
+    LaunchedEffect(contentVisible, exitRequested) {
+        if (!contentVisible || exitRequested) return@LaunchedEffect
         coroutineScope {
             launch {
                 entryAlpha.animateTo(1f, tween(
@@ -213,7 +225,7 @@ internal fun EtaVoicePanel(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .graphicsLayer { alpha = exitAlpha }
+            .graphicsLayer { alpha = exitProgress.value }
             .drawBehind { drawRect(colors.scrim.copy(alpha = colors.scrim.alpha * scrimProgress.value)) },
     ) {
         Box(
@@ -241,7 +253,8 @@ internal fun EtaVoicePanel(
                 .fillMaxSize()
                 .graphicsLayer {
                     alpha = entryAlpha.value
-                    translationY = (1f - entryProgress.value) * textEntryOffsetPx
+                    translationY = (1f - entryProgress.value) * textEntryOffsetPx +
+                        (1f - exitProgress.value) * exitOffsetPx
                 },
         ) {
             val imeInsets = WindowInsets.ime
@@ -334,6 +347,9 @@ private fun BoxScope.AssistantPanel(
     var dismissPullPx by remember { mutableFloatStateOf(0f) }
     var handoffPullPx by remember { mutableFloatStateOf(0f) }
     var thresholdHapticSent by remember { mutableStateOf(false) }
+    val panelScope = rememberCoroutineScope()
+    var releaseJob by remember { mutableStateOf<Job?>(null) }
+    var settleSequence by remember { mutableIntStateOf(0) }
     var keepBottomAnchored by remember { mutableStateOf(true) }
     var fittedReplyId by remember { mutableStateOf<String?>(null) }
     // 满高时把手与状态栏之间的空间有限，需在扣除触摸 slop 后仍能完成过顶手势。
@@ -354,17 +370,18 @@ private fun BoxScope.AssistantPanel(
     } else {
         0f
     }
-    val animatedHeightPx by animateFloatAsState(
-        targetValue = targetHeightPx,
-        animationSpec = when {
+    val height = remember { Animatable(targetHeightPx) }
+    val animatedHeightPx = height.value
+    LaunchedEffect(targetHeightPx, draggedHeightPx == null, settleSequence) {
+        if (draggedHeightPx != null) return@LaunchedEffect
+        height.animateTo(targetHeightPx, when {
             !autoExpandSuppressed &&
                 abs(settledHeightPx - baseContentHeightPx) > autoSettleTolerancePx ->
                 folmeSpring(damping = 1f, response = 0.72f)
             autoExpandSuppressed -> folmeSpring(damping = 1f, response = 0.38f)
             else -> folmeSpring(damping = 1f, response = 0.50f)
-        },
-        label = "assistant_content_height",
-    )
+        })
+    }
     val sheetBackgroundAlpha = animateFloatAsState(
         targetValue = if (hasMessages) 1f else 0f,
         animationSpec = tween(durationMillis = 160, easing = LinearOutSlowInEasing),
@@ -471,13 +488,24 @@ private fun BoxScope.AssistantPanel(
         }
     }
 
+    fun settlePanel(target: Float, handoff: Boolean = false) {
+        val current = draggedHeightPx ?: height.value
+        releaseJob?.cancel()
+        releaseJob = panelScope.launch {
+            // 从松手处续接动画，避免先跳回上一次停靠高度、再向新位置展开。
+            height.snapTo(current)
+            settledHeightPx = target
+            draggedHeightPx = null
+            settleSequence++ // 同一帧内完成的短拖动也必须重新吸附到原停靠点。
+            dismissPullPx = 0f
+            handoffPullPx = 0f
+            if (handoff) onOpenConversation()
+        }
+    }
+
     fun triggerHandoff() {
         if (handoffRunning || !canOpenConversation) return
-        settledHeightPx = maxContentHeightPx
-        draggedHeightPx = null
-        dismissPullPx = 0f
-        handoffPullPx = 0f
-        onOpenConversation()
+        settlePanel(maxContentHeightPx, handoff = true)
     }
 
     fun stopAutoExpand() {
@@ -530,10 +558,7 @@ private fun BoxScope.AssistantPanel(
                     mediumHeightPx,
                     maxContentHeightPx,
                 )
-                settledHeightPx = anchors.minBy { kotlin.math.abs(it - current) }
-                draggedHeightPx = null
-                dismissPullPx = 0f
-                handoffPullPx = 0f
+                settlePanel(anchors.minBy { kotlin.math.abs(it - current) })
             }
         }
     }
@@ -541,6 +566,7 @@ private fun BoxScope.AssistantPanel(
     // 局部函数引用的相等判断不包含捕获值，不能直接作为结构相等 State 的回调值。
     val stopAutoExpandState = rememberUpdatedState { stopAutoExpand() }
     val startDragState = rememberUpdatedState {
+        releaseJob?.cancel()
         stopAutoExpand()
         dismissPullPx = 0f
         handoffPullPx = 0f

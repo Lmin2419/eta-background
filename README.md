@@ -1,10 +1,14 @@
-# Eta
+<h1 align="center">Eta</h1>
 
-**简体中文** | [English](README_EN.md)
+<p align="center"><strong>简体中文</strong> | <a href="README_EN.md">English</a></p>
 
- <p><a href="https://github.com/Mangi-11/Eta/releases"><img src="https://img.shields.io/github/downloads/Mangi-11/Eta/total?logo=github&amp;label=Downloads&amp;color=1677FF" alt="GitHub Releases 累计下载量"></a> <img src="https://img.shields.io/badge/minSdk-33-3DDC84?logo=android&amp;logoColor=white" alt="minSdk 33"> <img src="https://img.shields.io/badge/Kotlin-2.4.20-7F52FF?logo=kotlin&amp;logoColor=white" alt="Kotlin 2.4.20"> <img src="https://img.shields.io/badge/AGP-9.4.1-3DDC84?logo=android&amp;logoColor=white" alt="AGP 9.4.1"> <img src="https://img.shields.io/badge/Assistant%20Integrations-ColorOS%20%26%20HyperOS-1677FF" alt="Assistant integrations for ColorOS and HyperOS"></p>
+<p align="center"><strong>面向 Android 的第三方系统级 AI 助手</strong></p>
 
-**面向 Android 的第三方系统级 AI 助手**
+<p align="center"><a href="https://github.com/Mangi-11/Eta/stargazers"><img src="https://img.shields.io/github/stars/Mangi-11/Eta?logo=github&amp;label=Stars&amp;color=1677FF" alt="GitHub Stars"></a> <a href="https://github.com/Mangi-11/Eta/releases"><img src="https://img.shields.io/github/downloads/Mangi-11/Eta/total?logo=github&amp;label=Downloads&amp;color=1677FF" alt="GitHub Releases 累计下载量"></a> <img src="https://img.shields.io/badge/minSdk-33-3DDC84?logo=android&amp;logoColor=white" alt="minSdk 33"> <img src="https://img.shields.io/badge/Assistant%20Integrations-ColorOS%20%26%20HyperOS-1677FF" alt="Assistant integrations for ColorOS and HyperOS"></p>
+
+<p align="center">
+  <a href="https://trendshift.io/repositories/116433"><img src="https://trendshift.io/api/badge/trendshift/repositories/116433/daily?language=Kotlin" alt="Eta · Trendshift Kotlin 日榜" width="250" height="55"></a>
+</p>
 
 Eta 是为手机和移动设备设计的 AI Agent，结合了 [Codex](https://openai.com/codex/) 这类 Coding Agent 自主规划与执行任务的能力，以及[豆包手机助手](https://o.doubao.com/)所展示的 GUI Agent 跨应用操作方式。它可以处理文件、执行命令、编写代码，也能深入 Android 系统与厂商应用，直接获取个人上下文、调用系统与一方应用的原生接口。
 
@@ -42,7 +46,8 @@ Eta 独立实现了 Agent Runtime 与 Agent Loop，统一编排模型调用、�
 ### 执行工具
 
 - **系统与一方应用操作**：直接调用 Android API 与一方应用接口，读写日历日程（支持单条或批量创建、修改、删除）、管理闹钟与计时器、创建和回收系统便签；控制手电筒、亮度、息屏时间、响铃与勿扰、护眼与深色模式、音量、媒体播放，以及 Wi‑Fi、蓝牙、移动数据、个人热点、NFC、定位和省电模式。也可查询应用版本、安装来源与权限，停止或冻结应用，在 Root 授权下筛选系统日志。设置、开关和一方应用写操作都会读回实际状态，未确认时明确报告，不盲目重复执行。
-- **GUI Agent**：结合无障碍 UI 树、控件定位与按需截图，执行点击、长按、滑动、滚动和文本输入；动作成功后会自动附带新界面的节点快照，截图按原始尺寸与像素传递，不在上传前缩放或转 JPEG。执行期间保持屏幕常亮，屏幕边缘流光提示正在接管，状态栏下方的状态胶囊显示当前步骤（手势经过时自动让路），点击展开补充、暂停与停止；Android 16 QPR2 及以上的设备还会把运行状态显示到状态栏胶囊与锁屏（Live Updates，部分系统映射到流体云等）。
+- **GUI Agent**：结合无障碍 UI 树、控件定位与按需截图，执行点击、长按、滑动、滚动和文本输入；动作成功后会自动附带新界面的节点快照，截图按原始尺寸与像素传递，不在上传前缩放或转 JPEG。执行期间保持屏幕常亮，屏幕边缘流光提示正在接管，状态栏下方的状态胶囊显示当前步骤（手势经过时自动让路），点击展开补充、暂停与停止。
+- **运行通知**：Android 16 及以上且支持 Live Updates 的系统可在状态栏胶囊与锁屏显示 Agent 任务状态，纯后台任务同样适用；具体展示取决于系统支持和通知设置，部分系统映射到流体云或超级岛。仅驻留的终端会话、Linux 等任务保持普通前台通知。
 - **网页搜索与内置浏览器**：提供轻量的公开网页搜索与静态正文分页读取，可在设置中切换内置默认、DeepSeek Search / Fetch 或自定义 HTTP 接口；动态 JavaScript 页面通过内置 WebView 加载，支持读取正文、操作 DOM 与截图，用户可随时打开同一浏览器会话接管。
 - **终端**：Android user/root Shell、Alpine / Debian Linux 与脚本执行，支持会话、异步后台命令和常驻守护任务；返回实际 Shell、执行身份与可解析命令的信息。
 - **文件工具**：读取、写入、精确编辑、元数据查询、目录分页、路径匹配、文本搜索与本机图片读取。文本读取按 UTF-8 字节边界续读，编辑检查旧内容，搜索结果说明实际范围与未完成部分。
@@ -53,6 +58,7 @@ Eta 独立实现了 Agent Runtime 与 Agent Loop，统一编排模型调用、�
 
 - **个人上下文**：通过结构化只读工具按需获取本机与厂商 ROM 数据。普通授权下可读取时间与时区、最近位置、设备环境（锁屏、勿扰、音频输出与外接显示状态）、当前通知与最近 7 天通知历史、最近打开应用与前台使用时长，以及日历日程。Root 授权下进一步开放通讯录、通话记录、短信与验证码提取、相册图片（支持按文件名，或通过内容索引按图片 OCR 文字、画面描述与标签检索）、音频与录音、共享文件与下载记录、输入法剪贴板历史、Health Connect 健康汇总（步数、睡眠、运动、心率、体重、血氧）、已保存的 Wi‑Fi 密码及微信/QQ 聊天图片缓存。在 ColorOS 上，还可通过小布记忆进程内 Hook 桥与系统 DMP 索引直接检索小布记忆、便签、通话与普通录音摘要，以及账单与收支汇总、航班/火车/酒店行程、外卖快递订单、待办线索、生活事件和收藏地点。
 - **长期记忆**：使用本机 `MEMORY.md` 保存跨对话背景，核心内容按预算加入上下文，其余按需读取；支持编辑、清空和关闭。
+- **Subagent**：支持在独立子上下文中派发并并发运行多个 Subagent（内置 `explore`、`coder`、`plan`，支持在对话中按需拉起任意临时专职 Subagent 或保存 `agents/<name>.md` 复用模板），可单独配置轻量/高速模型（Secondary Model）并在聊天时间线中点击实时检视内部步骤。
 - **Skills**：按需加载任务方法、参考资料与脚本资源，支持公开 GitHub 仓库安装和本地 ZIP 导入；安装不会执行脚本或开启额外权限。
 - **MCP**：通过 Streamable HTTP 连接远程工具，支持 Bearer Token；工具逐项启用，与本机工具共同参与任务。
 
@@ -188,6 +194,17 @@ Eta 先从现有 Android 上的模型、上下文与工具做起。真正落地�
 - [Agent Runtime](docs/AGENT_RUNTIME.md)：Agent Loop、Provider、steering、transcript 与结果恢复。
 - [HyperOS 系统入口](docs/HYPEROS_SYSTEM_ENTRY.md)：电源键、一圈即搜的适配条件与验证边界。
 - [终端原生组件](docs/TERMINAL_NATIVE.md)：PTY、PRoot 及随包源码的构建方式。
+
+## Star History
+
+<p align="center">
+  <a href="https://www.star-history.com/#Mangi-11/Eta&amp;Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Mangi-11/Eta&amp;type=Date&amp;theme=dark">
+      <img src="https://api.star-history.com/svg?repos=Mangi-11/Eta&amp;type=Date" alt="Eta Star History" width="800">
+    </picture>
+  </a>
+</p>
 
 ## 参考与致谢
 

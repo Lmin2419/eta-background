@@ -8,7 +8,11 @@ import io.github.mangi.eta.R
 
 /** 浮窗只保存语义状态，文案在渲染时根据当前系统语言解析。 */
 internal sealed interface AgentOverlayStatus {
+    data object Queued : AgentOverlayStatus
+    data object ScreenOffPaused : AgentOverlayStatus
     data object Reasoning : AgentOverlayStatus
+    data class BackgroundScreen(val phase: io.github.mangi.eta.agent.runtime.BackgroundScreenPhase) : AgentOverlayStatus
+    data object WaitingForModel : AgentOverlayStatus
     data object SupplementReceived : AgentOverlayStatus
     data class RunningTool(val name: String) : AgentOverlayStatus
     data class HostedToolRunning(val name: String) : AgentOverlayStatus
@@ -28,7 +32,16 @@ internal fun AgentOverlayStatus.localizedText(): String = localizedText(LocalRes
 
 /** 通知等非 Compose 表面与浮层共用同一套状态文案。 */
 internal fun AgentOverlayStatus.localizedText(resources: Resources): String = when (this) {
+    AgentOverlayStatus.Queued -> resources.getString(R.string.background_task_queued)
+    AgentOverlayStatus.ScreenOffPaused -> resources.getString(R.string.background_screen_off_paused)
     AgentOverlayStatus.Reasoning -> resources.getString(R.string.overlay_reasoning)
+    AgentOverlayStatus.WaitingForModel -> resources.getString(R.string.background_waiting_model)
+    is AgentOverlayStatus.BackgroundScreen -> resources.getString(when (phase) {
+        io.github.mangi.eta.agent.runtime.BackgroundScreenPhase.WaitingForApp -> R.string.background_waiting_app
+        io.github.mangi.eta.agent.runtime.BackgroundScreenPhase.ReleasingScreen -> R.string.background_releasing_screen
+        io.github.mangi.eta.agent.runtime.BackgroundScreenPhase.OpeningApp -> R.string.background_opening_app
+        io.github.mangi.eta.agent.runtime.BackgroundScreenPhase.RestoringDisplay -> R.string.background_restoring_display
+    })
     AgentOverlayStatus.SupplementReceived -> resources.getString(R.string.overlay_supplement_received)
     // 工具名本身就是动作（点击元素、读取文件），不再加"执行："前缀。
     is AgentOverlayStatus.RunningTool -> toolDisplayName(resources, name)
@@ -55,6 +68,15 @@ internal fun toolDisplayName(resources: Resources, name: String): String {
 
 @StringRes
 internal fun toolDisplayNameResource(name: String): Int? = when (name) {
+    "screen_open" -> R.string.tool_launch_app
+    "screen_dump", "screen_list", "screen_diag", "screen_shot", "screen_state" -> R.string.tool_observe_screen
+    "screen_click", "screen_tap" -> R.string.tool_tap
+    "screen_press" -> R.string.tool_long_press
+    "screen_swipe", "screen_drag" -> R.string.tool_swipe
+    "screen_scroll" -> R.string.tool_scroll
+    "screen_text" -> R.string.tool_input_text
+    "screen_wait" -> R.string.tool_wait
+    "screen_finish" -> R.string.overlay_result_ready
     "observe_screen" -> R.string.tool_observe_screen
     "release_gui" -> R.string.tool_release_gui
     "tap" -> R.string.tool_tap

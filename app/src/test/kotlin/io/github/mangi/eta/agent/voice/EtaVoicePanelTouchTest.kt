@@ -14,6 +14,7 @@ import androidx.compose.runtime.Recomposer
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.MotionDurationScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
@@ -48,6 +49,55 @@ import top.yukonga.miuix.kmp.squircle.LocalSquircleEnabled
 @Config(sdk = [36], application = Application::class, qualifiers = "w411dp-h896dp-xhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class EtaVoicePanelTouchTest {
+    @Test
+    fun shortDragSettlesEvenWhenItReturnsToTheSameAnchor() = withPanel { panel ->
+        panel.showReply()
+        val before = panel.handleBounds()
+        panel.dragBy(45f)
+        assertEquals("短拖动不能停在两个停靠点之间", before.top, panel.handleBounds().top, panel.dp(2f))
+    }
+
+    @Test
+    fun releasingPanelDoesNotJumpBackToItsPreviousHeight() = withPanel { panel ->
+        panel.showReply()
+        panel.dragBy(200f, onReleased = { before, after ->
+            assertTrue("松手必须从当前高度续接：before=$before after=$after",
+                kotlin.math.abs(after.top - before.top) < panel.dp(45f))
+        })
+    }
+
+    @Test
+    fun exitFinishesOnceAfterTransition() = withPanel { panel ->
+        panel.exitRequested.value = true
+        panel.advance(2)
+        assertEquals("不能在退出动画首帧就拆掉窗口", 0, panel.exits)
+        panel.advance()
+        assertEquals(1, panel.exits)
+        panel.advance()
+        assertEquals(1, panel.exits)
+    }
+
+    @Test
+    fun exitDuringTextRevealCancelsPendingKeyboardRequest() =
+        withPanel(recognitionEnabled = false, initialFrames = 1) { panel ->
+            panel.gainWindowFocus()
+            panel.advanceUntil { panel.entrances == 1 }
+            panel.advance(1)
+            panel.exitRequested.value = true
+            panel.advance()
+            assertEquals(1, panel.exits)
+            assertEquals(0, panel.contentReveals)
+            assertEquals(0, panel.keyboardShows)
+        }
+
+    @Test
+    fun disabledAnimationsFinishExitWithoutWaitingForVisualDuration() =
+        withPanel(motionScale = 0f) { panel ->
+            panel.exitRequested.value = true
+            panel.advance(3)
+            assertEquals(1, panel.exits)
+        }
+
     @Test
     fun handleCanDragDownAfterEmptyEntryReceivesReply() = withPanel { panel ->
         panel.showReply()
@@ -175,10 +225,11 @@ class EtaVoicePanelTouchTest {
     private fun withPanel(
         recognitionEnabled: Boolean = true,
         initialFrames: Int = 180,
+        motionScale: Float = 1f,
         block: (Panel) -> Unit,
     ) {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
-        val panel = Panel(controller.get(), recognitionEnabled) { controller.windowFocusChanged(true) }
+        val panel = Panel(controller.get(), recognitionEnabled, motionScale) { controller.windowFocusChanged(true) }
         try {
             panel.advance(initialFrames)
             block(panel)
@@ -191,9 +242,12 @@ class EtaVoicePanelTouchTest {
     private class Panel(
         val activity: ComponentActivity,
         recognitionEnabled: Boolean,
+        motionScale: Float,
         private val onGainWindowFocus: () -> Unit,
     ) {
         val state = mutableStateOf(EtaVoiceUiState())
+        val exitRequested = mutableStateOf(false)
+        var exits = 0
         val recognitionEnabled = mutableStateOf(recognitionEnabled)
         private val entranceComplete = mutableStateOf(false)
         private val inputFocusRequestKey = mutableStateOf(-1)
@@ -211,7 +265,8 @@ class EtaVoicePanelTouchTest {
         var opened = 0
         var closed = 0
         private val frameClock = BroadcastFrameClock()
-        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate + frameClock)
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate + frameClock +
+            object : MotionDurationScale { override val scaleFactor = motionScale })
         private val recomposer = Recomposer(scope.coroutineContext)
 
         init {
@@ -252,7 +307,8 @@ class EtaVoicePanelTouchTest {
                             canOpenConversation = state.value.phase == EtaVoicePhase.READY &&
                                 state.value.messages.isNotEmpty(),
                             handoffRunning = false,
-                            exitRequested = false,
+                            exitRequested = exitRequested.value,
+                            onExitFinished = { exits++ },
                             onInputChange = {},
                             onSuggestionClick = {},
                             onSubmit = {},
@@ -343,7 +399,7 @@ class EtaVoicePanelTouchTest {
         fun handleBounds(): Rect = findHandle(root().semanticsOwner.unmergedRootSemanticsNode)?.boundsInRoot
             ?: error("未找到顶部把手")
 
-        fun dragBy(distanceDp: Float, cancel: Boolean = false) {
+        fun dragBy(distanceDp: Float, cancel: Boolean = false, onReleased: ((Rect, Rect) -> Unit)? = null) {
             val view = root().view
             val bounds = handleBounds()
             val node = findHandle(root().semanticsOwner.unmergedRootSemanticsNode)!!
@@ -366,8 +422,14 @@ class EtaVoicePanelTouchTest {
             send(MotionEvent.ACTION_DOWN, start.y)
             repeat(10) { index ->
                 send(MotionEvent.ACTION_MOVE, start.y + dp(distanceDp) * (index + 1) / 10f)
+                if (onReleased != null) advance(1)
             }
+            val beforeRelease = if (onReleased != null) handleBounds() else null
             send(if (cancel) MotionEvent.ACTION_CANCEL else MotionEvent.ACTION_UP, start.y + dp(distanceDp))
+            if (onReleased != null) {
+                advance(2)
+                onReleased(requireNotNull(beforeRelease), handleBounds())
+            }
             advance()
         }
 

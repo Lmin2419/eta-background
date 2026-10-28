@@ -5,4 +5,7 @@
     <string name="linux_environment_base_ready">Base environment ready; install the base tools next</string>
     <string name="linux_environment_tools_ready">Base tools ready; install extension tools as needed</string>
     <string name="linux_environment_shared_folders_summary">Mount Android directories in the Linux environment</string>
+    <string name="linux_debian_repair_failed">Debian package checks or recovery did not complete. Ensure no other package manager task is running, then retry. If it still fails, run dpkg --configure -a and apt-get --fix-broken install in the Debian terminal to inspect the error.</string>
+    <string name="linux_debian_install_timeout">Debian base tool installation timed out. Retry to check and recover unfinished package operations.</string>
+    <string name="linux_debian_install_failed">Debian base tool installation failed. Check repositories, other package manager tasks, and available storage in the Debian terminal.</string>
 </resources>

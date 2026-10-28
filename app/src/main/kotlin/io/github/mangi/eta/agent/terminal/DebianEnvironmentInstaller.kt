@@ -2,6 +2,7 @@ package io.github.mangi.eta.agent.terminal
 
 import android.content.Context
 import android.os.Build
+import io.github.mangi.eta.R
 import io.github.mangi.eta.core.AndroidAgentLogger
 import java.io.File
 import kotlin.coroutines.coroutineContext
@@ -147,8 +148,16 @@ internal class DebianEnvironmentInstaller(
         onProgress(DebianInstallProgress(DebianInstallStage.CHECKING))
         preflightFailure()?.let { return@withContext it }
         onProgress(DebianInstallProgress(DebianInstallStage.INSTALLING_TOOLS))
-        if (!installCommonTools(rootfs)) {
-            return@withContext DebianInstallResult.Failed(DebianInstallStage.INSTALLING_TOOLS)
+        val result = installCommonTools(rootfs)
+        if (result.exitCode != 0) {
+            val (code, messageRes) = when (result.exitCode) {
+                APT_REPAIR_FAILED_EXIT_CODE -> "APT_REPAIR_FAILED" to R.string.linux_debian_repair_failed
+                -2 -> "INSTALL_TIMEOUT" to R.string.linux_debian_install_timeout
+                else -> "APT_INSTALL_FAILED" to R.string.linux_debian_install_failed
+            }
+            return@withContext DebianInstallResult.Failed(
+                DebianInstallStage.INSTALLING_TOOLS, code, context.getString(messageRes),
+            )
         }
         onProgress(DebianInstallProgress(DebianInstallStage.COMPLETE))
         DebianInstallResult.ToolsInstalled(readInstalledVersion(rootfs) ?: DEBIAN_VERSION)
@@ -230,8 +239,7 @@ internal class DebianEnvironmentInstaller(
               ${shellQuote("deb ${APT_MIRRORS.first().archiveBaseUrl} trixie main")} \
               ${shellQuote("deb ${APT_MIRRORS.first().archiveBaseUrl} trixie-updates main")} \
               ${shellQuote("deb ${APT_MIRRORS.first().securityBaseUrl} trixie-security main")} > "${'$'}eta_temporary/etc/apt/sources.list"
-            printf '%s\n' '#!/bin/sh' > "${'$'}eta_temporary/usr/local/bin/eta-apt"
-            printf %s ${shellQuote(aptMirrorScriptBody())} >> "${'$'}eta_temporary/usr/local/bin/eta-apt"
+            printf '%s\n' ${aptMirrorScriptLines()} > "${'$'}eta_temporary/usr/local/bin/eta-apt" || exit 67
             "${'$'}eta_busybox" chmod 0755 "${'$'}eta_temporary/usr/local/bin/eta-apt"
             printf ${shellQuote(markerBody)} > "${'$'}eta_temporary/${LinuxEnvironmentPaths.READY_MARKER}"
             "${'$'}eta_busybox" chmod 0644 "${'$'}eta_temporary/${LinuxEnvironmentPaths.READY_MARKER}"
@@ -246,15 +254,14 @@ internal class DebianEnvironmentInstaller(
         return result.exitCode == 0
     }
 
-    private suspend fun installCommonTools(rootfs: File): Boolean {
+    private suspend fun installCommonTools(rootfs: File): InstallerCommandResult {
         val packages = AGENT_PACKAGES.joinToString(" ")
         val command = """
             export DEBIAN_FRONTEND=noninteractive
             mkdir -p /usr/local/bin
-            printf '%s\n' '#!/bin/sh' > /usr/local/bin/eta-apt
-            printf %s ${shellQuote(aptMirrorScriptBody())} >> /usr/local/bin/eta-apt
-            chmod 0755 /usr/local/bin/eta-apt
-            /usr/local/bin/eta-apt install $packages || exit 70
+            printf '%s\n' ${aptMirrorScriptLines()} > /usr/local/bin/eta-apt || exit 70
+            chmod 0755 /usr/local/bin/eta-apt || exit 70
+            /usr/local/bin/eta-apt install $packages || exit ${'$'}?
             if command -v fdfind >/dev/null 2>&1; then ln -sf /usr/bin/fdfind /usr/local/bin/fd; fi
             cat > /${COMMON_TOOLS_MARKER} <<'ETA_TOOLSET_EOF'
             debian=$DEBIAN_VERSION
@@ -273,7 +280,7 @@ internal class DebianEnvironmentInstaller(
             "Debian environment action=install_tools outcome=${if (result.exitCode == 0) "succeeded" else "failed"} " +
                 "exitCode=${result.exitCode} outputChars=${result.output.length}",
         )
-        return result.exitCode == 0
+        return result
     }
 
     private fun rootfsDir(): File = LinuxEnvironmentPaths.rootfsDir(context, LinuxDistribution.DEBIAN)
@@ -298,6 +305,7 @@ internal class DebianEnvironmentInstaller(
         private const val COMMON_TOOLS_MARKER = ".eta-common-tools-ready"
         private const val TOOLSET_REVISION = 1
         private const val COMMON_TOOLS_TIMEOUT_SECONDS = 900L
+        internal const val APT_REPAIR_FAILED_EXIT_CODE = 72
         private const val PREFLIGHT_ROOT_UNAVAILABLE = 40
         private const val PREFLIGHT_BUSYBOX_UNAVAILABLE = 41
         private const val PREFLIGHT_BUSYBOX_INCOMPLETE = 42
@@ -331,23 +339,60 @@ internal class DebianEnvironmentInstaller(
         /** 逐个尝试镜像并把成功者写回 sources.list，后续 apt 操作复用它。 */
         internal fun aptMirrorScript(): String = "#!/bin/sh\n${aptMirrorScriptBody()}"
 
-        private fun aptMirrorScriptBody(): String = buildString {
-            append("set -u; ")
-            append("eta_apt_write_sources() { ")
-            append("case \"${'$'}1\" in ")
-            append("tuna) eta_apt_archive=https://mirrors.tuna.tsinghua.edu.cn/debian; eta_apt_security=https://security.debian.org/debian-security;; ")
-            append("official) eta_apt_archive=https://deb.debian.org/debian; eta_apt_security=https://security.debian.org/debian-security;; ")
-            append("*) return 64;; esac; ")
-            append("printf '%s\\n' \"deb ${'$'}eta_apt_archive trixie main\" \"deb ${'$'}eta_apt_archive trixie-updates main\" \"deb ${'$'}eta_apt_security trixie-security main\" > /etc/apt/sources.list; ")
-            append("}; ")
-            append("case \"${'$'}{1:-}\" in ")
-            append("install) shift; [ \"${'$'}#\" -gt 0 ] || exit 64; ")
-            append("for eta_apt_mirror in tuna official; do ")
-            append("eta_apt_write_sources \"${'$'}eta_apt_mirror\" || exit 65; ")
-            append("if apt-get -o Acquire::Retries=2 -o Acquire::http::Pipeline-Depth=0 update && apt-get -o Acquire::Retries=2 -o Acquire::http::Pipeline-Depth=0 install -y --no-install-recommends \"${'$'}@\"; then exit 0; fi; ")
-            append("done; exit 1;; ")
-            append("update) for eta_apt_mirror in tuna official; do eta_apt_write_sources \"${'$'}eta_apt_mirror\" || exit 65; apt-get -o Acquire::Retries=2 -o Acquire::http::Pipeline-Depth=0 update && exit 0; done; exit 1;; ")
-            append("*) echo \"usage: eta-apt install PACKAGE... | update\" >&2; exit 64;; esac")
+        private fun aptMirrorScriptLines(): String =
+            aptMirrorScript().trimEnd().lineSequence().joinToString(" ", transform = ::shellQuote)
+
+        private fun aptMirrorScriptBody(): String {
+            val mirrorCases = APT_MIRRORS.joinToString("\n") { mirror ->
+                "${mirror.id}) eta_apt_archive=${shellQuote(mirror.archiveBaseUrl)}; " +
+                    "eta_apt_security=${shellQuote(mirror.securityBaseUrl)} ;;"
+            }
+            return """
+                set -u
+                export LC_ALL=C DEBIAN_FRONTEND=noninteractive
+                eta_apt() {
+                  apt-get -o Acquire::Retries=2 -o Acquire::http::Pipeline-Depth=0 "${'$'}@"
+                }
+                eta_apt_write_sources() {
+                  case "${'$'}1" in
+                    $mirrorCases
+                    *) return 64 ;;
+                  esac
+                  printf '%s\n' "deb ${'$'}eta_apt_archive trixie main" "deb ${'$'}eta_apt_archive trixie-updates main" "deb ${'$'}eta_apt_security trixie-security main" > /etc/apt/sources.list
+                }
+                eta_apt_healthy() {
+                  eta_audit=${'$'}(dpkg --audit) || return 1
+                  if [ -n "${'$'}eta_audit" ]; then
+                    printf '%s\n' "${'$'}eta_audit" >&2
+                    return 1
+                  fi
+                  eta_apt check
+                }
+                eta_apt_repair() {
+                  eta_apt_healthy && return 0
+                  # 配置可能被缺失依赖阻塞，交给 APT 修复后必须再次配置并验证。
+                  if dpkg --configure -a && eta_apt_healthy; then return 0; fi
+                  eta_apt --fix-broken --no-remove install -y --no-install-recommends || return 1
+                  dpkg --configure -a && eta_apt_healthy
+                }
+                case "${'$'}{1:-}" in
+                  install) eta_action=install; shift; [ "${'$'}#" -gt 0 ] || exit 64 ;;
+                  update) eta_action=update ;;
+                  *) echo 'usage: eta-apt install PACKAGE... | update' >&2; exit 64 ;;
+                esac
+                for eta_apt_mirror in ${APT_MIRRORS.joinToString(" ") { it.id }}; do
+                  eta_apt_write_sources "${'$'}eta_apt_mirror" || exit 65
+                  eta_apt --error-on=any update || continue
+                  [ "${'$'}eta_action" != update ] || exit 0
+                  eta_apt_repair || exit $APT_REPAIR_FAILED_EXIT_CODE
+                  if eta_apt install -y --no-install-recommends "${'$'}@"; then
+                    eta_apt_healthy || exit $APT_REPAIR_FAILED_EXIT_CODE
+                    exit 0
+                  fi
+                  eta_apt_healthy || exit $APT_REPAIR_FAILED_EXIT_CODE
+                done
+                exit 1
+            """.trimIndent()
         }
 
         internal fun artifactForAbis(abis: List<String>): VerifiedArtifact? =

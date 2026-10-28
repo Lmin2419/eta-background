@@ -13,6 +13,7 @@ set -eu
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 SRC=${SRC:-$HERE/vdrive/src}
+SHARED=${SHARED:-$HERE/../shared/src}
 OUT=${OUT:-$HERE/vdrive/dexout}
 WORK=${WORK:-$HERE/vbuild2}
 ANDROID_JAR=${ANDROID_JAR:?set ANDROID_JAR to platforms/android-XX/android.jar}
@@ -30,7 +31,7 @@ mkdir -p "$WORK/classes" "$OUT"
 rm -f "$OUT/classes.dex"
 
 echo "== javac =="
-"$JAVAC" -nowarn -source 8 -target 8 -cp "$ANDROID_JAR" -d "$WORK/classes" "$SRC"/*.java
+"$JAVAC" -nowarn -source 8 -target 8 -cp "$ANDROID_JAR" -d "$WORK/classes" "$SRC"/*.java "$SHARED"/com/eta/shadow/*.java
 
 echo "== d8 =="
 "$JAVA" -cp "$R8_JAR" com.android.tools.r8.D8 --min-api "$MIN_API" --lib "$ANDROID_JAR" \

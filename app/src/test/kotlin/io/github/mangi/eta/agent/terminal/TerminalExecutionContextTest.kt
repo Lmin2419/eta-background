@@ -72,9 +72,21 @@ class TerminalExecutionContextTest {
 
         val description = context.description(rootAvailable = false)
         assertTrue(context.linuxReady)
-        assertTrue(description.contains("debian，backend=proot，identity=user，ready=true"))
+        assertFalse(context.linuxCommonToolsReady)
+        assertTrue(context.linuxInstalledProfiles.isEmpty())
+        assertTrue(description.contains("debian，backend=proot，identity=user，ready=true，common_tools=false，profiles=none"))
         assertTrue(description.contains(JSONObject.quote(workspace)))
         assertFalse(description.contains(workspace))
         assertFalse(description.contains(rootfs.path))
+
+        File(rootfs, AlpineEnvironmentPaths.COMMON_TOOLS_MARKER).writeText("toolset=${AlpineEnvironmentPaths.TOOLSET_REVISION}\n")
+        File(rootfs, AlpineEnvironmentPaths.PYTHON_TOOLS_MARKER).writeText("profile=${AlpineEnvironmentPaths.PYTHON_TOOLS_REVISION}\n")
+        File(rootfs, AlpineEnvironmentPaths.APK_ANALYSIS_MARKER).writeText("profile=${AlpineEnvironmentPaths.APK_ANALYSIS_REVISION}\n")
+        assertTrue(context.linuxCommonToolsReady)
+        assertEquals(listOf("python", "apk_analysis"), context.linuxInstalledProfiles)
+        assertTrue(
+            context.description(rootAvailable = false)
+                .contains("ready=true，common_tools=true，profiles=python/apk_analysis"),
+        )
     }
 }

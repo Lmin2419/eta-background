@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import io.github.mangi.eta.agent.runtime.AgentRuntimeService
 import io.github.mangi.eta.agent.voice.EtaAssistantOverlayService
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.data.model.AppearanceThemeMode
@@ -22,6 +23,8 @@ import io.github.mangi.eta.ui.app.AgentAppRoot
 import io.github.mangi.eta.ui.app.AgentAppTheme
 import io.github.mangi.eta.ui.app.PredictiveBackController
 import io.github.mangi.eta.ui.app.installStartupSplash
+import java.util.Collections
+import java.util.IdentityHashMap
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -65,8 +68,9 @@ class MainActivity : ComponentActivity() {
                     AgentAppRoot(
                         assistantConversationKey = launchRequests.assistantConversationKey,
                         requestedConversationId = launchRequests.conversationId,
+                        composeReply = launchRequests.composeReply,
                         onRequestedConversationOpened = {
-                            launchRequests = launchRequests.copy(conversationId = null)
+                            launchRequests = launchRequests.copy(conversationId = null, composeReply = false)
                             intent?.action = null
                         },
                         requestedArchivedConversation = launchRequests.archivedConversation,
@@ -98,6 +102,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        startedInstances.add(this)
+        isInForeground = true
+        AgentRuntimeService.onEtaUiVisibilityChanged()
+    }
+
+    override fun onStop() {
+        startedInstances.remove(this)
+        isInForeground = startedInstances.isNotEmpty() || isChangingConfigurations
+        AgentRuntimeService.onEtaUiVisibilityChanged()
+        super.onStop()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         com.eta.shadow.ShadowNotice.handleHandoverIntent(intent) // etax
@@ -108,6 +126,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        startedInstances.remove(this)
+        isInForeground = startedInstances.isNotEmpty() || isChangingConfigurations
         AndroidAgentLogger.info(
             "Agent UI destroyed: task=$taskId changing_configuration=$isChangingConfigurations finishing=$isFinishing",
         )
@@ -159,10 +179,17 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
+        private val startedInstances = Collections.newSetFromMap(IdentityHashMap<MainActivity, Boolean>())
+
+        @Volatile
+        internal var isInForeground: Boolean = false
+            private set
+
         const val ACTION_OPEN_TERMINAL = "io.github.mangi.eta.action.OPEN_TERMINAL"
         /** 运行浮层的结果卡片回到本体：App 发起的 run 带会话 ID，直接打开该会话。 */
         const val ACTION_OPEN_CONVERSATION_ID = "io.github.mangi.eta.action.OPEN_CONVERSATION_ID"
         const val EXTRA_CONVERSATION_ID = "io.github.mangi.eta.extra.CONVERSATION_ID"
+        const val EXTRA_COMPOSE_REPLY = "io.github.mangi.eta.extra.COMPOSE_REPLY"
         /** 系统助手等外部入口发起的 run 按来源与会话键归档，回到本体时打开对应的归档会话。 */
         const val ACTION_OPEN_ARCHIVED_CONVERSATION = "io.github.mangi.eta.action.OPEN_ARCHIVED_CONVERSATION"
         const val EXTRA_HANDOFF_SOURCE = "io.github.mangi.eta.extra.HANDOFF_SOURCE"

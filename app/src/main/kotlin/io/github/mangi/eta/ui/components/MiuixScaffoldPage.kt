@@ -35,6 +35,7 @@ fun MiuixScaffoldPage(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {},
+    overlay: @Composable () -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
     compactTitle: Boolean = false,
     content: LazyListScope.() -> Unit,
@@ -92,6 +93,7 @@ fun MiuixScaffoldPage(
                     }
                 }
             }
+            overlay()
         }
     }
 }

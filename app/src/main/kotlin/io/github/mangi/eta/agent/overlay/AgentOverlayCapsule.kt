@@ -33,6 +33,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
@@ -77,8 +80,10 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 /**
  * 顶部状态胶囊：收起时只显示一句当前步骤，点击展开补充、暂停与停止。
  * 位置固定在状态栏下方居中，不随 Agent 的点击位置移动，避免和目标控件重叠。
- * 状态文字只在语义变化时以上滑淡入切换，流式正文不进入胶囊。
+ * 状态文字在语义变化时以上滑淡入切换，副行显示所选任务的最新流式内容。
  */
+internal data class OverlayTaskItem(val id: String, val title: String)
+
 @Composable
 internal fun AgentOverlayCapsule(
     state: AgentOverlayState,
@@ -91,6 +96,10 @@ internal fun AgentOverlayCapsule(
     onStop: () -> Unit,
     onSupplementModeChange: (Boolean) -> Unit,
     onSupplement: (String) -> Unit,
+    tasks: List<OverlayTaskItem> = emptyList(),
+    selectedTaskId: String? = null,
+    onSelectTask: (String) -> Unit = {},
+    onOpenConversation: () -> Unit = {},
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
@@ -192,7 +201,7 @@ internal fun AgentOverlayCapsule(
                         label = "capsule_status",
                     ) { text ->
                         Text(
-                            text = text,
+                            text = if (tasks.size > 1) stringResource(R.string.overlay_task_count, tasks.size, text) else text,
                             color = MiuixTheme.colorScheme.onSurface,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
@@ -200,7 +209,8 @@ internal fun AgentOverlayCapsule(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    ThoughtLine(thought = state.thought.takeIf { state.phase == AgentOverlayPhase.RUNNING }.orEmpty())
+                    ThoughtLine(thought = (if (state.status == AgentOverlayStatus.GeneratingAnswer) state.detailText.takeLast(96) else state.thought)
+                        .takeIf { state.phase == AgentOverlayPhase.RUNNING }.orEmpty())
                     }
                 }
 
@@ -227,6 +237,18 @@ internal fun AgentOverlayCapsule(
                                 },
                             )
                         } else {
+                            Column(Modifier.fillMaxWidth().heightIn(max = 112.dp).verticalScroll(rememberScrollState())) {
+                                tasks.forEach { task ->
+                                    Text(
+                                        text = (if (task.id == selectedTaskId) "● " else "○ ") + task.title,
+                                        modifier = Modifier.fillMaxWidth().clickable { onSelectTask(task.id) }.padding(vertical = 7.dp),
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 12.sp,
+                                        color = MiuixTheme.colorScheme.onSurface,
+                                    )
+                                }
+                            }
+                            Text(stringResource(R.string.overlay_open_conversation), modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenConversation)
+                                .padding(vertical = 8.dp), color = MiuixTheme.colorScheme.primary, fontSize = 12.sp)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),

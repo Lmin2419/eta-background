@@ -230,11 +230,13 @@ Shell 子进程在校验失败或取消时可能提前关闭输入管道，执�
 
 ## 结构化设备查询与操作
 
+`get_current_context` 在操作记录中显示为“读取时间与位置”，结果保留手机返回的本地时间和 UTC 偏移。位置显示系统最近一次位置记录及其年龄；未授权、系统定位关闭或没有缓存位置时明确提示，不将缓存位置表述为实时定位，也不额外解析城市或地址。
+
 `inspect_app` 属于设备直达工具，优先通过 PackageManager 查询精确包名，不要求目标应用具有桌面入口。结果包含版本、UID、安装来源及路径、启用/停止状态与分页权限列表。查询仅针对 Eta 所属 Android 用户；`user_id` 缺失时使用该用户，指定其他用户或工作资料时返回 `USER_SCOPE_UNSUPPORTED`。缺少包可见性时不会把查询不到直接断言成未安装，安装来源不可读也会单独标记。
 
 `get_logcat` 仍属于需要 Root 的敏感读取工具。它先按 PID、tag、最低 level 与 buffer 采集最近 `scan_lines` 条记录，再在样本中按 ISO 8601 的 `since` 和字面 `query` 筛选，最多返回 `max_lines` 条及有限文本。日志作用域为设备，不能用 `user_id` 冒充用户隔离。结果的采集起止时间、`scan_limited`、`capture_truncated`、`has_more` 与 `complete_within_scan` 分别说明采集和返回范围；`has_more` 只表示样本内有未返回匹配。日志源是环形缓冲区，`history_complete` 始终为 false，无匹配不代表更早记录不存在。
 
-`get_setting` 与系统写操作统一指定或报告 `user_id`，不再把 Root 命令中的前台用户当作 Eta 所属用户；当前不提供跨资料后端。`global` 设置和 Wi-Fi/蓝牙属于设备级状态。`set_setting`、`set_device_state`、`app_state_control`、`set_volume` 返回 `before`、`after`、`expected`、`changed` 与 `verified`，命令退出 0 或 API 接受请求不再等同于目标状态生效。读回未达到目标或过渡状态尚未结束时返回 `STATE_CHANGE_UNCONFIRMED`；无法比较前后值时 `changed` 为 null。已有目标状态可以验证成功而 `changed=false`。设置原始值按敏感工具数据处理。
+`get_setting` 与系统写操作统一指定或报告 `user_id`，不再把 Root 命令中的前台用户当作 Eta 所属用户；当前不提供跨资料后端。`global` 设置和 Wi-Fi/蓝牙属于设备级状态。`set_setting`、`set_device_state`、`app_state_control`、`set_volume` 返回 `before`、`after`、`expected`、`changed` 与 `verified`，命令退出 0 或 API 接受请求不再等同于目标状态生效。读回未达到目标或过渡状态尚未结束时返回 `STATE_CHANGE_UNCONFIRMED`；无法比较前后值时 `changed` 为 null。已有目标状态可以验证成功而 `changed=false`。已验证的设备操作在记录中显示具体目标及前后状态，例如“自动旋转：关闭 → 开启”；音量、亮度和息屏时间使用读回值及对应单位，未知前值不推断为零或关闭。通用设置仅对语义明确的固定设置键展示值，其余保持不含原始值的修改摘要。
 
 ## 个人上下文与一方应用操作
 
@@ -274,13 +276,13 @@ Shell 子进程在校验失败或取消时可能提前关闭输入管道，执�
 
 | 工具 | 调用方式 | 生命周期 |
 | --- | --- | --- |
-| `terminal` | 普通调用只需 `command`，`action` 默认 `exec`；`open` 创建会话，`session_id` 复用，`close` 关闭。 | 命令和会话属于当前 Agent run。 |
+| `terminal` | 普通调用只需 `command`，`action` 默认 `exec`；`open` 创建会话，`session_id` 复用，`close` 关闭。 | 命令和会话属于当前 Agent run，单次调用结束后回收进程，不用于 `&` 挂起后台进程。 |
 | `terminal_job` | `start` 启动，`list` 查看任务，`read` 读取日志，`wait` 等待完成，`stop` 停止。 | 回复结束后继续执行；完成、失败或停止时通知用户，状态与日志可在后续 run 查询。 |
 | `terminal_daemon` | `start / list / logs / stop` 管理后台服务，使用 `task_id`。 | 可跨 run 运行，仍可能因进程退出、系统回收或重启结束。 |
 
 参数由 `AgentTerminalToolCatalog` 声明，执行器按动作读取所需字段，不另设字段白名单或 Schema 预检。使用 `session_id` 时沿用会话目录、身份和环境，重复传入的 `cwd`、`identity`、`environment` 不覆盖会话。异步任务和后台服务不复用 Shell 会话。命令不设应用侧字符上限，实际运行仍受系统进程限制、超时、输出预算和取消控制。旧 `run_command` 与旧终端动作只保留历史展示，不再作为执行入口。
 
-`TerminalExecutionContext` 在 run 创建时冻结工作目录、所选 Linux 发行版和 rootfs 路径，并由同一个对象向执行器和模型提供事实。Android 的新调用按当前已确认授权选择默认身份：Root 可用则直接用 Root，否则用 App UID；显式 `identity` 优先。已有会话和后台任务保留创建时身份，授权变化不移动文件。模型首轮等待 App 已经启动的 Root 探测，不让检测中的 Root 用户先以普通身份试错；已有有效授权时无需重复调用检测工具。后台服务的启动后端与同一份上下文绑定，不跟随运行中的 Linux 设置变更。模型能看到实际工作目录、Linux 后端、就绪状态与 `/workspace` 的宿主映射，避免把 PRoot 私有工作区和 chroot Root 工作区当成同一目录。持久目录、任务记录与已有 Linux 安装均不迁移。
+`TerminalExecutionContext` 在 run 创建时冻结工作目录、所选 Linux 发行版和 rootfs 路径，并由同一个对象向执行器和模型提供事实。Android 的新调用按当前已确认授权选择默认身份：Root 可用则直接用 Root，否则用 App UID；显式 `identity` 优先。已有会话和后台任务保留创建时身份，授权变化不移动文件。模型首轮等待 App 已经启动的 Root 探测，不让检测中的 Root 用户先以普通身份试错；已有有效授权时无需重复调用检测工具。后台服务的启动后端与同一份上下文绑定，不跟随运行中的 Linux 设置变更。模型能看到实际工作目录、Linux 后端、基础 rootfs 与常用工具包/扩展组件的就绪状态以及 `/workspace` 的宿主映射，避免把 PRoot 私有工作区和 chroot Root 工作区当成同一目录。持久目录、任务记录与已有 Linux 安装均不迁移。
 
 终端族与文件工具的 `environment` 明确区分设备控制与通用 Linux 工具，默认值为 `android`：
 
@@ -300,6 +302,8 @@ Shell 子进程在校验失败或取消时可能提前关闭输入管道，执�
 用户在 Alpine 与 Debian 中选择一个当前 Linux 发行版，模型与终端统一通过 `environment=linux` 使用该选择。基础环境安装与基础工具安装是两个独立步骤：安装器先下载固定版本、大小和 SHA-256 的 rootfs，在临时目录解压，运行检查成功后才写入基础完成标记；PRoot 的流式解包校验归档路径和链接，支持取消与失败清理；用户随后安装只含通用命令的基础工具集。Python profile 只安装 uv，随后由 uv 把最新正式版 Python 安装到 `/opt/eta/python` 并把全局命令链接到 `/usr/local/bin`。Node.js profile 在 Debian 安装上游最新正式版 ARM64/x64 制品，在 Alpine 安装稳定分支提供的 `nodejs-current`；SSH 使用所选发行版的最新稳定包。App 侧只读取安装器完成标记，不再重复检查 rootfs 内的符号链接、二进制或执行权限。中国大陆网络下，Alpine 使用阿里云镜像，Debian 主仓库使用清华 TUNA、安全更新使用 Debian 官方源，各自只保留官方主仓库作为失败出口；APT 还启用重试并关闭 HTTP pipelining。
 
 APK 分析在 Alpine 与 Debian 中都作为可选档案显示。JADX、Apktool、smali 与 baksmali 使用当前最新正式版的固定官方 Release URL、大小和 SHA-256，下载完整校验后才进入 App 可写的 cache staging；不能把下载或解包暂存目录放进由 Root 创建的 Linux 管理目录。GitHub 制品先尝试一个 HTTPS 下载入口，再回到官方地址，但仍只接受与官方清单 SHA-256 完全一致的字节。JADX 只解出 CLI 脚本、运行库与许可证，成功验证全部命令后再原子切换当前版本。档案在 Alpine 安装 `openjdk25-jdk`，在 Debian 安装 `openjdk-25-jdk-headless`，但不安装全局 Gradle、Android SDK 或 NDK。由于 Google 的 Linux SDK、AAPT2 与 NDK 主机工具只提供 x86_64 构建，手机 ARM64 chroot 无法原生组成受官方支持的完整 Android 编译链；`apktool build` 因而稳定拒绝，解码、代码查看和独立 Smali 汇编/反汇编不受影响。
+
+Debian 安装基础工具时会刷新 `eta-apt` 入口，旧环境初始化中断后可直接重试。入口在安装前结合 `dpkg --audit` 与 `apt-get check` 检查包状态和依赖；发现异常时先尝试完成未配置的包，必要时运行 `apt-get --fix-broken --no-remove install`，修复后重新配置并验证。恢复依据包管理器自身的状态，自动修复不会删除软件包。修复未完成或安装留下不一致状态时停止本次操作，界面提示检查或修复失败及手动诊断命令；超时和其他安装失败也不再统一归因为网络。相关语义见 Debian 的 [dpkg 手册](https://manpages.debian.org/trixie/dpkg/dpkg.1.en.html)和 [APT 手册](https://manpages.debian.org/trixie/apt/apt-get.8.en.html)。
 
 ## 后台执行生命周期
 
@@ -377,6 +381,8 @@ Skill 安装工具始终向模型提供，不再根据顶层用户输入的固�
 待确认结果和外部入口归档会把完整脱敏 transcript 一并写入 Room。显式迁移为旧记录补默认字段并搬迁大文本；分块读写集中在 DAO，协议投影集中在 Runtime，Provider 不负责持久化。恢复幂等性依据已应用 run 标记，不能靠比较 history 尾部文本猜测。旧结果缺少 transcript 时仍可用已有 assistant 内容合成兼容历史。
 
 主界面的 `AgentAppState` 由 Activity 级 ViewModel 持有，配置变更只重建 Compose UI，不替换正在等待 Runtime 的客户端。用户消息先提交到 Room，再启动可能产生设备副作用的 run。Runtime 为 App 会话维护追加式在途 checkpoint：文本增量有界合并，结构化边界先落盘再发布；块结束通常只保存边界和字符数，仅在终态修正流式内容时保存替换正文。工具调用的原始参数增量和原始结果不进入 UI 事件日志，UI 已展示的参数摘要、脱敏终端命令与结果摘要会随工具状态保存；完整普通工具交换另存于脱敏 transcript。终态先封存 checkpoint 再提交 outbox，只有会话成功落盘并 ACK 结果后才同时删除 outbox 与 checkpoint。
+
+设备、文件和一方应用的专用结果摘要按工具语义展示已验证的状态变化、已完成的动作或本次返回数量。闹钟和计时器的 Intent 派发仅显示请求已提交；日历更新只列改动字段类别，便签回收不表述为永久删除。文件摘要显示读写规模、替换次数或匹配数量，并保留分页与扫描范围限制；技能安装显示下一轮可用。这些专用摘要不包含文件正文、路径、日历和便签内容、网络名称或任意设置原始值，未知字段不推断为零或关闭。既有历史记录保留原摘要，不重新执行工具或补造变更详情。
 
 App 恢复时以 `checkpoint + outbox + active session` 统一对账，不再用进程是否变化推断 run 状态。有 outbox 时先恢复工具轨迹，再用终态结果定稿；Runtime 仍 active 时，新 UI 会先整体恢复内存中的安全事件，再订阅实时事件与最终结果；只有既无终态又不 active 的 run 才标记为中断。恢复不会自动重放任何工具，也不会把半截助手回复加入后续模型 history。
 

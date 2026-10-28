@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -48,6 +49,47 @@ class AgentAppStateConversationLoadingTest {
         scope.cancel()
         awaitCondition { job.isCompleted }
         EtaDatabase.closeForTests()
+    }
+
+    @Test
+    fun notificationReplyPromptIsVisibleFromCheckpointBeforeAResultExists() {
+        seed("first" to conversation("first"))
+        val payload = io.github.mangi.eta.agent.runtime.AgentUiHandoffPayload("first",
+            promptSupplement = io.github.mangi.eta.agent.runtime.AgentUiHandoffPayload.Supplement(1, "收左边的菜", 1))
+        val request = AgentRuntimeWire.RunRequest("inline-running", "收左边的菜",
+            AgentModelClient.ModelConfig(baseUrl = "https://example.invalid", apiKey = "test", model = "test", systemPrompt = ""),
+            emptyList(), emptyList(), handoff = AgentRuntimeWire.EntryHandoff("inline-running",
+                AgentRuntimeWire.AGENT_UI_HANDOFF_SOURCE, payload.toJson()))
+        assertTrue(io.github.mangi.eta.agent.runtime.AgentRunCheckpointStore.start(context, request))
+        val state = AgentAppState(context, scope)
+        awaitCondition { state.homeState.messages.filterIsInstance<UserMessageUi>().any { it.content == "收左边的菜" } }
+        state.refreshRuntimeResults()
+        awaitCondition { !state.isLoadingEarlierMessages }
+        assertEquals(1, state.homeState.messages.filterIsInstance<UserMessageUi>().count { it.content == "收左边的菜" })
+    }
+
+    @Test
+    fun notificationContinuationImportsTheAssistantArchiveBeforeSelectingItsChat() {
+        seed("first" to conversation("first"))
+        val source = AgentRuntimeWire.ETA_VOICE_HANDOFF_SOURCE
+        val handoff = AgentRuntimeWire.EntryHandoff("game-run", source,
+            io.github.mangi.eta.agent.runtime.AgentExternalArchivePayload("收菜", "game", "游戏任务").toJson())
+        io.github.mangi.eta.agent.runtime.AgentRunArchiveStore.add(context,
+            io.github.mangi.eta.agent.runtime.AgentRunArchiveStore.ArchivedRun(
+                handoff, emptyList(), AgentRuntimeWire.RunResult("game-run", true, "请决定下一步"), System.currentTimeMillis()))
+        val state = AgentAppState(context, scope)
+        val chat = io.github.mangi.eta.agent.runtime.AgentConversationIdentity.archiveConversationId(source, "game")
+        var opened: Boolean? = null
+        scope.launch { opened = state.openConversationById(chat) }
+        awaitCondition { opened != null }
+        assertTrue(opened == true)
+        awaitLoaded(state, chat)
+        assertTrue(state.homeState.messages.filterIsInstance<AgentMessageUi>().any { it.content == "请决定下一步" })
+        opened = null
+        scope.launch { opened = state.openConversationById("missing-chat") }
+        awaitCondition { opened != null }
+        assertFalse(opened == true)
+        assertEquals(chat, state.conversationPaneState.selectedConversationId)
     }
 
     @Test

@@ -20,6 +20,35 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class RuntimeRunRegistryTest {
+    @Test fun onlyTwoTasksStartAndQueuedCancellationNeverOccupiesASlot() {
+        val registry = RuntimeRunRegistry()
+        val a = registry.accept("a", "ca")
+        val b = registry.accept("b", "cb")
+        val c = registry.accept("c", "cc")
+        val d = registry.accept("d", "cd")
+        val ready = setOf("a", "b", "c", "d")
+        assertSame(a, registry.claimNext(ready))
+        assertSame(b, registry.claimNext(ready))
+        assertEquals(null, registry.claimNext(ready))
+        assertTrue(c.queued)
+        assertFalse(a.session.controller.isCancelled)
+        c.session.controller.cancel()
+        registry.finish(a.runId, a.session)
+        assertSame(d, registry.claimNext(ready))
+        assertEquals(null, registry.claimNext(ready))
+    }
+
+    @Test fun screenOffPausedQueueWaitsForManualResume() {
+        val registry = RuntimeRunRegistry()
+        val a = registry.accept("a", "ca")
+        a.session.controller.pause()
+        assertEquals(null, registry.claimNext(setOf("a")))
+        assertEquals(AgentRuntimeWire.RunPhase.Paused, a.snapshot().phase)
+        a.session.controller.resume()
+        assertSame(a, registry.claimNext(setOf("a")))
+        assertEquals(AgentRuntimeWire.RunPhase.Preparing, a.snapshot().phase)
+    }
+
     @Test
     fun pendingRequestsCountTowardCapacityAndDuplicatesDoNotCreateAnotherRun() {
         val registry = RuntimeRunRegistry(capacity = 2)
@@ -30,7 +59,7 @@ class RuntimeRunRegistryTest {
         val rejected = registry.admit(request("c", "conversation-c")) { error("不能超额创建") }
         assertEquals("RUN_CAPACITY_REACHED", (rejected as RuntimeRunRegistry.Admission.Rejected).code)
         assertEquals(setOf("a", "b"), registry.snapshots().map { it.runId }.toSet())
-        assertTrue(registry.snapshots().all { it.phase == AgentRuntimeWire.RunPhase.Preparing })
+        assertTrue(registry.snapshots().all { it.phase == AgentRuntimeWire.RunPhase.Queued })
     }
 
     @Test
@@ -109,6 +138,7 @@ class RuntimeRunRegistryTest {
         assertEquals(AgentRuntimeWire.AGENT_UI_HANDOFF_SOURCE, snapshot.handoffSource)
         assertEquals(AgentRuntimeWire.OP_COMPACT, snapshot.operation)
         run.releaseIncoming()
+        registry.claimNext(setOf(run.runId))
         run.prepared(request)
         run.releaseIncoming()
         assertEquals(1, releases)

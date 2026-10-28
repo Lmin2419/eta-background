@@ -38,6 +38,8 @@ final class McpEndpoint {
 
     /** Alias table: public JSON schema uses snake_case, the engine/observer read camelCase. */
     private static final String[][] ARG_ALIASES = {
+            {"coordinate_space", "coordinateSpace"},
+            {"frame_id", "frameId"},
             {"view_id", "viewId"},
             {"hold_ms", "holdMs"},
             {"duration_ms", "durationMs"},
@@ -244,7 +246,7 @@ final class McpEndpoint {
         }
     }
 
-    private static String handle(String body) {
+    private static synchronized String handle(String body) {
         JSONObject req;
         try {
             req = new JSONObject(body);
@@ -402,11 +404,13 @@ final class McpEndpoint {
     }
 
     private static String observer(String json) throws Exception {
+        JSONObject request = new JSONObject(json);
+        if (request.optInt("displayId", -1) > 0) request.put("sessionId", "legacy-mcp");
         try (Socket s = new Socket()) {
             s.connect(new InetSocketAddress("127.0.0.1", VDrive.obsPort()), 1500);
             s.setSoTimeout(20000);
             PrintStream w = new PrintStream(s.getOutputStream(), true, "UTF-8");
-            w.println(json);
+            w.println(request);
             BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream(), "UTF-8"));
             String line = r.readLine();
             if (line == null) throw new IOException("observer closed connection");
