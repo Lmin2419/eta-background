@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="appearance_task_completion_alerts">任务完成时弹出提示</string>
+    <string name="appearance_task_completion_alerts_summary">任务完成、停止或失败时从顶部弹出原生通知。关闭后仍保留任务通知。需在系统通知设置中允许横幅。</string>
+    <string name="task_completion_channel">任务完成提示</string>
+    <string name="task_completion_notice_success">任务已完成</string>
+    <string name="task_completion_notice_stopped">任务已终止</string>
+    <string name="task_completion_notice_failed">任务未完成</string>
     <string name="background_task_completed">本轮已结束</string>
     <string name="background_continue_instruction">继续指令</string>
+    <string name="background_open_app">打开 App</string>
     <string name="background_handoff_unavailable">后台页面仍在使用或暂时无法接管，请查看聊天后重试。</string>
     <string name="background_waiting_model">等待模型回复</string>
     <string name="background_waiting_app">等待应用空闲</string>

@@ -88,7 +88,7 @@ private fun AgentOverlayState.projectEvent(event: AgentEvent): AgentOverlayState
 
     is AgentEvent.RunFailed -> copy(
         phase = AgentOverlayPhase.FAILED,
-        status = AgentOverlayStatus.RunFailed,
+        status = if (event.reason == "已停止") AgentOverlayStatus.Stopped else AgentOverlayStatus.RunFailed,
         detailText = event.reason,
     )
 

@@ -69,6 +69,51 @@ class AgentRuntimeScreenOnTest {
     }
 
     @Test
+    @Config(sdk = [33, 37])
+    fun completionSwitchAlsoSuppressesTheLegacyResultFallback() {
+        val before = kotlinx.coroutines.runBlocking {
+            io.github.mangi.eta.data.repository.AppearanceSettingsRepository.settings().also {
+                io.github.mangi.eta.data.repository.AppearanceSettingsRepository.update(it.copy(taskCompletionAlertsEnabled = true))
+            }
+        }
+        org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(false)
+        val controller = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        val service = controller.get()
+        val notifications = shadowOf(service.getSystemService(android.app.NotificationManager::class.java))
+        fun awaitSetting(value: Boolean) {
+            val deadline = System.nanoTime() + 3_000_000_000L
+            while (service.field<Boolean>("taskCompletionAlertsEnabled") != value && System.nanoTime() < deadline) {
+                shadowOf(Looper.getMainLooper()).idle()
+                Thread.sleep(5)
+            }
+            assertEquals(value, service.field<Boolean>("taskCompletionAlertsEnabled"))
+        }
+        try {
+            awaitSetting(true)
+            val run = service.registerRun("no-completion-overlay", ownsGui = false).apply { hasExecutedForegroundTool = true }
+            service.setField("displayedRun", run)
+            kotlinx.coroutines.runBlocking {
+                io.github.mangi.eta.data.repository.AppearanceSettingsRepository.update { it.copy(taskCompletionAlertsEnabled = false) }
+            }
+            awaitSetting(false)
+            notifications.setNotificationsEnabled(false)
+            org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(true)
+            AgentRuntimeService::class.java.getDeclaredMethod("enterFinalState", AgentOverlayState::class.java)
+                .apply { isAccessible = true }.invoke(service,
+                    AgentOverlayState(phase = AgentOverlayPhase.FINISHED, status = AgentOverlayStatus.ResultReady))
+            assertNull(service.field<ComposeView?>("resultCardView"))
+            assertNull(service.field<ComposeView?>("capsuleView"))
+        } finally {
+            notifications.setNotificationsEnabled(true)
+            org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(false)
+            controller.destroy()
+            kotlinx.coroutines.runBlocking {
+                io.github.mangi.eta.data.repository.AppearanceSettingsRepository.update(before)
+            }
+        }
+    }
+
+    @Test
     fun returningToEtaSuppressesAmbientWindowsButRetainsBackgroundTaskCard() {
         val controller = Robolectric.buildService(AgentRuntimeService::class.java).create()
         val service = controller.get()

@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="appearance_task_completion_alerts">Task completion pop-up</string>
+    <string name="appearance_task_completion_alerts_summary">Show a native top banner when a task finishes, stops, or fails. Turning this off keeps task notifications. Allow banners in system notification settings.</string>
+    <string name="task_completion_channel">Task completion alerts</string>
+    <string name="task_completion_notice_success">Done</string>
+    <string name="task_completion_notice_stopped">Stopped</string>
+    <string name="task_completion_notice_failed">Failed</string>
     <string name="background_task_completed">Turn ended</string>
     <string name="background_continue_instruction">Continue task</string>
+    <string name="background_open_app">Open app</string>
     <string name="background_handoff_unavailable">The background page is busy or could not be opened. Check the conversation and try again.</string>
     <string name="background_waiting_model">Waiting for model</string>
     <string name="background_waiting_app">Waiting for app</string>

@@ -6,21 +6,36 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.RemoteInput
 import android.app.Service
+import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.drawable.Icon
+import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
+import android.os.SystemClock
+import android.view.Display
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.overlay.AgentOverlayStatus
 import io.github.mangi.eta.agent.overlay.localizedText
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.core.safeLogType
+import io.github.mangi.eta.data.repository.AppearanceSettingsRepository
 import io.github.mangi.eta.ui.MainActivity
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicLong
 
 /** A task keeps its notification identity from admission through completion. */
@@ -167,8 +182,10 @@ internal class AgentExecutionService : Service() {
 
     companion object {
         private const val CHANNEL = "eta_execution_tasks_v2"
+        internal const val COMPLETION_CHANNEL = "eta_task_completion_v1"
         private const val NOTIFICATION_ID = 1107
         private const val ACTION_STOP = "io.github.mangi.eta.action.STOP_USER_EXECUTION"
+        private const val ACTION_DISMISS_COMPLETED = "io.github.mangi.etax.action.DISMISS_COMPLETED_TASK"
         // Accepted only for PendingIntents left by older builds; new cards have no switch action.
         internal const val ACTION_NEXT_TASK = "io.github.mangi.etax.action.NEXT_TASK"
         internal const val ACTION_PAUSE_RUN = "io.github.mangi.etax.action.PAUSE_RUN"
@@ -188,6 +205,11 @@ internal class AgentExecutionService : Service() {
         private val notificationIds = mutableMapOf<String, Int>()
         private val posted = mutableMapOf<Int, TaskNotificationState>()
         private val repliedRuns = linkedSetOf<String>()
+        // Finite jobs may outlive the FGS: its last lease is normally released at completion.
+        private val completionScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        private val completionJobs = mutableMapOf<String, Job>()
+        private val completionAlertCards = mutableSetOf<String>()
+        private val completedRuns = linkedSetOf<String>()
         private var nextId = 0x45540000
         private var refreshPending = false
         private val refresh = Runnable {
@@ -204,13 +226,22 @@ internal class AgentExecutionService : Service() {
         }
 
         private fun ensureChannel(context: Context) {
-            context.getSystemService(NotificationManager::class.java).createNotificationChannel(
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(
                 NotificationChannel(CHANNEL, context.getString(R.string.execution_channel), NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    setSound(null, null); enableVibration(false); setShowBadge(false)
+                })
+            // Android does not allow raising an existing channel's importance on upgrade.
+            // A separate channel changes alert policy, never the task's notification identity.
+            manager.createNotificationChannel(
+                NotificationChannel(COMPLETION_CHANNEL, context.getString(R.string.task_completion_channel), NotificationManager.IMPORTANCE_HIGH).apply {
                     setSound(null, null); enableVibration(false); setShowBadge(false)
                 })
         }
 
         private fun removeCard(context: Context, runId: String) {
+            completionJobs.remove(runId)?.cancel()
+            completionAlertCards.remove(runId)
             cards.remove(runId)
             notificationIds.remove(runId)?.let { id ->
                 context.getSystemService(NotificationManager::class.java).cancel(id)
@@ -237,8 +268,12 @@ internal class AgentExecutionService : Service() {
         /** Terminal events bypass streaming throttles and update the original task card immediately. */
         fun completeTask(context: Context, task: TaskNotificationState) = onMain {
             val previous = cards[task.runId]
+            // Late terminal callbacks must not recreate a dismissed, replied-to or reclaimed card.
+            if (previous == null && task.runId in completedRuns) return@onMain
             if (previous?.completed == true && previous.status == task.status && previous.targetPackage == task.targetPackage &&
                 previous.streamPreview == task.streamPreview) return@onMain
+            val firstCompletion = completedRuns.add(task.runId)
+            while (completedRuns.size > 64) completedRuns.remove(completedRuns.first())
             cards[task.runId] = task.copy(completed = true, paused = false)
             idFor(task.runId)
             cards.values.filter { it.completed }.dropLast(3).map { it.runId }.forEach { removeCard(context, it) }
@@ -246,6 +281,50 @@ internal class AgentExecutionService : Service() {
             refreshPending = false
             val service = instance
             if (service != null) service.refreshNotification() else publishCards(context, completedOnly = true)
+            if (firstCompletion) scheduleCompletionAlert(context.applicationContext, task.runId)
+        }
+
+        internal fun onNotificationDismissed(context: Context, intent: Intent) = onMain {
+            if (intent.action != ACTION_DISMISS_COMPLETED) return@onMain
+            val runId = intent.getStringExtra(EXTRA_RUN_ID) ?: return@onMain
+            val id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0)
+            if (cards[runId]?.completed == true && notificationIds[runId] == id) removeCard(context, runId)
+        }
+
+        /** Request one native heads-up update, leaving animation, duration and dismissal to System UI. */
+        private fun scheduleCompletionAlert(context: Context, runId: String) {
+            val requestedAt = SystemClock.uptimeMillis()
+            val job = completionScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    // Coalesce RunFinished and its final archive/result update without delaying the card itself.
+                    delay(120)
+                    val enabled = withTimeoutOrNull(1_500) {
+                        AppearanceSettingsRepository.settings().taskCompletionAlertsEnabled
+                    } == true
+                    if (!enabled || SystemClock.uptimeMillis() - requestedAt > 2_000) return@launch
+                    if (!context.getSystemService(PowerManager::class.java).isInteractive ||
+                        context.getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY)?.state != Display.STATE_ON ||
+                        context.getSystemService(KeyguardManager::class.java).isKeyguardLocked) return@launch
+                    val task = cards[runId]?.takeIf { it.completed } ?: return@launch
+                    val id = notificationIds[runId] ?: return@launch
+                    val manager = context.getSystemService(NotificationManager::class.java)
+                    if (!taskNotificationsEnabled(context) ||
+                        (manager.getNotificationChannel(COMPLETION_CHANNEL)?.importance ?: 0) < NotificationManager.IMPORTANCE_HIGH) return@launch
+                    // Do not resurrect a card the user dismissed while the preference was loading.
+                    if (manager.activeNotifications.none { it.id == id && it.tag == null }) return@launch
+                    completionAlertCards.add(runId)
+                    manager.notify(id, notification(context, task, id, alert = true))
+                    posted[id] = task
+                } catch (failure: Exception) {
+                    if (failure is CancellationException) throw failure
+                    // The original completed card is already present; alert failure must not affect it.
+                    completionAlertCards.remove(runId)
+                    AndroidAgentLogger.warn("Completion alert unavailable: type=${failure.safeLogType()}")
+                }
+            }
+            completionJobs[runId] = job
+            job.invokeOnCompletion { onMain { if (completionJobs[runId] === job) completionJobs.remove(runId) } }
+            job.start()
         }
 
         @JvmStatic fun publishRunCompletion(context: Context, runId: String, conversationId: String, status: String, text: String) = onMain {
@@ -306,41 +385,63 @@ internal class AgentExecutionService : Service() {
             return conversationIntent(context, task?.conversationId)
         }
 
-        private fun notification(context: Context, task: TaskNotificationState?, id: Int): Notification {
+        private fun notification(context: Context, task: TaskNotificationState?, id: Int, alert: Boolean = false): Notification {
             val status = task?.status
             val completed = task?.completed == true
             val progressing = !completed && task?.paused != true && status != AgentOverlayStatus.Queued
             val label = if (completed && status == AgentOverlayStatus.ResultReady) context.getString(R.string.background_task_completed)
                 else status?.localizedText(context.resources)
                     ?: context.resources.getQuantityString(R.plurals.execution_summary, leases.count(), leases.count())
-            val builder = Notification.Builder(context, CHANNEL)
+            val hasCompletionAlert = completed && task.runId in completionAlertCards
+            val completionLabel = if (!hasCompletionAlert) null else when (status) {
+                AgentOverlayStatus.ResultReady -> context.getString(R.string.task_completion_notice_success)
+                AgentOverlayStatus.Stopped -> context.getString(R.string.task_completion_notice_stopped)
+                else -> context.getString(R.string.task_completion_notice_failed)
+            }
+            val builder = Notification.Builder(context, if (hasCompletionAlert) COMPLETION_CHANNEL else CHANNEL)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(task?.title?.take(60)?.takeIf(String::isNotBlank) ?: context.getString(R.string.execution_title))
                 .setContentText(label + task?.streamPreview?.takeIf(String::isNotBlank)?.let { " · $it" }.orEmpty())
                 .setContentIntent(destination(context, task, id))
                 // Keep the continue action available, including after an unsuccessful App handoff.
-                .setOngoing(!completed).setAutoCancel(completed && task?.targetPackage.isNullOrBlank()).setOnlyAlertOnce(true)
+                .setOngoing(!completed).setAutoCancel(completed && task.targetPackage.isNullOrBlank()).setOnlyAlertOnce(!alert)
                 .setVisibility(Notification.VISIBILITY_PRIVATE)
+            completionLabel?.let(builder::setSubText)
+            if (completed) {
+                val dismissed = Intent(context, TaskNotificationDismissReceiver::class.java).setAction(ACTION_DISMISS_COMPLETED)
+                    .setData(Uri.Builder().scheme("eta-task").authority("dismiss").appendPath(task.runId).build())
+                    .putExtra(EXTRA_RUN_ID, task.runId).putExtra(EXTRA_NOTIFICATION_ID, id)
+                builder.setDeleteIntent(PendingIntent.getBroadcast(context, 0, dismissed,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+            }
             if (task != null && !completed) {
                 builder.addAction(runAction(context, task.runId,
                     if (task.paused) ACTION_RESUME_RUN else ACTION_PAUSE_RUN,
                     if (task.paused) R.string.overlay_resume else R.string.overlay_pause,
                     if (task.paused) android.R.drawable.ic_media_play else android.R.drawable.ic_media_pause))
                 builder.addAction(runAction(context, task.runId, ACTION_STOP_RUN, R.string.overlay_stop_task, R.drawable.ic_assistant_stop))
-            } else if (completed && !task?.conversationId.isNullOrBlank()) {
-                val replyIntent = Intent(context, AgentExecutionService::class.java).setAction(ACTION_REPLY)
-                    .setData(Uri.Builder().scheme("eta-task").authority("reply").appendPath(task!!.runId).build())
-                    .putExtra(EXTRA_RUN_ID, task.runId).putExtra(EXTRA_CONVERSATION_ID, task.conversationId)
-                    .putExtra(EXTRA_NOTIFICATION_ID, id)
-                val reply = PendingIntent.getForegroundService(context, 0, replyIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
-                builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, android.R.drawable.ic_menu_edit),
-                    context.getString(R.string.background_continue_instruction), reply)
-                    .addRemoteInput(RemoteInput.Builder(REPLY_TEXT).setLabel(context.getString(R.string.background_continue_instruction)).build())
-                    .setSemanticAction(Notification.Action.SEMANTIC_ACTION_REPLY).setAllowGeneratedReplies(false)
-                    .setAuthenticationRequired(true).build())
-                builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, R.drawable.ic_notification),
-                    context.getString(R.string.overlay_open_conversation), conversationIntent(context, task?.conversationId)).build())
+            } else if (completed) {
+                if (!task.conversationId.isNullOrBlank()) {
+                    builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, R.drawable.ic_notification),
+                        context.getString(R.string.overlay_open_conversation), conversationIntent(context, task.conversationId)).build())
+                }
+                if (!task.targetPackage.isNullOrBlank()) {
+                    builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, android.R.drawable.ic_menu_view),
+                        context.getString(R.string.background_open_app), destination(context, task, id)).build())
+                }
+                if (!task.conversationId.isNullOrBlank()) {
+                    val replyIntent = Intent(context, AgentExecutionService::class.java).setAction(ACTION_REPLY)
+                        .setData(Uri.Builder().scheme("eta-task").authority("reply").appendPath(task.runId).build())
+                        .putExtra(EXTRA_RUN_ID, task.runId).putExtra(EXTRA_CONVERSATION_ID, task.conversationId)
+                        .putExtra(EXTRA_NOTIFICATION_ID, id)
+                    val reply = PendingIntent.getForegroundService(context, 0, replyIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+                    builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, android.R.drawable.ic_menu_edit),
+                        context.getString(R.string.background_continue_instruction), reply)
+                        .addRemoteInput(RemoteInput.Builder(REPLY_TEXT).setLabel(context.getString(R.string.background_continue_instruction)).build())
+                        .setSemanticAction(Notification.Action.SEMANTIC_ACTION_REPLY).setAllowGeneratedReplies(false)
+                        .setAuthenticationRequired(true).build())
+                }
             } else if (task == null) {
                 val stop = PendingIntent.getService(context, 1, Intent(context, AgentExecutionService::class.java).setAction(ACTION_STOP),
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -349,7 +450,7 @@ internal class AgentExecutionService : Service() {
             if (task != null && usesSystemTaskSurface()) {
                 builder.setStyle(Notification.ProgressStyle().setProgressIndeterminate(progressing)
                     .setProgressSegments(listOf(Notification.ProgressStyle.Segment(100))).setProgress(if (completed) 100 else 0))
-                    .setShortCriticalText(if (completed) label.take(7) else shortText(context, task.status))
+                    .setShortCriticalText(completionLabel?.take(7) ?: if (completed) label.take(7) else shortText(context, task.status))
                 if (progressing) builder.extras.putBoolean("android.requestPromotedOngoing", true)
             }
             return builder.build()

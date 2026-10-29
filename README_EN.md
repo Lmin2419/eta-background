@@ -22,6 +22,7 @@ CI reported 2,058 regression tests: 2,057 passed, one skipped, no failures or er
 - Two executing tasks and at most two active or retained displays; bounded queuing and serialized access to the same app.
 - Live conversation recovery after leaving the power-button assistant sheet.
 - Separate native task notifications, streaming progress, pause/stop controls and in-place result updates. Compatible systems can show them as Live Updates / Fluid Cloud.
+- Optional native completion banners on the same task card, with separate conversation, app handoff and inline continuation actions. The Appearance switch disables pop-ups while retaining task notifications.
 - Inline notification replies to continue the original conversation, plus a separate action to open the ETA conversation.
 - Capture suspension after completion, retained app pages and explicit foreground handoff of an existing task before releasing its empty display.
 - Shared display geometry validation, landscape capture, screenshot-coordinate mapping and structured rejection diagnostics.

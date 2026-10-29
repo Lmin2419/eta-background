@@ -103,6 +103,8 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private var windowManager: WindowManager? = null
     private var glowView: ComposeView? = null
     private var runtimeGlowEnabled = true
+    // Fail closed until the persisted preference is loaded; this controls only the legacy fallback.
+    private var taskCompletionAlertsEnabled = false
     private var capsuleView: ComposeView? = null
     private var resultCardView: ComposeView? = null
     private var glowParams: WindowManager.LayoutParams? = null
@@ -170,6 +172,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         serviceScope.launch { guiControl.state.collect(::applyGuiControlState) }
         serviceScope.launch {
             AppearanceSettingsRepository.settingsFlow().collect { appearance ->
+                taskCompletionAlertsEnabled = appearance.taskCompletionAlertsEnabled
                 if (runtimeGlowEnabled != appearance.runtimeGlowEnabled) {
                     runtimeGlowEnabled = appearance.runtimeGlowEnabled
                     glowView?.let { view -> runCatching { windowManager?.removeView(view) } }
@@ -530,7 +533,8 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         run.releaseIncoming()
         mainHandler.post {
             if (!destroyed) AgentExecutionService.completeTask(this, notificationState(run).copy(
-                completed = true, status = AgentOverlayStatus.RunFailed, streamPreview = message.takeLast(240)))
+                completed = true, status = if (message == "已停止") AgentOverlayStatus.Stopped else AgentOverlayStatus.RunFailed,
+                streamPreview = message.takeLast(240)))
         }
         val result = AgentRuntimeWire.RunResult(
             run.runId, false, "", message,
@@ -692,7 +696,11 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             run.completedContext = completedContext
             AgentExecutionService.completeTask(this, notificationState(run).copy(
                 completed = true,
-                status = if (result.ok) AgentOverlayStatus.ResultReady else AgentOverlayStatus.RunFailed,
+                status = when {
+                    result.ok -> AgentOverlayStatus.ResultReady
+                    result.error == "已停止" -> AgentOverlayStatus.Stopped
+                    else -> AgentOverlayStatus.RunFailed
+                },
                 streamPreview = (if (result.ok) result.content else result.error.orEmpty()).takeLast(240),
             ))
             if (runs.all().any { !it.session.isTerminal }) {
@@ -1578,7 +1586,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private fun enterFinalState(finalState: AgentOverlayState) {
         state.value = finalState
 
-        if (AgentExecutionService.usesSystemTaskSurface() && AgentExecutionService.taskNotificationsEnabled(this)) {
+        if (!taskCompletionAlertsEnabled || AgentExecutionService.taskNotificationsEnabled(this)) {
             dismissAndStop()
             return
         }

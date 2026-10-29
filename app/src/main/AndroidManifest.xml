@@ -153,6 +153,9 @@
             android:exported="true"
             tools:ignore="ExportedService" />
 
+        <receiver
+            android:name=".agent.runtime.TaskNotificationDismissReceiver"
+            android:exported="false" />
         <service
             android:name=".agent.runtime.AgentExecutionService"
             android:exported="false"

@@ -48,8 +48,9 @@ class AgentSystemNotificationTest {
             assertNull(shadowOf(service.application).nextStartedActivity)
             finished.notification.contentIntent.send()
             assertEquals(CompletedAppActivity::class.java.name, shadowOf(service.application).nextStartedActivity.component?.className)
-            assertEquals(2, finished.notification.actions.size)
-            val reply = finished.notification.actions[0]
+            assertEquals(3, finished.notification.actions.size)
+            assertEquals(finished.notification.contentIntent, finished.notification.actions[1].actionIntent)
+            val reply = finished.notification.actions[2]
             assertEquals(Notification.Action.SEMANTIC_ACTION_REPLY, reply.semanticAction)
             assertEquals(AgentExecutionService.REPLY_TEXT, reply.remoteInputs.single().resultKey)
             assertFalse(reply.actionIntent.isImmutable)
@@ -62,7 +63,7 @@ class AgentSystemNotificationTest {
             assertEquals(AgentExecutionService::class.java.name, continuation.component?.className)
             assertEquals(AgentExecutionService.ACTION_REPLY, continuation.action)
             assertEquals("chat-app-click", continuation.getStringExtra(AgentExecutionService.EXTRA_CONVERSATION_ID))
-            finished.notification.actions[1].actionIntent.send()
+            finished.notification.actions[0].actionIntent.send()
             assertEquals("chat-app-click", shadowOf(service.application).nextStartedActivity
                 .getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
             assertEquals(original.id, manager.activeNotifications.single().id)

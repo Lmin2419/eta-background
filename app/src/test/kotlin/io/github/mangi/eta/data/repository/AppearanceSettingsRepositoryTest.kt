@@ -26,6 +26,7 @@ class AppearanceSettingsRepositoryTest {
             themeMode = AppearanceThemeMode.DARK,
             monetEnabled = true,
             runtimeGlowEnabled = false,
+            taskCompletionAlertsEnabled = false,
             accentColor = AppearanceAccentColor.TEAL,
             interfaceScale = 0.9f,
         )

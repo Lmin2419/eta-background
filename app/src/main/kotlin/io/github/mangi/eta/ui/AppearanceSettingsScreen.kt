@@ -202,6 +202,15 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit) {
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
+                    title = stringResource(R.string.appearance_task_completion_alerts),
+                    summary = stringResource(R.string.appearance_task_completion_alerts_summary),
+                    checked = appearance.taskCompletionAlertsEnabled,
+                    onCheckedChange = { enabled ->
+                        update { current -> current.copy(taskCompletionAlertsEnabled = enabled) }
+                    },
+                )
+                EtaPreferenceDivider(hasLeading = false)
+                EtaSwitchPreference(
                     title = stringResource(R.string.appearance_blur),
                     summary = stringResource(R.string.appearance_blur_summary),
                     checked = appearance.blurEnabled && blurSupported,
