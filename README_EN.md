@@ -6,13 +6,13 @@ A derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮
 
 ## Latest test build
 
-**2026-10-29 · `3.3.5+etax.f8bd297` · versionCode `2026102901`**, with engine `20261029-e38-input`.
+**2026-10-29 · `3.3.5+etax.70844e7` · versionCode `2026102902`**, with engine `20261029-e38-input`.
 
-This update integrates background tools into the native capability catalog, applies the same window readiness checks to newly launched and adopted apps, and separates accepted input from observed changes. Repeated actions with no observed progress are blocked so the agent can inspect the page again.
+This update adds native completion banners on the original task card, with separate actions to open the ETA conversation, open the target app, or continue through inline reply. The switch is under Settings → Appearance → Interface & Effects → Task completion pop-up, enabled by default. Turning it off retains task notifications. Allow banners for the Task completion alerts category in system notification settings.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/actions/runs/40819261662/artifacts/12873514442)** · [Exact source f8bd297](https://github.com/Lmin2419/eta-background/tree/f8bd2975ce9d98970aac2e8ad04511a467e0a59b) · [Changelog and checksums](etax/README.md#release-2026102901)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/actions/runs/40828973786/artifacts/12878572035)** · [Exact source 70844e7](https://github.com/Lmin2419/eta-background/tree/70844e71e25c9234b5075db1ca43c7e113dd0162) · [Changelog and checksums](etax/README.md#release-2026102902)
 
-CI reported 2,058 regression tests: 2,057 passed, one skipped, no failures or errors. All eight engine deployment tests passed; lint reported no errors. The APK retains the previous background edition's signing certificate for installation over the existing app, and its embedded engine was checked against the source build. Scrolling and long-press copying in Feishu still need ColorOS 17 device testing for both launch paths. Downloading requires a GitHub login; this artifact expires on **2026-11-28 (UTC)**.
+CI reported 2,072 regression tests: 2,071 passed, one skipped, no failures or errors. All eight engine deployment tests passed; lint reported no errors. The APK retains the previous background edition's signing certificate for installation over the existing app, and its embedded engine was checked against the source build. Banner presentation, the three-action layout and Fluid Cloud transitions still need ColorOS 17 device testing. Downloading requires a GitHub login; this artifact expires on **2026-11-28 (UTC)**.
 
 ## What this branch adds
 
