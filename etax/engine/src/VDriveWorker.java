@@ -16,12 +16,14 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.view.Display;
 import android.view.InputEvent;
+import android.view.InputDevice;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import org.json.JSONObject;
 import com.eta.shadow.ScreenGeometry;
+import com.eta.shadow.ActionEvidence;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
@@ -40,6 +42,7 @@ import java.util.List;
  *  - virtual display auto-released when orphaned (after handover) or idle
  */
 class VDriveWorker implements VDrive.Worker {
+    private final ActionEvidence.Tracker inputProgress = new ActionEvidence.Tracker();
     final long T0 = SystemClock.elapsedRealtime();
     /** Build stamp: lets status() prove which dex is actually running. */
     final String BUILD = VDrive.BUILD;
@@ -803,13 +806,62 @@ class VDriveWorker implements VDrive.Worker {
             detach();
         }
         try {
+            JSONObject beforeInput = null, inputGeometry = null;
+            String progressKey = "";
+            int inputDisplay = req.optInt("displayId", displayId);
             if (isPointerCommand(cmd0)) {
                 JSONObject invalid = preparePointerCoordinates(req);
                 if (invalid != null) return invalid;
+                inputGeometry = geometry(inputDisplay < 0 ? 0 : inputDisplay).json();
+                JSONObject ready = awaitInputReady(inputDisplay, "", req, 1800);
+                if (!ready.optBoolean("ready")) {
+                    inputLog("input rejected: " + ready);
+                    return fail("INPUT_NOT_READY", "目标显示屏尚无可操作窗口，请重新观察或诊断")
+                            .put("inputState", ready).put("operationMayHaveRun", false);
+                }
+                beforeInput = inputSnapshot(inputDisplay, req);
+                if (!ScreenGeometry.same(inputGeometry, geometry(inputDisplay < 0 ? 0 : inputDisplay).json())) {
+                    return ScreenGeometry.reject("STALE_OBSERVATION", "GEOMETRY_MISMATCH", inputGeometry,
+                            geometry(inputDisplay < 0 ? 0 : inputDisplay).json()).put("operationMayHaveRun", false);
+                }
+                progressKey = inputDisplay + ":" + cmd0 + ":" + req.optDouble("x", req.optDouble("x1", -1))
+                        + ":" + req.optDouble("y", req.optDouble("y1", -1)) + ":" + req.optDouble("x2", -1)
+                        + ":" + req.optDouble("y2", -1) + ":" + req.optLong("holdMs", -1)
+                        + ":" + (beforeInput == null ? "" : beforeInput.optString("targetKey"));
+                JSONObject blocked = inputProgress.blocked(progressKey, beforeInput, SystemClock.elapsedRealtime());
+                if (blocked != null) return blocked;
                 // Once an action starts it may take effect even if its response fails.
                 lastScreenshot = null;
             }
             JSONObject out = dispatch(cmd0, req);
+            if ("launch".equals(cmd0) && out.optBoolean("ok") && out.optInt("displayId", -1) > 0) {
+                inputProgress.clear(); // A newly opened/continued task gets its own attempt budget.
+                String component = req.optString("component");
+                String pkg = component.contains("/") ? component.substring(0, component.indexOf('/')) : component;
+                JSONObject readiness = awaitInputReady(out.getInt("displayId"), pkg, new JSONObject(), 2500);
+                out.put("inputReady", readiness.optBoolean("ready")).put("inputState", readiness);
+                inputLog("launch input_state via=" + out.optString("via", out.optBoolean("reused") ? "reused" : "unknown") + " " + readiness);
+            }
+            if (isPointerCommand(cmd0) && out.optBoolean("ok")) {
+                JSONObject afterInput = inputSnapshot(inputDisplay, req);
+                if (beforeInput != null && beforeInput.optBoolean("observable")) {
+                    long deadline = System.nanoTime() + 500_000_000L;
+                    while (ActionEvidence.comparable(beforeInput, afterInput) && !ActionEvidence.changed(beforeInput, afterInput)
+                            && System.nanoTime() < deadline) {
+                        sleepCancellable(100);
+                        afterInput = inputSnapshot(inputDisplay, req);
+                    }
+                }
+                JSONObject actualGeometry = geometry(inputDisplay < 0 ? 0 : inputDisplay).json();
+                if (!ScreenGeometry.same(inputGeometry, actualGeometry)) return ScreenGeometry.reject(
+                        "GEOMETRY_CHANGED_DURING_OPERATION", "GEOMETRY_CHANGED_DURING_OPERATION", inputGeometry, actualGeometry)
+                        .put("operationMayHaveRun", true);
+                inputProgress.record(progressKey, beforeInput, afterInput, true, SystemClock.elapsedRealtime());
+                ActionEvidence.attach(out, beforeInput, afterInput);
+                out.put("displayId", inputDisplay).put("geometry", actualGeometry);
+                inputLog("input_result cmd=" + cmd0 + " display=" + inputDisplay + " task=" + launchedTaskId
+                        + " via=" + out.optString("via", "inject") + " accepted=true outcome=" + out.optString("outcome"));
+            }
             save();
             return out;
         } catch (Throwable t) {
@@ -924,6 +976,33 @@ class VDriveWorker implements VDrive.Worker {
     /** Send one JSON command to the accessibility observer. */
     JSONObject proxyA11y(JSONObject req) {
         return proxyA11y(req, 20_000);
+    }
+
+    JSONObject inputSnapshot(int did, JSONObject action) throws Exception {
+        JSONObject query = new JSONObject().put("cmd", "snapshot").put("displayId", did);
+        if (action.has("x") || action.has("x1")) query.put("x", action.optDouble("x", action.optDouble("x1")))
+                .put("y", action.optDouble("y", action.optDouble("y1")));
+        JSONObject result = proxyA11y(query, 400);
+        return result != null && result.optBoolean("ok") ? result : null;
+    }
+
+    JSONObject awaitInputReady(int did, String pkg, JSONObject action, long timeoutMs) throws Exception {
+        long start = System.nanoTime(), deadline = start + timeoutMs * 1_000_000L;
+        JSONObject query = new JSONObject().put("cmd", "input_state").put("displayId", did).put("expectedPackage", pkg);
+        if (action.has("x") || action.has("x1")) query.put("x", action.optDouble("x", action.optDouble("x1")))
+                .put("y", action.optDouble("y", action.optDouble("y1")));
+        JSONObject state;
+        do {
+            checkCanceled();
+            state = proxyA11y(new JSONObject(query.toString()), 400);
+            if (state == null) state = new JSONObject().put("ready", false).put("reason", "OBSERVER_UNAVAILABLE");
+            if (state.optBoolean("ok") && state.optBoolean("ready")) break;
+            state.put("ready", false);
+            if (System.nanoTime() >= deadline) break;
+            sleepCancellable(100);
+        } while (System.nanoTime() < deadline);
+        return state.put("displayId", did).put("expectedPackage", pkg)
+                .put("waitedMs", (System.nanoTime() - start) / 1_000_000L);
     }
 
     JSONObject proxyA11y(JSONObject req, int timeoutMs) {
@@ -1642,16 +1721,32 @@ class VDriveWorker implements VDrive.Worker {
     /** One touch event; downTime keeps a gesture's events on a consistent timeline. */
     void injectMotion(int did, long downTime, int action, float x, float y) throws Exception {
         long now = SystemClock.uptimeMillis();
-        MotionEvent ev = MotionEvent.obtain(downTime, now, action, x, y, 0);
+        MotionEvent.PointerProperties finger = new MotionEvent.PointerProperties();
+        finger.id = 0; finger.toolType = MotionEvent.TOOL_TYPE_FINGER;
+        MotionEvent.PointerCoords point = new MotionEvent.PointerCoords();
+        point.x = x; point.y = y; point.size = 1;
+        point.pressure = action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL ? 0 : 1;
+        MotionEvent ev = MotionEvent.obtain(downTime, now, action, 1,
+                new MotionEvent.PointerProperties[]{finger}, new MotionEvent.PointerCoords[]{point},
+                0, 0, 1, 1, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
         try {
             motionSetDisplay.invoke(ev, did);
-            Object r = inject.invoke(inputManager, ev, 1);
-            if (r instanceof Boolean && !(Boolean) r) {
-                throw new IllegalStateException("injectInputEvent returned false for action " + action);
-            }
+            injectEvent(ev);
         } finally {
             ev.recycle();
         }
+    }
+
+    void injectEvent(InputEvent event) throws Exception {
+        Object result = inject.invoke(inputManager, event, 1);
+        if (!(result instanceof Boolean) || !((Boolean) result)) {
+            throw new IllegalStateException("INPUT_REJECTED: injectInputEvent did not accept " + event.getClass().getSimpleName());
+        }
+    }
+
+    void inputLog(String message) {
+        log(message);
+        android.util.Log.i("EtaBackgroundInput", message);
     }
 
     /** Put text on the system clipboard (uid 0 system context, so no app focus needed). */
@@ -1676,10 +1771,10 @@ class VDriveWorker implements VDrive.Worker {
         long now = SystemClock.uptimeMillis();
         KeyEvent down = new KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0);
         keySetDisplay.invoke(down, did);
-        inject.invoke(inputManager, down, 1);
+        injectEvent(down);
         KeyEvent up = new KeyEvent(now, now + 20, KeyEvent.ACTION_UP, code, 0);
         keySetDisplay.invoke(up, did);
-        inject.invoke(inputManager, up, 1);
+        injectEvent(up);
         return new JSONObject().put("ok", true);
     }
 
@@ -1737,7 +1832,7 @@ class VDriveWorker implements VDrive.Worker {
                 KeyEvent copy = new KeyEvent(now, now, e.getAction(), e.getKeyCode(),
                         e.getRepeatCount(), e.getMetaState());
                 keySetDisplay.invoke(copy, did);
-                inject.invoke(inputManager, copy, 1);
+                injectEvent(copy);
             }
             return new JSONObject().put("ok", true).put("chars", s.length())
                     .put("via", "keys").put("verified", false)

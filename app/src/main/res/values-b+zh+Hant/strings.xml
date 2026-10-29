@@ -1380,4 +1380,21 @@
   <string name="chat_queue_files_only">[%1$d 個檔案]</string>
     <string name="appearance_runtime_glow">執行時螢幕流光</string>
     <string name="appearance_runtime_glow_summary">顯示助手喚醒及任務執行時的螢幕邊緣光效，修改後立即生效。</string>
+  <string name="tools_background_group">背景應用程式操作</string>
+  <string name="tool_background_open">開啟背景應用程式</string>
+  <string name="tool_background_open_description">明確要求背景執行時使用虛擬螢幕。需要 Root 和無障礙服務；最多兩個不同應用程式並行，其他工作排隊，螢幕關閉時暫停。</string>
+  <string name="tool_background_state">查看背景狀態</string>
+  <string name="tool_background_state_description">檢查引擎和工作階段狀態。視窗診斷回報可見性與焦點，不傳送試探性手勢。</string>
+  <string name="tool_background_read">讀取背景畫面</string>
+  <string name="tool_background_read_description">讀取可見文字、控制項、位置與捲動目標。沒有節點不代表頁面空白。</string>
+  <string name="tool_background_shot">擷取背景畫面</string>
+  <string name="tool_background_shot_description">依目前方向截圖，附帶尺寸與影格參照。查看圖片需要啟用圖片讀取工具，座標始終綁定對應影格。</string>
+  <string name="tool_background_gesture">背景手勢操作</string>
+  <string name="tool_background_gesture_description">在目標螢幕點選、長按、滑動或拖曳，分別回報輸入是否接受、畫面是否觀察到變化。</string>
+  <string name="tool_background_scroll">捲動指定清單</string>
+  <string name="tool_background_scroll_description">多個容器時明確選擇目標清單，只核對該清單內變化；連續無進展時停止重複操作。</string>
+  <string name="tool_background_text">背景輸入文字</string>
+  <string name="tool_background_text_description">選擇可編輯輸入框，寫入後讀回核對，區分已提交與已確認的輸入結果。</string>
+  <string name="tool_background_finish">保留頁面與接續</string>
+  <string name="tool_background_finish_description">本輪結束後保留頁面，可在原通知繼續指令或開啟應用程式接手，不自動切換目前螢幕。</string>
 </resources>

@@ -570,8 +570,10 @@ final class McpEndpoint {
         a.put(tool("screen_wait", "Wait for text to appear, or for the UI to settle.",
                 "{\"text\":{\"type\":\"string\"},\"timeout_ms\":{\"type\":\"integer\"},"
                 + "\"quiet_ms\":{\"type\":\"integer\"}}", ""));
-        a.put(tool("screen_scroll", "Scroll the dominant scrollable container.",
-                "{\"direction\":{\"type\":\"string\",\"enum\":[\"down\",\"up\"]}}", ""));
+        a.put(tool("screen_scroll", "Scroll an identified container. Resolve AMBIGUOUS_SCROLL_TARGET with view_id, candidate index or display x/y. Check outcome; acceptance is not proof of movement.",
+                "{\"direction\":{\"type\":\"string\",\"enum\":[\"down\",\"up\"]},"
+                + "\"view_id\":{\"type\":\"string\"},\"index\":{\"type\":\"integer\"},"
+                + "\"x\":{\"type\":\"integer\"},\"y\":{\"type\":\"integer\"}}", ""));
         a.put(tool("screen_list", "Read the screen as rows (title and price come back together).",
                 "{\"max_rows\":{\"type\":\"integer\"}}", ""));
         a.put(tool("screen_dump", "Raw node list with bounds and view ids.",

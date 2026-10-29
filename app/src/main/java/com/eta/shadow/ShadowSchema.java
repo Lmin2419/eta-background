@@ -5,6 +5,16 @@ import org.json.JSONObject;
 
 /** Appends the hidden-display tools to Eta's tool schema array. */
 public final class ShadowSchema {
+    public static final int MAX_CONCURRENT_APPS = 2;
+    public static final java.util.Set<String> NAMES = java.util.Collections.unmodifiableSet(
+            new java.util.LinkedHashSet<>(java.util.Arrays.asList("screen_open", "screen_state",
+                    "screen_tap", "screen_swipe", "screen_press", "screen_drag", "screen_text",
+                    "screen_click", "screen_wait", "screen_scroll", "screen_list", "screen_dump",
+                    "screen_shot", "screen_diag", "screen_finish")));
+    public static final java.util.Set<String> OBSERVER_TOOLS = java.util.Collections.unmodifiableSet(
+            new java.util.HashSet<>(java.util.Arrays.asList("screen_open", "screen_tap", "screen_swipe",
+                    "screen_press", "screen_drag", "screen_text", "screen_click", "screen_wait",
+                    "screen_scroll", "screen_list", "screen_dump", "screen_diag")));
 
     public static void append(JSONArray tools) {
         // Foreground tools remain available even with a healthy background engine.
@@ -20,7 +30,7 @@ public final class ShadowSchema {
         try {
             tools.put(tool("screen_open",
                     "在本任务独占的后台虚拟屏打开应用。同一应用被其他任务占用时等待释放。"
-                    + "不同应用最多使用两个虚拟屏；额外任务等待空闲位置，不会抢占正在执行的任务。"
+                    + "不同应用最多使用 " + MAX_CONCURRENT_APPS + " 个虚拟屏；额外任务等待空闲位置，不会抢占正在执行的任务。"
                     + "仅用于用户明确要求后台执行或续接已有后台任务。当前页面、已登录页面、当面操作请用 observe_screen 等前台工具，不要搬走应用。不要用 terminal 执行 am/input/screencap。"
                     + "只传包名即可（如 com.tencent.mm）。暂停恢复后必须先重新观察页面再操作；操作结束后用 screen_finish 收尾。",
                     props3("component", "string", "包名或 package/activity，例如 com.tencent.mm",
@@ -31,7 +41,7 @@ public final class ShadowSchema {
             tools.put(tool("screen_state", "查看后台操作会话与引擎状态（含 root 引擎是否就绪）。", new JSONObject(), ""));
             tools.put(tool("screen_tap", "在当前屏幕点按坐标。截图坐标必须携带 coordinate_space=screenshot 和该截图 frame_id；节点 bounds 用 display。",
                     coordinates(props3("x", "integer", "横坐标", "y", "integer", "纵坐标")), "x,y"));
-            tools.put(tool("screen_swipe", "从一点滑到另一点。",
+            tools.put(tool("screen_swipe", "从一点滑到另一点。accepted 仅表示输入被接受，按 outcome/after 核对目标页面；UNKNOWN 或无变化时先重新观察，不盲目重复。",
                     coordinates(props7("x1", "y1", "x2", "y2", "duration_ms")), "x1,y1,x2,y2"));
             tools.put(tool("screen_press", "长按坐标（上下文菜单、拖拽把手）。",
                     coordinates(props3("x", "integer", "横坐标", "y", "integer", "纵坐标", "hold_ms", "integer", "按住毫秒")),
@@ -56,8 +66,12 @@ public final class ShadowSchema {
                             "timeout_ms", "integer", "超时毫秒",
                             "quiet_ms", "integer", "静止阈值毫秒"),
                     ""));
-            tools.put(tool("screen_scroll", "滚动当前屏幕的主要可滚动容器。",
-                    enumProp("direction", "down 或 up"), ""));
+            tools.put(tool("screen_scroll", "滚动目标列表。多个候选时返回 AMBIGUOUS_SCROLL_TARGET，按 view_id、候选 index 或显示屏 x/y 选择。moved 只表示目标内观察到变化，不能据此断言历史已到底；NO_PROGRESS 时改查目标或输入状态。",
+                    enumProp("direction", "down 显示下方内容，up 显示上方内容")
+                            .put("view_id", property("string", "滚动容器 view id，可用后半段"))
+                            .put("index", property("integer", "候选列表中的序号，从 0 开始"))
+                            .put("x", property("integer", "容器内一点的显示屏像素横坐标，与 y 同时提供"))
+                            .put("y", property("integer", "容器内一点的显示屏像素纵坐标")), ""));
             tools.put(tool("screen_list", "把当前屏幕按行读出：同一水平位置的文字归为一行，"
                     + "标题和价格会落在同一行。",
                     props1("max_rows", "integer", "最多行数"), ""));

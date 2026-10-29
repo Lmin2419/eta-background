@@ -44,6 +44,7 @@ public final class Boot {
     private static volatile long lastEventAt = SystemClock.elapsedRealtime();
     private static volatile int eventCount = 0;
     private static final SparseLongArray lastEventByDisplay = new SparseLongArray();
+    private static final ActionEvidence.Tracker clickProgress = new ActionEvidence.Tracker();
 
     public static void init(AccessibilityService svc) {
         android.util.Log.i("EtaShadow", "Boot.init called, svc=" + svc);
@@ -265,6 +266,21 @@ public final class Boot {
         JSONObject geometry = before.optJSONObject("geometry");
         JSONObject invalid = ScreenGeometry.check(req.optJSONObject("expectedGeometry"), geometry);
         if (invalid != null) return invalid.put("windows", windowGeometry(req.optInt("displayId", 0)));
+        boolean clickAction = "click2".equals(command) || "tapnode".equals(command);
+        JSONObject observation = clickAction ? BackgroundObservation.scene(windowsOf(req.optInt("displayId", 0)), req) : null;
+        // Coordinate taps are guarded by their owning engine worker. Direct node clicks
+        // bypass that worker, so keep their retry budget scoped to the runtime binding.
+        String clickKey = null;
+        if ("click2".equals(command)) {
+            JSONObject selector = new JSONObject();
+            for (String field : new String[]{"viewId", "text", "desc", "index", "exact"}) {
+                if (req.has(field)) selector.put(field, req.get(field));
+            }
+            clickKey = req.optString("sessionId") + ":" + req.optInt("displayId") + ":"
+                    + BackgroundObservation.digest(selector.toString()) + ":" + observation.optString("targetKey");
+            JSONObject blocked = clickProgress.blocked(clickKey, observation, SystemClock.elapsedRealtime());
+            if (blocked != null) return blocked;
+        }
         JSONObject result = dispatch(req);
         JSONObject after = geometryState(req);
         boolean mutating = "click2".equals(command) || "tapnode".equals(command) || "settext".equals(command) || "scroll".equals(command);
@@ -273,6 +289,16 @@ public final class Boot {
         if (!ScreenGeometry.same(geometry, actual)) return ScreenGeometry.reject(
                 "GEOMETRY_CHANGED_DURING_OPERATION", "GEOMETRY_CHANGED_DURING_OPERATION", geometry, actual)
                 .put("operationMayHaveRun", mutating).put("windows", windowGeometry(req.optInt("displayId", 0)));
+        if (clickAction) {
+            JSONObject observedAfter = BackgroundObservation.scene(windowsOf(req.optInt("displayId", 0)), req);
+            if (clickKey != null) clickProgress.record(clickKey, observation, observedAfter, result.optBoolean("ok"), SystemClock.elapsedRealtime());
+            ActionEvidence.attach(result, observation, observedAfter);
+            result.put("changed", result.optBoolean("verified"));
+        } else if ("settext".equals(command)) {
+            boolean accepted = result.optBoolean("ok"), verified = result.optBoolean("verified");
+            result.put("accepted", accepted).put("outcome", !accepted ? "REJECTED" : verified ? "VERIFIED" : "UNKNOWN");
+            if (accepted && !verified) result.put("code", "ACTION_OUTCOME_UNKNOWN").put("operationMayHaveRun", true);
+        }
         return result.put("geometry", actual);
     }
 
@@ -310,6 +336,8 @@ public final class Boot {
             case "scroll": return scroll(req);
             case "list": return list(req);
             case "diag": return diag(req);
+            case "snapshot": return BackgroundObservation.scene(windowsOf(req.optInt("displayId", -1)), req).put("ok", true);
+            case "input_state": return inputState(req);
             case "notify": return notifyUser(req);
             default: return new JSONObject().put("ok", false).put("code", "UNKNOWN_CMD");
         }
@@ -370,6 +398,10 @@ public final class Boot {
             o.put("vid", n.getViewIdResourceName() == null ? "" : n.getViewIdResourceName());
             o.put("edit", n.isEditable());
             o.put("click", n.isClickable());
+            o.put("scrollable", n.isScrollable());
+            JSONArray actions = new JSONArray();
+            for (AccessibilityNodeInfo.AccessibilityAction action : n.getActionList()) actions.put(action.getId());
+            o.put("actions", actions);
             o.put("enabled", n.isEnabled());
             o.put("bounds", new JSONArray().put(r.left).put(r.top).put(r.right).put(r.bottom));
             nodes.put(o);
@@ -515,15 +547,14 @@ public final class Boot {
         AccessibilityNodeInfo target = clickable;
         if (target == null) return new JSONObject().put("ok", false).put("code", "NO_NODE");
         String before = signature(did);
-        long evBefore = lastEventFor(did);
         boolean ok = target.performAction(hold > 0
                 ? AccessibilityNodeInfo.ACTION_LONG_CLICK
                 : AccessibilityNodeInfo.ACTION_CLICK);
         boolean changed = false;
-        long deadline = SystemClock.elapsedRealtime() + 250;
-        while (SystemClock.elapsedRealtime() < deadline) {
+        long deadline = System.nanoTime() + 250_000_000L;
+        while (ok && System.nanoTime() < deadline) {
             Thread.sleep(20);
-            if (lastEventFor(did) != evBefore || !signature(did).equals(before)) { changed = true; break; }
+            if (!signature(did).equals(before)) { changed = true; break; }
         }
         if (changed && target.isEditable()) {
             // Clicking a text field makes that app request the IME. On this ROM the hidden
@@ -617,20 +648,12 @@ public final class Boot {
         AccessibilityNodeInfo clickable = nearestClickable(picked);
         boolean editableTarget = picked.isEditable();
         String before = signature(did);
-        int evBefore = eventCount;
-        long t0 = SystemClock.elapsedRealtime();
         boolean ok = clickable.performAction(AccessibilityNodeInfo.ACTION_CLICK);
         boolean changed = false;
-        long deadline = t0 + 250;
-        long lastSample = 0;
-        while (SystemClock.elapsedRealtime() < deadline) {
-            Thread.sleep(20);
-            if (eventCount != evBefore) { changed = true; break; }
-            long now = SystemClock.elapsedRealtime();
-            if (lastSample == 0 || now - lastSample >= 100) {
-                lastSample = now;
-                if (!signature(did).equals(before)) { changed = true; break; }
-            }
+        long deadline = System.nanoTime() + 250_000_000L;
+        while (ok && System.nanoTime() < deadline) {
+            Thread.sleep(50);
+            if (!signature(did).equals(before)) { changed = true; break; }
         }
         if (changed && editableTarget) {
             // same reason as tapNode: a clicked text field would otherwise pull the IME
@@ -646,15 +669,8 @@ public final class Boot {
                 .put("bounds", new JSONArray().put(r.left).put(r.top).put(r.right).put(r.bottom));
     }
 
-    private static String signature(int did) {
-        StringBuilder sb = new StringBuilder();
-        int n = 0;
-        for (AccessibilityNodeInfo node : flatten(windowsOf(did), 160)) {
-            String t = textOf(node);
-            if (!t.isEmpty()) { sb.append(t).append('|'); n++; }
-            if (n > 60) break;
-        }
-        return Integer.toHexString(sb.toString().hashCode()) + ":" + n;
+    private static String signature(int did) throws Exception {
+        return BackgroundObservation.scene(windowsOf(did), new JSONObject()).optString("fingerprint");
     }
 
     private static long lastEventFor(int did) {
@@ -718,32 +734,35 @@ public final class Boot {
 
     private static JSONObject scroll(JSONObject req) throws Exception {
         int did = req.optInt("displayId", -1);
-        // the tool schema exposes "direction"; "dir" is the old internal name
-        String dir = req.optString("direction", req.optString("dir", "down"));
-        boolean forward = !"up".equals(dir);
-        AccessibilityNodeInfo best = null;
-        long bestArea = 0;
-        for (AccessibilityNodeInfo n : flatten(windowsOf(did), 500)) {
-            if (!n.isVisibleToUser()) continue;
-            if (!n.isScrollable() || !n.isEnabled()) continue;
-            Rect r = new Rect();
-            n.getBoundsInScreen(r);
-            long area = (long) r.width() * r.height();
-            if (area > bestArea) { bestArea = area; best = n; }
+        return BackgroundScroll.execute(req, () -> windowsOf(did));
+    }
+
+    private static JSONObject inputState(JSONObject req) throws Exception {
+        int did = req.optInt("displayId", -1);
+        String expected = req.optString("expectedPackage");
+        JSONArray windows = new JSONArray();
+        boolean ready = false;
+        List<AccessibilityWindowInfo> all = windowsOf(did);
+        if (all != null) for (AccessibilityWindowInfo window : all) {
+            AccessibilityNodeInfo root = window.getRoot();
+            Rect bounds = new Rect(); window.getBoundsInScreen(bounds);
+            if (bounds.isEmpty() && root != null) root.getBoundsInScreen(bounds);
+            String pkg = root == null ? "" : BackgroundObservation.value(root.getPackageName());
+            boolean application = window.getType() == AccessibilityWindowInfo.TYPE_APPLICATION;
+            boolean interactive = application || window.getType() == AccessibilityWindowInfo.TYPE_INPUT_METHOD
+                    || window.getType() == AccessibilityWindowInfo.TYPE_SYSTEM;
+            boolean matches = expected.isEmpty() || expected.equals(pkg);
+            boolean containsPoint = !req.has("x") || bounds.contains(req.optInt("x"), req.optInt("y"));
+            boolean visible = !bounds.isEmpty() && (root != null && root.isVisibleToUser() || window.isFocused() || window.isActive());
+            if (interactive && visible && matches && containsPoint) ready = true;
+            windows.put(new JSONObject().put("id", window.getId()).put("package", pkg)
+                    .put("type", window.getType()).put("focused", window.isFocused()).put("active", window.isActive())
+                    .put("visible", visible).put("bounds", BackgroundObservation.rect(bounds)));
         }
-        if (best == null) return new JSONObject().put("ok", false).put("code", "NO_SCROLLABLE");
-        String before = signature(did);
-        boolean ok = best.performAction(forward
-                ? AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
-                : AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
-        // the list animates: sample for a short while instead of one fixed 350ms guess
-        boolean moved = false;
-        long deadline = SystemClock.elapsedRealtime() + 1200;
-        while (SystemClock.elapsedRealtime() < deadline) {
-            Thread.sleep(120);
-            if (!before.equals(signature(did))) { moved = true; break; }
-        }
-        return new JSONObject().put("ok", ok).put("moved", moved);
+        return new JSONObject().put("ok", true).put("ready", ready).put("displayId", did)
+                .put("expectedPackage", expected).put("windows", windows)
+                .put("reason", ready ? "VISIBLE_TARGET_WINDOW" : "NO_VISIBLE_TARGET_WINDOW")
+                .put("hint", "窗口可见仅表示可以尝试输入；焦点单独报告，动作效果须查看 outcome/after。");
     }
 
     private static JSONObject list(JSONObject req) throws Exception {
@@ -809,6 +828,7 @@ public final class Boot {
                     .put("bounds", new JSONArray().put(bounds.left).put(bounds.top).put(bounds.right).put(bounds.bottom)));
         }
         return new JSONObject().put("ok", true).put("displayId", did).put("package", pkg)
+                .put("inputState", inputState(req))
                 .put("windows", windows).put("windowCount", windows.length())
                 .put("visualOnly", texts.isEmpty() && edit == 0 && click == 0)
                 .put("hint", texts.isEmpty() ? "此页面未暴露可读文字节点；游戏/画布界面请使用 screen_shot 与截图坐标操作" : "节点 bounds 使用显示屏原始像素")

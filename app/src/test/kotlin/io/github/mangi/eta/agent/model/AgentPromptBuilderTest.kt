@@ -16,6 +16,23 @@ import org.junit.Test
 
 class AgentPromptBuilderTest {
     @Test
+    fun customProviderPromptsKeepBuiltInBackgroundRulesAndCoordinateProtocolsSeparate() {
+        for (custom in listOf("", "用户自定义语气")) {
+            val contents = AgentPromptBuilder.buildSystemMessages(
+                modelConfig(custom, terminalTools = false, browserTools = false),
+                SkillContext.EMPTY, AgentMemoryContext.DISABLED, rootAvailable = true,
+            ).toString()
+            assertTrue(contents.contains("内置前台操作和后台虚拟屏操作"))
+            assertTrue(contents.contains("后台最多同时操作 2 个不同应用"))
+            assertTrue(contents.contains("息屏会暂停"))
+            assertTrue(contents.contains("仅适用于前台 GUI 工具，不适用于后台 screen_*"))
+            assertTrue(contents.contains("不使用前台的 normalized/screen 或 observation_id"))
+            assertTrue(contents.contains("NO_PROGRESS"))
+            assertTrue(contents.contains("未翻到历史、文字被裁切或复制失败不能推断消息被删除"))
+            if (custom.isNotBlank()) assertTrue(contents.contains(custom))
+        }
+    }
+    @Test
     fun rootPromptOnlyDependsOnGrantSoTransientProbeStatesKeepThePrefixStable() {
         fun prompt(state: RootAccessState) = AgentPromptBuilder.buildSystemMessages(
             config = modelConfig("", terminalTools = true, browserTools = false),

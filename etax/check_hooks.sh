@@ -23,7 +23,7 @@ need $K/agent/runtime/AgentExecutionService.kt  'extras.putBoolean("android.requ
 need $K/ui/MainActivity.kt                      'com.eta.shadow.ShadowNotice.handleHandoverIntent(intent)' '6 通知点击 → 移回主屏'
 need $K/agent/mcp/McpRunContext.kt              'shadow?.execute('              '7 工具执行拦截 screen_*'
 need $K/agent/runtime/AgentRuntimeService.kt                'run.notice.append('                '8 流式正文 → 通知栏'
-need $K/agent/model/AgentModelClient.kt         'com.eta.shadow.ShadowSchema.append(tools)'          '9 工具表注入'
+need $K/agent/model/AgentToolCatalog.kt         'AgentBackgroundToolCatalog.appendTo(tools)'        '9 内置后台工具目录'
 need $K/agent/runtime/AgentRuntimeService.kt    'run.notice.onRunStarted()'         '10 任务开始'
 need $K/agent/runtime/AgentRuntimeService.kt    'run.notice.onRunFinished('         '11 任务结束（成功/出错）'
 need app/build.gradle.kts                       'applicationId = "io.github.mangi.etax"'             '12 独立包名 etax'

@@ -288,7 +288,7 @@ internal class RoutingToolExecutor(
     override fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult {
         // etax: screen_* 后台虚拟屏工具，以及 terminal 里的界面类 shell 命令拦截
         shadow?.execute(toolCall.name, toolCall.argumentsJson)
-            ?.let { return AgentModelClient.ToolResult(it) }
+            ?.let { return backgroundToolResult(toolCall.name, it) }
         return if (mcp.contains(toolCall.name)) mcp.execute(toolCall) else local.execute(toolCall)
     }
 
@@ -297,4 +297,14 @@ internal class RoutingToolExecutor(
         runCatching { mcp.close() }
         (local as? AutoCloseable)?.let { runCatching { it.close() } }
     }
+}
+
+/** Legacy bridge text replies are failure hints, never successful tool completion. */
+internal fun backgroundToolResult(name: String, content: String): AgentModelClient.ToolResult {
+    val result = runCatching { JSONObject(content) }.getOrElse {
+        JSONObject().put("ok", false)
+            .put("code", if (name == "terminal") "GUI_TOOL_REQUIRED" else "BACKGROUND_TOOL_UNAVAILABLE")
+            .put("message", content)
+    }
+    return AgentModelClient.ToolResult(result.toString())
 }

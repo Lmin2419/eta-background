@@ -30,6 +30,12 @@ internal object AgentToolRequirements {
                 check(put(name, LocalToolRequirement(root)) == null) { "Duplicate tool: $name" }
             }
         }
+        com.eta.shadow.ShadowSchema.NAMES.forEach { name ->
+            put(name, LocalToolRequirement(
+                rootRequirement = if (name == "screen_state") RootRequirement.NONE else RootRequirement.REQUIRED,
+                accessibility = name in com.eta.shadow.ShadowSchema.OBSERVER_TOOLS,
+            ))
+        }
         register(
             RootRequirement.NONE,
             "get_current_context", "search_apps", "launch_app", "open_uri", "browser_use", "web_search", "fetch_url",

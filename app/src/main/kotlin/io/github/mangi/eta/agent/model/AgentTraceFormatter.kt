@@ -11,6 +11,17 @@ import org.json.JSONObject
 internal class AgentTraceFormatter {
     fun summarizeArguments(toolCall: AgentModelClient.ToolCall): String =
         when (toolCall.name) {
+            "screen_open" -> "后台打开应用"
+            "screen_state", "screen_diag" -> "检查后台状态"
+            "screen_tap", "screen_click" -> "后台点击"
+            "screen_swipe", "screen_scroll" -> "后台滚动"
+            "screen_press" -> "后台长按"
+            "screen_drag" -> "后台拖动"
+            "screen_text" -> summarizeTextLength("后台输入", toolCall.argumentsJson, "text")
+            "screen_list", "screen_dump" -> "读取后台界面"
+            "screen_shot" -> "截取后台画面"
+            "screen_wait" -> "等待后台界面"
+            "screen_finish" -> "后台操作收尾"
             BROWSER_TOOL_NAME -> summarizeBrowserArguments(toolCall.argumentsJson)
             "web_search" -> "搜索网页"
             "fetch_url" -> summarizeFetchArguments(toolCall.argumentsJson)
@@ -282,6 +293,17 @@ internal class AgentTraceFormatter {
         }
         if (json?.optString("status") == "unconfirmed") return "操作已提交，效果未确认"
         if (!isSuccessResult(result)) return summarizeFailure(json)
+        if (toolName in com.eta.shadow.ShadowSchema.NAMES && json != null) {
+            when (json.optString("outcome")) {
+                "UNKNOWN" -> return "操作已提交，效果未确认"
+                "NO_OBSERVED_CHANGE" -> return "操作已提交，目标未观察到变化"
+                "CHANGED" -> return "目标区域已变化，需核对内容"
+                "VERIFIED" -> return "已输入并核对文本"
+            }
+            if (toolName == "screen_open" && json.has("inputReady")) {
+                return if (json.optBoolean("inputReady")) "后台应用窗口已就绪" else "应用已打开，等待窗口就绪"
+            }
+        }
         if (json != null) {
             val summary = AgentDeviceResultFormatter.summarize(toolName, json)
                 ?: AgentPhoneResultFormatter.summarize(toolName, json)

@@ -60,6 +60,17 @@ import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.ui.graphics.vector.ImageVector
 
 internal fun iconForTool(toolId: String): ImageVector = when (toolId) {
+    "screen_open" -> Icons.Rounded.Layers
+    "screen_state", "screen_diag" -> Icons.Rounded.AdminPanelSettings
+    "screen_dump", "screen_list" -> Icons.Rounded.DocumentScanner
+    "screen_shot" -> Icons.Rounded.ScreenshotMonitor
+    "screen_tap", "screen_click" -> Icons.Rounded.AdsClick
+    "screen_swipe", "screen_drag" -> Icons.Rounded.OpenWith
+    "screen_press" -> Icons.Rounded.TouchApp
+    "screen_scroll" -> Icons.Rounded.SwapVert
+    "screen_text" -> Icons.Rounded.Keyboard
+    "screen_wait" -> Icons.Rounded.Schedule
+    "screen_finish" -> Icons.Rounded.Notifications
     "observe", "observe_screen" -> Icons.Rounded.DocumentScanner
     "click", "tap", "tap_element" -> Icons.Rounded.AdsClick
     "tap_area" -> Icons.Rounded.MyLocation

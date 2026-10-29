@@ -22,7 +22,7 @@ private class ShadowScreenConnection(id: String) : ScreenToolConnection {
 }
 
 /** Capacity is reserved before launch; a cancelled owner keeps its slot until engine cleanup ACK. */
-internal class ScreenLeaseRegistry(private val capacity: Int = 2) {
+internal class ScreenLeaseRegistry(private val capacity: Int = com.eta.shadow.ShadowSchema.MAX_CONCURRENT_APPS) {
     private data class Lease(val owner: String, val app: String)
     private val monitor = Object()
     private val leases = linkedMapOf<String, Lease>()

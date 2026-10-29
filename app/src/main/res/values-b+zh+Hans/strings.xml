@@ -1450,4 +1450,21 @@
   <string name="chat_queue_files_only">[%1$d 个文件]</string>
     <string name="appearance_runtime_glow">运行时屏幕流光</string>
     <string name="appearance_runtime_glow_summary">显示助手唤醒及任务执行时的屏幕边缘光效，修改后立即生效。</string>
+  <string name="tools_background_group">后台应用操作</string>
+  <string name="tool_background_open">打开后台应用</string>
+  <string name="tool_background_open_description">明确要求后台执行时使用虚拟屏。需要 Root 和无障碍服务；最多两个不同应用并行，其他任务排队，息屏暂停。</string>
+  <string name="tool_background_state">查看后台状态</string>
+  <string name="tool_background_state_description">检查引擎和会话状态。窗口诊断报告可见性与焦点，不发送试探性手势。</string>
+  <string name="tool_background_read">读取后台界面</string>
+  <string name="tool_background_read_description">读取可见文字、控件、位置与滚动目标。没有节点不代表页面为空。</string>
+  <string name="tool_background_shot">截取后台画面</string>
+  <string name="tool_background_shot_description">按当前方向截图，附带尺寸与帧引用。查看图片需要开启图片读取工具，坐标始终绑定对应帧。</string>
+  <string name="tool_background_gesture">后台手势操作</string>
+  <string name="tool_background_gesture_description">在目标屏幕点击、长按、滑动或拖动，分别报告输入是否接受、页面是否观察到变化。</string>
+  <string name="tool_background_scroll">滚动指定列表</string>
+  <string name="tool_background_scroll_description">多个容器时明确选择目标列表，只核对该列表内变化；连续无进展时停止重复操作。</string>
+  <string name="tool_background_text">后台输入文字</string>
+  <string name="tool_background_text_description">选择可编辑输入框，写入后回读核对，区分已提交与已确认的输入结果。</string>
+  <string name="tool_background_finish">保留页面与续接</string>
+  <string name="tool_background_finish_description">本轮结束后保留页面，可在原通知继续指令或打开应用接管，不自动切换当前屏幕。</string>
 </resources>

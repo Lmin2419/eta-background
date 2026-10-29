@@ -31,6 +31,20 @@ internal fun buildToolsState(context: Context): AgentToolsUiState =
                 ),
             ),
             ToolGroupUi(
+                id = "background",
+                title = context.getString(R.string.tools_background_group),
+                tools = listOf(
+                    ToolItemUi("screen_open", context.getString(R.string.tool_background_open), context.getString(R.string.tool_background_open_description)),
+                    ToolItemUi("screen_state", context.getString(R.string.tool_background_state), context.getString(R.string.tool_background_state_description)),
+                    ToolItemUi("screen_dump", context.getString(R.string.tool_background_read), context.getString(R.string.tool_background_read_description)),
+                    ToolItemUi("screen_shot", context.getString(R.string.tool_background_shot), context.getString(R.string.tool_background_shot_description)),
+                    ToolItemUi("screen_swipe", context.getString(R.string.tool_background_gesture), context.getString(R.string.tool_background_gesture_description)),
+                    ToolItemUi("screen_scroll", context.getString(R.string.tool_background_scroll), context.getString(R.string.tool_background_scroll_description)),
+                    ToolItemUi("screen_text", context.getString(R.string.tool_background_text), context.getString(R.string.tool_background_text_description)),
+                    ToolItemUi("screen_finish", context.getString(R.string.tool_background_finish), context.getString(R.string.tool_background_finish_description)),
+                ),
+            ),
+            ToolGroupUi(
                 id = "web",
                 title = context.getString(R.string.state_web_browsing_e56105),
                 tools = listOf(

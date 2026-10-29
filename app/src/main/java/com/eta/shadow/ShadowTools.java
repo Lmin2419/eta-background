@@ -290,16 +290,7 @@ public final class ShadowTools {
         display = disp < 0 ? 0 : disp;
         observedGeometry = null;
         rememberGeometry(launched);
-        if ("hidden".equals(mode)) {
-            for (int i = 0; i < 30; i++) {
-                try {
-                    JSONObject d = new JSONObject(observer(new JSONObject()
-                            .put("cmd", "dump").put("displayId", display).put("limit", 1).toString()));
-                    if (d.optBoolean("ok") && d.optInt("count", 0) > 0) break;
-                } catch (Throwable ignored) { }
-                Thread.sleep(100);
-            }
-        }
+        // Engine reports window readiness for both adoption and cold launch; a nonempty tree alone is insufficient.
         return launched.put("display", display)
                 .put("hint", "hidden".equals(mode)
                         ? "app is on a hidden display; call screen_finish when done"

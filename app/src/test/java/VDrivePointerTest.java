@@ -26,6 +26,13 @@ public class VDrivePointerTest {
             try { return visualOnly ? new JSONObject().put("ok", false).put("code", "NO_NODE") : success(); }
             catch (Exception e) { throw new AssertionError(e); }
         }
+        @Override JSONObject proxyA11y(JSONObject req, int timeout) {
+            try {
+                if ("input_state".equals(req.optString("cmd"))) return success().put("ready", true);
+                if ("snapshot".equals(req.optString("cmd"))) return success().put("observable", false);
+                return proxyA11y(req);
+            } catch (Exception error) { throw new AssertionError(error); }
+        }
         @Override void injectTouch(int did, float x1, float y1, float x2, float y2, long hold, int move) {
             touches++; touchedX = x1; touchedY = y1;
         }

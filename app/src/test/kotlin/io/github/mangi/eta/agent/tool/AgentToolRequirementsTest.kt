@@ -12,6 +12,19 @@ import org.junit.Test
 
 class AgentToolRequirementsTest {
     @Test
+    fun backgroundToolsShareCapabilityChecksWithoutTakingForegroundControl() {
+        assertTrue(com.eta.shadow.ShadowSchema.NAMES.all { it in catalog(root = true).names() })
+        assertEquals(setOf("screen_state"), catalog(root = false).names().filter { it.startsWith("screen_") }.toSet())
+        val noRoot = AgentToolCapabilities(rootAvailable = false)
+        assertEquals("ROOT_REQUIRED", noRoot.unavailableCode("screen_open"))
+        assertEquals(null, noRoot.unavailableCode("screen_state"))
+        val noObserver = AgentToolCapabilities(rootAvailable = true, accessibilityAvailable = false)
+        assertEquals("ACCESSIBILITY_UNAVAILABLE", noObserver.unavailableCode("screen_swipe"))
+        assertEquals(null, noObserver.unavailableCode("screen_shot"))
+        assertEquals(null, noObserver.unavailableCode("screen_finish"))
+        assertTrue(com.eta.shadow.ShadowSchema.NAMES.none { AgentToolRequirements.requiresGuiControl(it) })
+    }
+    @Test
     fun everyRegisteredToolHasExactlyOneRequirement() {
         val tools = catalog(root = true).also { CharacterMemoryTools.appendSchemas(it) }
         val executionOnly = setOf("input_text", "replace_text", "clear_text", "paste_text")

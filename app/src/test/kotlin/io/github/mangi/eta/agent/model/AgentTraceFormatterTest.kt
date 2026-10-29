@@ -11,6 +11,21 @@ class AgentTraceFormatterTest {
     private val formatter = AgentTraceFormatter()
 
     @Test
+    fun backgroundSummariesDistinguishSubmissionFromObservedChangeWithoutLeakingText() {
+        val cases = mapOf("UNKNOWN" to "操作已提交，效果未确认",
+            "NO_OBSERVED_CHANGE" to "操作已提交，目标未观察到变化",
+            "CHANGED" to "目标区域已变化，需核对内容")
+        for ((outcome, summary) in cases) {
+            val result = AgentModelClient.ToolResult(JSONObject().put("ok", true).put("outcome", outcome)
+                .put("after", JSONObject().put("text", "private message")).toString())
+            assertEquals(summary, formatter.summarizeResult("screen_swipe", result))
+        }
+        assertEquals("应用已打开，等待窗口就绪", formatter.summarizeResult("screen_open",
+            AgentModelClient.ToolResult("""{"ok":true,"inputReady":false}""")))
+        assertEquals("后台长按", formatter.summarizeArguments(AgentModelClient.ToolCall("id", "screen_press", "{}")))
+    }
+
+    @Test
     fun currentContextIsPresentedAsTimeAndLocationWithoutRequiringAnOkField() {
         assertEquals("读取时间与位置", formatter.summarizeArguments(
             AgentModelClient.ToolCall("context", "get_current_context", "{}"),

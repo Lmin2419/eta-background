@@ -22,6 +22,7 @@ internal object AgentToolCatalog {
             AgentContextAppToolCatalog.appendTo(tools)
             AgentGestureToolCatalog.appendTo(tools)
             AgentTextSystemToolCatalog.appendTo(tools)
+            AgentBackgroundToolCatalog.appendTo(tools)
             AgentDeviceToolCatalog.appendTo(
                 tools,
                 directTools = deviceDirectTools,

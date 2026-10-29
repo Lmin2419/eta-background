@@ -8,6 +8,7 @@ A derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮
 
 - Foreground tools for the current page; virtual displays for explicitly requested background work or continuation.
 - Root-backed virtual displays with per-task screen ownership, observations and input state.
+- Shared capability registration, window readiness checks, explicit scroll targets, and separate input acceptance/change evidence with bounded no-progress retries.
 - Two executing tasks and at most two active or retained displays; bounded queuing and serialized access to the same app.
 - Live conversation recovery after leaving the power-button assistant sheet.
 - Separate native task notifications, streaming progress, pause/stop controls and in-place result updates. Compatible systems can show them as Live Updates / Fluid Cloud.
