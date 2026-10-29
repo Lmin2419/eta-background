@@ -4,6 +4,16 @@
 
 **Eta 后台版是 [Eta](https://github.com/Mangi-11/Eta) 的衍生分支，基于上游 v3.3.5。原作者为 [蛮吉（Mangi-11）](https://github.com/Mangi-11)。** 本仓库维护后台虚拟屏、多任务与通知交互等扩展，非上游官方发行版。内部工程名沿用 `Etax`，安装包名为 `io.github.mangi.etax`，可与官方 Eta 共存。
 
+## 最新测试版本
+
+**2026-10-29 · `3.3.5+etax.f8bd297` · versionCode `2026102901`**，配套引擎为 `20261029-e38-input`。
+
+本次重点是后台能力统一接入、直接启动与接管应用的窗口就绪检查，以及操作效果核验：区分“操作已提交”和“目标页面已变化”，连续无变化时阻止重复操作，要求重新观察。
+
+**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/actions/runs/40819261662/artifacts/12873514442)** · [对应源码 f8bd297](https://github.com/Lmin2419/eta-background/tree/f8bd2975ce9d98970aac2e8ad04511a467e0a59b) · [详细更新与校验值](etax/README.md#release-2026102901)
+
+该构建的 2,058 项回归测试中，2,057 项通过、1 项跳过，失败及错误均为 0；另有 8 项引擎部署测试通过，lint 无错误。APK 签名与此前后台版一致，可覆盖安装；包内引擎已与源码核验。飞书两种启动方式的上翻与长按复制仍待 ColorOS 17 真机复测。下载需登录 GitHub，该附件将于 **2026-11-28（UTC）** 到期。
+
 ## 我们新增与改进的功能
 
 | 功能 | Eta 后台版的实现 |
@@ -36,7 +46,7 @@
 
 | 版本 | 源码 | 更新内容 |
 | --- | --- | --- |
-| 3.3.5 后台版 | [main](https://github.com/Lmin2419/eta-background/tree/main) | 上游 3.3.5 与后台版特性整合；项目整理与命名。 |
+| 3.3.5 后台版 · 2026102901 | [f8bd297](https://github.com/Lmin2419/eta-background/tree/f8bd2975ce9d98970aac2e8ad04511a467e0a59b) | 最新签名测试包：后台能力统一、窗口就绪与操作效果核验；包含此前的部署恢复、前台操作及流光开关改进。 |
 | 3.3.4 后台扩展历程 | [历史记录](https://github.com/Lmin2419/eta-background/commits/etax-3.3.4-background-multitask) | 多任务、原生通知、双屏稳定性、接管与几何修复。该开发分支之后已继续合入 3.3.5。 |
 | 3.3.4 早期版 | [etax-3.3.4](https://github.com/Lmin2419/eta-background/tree/etax-3.3.4) | 后台引擎源码化、通知与电源键入口接线。 |
 | 3.3.3 早期版 | [etax-3.3.3](https://github.com/Lmin2419/eta-background/tree/etax-3.3.3) | 初版后台扩展及 Root 引擎内嵌、自启。 |
@@ -45,7 +55,7 @@
 
 ## 源码与测试
 
-Android 应用位于 `app/`；后台桥接在 `app/src/main/java/com/eta/shadow/`；Root 引擎在 `etax/engine/`，共用几何协议在 `etax/shared/`。`app/src/test/` 保留上游和后台版回归测试，防止并发、生命周期、通知回复和坐标校验问题回归。
+Android 应用位于 `app/`；后台桥接在 `app/src/main/java/com/eta/shadow/`；Root 引擎在 `etax/engine/`，共用几何与操作证据协议在 `etax/shared/`。`app/src/test/` 保留上游和后台版回归测试，`etax/engine/tests/` 覆盖引擎部署脚本，防止并发、生命周期、通知回复、输入核验与部署问题回归。
 
 问题反馈请说明版本、手机/系统、复现步骤和实际结果。分享诊断前请移除个人聊天、账号与密钥。
 
