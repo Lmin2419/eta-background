@@ -6,10 +6,13 @@
 
 ```bash
 bash etax/check_hooks.sh
+python3 -m unittest discover -s etax/engine/tests -v
 bash etax/embed_engine.sh
 ./gradlew :app:testDebugUnitTest
 ./gradlew :app:lintDebug :app:assembleDebug
 ```
+
+引擎部署测试需在 Linux 构建主机运行，并安装 mksh、BusyBox（ash）和 Toybox；也可通过 `ETA_TEST_MKSH`、`ETA_TEST_BUSYBOX`、`ETA_TEST_TOYBOX` 指定各自的可执行文件路径。它们用于复现 Android Shell 的锁、端口交接与回滚行为，CI 会安装对应工具。
 
 `embed_engine.sh` 从 `etax/engine/src` 和 `etax/shared/src` 编译 Root 引擎，读取源码 BUILD 常量，并将 dex、版本与启动脚本放入 APK assets。这些是生成文件，不提交到 Git。直接运行 Gradle 前必须先执行该步骤；签名构建和 PR 检查共用同一个脚本。
 
@@ -42,5 +45,9 @@ CI 将上述 Secrets 映射为 Gradle 读取的 `ETA_RELEASE_STORE_FILE`、`ETA_
 `app/build.gradle.kts` 的 `versionCode` 使用 `yyyyMMdd` 加两位序号，只能递增。`versionName` 表示当前上游基础版本；后台版变更由 versionCode、源码提交与 [更新日志](../etax/README.md) 区分。CI 文件名如 `Etax-v3.3.5+etax.<短提交号>.apk`。
 
 历史源码通过分支和提交保留，无需复制整套源码目录。正式分发前更新版本日志，在真机检查通知内回复、双任务、微信截图坐标、横屏游戏及前台接管，再从成功的 Etax Build 取得签名 APK。
+
+对于 `2026102902` 的完成提示，还需复测单任务与双任务结束、完成/停止/失败状态、三个按钮、提示开关及划掉通知后的行为。操作路径见[完成提示使用说明](../etax/README.md#completion-notice-guide)。记录实际手机、系统版本和结果；CI 通过与 ColorOS 的动画和横幅展示分别记录。
+
+更新中英文首页及版本记录时，下载入口、源码提交、versionCode、引擎标识和 SHA-256 应对应同一份已验签 APK。仅补充文档时继续引用该安装包的源码提交，避免将文档提交号误写成安装包版本。
 
 Actions 附件需要登录且到期失效。长期下载由维护者在本仓库 Releases 创建版本、选择经过验证的提交并上传 APK，附上版本说明与 SHA-256。当前流程不自动创建或发布 Release；推送标签也不会自动触发构建。发布源码及 APK 时保留 [LICENSE](../LICENSE) 和上游 Required Notice。

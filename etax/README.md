@@ -8,6 +8,9 @@
 | --- | --- |
 | `app/src/main/kotlin/io/github/mangi/eta/` | 上游 Agent Runtime、会话、工具、UI 与后台版接线 |
 | `app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentBackgroundToolCatalog.kt` | 原生后台工具登记、能力条件与系统提示词 |
+| [AgentExecutionService.kt](../app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentExecutionService.kt) | 原生任务卡片、完成横幅、三个操作入口与结束回调去重 |
+| [TaskNotificationDismissReceiver.kt](../app/src/main/kotlin/io/github/mangi/eta/agent/runtime/TaskNotificationDismissReceiver.kt) | 用户划掉完成通知时取消待弹提示，防止晚到的结果重新显示卡片 |
+| [AppearanceSettingsScreen.kt](../app/src/main/kotlin/io/github/mangi/eta/ui/AppearanceSettingsScreen.kt) / [SettingsDataStore.kt](../app/src/main/kotlin/io/github/mangi/eta/data/datastore/SettingsDataStore.kt) | 流光与任务完成提示开关，以及设置持久保存 |
 | `app/src/main/java/com/eta/shadow/` | 后台屏工具、节点观察、通知桥接和 Root 引擎部署 |
 | `etax/engine/src/` | 虚拟屏传输、worker、图像复制与显示几何的 Root 引擎源码 |
 | `etax/shared/src/` | App 与 Root 共用的屏幕几何、操作证据与无进展追踪 |
@@ -20,6 +23,26 @@
 引擎源码通过 javac + D8 编译为 APK 内的 `vdrive.dex`，版本从 `VDrive.java` 提取。无障碍服务连接或首次调用后台屏工具时，App 使用 `su` 部署并启动引擎；版本及文件摘要不一致时更新。未授权 Root 无法使用后台虚拟屏。
 
 **当前行为以首页为准。** 下方记录各版本当时的实现，包括已撤回的实验；并非这些策略同时生效。目前最多两项执行、两块执行/保留屏，息屏暂停且手动恢复，通知栏内联续接，完成后保留页面直到接管、显式释放或容量回收。
+
+<a id="completion-notice-guide"></a>
+
+## 完成提示使用说明
+
+从 `2026102902` 起，可在“设置 → 外观 → 界面与效果 → 任务完成时弹出提示”控制任务结束时的顶部横幅。默认开启；关闭只停止弹出提示，原任务的状态栏图标、下拉通知和操作入口仍保留。完成、停止和失败分别显示对应状态。
+
+| 入口 | 操作结果 |
+| --- | --- |
+| 打开 ETA 会话 | 进入该任务对应的会话，查看完整执行过程和结果 |
+| 打开 App | 打开该任务的目标应用，使用现有后台页面接管路径；没有目标 App 时不显示此按钮 |
+| 继续指令 | 直接在通知中输入并发送到原会话，无需先进入 ETA 会话页面 |
+
+如果下拉通知里有任务结果，但没有顶部横幅：
+
+1. 确认应用内“任务完成时弹出提示”已开启。
+2. 从“设置 → 后台任务通知”进入系统通知设置，允许 Eta 后台版通知，并允许“任务完成提示”类别显示横幅；系统勿扰设置也可能限制弹出。
+3. 在手机亮屏且已解锁时新建一个简单任务复测。已结束、已划掉的任务不会因重新开启开关或解锁而补弹。
+
+顶部横幅和流体云的动画、停留时间及按钮展开方式由系统控制。默认不发声、不振动。ColorOS 17 的具体展示仍需真机验证；当前自动化结果和安装包校验信息见[2026102902 版本记录](#release-2026102902)。
 
 ## 版本更新记录
 

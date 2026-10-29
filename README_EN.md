@@ -10,6 +10,8 @@ A derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮
 
 This update adds native completion banners on the original task card, with separate actions to open the ETA conversation, open the target app, or continue through inline reply. The switch is under Settings → Appearance → Interface & Effects → Task completion pop-up, enabled by default. Turning it off retains task notifications. Allow banners for the Task completion alerts category in system notification settings.
 
+See the [completion notification guide](etax/README.md#completion-notice-guide) (Chinese) for action details, settings and troubleshooting. After enabling the switch, test with a new task; previously completed tasks do not produce a delayed banner.
+
 **[Download the signed test APK](https://github.com/Lmin2419/eta-background/actions/runs/40828973786/artifacts/12878572035)** · [Exact source 70844e7](https://github.com/Lmin2419/eta-background/tree/70844e71e25c9234b5075db1ca43c7e113dd0162) · [Changelog and checksums](etax/README.md#release-2026102902)
 
 CI reported 2,072 regression tests: 2,071 passed, one skipped, no failures or errors. All eight engine deployment tests passed; lint reported no errors. The APK retains the previous background edition's signing certificate for installation over the existing app, and its embedded engine was checked against the source build. Banner presentation, the three-action layout and Fluid Cloud transitions still need ColorOS 17 device testing. Downloading requires a GitHub login; this artifact expires on **2026-11-28 (UTC)**.
