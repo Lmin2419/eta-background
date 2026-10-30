@@ -83,7 +83,7 @@ def generate(eta_root, output, check=False):
     source_names = ['EtaPreferenceStyle.kt', 'EtaCard.kt', 'EtaControls.kt', 'StatusColors.kt', 'AgentChatFileAttachments.kt', 'AgentChatInputBar.kt', 'ConversationSidePaneScaffold.kt',
                     'EtaPreferenceRow.kt', 'EtaPreferenceGroupItem.kt', 'EtaSelectionPreferences.kt', 'EtaDropdownPreference.kt',
                     'EtaFeatureCard.kt', 'EtaChoiceChip.kt', 'ToolChip.kt', 'SectionHeader.kt', 'ListEmptyState.kt',
-                    'MiuixDialogActions.kt', 'ItemDescriptionDialog.kt', 'MiuixScaffoldPage.kt', 'AdaptiveTopAppBar.kt', 'MiuixBackButton.kt', 'TopBarBackdrop.kt', 'AgentChatBody.kt', 'AgentModelPicker.kt', 'AgentChatModelControls.kt', 'ChatMessageItem.kt', 'AgentWorkProcess.kt', 'AgentToolActivity.kt', 'AgentStatusCard.kt', 'AgentConversationLoading.kt', 'AgentChatQueueStrip.kt']
+                    'MiuixDialogActions.kt', 'ItemDescriptionDialog.kt', 'MiuixScaffoldPage.kt', 'AdaptiveTopAppBar.kt', 'MiuixBackButton.kt', 'TopBarBackdrop.kt', 'AgentChatBody.kt', 'AgentModelPicker.kt', 'AgentChatModelControls.kt', 'ChatMessageItem.kt', 'AgentWorkProcess.kt', 'AgentToolActivity.kt', 'AgentStatusCard.kt', 'AgentConversationLoading.kt', 'AgentChatQueueStrip.kt', 'ConversationPanePanel.kt']
     texts = {name: (components / name).read_text() for name in source_names}
     markdown_dir=components.parent / 'markdown'
     markdown_style=(markdown_dir/'MarkdownStyle.kt').read_text()
@@ -112,6 +112,7 @@ def generate(eta_root, output, check=False):
             return '#' + f'{math.floor(alpha * 255 + 0.5):02X}' + colors[role][3:]
         row = texts['EtaPreferenceRow.kt']; chip = texts['EtaChoiceChip.kt']
         input_source=texts['AgentChatInputBar.kt']; body_source=texts['AgentChatBody.kt']
+        result['eta_conversation_pane']=colors['surface'] if mode=='light' else colors['surfaceContainer']
         result['eta_queue_outline']=blend('outline',float(re.search(r'outline.copy\(alpha = ([\d.]+)f',texts['AgentChatQueueStrip.kt'])[1]))
         result['eta_queue_divider']=blend('outline',float(re.findall(r'outline.copy\(alpha = ([\d.]+)f',texts['AgentChatQueueStrip.kt'])[-1]))
         result['eta_message_action']=blend('onSurfaceVariantSummary',float(re.search(r'onSurfaceVariantSummary.copy\(alpha = ([\d.]+)f',texts['ChatMessageItem.kt'].split('internal fun AnswerActionButton',1)[1])[1]))
@@ -164,6 +165,10 @@ def generate(eta_root, output, check=False):
     source_for['EtaContextDefaults']='app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatModelControls.kt @ 3b1794d'
     source_for['EtaModelPickerDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentModelPicker.kt @ 3b1794d'
     queue=texts['AgentChatQueueStrip.kt']
+    objects['EtaFontWeights']={'SemiBold':600}
+    source_for['EtaFontWeights']='Compose FontWeight.SemiBold used by ConversationPanePanel.kt @ 3b1794d (CSS/ArkUI weight 600)'
+    objects['ConversationPanelMetrics']=defaults(texts['ConversationPanePanel.kt'],'ConversationPanelMetrics')
+    source_for['ConversationPanelMetrics']='app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt @ 3b1794d'
     objects['EtaQueueDefaults']={k:float(v) for k,v in re.findall(r'private val (\w+) = ([\d.]+)\.dp',queue)}
     objects['EtaQueueDefaults']['ChevronExpandedDegrees']=float(re.search(r'targetValue = if \(expanded\) ([\d.]+)f',queue)[1])
     objects['EtaQueueDefaults']['ExpandDurationMs']=int(re.search(r'durationMillis = (\d+)',queue)[1])

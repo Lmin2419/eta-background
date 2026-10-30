@@ -1,3 +1,7 @@
+import { PaneDateContext } from '../core/eta/conversationDrawer';
+import { ExportLabels } from '../core/eta/conversationMarkdownExporter';
+import { SystemNoticeCode } from '../core/eta/model/conversation';
+import { EtaConversations } from './EtaConversations';
 import { bundleManager, common, Want } from '@kit.AbilityKit';
 import { util } from '@kit.ArkTS';
 import { deviceInfo, systemDateTime } from '@kit.BasicServicesKit';
@@ -36,7 +40,12 @@ export class FoundationHost {
     const profiles = new ProfileRepository(new DatabaseProfileStorage(db, context.filesDir), new AssetSecretStorage(), uuid);
     const drafts = new DraftRepository(new DatabaseDocumentStorage(db, 'drafts'));
     this.ledger = new TaskLedger(new DatabaseDocumentStorage(db, 'tasks'), uuid);
+    const etaConversations=new EtaConversations(context);
     const dependencies: FoundationDependencies = {
+      exportName:(title:string):string=>etaConversations.fileName(title),
+      paneDate:():PaneDateContext=>etaConversations.dateContext(),exportLabels:():ExportLabels=>etaConversations.labels(),
+      noticeSearch:(query:string):SystemNoticeCode[]=>etaConversations.noticeSearch(query),
+      exportMarkdown:(name:string,markdown:string):Promise<boolean>=>etaConversations.exportMarkdown(name,markdown),
       chats, profiles, drafts, uuid, diagnostics,
       elapsed: ():number => systemDateTime.getUptime(systemDateTime.TimeType.STARTUP),
       transport: (): HttpTransport => new DiagnosticTransport(new HarmonyHttpTransport(), diagnostics),

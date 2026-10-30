@@ -1,6 +1,7 @@
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatBody.kt,
 // ChatHistoryPaging.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import { messagePage } from '../../../core/eta/conversationDrawer';
 import { FoundationController, ChatView, emptyShellState } from '../../../core/foundation/controller';
 import { AgentTimelineEntry, toTimelineEntries } from '../../../core/eta/agentChatTimelineEntries';
 import { LengthMetrics } from '@kit.ArkUI';
@@ -86,8 +87,8 @@ export struct AgentChatBody {
     this.lastFollow=this.chat.followBottom;
     if(!switched&&!this.anchored&&this.chat.messages.length>this.lastMessageCount)this.limit+=this.chat.messages.length-this.lastMessageCount;
     this.lastMessageCount=this.chat.messages.length;
-    this.start=Math.max(0,this.chat.messages.length-this.limit);this.earlier=this.start>0;
-    this.entries=toTimelineEntries(this.chat.messages.slice(this.start),this.entries);
+    const page=messagePage(this.chat.messages,this.chat.messages.length,this.limit);this.start=page.startIndex;this.earlier=page.hasEarlierMessages;
+    this.entries=toTimelineEntries(page.messages,this.entries);
     const last=this.entries[this.entries.length-1];this.activeWork=last?.kind==='work'&&this.chat.active?last.key:'';
     this.source.update(this.entries);
     const retained=new Set<string>(this.chat.messages.slice(this.start).map(m=>m.id));for(const entry of this.entries)retained.add(entry.key);this.store.retain(retained);

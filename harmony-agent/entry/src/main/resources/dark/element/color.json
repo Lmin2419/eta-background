@@ -5,6 +5,10 @@
       "value": "#1F277AF7"
     },
     {
+      "name": "eta_conversation_pane",
+      "value": "#FF242424"
+    },
+    {
       "name": "eta_input_outline",
       "value": "#8C404040"
     },
