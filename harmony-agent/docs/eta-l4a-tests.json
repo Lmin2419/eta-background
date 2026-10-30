@@ -1,0 +1,116 @@
+{
+  "upstream": "3b1794d",
+  "ported": 18,
+  "skipped": 0,
+  "pendingL4OriginalTests": 8,
+  "tests": [
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "searchSuggestionsBindToExactTextBlockAndDoNotPersistIntoAnotherRun",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "searchSuggestionsEnforcePerRoundBudgetAcrossMultipleAnswerBlocks",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "eventsWithoutVisibleChangeReturnSameListSoCallerSkipsTimestamp",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "usageAttachesToRoundWithoutRestartingStreaming",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "applyResultFillsSingleBlockKeepsMultiBlockAndReplacesWithNotice",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "retryKeepsFailedAttemptSeparateAndReplayClearsItsNotice",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "runCompletionFinalizesUnclosedBlocksAndUnknownToolWithoutChangingOtherRuns",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "replayResetRemovesOnlyRebuildableTraceAndExplicitlyReplayedSupplements",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "repeatedReplayRebuildsTextReasoningAndToolsWithoutAccumulatingContent",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "replayResetClearsOnlyThatRunsThinkingClockAndKeepsUnreplayedUserInputs",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "projectsReasoningAndToolsByRoundAndToolCallId",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "keepsAssistantTextSeparatedByRound",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "keepsFallbackToolCallIdsDistinctAcrossRounds",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "toolActivityFollowsAssistantTextStreamedInSameRound",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "finalizingTextTrimsTrailingWhitespace",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "interruptedToolBecomesUnknownInsteadOfFailed",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "keepsInterleavedReasoningTextAndHostedToolInEventOrder",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentRunMessageProjectorTest.kt",
+      "name": "compactionResultMergesIntoExistingMarkerInsteadOfAppending",
+      "target": "tests/eta/agentRunMessageProjector.test.ts",
+      "status": "ported"
+    }
+  ]
+}
