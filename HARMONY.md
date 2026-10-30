@@ -2,6 +2,7 @@
 
 当前版本为 **0.9 交互框架预览**。先建立清晰的聊天、会话、模型服务和页面导航，再逐项接回设备执行等能力；不是已经完成 Eta 全功能对齐的上线版。
 
+- [推进方案与任务卡（ROADMAP）](harmony-agent/docs/ROADMAP.md)，编码代理规则见 [AGENTS.md](harmony-agent/AGENTS.md)
 - [鸿蒙工程源码与构建说明](harmony-agent/README.md)
 - [当前进度：已实现、已验证和待真机验证](harmony-agent/docs/PROJECT_STATUS.md)
 - [开发接手说明](harmony-agent/docs/DEVELOPMENT_HANDOFF.md)
