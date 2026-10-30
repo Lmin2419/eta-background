@@ -34,6 +34,7 @@ const entries = {};
 for (const page of pages) entries[page] = path.join(src, page + '.ets');
 entries.ability = path.join(src, 'entryability/EntryAbility.ets');
 entries.preview = path.join(src, 'pages/FoundationPreview.ets');
+entries.etaGallery = path.join(src, 'pages/EtaGallery.ets');
 
 const cache = fs.mkdtempSync(path.join(os.tmpdir(), 'ets-check-'));
 const config = {

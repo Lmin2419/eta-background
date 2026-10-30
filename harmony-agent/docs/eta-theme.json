@@ -32,8 +32,72 @@
       "sha256": "ef6aa6f1497115bc34ecc275d48e721dc3a83397158d7aa34920c2a3ac44c4f1"
     },
     {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaPreferenceRow.kt",
+      "sha256": "2198a03d2116287661301aede50eb7c7310e947b52aff719bcaba30b0b0d54ad"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaPreferenceGroupItem.kt",
+      "sha256": "d26c4edca2bbb296238ea12fdede2567fde354eddd65476f49ab822648e0369b"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaSelectionPreferences.kt",
+      "sha256": "dfc3d8959baf8658f8ba994e37d00b6e5144a8ed315c5518be5a1a8823870c45"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaDropdownPreference.kt",
+      "sha256": "e76c5f36cc6dfed6e594f0f7347207a18511931c9a7573d9cb52ac51efefdc45"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaFeatureCard.kt",
+      "sha256": "3ed511c7449c62b5f590167cd5330d7bf997b7a0f05f5720d152222ab786982e"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaChoiceChip.kt",
+      "sha256": "6686113377ff35de2cd9dbc0f42c5b1d87ef2efaa47dff91c728029b1ec5b4c7"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolChip.kt",
+      "sha256": "924ce6d371801cc43761ea121c2e70241b9ce4308a6fa258ae93dddc40b30945"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/SectionHeader.kt",
+      "sha256": "6dfba9bc33e8b66a7cc61ec109ce46a596b988e3432e68a1e423b499825bcd5e"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ListEmptyState.kt",
+      "sha256": "be38a61d91ad13ac5ae7d03486141325817b7de028ad74331cbe625c0e95d19e"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/MiuixDialogActions.kt",
+      "sha256": "f1ab0a2d5c4917022db87d4550122974d621188738f6d23c3515dc1a7ce8952b"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ItemDescriptionDialog.kt",
+      "sha256": "81840ad9f645fc03ee23317de6048c58cc8c28d29a348e35d37b1bb3244cd290"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/MiuixScaffoldPage.kt",
+      "sha256": "3369644a2956af3fd7c88345a3670b877911e14595783752eb56521c949507c8"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AdaptiveTopAppBar.kt",
+      "sha256": "d954370f76c757e75ef578d1468e1509ea729fa57fd167cc1c2bf608ce8133eb"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/MiuixBackButton.kt",
+      "sha256": "45903d49f35e84b951df48ca51dca613255c7f58028433a98b4693579f11d2be"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/TopBarBackdrop.kt",
+      "sha256": "de251355afbbe035425802df2121eab7fcd22aee8eb13c585b208e8374bb2941"
+    },
+    {
       "path": "scripts/eta-upstream/miuix-0.9.4/ArrowRight.kt",
       "sha256": "92e10aec73f6f93de2195c45af457c4f4c9684c7d4f994a1aa82e44d86f012dd"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/ArrowUpDown.kt",
+      "sha256": "39d339717db926f333aa5a4aa5e1cfc88fcb31be7122f3d28baf62c078ab9238"
     },
     {
       "path": "scripts/eta-upstream/miuix-0.9.4/Button.kt",
@@ -44,21 +108,53 @@
       "sha256": "2c1617424e052f442474f520608a1be8d4bbb7881288666494d356c246eec5d8"
     },
     {
+      "path": "scripts/eta-upstream/miuix-0.9.4/Checkbox.kt",
+      "sha256": "fd8c347cceeb1b5160c0e83fff33b303ccb70c641c18cc75bd33f833c6925888"
+    },
+    {
       "path": "scripts/eta-upstream/miuix-0.9.4/Colors.kt",
       "sha256": "c6885c8025dbc7cb81f11a6395032ea6c802c76862dca09c32365d5f7d40e911"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/Component.kt",
+      "sha256": "a70311c4e5c22cf45589ba4d3c448c27c7f9ee60f4fdcf8580ccdb656edc5881"
     },
     {
       "path": "scripts/eta-upstream/miuix-0.9.4/DialogContentLayout.kt",
       "sha256": "6f0273f44558c04cc4a5d179ac25eb0540ffaf83730cf88e862124eb3b2678cd"
     },
     {
+      "path": "scripts/eta-upstream/miuix-0.9.4/Dropdown.kt",
+      "sha256": "8612be7e913041f99f01b7d108b299ea6cc74ca5aa6b7a824093c49c2b7e2aa5"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/IconButton.kt",
+      "sha256": "6c3a5d1a25e9392da1dfc489cc0360dccad13d54ef1856743056f8e44acc5446"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/PressFeedback.kt",
+      "sha256": "e712c4700f1ac24f3eac3ff0edf49e6b8bd82dd903c48e2f2eb627f33cf0b0b7"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/RadioButton.kt",
+      "sha256": "18c5a5bc91988604c5ebb967b18235c87bee7db38ded216d8a72c5e520f64bc6"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/SmallTitle.kt",
+      "sha256": "434ec6cfc33e05ef6d857310c42d1595c30f7ea1503e755e120b72331d490fd5"
+    },
+    {
       "path": "scripts/eta-upstream/miuix-0.9.4/TextStyles.kt",
       "sha256": "b11d9c7c545e7cdc9d5b016728538ceaf0840709a05df5c44e1b18c944b092e1"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/TopAppBar.kt",
+      "sha256": "9c40cd4f06dfde2a8c4b4d71b20e43fbdedbba63b94ed62804b4f3cbff1625b8"
     }
   ],
   "miuixColorRoles": 53,
-  "lightColorCount": 66,
-  "darkColorCount": 66,
+  "lightColorCount": 73,
+  "darkColorCount": 73,
   "tokens": {
     "EtaPreferenceDefaults": {
       "SidePadding": 16,
@@ -108,7 +204,9 @@
     },
     "MiuixDialogDefaults": {
       "MaxWidth": 420.0,
-      "CornerRadius": 32.0
+      "CornerRadius": 32.0,
+      "LargeWidth": 840.0,
+      "LargeHeight": 480.0
     },
     "MiuixFontSizes": {
       "Main": 17.0,
@@ -125,6 +223,81 @@
       "Title2": 24.0,
       "Title3": 20.0,
       "Title4": 18.0
+    },
+    "EtaComponentSizes": {
+      "Dp0": 0.0,
+      "Dp0_33": 0.33,
+      "Dp0_5": 0.5,
+      "Dp1": 1.0,
+      "Dp2": 2.0,
+      "Dp4": 4.0,
+      "Dp6": 6.0,
+      "Dp7": 7.0,
+      "Dp8": 8.0,
+      "Dp10": 10.0,
+      "Dp11": 11.0,
+      "Dp12": 12.0,
+      "Dp14": 14.0,
+      "Dp15": 15.0,
+      "Dp16": 16.0,
+      "Dp17": 17.0,
+      "Dp18": 18.0,
+      "Dp20": 20.0,
+      "Dp21": 21.0,
+      "Dp22": 22.0,
+      "Dp24": 24.0,
+      "Dp26": 26.0,
+      "Dp28": 28.0,
+      "Dp32": 32.0,
+      "Dp38": 38.0,
+      "Dp40": 40.0,
+      "Dp42": 42.0,
+      "Dp44": 44.0,
+      "Dp48": 48.0,
+      "Dp50": 50.0,
+      "Dp52": 52.0,
+      "Dp60": 60.0,
+      "Dp136": 136.0,
+      "Dp250": 250.0,
+      "Dp280": 280.0,
+      "Dp340": 340.0,
+      "Dp360": 360.0
+    },
+    "EtaComponentBehavior": {
+      "ActionWidthFraction": 0.45,
+      "SinkScale": 0.94,
+      "SinkDamping": 0.8,
+      "SinkStiffness": 600.0,
+      "ChoiceDuration": 160
+    },
+    "MiuixIconButtonDefaults": {
+      "MinWidth": 40,
+      "MinHeight": 40,
+      "CornerRadius": 40
+    },
+    "EtaPageDefaults": {
+      "WideScreenMinWidth": 600.0,
+      "MaxPageContentWidth": 800.0
+    },
+    "MiuixTopBarDefaults": {
+      "TitlePadding": 26.0,
+      "NavigationIconPadding": 16.0,
+      "ActionIconPadding": 16.0,
+      "CollapsedHeight": 52.0,
+      "SmallTopAppBarCenterHeight": 50.0,
+      "LargeTitleBottomPadding": 4.0,
+      "TitleFadeMultiplier": 3.0,
+      "SmallTitleTranslation": 20.0,
+      "TitleShowResponse": 0.3,
+      "TitleHideResponse": 0.15,
+      "TitleDamping": 1.0
+    },
+    "EtaBlurDefaults": {
+      "TopBarBlurRadius": 25.0,
+      "TopBarSurfaceAlpha": 0.8,
+      "ProgressiveTopBarBlurRadius": 10.0,
+      "ProgressiveTopBarSurfaceAlpha": 0.3,
+      "ProgressiveCurve": 2.2
     }
   }
 }

@@ -80,7 +80,10 @@ def generated_class(name, values, source):
 
 def generate(eta_root, output, check=False):
     components = eta_root / 'app/src/main/kotlin/io/github/mangi/eta/ui/components'
-    source_names = ['EtaPreferenceStyle.kt', 'EtaCard.kt', 'EtaControls.kt', 'StatusColors.kt', 'AgentChatFileAttachments.kt', 'AgentChatInputBar.kt', 'ConversationSidePaneScaffold.kt']
+    source_names = ['EtaPreferenceStyle.kt', 'EtaCard.kt', 'EtaControls.kt', 'StatusColors.kt', 'AgentChatFileAttachments.kt', 'AgentChatInputBar.kt', 'ConversationSidePaneScaffold.kt',
+                    'EtaPreferenceRow.kt', 'EtaPreferenceGroupItem.kt', 'EtaSelectionPreferences.kt', 'EtaDropdownPreference.kt',
+                    'EtaFeatureCard.kt', 'EtaChoiceChip.kt', 'ToolChip.kt', 'SectionHeader.kt', 'ListEmptyState.kt',
+                    'MiuixDialogActions.kt', 'ItemDescriptionDialog.kt', 'MiuixScaffoldPage.kt', 'AdaptiveTopAppBar.kt', 'MiuixBackButton.kt', 'TopBarBackdrop.kt']
     texts = {name: (components / name).read_text() for name in source_names}
     upstream = PROJECT / 'scripts/eta-upstream/miuix-0.9.4'
     miuix = (upstream / 'Colors.kt').read_text(); style = texts['EtaPreferenceStyle.kt']; status = texts['StatusColors.kt']
@@ -102,6 +105,18 @@ def generate(eta_root, output, check=False):
             'eta_settings_primary': blue if mode == 'light' else colors['primary']})
         alpha = float(re.search(r'onBackground.copy\(alpha = ([\d.]+)f\)', style)[1])
         result['eta_preference_divider'] = '#' + f'{math.floor(alpha*255+0.5):02X}' + colors['onBackground'][3:]
+        def blend(role, alpha):
+            return '#' + f'{math.floor(alpha * 255 + 0.5):02X}' + colors[role][3:]
+        row = texts['EtaPreferenceRow.kt']; chip = texts['EtaChoiceChip.kt']
+        result['eta_transparent'] = parse_color('Color.Transparent')
+        result['eta_preference_arrow'] = blend('onBackground', float(re.search(r'onBackground.copy\(alpha = ([\d.]+)f\)', row)[1]))
+        # The first occurrence is the arrow (0.3); the row's held overlay is 0.06.
+        result['eta_preference_held'] = blend('onBackground', float(re.findall(r'onBackground.copy\(alpha = ([\d.]+)f\)', row)[-1]))
+        chip_alpha = float(re.search(r'primary.copy\(alpha = ([\d.]+)f\)', chip)[1])
+        result['eta_chip_selected'] = blend('primary', chip_alpha)
+        result['eta_top_bar_surface'] = blend('surface', float(re.search(r'TopBarSurfaceAlpha = ([\d.]+)f', texts['TopBarBackdrop.kt'])[1]))
+        result['eta_top_bar_progressive_surface'] = blend('surface', float(re.search(r'ProgressiveTopBarSurfaceAlpha = ([\d.]+)f', texts['TopBarBackdrop.kt'])[1]))
+        result['eta_settings_chip_selected'] = '#' + f'{math.floor(chip_alpha * 255 + 0.5):02X}' + result['eta_settings_primary'][3:]
         emit_json(output / f'entry/src/main/resources/{folder}/element/color.json', {'color': [{'name': k, 'value': v} for k, v in sorted(result.items())]}, check)
         palettes[mode] = result
     objects = {}
@@ -126,6 +141,39 @@ def generate(eta_root, output, check=False):
     objects['MiuixFontSizes'] = {k: float(v) for k, v in re.findall(r'private val (\w+): TextStyle\s+get\(\) =\s+TextStyle\(\s+fontSize = ([\d.]+)\.sp', font_styles)}
     if len(objects['MiuixFontSizes']) != 14: raise ValueError('Unexpected Miuix text style count')
     source_for['MiuixFontSizes'] = 'compose-miuix-ui/miuix TextStyles.kt @ 39c40f9 (0.9.4), Apache-2.0'
+    # Literal dimensions are generated from the same pinned files as the components.
+    size_sources = list(texts.values()) + [(upstream / name).read_text() for name in ['Card.kt', 'IconButton.kt', 'SmallTitle.kt', 'TopAppBar.kt', 'Checkbox.kt', 'RadioButton.kt']]
+    sizes = sorted({float(value) for text in size_sources for value in re.findall(r'(?<![\w.])([\d.]+)\.dp', text)})
+    objects['EtaComponentSizes'] = {'Dp' + format(value, 'g').replace('.', '_'): value for value in sizes}
+    source_for['EtaComponentSizes'] = 'Eta E02 components @ 3b1794d; Miuix 0.9.4 pinned sources (see docs/eta-theme.json)'
+    row = texts['EtaPreferenceRow.kt']; feedback = (upstream / 'PressFeedback.kt').read_text()
+    objects['EtaComponentBehavior'] = {
+        'ActionWidthFraction': float(re.search(r'\* ([\d.]+)f', row)[1]),
+        'SinkScale': float(re.search(r'sinkAmount: Float = ([\d.]+)f', feedback)[1]),
+        'SinkDamping': float(re.search(r'spring\(([\d.]+)f,', feedback)[1]),
+        'SinkStiffness': float(re.search(r'spring\([\d.]+f, ([\d.]+)f', feedback)[1]),
+        'ChoiceDuration': int(re.search(r'durationMillis = (\d+)', texts['EtaChoiceChip.kt'])[1]),
+    }
+    source_for['EtaComponentBehavior'] = 'EtaPreferenceRow.kt / EtaChoiceChip.kt @ 3b1794d; Miuix PressFeedback.kt @ 39c40f9'
+    objects['MiuixIconButtonDefaults'] = defaults((upstream / 'IconButton.kt').read_text(), 'IconButtonDefaults')
+    source_for['MiuixIconButtonDefaults'] = 'compose-miuix-ui/miuix IconButton.kt @ 39c40f9, Apache-2.0'
+    layout = (eta_root / 'app/src/main/kotlin/io/github/mangi/eta/ui/layout/AdaptivePageLayout.kt').read_text()
+    objects['EtaPageDefaults'] = {k: float(v) for k, v in re.findall(r'private val (\w+) = ([\d.]+)\.dp', layout)}
+    source_for['EtaPageDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/layout/AdaptivePageLayout.kt @ 3b1794d'
+    top = (upstream / 'TopAppBar.kt').read_text()
+    objects['MiuixTopBarDefaults'] = {k: float(re.search(r'val ' + k + r' = ([\d.]+)\.dp', top)[1]) for k in ['TitlePadding', 'NavigationIconPadding', 'ActionIconPadding', 'CollapsedHeight', 'SmallTopAppBarCenterHeight', 'LargeTitleBottomPadding']}
+    objects['MiuixTopBarDefaults']['TitleFadeMultiplier'] = float(re.search(r'frac \* ([\d.]+)f', top)[1])
+    objects['MiuixTopBarDefaults']['SmallTitleTranslation'] = float(re.search(r'if \(smallTitleVisible\) 0f else ([\d.]+)f', top)[1])
+    objects['MiuixTopBarDefaults']['TitleShowResponse'] = float(re.search(r'val showSpec = folmeSpring<Float>\(damping = [\d.]+f, response = ([\d.]+)f', top)[1])
+    objects['MiuixTopBarDefaults']['TitleHideResponse'] = float(re.search(r'val hideSpec = folmeSpring<Float>\(damping = [\d.]+f, response = ([\d.]+)f', top)[1])
+    objects['MiuixTopBarDefaults']['TitleDamping'] = float(re.search(r'val showSpec = folmeSpring<Float>\(damping = ([\d.]+)f', top)[1])
+    source_for['MiuixTopBarDefaults'] = 'compose-miuix-ui/miuix TopAppBar.kt @ 39c40f9, Apache-2.0'
+    objects['EtaBlurDefaults'] = {k: float(v) for k, v in re.findall(r'private const val (\w+) = ([\d.]+)f', texts['TopBarBackdrop.kt'])}
+    objects['EtaBlurDefaults']['ProgressiveCurve'] = float(re.search(r'curve = ([\d.]+)f', texts['TopBarBackdrop.kt'])[1])
+    source_for['EtaBlurDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/TopBarBackdrop.kt @ 3b1794d'
+    dialog = (upstream / 'DialogContentLayout.kt').read_text()
+    objects['MiuixDialogDefaults']['LargeWidth'] = float(re.search(r'windowWidth >= ([\d.]+)\.dp', dialog)[1])
+    objects['MiuixDialogDefaults']['LargeHeight'] = float(re.search(r'windowHeight >= ([\d.]+)\.dp', dialog)[1])
     token = '// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/* @ 3b1794d.\n// Required Notice: Copyright © 2026 蛮吉 (Mangi-11).\n// Generated by scripts/port-eta-theme.py. dp → vp; sp → fp, values unchanged.\n\nexport interface EtaAxisInsets { horizontal: number; vertical: number; }\nexport interface EtaSize { width: number; height: number; }\n\n'
     token += '\n'.join(generated_class(k, v, source_for[k]) for k, v in objects.items())
     emit(output / 'entry/src/main/ets/core/eta/tokens.ts', token, check)

@@ -1,4 +1,24 @@
 {
+  "controls": [
+    {
+      "origin": "scripts/eta-upstream/miuix-0.9.4/RadioButton.kt",
+      "resource": "ic_miuix_radio_check",
+      "output": "entry/src/main/resources/base/media/ic_miuix_radio_check.svg",
+      "sha256": "af73e422f77af5e278de66d4c32e8c04092b9897e01bb8d3946dd2f66fb84c1a"
+    },
+    {
+      "origin": "scripts/eta-upstream/miuix-0.9.4/Checkbox.kt",
+      "resource": "ic_miuix_checkbox_check",
+      "output": "entry/src/main/resources/base/media/ic_miuix_checkbox_check.svg",
+      "sha256": "effff458dff99262e99a4d6224e298ff16f73807b61fea295d0cb7c0db585cf6"
+    },
+    {
+      "origin": "scripts/eta-upstream/miuix-0.9.4/ArrowUpDown.kt",
+      "resource": "ic_miuix_basic_arrow_up_down",
+      "output": "entry/src/main/resources/base/media/ic_miuix_basic_arrow_up_down.svg",
+      "sha256": "f0e49ec2866aa6c90e7e46b817b859d39b7ce03ffc9a198260f6e65eecdaf779"
+    }
+  ],
   "etaCommit": "3b1794d70881c3c849b53d7778dd2bfdf0a46cc5",
   "materialVersion": "0.14.15",
   "miuixVersion": "0.9.4",

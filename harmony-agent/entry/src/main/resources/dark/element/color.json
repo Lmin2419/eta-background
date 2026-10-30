@@ -1,6 +1,14 @@
 {
   "color": [
     {
+      "name": "eta_chip_selected",
+      "value": "#1F277AF7"
+    },
+    {
+      "name": "eta_preference_arrow",
+      "value": "#4DFFFFFF"
+    },
+    {
       "name": "eta_preference_blue",
       "value": "#FF0080FF"
     },
@@ -13,6 +21,10 @@
       "value": "#FF00BD13"
     },
     {
+      "name": "eta_preference_held",
+      "value": "#0FFFFFFF"
+    },
+    {
       "name": "eta_preference_orange",
       "value": "#FFFF7700"
     },
@@ -23,6 +35,10 @@
     {
       "name": "eta_settings_background",
       "value": "#FF242424"
+    },
+    {
+      "name": "eta_settings_chip_selected",
+      "value": "#1F277AF7"
     },
     {
       "name": "eta_settings_primary",
@@ -47,6 +63,18 @@
     {
       "name": "eta_status_warning",
       "value": "#FFFFB200"
+    },
+    {
+      "name": "eta_top_bar_progressive_surface",
+      "value": "#4D000000"
+    },
+    {
+      "name": "eta_top_bar_surface",
+      "value": "#CC000000"
+    },
+    {
+      "name": "eta_transparent",
+      "value": "#00000000"
     },
     {
       "name": "miuix_background",
