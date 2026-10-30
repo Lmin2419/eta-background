@@ -1,0 +1,19 @@
+{
+  "package": "unicode-segmenter",
+  "version": "0.14.0",
+  "license": "MIT",
+  "url": "https://github.com/cometkim/unicode-segmenter",
+  "tarballSha256": "b976d911cc6ea0d08735f6baceb9f39d9c47a0d449792f134efeb215c14d3f70",
+  "files": {
+    "grapheme.js": "a377190b75ebcd760ce81d6dd846a72afc7f652b5851a66db4f31e78ad93bb01",
+    "grapheme.d.ts": "46d89735120c9378074bb008d7a9c5e63d85a0a947ffd9a52aa609c17cc1bd2e",
+    "core.js": "2f2a8ffc669dba1e92c1870d1fdcc2d9a280ebd17a19d36574f9020997e5b6b9",
+    "core.d.ts": "fba3fa52beb2456c1ed095be37d8cd2a4fc2beb3f184f9e349270be0207c210e",
+    "_grapheme_data.js": "6f9e4ceaab6bf7e772497f713fd0865e769f8f9d2fc97f79311545e5616c7221",
+    "_grapheme_data.d.ts": "8e972112622d5bcc5261d7ae62abd926f1175e78738c95f2b6b3c58ef548b0a1",
+    "_incb_data.js": "9b23324a983bf0713b52002afdbfb8492630cd409ee760cab88678d773604f37",
+    "_incb_data.d.ts": "5ba8781144e88403c6d39db30d9ea547d62769a22554c667040eb9652bdef8d6",
+    "LICENSE": "c6870e61278ca4af52f28b3ed644780d460bcd4ed927ebeb2a9555cb353b7aaa",
+    "unicode-segmentation_MIT.txt": "7b63ecd5f1902af1b63729947373683c32745c16a10e8e6292e2e2dcd7e90ae0"
+  }
+}

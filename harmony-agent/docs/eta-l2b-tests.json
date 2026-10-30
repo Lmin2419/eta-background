@@ -1,0 +1,318 @@
+{
+  "upstream": "3b1794d",
+  "ported": 39,
+  "skippedPlatformTests": 5,
+  "logicOnlyReplacements": 5,
+  "totalL2OriginalTests": 79,
+  "totalL2FullyPorted": 74,
+  "tests": [
+    {
+      "source": "StreamingMarkdownParsingTest.kt",
+      "name": "continuousAppendsPublishProgressBeforeTheStreamEnds",
+      "target": "tests/eta/streamingMarkdownParsing.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownParsingTest.kt",
+      "name": "pendingTargetsAreCoalescedWithoutParsingEveryNetworkChunk",
+      "target": "tests/eta/streamingMarkdownParsing.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownParsingTest.kt",
+      "name": "correctedSourceDoesNotPublishAnObsoleteSnapshot",
+      "target": "tests/eta/streamingMarkdownParsing.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownParsingTest.kt",
+      "name": "completionWithUnchangedTextStillPublishesTheFinalSnapshot",
+      "target": "tests/eta/streamingMarkdownParsing.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownParsingTest.kt",
+      "name": "resumedStreamDoesNotPublishAnObsoleteCompletion",
+      "target": "tests/eta/streamingMarkdownParsing.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownParsingTest.kt",
+      "name": "disposingConsumerCancelsParsingWithoutPublishingLateResults",
+      "target": "tests/eta/streamingMarkdownParsing.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownRestoreStateTest.kt",
+      "name": "restoredContentWaitsForMatchingLayoutRegardlessOfEarlierLayoutCount",
+      "target": "tests/eta/streamingMarkdownRestoreState.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownRestoreStateTest.kt",
+      "name": "delayedOldLayoutCannotResumeAfterAnotherBackgroundCycle",
+      "target": "tests/eta/streamingMarkdownRestoreState.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownRestoreStateTest.kt",
+      "name": "newNetworkTextDoesNotKeepMovingTheRestoreBaseline",
+      "target": "tests/eta/streamingMarkdownRestoreState.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownRestoreStateTest.kt",
+      "name": "authoritativeReplacementCanCompleteRestoreButStaleLayoutCannot",
+      "target": "tests/eta/streamingMarkdownRestoreState.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownRestoreStateTest.kt",
+      "name": "onlyCurrentTerminalSnapshotMayFinishReveal",
+      "target": "tests/eta/streamingMarkdownRestoreState.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownStateCacheTest.kt",
+      "name": "completedOffscreenTurnsDoNotAccumulateStreamingSessions",
+      "target": "tests/eta/streamingMarkdownStateCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownStateCacheTest.kt",
+      "name": "detachedLiveMessageKeepsItsParsingAndRevealState",
+      "target": "tests/eta/streamingMarkdownStateCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownStateCacheTest.kt",
+      "name": "everyMountedOwnerMustDetachBeforeACompletedMessageCanBeEvicted",
+      "target": "tests/eta/streamingMarkdownStateCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownStateCacheTest.kt",
+      "name": "evictionHandsTheFinalDocumentToTheBoundedStaticCache",
+      "target": "tests/eta/streamingMarkdownStateCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownStateCacheTest.kt",
+      "name": "anIncompleteDetachedSnapshotNeverBecomesAStaticDocument",
+      "target": "tests/eta/streamingMarkdownStateCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StreamingMarkdownStateCacheTest.kt",
+      "name": "movingCompletedDocumentsToStaticRenderingStillHasABoundedHistoryCache",
+      "target": "tests/eta/streamingMarkdownStateCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StaticMarkdownDocumentCacheTest.kt",
+      "name": "smallDocumentsRespectTheEntryBudgetAndLeastRecentlyUsedOrder",
+      "target": "tests/eta/staticMarkdownDocumentCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StaticMarkdownDocumentCacheTest.kt",
+      "name": "totalSourceCharactersEvictBeforeTheEntryLimitIsReached",
+      "target": "tests/eta/staticMarkdownDocumentCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StaticMarkdownDocumentCacheTest.kt",
+      "name": "oversizedStaticDocumentIsParsedWithoutDisplacingSmallerDocuments",
+      "target": "tests/eta/staticMarkdownDocumentCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "StaticMarkdownDocumentCacheTest.kt",
+      "name": "streamingHandoffUsesTheSameSingleDocumentAdmissionLimit",
+      "target": "tests/eta/staticMarkdownDocumentCache.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "coordinatorTracksBackgroundAnimationSuspension",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "emptyAndOrdinaryTextExposeEveryGraphemeBoundary",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "emojiSurrogatePairIsOneGrapheme",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "extendedEmojiSequencesAreNeverSplit",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "combiningMarkAndCrLfStayInOneGrapheme",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "appendedTextOnlyRebuildsTheLastPotentiallyExtendedGrapheme",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "nonAppendReplacementFallsBackToACompleteBoundaryScan",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "replacementSharingPrefixInsideSurrogatePairFallsBackToCompleteScan",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "changedExtendedGraphemeFallsBackToCompleteScanWithoutSplitting",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "revealSpeedUsesBaseRateThenCatchesUpWithoutCeiling",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "normalFrameAdvancesFractionallyAtBaseRate",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "catchUpAdvancesBeyondFormerSpeedCap",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "sustainedFastOutputDoesNotAccumulateUnboundedBacklog",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "frameAdvanceClampsInvalidTimeAndTargetBounds",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "markdownDocumentCollapsesSourceBlankLinesIntoSemanticBlocks",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "markdownBlockGapBuildsReadableHierarchyWithoutLeadingGap",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "listMarkerWaitsForItsOwnContentToStartRevealing",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealPolicyTest.kt",
+      "name": "listMarkerStaysHiddenForEmptyItemsUntilRevealEnds",
+      "target": "tests/eta/smoothTextRevealPolicy.test.ts",
+      "status": "ported",
+      "reason": ""
+    },
+    {
+      "source": "SmoothTextRevealCoordinatorTest.kt",
+      "name": "detachedEarlierBlockCompletesAndLaterBlockKeepsRevealing",
+      "target": "tests/eta/smoothTextRevealCoordinator.logic.test.ts",
+      "status": "logic-only",
+      "reason": "Robolectric TextMeasurer 与 Compose 帧时钟不可在 Node 运行；以显式帧增量与布局身份迁移状态断言，原平台验证未移植"
+    },
+    {
+      "source": "SmoothTextRevealCoordinatorTest.kt",
+      "name": "oneFrameCarriesAdvanceAcrossBlocksInSourceOrder",
+      "target": "tests/eta/smoothTextRevealCoordinator.logic.test.ts",
+      "status": "logic-only",
+      "reason": "Robolectric TextMeasurer 与 Compose 帧时钟不可在 Node 运行；以显式帧增量与布局身份迁移状态断言，原平台验证未移植"
+    },
+    {
+      "source": "SmoothTextRevealCoordinatorTest.kt",
+      "name": "reattachedBlockKeepsCompletedPrefixAndAnimatesOnlyNewText",
+      "target": "tests/eta/smoothTextRevealCoordinator.logic.test.ts",
+      "status": "logic-only",
+      "reason": "Robolectric TextMeasurer 与 Compose 帧时钟不可在 Node 运行；以显式帧增量与布局身份迁移状态断言，原平台验证未移植"
+    },
+    {
+      "source": "SmoothTextRevealCoordinatorTest.kt",
+      "name": "layoutWithoutMountedNodeIsImmediatelyReadableOnLaterAttach",
+      "target": "tests/eta/smoothTextRevealCoordinator.logic.test.ts",
+      "status": "logic-only",
+      "reason": "Robolectric TextMeasurer 与 Compose 帧时钟不可在 Node 运行；以显式帧增量与布局身份迁移状态断言，原平台验证未移植"
+    },
+    {
+      "source": "SmoothTextRevealCoordinatorTest.kt",
+      "name": "staleDetachDoesNotCompleteTheReplacementNode",
+      "target": "tests/eta/smoothTextRevealCoordinator.logic.test.ts",
+      "status": "logic-only",
+      "reason": "Robolectric TextMeasurer 与 Compose 帧时钟不可在 Node 运行；以显式帧增量与布局身份迁移状态断言，原平台验证未移植"
+    }
+  ]
+}
