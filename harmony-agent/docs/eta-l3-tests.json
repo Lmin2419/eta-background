@@ -1,0 +1,143 @@
+{
+  "etaCommit": "3b1794d70881c3c849b53d7778dd2bfdf0a46cc5",
+  "portedCount": 46,
+  "skippedPlatformTestCount": 3,
+  "additionalLogicTestCount": 3,
+  "files": [
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/components/AgentChatScrollPolicyTest.kt",
+      "target": "tests/eta/agentChatScrollPolicy.test.ts",
+      "ported": [
+        "networkCompletionKeepsFollowingUntilRenderedTailSettles",
+        "draggingInterruptsCompletionFollowing",
+        "completionDoesNotPullReaderBackFromHistory",
+        "completedContentExpansionDoesNotFollowBottom",
+        "streamingTailGrowthFollowsBottom",
+        "completedConversationDoesNotJumpToInitialBottom",
+        "streamingConversationRequestsInitialBottom",
+        "contentGrowthDoesNotDisableBottomFollowing",
+        "draggingAwayFromBottomDisablesFollowing",
+        "reachingBottomEnablesFollowingAgain",
+        "growingTailOnlyScrollsByTheOverflowDistance",
+        "largeAppendRequestsBottomOnlyWhenSentinelLeftTheViewport",
+        "disabledFollowingNeverMovesTheList"
+      ],
+      "skipped": [],
+      "logicOnly": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/components/ChatHistoryPagingTest.kt",
+      "target": "tests/eta/chatHistoryPaging.logic.test.ts",
+      "ported": [],
+      "skipped": [
+        {
+          "name": "actualUpwardScrollLoadsOnePageAndPreservesTheVisibleMessageOffset",
+          "reason": "原测试依赖 Robolectric Activity、Compose LazyColumn 测量与像素锚点；仅迁移请求/锚点恢复逻辑。"
+        }
+      ],
+      "logicOnly": [
+        "actualUpwardScrollLoadsOnePageAndPreservesTheVisibleMessageOffset"
+      ]
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/components/HistoryScrollDemandTest.kt",
+      "target": "tests/eta/historyScrollDemand.test.ts",
+      "ported": [
+        "initialLayoutAndRestoredPositionDoNotReadHistoryWithoutScrolling",
+        "approachingTheTopPrefetchesOnlyAfterTheListHasBeenMeasured",
+        "completedPageAndLayoutChangesCannotChainAnotherRead",
+        "failureWaitsForAnExplicitRetryAndBusyReadsAreNotDuplicated",
+        "reversingDirectionWithdrawsUnusedPrefetchDemand",
+        "endOfHistoryAndMessageMutationsPreventPrefetch"
+      ],
+      "skipped": [],
+      "logicOnly": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/components/ConversationPaneStateTest.kt",
+      "target": "tests/eta/conversationPaneState.logic.test.ts",
+      "ported": [],
+      "skipped": [
+        {
+          "name": "interruptedOpeningResynchronizesClosedAndCanOpenAgain",
+          "reason": "原测试依赖 Compose AnchoredDraggableState、协程取消与帧时钟；仅迁移 settled/null/重新同步逻辑。"
+        },
+        {
+          "name": "interruptedClosingResynchronizesOpenAndCanCloseAgain",
+          "reason": "原测试依赖 Compose AnchoredDraggableState、协程取消与帧时钟；仅迁移 settled/null/重新同步逻辑。"
+        }
+      ],
+      "logicOnly": [
+        "interruptedOpeningResynchronizesClosedAndCanOpenAgain",
+        "interruptedClosingResynchronizesOpenAndCanCloseAgain"
+      ]
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/components/ConversationPaneMotionTest.kt",
+      "target": "tests/eta/conversationPaneMotion.test.ts",
+      "ported": [
+        "closedAndOpenPositionsMatchTheViewportEdges",
+        "panesStayAdjacentWithoutOverlapOrGapsThroughoutEitherDirection",
+        "overshootAndUninitializedOffsetsCannotProduceInvalidLayers",
+        "resizedWindowsKeepTheSameProgressAtEquivalentDragFractions"
+      ],
+      "skipped": [],
+      "logicOnly": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/components/AgentChatTimelineEntriesTest.kt",
+      "target": "tests/eta/agentChatTimelineEntries.test.ts",
+      "ported": [
+        "unchangedWorkProcessReusesPreviousEntry",
+        "changedWorkProcessMemberCreatesNewEntry",
+        "prependingTheStartOfAWorkProcessPreservesItsVisibleKey",
+        "splittingAPreviouslyPrependedGroupDoesNotReuseItsKeyTwice"
+      ],
+      "skipped": [],
+      "logicOnly": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/components/AgentWorkStepsTest.kt",
+      "target": "tests/eta/agentWorkSteps.test.ts",
+      "ported": [
+        "consecutiveSameToolCallsFormOneGroup",
+        "thinkingBreaksToolGroup",
+        "browserCallsStayIndividual",
+        "groupKeyStaysStableWhileCallsAppend",
+        "terminalOutcomeUsesLastOutputLine",
+        "trivialSuccessHasNoOutcome",
+        "failureOutcomeStripsPrefixAndCode",
+        "failedTerminalFallsBackToOutput",
+        "runningToolHasNoOutcome"
+      ],
+      "skipped": [],
+      "logicOnly": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/components/AgentChatFinalResultTest.kt",
+      "target": "tests/eta/agentChatFinalResult.test.ts",
+      "ported": [
+        "onlyLastAgentMessageOfEachTurnIsFinalResult",
+        "multipleTurnsEachHaveTheirOwnFinalResult",
+        "turnInterruptedAfterToolKeepsPreviousAgentMessageAsFinalResult",
+        "turnWithoutAgentMessageProducesNoFinalResult",
+        "streamingTurnDoesNotMarkIntermediateMessageAsFinalResult",
+        "streamingKeepsFinalResultOfCompletedEarlierTurns",
+        "streamingEndRestoresFinalResultOfLastTurn"
+      ],
+      "skipped": [],
+      "logicOnly": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/components/ChatConversationKeyTest.kt",
+      "target": "tests/eta/chatConversationKey.test.ts",
+      "ported": [
+        "sameConversationKeepsTheSameCompositionKey",
+        "switchingConversationChangesTheCompositionKey",
+        "draftConversationHasAStableNonNullKey"
+      ],
+      "skipped": [],
+      "logicOnly": []
+    }
+  ]
+}
