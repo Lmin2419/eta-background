@@ -15,3 +15,7 @@ local.properties
 *.pem
 build-profile.local.json5
 *.log
+# L2b: audited source dependency (the native build vendor/ directory remains ignored).
+!entry/src/main/ets/core/eta/markdown/vendor/
+!entry/src/main/ets/core/eta/markdown/vendor/unicode-segmenter/
+!entry/src/main/ets/core/eta/markdown/vendor/unicode-segmenter/**

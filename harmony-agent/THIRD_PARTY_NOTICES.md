@@ -47,3 +47,7 @@ HDC 原始源文件声明 Copyright (C) 2021 Huawei Device Co., Ltd.；securec �
 0.5 交互对照上游同一 commit 的 AgentChatBody.kt 和 RemoteModelImportSheet.kt：正向消息流、跟随底部/用户滚动仲裁、紧凑输入区、远端目录搜索/多选确认、取消不改草稿。使用原生 ArkUI 与独立 TypeScript 协议/状态实现，没有把 Kotlin 源文件、Compose/Miuix 库或上游素材打包进工程。
 
 0.9 经用户要求，重新对照自有 `Lmin2419/eta-background` 的 `8ae286a8993efaa4650426ae450ab4634f2b2354`。重点阅读 AgentAppRoot、AgentHomeScreen、ConversationSidePaneScaffold、AgentChatBody、AgentChatInputBar、ModelProviderListScreen、ModelProviderDetailScreen、ProviderModelsTab、RemoteModelImportSheet，并查看仓库自带聊天首页截图。新建页面栈、会话/输入投影、独立模型草稿和原生 ArkUI 页面；没有把截图、Kotlin 文件或 Android 库打入 HAP，新增 SVG 图标自行绘制。对应清单见 `docs/FOUNDATION_0.9.md`。旧 0.8 源码单独归档，旧扩展能力不作为本版功能声明。
+
+## unicode-segmenter 0.14.0（L2b）
+
+仅 vendoring 扩展字素分割模块、依赖的 Unicode 数据与类型声明。来源 https://github.com/cometkim/unicode-segmenter ，MIT；Copyright (c) 2024 Hyeseong Kim。Rust 上游片段同为 MIT，两个许可证及逐文件 SHA-256 放在 `entry/src/main/ets/core/eta/markdown/vendor/unicode-segmenter/`。纯 JS，无原生/网络依赖、不安装全局 polyfill；用于替代 Eta 的 JVM BreakIterator，Markdown 块解析仍为本仓库 TS 实现。
