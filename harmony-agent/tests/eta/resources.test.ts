@@ -24,7 +24,7 @@ test('all Eta string keys and 22 plural keys are present in each locale', () => 
   assert.deepEqual(report.locales.base.fallbackKeys, ['route_skills', 'speech_api_key']);
   for (const locale of ['base', 'en_US', 'zh_Hant']) {
     const values = json(`entry/src/main/resources/${locale}/element/string.json`).string as { name: string; value: string }[];
-    assert.equal(values.length, 1545); assert.equal(new Set(values.map(v => v.name)).size, values.length);
+    assert.equal(values.length, 1553); assert.equal(new Set(values.map(v => v.name)).size, values.length);
     assert.equal(json(`entry/src/main/resources/${locale}/element/plural.json`).plural.length, 22);
     assert.equal(values.find(v => v.name === 'app_name'), undefined, 'app_name belongs to AppScope only');
     assert.equal(report.locales[locale].portedStrings, 1537);
@@ -80,7 +80,7 @@ test('tokens preserve source dimensions, content alignment and fractional divide
 });
 test('light and dark resources preserve Miuix roles, Eta overrides and alpha', () => {
   const palette = (locale: string): Map<string, string> => new Map(json(`entry/src/main/resources/${locale}/element/color.json`).color.map((c: { name: string; value: string }) => [c.name, c.value]));
-  const light = palette('base'), dark = palette('dark'); assert.equal(light.size, 73); assert.equal(dark.size, 73);
+  const light = palette('base'), dark = palette('dark'); assert.equal(light.size, 74); assert.equal(dark.size, 74);
   assert.deepEqual([...light.keys()], [...dark.keys()]);
   assert.equal(light.get('miuix_primary'), '#FF3482FF'); assert.equal(dark.get('miuix_primary'), '#FF277AF7');
   assert.equal(light.get('eta_settings_primary'), '#FF0080FF'); assert.equal(light.get('eta_settings_background'), '#FFF0F1F2');

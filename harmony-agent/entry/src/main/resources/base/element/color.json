@@ -5,6 +5,10 @@
       "value": "#1F3482FF"
     },
     {
+      "name": "eta_pane_scrim",
+      "value": "#29000000"
+    },
+    {
       "name": "eta_preference_arrow",
       "value": "#4D000000"
     },

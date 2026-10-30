@@ -89,9 +89,11 @@ export class FoundationHost {
     const id = want.parameters?.runId, token = want.parameters?.taskToken;
     if (typeof id === 'string' && typeof token === 'string') {
       const task = this.ledger.validAction(id, token);
-      if (task && this.controller.ports.chats.get(task.conversationId)) await this.controller.selectConversation(task.conversationId);
+      if (task) await this.controller.notificationConversation(task.conversationId);
+      return;
     }
-    // Old notification action tokens may navigate to history, but never restart archived execution.
+    // Invalid or partial notification tokens do not redirect to an unrelated conversation.
+    if (id !== undefined || token !== undefined) return;
     this.controller.navigate('chat');
   }
 }

@@ -35,7 +35,7 @@ for (const page of pages) entries[page] = path.join(src, page + '.ets');
 entries.ability = path.join(src, 'entryability/EntryAbility.ets');
 entries.preview = path.join(src, 'pages/FoundationPreview.ets');
 entries.etaGallery = path.join(src, 'pages/EtaGallery.ets');
-// Draft E03 logic is not reachable from Index yet; include it explicitly in the SDK program.
+// Keep direct core entries as additional checks; Index and EntryAbility now use these ports.
 entries.etaNavigationCore = path.join(src, 'core/eta/etaNavigation.ts');
 entries.etaStartupCore = path.join(src, 'core/eta/startupSplash.ts');
 

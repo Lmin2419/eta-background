@@ -172,3 +172,20 @@ test('cold restart restores saved catalog and draft without writing API keys int
   const drafts = new DraftRepository(f.draftStorage); await drafts.load(); assert.equal(drafts.message(c.snapshot().chat.id).text, 'draft after restart');
   const data = JSON.parse(f.profileStorage.raw); assert.ok(data.profiles.find((p: { id: string }) => p.id === f.a.id).models.includes('new-model')); c.editor.close();
 });
+
+
+test('verified notification keeps route and selection when conversation no longer exists', async () => {
+  const f=await fixture(), c=f.controller, before=c.snapshot().chat.id;
+  c.drawer(true); c.navigate('settings');
+  assert.equal(await c.notificationConversation('missing'),false);
+  assert.equal(c.snapshot().screen,'settings'); assert.equal(c.snapshot().chat.id,before);
+  assert.equal(c.snapshot().drawer,true); assert.equal(c.runtime.active(),false);
+});
+test('verified notification selects its conversation and closes pane without starting a run', async () => {
+  const f=await fixture(), c=f.controller, first=c.snapshot().chat.id;
+  c.draft('retained'); await c.newConversation(); c.drawer(true); c.navigate('settings');
+  assert.equal(await c.notificationConversation(first),true);
+  assert.equal(c.snapshot().screen,'chat'); assert.equal(c.snapshot().drawer,false);
+  assert.equal(c.snapshot().chat.id,first); assert.equal(c.snapshot().chat.input,'retained');
+  assert.equal(c.runtime.active(),false); await c.flush();
+});

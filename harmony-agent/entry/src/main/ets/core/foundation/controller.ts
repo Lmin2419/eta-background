@@ -4,7 +4,8 @@ import { ProfileRepository, ModelProfile, modelCatalog } from '../profiles';
 import { HttpTransport } from '../model';
 import { FoundationChatRuntime } from './chatRuntime';
 import { ProviderEditor, ProviderEditorState } from './providerEditor';
-import { ShellNavigation, Screen, Sheet } from './navigation';
+import { EtaShellNavigation, Screen, Sheet } from '../eta/etaShellNavigation';
+import { AppRoute } from '../eta/routes';
 import { DiagnosticArea, DiagnosticEnvironment, DiagnosticFact, DiagnosticLog, diagnosticReport, emptyEnvironment, environmentFacts, formatEvent } from '../diagnostics';
 
 export interface MessageRow { id: string; request: string; reply: string; reasoning: string; model: string; status: string; notice: string; active: boolean }
@@ -16,7 +17,7 @@ export interface ChatView {
 }
 export interface DiagnosticView { facts: DiagnosticFact[]; lines: string[]; total: number }
 export interface ShellState {
-  ready: boolean; busy: boolean; error: string; screen: Screen; drawer: boolean; sheet: Sheet;
+  routes: AppRoute[]; ready: boolean; busy: boolean; error: string; screen: Screen; drawer: boolean; sheet: Sheet;
   conversations: ConversationSummary[]; search: string; providers: ModelProfile[]; providerSearch: string;
   chat: ChatView; editor: ProviderEditorState; choices: ModelChoice[]; modelQuery: string;
   appVersion: string; diagnostics: DiagnosticView;
@@ -28,14 +29,14 @@ export interface FoundationDependencies {
   diagnostics?: DiagnosticLog; environment?: () => Promise<DiagnosticEnvironment>;
 }
 export function emptyShellState(): ShellState {
-  return { ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
+  return { routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
     chat: { id: '', title: '新对话', input: '', inputVersion: 0, rows: [], model: '', provider: '', profileId: '', active: false, phase: '', error: '', followBottom: true, scroll: 0 },
     editor: { draft: { id: '', name: '我的模型', baseUrl: '', apiKey: '', model: '', models: [], rememberKey: false, screenshots: false, allowInsecureHttp: false, streaming: true, protocol: 'chat_completions' }, busy: false, working: '', error: '', message: '', connection: '', catalog: [], selected: [], query: '', tab: 'config' } };
 }
 
 /** All user actions cross this boundary. ArkUI only renders snapshots and sends intents. */
 export class FoundationController {
-  readonly navigation = new ShellNavigation();
+  readonly navigation = new EtaShellNavigation();
   readonly editor: ProviderEditor;
   readonly runtime: FoundationChatRuntime;
   private ready = false;
@@ -77,7 +78,7 @@ export class FoundationController {
       if ((p.name + ' ' + model).toLowerCase().includes(this.modelQuery.trim().toLowerCase())) choices.push({ key: p.id + ':' + model, profileId: p.id, provider: p.name, model });
     }
     return {
-      ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
+      routes: this.navigation.routes, ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
       conversations: this.ready ? chats.list(this.search) : [], search: this.search,
       providers: this.ports.profiles.document.profiles.filter(p => (p.name + ' ' + p.baseUrl).toLowerCase().includes(this.providerSearch.trim().toLowerCase())), providerSearch: this.providerSearch,
       chat: { id, title: selected?.title || '新对话', input: draft.text, inputVersion: this.inputVersion, rows, model: choice?.model || '', provider: choice?.provider || '', profileId: choice?.profileId || '',
@@ -106,7 +107,7 @@ export class FoundationController {
     if (this.navigation.screen === 'provider') this.editor.close();
     this.navigation.push(screen); this.error = ''; this.changed();
   }
-  drawer(value: boolean): void { if (!this.busy) { this.navigation.drawer = value; this.changed(); } }
+  drawer(value: boolean): void { this.navigation.drawer = value; this.changed(); }
   back(): boolean {
     if (this.busy || this.editor.state.working === '保存' || this.editor.state.working === '删除') return true;
     if (this.navigation.sheet === 'catalog') this.editor.dismissCatalog();
@@ -135,6 +136,19 @@ export class FoundationController {
       this.inputVersion++; this.navigation.push('chat');
     });
   }
+  async notificationConversation(id: string): Promise<boolean> {
+    if (!this.ready || this.busy || !this.ports.chats.get(id)) return false;
+    let navigated = false;
+    await this.action(async () => {
+      navigated = await this.navigation.eta.notificationConversation(id, async (target) => {
+        if (!this.ports.chats.get(target)) return false;
+        await this.ports.chats.select(target); this.inputVersion++; return true;
+      });
+      if (navigated) { this.navigation.sheet = 'none'; this.editor.close(); }
+    });
+    return navigated;
+  }
+  restoreNavigation(encoded: string): void { this.navigation.restore(encoded); this.changed(); }
   async newConversation(): Promise<void> {
     await this.action(async () => {
       const choice = this.selection(), conversation = await this.ports.chats.create(choice?.profileId || '', 'chat');
@@ -177,7 +191,7 @@ export class FoundationController {
   reuse(text: string): void { this.draft(text); this.inputVersion++; this.changed(); }
   async openProvider(id = ''): Promise<void> {
     if (this.busy) return;
-    this.navigation.push('provider'); await this.editor.open(id); this.changed();
+    this.navigation.provider(id); await this.editor.open(id); this.changed();
   }
   async probeProvider(testFirst: boolean): Promise<void> {
     const available = await this.editor.probe(testFirst);
@@ -211,5 +225,5 @@ export class FoundationController {
     catch (e) { this.log('app', '读取设备信息失败', e instanceof Error ? e.message : ''); }
     this.changed();
   }
-  async deleteProvider(): Promise<void> { if (await this.editor.remove()) this.navigation.push('providers'); this.changed(); }
+  async deleteProvider(): Promise<void> { if (await this.editor.remove()) this.navigation.providersAfterDelete(); this.changed(); }
 }

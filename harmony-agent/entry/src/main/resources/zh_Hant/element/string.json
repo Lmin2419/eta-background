@@ -1173,6 +1173,38 @@
       "value": "鴻蒙版尚未接入"
     },
     {
+      "name": "eta_route_character_detail",
+      "value": "角色详情"
+    },
+    {
+      "name": "eta_route_character_editor",
+      "value": "编辑角色"
+    },
+    {
+      "name": "eta_route_character_memory",
+      "value": "剧情记忆"
+    },
+    {
+      "name": "eta_route_character_persona",
+      "value": "我的人设"
+    },
+    {
+      "name": "eta_route_characters",
+      "value": "角色"
+    },
+    {
+      "name": "eta_route_community_catalog",
+      "value": "从目录添加"
+    },
+    {
+      "name": "eta_route_community_catalog_provider",
+      "value": "选择模型"
+    },
+    {
+      "name": "eta_route_subagents",
+      "value": "Subagent"
+    },
+    {
       "name": "execution_channel",
       "value": "任務執行"
     },

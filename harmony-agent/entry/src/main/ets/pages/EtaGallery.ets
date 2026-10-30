@@ -19,6 +19,7 @@ import { EtaRunStatus, EtaPermissionStatus, runStatusColor, runStatusLabel, perm
 struct EtaGallery {
   @Prop previewFontScale: number = 1;
   aboutToAppear(): void { this.getUIContext().getHostContext()?.getApplicationContext().setFontSizeScale(this.previewFontScale); }
+  @State private blurStyle: number = 0;
   @State private checked: boolean = true;
   @State private selected: number = 0;
   @State private pageWidth: number = S.Dp0;
@@ -77,7 +78,7 @@ struct EtaGallery {
     EtaPreferenceDivider()
     EtaArrowPreference({ title: $r('app.string.appearance_blur'), summary: $r('app.string.appearance_blur_summary'), hasLeading: true, startAction: this.icon, onAction: () => { this.openDescription(); } })
     EtaPreferenceDivider()
-    EtaArrowPreference({ title: $r('app.string.appearance_blur_style_progressive'), isEnabled: false, summary: $r('app.string.eta_port_unavailable'), hasLeading: true, startAction: this.disabledIcon })
+    EtaDropdownPreference({ title: $r('app.string.appearance_blur'), items: [new EtaDropdownItem('uniform', $r('app.string.appearance_blur_style_uniform')), new EtaDropdownItem('progressive', $r('app.string.appearance_blur_style_progressive')), new EtaDropdownItem('off', $r('app.string.status_disabled'))], selectedIndex: this.blurStyle, onSelectedIndexChange: (value: number) => { this.blurStyle = value; } })
     EtaPreferenceDivider({ hasLeading: false })
     EtaSwitchPreference({ title: $r('app.string.appearance_blur'), checked: this.checked, onCheckedChange: (value: boolean) => { this.checked = value; } })
     EtaSwitchPreference({ title: $r('app.string.status_disabled'), checked: true, isEnabled: false })
@@ -122,7 +123,7 @@ struct EtaGallery {
     ListEmptyState({ title: $r('app.string.mcp_empty_title'), summary: $r('app.string.mcp_empty_summary'), hasIcon: true, icon: this.icon, hasAction: true, action: this.emptyAction })
   }
   build() {
-    MiuixScaffoldPage({ title: $r('app.string.appearance_title'), content: this.body })
+    MiuixScaffoldPage({ title: $r('app.string.appearance_title'), blurEnabled: this.blurStyle !== 2, progressiveBlur: this.blurStyle === 1, content: this.body })
       .onAreaChange((_old, area) => { this.pageWidth = Number(area.width); this.pageHeight = Number(area.height); })
   }
 }

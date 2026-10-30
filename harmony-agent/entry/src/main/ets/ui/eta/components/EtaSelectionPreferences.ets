@@ -36,8 +36,8 @@ export struct EtaSwitchPreference {
   @BuilderParam bottomAction: () => void = EmptyEtaSlot;
   onCheckedChange: (checked: boolean) => void = () => {};
   @Builder private trailing() {
-    EtaSwitch({ checked: this.checked, isEnabled: this.isEnabled })
-      .hitTestBehavior(HitTestMode.None).accessibilityLevel('no')
+    EtaSwitch({ checked: this.checked, isEnabled: this.isEnabled, onCheckedChange: this.onCheckedChange })
+      .accessibilityLevel('no')
   }
   build() {
     EtaPreferenceRow({ title: this.title, summary: this.summary, isEnabled: this.isEnabled,

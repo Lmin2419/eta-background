@@ -118,6 +118,27 @@
       "source": "miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/icon/basic/ArrowUpDown.kt",
       "local": "scripts/eta-upstream/miuix-0.9.4/ArrowUpDown.kt",
       "sha256": "39d339717db926f333aa5a4aa5e1cfc88fcb31be7122f3d28baf62c078ab9238"
+    },
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "miuix-blur/src/commonMain/kotlin/top/yukonga/miuix/kmp/blur/ProgressiveBlur.kt",
+      "local": "scripts/eta-upstream/miuix-0.9.4/ProgressiveBlur.kt",
+      "sha256": "a7164f6ef628a08560b0af02b0fc5754b2bad5e1b54903e3ba81ff3798eb0d23"
+    },
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/basic/Switch.kt",
+      "local": "scripts/eta-upstream/miuix-0.9.4/Switch.kt",
+      "sha256": "0a4cb03161fbc9715a166f2b49004de55b5a7c840c71fc01c4f8ce0b998b6a4b"
+    },
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/utils/ScrollEndHaptic.kt",
+      "local": "scripts/eta-upstream/miuix-0.9.4/ScrollEndHaptic.kt",
+      "sha256": "b9fa086529b4ffb3bdbda3bb3707107be561e610df205ebbd0d7daa4691d9fe1"
     }
   ]
 }
