@@ -1,0 +1,1995 @@
+{
+  "etaCommit": "3b1794d70881c3c849b53d7778dd2bfdf0a46cc5",
+  "materialVersion": "0.14.15",
+  "miuixVersion": "0.9.4",
+  "materialCount": 148,
+  "miuixCount": 1,
+  "drawableCount": 11,
+  "brandCount": 22,
+  "missing": [],
+  "icons": [
+    {
+      "source": "Icons.AutoMirrored.Outlined.ShortText",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppShell.kt"
+      ],
+      "resource": "ic_outlined_short_text",
+      "output": "entry/src/main/resources/base/media/ic_outlined_short_text.svg",
+      "origin": "@material-design-icons/svg@0.14.15/outlined/short_text.svg",
+      "autoMirrored": true,
+      "sha256": "f3c59788ebd254e2898db9cf6257e6269a8ddd1cf7abc424cd1fd898de52cd38"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.ArrowBack",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/MiuixBackButton.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/browser/BrowserAddressBar.kt"
+      ],
+      "resource": "ic_rounded_arrow_back",
+      "output": "entry/src/main/resources/base/media/ic_rounded_arrow_back.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/arrow_back.svg",
+      "autoMirrored": true,
+      "sha256": "53dd992a37bbdc0ebe0c480c1d9e2b479f4362baf135266950a8949667ca4af2"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.ArrowForward",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/browser/BrowserAddressBar.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/tools/ToolCard.kt"
+      ],
+      "resource": "ic_rounded_arrow_forward",
+      "output": "entry/src/main/resources/base/media/ic_rounded_arrow_forward.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/arrow_forward.svg",
+      "autoMirrored": true,
+      "sha256": "82594aa0a71d681426a34c9884e65078bc573905b24e00c48936135faa13e331"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.Article",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/DaemonTasksDialog.kt"
+      ],
+      "resource": "ic_rounded_article",
+      "output": "entry/src/main/resources/base/media/ic_rounded_article.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/article.svg",
+      "autoMirrored": true,
+      "sha256": "80622adffa204e0deb873498a7e5b4bfde9ceccb5ca664ab45e642dc74b4df28"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.Backspace",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_backspace",
+      "output": "entry/src/main/resources/base/media/ic_rounded_backspace.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/backspace.svg",
+      "autoMirrored": true,
+      "sha256": "edfa4a56e963e96f993e2b227c406513000a56cd40f0c67a9408f0a9d112afa0"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.InsertDriveFile",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/LinuxFilesScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/WorkspaceScreen.kt"
+      ],
+      "resource": "ic_rounded_insert_drive_file",
+      "output": "entry/src/main/resources/base/media/ic_rounded_insert_drive_file.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/insert_drive_file.svg",
+      "autoMirrored": true,
+      "sha256": "8c48cf108239cab4bee8d161025d42d4a84f8cf5a4a4e1865832b0009338cb48"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.KeyboardReturn",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/ConsoleKeyBar.kt"
+      ],
+      "resource": "ic_rounded_keyboard_return",
+      "output": "entry/src/main/resources/base/media/ic_rounded_keyboard_return.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/keyboard_return.svg",
+      "autoMirrored": true,
+      "sha256": "1d1ddb10c1e08eb401946848e8a8f11bae72ccc5a47f24977cd5321f9f02ea78"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.ManageSearch",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/enhance/SystemEnhanceScreen.kt"
+      ],
+      "resource": "ic_rounded_manage_search",
+      "output": "entry/src/main/resources/base/media/ic_rounded_manage_search.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/manage_search.svg",
+      "autoMirrored": true,
+      "sha256": "4b0a7eb8eb91278cf240c1e533d912ce1ea2201b47499a45c5e15d2b4607ef9b"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.MenuBook",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaPreferenceStyle.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_menu_book",
+      "output": "entry/src/main/resources/base/media/ic_rounded_menu_book.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/menu_book.svg",
+      "autoMirrored": true,
+      "sha256": "78f5b1bfc123e2d6af4eea7a5658fdd3295c983129e508223ccc34b1a59896dd"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.Notes",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/memory/AgentMemoryScreen.kt"
+      ],
+      "resource": "ic_rounded_notes",
+      "output": "entry/src/main/resources/base/media/ic_rounded_notes.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/notes.svg",
+      "autoMirrored": true,
+      "sha256": "7e02e6b2fa491ddad2cbb5b251b6c9da209915103ebf552fbef609cb3c302f5c"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.OpenInNew",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_open_in_new",
+      "output": "entry/src/main/resources/base/media/ic_rounded_open_in_new.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/open_in_new.svg",
+      "autoMirrored": true,
+      "sha256": "2e60fd63aad304ddff6ba5e4162974ae1992385b25b72f22a612f9d391fa2272"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.StickyNote2",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_sticky_note_2",
+      "output": "entry/src/main/resources/base/media/ic_rounded_sticky_note_2.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/sticky_note_2.svg",
+      "autoMirrored": true,
+      "sha256": "83cd6f09a41360713ffc1e09bc3f4566adc0ed8d46465bad5a4be590cbe0c5ca"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.VolumeOff",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppShell.kt"
+      ],
+      "resource": "ic_rounded_volume_off",
+      "output": "entry/src/main/resources/base/media/ic_rounded_volume_off.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/volume_off.svg",
+      "autoMirrored": true,
+      "sha256": "016b3fad7ad39929c20d3ac2915337ace1126c90fdc12a77a4ccfc690c912b6c"
+    },
+    {
+      "source": "Icons.AutoMirrored.Rounded.VolumeUp",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppShell.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechControls.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_volume_up",
+      "output": "entry/src/main/resources/base/media/ic_rounded_volume_up.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/volume_up.svg",
+      "autoMirrored": true,
+      "sha256": "05ee8b172ad2b9dd22319440bb6e5d401bd0de8783b24b107443695ac7d55cfa"
+    },
+    {
+      "source": "Icons.Outlined.MoreHoriz",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppShell.kt"
+      ],
+      "resource": "ic_outlined_more_horiz",
+      "output": "entry/src/main/resources/base/media/ic_outlined_more_horiz.svg",
+      "origin": "@material-design-icons/svg@0.14.15/outlined/more_horiz.svg",
+      "autoMirrored": false,
+      "sha256": "2722ecf9ae80e170a46e00596bc367302e2e15a8b8aa63e5f88c055351977447"
+    },
+    {
+      "source": "Icons.Rounded.AccessibilityNew",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_accessibility_new",
+      "output": "entry/src/main/resources/base/media/ic_rounded_accessibility_new.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/accessibility_new.svg",
+      "autoMirrored": false,
+      "sha256": "92b394628b801a56ade05cfa06525029aa6c7f4d85a21a293599adf5f770f771"
+    },
+    {
+      "source": "Icons.Rounded.AccountTree",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/enhance/SystemEnhanceScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_account_tree",
+      "output": "entry/src/main/resources/base/media/ic_rounded_account_tree.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/account_tree.svg",
+      "autoMirrored": false,
+      "sha256": "602644b6f7301f2ecb70bf73020ace09dfd07ba5599a41895531e445992b0821"
+    },
+    {
+      "source": "Icons.Rounded.Add",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatFileAttachments.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderHeadersEditor.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderModelsTab.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterLibraryScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterPortraitCard.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/mcp/McpServersScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/subagent/SubagentSettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/SharedFoldersScreen.kt"
+      ],
+      "resource": "ic_rounded_add",
+      "output": "entry/src/main/resources/base/media/ic_rounded_add.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/add.svg",
+      "autoMirrored": false,
+      "sha256": "ce6fbc16375dc59294c129366f05625b7f1e060a054d69654d846bf314a0312e"
+    },
+    {
+      "source": "Icons.Rounded.AddComment",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppShell.kt"
+      ],
+      "resource": "ic_rounded_add_comment",
+      "output": "entry/src/main/resources/base/media/ic_rounded_add_comment.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/add_comment.svg",
+      "autoMirrored": false,
+      "sha256": "13163bf254226759f1ddb88cedac59527c892ef35298e7b4d7bf139f78fd2dcd"
+    },
+    {
+      "source": "Icons.Rounded.AdminPanelSettings",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/enhance/SystemEnhanceScreen.kt"
+      ],
+      "resource": "ic_rounded_admin_panel_settings",
+      "output": "entry/src/main/resources/base/media/ic_rounded_admin_panel_settings.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/admin_panel_settings.svg",
+      "autoMirrored": false,
+      "sha256": "e16accb61922bcb6e8b84dcf7b9539a2d5cdcaf7fe103b9ef371b09a0e898df3"
+    },
+    {
+      "source": "Icons.Rounded.AdsClick",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_ads_click",
+      "output": "entry/src/main/resources/base/media/ic_rounded_ads_click.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/ads_click.svg",
+      "autoMirrored": false,
+      "sha256": "c24bdbe484898afc4db7ba5e66a723f3163d5c544b070a9493c815bc7dbcf349"
+    },
+    {
+      "source": "Icons.Rounded.Alarm",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_alarm",
+      "output": "entry/src/main/resources/base/media/ic_rounded_alarm.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/alarm.svg",
+      "autoMirrored": false,
+      "sha256": "f342d29a3af749aaa9e80d95d64d2c97d7ef40378ba6dd6358eb1777ff78f761"
+    },
+    {
+      "source": "Icons.Rounded.Apps",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_apps",
+      "output": "entry/src/main/resources/base/media/ic_rounded_apps.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/apps.svg",
+      "autoMirrored": false,
+      "sha256": "c4c494c6edb2ec15ee2c597317c8f8f61cc945de60290483e4817cfdf6da3057"
+    },
+    {
+      "source": "Icons.Rounded.ArrowDownward",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatBody.kt"
+      ],
+      "resource": "ic_rounded_arrow_downward",
+      "output": "entry/src/main/resources/base/media/ic_rounded_arrow_downward.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/arrow_downward.svg",
+      "autoMirrored": false,
+      "sha256": "29ab14666f1e6f91742114d16e6e2708465d3159caac465ec4038c36d23aecf7"
+    },
+    {
+      "source": "Icons.Rounded.ArrowUpward",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatInputBar.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatQueueStrip.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/UserTerminalScreen.kt"
+      ],
+      "resource": "ic_rounded_arrow_upward",
+      "output": "entry/src/main/resources/base/media/ic_rounded_arrow_upward.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/arrow_upward.svg",
+      "autoMirrored": false,
+      "sha256": "6167e08f92ddec8f9c27b0cd91db2d8d5c621c534bf0e595a05979ad6431bfc8"
+    },
+    {
+      "source": "Icons.Rounded.AutoAwesome",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/enhance/SystemEnhanceScreen.kt"
+      ],
+      "resource": "ic_rounded_auto_awesome",
+      "output": "entry/src/main/resources/base/media/ic_rounded_auto_awesome.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/auto_awesome.svg",
+      "autoMirrored": false,
+      "sha256": "aa6fd7a71fe4893d8a294943d90ebf2884e0124544ce0582d6a7f69c6eef3a49"
+    },
+    {
+      "source": "Icons.Rounded.Bolt",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatQueueStrip.kt"
+      ],
+      "resource": "ic_rounded_bolt",
+      "output": "entry/src/main/resources/base/media/ic_rounded_bolt.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/bolt.svg",
+      "autoMirrored": false,
+      "sha256": "e2167e8f88d9207b3701fb5a8136b6fb94c843406cb70e8e19063b89eb9ba5ff"
+    },
+    {
+      "source": "Icons.Rounded.BugReport",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_bug_report",
+      "output": "entry/src/main/resources/base/media/ic_rounded_bug_report.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/bug_report.svg",
+      "autoMirrored": false,
+      "sha256": "5bb1dd5c1c9115e55f4301f0421f652f7e7c1b54f1e758ba33c847afdad3e4bc"
+    },
+    {
+      "source": "Icons.Rounded.Build",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentWorkProcess.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_build",
+      "output": "entry/src/main/resources/base/media/ic_rounded_build.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/build.svg",
+      "autoMirrored": false,
+      "sha256": "c6ac941a9ace5065b8ed8d84b6d5458f43040fa3d871e5c2f38dff230b93477a"
+    },
+    {
+      "source": "Icons.Rounded.CalendarMonth",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_calendar_month",
+      "output": "entry/src/main/resources/base/media/ic_rounded_calendar_month.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/calendar_month.svg",
+      "autoMirrored": false,
+      "sha256": "b9084f00d310c5a63c535ecc14854a7a51d381efcc74c67bd4200d93b2f5dfbd"
+    },
+    {
+      "source": "Icons.Rounded.ChatBubble",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_chat_bubble",
+      "output": "entry/src/main/resources/base/media/ic_rounded_chat_bubble.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/chat_bubble.svg",
+      "autoMirrored": false,
+      "sha256": "61c3f5dd25503e4c82026e98fad4c66710cf14b765431c054cff5fcb4d220ceb"
+    },
+    {
+      "source": "Icons.Rounded.Check",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayContent.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentModelPicker.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentStatusCard.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentToolActivity.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/PermissionHealthCard.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownContent.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ModelProviderListScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderModelsTab.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterEditorScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterHero.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/subagent/SubagentSettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechControls.kt"
+      ],
+      "resource": "ic_rounded_check",
+      "output": "entry/src/main/resources/base/media/ic_rounded_check.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/check.svg",
+      "autoMirrored": false,
+      "sha256": "f939e8395fafce22ae3b95ae6218a982e78005eca488e3266c279d6cccd47420"
+    },
+    {
+      "source": "Icons.Rounded.CheckBox",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownContent.kt"
+      ],
+      "resource": "ic_rounded_check_box",
+      "output": "entry/src/main/resources/base/media/ic_rounded_check_box.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/check_box.svg",
+      "autoMirrored": false,
+      "sha256": "2c118c200a41f0672135c6dca4867ae7f7b09c3dc23ee48857fbf418ea7fced8"
+    },
+    {
+      "source": "Icons.Rounded.CheckBoxOutlineBlank",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownContent.kt"
+      ],
+      "resource": "ic_rounded_check_box_outline_blank",
+      "output": "entry/src/main/resources/base/media/ic_rounded_check_box_outline_blank.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/check_box_outline_blank.svg",
+      "autoMirrored": false,
+      "sha256": "0d556fbd61348b3600978abd4a83ec68d1b18e61cc4244c7f963db54ba8af204"
+    },
+    {
+      "source": "Icons.Rounded.Checklist",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentWorkProcess.kt"
+      ],
+      "resource": "ic_rounded_checklist",
+      "output": "entry/src/main/resources/base/media/ic_rounded_checklist.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/checklist.svg",
+      "autoMirrored": false,
+      "sha256": "d90338b11d5d44186d84c26b5f0f474c31967377268a8bfcf90819d88092271c"
+    },
+    {
+      "source": "Icons.Rounded.ChevronLeft",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt"
+      ],
+      "resource": "ic_rounded_chevron_left",
+      "output": "entry/src/main/resources/base/media/ic_rounded_chevron_left.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/chevron_left.svg",
+      "autoMirrored": false,
+      "sha256": "c35b83d8a86382125c874db8f01a6aefb22d3ce886e288cfc73a53a7496d0fce"
+    },
+    {
+      "source": "Icons.Rounded.ChevronRight",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentWorkProcess.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/SubagentActivitySheet.kt"
+      ],
+      "resource": "ic_rounded_chevron_right",
+      "output": "entry/src/main/resources/base/media/ic_rounded_chevron_right.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/chevron_right.svg",
+      "autoMirrored": false,
+      "sha256": "7fb1f52e9b65907801c0726df9544223dfdf7a4b9408bc2f020acc096cbdac02"
+    },
+    {
+      "source": "Icons.Rounded.Close",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayContent.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatFileAttachments.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatInputBar.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatQueueStrip.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentStatusCard.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/PermissionHealthCard.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/browser/BrowserAddressBar.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterEditorScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/SessionListDialog.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/SharedFoldersScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/WorkspaceScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechControls.kt"
+      ],
+      "resource": "ic_rounded_close",
+      "output": "entry/src/main/resources/base/media/ic_rounded_close.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/close.svg",
+      "autoMirrored": false,
+      "sha256": "8653e1a2a2aed77b1170693db53c7bf20f4041a209a5ee3e9d9d77715a731589"
+    },
+    {
+      "source": "Icons.Rounded.Cloud",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/subagent/SubagentSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_cloud",
+      "output": "entry/src/main/resources/base/media/ic_rounded_cloud.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/cloud.svg",
+      "autoMirrored": false,
+      "sha256": "d81eda7376645e43d1be342e4756d2a9de2034133b1db0dc9c9e7714ff8dd0b1"
+    },
+    {
+      "source": "Icons.Rounded.CloudDownload",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderModelsTab.kt"
+      ],
+      "resource": "ic_rounded_cloud_download",
+      "output": "entry/src/main/resources/base/media/ic_rounded_cloud_download.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/cloud_download.svg",
+      "autoMirrored": false,
+      "sha256": "c869127f7346ac9321228a2981f0664251f9d31a8e0c666569dae2f990ca7eee"
+    },
+    {
+      "source": "Icons.Rounded.CloudOff",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/CommunityCatalogScreens.kt"
+      ],
+      "resource": "ic_rounded_cloud_off",
+      "output": "entry/src/main/resources/base/media/ic_rounded_cloud_off.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/cloud_off.svg",
+      "autoMirrored": false,
+      "sha256": "e20f89aa2bcf35c00a18128cb1c36fe40d915fd4a8b4af36683da9fa18ce85db"
+    },
+    {
+      "source": "Icons.Rounded.CloudUpload",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechRecognitionScreen.kt"
+      ],
+      "resource": "ic_rounded_cloud_upload",
+      "output": "entry/src/main/resources/base/media/ic_rounded_cloud_upload.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/cloud_upload.svg",
+      "autoMirrored": false,
+      "sha256": "d62c98c7d326cd3f0b96feb70a2755ec6c45029167a6045514db6e7542024b5c"
+    },
+    {
+      "source": "Icons.Rounded.Code",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/subagent/SubagentSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_code",
+      "output": "entry/src/main/resources/base/media/ic_rounded_code.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/code.svg",
+      "autoMirrored": false,
+      "sha256": "1b1ae8c777cb412def78ddfacf549b2859864e168e92b0cffc54e0d517beb9ba"
+    },
+    {
+      "source": "Icons.Rounded.Compress",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt"
+      ],
+      "resource": "ic_rounded_compress",
+      "output": "entry/src/main/resources/base/media/ic_rounded_compress.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/compress.svg",
+      "autoMirrored": false,
+      "sha256": "4d1a42ad791ff8855a1c6bb46f1b5ea50e568d3e3825a61841e048f852928527"
+    },
+    {
+      "source": "Icons.Rounded.Computer",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_computer",
+      "output": "entry/src/main/resources/base/media/ic_rounded_computer.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/computer.svg",
+      "autoMirrored": false,
+      "sha256": "e8ab5f00ea53a2791b2d1a0aa31911587a3ad01ef1f37893de0c49e5487b6879"
+    },
+    {
+      "source": "Icons.Rounded.Contacts",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_contacts",
+      "output": "entry/src/main/resources/base/media/ic_rounded_contacts.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/contacts.svg",
+      "autoMirrored": false,
+      "sha256": "8e235d390f99260679302a8fe51c442c81462c6420701b3e06f426f971cdd6cb"
+    },
+    {
+      "source": "Icons.Rounded.ContentCopy",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayContent.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentToolActivity.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownContent.kt"
+      ],
+      "resource": "ic_rounded_content_copy",
+      "output": "entry/src/main/resources/base/media/ic_rounded_content_copy.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/content_copy.svg",
+      "autoMirrored": false,
+      "sha256": "ec47224d3416c714a318d73f05045d4dde7f6d9eccd95758ced3f0028b8bc0a1"
+    },
+    {
+      "source": "Icons.Rounded.ContentPaste",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/ConsoleKeyBar.kt"
+      ],
+      "resource": "ic_rounded_content_paste",
+      "output": "entry/src/main/resources/base/media/ic_rounded_content_paste.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/content_paste.svg",
+      "autoMirrored": false,
+      "sha256": "529f5965e2d7e909d2d4556fef012b72163560ae6ccb1f2516ec87c94e3d8925"
+    },
+    {
+      "source": "Icons.Rounded.ContentPasteGo",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_content_paste_go",
+      "output": "entry/src/main/resources/base/media/ic_rounded_content_paste_go.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/content_paste_go.svg",
+      "autoMirrored": false,
+      "sha256": "f38c9675aafb3d541dbb62b29342f255987b5e039b6a9b3930649338178d70d7"
+    },
+    {
+      "source": "Icons.Rounded.Dashboard",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_dashboard",
+      "output": "entry/src/main/resources/base/media/ic_rounded_dashboard.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/dashboard.svg",
+      "autoMirrored": false,
+      "sha256": "34256182869dfcf0a598cc4d6c5205a644fbaa8dc2b9ab87e7b3b7e09e6db917"
+    },
+    {
+      "source": "Icons.Rounded.Delete",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderHeadersEditor.kt"
+      ],
+      "resource": "ic_rounded_delete",
+      "output": "entry/src/main/resources/base/media/ic_rounded_delete.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/delete.svg",
+      "autoMirrored": false,
+      "sha256": "845635bb430265f26a26eb0fc60dd57a9101779c38cf2d1fd2241fab3f3617ec"
+    },
+    {
+      "source": "Icons.Rounded.DeleteOutline",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderModelsTab.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/memory/AgentMemoryScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/SharedFoldersScreen.kt"
+      ],
+      "resource": "ic_rounded_delete_outline",
+      "output": "entry/src/main/resources/base/media/ic_rounded_delete_outline.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/delete_outline.svg",
+      "autoMirrored": false,
+      "sha256": "8d03959536416e8130a75ae0184cff736c583aabc80a91967c1c3f9bdb735fce"
+    },
+    {
+      "source": "Icons.Rounded.Description",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatFileAttachments.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/backup/DataBackupScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/LinuxEnvironmentScreen.kt"
+      ],
+      "resource": "ic_rounded_description",
+      "output": "entry/src/main/resources/base/media/ic_rounded_description.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/description.svg",
+      "autoMirrored": false,
+      "sha256": "211e73661106b6423162b11f992cec06fcdbc0dc2a188eee426d7119f6ac25c9"
+    },
+    {
+      "source": "Icons.Rounded.DesignServices",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/skills/SkillSwitchRow.kt"
+      ],
+      "resource": "ic_rounded_design_services",
+      "output": "entry/src/main/resources/base/media/ic_rounded_design_services.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/design_services.svg",
+      "autoMirrored": false,
+      "sha256": "e1706c950d1ef0144280e1b3619d8ccbfdff562df356481dd44ae574693752f9"
+    },
+    {
+      "source": "Icons.Rounded.Dns",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentModelPicker.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderComponents.kt"
+      ],
+      "resource": "ic_rounded_dns",
+      "output": "entry/src/main/resources/base/media/ic_rounded_dns.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/dns.svg",
+      "autoMirrored": false,
+      "sha256": "03f5e2aefdcf95e1d8816f1e34c89775c612307c35c983eeae6098e2011250c0"
+    },
+    {
+      "source": "Icons.Rounded.DocumentScanner",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatBody.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_document_scanner",
+      "output": "entry/src/main/resources/base/media/ic_rounded_document_scanner.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/document_scanner.svg",
+      "autoMirrored": false,
+      "sha256": "0bf00851a34f44e129168afd536ea39cd71ce50fb58fe5371b749aa66f051b40"
+    },
+    {
+      "source": "Icons.Rounded.Download",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/backup/DataBackupScreen.kt"
+      ],
+      "resource": "ic_rounded_download",
+      "output": "entry/src/main/resources/base/media/ic_rounded_download.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/download.svg",
+      "autoMirrored": false,
+      "sha256": "0de6f523c42ed0ba9a3e0bd906ea8454129ea12b8b5414c7af65210f40ec8e1b"
+    },
+    {
+      "source": "Icons.Rounded.DriveFolderUpload",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/WorkspaceScreen.kt"
+      ],
+      "resource": "ic_rounded_drive_folder_upload",
+      "output": "entry/src/main/resources/base/media/ic_rounded_drive_folder_upload.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/drive_folder_upload.svg",
+      "autoMirrored": false,
+      "sha256": "d5258903e2c2ccfe11be300ba655b5ad80dd769080fd9f4318e7369efc513bc9"
+    },
+    {
+      "source": "Icons.Rounded.Edit",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayCapsule.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt"
+      ],
+      "resource": "ic_rounded_edit",
+      "output": "entry/src/main/resources/base/media/ic_rounded_edit.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/edit.svg",
+      "autoMirrored": false,
+      "sha256": "24a67c4e4e642161d8d97c530ad1e7decdcc9d03371dcbfba096cafe6a4240fe"
+    },
+    {
+      "source": "Icons.Rounded.EditNote",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_edit_note",
+      "output": "entry/src/main/resources/base/media/ic_rounded_edit_note.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/edit_note.svg",
+      "autoMirrored": false,
+      "sha256": "7e02f8d4ddbeef26f7271959a11aec1ecb0f89ed19de403830091fb255d2fefe"
+    },
+    {
+      "source": "Icons.Rounded.ErrorOutline",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/LinuxFilesScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/tools/WebToolsSettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechSettingsFields.kt"
+      ],
+      "resource": "ic_rounded_error_outline",
+      "output": "entry/src/main/resources/base/media/ic_rounded_error_outline.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/error_outline.svg",
+      "autoMirrored": false,
+      "sha256": "cd874d38d747e78a87224259b0360f891ab4240fcac83e2ef2609c29bef35e0c"
+    },
+    {
+      "source": "Icons.Rounded.ExpandMore",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatQueueStrip.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderHeadersEditor.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/tools/WebToolsSettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechConnectionFields.kt"
+      ],
+      "resource": "ic_rounded_expand_more",
+      "output": "entry/src/main/resources/base/media/ic_rounded_expand_more.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/expand_more.svg",
+      "autoMirrored": false,
+      "sha256": "649d1227ff6c2f8d2326069cbc51d6d98ff58aafb6cb0066789eb98e73a7f9a9"
+    },
+    {
+      "source": "Icons.Rounded.Explore",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/subagent/SubagentSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_explore",
+      "output": "entry/src/main/resources/base/media/ic_rounded_explore.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/explore.svg",
+      "autoMirrored": false,
+      "sha256": "cd214ea8e75ba464ae883100872fb6b0403ee0f7de13d88cca8438d72041db97"
+    },
+    {
+      "source": "Icons.Rounded.Extension",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaPreferenceStyle.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/skills/SkillSwitchRow.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/subagent/SubagentSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_extension",
+      "output": "entry/src/main/resources/base/media/ic_rounded_extension.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/extension.svg",
+      "autoMirrored": false,
+      "sha256": "4a1b4a668acffe11993b6f96babf86e27bde9b656f2dfcc58b8b96aa37506b7c"
+    },
+    {
+      "source": "Icons.Rounded.Face",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterLibraryScreen.kt"
+      ],
+      "resource": "ic_rounded_face",
+      "output": "entry/src/main/resources/base/media/ic_rounded_face.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/face.svg",
+      "autoMirrored": false,
+      "sha256": "9947c5eaf6ada34de1838f6d0ba646d0e35711083b42b4e91cc7cdfa58b672f6"
+    },
+    {
+      "source": "Icons.Rounded.Feedback",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownContent.kt"
+      ],
+      "resource": "ic_rounded_feedback",
+      "output": "entry/src/main/resources/base/media/ic_rounded_feedback.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/feedback.svg",
+      "autoMirrored": false,
+      "sha256": "54bc978e1c5fd54fd7a680018d920a31851977066efeaa29aaad65cf9ecea22e"
+    },
+    {
+      "source": "Icons.Rounded.FileUpload",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterLibraryScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterPortraitCard.kt"
+      ],
+      "resource": "ic_rounded_file_upload",
+      "output": "entry/src/main/resources/base/media/ic_rounded_file_upload.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/file_upload.svg",
+      "autoMirrored": false,
+      "sha256": "2cf14f07e538b33c141b6740d401482168c56f5e0f76588aca433d3faf7f66e4"
+    },
+    {
+      "source": "Icons.Rounded.FilterAlt",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_filter_alt",
+      "output": "entry/src/main/resources/base/media/ic_rounded_filter_alt.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/filter_alt.svg",
+      "autoMirrored": false,
+      "sha256": "114ebc7ea13079219ce23d788d70f9c928138d06149e9d4e7eae94fb67e7fc74"
+    },
+    {
+      "source": "Icons.Rounded.FindReplace",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_find_replace",
+      "output": "entry/src/main/resources/base/media/ic_rounded_find_replace.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/find_replace.svg",
+      "autoMirrored": false,
+      "sha256": "024709bcc5fbe788ed74387580a30c8ff84b15cd856a1711acc13117d5ac13fc"
+    },
+    {
+      "source": "Icons.Rounded.Folder",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/LinuxEnvironmentScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/LinuxFilesScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/SharedFoldersScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/WorkspaceScreen.kt"
+      ],
+      "resource": "ic_rounded_folder",
+      "output": "entry/src/main/resources/base/media/ic_rounded_folder.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/folder.svg",
+      "autoMirrored": false,
+      "sha256": "9cda1a474d24ecf8dc9eb74f803a2278571ebff95105d119ee1b4f43d3a97079"
+    },
+    {
+      "source": "Icons.Rounded.FolderOpen",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatFileAttachments.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/LinuxEnvironmentScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/LinuxFilesScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/WorkspaceScreen.kt"
+      ],
+      "resource": "ic_rounded_folder_open",
+      "output": "entry/src/main/resources/base/media/ic_rounded_folder_open.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/folder_open.svg",
+      "autoMirrored": false,
+      "sha256": "c2cc8ed3926ec66e7a08670c710935ad3fd63d28220ec0ad4cb811dc7ac8860c"
+    },
+    {
+      "source": "Icons.Rounded.FolderZip",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/skills/AgentSkillsScreen.kt"
+      ],
+      "resource": "ic_rounded_folder_zip",
+      "output": "entry/src/main/resources/base/media/ic_rounded_folder_zip.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/folder_zip.svg",
+      "autoMirrored": false,
+      "sha256": "8e8885aa0bfd67d283370086d3bc4284ccb29dcae2b6f751fed099347cd66c60"
+    },
+    {
+      "source": "Icons.Rounded.GppMaybe",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_gpp_maybe",
+      "output": "entry/src/main/resources/base/media/ic_rounded_gpp_maybe.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/gpp_maybe.svg",
+      "autoMirrored": false,
+      "sha256": "2f6e6d1adc2dd1a49874cb81fe6d6fa01104ef89860ffd7d1ece75ef5c1ebe9b"
+    },
+    {
+      "source": "Icons.Rounded.Hearing",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_hearing",
+      "output": "entry/src/main/resources/base/media/ic_rounded_hearing.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/hearing.svg",
+      "autoMirrored": false,
+      "sha256": "d5a1fb2a5a21c7512b6a3fcde50e8632cb3090ff319795c1093b64b3c72e03be"
+    },
+    {
+      "source": "Icons.Rounded.History",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_history",
+      "output": "entry/src/main/resources/base/media/ic_rounded_history.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/history.svg",
+      "autoMirrored": false,
+      "sha256": "cba73439a2287ef72c9e5bf99ce2241db7bd4a25bd9b60b06c7c0494f2499fde"
+    },
+    {
+      "source": "Icons.Rounded.Hub",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/mcp/McpServersScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/subagent/SubagentSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_hub",
+      "output": "entry/src/main/resources/base/media/ic_rounded_hub.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/hub.svg",
+      "autoMirrored": false,
+      "sha256": "3aa34a401812e7692fd0b9745d1035b6a69a0910cfebdf55b3a08d1b5b820f8c"
+    },
+    {
+      "source": "Icons.Rounded.Image",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_image",
+      "output": "entry/src/main/resources/base/media/ic_rounded_image.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/image.svg",
+      "autoMirrored": false,
+      "sha256": "ea09caccbf905f0a13d6eb774a15618d17525178623820d37b2c9edc5ed08ebe"
+    },
+    {
+      "source": "Icons.Rounded.ImportContacts",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt"
+      ],
+      "resource": "ic_rounded_import_contacts",
+      "output": "entry/src/main/resources/base/media/ic_rounded_import_contacts.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/import_contacts.svg",
+      "autoMirrored": false,
+      "sha256": "0e118c400b22d5ea8a3fcabd715ac4d78af608c4d9e979504808dc0679237e21"
+    },
+    {
+      "source": "Icons.Rounded.Info",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownContent.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/enhance/SystemEnhanceScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/tools/ToolCard.kt"
+      ],
+      "resource": "ic_rounded_info",
+      "output": "entry/src/main/resources/base/media/ic_rounded_info.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/info.svg",
+      "autoMirrored": false,
+      "sha256": "27fd5a94d8ac84cadbcdff1da8aa8252fa6f0108cf092798d6aef3d86e088800"
+    },
+    {
+      "source": "Icons.Rounded.Insights",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/TerminalToolbar.kt"
+      ],
+      "resource": "ic_rounded_insights",
+      "output": "entry/src/main/resources/base/media/ic_rounded_insights.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/insights.svg",
+      "autoMirrored": false,
+      "sha256": "a8cdbb4fa3c067884ab05ddf64be801aa7a8af16022ce7c02ddac4d78e275981"
+    },
+    {
+      "source": "Icons.Rounded.Inventory",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_inventory",
+      "output": "entry/src/main/resources/base/media/ic_rounded_inventory.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/inventory.svg",
+      "autoMirrored": false,
+      "sha256": "0a271f945caa6c56e71450d83949bd0afbc226fdad90b983526320a1e8fa198e"
+    },
+    {
+      "source": "Icons.Rounded.Inventory2",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_inventory_2",
+      "output": "entry/src/main/resources/base/media/ic_rounded_inventory_2.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/inventory_2.svg",
+      "autoMirrored": false,
+      "sha256": "fbc3d169762ca3077af9339c81478bf927a2deab4e9d1db7ccbffb7cfa6d754e"
+    },
+    {
+      "source": "Icons.Rounded.Key",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/enhance/SystemEnhanceScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_key",
+      "output": "entry/src/main/resources/base/media/ic_rounded_key.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/key.svg",
+      "autoMirrored": false,
+      "sha256": "ab3fdaaaf5c470fbb43c6fe0c5a364acac35c0708ef68e415fdc58c9a8f094e1"
+    },
+    {
+      "source": "Icons.Rounded.Keyboard",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/ConsoleKeyBar.kt"
+      ],
+      "resource": "ic_rounded_keyboard",
+      "output": "entry/src/main/resources/base/media/ic_rounded_keyboard.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/keyboard.svg",
+      "autoMirrored": false,
+      "sha256": "2cdaa4b5ee59746fbd478419a52bef03089bb6fb3c499c1f4c90b4ff1ee2763b"
+    },
+    {
+      "source": "Icons.Rounded.KeyboardArrowUp",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/ConsoleKeyBar.kt"
+      ],
+      "resource": "ic_rounded_keyboard_arrow_up",
+      "output": "entry/src/main/resources/base/media/ic_rounded_keyboard_arrow_up.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/keyboard_arrow_up.svg",
+      "autoMirrored": false,
+      "sha256": "8625a301a7df8a0a1140d54e6ddb03b4ab1b2c6fe87569d345d08cb944396e1b"
+    },
+    {
+      "source": "Icons.Rounded.KeyboardCommandKey",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_keyboard_command_key",
+      "output": "entry/src/main/resources/base/media/ic_rounded_keyboard_command_key.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/keyboard_command_key.svg",
+      "autoMirrored": false,
+      "sha256": "cb5e7e939c11f918c73c8ef542bc21718d6e8f1c0bd8aa6c150a9bc4ec97f909"
+    },
+    {
+      "source": "Icons.Rounded.KeyboardHide",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/ConsoleKeyBar.kt"
+      ],
+      "resource": "ic_rounded_keyboard_hide",
+      "output": "entry/src/main/resources/base/media/ic_rounded_keyboard_hide.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/keyboard_hide.svg",
+      "autoMirrored": false,
+      "sha256": "1534ec090c1a520c3ee22e8fb63bff99947fbca0c64be0ce3f6cbc31e632a04e"
+    },
+    {
+      "source": "Icons.Rounded.Language",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppShell.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatBody.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentToolActivity.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/LanguagePreference.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderComponents.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/browser/BrowserAddressBar.kt"
+      ],
+      "resource": "ic_rounded_language",
+      "output": "entry/src/main/resources/base/media/ic_rounded_language.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/language.svg",
+      "autoMirrored": false,
+      "sha256": "866660cd0386762149087c93f03826996cd21c59613e16c4fd409a82f559c49a"
+    },
+    {
+      "source": "Icons.Rounded.Layers",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/TerminalToolbar.kt"
+      ],
+      "resource": "ic_rounded_layers",
+      "output": "entry/src/main/resources/base/media/ic_rounded_layers.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/layers.svg",
+      "autoMirrored": false,
+      "sha256": "5d9c658f1a6aef1899de68c3f3226ba08e878bd2471f843b1be97a48bf9aed89"
+    },
+    {
+      "source": "Icons.Rounded.Lightbulb",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentWorkProcess.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/SubagentActivitySheet.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownContent.kt"
+      ],
+      "resource": "ic_rounded_lightbulb",
+      "output": "entry/src/main/resources/base/media/ic_rounded_lightbulb.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/lightbulb.svg",
+      "autoMirrored": false,
+      "sha256": "cc78910aa9d3957473777b7efa9ac57e0389f473be5f39e83de4416abc8c9897"
+    },
+    {
+      "source": "Icons.Rounded.LocationOn",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_location_on",
+      "output": "entry/src/main/resources/base/media/ic_rounded_location_on.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/location_on.svg",
+      "autoMirrored": false,
+      "sha256": "36edc0136b54f940867309524ed70ee1b7cc1f0d19262e2c96356c5af94d2add"
+    },
+    {
+      "source": "Icons.Rounded.Lock",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/browser/BrowserAddressBar.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/enhance/SystemEnhanceScreen.kt"
+      ],
+      "resource": "ic_rounded_lock",
+      "output": "entry/src/main/resources/base/media/ic_rounded_lock.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/lock.svg",
+      "autoMirrored": false,
+      "sha256": "b2757117e17c858b169d105354f14afef9034c737ffc17a3b75bb7efe4b06552"
+    },
+    {
+      "source": "Icons.Rounded.Memory",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_memory",
+      "output": "entry/src/main/resources/base/media/ic_rounded_memory.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/memory.svg",
+      "autoMirrored": false,
+      "sha256": "5eedf7121a4b606cf7bb7884c68803740f1f297d4b844f834a6aa3fb70e0b6d2"
+    },
+    {
+      "source": "Icons.Rounded.Mic",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechControls.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_mic",
+      "output": "entry/src/main/resources/base/media/ic_rounded_mic.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/mic.svg",
+      "autoMirrored": false,
+      "sha256": "ce7ba4d227f6c08a5ed36b9c39f67ca95e4f978fa2d946e685e58fa6f5297397"
+    },
+    {
+      "source": "Icons.Rounded.MonitorHeart",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_monitor_heart",
+      "output": "entry/src/main/resources/base/media/ic_rounded_monitor_heart.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/monitor_heart.svg",
+      "autoMirrored": false,
+      "sha256": "60c53d096d5cdebf572aefb6baa2db6ce9f33fcab476b0ab891a2e2d200ab81c"
+    },
+    {
+      "source": "Icons.Rounded.MoreHoriz",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentStatusCard.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/skills/SkillSwitchRow.kt"
+      ],
+      "resource": "ic_rounded_more_horiz",
+      "output": "entry/src/main/resources/base/media/ic_rounded_more_horiz.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/more_horiz.svg",
+      "autoMirrored": false,
+      "sha256": "5da8d9152cad74f011053e33b82867cc1c5e89867d383189050a59396fd04dfd"
+    },
+    {
+      "source": "Icons.Rounded.MoreVert",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/browser/BrowserAddressBar.kt"
+      ],
+      "resource": "ic_rounded_more_vert",
+      "output": "entry/src/main/resources/base/media/ic_rounded_more_vert.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/more_vert.svg",
+      "autoMirrored": false,
+      "sha256": "51b46d02147688ee432ee30dffabbd097bb987809f4f9dd64257d7a2ccf82d46"
+    },
+    {
+      "source": "Icons.Rounded.MusicNote",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_music_note",
+      "output": "entry/src/main/resources/base/media/ic_rounded_music_note.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/music_note.svg",
+      "autoMirrored": false,
+      "sha256": "7bf2fcb4df05e6a7a0a24087ac98ddf4f7fa75a3b948fa2d7dcf878a117505fe"
+    },
+    {
+      "source": "Icons.Rounded.MyLocation",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_my_location",
+      "output": "entry/src/main/resources/base/media/ic_rounded_my_location.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/my_location.svg",
+      "autoMirrored": false,
+      "sha256": "8ffeaf95088c80055f3572a371c3faeeedd9b1e6f66dfb9b41b8d8bf4f9c701d"
+    },
+    {
+      "source": "Icons.Rounded.Notifications",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_notifications",
+      "output": "entry/src/main/resources/base/media/ic_rounded_notifications.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/notifications.svg",
+      "autoMirrored": false,
+      "sha256": "23c6ec18cc2fa45756aaebb5d560ffd05750b2af2f77195d0ec7fbe097e08f00"
+    },
+    {
+      "source": "Icons.Rounded.NotificationsActive",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_notifications_active",
+      "output": "entry/src/main/resources/base/media/ic_rounded_notifications_active.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/notifications_active.svg",
+      "autoMirrored": false,
+      "sha256": "751d517bdcccf11fdbf3c09546fb2bd05adf42805043dff196fc085b0009c7c8"
+    },
+    {
+      "source": "Icons.Rounded.OpenWith",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_open_with",
+      "output": "entry/src/main/resources/base/media/ic_rounded_open_with.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/open_with.svg",
+      "autoMirrored": false,
+      "sha256": "e604f622791908d903e1d47fd45f2be277f48e401300942ce9ea6718888d03e9"
+    },
+    {
+      "source": "Icons.Rounded.Palette",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_palette",
+      "output": "entry/src/main/resources/base/media/ic_rounded_palette.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/palette.svg",
+      "autoMirrored": false,
+      "sha256": "9e90f964cfa96a926e2d6c78d57128268aca4f3e40d45f1af48bf40ad6c78ba5"
+    },
+    {
+      "source": "Icons.Rounded.Pause",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayCapsule.kt"
+      ],
+      "resource": "ic_rounded_pause",
+      "output": "entry/src/main/resources/base/media/ic_rounded_pause.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/pause.svg",
+      "autoMirrored": false,
+      "sha256": "1b0e22978ed8e51939c872078cbec63b55ea871a146a9a4ebefef09f73d3091b"
+    },
+    {
+      "source": "Icons.Rounded.Phone",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_phone",
+      "output": "entry/src/main/resources/base/media/ic_rounded_phone.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/phone.svg",
+      "autoMirrored": false,
+      "sha256": "b5c099d47bbf2ed19adf5b924328a098bcd5b87b4713e9c00bb8228e3e59f26f"
+    },
+    {
+      "source": "Icons.Rounded.PhotoCamera",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterHero.kt"
+      ],
+      "resource": "ic_rounded_photo_camera",
+      "output": "entry/src/main/resources/base/media/ic_rounded_photo_camera.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/photo_camera.svg",
+      "autoMirrored": false,
+      "sha256": "91e09333d670afc59067491d5dd800c3c429057d3e3f4eb674da0e065ec8d93d"
+    },
+    {
+      "source": "Icons.Rounded.PlayArrow",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayCapsule.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_play_arrow",
+      "output": "entry/src/main/resources/base/media/ic_rounded_play_arrow.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/play_arrow.svg",
+      "autoMirrored": false,
+      "sha256": "9387743fb9323a2fb0cf83f8c9a90743f6cb269b5b53ad7172eb25d35550015a"
+    },
+    {
+      "source": "Icons.Rounded.PowerSettingsNew",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_power_settings_new",
+      "output": "entry/src/main/resources/base/media/ic_rounded_power_settings_new.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/power_settings_new.svg",
+      "autoMirrored": false,
+      "sha256": "cf7784a77c619195002e1bb03447e573c586731019434dea8558b189e3c4c900"
+    },
+    {
+      "source": "Icons.Rounded.Psychology",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/subagent/SubagentSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_psychology",
+      "output": "entry/src/main/resources/base/media/ic_rounded_psychology.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/psychology.svg",
+      "autoMirrored": false,
+      "sha256": "224ac4fc79d937117318a4a7908b6b73bb053b63e39ea74ba785e2ffa5448207"
+    },
+    {
+      "source": "Icons.Rounded.QueryStats",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_query_stats",
+      "output": "entry/src/main/resources/base/media/ic_rounded_query_stats.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/query_stats.svg",
+      "autoMirrored": false,
+      "sha256": "323ab4738a9721e7d9cd26de664fd978d4a64ca8e934fd366aeabf41fbddc9fb"
+    },
+    {
+      "source": "Icons.Rounded.RadioButtonUnchecked",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ModelProviderListScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderModelsTab.kt"
+      ],
+      "resource": "ic_rounded_radio_button_unchecked",
+      "output": "entry/src/main/resources/base/media/ic_rounded_radio_button_unchecked.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/radio_button_unchecked.svg",
+      "autoMirrored": false,
+      "sha256": "850ca0d5701f2dbe2606b49a561c292fc637a9fb1e90110e806d097d950379eb"
+    },
+    {
+      "source": "Icons.Rounded.RecordVoiceOver",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_record_voice_over",
+      "output": "entry/src/main/resources/base/media/ic_rounded_record_voice_over.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/record_voice_over.svg",
+      "autoMirrored": false,
+      "sha256": "ff0801bbc61bfec7453fdfc7890f20c85734a69f068d3f793a4c21b6d33c4c61"
+    },
+    {
+      "source": "Icons.Rounded.Refresh",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/CommunityCatalogScreens.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/browser/BrowserAddressBar.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/mcp/McpServersScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/skills/SkillSwitchRow.kt"
+      ],
+      "resource": "ic_rounded_refresh",
+      "output": "entry/src/main/resources/base/media/ic_rounded_refresh.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/refresh.svg",
+      "autoMirrored": false,
+      "sha256": "6f6b89295dae9cadb23921a614ffc4f9b5e33512902ca6cc384698c8db1cbbfd"
+    },
+    {
+      "source": "Icons.Rounded.Report",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownContent.kt"
+      ],
+      "resource": "ic_rounded_report",
+      "output": "entry/src/main/resources/base/media/ic_rounded_report.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/report.svg",
+      "autoMirrored": false,
+      "sha256": "5f948e23a13682ea2245f51c4bf6feb7179ffaa7c7cf4ed1521983693386d073"
+    },
+    {
+      "source": "Icons.Rounded.RestartAlt",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/SessionListDialog.kt"
+      ],
+      "resource": "ic_rounded_restart_alt",
+      "output": "entry/src/main/resources/base/media/ic_rounded_restart_alt.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/restart_alt.svg",
+      "autoMirrored": false,
+      "sha256": "a7c3b614edce931b560c703a8e4fdd57fe16162dcfc07f8d750f01b9c2b70fee"
+    },
+    {
+      "source": "Icons.Rounded.RocketLaunch",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatBody.kt"
+      ],
+      "resource": "ic_rounded_rocket_launch",
+      "output": "entry/src/main/resources/base/media/ic_rounded_rocket_launch.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/rocket_launch.svg",
+      "autoMirrored": false,
+      "sha256": "d736cfd5b23ed44ede3f057b63a968f44c2fa8ca143dd37f9abf4666e97d6635"
+    },
+    {
+      "source": "Icons.Rounded.Route",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/subagent/SubagentSettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_route",
+      "output": "entry/src/main/resources/base/media/ic_rounded_route.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/route.svg",
+      "autoMirrored": false,
+      "sha256": "8ffb221e9d54a7128428fc171fe67f9798bd68c858d33404e7aa66ce1571c83a"
+    },
+    {
+      "source": "Icons.Rounded.Schedule",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_schedule",
+      "output": "entry/src/main/resources/base/media/ic_rounded_schedule.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/schedule.svg",
+      "autoMirrored": false,
+      "sha256": "03e8ec4c4b9fba1f005846cae6a1458f5922f861e1531c1c804e20afeb226320"
+    },
+    {
+      "source": "Icons.Rounded.ScreenshotMonitor",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_screenshot_monitor",
+      "output": "entry/src/main/resources/base/media/ic_rounded_screenshot_monitor.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/screenshot_monitor.svg",
+      "autoMirrored": false,
+      "sha256": "f3b89ed8a8bb7243f186042db8bd004890163f5f11ac324641d3a16e36279e5c"
+    },
+    {
+      "source": "Icons.Rounded.Search",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_search",
+      "output": "entry/src/main/resources/base/media/ic_rounded_search.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/search.svg",
+      "autoMirrored": false,
+      "sha256": "17aa7ccad4b7c26f0c481ecbb15fe81eba2f201086bb78a3b2e05ceccc006ef6"
+    },
+    {
+      "source": "Icons.Rounded.SearchOff",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/CommunityCatalogScreens.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterLibraryScreen.kt"
+      ],
+      "resource": "ic_rounded_search_off",
+      "output": "entry/src/main/resources/base/media/ic_rounded_search_off.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/search_off.svg",
+      "autoMirrored": false,
+      "sha256": "4cf6655102d11d9091df255c644e52a1faaf09fa329d61cec4abf8af9a234f62"
+    },
+    {
+      "source": "Icons.Rounded.Security",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_security",
+      "output": "entry/src/main/resources/base/media/ic_rounded_security.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/security.svg",
+      "autoMirrored": false,
+      "sha256": "9bf09c52bf132d01b02336a624b4725088e9df4ea5f6d093bf6e97953cde9eb5"
+    },
+    {
+      "source": "Icons.Rounded.Settings",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_settings",
+      "output": "entry/src/main/resources/base/media/ic_rounded_settings.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/settings.svg",
+      "autoMirrored": false,
+      "sha256": "116b79bb1eef8fb595a92dd6c05259c8134f20df0d54d2f33a42ff6eda91d730"
+    },
+    {
+      "source": "Icons.Rounded.SettingsVoice",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_settings_voice",
+      "output": "entry/src/main/resources/base/media/ic_rounded_settings_voice.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/settings_voice.svg",
+      "autoMirrored": false,
+      "sha256": "79f08c3da67d493b0df0054dc0952a823ccbdb8519da4665e071c80a5afef2e5"
+    },
+    {
+      "source": "Icons.Rounded.Shield",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt"
+      ],
+      "resource": "ic_rounded_shield",
+      "output": "entry/src/main/resources/base/media/ic_rounded_shield.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/shield.svg",
+      "autoMirrored": false,
+      "sha256": "5aa6a7cb786d0afb860cde0434366c01bbe6397e249774a4eadccfe757d7dc1f"
+    },
+    {
+      "source": "Icons.Rounded.ShoppingBag",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_shopping_bag",
+      "output": "entry/src/main/resources/base/media/ic_rounded_shopping_bag.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/shopping_bag.svg",
+      "autoMirrored": false,
+      "sha256": "8fe3daab0f8b8eff4b0164a5ed9a22cf1ff3fe58fa4d6551451cc02001b14a82"
+    },
+    {
+      "source": "Icons.Rounded.Smartphone",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_smartphone",
+      "output": "entry/src/main/resources/base/media/ic_rounded_smartphone.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/smartphone.svg",
+      "autoMirrored": false,
+      "sha256": "a2d1c1c4479601154b532aefc81dfdfbef7e186fb7fb3cf13c4121130603bb22"
+    },
+    {
+      "source": "Icons.Rounded.SportsBar",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt"
+      ],
+      "resource": "ic_rounded_sports_bar",
+      "output": "entry/src/main/resources/base/media/ic_rounded_sports_bar.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/sports_bar.svg",
+      "autoMirrored": false,
+      "sha256": "d782d91671fdfe3c330039e64e9ac9d8aa4a1777273d01530a5e5e3d81536bf4"
+    },
+    {
+      "source": "Icons.Rounded.Star",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterHero.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterPortraitCard.kt"
+      ],
+      "resource": "ic_rounded_star",
+      "output": "entry/src/main/resources/base/media/ic_rounded_star.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/star.svg",
+      "autoMirrored": false,
+      "sha256": "5720175c124398f1688dafbd86e27230b4e20800bb0217c5ed542c39ce8a1a8b"
+    },
+    {
+      "source": "Icons.Rounded.StarOutline",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterHero.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterPortraitCard.kt"
+      ],
+      "resource": "ic_rounded_star_outline",
+      "output": "entry/src/main/resources/base/media/ic_rounded_star_outline.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/star_outline.svg",
+      "autoMirrored": false,
+      "sha256": "10f018d09f4eec6a0a8c89a6a0898e88f0a9d0b5bed9bf83c7f944d96df44daa"
+    },
+    {
+      "source": "Icons.Rounded.Stop",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayCapsule.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppShell.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatInputBar.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/DaemonTasksDialog.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/UserTerminalScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechControls.kt"
+      ],
+      "resource": "ic_rounded_stop",
+      "output": "entry/src/main/resources/base/media/ic_rounded_stop.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/stop.svg",
+      "autoMirrored": false,
+      "sha256": "90f05d1253acb55b03ffff2eaa58716ee0ad93ef105b04c6ee211f49fb6dc464"
+    },
+    {
+      "source": "Icons.Rounded.Storefront",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ModelProviderListScreen.kt"
+      ],
+      "resource": "ic_rounded_storefront",
+      "output": "entry/src/main/resources/base/media/ic_rounded_storefront.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/storefront.svg",
+      "autoMirrored": false,
+      "sha256": "913b295bb44117dd8f320386912b2664d805808aaf0bbdfde7a3ec176e9075ac"
+    },
+    {
+      "source": "Icons.Rounded.SupportAgent",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_support_agent",
+      "output": "entry/src/main/resources/base/media/ic_rounded_support_agent.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/support_agent.svg",
+      "autoMirrored": false,
+      "sha256": "c47112cc52bfe6a426494b74c901eb53ed8df7042b7d1f441dfcc11852e84057"
+    },
+    {
+      "source": "Icons.Rounded.SwapVert",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_swap_vert",
+      "output": "entry/src/main/resources/base/media/ic_rounded_swap_vert.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/swap_vert.svg",
+      "autoMirrored": false,
+      "sha256": "56b9c09d7f6256886a53ee8791e0855c5448571e950580ad4bb2813a8bb8d883"
+    },
+    {
+      "source": "Icons.Rounded.SwipeUp",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_swipe_up",
+      "output": "entry/src/main/resources/base/media/ic_rounded_swipe_up.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/swipe_up.svg",
+      "autoMirrored": false,
+      "sha256": "bd4a249aa9cc735cb7eccfd5be12fbf3a1b80d5c1123621db41fbaa822d27094"
+    },
+    {
+      "source": "Icons.Rounded.SystemUpdate",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt"
+      ],
+      "resource": "ic_rounded_system_update",
+      "output": "entry/src/main/resources/base/media/ic_rounded_system_update.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/system_update.svg",
+      "autoMirrored": false,
+      "sha256": "c7a330a1f9a87a00fd143a1b5c3b08a7006bbd1247956baf557cce26403a75f4"
+    },
+    {
+      "source": "Icons.Rounded.Terminal",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppShell.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatBody.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/enhance/SystemEnhanceScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/permissions/PermissionHealthScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/ConsoleScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/LinuxFilesScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/TerminalToolbar.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/UserTerminalScreen.kt"
+      ],
+      "resource": "ic_rounded_terminal",
+      "output": "entry/src/main/resources/base/media/ic_rounded_terminal.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/terminal.svg",
+      "autoMirrored": false,
+      "sha256": "b04d4919f8fd5ce1f6edf7c8239c537e4a02774c22abf2b0e748bd89d3f8b419"
+    },
+    {
+      "source": "Icons.Rounded.TheaterComedy",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaPreferenceStyle.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/characters/CharacterLibraryScreen.kt"
+      ],
+      "resource": "ic_rounded_theater_comedy",
+      "output": "entry/src/main/resources/base/media/ic_rounded_theater_comedy.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/theater_comedy.svg",
+      "autoMirrored": false,
+      "sha256": "b0e817410240f13e802be86785574312b53c3d5feda2ef2d905bfe8737df8d92"
+    },
+    {
+      "source": "Icons.Rounded.TouchApp",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_touch_app",
+      "output": "entry/src/main/resources/base/media/ic_rounded_touch_app.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/touch_app.svg",
+      "autoMirrored": false,
+      "sha256": "842bcec7a8350306287eb36c297d31eefe8b171ea85677d76c7aec6ff5db00f0"
+    },
+    {
+      "source": "Icons.Rounded.TravelExplore",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_travel_explore",
+      "output": "entry/src/main/resources/base/media/ic_rounded_travel_explore.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/travel_explore.svg",
+      "autoMirrored": false,
+      "sha256": "6a983f871a0e6b02550801e7ad0b9736c8dbfc9be6c94e7fff70ad765b963377"
+    },
+    {
+      "source": "Icons.Rounded.Tune",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderModelsTab.kt"
+      ],
+      "resource": "ic_rounded_tune",
+      "output": "entry/src/main/resources/base/media/ic_rounded_tune.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/tune.svg",
+      "autoMirrored": false,
+      "sha256": "0786906ec0a3200ba475d16a401a005d2f0a7b191762825a6ef316daf54c82fb"
+    },
+    {
+      "source": "Icons.Rounded.VerifiedUser",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/enhance/SystemEnhanceScreen.kt"
+      ],
+      "resource": "ic_rounded_verified_user",
+      "output": "entry/src/main/resources/base/media/ic_rounded_verified_user.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/verified_user.svg",
+      "autoMirrored": false,
+      "sha256": "e88e8cc97bea5fff0ddb9db068385745b7a01b7893b075080cfce3b865815595"
+    },
+    {
+      "source": "Icons.Rounded.ViewAgenda",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/terminal/TerminalToolbar.kt"
+      ],
+      "resource": "ic_rounded_view_agenda",
+      "output": "entry/src/main/resources/base/media/ic_rounded_view_agenda.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/view_agenda.svg",
+      "autoMirrored": false,
+      "sha256": "4ac9487cc424a66c19316436bd2ada6395c3e886b2ee400262f483203024cad8"
+    },
+    {
+      "source": "Icons.Rounded.Visibility",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderConnectionFields.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderHeadersEditor.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/tools/WebToolsSettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechSettingsFields.kt"
+      ],
+      "resource": "ic_rounded_visibility",
+      "output": "entry/src/main/resources/base/media/ic_rounded_visibility.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/visibility.svg",
+      "autoMirrored": false,
+      "sha256": "d4e2435649d8658fa23ff3cdc3854bbb64b5c642b624e35ff187c48466159c91"
+    },
+    {
+      "source": "Icons.Rounded.VisibilityOff",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderConnectionFields.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderHeadersEditor.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/screens/tools/WebToolsSettingsScreen.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/voice/SpeechSettingsFields.kt"
+      ],
+      "resource": "ic_rounded_visibility_off",
+      "output": "entry/src/main/resources/base/media/ic_rounded_visibility_off.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/visibility_off.svg",
+      "autoMirrored": false,
+      "sha256": "cd19e742ea93242cfe70e7442a279e3d8e53c36e11df8b56d2c2344fe1b32dab"
+    },
+    {
+      "source": "Icons.Rounded.Warning",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/PermissionHealthCard.kt",
+        "app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownContent.kt"
+      ],
+      "resource": "ic_rounded_warning",
+      "output": "entry/src/main/resources/base/media/ic_rounded_warning.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/warning.svg",
+      "autoMirrored": false,
+      "sha256": "81e2be5518ea9f7d8165da03187b3c984b0bff4de4376066277578b80cb0015c"
+    },
+    {
+      "source": "Icons.Rounded.WebAsset",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_web_asset",
+      "output": "entry/src/main/resources/base/media/ic_rounded_web_asset.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/web_asset.svg",
+      "autoMirrored": false,
+      "sha256": "422078e63cad7bb19cf476c73712900fae1082973cd1471588d59a6ebefed408"
+    },
+    {
+      "source": "Icons.Rounded.Wifi",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt"
+      ],
+      "resource": "ic_rounded_wifi",
+      "output": "entry/src/main/resources/base/media/ic_rounded_wifi.svg",
+      "origin": "@material-design-icons/svg@0.14.15/round/wifi.svg",
+      "autoMirrored": false,
+      "sha256": "a06fd05377049cd9b7ecb40c499a64055dce68dccd159e715b7d4d8325a189c1"
+    },
+    {
+      "source": "MiuixIcons.Basic.ArrowRight",
+      "uses": [
+        "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaPreferenceRow.kt"
+      ],
+      "resource": "ic_miuix_basic_arrow_right",
+      "output": "entry/src/main/resources/base/media/ic_miuix_basic_arrow_right.svg",
+      "origin": "scripts/eta-upstream/miuix-0.9.4/ArrowRight.kt",
+      "autoMirrored": false,
+      "sha256": "0e9929317f93e538c6703bc40eecc6750d419c518f8e6b4b353bd9c5335acb97"
+    }
+  ],
+  "drawables": [
+    {
+      "source": "app/src/main/res/drawable/ic_assistant_keyboard.xml",
+      "resource": "ic_assistant_keyboard",
+      "output": "entry/src/main/resources/base/media/ic_assistant_keyboard.svg",
+      "sha256": "988e540d25bffdac50b53a8aef9db003d8d5d1b05aa7fc557c2edd4841cc3633"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_assistant_keyboard_float.xml",
+      "resource": "ic_assistant_keyboard_float",
+      "output": "entry/src/main/resources/base/media/ic_assistant_keyboard_float.svg",
+      "sha256": "d7ee85a044250fccb080c1be4959e8e751e09b754df9673d7df50bf9ff2ce441"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_assistant_send.xml",
+      "resource": "ic_assistant_send",
+      "output": "entry/src/main/resources/base/media/ic_assistant_send.svg",
+      "sha256": "03e0552ed3868836493d6fdedc0424cd2aa4293d70aad056a455760fbf9672ea"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_assistant_stop.xml",
+      "resource": "ic_assistant_stop",
+      "output": "entry/src/main/resources/base/media/ic_assistant_stop.svg",
+      "sha256": "0cd75662f6cb763026efb8fdf60769c6177f3bd5ae760cb85d7164bd1e95d40b"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_assistant_voice.xml",
+      "resource": "ic_assistant_voice",
+      "output": "entry/src/main/resources/base/media/ic_assistant_voice.svg",
+      "sha256": "a9d82d0ae2443b5e830317923cdf66d93a576b0d1346e081371a985037b78b77"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_atom.xml",
+      "resource": "ic_atom",
+      "output": "entry/src/main/resources/base/media/ic_atom.svg",
+      "sha256": "f7913d760519ddd875328a2cf248a2258549178762e7573fe7ad11c9bb5006fa"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_kimi_code.xml",
+      "resource": "ic_kimi_code",
+      "output": "entry/src/main/resources/base/media/ic_kimi_code.svg",
+      "sha256": "a2234ee0a9e120cea270ccd814d279092ac7328327922f8cab66b82311c0046c"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_launcher_background.xml",
+      "resource": "ic_launcher_background",
+      "output": "entry/src/main/resources/base/media/ic_launcher_background.svg",
+      "sha256": "2460583dbb8c09590e0d475873f2145d0455904a7b76fd6c7777a958d2676743"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "resource": "ic_launcher_foreground",
+      "output": "entry/src/main/resources/base/media/ic_launcher_foreground.svg",
+      "sha256": "0b5c7d92c430abdac3e857703acdf05048c01ee6105e3f383901d61b2e49fe93"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_launcher_monochrome.xml",
+      "resource": "ic_launcher_monochrome",
+      "output": "entry/src/main/resources/base/media/ic_launcher_monochrome.svg",
+      "sha256": "191e03a99d1aae5f03eb18d5f7679ff712094148b0d924eac11577e518d6a7b8"
+    },
+    {
+      "source": "app/src/main/res/drawable/ic_notification.xml",
+      "resource": "ic_notification",
+      "output": "entry/src/main/resources/base/media/ic_notification.svg",
+      "sha256": "b01490116e1aff8421f61da2b3757a925bdda67ff63a5623b35a05ef2d0d2686"
+    }
+  ],
+  "brands": [
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_chatglm.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_chatglm.webp",
+      "sha256": "54ad0b59a21315fe695efc0649265e429a9c50cd8fcb27900a23a527b7b93fce"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_claude.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_claude.webp",
+      "sha256": "3094d280e22eab471e52a2920a3204461cde6d2f9941405454b7eb725b2953a6"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_doubao.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_doubao.webp",
+      "sha256": "639c71871405ac492dcdd3a7cd5cef02912d7d45f9d48f96caab71a055dd3f0b"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_gemini.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_gemini.webp",
+      "sha256": "872eb0d89d1dc3470789bfab38dab74985905938ddd5fcc8cbc9f54844ff43ca"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_gemma.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_gemma.webp",
+      "sha256": "dc7bda7416a577203143b452e6fbb56931bcb65b2f9ad11d3b4263c8c08a79f6"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_grok.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_grok.webp",
+      "sha256": "74470438dc521305e8cdd415a98a50655200507f3d7202279af5ad2dc62ba93f"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_hunyuan.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_hunyuan.webp",
+      "sha256": "dc43e3e479a29468c22b3716c60dfa45804dabad30531757688e48b32a037c0f"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_meta.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_meta.webp",
+      "sha256": "490056197667b1b344f3d1ef76704a3b6c2c4c9d8163fa5ba81a1c030278976f"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_mistral.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_mistral.webp",
+      "sha256": "ac297ba5e42b9b187c50ff51ca5df9f087694984f55d95507add93523f2a4043"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_qwen.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_qwen.webp",
+      "sha256": "dc3d49c50a0cc49c205f8e1cb2f8c26b52c9d7f87d776a96fe8d721d0901b575"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_yi.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_yi.webp",
+      "sha256": "14edd070132bc0ce7fc68d5328cd1c0be345058d536d785d2b8f3b4014b9a844"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/model_logo_zai.webp",
+      "output": "entry/src/main/resources/base/media/model_logo_zai.webp",
+      "sha256": "3a0314c9b27cafbc68edb17dde5823cdca180a3f483aebe6f424db56e3344a34"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_anthropic.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_anthropic.webp",
+      "sha256": "8f532754a45b51ab8bf3ae3ad2b501698a0042e5c41988d0c9830b61e736bfae"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_bailian.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_bailian.webp",
+      "sha256": "96d1b24cb0c8ae1888431cde1c397bbb229f335b773f7b2bd411be7e7668c81e"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_deepseek.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_deepseek.webp",
+      "sha256": "cbd4832d3cf3a73bad43316d18261800ae6abc9d5109d15b4d0d3edda659e81c"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_kimi.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_kimi.webp",
+      "sha256": "7dc4a2725d1c1f9d39d1ab1c88b622339fa6f1068c9778bf0a759ffd006046d7"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_mimo.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_mimo.webp",
+      "sha256": "5b8ca26506de39fd8d3969309f35d5d5f931b20a89e8967ce9b399b62f540624"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_minimax.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_minimax.webp",
+      "sha256": "84725db33e524a4a7ae2604a679a271cd58b9fe4e25aaacc3bbb235ad2373cff"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_openai.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_openai.webp",
+      "sha256": "035800a11be23e09bad3dca085a6291b4e731ce79e3b1ef4eaf92585559012fe"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_openrouter.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_openrouter.webp",
+      "sha256": "881fec5f5b4f719197199c1229e91575d9ca32062aad40d8b611b0d77f7b4e20"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_siliconflow.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_siliconflow.webp",
+      "sha256": "39110fa14197ab81da70cb3b433f857972a05d1e6ef599cceed7f2d423ce6de5"
+    },
+    {
+      "source": "app/src/main/res/drawable-xxxhdpi/provider_logo_stepfun.webp",
+      "output": "entry/src/main/resources/base/media/provider_logo_stepfun.webp",
+      "sha256": "ac6feba60e57dd3733834957d73f7667547a6851d6b94d8b0dd4e1117f2b4172"
+    }
+  ]
+}

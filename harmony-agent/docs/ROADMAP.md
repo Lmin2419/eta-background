@@ -8,7 +8,8 @@
 | --- | --- | --- |
 | T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，PR #8（分支 `harmony/m0-0.9.1`），三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；ArkTS 检查 0 错误（OpenHarmony SDK 26.0.0.38）；未生成 HAP |
 | `.ets` 检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets`，CI 任务 `Harmony / ArkTS (.ets) check` |
-| M1：E01–E09（Eta 界面与交互 1:1 移植） | **规划完成，可以开工** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
+| E01（M1 / 0.9.2） | **代码完成，自动测试通过，待 PR 合并** | 分支 `harmony/e01-resources`，base 暂为 `harmony/m0-0.9.1`；资源生成、许可证、字体注册完成，不改页面。213 项测试通过；ArkTS 0 错误；未生成 HAP。详见 [E01 记录](E01_RESOURCE_PORT.md)。当前 workflow 只接受 base 为 main 的 PR，待 #8 合并、改 base 后确认 CI 全绿 |
+| E02–E09（M1 后续） | **未开始** | E01 经 CI 通过并由用户合并后，才开始 E02；按 [ETA_PORT.md](ETA_PORT.md) 顺序执行 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |
 
 每完成一个任务，执行者更新本表。

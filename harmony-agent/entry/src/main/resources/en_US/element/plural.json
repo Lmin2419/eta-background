@@ -1,0 +1,290 @@
+{
+  "plural": [
+    {
+      "name": "capability_workspace_partial_import",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Imported %1$d file; the remaining files could not be read or exceeded 32 MiB"
+        },
+        {
+          "quantity": "other",
+          "value": "Imported %1$d files; the remaining files could not be read or exceeded 32 MiB"
+        }
+      ]
+    },
+    {
+      "name": "conversation_delete_later_turns",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "This message and %d later turn will be deleted."
+        },
+        {
+          "quantity": "other",
+          "value": "This message and %d later turns will be deleted."
+        }
+      ]
+    },
+    {
+      "name": "conversation_regenerate_later_turns",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "This will delete %d later turn and regenerate from this message."
+        },
+        {
+          "quantity": "other",
+          "value": "This will delete %d later turns and regenerate from this message."
+        }
+      ]
+    },
+    {
+      "name": "execution_summary",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "%1$d task is running. Return to 随身助手 to check progress."
+        },
+        {
+          "quantity": "other",
+          "value": "%1$d tasks are running. Return to 随身助手 to check progress."
+        }
+      ]
+    },
+    {
+      "name": "file_references_added_with_failures",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Added %1$d item; %2$d item could not be referenced"
+        },
+        {
+          "quantity": "other",
+          "value": "Added %1$d items; %2$d items could not be referenced"
+        }
+      ]
+    },
+    {
+      "name": "linux_missing_core_commands",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Missing %d core command"
+        },
+        {
+          "quantity": "other",
+          "value": "Missing %d core commands"
+        }
+      ]
+    },
+    {
+      "name": "permission_health_issues",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "%d item needs attention"
+        },
+        {
+          "quantity": "other",
+          "value": "%d items need attention"
+        }
+      ]
+    },
+    {
+      "name": "provider_configured_count",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Configured providers (%d)"
+        },
+        {
+          "quantity": "other",
+          "value": "Configured providers (%d)"
+        }
+      ]
+    },
+    {
+      "name": "provider_delete_models_action",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Delete %d model"
+        },
+        {
+          "quantity": "other",
+          "value": "Delete %d models"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_added",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Added %d model"
+        },
+        {
+          "quantity": "other",
+          "value": "Added %d models"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_count",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "%d model"
+        },
+        {
+          "quantity": "other",
+          "value": "%d models"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_deleted",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Deleted %d model"
+        },
+        {
+          "quantity": "other",
+          "value": "Deleted %d models"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_fetched",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Fetched %d model"
+        },
+        {
+          "quantity": "other",
+          "value": "Fetched %d models"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_selected",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "%d selected"
+        },
+        {
+          "quantity": "other",
+          "value": "%d selected"
+        }
+      ]
+    },
+    {
+      "name": "provider_selected_delete_summary",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "The selected model will be permanently deleted."
+        },
+        {
+          "quantity": "other",
+          "value": "The %d selected models will be permanently deleted."
+        }
+      ]
+    },
+    {
+      "name": "reasoning_completed_seconds",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Reasoning completed · %d second"
+        },
+        {
+          "quantity": "other",
+          "value": "Reasoning completed · %d seconds"
+        }
+      ]
+    },
+    {
+      "name": "tool_group_calls",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "%d call"
+        },
+        {
+          "quantity": "other",
+          "value": "%d calls"
+        }
+      ]
+    },
+    {
+      "name": "work_completed_steps",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Completed %d step"
+        },
+        {
+          "quantity": "other",
+          "value": "Completed %d steps"
+        }
+      ]
+    },
+    {
+      "name": "work_processing_step",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Working · step %d"
+        },
+        {
+          "quantity": "other",
+          "value": "Working · step %d"
+        }
+      ]
+    },
+    {
+      "name": "work_summary_failed",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "%d failed"
+        },
+        {
+          "quantity": "other",
+          "value": "%d failed"
+        }
+      ]
+    },
+    {
+      "name": "work_summary_thinking",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "Thought %d time"
+        },
+        {
+          "quantity": "other",
+          "value": "Thought %d times"
+        }
+      ]
+    },
+    {
+      "name": "work_summary_tools",
+      "value": [
+        {
+          "quantity": "one",
+          "value": "%d tool call"
+        },
+        {
+          "quantity": "other",
+          "value": "%d tool calls"
+        }
+      ]
+    }
+  ]
+}

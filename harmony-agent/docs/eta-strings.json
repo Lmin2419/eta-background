@@ -1,0 +1,197 @@
+{
+  "etaCommit": "3b1794d70881c3c849b53d7778dd2bfdf0a46cc5",
+  "defaultLocale": "zh-Hans",
+  "placeholderSpec": "API 26 ResourceManager: %d, %f, %s, %% and %number$[dfs]",
+  "locales": {
+    "base": {
+      "sourceStrings": 1536,
+      "sourcePlurals": 22,
+      "portedStrings": 1538,
+      "generatedStrings": 1546,
+      "generatedPlurals": 22,
+      "fallbackKeys": [
+        "route_skills",
+        "speech_api_key"
+      ],
+      "inputs": [
+        {
+          "path": "app/src/main/res/values-b+zh+Hans/background_runtime.xml",
+          "sha256": "8ff1dd3e804dd2fd2efffa7cdaeb59e5b42804419e1c1c065f50bdd09b709444"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hans/execution_service.xml",
+          "sha256": "507bf651737ca9f453532a0a762fe1b90cd857118826787d7f7954802a6db0c9"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hans/linux_environment_ui.xml",
+          "sha256": "b33073d387fd25fdede427a1334c748788d06640cf294d554bac8e786a406ecc"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hans/root_capabilities.xml",
+          "sha256": "2080f3b59ce2b84c4f54a9f8bd232d2ee588ceee8febca32b950f502e637d7b1"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hans/strings.xml",
+          "sha256": "e87f4cc5680a87df31b4c64072f4713138a02289b4bee81802f9ae6dc3b0526f"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hans/ui_list_details.xml",
+          "sha256": "b95e1f3a28a25a57b4081e14d282b53e18e600d71a8a6b26d4caa6c2ad56d9cb"
+        }
+      ]
+    },
+    "en_US": {
+      "sourceStrings": 1538,
+      "sourcePlurals": 22,
+      "portedStrings": 1538,
+      "generatedStrings": 1546,
+      "generatedPlurals": 22,
+      "fallbackKeys": [],
+      "inputs": [
+        {
+          "path": "app/src/main/res/values/background_runtime.xml",
+          "sha256": "1c90689d56cb4c10dd713563d6519c3aea2d16e93c4139b67abfa96e3f0b378c"
+        },
+        {
+          "path": "app/src/main/res/values/browser_sessions.xml",
+          "sha256": "8e088f47667a881b01276584d9dae3314c96f0851d89c8df4c97accc6b2757fb"
+        },
+        {
+          "path": "app/src/main/res/values/colors.xml",
+          "sha256": "57681038afd005dcd260eabdd6d16619709c4a3fe20324362ea00e093e85b5fd"
+        },
+        {
+          "path": "app/src/main/res/values/execution_service.xml",
+          "sha256": "5790c80c6ccd73245eb46e9640b8795a187b32490cfa933ed8db8504eb93865b"
+        },
+        {
+          "path": "app/src/main/res/values/linux_environment_ui.xml",
+          "sha256": "a17cccafa77770d62015be5f5984280ef32b8e220e949330bce783d80369c18d"
+        },
+        {
+          "path": "app/src/main/res/values/root_capabilities.xml",
+          "sha256": "8a84517b525b10bdcb83081c090628033bf7150e1c64477e54ae022d202679e5"
+        },
+        {
+          "path": "app/src/main/res/values/strings.xml",
+          "sha256": "d3fe1b6d852bdc5c8513972db7e4475ba2b8d7d1c7311af83dc22be26c5b3ed9"
+        },
+        {
+          "path": "app/src/main/res/values/styles.xml",
+          "sha256": "ffb54626e21b4ab47a2eccc53dda9719d25f646bf75874d8bbb4d3f4d8328452"
+        },
+        {
+          "path": "app/src/main/res/values/ui_list_details.xml",
+          "sha256": "ad70b76584a99a94285f38d547859905eb70695d66896e79f1917dcba9f74fe2"
+        }
+      ]
+    },
+    "zh_Hant": {
+      "sourceStrings": 1466,
+      "sourcePlurals": 22,
+      "portedStrings": 1538,
+      "generatedStrings": 1546,
+      "generatedPlurals": 22,
+      "fallbackKeys": [
+        "action_export",
+        "conversation_export_assistant",
+        "conversation_export_default_name",
+        "conversation_export_failed",
+        "conversation_export_images",
+        "conversation_export_thinking",
+        "conversation_export_tool_arguments",
+        "conversation_export_tool_line",
+        "conversation_export_tool_result",
+        "conversation_export_tools_line",
+        "conversation_export_user",
+        "conversation_exported",
+        "route_skills",
+        "speech_api_key",
+        "speech_gemini_connection_note",
+        "speech_gemini_flash",
+        "speech_gemini_flash_lite",
+        "speech_gemini_style",
+        "speech_gemini_voice_note",
+        "speech_minimax_connection_note",
+        "speech_minimax_hd",
+        "speech_minimax_turbo",
+        "speech_minimax_voice_note",
+        "speech_preview_default_text",
+        "speech_preview_text",
+        "speech_recognition_disabled",
+        "speech_recognition_disabled_note",
+        "speech_recognition_enabled",
+        "speech_recognition_enabled_summary",
+        "speech_speed",
+        "speech_tts_gemini",
+        "speech_tts_minimax",
+        "speech_tts_model",
+        "speech_tts_service",
+        "speech_voice_breezy",
+        "speech_voice_bright",
+        "speech_voice_firm",
+        "speech_voice_gemini_achernar",
+        "speech_voice_gemini_aoede",
+        "speech_voice_gemini_charon",
+        "speech_voice_gemini_kore",
+        "speech_voice_gemini_leda",
+        "speech_voice_gemini_puck",
+        "speech_voice_gemini_sulafat",
+        "speech_voice_gemini_zephyr",
+        "speech_voice_informative",
+        "speech_voice_minimax_elite",
+        "speech_voice_minimax_executive",
+        "speech_voice_minimax_girl",
+        "speech_voice_minimax_mature",
+        "speech_voice_minimax_news",
+        "speech_voice_minimax_sweet",
+        "speech_voice_minimax_young",
+        "speech_voice_minimax_yujie",
+        "speech_voice_soft",
+        "speech_voice_upbeat",
+        "speech_voice_warm",
+        "speech_voice_youthful",
+        "tool_edit_file",
+        "tool_edit_file_description",
+        "tool_fetch_url",
+        "tool_fetch_url_description",
+        "tool_glob_files",
+        "tool_glob_files_description",
+        "tool_grep_files",
+        "tool_grep_files_description",
+        "tool_inspect_app",
+        "tool_inspect_app_description",
+        "tool_stat_file",
+        "tool_stat_file_description",
+        "tool_web_search",
+        "tool_web_search_description"
+      ],
+      "inputs": [
+        {
+          "path": "app/src/main/res/values-b+zh+Hant/background_runtime.xml",
+          "sha256": "39e47303f99965dfc22d6d14c3292517e1d096cba21a7c372fa8751773646884"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hant/execution_service.xml",
+          "sha256": "227ad79732d87e0e3f3eb0ba4a920700f65283d0302009fb981278400ecbc143"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hant/linux_environment_ui.xml",
+          "sha256": "45ea1d16b56594ddc8389847f9b7fe06d8f7f5e9f82eaa7a559be2cad119bc7a"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hant/root_capabilities.xml",
+          "sha256": "45c6d4edc125c4bd1fcf846bbfa31cddff0fc28c8efc72fe8d44ae3f213cb542"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hant/strings.xml",
+          "sha256": "f9fef5b31c737927e1fc60bd5aaf3d5f4c22a64ee6f75eeabac81a8745481c3d"
+        },
+        {
+          "path": "app/src/main/res/values-b+zh+Hant/ui_list_details.xml",
+          "sha256": "d9361609819fc8e7749e378946fcdb8f1d39538908bb9265d6c0ad5e22e7479e"
+        }
+      ]
+    }
+  }
+}

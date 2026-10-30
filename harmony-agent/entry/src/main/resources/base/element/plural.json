@@ -1,0 +1,202 @@
+{
+  "plural": [
+    {
+      "name": "capability_workspace_partial_import",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "已导入 %1$d 个文件，其余文件无法读取或超过 32 MiB"
+        }
+      ]
+    },
+    {
+      "name": "conversation_delete_later_turns",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "这条消息及之后 %d 轮对话将被删除。"
+        }
+      ]
+    },
+    {
+      "name": "conversation_regenerate_later_turns",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "将删除之后 %d 轮对话，并从这条消息重新生成。"
+        }
+      ]
+    },
+    {
+      "name": "execution_summary",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "%1$d 项任务正在运行，可返回 随身助手 查看进度"
+        }
+      ]
+    },
+    {
+      "name": "file_references_added_with_failures",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "已添加 %1$d 项，%2$d 项无法引用"
+        }
+      ]
+    },
+    {
+      "name": "linux_missing_core_commands",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "缺少 %d 个核心命令"
+        }
+      ]
+    },
+    {
+      "name": "permission_health_issues",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "%d 项需关注"
+        }
+      ]
+    },
+    {
+      "name": "provider_configured_count",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "已配置提供商（共 %d 个）"
+        }
+      ]
+    },
+    {
+      "name": "provider_delete_models_action",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "删除 %d 个模型"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_added",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "已添加 %d 个模型"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_count",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "%d 个模型"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_deleted",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "已删除 %d 个模型"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_fetched",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "成功，拉取到 %d 个模型"
+        }
+      ]
+    },
+    {
+      "name": "provider_models_selected",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "已选 %d 个"
+        }
+      ]
+    },
+    {
+      "name": "provider_selected_delete_summary",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "删除选中的 %d 个模型后将不可恢复。"
+        }
+      ]
+    },
+    {
+      "name": "reasoning_completed_seconds",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "思考已完成 · 用时 %d 秒"
+        }
+      ]
+    },
+    {
+      "name": "tool_group_calls",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "%d 次"
+        }
+      ]
+    },
+    {
+      "name": "work_completed_steps",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "已完成 %d 个步骤"
+        }
+      ]
+    },
+    {
+      "name": "work_processing_step",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "正在处理 · 第 %d 步"
+        }
+      ]
+    },
+    {
+      "name": "work_summary_failed",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "%d 个失败"
+        }
+      ]
+    },
+    {
+      "name": "work_summary_thinking",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "思考 %d 次"
+        }
+      ]
+    },
+    {
+      "name": "work_summary_tools",
+      "value": [
+        {
+          "quantity": "other",
+          "value": "调用 %d 个工具"
+        }
+      ]
+    }
+  ]
+}

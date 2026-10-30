@@ -1,0 +1,60 @@
+{
+  "sources": [
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "LICENSE",
+      "local": "scripts/eta-upstream/miuix-0.9.4/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/theme/Colors.kt",
+      "local": "scripts/eta-upstream/miuix-0.9.4/Colors.kt",
+      "sha256": "c6885c8025dbc7cb81f11a6395032ea6c802c76862dca09c32365d5f7d40e911"
+    },
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/theme/TextStyles.kt",
+      "local": "scripts/eta-upstream/miuix-0.9.4/TextStyles.kt",
+      "sha256": "b11d9c7c545e7cdc9d5b016728538ceaf0840709a05df5c44e1b18c944b092e1"
+    },
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/icon/basic/ArrowRight.kt",
+      "local": "scripts/eta-upstream/miuix-0.9.4/ArrowRight.kt",
+      "sha256": "92e10aec73f6f93de2195c45af457c4f4c9684c7d4f994a1aa82e44d86f012dd"
+    },
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/basic/Button.kt",
+      "local": "scripts/eta-upstream/miuix-0.9.4/Button.kt",
+      "sha256": "1bd0eefc46d063344fc1979e9302df6a60058f759dd52ab8fef7c8bab1d3e0ba"
+    },
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/basic/Card.kt",
+      "local": "scripts/eta-upstream/miuix-0.9.4/Card.kt",
+      "sha256": "2c1617424e052f442474f520608a1be8d4bbb7881288666494d356c246eec5d8"
+    },
+    {
+      "repository": "compose-miuix-ui/miuix",
+      "commit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+      "source": "miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/layout/DialogContentLayout.kt",
+      "local": "scripts/eta-upstream/miuix-0.9.4/DialogContentLayout.kt",
+      "sha256": "6f0273f44558c04cc4a5d179ac25eb0540ffaf83730cf88e862124eb3b2678cd"
+    },
+    {
+      "repository": "JetBrains/JetBrainsMono",
+      "commit": "cd5227bd1f61dff3bbd6c814ceaf7ffd95e947d9",
+      "source": "OFL.txt",
+      "local": "scripts/eta-upstream/JetBrainsMono-OFL.txt",
+      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad"
+    }
+  ]
+}

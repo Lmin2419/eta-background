@@ -1,8 +1,11 @@
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaFonts.kt @ 3b1794d (font registration only).
+// Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 import { common, ConfigurationConstant } from '@kit.AbilityKit';
 import { KeyboardAvoidMode } from '@kit.ArkUI';
 import { FoundationHost } from '../platform/FoundationHost';
 import { FoundationController, ShellState, emptyShellState } from '../core/foundation/controller';
 import { AssistantShell } from '../ui/foundation/AssistantShell';
+import { registerEtaFonts } from '../platform/EtaFonts';
 
 /** Subscription lifetime only. Business actions live in the controller. */
 @Entry
@@ -13,6 +16,7 @@ struct Index {
   private unsubscribe: (() => void) | undefined;
   private timer: number = -1;
   aboutToAppear(): void {
+    registerEtaFonts(this.getUIContext());
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.getUIContext().setKeyboardAvoidMode(KeyboardAvoidMode.RESIZE);
     context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT);

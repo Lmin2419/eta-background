@@ -1,0 +1,6188 @@
+{
+  "string": [
+    {
+      "name": "accessibility_protection_rejected",
+      "value": "系統拒絕了無障礙保護要求"
+    },
+    {
+      "name": "accessibility_protection_unavailable",
+      "value": "無障礙保護後端無法使用，請確認已啟用 system 作用範圍並重新啟動"
+    },
+    {
+      "name": "action_add",
+      "value": "新增"
+    },
+    {
+      "name": "action_back",
+      "value": "返回"
+    },
+    {
+      "name": "action_cancel",
+      "value": "取消"
+    },
+    {
+      "name": "action_close",
+      "value": "關閉"
+    },
+    {
+      "name": "action_confirm",
+      "value": "確認"
+    },
+    {
+      "name": "action_continue",
+      "value": "繼續"
+    },
+    {
+      "name": "action_conversation_history",
+      "value": "對話記錄"
+    },
+    {
+      "name": "action_delete",
+      "value": "刪除"
+    },
+    {
+      "name": "action_done",
+      "value": "完成"
+    },
+    {
+      "name": "action_edit",
+      "value": "編輯"
+    },
+    {
+      "name": "action_export",
+      "value": "Export"
+    },
+    {
+      "name": "action_import",
+      "value": "匯入"
+    },
+    {
+      "name": "action_install",
+      "value": "安裝"
+    },
+    {
+      "name": "action_launch_kimi_web",
+      "value": "啟動 Kimi Web"
+    },
+    {
+      "name": "action_more",
+      "value": "更多選項"
+    },
+    {
+      "name": "action_new_conversation",
+      "value": "新增對話"
+    },
+    {
+      "name": "action_open",
+      "value": "開啟"
+    },
+    {
+      "name": "action_open_browser",
+      "value": "開啟瀏覽器"
+    },
+    {
+      "name": "action_open_terminal",
+      "value": "開啟終端機"
+    },
+    {
+      "name": "action_regenerate",
+      "value": "重新產生"
+    },
+    {
+      "name": "action_reinstall",
+      "value": "重新安裝"
+    },
+    {
+      "name": "action_remove",
+      "value": "移除"
+    },
+    {
+      "name": "action_rename",
+      "value": "重新命名"
+    },
+    {
+      "name": "action_retry",
+      "value": "重試"
+    },
+    {
+      "name": "action_save",
+      "value": "儲存"
+    },
+    {
+      "name": "action_settings",
+      "value": "設定"
+    },
+    {
+      "name": "action_stop",
+      "value": "停止"
+    },
+    {
+      "name": "agent_accessibility_description",
+      "value": "讀取畫面內容並執行點按、滑動、文字輸入等操作，協助 Agent 完成任務。"
+    },
+    {
+      "name": "agent_accessibility_label",
+      "value": "随身助手 Agent"
+    },
+    {
+      "name": "app_name",
+      "value": "随身助手"
+    },
+    {
+      "name": "appearance_accent_blue",
+      "value": "藍色"
+    },
+    {
+      "name": "appearance_accent_color",
+      "value": "強調色"
+    },
+    {
+      "name": "appearance_accent_green",
+      "value": "綠色"
+    },
+    {
+      "name": "appearance_accent_orange",
+      "value": "橙色"
+    },
+    {
+      "name": "appearance_accent_pink",
+      "value": "粉紅色"
+    },
+    {
+      "name": "appearance_accent_purple",
+      "value": "紫色"
+    },
+    {
+      "name": "appearance_accent_red",
+      "value": "紅色"
+    },
+    {
+      "name": "appearance_accent_system",
+      "value": "系統取色"
+    },
+    {
+      "name": "appearance_accent_teal",
+      "value": "青色"
+    },
+    {
+      "name": "appearance_accent_yellow",
+      "value": "黃色"
+    },
+    {
+      "name": "appearance_blur",
+      "value": "模糊效果"
+    },
+    {
+      "name": "appearance_blur_style",
+      "value": "頂部列模糊樣式"
+    },
+    {
+      "name": "appearance_blur_style_gaussian",
+      "value": "高斯"
+    },
+    {
+      "name": "appearance_blur_style_gaussian_summary",
+      "value": "頂部列整體均勻模糊"
+    },
+    {
+      "name": "appearance_blur_style_progressive",
+      "value": "漸進"
+    },
+    {
+      "name": "appearance_blur_style_progressive_summary",
+      "value": "頂部漸強模糊"
+    },
+    {
+      "name": "appearance_blur_summary",
+      "value": "啟用頂部列、聊天輸入區等表面的模糊效果"
+    },
+    {
+      "name": "appearance_group_color",
+      "value": "顏色與主題"
+    },
+    {
+      "name": "appearance_group_interface",
+      "value": "介面與效果"
+    },
+    {
+      "name": "appearance_interface_scale",
+      "value": "介面縮放"
+    },
+    {
+      "name": "appearance_interface_scale_dialog_summary",
+      "value": "請輸入 80 至 110 之間的整數"
+    },
+    {
+      "name": "appearance_interface_scale_dialog_title",
+      "value": "介面縮放"
+    },
+    {
+      "name": "appearance_interface_scale_input_label",
+      "value": "百分比"
+    },
+    {
+      "name": "appearance_interface_scale_summary",
+      "value": "調整全域顯示比例（80%–110%）"
+    },
+    {
+      "name": "appearance_monet",
+      "value": "Monet 取色"
+    },
+    {
+      "name": "appearance_monet_summary",
+      "value": "可用時使用系統動態取色"
+    },
+    {
+      "name": "appearance_palette_content",
+      "value": "內容（Content）"
+    },
+    {
+      "name": "appearance_palette_expressive",
+      "value": "表現力（Expressive）"
+    },
+    {
+      "name": "appearance_palette_fidelity",
+      "value": "保真（Fidelity）"
+    },
+    {
+      "name": "appearance_palette_fruit_salad",
+      "value": "水果沙拉（FruitSalad）"
+    },
+    {
+      "name": "appearance_palette_monochrome",
+      "value": "單色（Monochrome）"
+    },
+    {
+      "name": "appearance_palette_neutral",
+      "value": "中性（Neutral）"
+    },
+    {
+      "name": "appearance_palette_rainbow",
+      "value": "彩虹（Rainbow）"
+    },
+    {
+      "name": "appearance_palette_style",
+      "value": "色彩風格"
+    },
+    {
+      "name": "appearance_palette_tonal_spot",
+      "value": "色調點（TonalSpot）"
+    },
+    {
+      "name": "appearance_palette_vibrant",
+      "value": "鮮明（Vibrant）"
+    },
+    {
+      "name": "appearance_predictive_back",
+      "value": "預測性返回手勢"
+    },
+    {
+      "name": "appearance_predictive_back_summary",
+      "value": "啟用預測性返回動畫效果"
+    },
+    {
+      "name": "appearance_pure_black",
+      "value": "純黑背景"
+    },
+    {
+      "name": "appearance_pure_black_summary",
+      "value": "深色模式下使用純黑背景"
+    },
+    {
+      "name": "appearance_runtime_glow",
+      "value": "執行時螢幕流光"
+    },
+    {
+      "name": "appearance_runtime_glow_summary",
+      "value": "顯示助手喚醒及任務執行時的螢幕邊緣光效，修改後立即生效。"
+    },
+    {
+      "name": "appearance_swipe_dismiss",
+      "value": "橫移返回手勢"
+    },
+    {
+      "name": "appearance_swipe_dismiss_summary",
+      "value": "在頁面任意位置橫移即可返回上一頁"
+    },
+    {
+      "name": "appearance_task_completion_alerts",
+      "value": "任務完成時彈出提示"
+    },
+    {
+      "name": "appearance_task_completion_alerts_summary",
+      "value": "任務完成、停止或失敗時從頂部彈出原生通知。關閉後仍保留任務通知。需在系統通知設定中允許橫幅。"
+    },
+    {
+      "name": "appearance_theme_dark",
+      "value": "深色"
+    },
+    {
+      "name": "appearance_theme_light",
+      "value": "淺色"
+    },
+    {
+      "name": "appearance_theme_mode",
+      "value": "主題模式"
+    },
+    {
+      "name": "appearance_theme_system",
+      "value": "跟隨系統"
+    },
+    {
+      "name": "appearance_title",
+      "value": "外觀與主題"
+    },
+    {
+      "name": "attachment_add",
+      "value": "新增"
+    },
+    {
+      "name": "attachment_enter_path",
+      "value": "輸入路徑"
+    },
+    {
+      "name": "attachment_file",
+      "value": "檔案"
+    },
+    {
+      "name": "attachment_folder",
+      "value": "資料夾"
+    },
+    {
+      "name": "attachment_image",
+      "value": "圖片"
+    },
+    {
+      "name": "background_continue_instruction",
+      "value": "繼續指令"
+    },
+    {
+      "name": "background_diagnostics_failed",
+      "value": "診斷檔案儲存失敗"
+    },
+    {
+      "name": "background_diagnostics_saved",
+      "value": "診斷檔案已儲存"
+    },
+    {
+      "name": "background_diagnostics_summary",
+      "value": "儲存任務狀態與螢幕恢復結果，不含聊天、金鑰或截圖"
+    },
+    {
+      "name": "background_diagnostics_title",
+      "value": "匯出執行診斷"
+    },
+    {
+      "name": "background_handoff_unavailable",
+      "value": "背景頁面仍在使用或暫時無法接管，請查看聊天後重試。"
+    },
+    {
+      "name": "background_notifications_disabled",
+      "value": "通知已關閉，開啟後可查看背景任務進度"
+    },
+    {
+      "name": "background_notifications_enabled",
+      "value": "已開啟，點選管理系統任務通知"
+    },
+    {
+      "name": "background_notifications_title",
+      "value": "背景任務通知"
+    },
+    {
+      "name": "background_open_app",
+      "value": "開啟 App"
+    },
+    {
+      "name": "background_opening_app",
+      "value": "正在開啟應用程式"
+    },
+    {
+      "name": "background_releasing_screen",
+      "value": "正在回收螢幕"
+    },
+    {
+      "name": "background_reply_failed",
+      "value": "未能傳送，請等待本會話任務結束，或開啟 ETA 檢查記錄和模型設定後重試。"
+    },
+    {
+      "name": "background_restoring_display",
+      "value": "正在結束螢幕任務"
+    },
+    {
+      "name": "background_screen_off_paused",
+      "value": "已熄屏暫停，解鎖後繼續"
+    },
+    {
+      "name": "background_task_completed",
+      "value": "本輪已結束"
+    },
+    {
+      "name": "background_task_queued",
+      "value": "等待執行"
+    },
+    {
+      "name": "background_waiting_app",
+      "value": "等待應用程式空閒"
+    },
+    {
+      "name": "background_waiting_model",
+      "value": "等待模型回覆"
+    },
+    {
+      "name": "browser_back",
+      "value": "上一頁"
+    },
+    {
+      "name": "browser_clear_shared_data",
+      "value": "清除所有瀏覽器資料"
+    },
+    {
+      "name": "browser_clear_shared_data_message",
+      "value": "將關閉所有頁面，清除 Cookie、快取和網站資料，包括登入狀態。"
+    },
+    {
+      "name": "browser_close_page",
+      "value": "關閉網頁"
+    },
+    {
+      "name": "browser_forward",
+      "value": "下一頁"
+    },
+    {
+      "name": "browser_no_external_app",
+      "value": "沒有應用程式可以開啟目前的網頁"
+    },
+    {
+      "name": "browser_open_external",
+      "value": "使用其他應用程式開啟"
+    },
+    {
+      "name": "browser_refresh",
+      "value": "重新整理"
+    },
+    {
+      "name": "browser_search_or_address",
+      "value": "搜尋或輸入網址"
+    },
+    {
+      "name": "browser_stop_loading",
+      "value": "停止載入"
+    },
+    {
+      "name": "browser_user_action_failed",
+      "value": "瀏覽器操作未完成，請重試。"
+    },
+    {
+      "name": "capability_accessibility_required",
+      "value": "開啟無障礙後可用"
+    },
+    {
+      "name": "capability_all",
+      "value": "全部能力"
+    },
+    {
+      "name": "capability_background_failed",
+      "value": "無法開始背景任務，請回到 随身助手 後重試"
+    },
+    {
+      "name": "capability_coloros_required",
+      "value": "適用於 ColorOS"
+    },
+    {
+      "name": "capability_current_device",
+      "value": "目前裝置"
+    },
+    {
+      "name": "capability_enhancements",
+      "value": "Root 與系統增強"
+    },
+    {
+      "name": "capability_enhancements_summary",
+      "value": "Root 授權與框架狀態"
+    },
+    {
+      "name": "capability_hook_accessibility",
+      "value": "無障礙保護"
+    },
+    {
+      "name": "capability_hook_accessibility_summary",
+      "value": "透過 system_server 維護服務啟用狀態，需要 LSPosed 的系統作用範圍。一般模式仍可手動開啟無障礙。"
+    },
+    {
+      "name": "capability_hook_assistants",
+      "value": "小布與超級小愛接管"
+    },
+    {
+      "name": "capability_hook_assistants_summary",
+      "value": "透過系統助理入口呼叫 随身助手 Runtime。需要 LSPosed 啟用 随身助手、對應助理作用範圍，以及支援的 ColorOS 或 HyperOS。"
+    },
+    {
+      "name": "capability_hook_google",
+      "value": "Gemini 與一圈即搜"
+    },
+    {
+      "name": "capability_hook_google_summary",
+      "value": "在 ColorOS 建立或修復系統能力與觸發入口。需要 LSPosed、對應系統與 Google 應用程式作用範圍；Google 應用程式系統化另需 Root。"
+    },
+    {
+      "name": "capability_import_denied",
+      "value": "沒有權限讀取此路徑，請選擇檔案匯入或授權共用目錄"
+    },
+    {
+      "name": "capability_import_failed",
+      "value": "檔案匯入失敗，請重試"
+    },
+    {
+      "name": "capability_import_too_large",
+      "value": "檔案超過 32 MiB，無法匯入"
+    },
+    {
+      "name": "capability_kimi_checking",
+      "value": "檢查 Kimi Web…"
+    },
+    {
+      "name": "capability_kimi_exited",
+      "value": "Kimi Web 程序已結束，請在終端檢查 Kimi 設定後重試"
+    },
+    {
+      "name": "capability_kimi_install",
+      "value": "安裝 Kimi Web"
+    },
+    {
+      "name": "capability_kimi_logs_unavailable",
+      "value": "無法讀取 Kimi 啟動日誌，請在終端檢查環境後重試"
+    },
+    {
+      "name": "capability_kimi_not_installed",
+      "value": "請先在 Linux 環境中安裝 Kimi Code"
+    },
+    {
+      "name": "capability_kimi_open",
+      "value": "開啟 Kimi Web · 執行中"
+    },
+    {
+      "name": "capability_kimi_preparing",
+      "value": "Kimi Web 準備中…"
+    },
+    {
+      "name": "capability_kimi_proot_unavailable",
+      "value": "PRoot 未能啟動，請在 Linux 環境中檢查或重新安裝一般環境"
+    },
+    {
+      "name": "capability_kimi_retry",
+      "value": "Kimi Web 啟動失敗 · 重試"
+    },
+    {
+      "name": "capability_kimi_root_required",
+      "value": "目前 Kimi 環境需要 Root，請恢復授權或在 Linux 環境中安裝 PRoot 版本"
+    },
+    {
+      "name": "capability_kimi_stop",
+      "value": "停止 Kimi Web"
+    },
+    {
+      "name": "capability_linux_backend",
+      "value": "執行方式"
+    },
+    {
+      "name": "capability_linux_chroot",
+      "value": "Root 模式 · chroot"
+    },
+    {
+      "name": "capability_linux_chroot_summary",
+      "value": "使用 Root 與獨立掛載空間，保留既有環境"
+    },
+    {
+      "name": "capability_linux_proot",
+      "value": "一般模式 · PRoot"
+    },
+    {
+      "name": "capability_linux_proot_requirements",
+      "value": "使用獨立的 App 私有目錄，無需 Root 或 BusyBox"
+    },
+    {
+      "name": "capability_linux_proot_summary",
+      "value": "無需 Root，使用獨立的私有 Linux 環境"
+    },
+    {
+      "name": "capability_linux_root_lost",
+      "value": "目前環境使用 chroot，需要恢復 Root 授權；也可以選擇 PRoot 安裝獨立環境"
+    },
+    {
+      "name": "capability_location_access_required",
+      "value": "授權位置存取權後可用"
+    },
+    {
+      "name": "capability_location_foreground",
+      "value": "前景使用時可讀取位置；背景任務需要額外的位置授權"
+    },
+    {
+      "name": "capability_notification_access_required",
+      "value": "授權通知存取權後可用"
+    },
+    {
+      "name": "capability_notifications_summary",
+      "value": "在通知欄檢視和停止正在執行的終端與 Agent 任務"
+    },
+    {
+      "name": "capability_notifications_title",
+      "value": "背景任務通知"
+    },
+    {
+      "name": "capability_optional_root",
+      "value": "可選的增強權限"
+    },
+    {
+      "name": "capability_provider_created",
+      "value": "已建立並設為目前的模型服務商"
+    },
+    {
+      "name": "capability_provider_saved",
+      "value": "已儲存並設為目前的模型服務商"
+    },
+    {
+      "name": "capability_root_checking",
+      "value": "正在檢查 Root 授權…"
+    },
+    {
+      "name": "capability_root_data",
+      "value": "受保護的資料與檔案"
+    },
+    {
+      "name": "capability_root_data_summary",
+      "value": "存取其他應用程式和系統儲存的部分資料。需要 Root，具體範圍取決於系統、應用程式版本與已開啟的工具權限。"
+    },
+    {
+      "name": "capability_root_device",
+      "value": "應用程式與系統管理"
+    },
+    {
+      "name": "capability_root_device_summary",
+      "value": "凍結與停止應用程式、修改受保護的系統設定、讀取系統日誌。需要 随身助手 取得 Root 授權。"
+    },
+    {
+      "name": "capability_root_features",
+      "value": "Root 能力"
+    },
+    {
+      "name": "capability_root_granted",
+      "value": "已取得 Root 授權"
+    },
+    {
+      "name": "capability_root_linux",
+      "value": "Linux 與終端增強"
+    },
+    {
+      "name": "capability_root_linux_summary",
+      "value": "Root 可使用 chroot、系統目錄與獨立於 App 的常駐任務；一般模式可使用私有工作區與 PRoot。"
+    },
+    {
+      "name": "capability_root_not_granted",
+      "value": "未取得 Root 授權，目前使用一般模式"
+    },
+    {
+      "name": "capability_root_partial",
+      "value": "目前使用一般能力，Root 可擴展操作範圍"
+    },
+    {
+      "name": "capability_root_refresh",
+      "value": "重新檢查"
+    },
+    {
+      "name": "capability_root_request",
+      "value": "授權"
+    },
+    {
+      "name": "capability_root_required",
+      "value": "需要 Root 授權"
+    },
+    {
+      "name": "capability_root_timeout",
+      "value": "授權等待已結束，可手動重試"
+    },
+    {
+      "name": "capability_root_unavailable",
+      "value": "未偵測到 Root，一般功能可正常使用"
+    },
+    {
+      "name": "capability_system_features",
+      "value": "系統助理與增強"
+    },
+    {
+      "name": "capability_terminal_ordinary_summary",
+      "value": "使用一般 Android Shell 或免 Root Linux 環境執行命令與背景任務"
+    },
+    {
+      "name": "capability_usage_access_required",
+      "value": "授權使用情況存取權後可用"
+    },
+    {
+      "name": "capability_workspace",
+      "value": "工作區與檔案"
+    },
+    {
+      "name": "capability_workspace_directory",
+      "value": "資料夾"
+    },
+    {
+      "name": "capability_workspace_empty",
+      "value": "暫無檔案"
+    },
+    {
+      "name": "capability_workspace_empty_summary",
+      "value": "匯入檔案，或透過終端任務產生檔案"
+    },
+    {
+      "name": "capability_workspace_exported",
+      "value": "檔案已匯出"
+    },
+    {
+      "name": "capability_workspace_failed",
+      "value": "檔案操作失敗，請檢查權限與剩餘空間"
+    },
+    {
+      "name": "capability_workspace_file_export",
+      "value": "%1$s · 點按匯出"
+    },
+    {
+      "name": "capability_workspace_files",
+      "value": "工作區檔案"
+    },
+    {
+      "name": "capability_workspace_import",
+      "value": "匯入檔案"
+    },
+    {
+      "name": "capability_workspace_imported",
+      "value": "檔案已匯入工作區"
+    },
+    {
+      "name": "capability_workspace_parent",
+      "value": "返回上層目錄"
+    },
+    {
+      "name": "capability_workspace_private",
+      "value": "私有工作區"
+    },
+    {
+      "name": "capability_workspace_private_summary",
+      "value": "終端與一般 Linux 環境的預設檔案目錄，無需儲存空間權限"
+    },
+    {
+      "name": "capability_workspace_public",
+      "value": "公共目錄存取"
+    },
+    {
+      "name": "capability_workspace_public_denied",
+      "value": "公共目錄尚未授權。可重試授權，或透過「工作區與檔案」匯入需要的檔案"
+    },
+    {
+      "name": "capability_workspace_public_granted",
+      "value": "已授權，終端可存取公共目錄"
+    },
+    {
+      "name": "capability_workspace_public_summary",
+      "value": "在系統設定中允許存取所有檔案後，可使用共用儲存空間中的目錄"
+    },
+    {
+      "name": "capability_workspace_summary",
+      "value": "匯入、匯出與目錄存取"
+    },
+    {
+      "name": "capability_xposed_connected",
+      "value": "服務已連線，不代表 随身助手 模組已啟用"
+    },
+    {
+      "name": "capability_xposed_disconnected",
+      "value": "未收到框架服務連線；不影響聊天、GUI、瀏覽器與一般 Linux 環境"
+    },
+    {
+      "name": "capability_xposed_help",
+      "value": "模組啟用與作用範圍"
+    },
+    {
+      "name": "capability_xposed_help_summary",
+      "value": "在 LSPosed 中啟用 随身助手 並檢查作用範圍。服務連線不代表模組已啟用，關閉模組後連線仍可能保留；實際生效取決於目標程序是否載入 Hook。"
+    },
+    {
+      "name": "capability_xposed_service",
+      "value": "框架通訊"
+    },
+    {
+      "name": "chat_character_input_hint",
+      "value": "對%1$s說點什麼…"
+    },
+    {
+      "name": "chat_character_story_start",
+      "value": "故事從這裡開始"
+    },
+    {
+      "name": "chat_character_typing",
+      "value": "%1$s 正在回覆…"
+    },
+    {
+      "name": "chat_edit_character_reply",
+      "value": "編輯角色回覆"
+    },
+    {
+      "name": "chat_edit_preserve_following",
+      "value": "儲存後原位更新這則訊息，並保留後續對話"
+    },
+    {
+      "name": "chat_edit_replace_later",
+      "value": "傳送後將取代此訊息及其後的內容"
+    },
+    {
+      "name": "chat_edit_replace_message",
+      "value": "傳送後將取代此訊息"
+    },
+    {
+      "name": "chat_eta_working",
+      "value": "随身助手 正在執行…"
+    },
+    {
+      "name": "chat_image_attachment",
+      "value": "圖片附件"
+    },
+    {
+      "name": "chat_input_hint",
+      "value": "交給 随身助手 完成"
+    },
+    {
+      "name": "chat_next_candidate",
+      "value": "下一則候選回覆"
+    },
+    {
+      "name": "chat_previous_candidate",
+      "value": "上一則候選回覆"
+    },
+    {
+      "name": "chat_queue_files_only",
+      "value": "[%1$d 個檔案]"
+    },
+    {
+      "name": "chat_queue_images_only",
+      "value": "[%1$d 張圖片]"
+    },
+    {
+      "name": "chat_queue_interrupting",
+      "value": "插話中"
+    },
+    {
+      "name": "chat_queue_remove",
+      "value": "移除排隊訊息"
+    },
+    {
+      "name": "chat_queue_status",
+      "value": "排隊中"
+    },
+    {
+      "name": "chat_queue_status_count",
+      "value": "排隊中 · %1$d"
+    },
+    {
+      "name": "chat_queue_steer_now",
+      "value": "立即插話傳送"
+    },
+    {
+      "name": "chat_reasoning_effort",
+      "value": "思考強度，目前為 %1$s"
+    },
+    {
+      "name": "chat_save_message",
+      "value": "儲存訊息"
+    },
+    {
+      "name": "chat_send",
+      "value": "傳送"
+    },
+    {
+      "name": "chat_stop",
+      "value": "停止"
+    },
+    {
+      "name": "context_compact_action",
+      "value": "壓縮上下文"
+    },
+    {
+      "name": "context_compaction",
+      "value": "上下文壓縮"
+    },
+    {
+      "name": "context_no_model_limit",
+      "value": "未知上下文視窗，自動壓縮已關閉。仍可手動壓縮，也可在設定 → 模型提供商中填寫視窗。"
+    },
+    {
+      "name": "context_no_previous_usage",
+      "value": "暫無上輪用量"
+    },
+    {
+      "name": "context_usage_after_response",
+      "value": "完成首次回覆後顯示實測用量"
+    },
+    {
+      "name": "context_usage_description",
+      "value": "內容用量：%1$s"
+    },
+    {
+      "name": "context_usage_previous_response",
+      "value": "%1$s\n上輪實測"
+    },
+    {
+      "name": "conversation_delete_message",
+      "value": "此對話及其中的訊息將永久刪除。"
+    },
+    {
+      "name": "conversation_delete_message_body",
+      "value": "此訊息將被刪除。"
+    },
+    {
+      "name": "conversation_delete_message_title",
+      "value": "要刪除訊息嗎？"
+    },
+    {
+      "name": "conversation_delete_save_failed",
+      "value": "無法儲存或確認任務結果，對話尚未刪除。"
+    },
+    {
+      "name": "conversation_delete_title",
+      "value": "要刪除對話嗎？"
+    },
+    {
+      "name": "conversation_dock_models",
+      "value": "模型"
+    },
+    {
+      "name": "conversation_empty",
+      "value": "尚無對話"
+    },
+    {
+      "name": "conversation_export_assistant",
+      "value": "Assistant"
+    },
+    {
+      "name": "conversation_export_default_name",
+      "value": "Conversation"
+    },
+    {
+      "name": "conversation_export_failed",
+      "value": "Export failed"
+    },
+    {
+      "name": "conversation_export_images",
+      "value": "Images: %1$d"
+    },
+    {
+      "name": "conversation_export_thinking",
+      "value": "Thinking"
+    },
+    {
+      "name": "conversation_export_tool_arguments",
+      "value": "Arguments: %1$s"
+    },
+    {
+      "name": "conversation_export_tool_line",
+      "value": "Tool: %1$s (%2$s)"
+    },
+    {
+      "name": "conversation_export_tool_result",
+      "value": "Result: %1$s"
+    },
+    {
+      "name": "conversation_export_tools_line",
+      "value": "Tools: %1$s"
+    },
+    {
+      "name": "conversation_export_user",
+      "value": "User"
+    },
+    {
+      "name": "conversation_exported",
+      "value": "Exported"
+    },
+    {
+      "name": "conversation_load_failed",
+      "value": "對話載入失敗"
+    },
+    {
+      "name": "conversation_load_turn_start",
+      "value": "請向上捲動到這一輪的使用者提問後再操作"
+    },
+    {
+      "name": "conversation_loading",
+      "value": "正在載入對話…"
+    },
+    {
+      "name": "conversation_model_unavailable",
+      "value": "此對話原用的模型無法使用，已改用 %1$s"
+    },
+    {
+      "name": "conversation_no_results",
+      "value": "找不到相符的對話"
+    },
+    {
+      "name": "conversation_persistence_failed",
+      "value": "無法儲存對話，請重試"
+    },
+    {
+      "name": "conversation_preview_empty",
+      "value": "直接輸入問題，随身助手 會在需要時操作手機"
+    },
+    {
+      "name": "conversation_preview_reasoning",
+      "value": "随身助手 正在思考"
+    },
+    {
+      "name": "conversation_preview_tool_call",
+      "value": "工具呼叫：%1$s"
+    },
+    {
+      "name": "conversation_regenerate_current_turn",
+      "value": "目前這輪對話將由新產生的回覆取代。"
+    },
+    {
+      "name": "conversation_regenerate_title",
+      "value": "要重新產生回覆嗎？"
+    },
+    {
+      "name": "conversation_rename_hint",
+      "value": "對話名稱"
+    },
+    {
+      "name": "conversation_rename_title",
+      "value": "重新命名對話"
+    },
+    {
+      "name": "conversation_retry_earlier_messages",
+      "value": "載入失敗，點按重試"
+    },
+    {
+      "name": "conversation_search_hint",
+      "value": "搜尋對話"
+    },
+    {
+      "name": "conversation_section_pinned",
+      "value": "已釘選"
+    },
+    {
+      "name": "conversation_section_today",
+      "value": "今天"
+    },
+    {
+      "name": "conversation_stop_and_delete",
+      "value": "停止任務並刪除"
+    },
+    {
+      "name": "conversation_stop_and_delete_message",
+      "value": "此對話的任務將先停止，結果儲存後刪除對話。"
+    },
+    {
+      "name": "conversation_unnamed",
+      "value": "新對話"
+    },
+    {
+      "name": "copy_answer",
+      "value": "複製回答"
+    },
+    {
+      "name": "copy_code",
+      "value": "複製程式碼"
+    },
+    {
+      "name": "copy_command",
+      "value": "複製指令"
+    },
+    {
+      "name": "copy_copied",
+      "value": "已複製"
+    },
+    {
+      "name": "data_backup_actions",
+      "value": "備份"
+    },
+    {
+      "name": "data_backup_export",
+      "value": "匯出資料"
+    },
+    {
+      "name": "data_backup_export_summary",
+      "value": "將對話、模型供應商與 MEMORY.md 儲存為 JSON 檔案"
+    },
+    {
+      "name": "data_backup_exported",
+      "value": "已匯出 %1$d 個對話與 %2$d 個模型供應商"
+    },
+    {
+      "name": "data_backup_failed",
+      "value": "備份操作失敗"
+    },
+    {
+      "name": "data_backup_file_open_failed",
+      "value": "無法開啟所選檔案"
+    },
+    {
+      "name": "data_backup_import",
+      "value": "匯入資料"
+    },
+    {
+      "name": "data_backup_import_confirm_summary",
+      "value": "目前的對話、模型供應商與 MEMORY.md 將被取代，備份檔案可能包含 API Key。"
+    },
+    {
+      "name": "data_backup_import_confirm_title",
+      "value": "匯入 随身助手 資料？"
+    },
+    {
+      "name": "data_backup_import_summary",
+      "value": "從備份檔案取代對話、模型供應商與 MEMORY.md"
+    },
+    {
+      "name": "data_backup_imported",
+      "value": "已匯入 %1$d 個對話與 %2$d 個模型供應商"
+    },
+    {
+      "name": "data_backup_title",
+      "value": "資料備份"
+    },
+    {
+      "name": "data_backup_warning_summary",
+      "value": "檔案包含模型供應商 API Key，僅包含對話、模型供應商與 MEMORY.md。"
+    },
+    {
+      "name": "data_backup_warning_title",
+      "value": "請妥善保管備份檔案"
+    },
+    {
+      "name": "data_backup_working",
+      "value": "處理中…"
+    },
+    {
+      "name": "eta_port_about_author",
+      "value": "原作者：蛮吉 (Mangi-11)"
+    },
+    {
+      "name": "eta_port_about_license",
+      "value": "PolyForm Noncommercial 1.0.0，僅限非商業用途"
+    },
+    {
+      "name": "eta_port_about_title",
+      "value": "基於 Eta 移植"
+    },
+    {
+      "name": "eta_port_required_notice",
+      "value": "Required Notice: Copyright © 2026 蛮吉 (Mangi-11)."
+    },
+    {
+      "name": "eta_port_unavailable",
+      "value": "鴻蒙版尚未接入"
+    },
+    {
+      "name": "execution_channel",
+      "value": "任務執行"
+    },
+    {
+      "name": "execution_chip_answering",
+      "value": "回答中"
+    },
+    {
+      "name": "execution_chip_running",
+      "value": "操作中"
+    },
+    {
+      "name": "execution_chip_tasks",
+      "value": "%1$d 個任務"
+    },
+    {
+      "name": "execution_next_task",
+      "value": "切換任務"
+    },
+    {
+      "name": "execution_stop",
+      "value": "停止執行任務"
+    },
+    {
+      "name": "execution_title",
+      "value": "随身助手 正在執行"
+    },
+    {
+      "name": "injected_app_tool",
+      "value": "應用程式工具"
+    },
+    {
+      "name": "injected_breeno_context_unavailable",
+      "value": "無法取得小布程序的 Context"
+    },
+    {
+      "name": "injected_breeno_custom_model_disabled",
+      "value": "請先在 随身助手 設定中啟用「小布自訂模型」"
+    },
+    {
+      "name": "injected_breeno_failed",
+      "value": "小布自訂模型呼叫失敗：%1$s"
+    },
+    {
+      "name": "injected_completed",
+      "value": "随身助手 已完成本次任務"
+    },
+    {
+      "name": "injected_executing",
+      "value": "随身助手 正在執行任務…"
+    },
+    {
+      "name": "injected_failed",
+      "value": "随身助手 處理失敗，請稍後再試"
+    },
+    {
+      "name": "injected_image_cache_limit",
+      "value": "圖片參照資料過大，無法安全暫存，請重新選擇圖片或使用遠端圖片連結"
+    },
+    {
+      "name": "injected_image_count_limit",
+      "value": "一次最多支援 %1$d 張圖片，請減少圖片數量後再試"
+    },
+    {
+      "name": "injected_image_data_limit",
+      "value": "圖片輸入資料超過安全上限，請縮小圖片後再試"
+    },
+    {
+      "name": "injected_image_input_limit",
+      "value": "圖片輸入結構超過安全上限，請減少圖片數量或簡化圖片資料後再試"
+    },
+    {
+      "name": "injected_image_unreadable",
+      "value": "無法讀取要求中的所有圖片，請重新選擇圖片後再試"
+    },
+    {
+      "name": "injected_reasoning",
+      "value": "随身助手 正在思考…"
+    },
+    {
+      "name": "injected_reasoning_label",
+      "value": "思考"
+    },
+    {
+      "name": "injected_runtime_failed",
+      "value": "Agent Runtime 執行失敗"
+    },
+    {
+      "name": "injected_screen_tool",
+      "value": "畫面工具"
+    },
+    {
+      "name": "injected_system_tool",
+      "value": "系統工具"
+    },
+    {
+      "name": "injected_tool",
+      "value": "工具"
+    },
+    {
+      "name": "injected_using_tool",
+      "value": "正在使用%1$s"
+    },
+    {
+      "name": "linux_agent_ready_summary",
+      "value": "已安裝 rg、fd、Git、SSH、curl、jq、SQLite 等基礎工具，Agent 使用目前選取的 Linux 環境在 /workspace 工作"
+    },
+    {
+      "name": "linux_alpine_ready",
+      "value": "Alpine %1$s 已就緒"
+    },
+    {
+      "name": "linux_already_ready",
+      "value": "Linux 工具環境已就緒"
+    },
+    {
+      "name": "linux_apk_analysis_installed",
+      "value": "JADX、Apktool、smali 與 baksmali 安裝完成"
+    },
+    {
+      "name": "linux_apk_analysis_ready",
+      "value": "APK 分析工具已就緒"
+    },
+    {
+      "name": "linux_apk_stage_activating",
+      "value": "啟用 APK 分析工具"
+    },
+    {
+      "name": "linux_apk_stage_checking",
+      "value": "檢查 Linux 基礎環境"
+    },
+    {
+      "name": "linux_apk_stage_complete",
+      "value": "APK 分析工具已就緒"
+    },
+    {
+      "name": "linux_apk_stage_downloading",
+      "value": "下載 APK 分析工具"
+    },
+    {
+      "name": "linux_apk_stage_failed",
+      "value": "%1$s失敗，可以稍後再試"
+    },
+    {
+      "name": "linux_apk_stage_installing_java",
+      "value": "安裝 OpenJDK 25"
+    },
+    {
+      "name": "linux_apk_stage_preparing",
+      "value": "準備工具檔案"
+    },
+    {
+      "name": "linux_apk_stage_verifying",
+      "value": "驗證分析指令"
+    },
+    {
+      "name": "linux_apk_tools_ready",
+      "value": "JADX、Apktool、smali 與 baksmali 已就緒；Apktool 暫不支援重新編譯"
+    },
+    {
+      "name": "linux_apk_tools_summary",
+      "value": "安裝正式版 OpenJDK 25，以及最新正式版 JADX、Apktool、smali 與 baksmali；需預留 768 MB"
+    },
+    {
+      "name": "linux_base_install_complete",
+      "value": "Alpine %1$s 基礎環境安裝完成"
+    },
+    {
+      "name": "linux_base_ready",
+      "value": "基礎環境已就緒"
+    },
+    {
+      "name": "linux_base_required",
+      "value": "請先安裝目前選取的 Linux 基礎環境"
+    },
+    {
+      "name": "linux_busy",
+      "value": "忙碌"
+    },
+    {
+      "name": "linux_busybox_unavailable",
+      "value": "Root 環境缺少可用的 BusyBox 或必要 applet"
+    },
+    {
+      "name": "linux_check",
+      "value": "檢查"
+    },
+    {
+      "name": "linux_checking",
+      "value": "檢查中"
+    },
+    {
+      "name": "linux_continue_installation",
+      "value": "繼續安裝"
+    },
+    {
+      "name": "linux_debian_agent_ready_summary",
+      "value": "Debian Trixie 基礎工具已就緒，Python、Node.js 與 SSH 可繼續按需單獨安裝"
+    },
+    {
+      "name": "linux_debian_already_ready",
+      "value": "Debian glibc 環境已經就緒"
+    },
+    {
+      "name": "linux_debian_base_install_complete",
+      "value": "Debian %1$s 基礎環境安裝完成"
+    },
+    {
+      "name": "linux_debian_base_ready",
+      "value": "Debian 基礎環境已就緒"
+    },
+    {
+      "name": "linux_debian_install_complete",
+      "value": "Debian %1$s 與常用工具安裝完成"
+    },
+    {
+      "name": "linux_debian_install_failed",
+      "value": "Debian 基礎工具安裝失敗，請在 Debian 終端機檢查軟體來源、套件管理員占用和儲存空間。"
+    },
+    {
+      "name": "linux_debian_install_timeout",
+      "value": "Debian 基礎工具安裝逾時，請重試；重試時會檢查並恢復未完成的套件操作。"
+    },
+    {
+      "name": "linux_debian_not_installed",
+      "value": "Debian glibc 環境尚未安裝"
+    },
+    {
+      "name": "linux_debian_ready",
+      "value": "Debian %1$s 已就緒"
+    },
+    {
+      "name": "linux_debian_repair_failed",
+      "value": "Debian 套件檢查或修復未完成。請確認沒有其他套件管理工作後重試；若仍失敗，可在 Debian 終端機執行 dpkg --configure -a 和 apt-get --fix-broken install 查看錯誤。"
+    },
+    {
+      "name": "linux_debian_requirements",
+      "value": "需要 Root 與 Magisk、KernelSU 或 APatch BusyBox"
+    },
+    {
+      "name": "linux_debian_tools_incomplete",
+      "value": "Debian 基礎環境已就緒，下一步安裝常用工具"
+    },
+    {
+      "name": "linux_distribution_alpine",
+      "value": "Alpine"
+    },
+    {
+      "name": "linux_distribution_alpine_summary",
+      "value": "輕量的 musl 環境"
+    },
+    {
+      "name": "linux_distribution_debian",
+      "value": "Debian"
+    },
+    {
+      "name": "linux_distribution_debian_summary",
+      "value": "軟體相容性更好的 glibc 環境"
+    },
+    {
+      "name": "linux_distribution_title",
+      "value": "Linux 發行版"
+    },
+    {
+      "name": "linux_download_install",
+      "value": "下載並安裝"
+    },
+    {
+      "name": "linux_environment_base_ready",
+      "value": "基礎環境已就緒，下一步安裝基礎工具"
+    },
+    {
+      "name": "linux_environment_configuration",
+      "value": "環境設定"
+    },
+    {
+      "name": "linux_environment_files",
+      "value": "檔案與目錄"
+    },
+    {
+      "name": "linux_environment_shared_folders_summary",
+      "value": "把 Android 目錄掛載到 Linux 環境"
+    },
+    {
+      "name": "linux_environment_tools_ready",
+      "value": "基礎工具已就緒，可按需安裝擴充工具"
+    },
+    {
+      "name": "linux_environment_unavailable",
+      "value": "目前的 Root 環境無法建立隔離的 mount namespace 或 chroot"
+    },
+    {
+      "name": "linux_files_binary_hint",
+      "value": "二進位檔案，無法預覽"
+    },
+    {
+      "name": "linux_files_empty",
+      "value": "該目錄為空"
+    },
+    {
+      "name": "linux_files_entry_summary",
+      "value": "瀏覽 Linux 環境中的檔案（唯讀）"
+    },
+    {
+      "name": "linux_files_entry_title",
+      "value": "檔案瀏覽"
+    },
+    {
+      "name": "linux_files_error_not_directory",
+      "value": "不是目錄"
+    },
+    {
+      "name": "linux_files_error_not_file",
+      "value": "不是一般檔案"
+    },
+    {
+      "name": "linux_files_error_unreadable",
+      "value": "無法讀取該路徑"
+    },
+    {
+      "name": "linux_files_invalid_distribution",
+      "value": "未知的 Linux 發行版"
+    },
+    {
+      "name": "linux_files_not_installed",
+      "value": "尚未安裝 Linux 環境"
+    },
+    {
+      "name": "linux_files_title",
+      "value": "Linux 檔案"
+    },
+    {
+      "name": "linux_files_truncated_hint",
+      "value": "內容過大，僅顯示開頭部分"
+    },
+    {
+      "name": "linux_health_needs_check",
+      "value": "環境需要檢查"
+    },
+    {
+      "name": "linux_health_ok",
+      "value": "環境正常"
+    },
+    {
+      "name": "linux_health_summary",
+      "value": "檢查核心指令、工作區掛載、共用儲存空間與剩餘容量"
+    },
+    {
+      "name": "linux_install",
+      "value": "安裝"
+    },
+    {
+      "name": "linux_install_base",
+      "value": "安裝基礎環境"
+    },
+    {
+      "name": "linux_install_base_tools",
+      "value": "安裝基礎工具"
+    },
+    {
+      "name": "linux_install_complete",
+      "value": "Alpine %1$s 與常用工具安裝完成"
+    },
+    {
+      "name": "linux_installed",
+      "value": "已安裝"
+    },
+    {
+      "name": "linux_installing",
+      "value": "安裝中"
+    },
+    {
+      "name": "linux_insufficient_space",
+      "value": "空間不足：至少需要 %1$s，目前剩餘 %2$s"
+    },
+    {
+      "name": "linux_kimi_tools",
+      "value": "Kimi Code"
+    },
+    {
+      "name": "linux_kimi_tools_ready",
+      "value": "Kimi Code 已就緒，在終端機執行 kimi 即可開始"
+    },
+    {
+      "name": "linux_kimi_tools_summary",
+      "value": "透過 npm 安裝最新正式版 Kimi Code；需要先安裝 Node.js 環境"
+    },
+    {
+      "name": "linux_kimi_web_failed_browser",
+      "value": "沒有可用的瀏覽器"
+    },
+    {
+      "name": "linux_kimi_web_failed_start",
+      "value": "Kimi Web 啟動失敗"
+    },
+    {
+      "name": "linux_kimi_web_failed_url",
+      "value": "未取得 Web UI 位址，請到背景任務查看日誌"
+    },
+    {
+      "name": "linux_kimi_web_launch",
+      "value": "啟動 Web UI"
+    },
+    {
+      "name": "linux_kimi_web_starting",
+      "value": "正在啟動…"
+    },
+    {
+      "name": "linux_missing_tools",
+      "value": "缺少 %1$s"
+    },
+    {
+      "name": "linux_node_tools",
+      "value": "Node.js 環境"
+    },
+    {
+      "name": "linux_node_tools_ready",
+      "value": "Node.js 與 npm 已就緒"
+    },
+    {
+      "name": "linux_node_tools_summary",
+      "value": "安裝最新正式版 Node.js 與 npm；專案依賴優先裝進專案本地，全域工具使用使用者前綴"
+    },
+    {
+      "name": "linux_not_checked",
+      "value": "尚未檢查"
+    },
+    {
+      "name": "linux_not_installed",
+      "value": "尚未安裝"
+    },
+    {
+      "name": "linux_profile_already_ready",
+      "value": "%1$s已經就緒"
+    },
+    {
+      "name": "linux_profile_dependency_missing",
+      "value": "請先安裝 %1$s"
+    },
+    {
+      "name": "linux_profile_installed",
+      "value": "%1$s安裝完成"
+    },
+    {
+      "name": "linux_profile_stage_checking",
+      "value": "檢查 Linux 基礎環境"
+    },
+    {
+      "name": "linux_profile_stage_complete",
+      "value": "安裝完成"
+    },
+    {
+      "name": "linux_profile_stage_downloading",
+      "value": "下載%1$s"
+    },
+    {
+      "name": "linux_profile_stage_downloading_percent",
+      "value": "下載%1$s · %2$d%%"
+    },
+    {
+      "name": "linux_profile_stage_failed",
+      "value": "%1$s失敗，可以稍後再試"
+    },
+    {
+      "name": "linux_profile_stage_installing",
+      "value": "安裝 %1$s"
+    },
+    {
+      "name": "linux_profile_stage_verifying",
+      "value": "驗證 %1$s"
+    },
+    {
+      "name": "linux_progress_percent",
+      "value": "%1$s · %2$d%%"
+    },
+    {
+      "name": "linux_python_tools",
+      "value": "Python / uv 環境"
+    },
+    {
+      "name": "linux_python_tools_ready",
+      "value": "uv 與最新正式版 Python 已就緒"
+    },
+    {
+      "name": "linux_python_tools_ready_debian",
+      "value": "uv 與最新正式版 Python 已就緒"
+    },
+    {
+      "name": "linux_python_tools_summary",
+      "value": "安裝最新正式版 uv；Python 版本和專案環境由 uv 按需下載與管理"
+    },
+    {
+      "name": "linux_python_tools_summary_debian",
+      "value": "安裝最新正式版 uv；Python 版本和專案環境由 uv 按需下載與管理"
+    },
+    {
+      "name": "linux_ready",
+      "value": "已就緒"
+    },
+    {
+      "name": "linux_repair",
+      "value": "修復"
+    },
+    {
+      "name": "linux_requirements",
+      "value": "需要 Root 與 Magisk、KernelSU 或 APatch BusyBox"
+    },
+    {
+      "name": "linux_root_unavailable",
+      "value": "未取得 Root 權限，請在 Root 管理器中授權 随身助手"
+    },
+    {
+      "name": "linux_sdcard_available",
+      "value": "/sdcard 可用"
+    },
+    {
+      "name": "linux_sdcard_unavailable",
+      "value": "/sdcard 目前無法使用"
+    },
+    {
+      "name": "linux_space_remaining",
+      "value": "剩餘 %1$s"
+    },
+    {
+      "name": "linux_ssh_tools",
+      "value": "SSH 遠端連線"
+    },
+    {
+      "name": "linux_ssh_tools_ready",
+      "value": "sshd、ssh-keygen 與 ssh-agent 已就緒"
+    },
+    {
+      "name": "linux_ssh_tools_summary",
+      "value": "安裝完整 OpenSSH（sshd、ssh-keygen、ssh-agent 與 sftp-server）；基礎環境已含 ssh/scp/sftp 用戶端"
+    },
+    {
+      "name": "linux_stage_checking",
+      "value": "檢查 Root 與 BusyBox"
+    },
+    {
+      "name": "linux_stage_complete",
+      "value": "環境已就緒"
+    },
+    {
+      "name": "linux_stage_downloading",
+      "value": "下載 Linux 基礎環境"
+    },
+    {
+      "name": "linux_stage_extracting",
+      "value": "解壓縮基礎環境"
+    },
+    {
+      "name": "linux_stage_failed",
+      "value": "%1$s失敗，請檢查網路或稍後再試"
+    },
+    {
+      "name": "linux_stage_installing_tools",
+      "value": "安裝常用工具"
+    },
+    {
+      "name": "linux_tool",
+      "value": "工具"
+    },
+    {
+      "name": "linux_tool_progress_percent",
+      "value": "%1$s · %2$s %3$d%%"
+    },
+    {
+      "name": "linux_tools_incomplete",
+      "value": "Alpine 基礎環境已就緒，下一步安裝常用工具"
+    },
+    {
+      "name": "linux_tools_upgrade_summary",
+      "value": "基礎環境可用，升級後補齊新版 Agent 工具集"
+    },
+    {
+      "name": "linux_unsupported_abi",
+      "value": "暫不支援裝置架構：%1$s"
+    },
+    {
+      "name": "linux_upgrade_tools",
+      "value": "升級工具"
+    },
+    {
+      "name": "linux_workspace_available",
+      "value": "/workspace 可用"
+    },
+    {
+      "name": "linux_workspace_error",
+      "value": "工作區掛載異常"
+    },
+    {
+      "name": "linux_workspace_unavailable",
+      "value": "/workspace 無法使用"
+    },
+    {
+      "name": "location_reason",
+      "value": "用于你开启的持续后台实验模式，低功耗位置更新不保存、不上传"
+    },
+    {
+      "name": "markdown_alert_caution",
+      "value": "注意"
+    },
+    {
+      "name": "markdown_alert_important",
+      "value": "重要"
+    },
+    {
+      "name": "markdown_alert_note",
+      "value": "說明"
+    },
+    {
+      "name": "markdown_alert_tip",
+      "value": "提示"
+    },
+    {
+      "name": "markdown_alert_warning",
+      "value": "警告"
+    },
+    {
+      "name": "markdown_code_block",
+      "value": "程式碼"
+    },
+    {
+      "name": "mcp_add_server",
+      "value": "新增伺服器"
+    },
+    {
+      "name": "mcp_bearer_optional",
+      "value": "Bearer Token（選填）"
+    },
+    {
+      "name": "mcp_bearer_token",
+      "value": "Bearer Token"
+    },
+    {
+      "name": "mcp_configured_servers",
+      "value": "伺服器 · %1$d"
+    },
+    {
+      "name": "mcp_connecting",
+      "value": "正在連線…"
+    },
+    {
+      "name": "mcp_connection_failed",
+      "value": "無法連線 MCP 伺服器"
+    },
+    {
+      "name": "mcp_delete_confirm",
+      "value": "刪除 %1$s？此操作無法復原。"
+    },
+    {
+      "name": "mcp_delete_server",
+      "value": "刪除伺服器"
+    },
+    {
+      "name": "mcp_delete_server_summary",
+      "value": "移除此位址、Token 與工具設定"
+    },
+    {
+      "name": "mcp_empty_summary",
+      "value": "點選新增伺服器"
+    },
+    {
+      "name": "mcp_empty_title",
+      "value": "尚無 MCP 伺服器"
+    },
+    {
+      "name": "mcp_enable_risky_tool",
+      "value": "啟用此工具？"
+    },
+    {
+      "name": "mcp_enable_risky_tool_summary",
+      "value": "%2$s 的 %1$s 可能修改資料或存取外部服務，請僅在信任該伺服器時啟用。"
+    },
+    {
+      "name": "mcp_enable_server",
+      "value": "啟用伺服器"
+    },
+    {
+      "name": "mcp_enable_tool",
+      "value": "啟用"
+    },
+    {
+      "name": "mcp_may_modify_data",
+      "value": "可能修改資料或存取外部服務"
+    },
+    {
+      "name": "mcp_name_required",
+      "value": "請輸入伺服器名稱"
+    },
+    {
+      "name": "mcp_no_authentication",
+      "value": "未設定身分驗證"
+    },
+    {
+      "name": "mcp_no_tools",
+      "value": "沒有相容工具"
+    },
+    {
+      "name": "mcp_read_only_tool",
+      "value": "唯讀工具"
+    },
+    {
+      "name": "mcp_refresh_failed",
+      "value": "無法重新整理工具清單"
+    },
+    {
+      "name": "mcp_refresh_tools",
+      "value": "重新整理工具"
+    },
+    {
+      "name": "mcp_refresh_tools_hint",
+      "value": "伺服器發佈工具後可在此重新整理"
+    },
+    {
+      "name": "mcp_refreshed",
+      "value": "工具清單已重新整理 · %1$d 個"
+    },
+    {
+      "name": "mcp_server_added",
+      "value": "伺服器已新增，發現 %1$d 個工具"
+    },
+    {
+      "name": "mcp_server_missing",
+      "value": "此 MCP 伺服器已不存在"
+    },
+    {
+      "name": "mcp_server_name",
+      "value": "名稱"
+    },
+    {
+      "name": "mcp_server_row_summary",
+      "value": "已啟用 %1$d/%2$d 個工具"
+    },
+    {
+      "name": "mcp_server_settings",
+      "value": "伺服器"
+    },
+    {
+      "name": "mcp_server_url",
+      "value": "伺服器位址"
+    },
+    {
+      "name": "mcp_token_configured",
+      "value": "已設定 Bearer Token"
+    },
+    {
+      "name": "mcp_tools_count",
+      "value": "工具 · %1$d"
+    },
+    {
+      "name": "mcp_update_token",
+      "value": "身分驗證"
+    },
+    {
+      "name": "mcp_update_token_summary",
+      "value": "輸入新 Token，留空則移除身分驗證"
+    },
+    {
+      "name": "memory_budget_summary",
+      "value": "每輪最多注入 %1$s 個字元，詳細內容由模型視需要讀取"
+    },
+    {
+      "name": "memory_clear",
+      "value": "清除"
+    },
+    {
+      "name": "memory_discard",
+      "value": "放棄"
+    },
+    {
+      "name": "memory_empty_title",
+      "value": "還沒有記憶"
+    },
+    {
+      "name": "memory_mode_edit",
+      "value": "編輯"
+    },
+    {
+      "name": "memory_mode_preview",
+      "value": "預覽"
+    },
+    {
+      "name": "memory_over_limit",
+      "value": "已超過 1 MiB 上限，請刪減內容"
+    },
+    {
+      "name": "memory_save",
+      "value": "儲存"
+    },
+    {
+      "name": "memory_saving",
+      "value": "儲存中"
+    },
+    {
+      "name": "memory_unsaved_changes",
+      "value": "尚未儲存的變更"
+    },
+    {
+      "name": "microphone_reason",
+      "value": "仅在你点击语音输入时录音并转为文字，离开助手即停止。"
+    },
+    {
+      "name": "model_not_selected",
+      "value": "未選擇"
+    },
+    {
+      "name": "model_picker_filter_all",
+      "value": "全部"
+    },
+    {
+      "name": "model_picker_title",
+      "value": "選擇模型"
+    },
+    {
+      "name": "model_switch_current",
+      "value": "切換模型，目前為 %1$s"
+    },
+    {
+      "name": "module_desc",
+      "value": "在手机上运行的 AI 助手"
+    },
+    {
+      "name": "notification_history_service_label",
+      "value": "随身助手 通知記錄"
+    },
+    {
+      "name": "overlay_capsule_toggle",
+      "value": "%1$s，點擊展開控制"
+    },
+    {
+      "name": "overlay_continuation_unavailable",
+      "value": "目前入口不支援補充"
+    },
+    {
+      "name": "overlay_continuing",
+      "value": "繼續執行"
+    },
+    {
+      "name": "overlay_finishing",
+      "value": "收尾中，結果出現後再補充"
+    },
+    {
+      "name": "overlay_generating_answer",
+      "value": "產生回答中"
+    },
+    {
+      "name": "overlay_hosted_tool_running",
+      "value": "%1$s中"
+    },
+    {
+      "name": "overlay_open_conversation",
+      "value": "開啟 ETA 會話"
+    },
+    {
+      "name": "overlay_pause",
+      "value": "暫停"
+    },
+    {
+      "name": "overlay_paused",
+      "value": "已暫停"
+    },
+    {
+      "name": "overlay_reasoning",
+      "value": "思考中"
+    },
+    {
+      "name": "overlay_result_done",
+      "value": "完成"
+    },
+    {
+      "name": "overlay_result_open_eta",
+      "value": "回到 随身助手"
+    },
+    {
+      "name": "overlay_result_ready",
+      "value": "結果已就緒"
+    },
+    {
+      "name": "overlay_resume",
+      "value": "繼續"
+    },
+    {
+      "name": "overlay_run_failed",
+      "value": "請求失敗"
+    },
+    {
+      "name": "overlay_send",
+      "value": "傳送"
+    },
+    {
+      "name": "overlay_settings_app_details",
+      "value": "已開啟應用程式資訊，請在權限設定中管理懸浮窗權限。"
+    },
+    {
+      "name": "overlay_settings_choose_app",
+      "value": "請在系統懸浮窗權限列表中選擇 随身助手 後台版。"
+    },
+    {
+      "name": "overlay_settings_unavailable",
+      "value": "無法開啟系統設定，請手動前往系統設定 → 應用程式 → 随身助手 後台版管理懸浮窗權限。"
+    },
+    {
+      "name": "overlay_stop_task",
+      "value": "停止目前任務"
+    },
+    {
+      "name": "overlay_stopped",
+      "value": "已停止"
+    },
+    {
+      "name": "overlay_stopping",
+      "value": "停止中"
+    },
+    {
+      "name": "overlay_substatus_failed",
+      "value": "執行失敗"
+    },
+    {
+      "name": "overlay_substatus_finished",
+      "value": "已完成"
+    },
+    {
+      "name": "overlay_supplement",
+      "value": "補充"
+    },
+    {
+      "name": "overlay_supplement_hint",
+      "value": "補充指令，随身助手 會繼續目前任務"
+    },
+    {
+      "name": "overlay_supplement_received",
+      "value": "收到補充，繼續執行"
+    },
+    {
+      "name": "overlay_task_count",
+      "value": "%1$d 個任務 · %2$s"
+    },
+    {
+      "name": "page_abnormal_5caf27",
+      "value": "例外"
+    },
+    {
+      "name": "page_accessibility_protection_request_was_denied_by_the_s_34c699",
+      "value": "無障礙保護請求被系統拒絕"
+    },
+    {
+      "name": "page_add_model_532a64",
+      "value": "新增模型"
+    },
+    {
+      "name": "page_add_to_94191c",
+      "value": "添加"
+    },
+    {
+      "name": "page_agent_browser_a66bd5",
+      "value": "Agent 瀏覽器"
+    },
+    {
+      "name": "page_agent_can_work_in_workspace_through_terminal_environ_9b7e2d",
+      "value": "Agent 透過 terminal 的 environment=linux 使用目前選取的發行版在 /workspace 工作"
+    },
+    {
+      "name": "page_apk_analysis_tools_are_ready_d45e3e",
+      "value": "APK 分析工具已經就緒"
+    },
+    {
+      "name": "page_authorized_284cc0",
+      "value": "已授權"
+    },
+    {
+      "name": "page_automatically_pull_from_remote_f883d0",
+      "value": "從遠端自動拉取"
+    },
+    {
+      "name": "page_back_4cf4c1",
+      "value": "後退"
+    },
+    {
+      "name": "page_base_url_must_be_a_valid_http_s_address_0e7d58",
+      "value": "Base URL 必須是有效的 HTTP(S) 位址"
+    },
+    {
+      "name": "page_busy_0212cc",
+      "value": "忙碌"
+    },
+    {
+      "name": "page_can_t_open_default_assistant_settings_02c66f",
+      "value": "無法開啟預設助理設置"
+    },
+    {
+      "name": "page_check_core_commands_workspace_mounts_shared_storage__a8ce44",
+      "value": "檢查核心指令、工作區掛載、共享儲存與剩餘空間"
+    },
+    {
+      "name": "page_checking_skill_packs_42134c",
+      "value": "正在檢查 Skill 包"
+    },
+    {
+      "name": "page_choose_eta_as_your_default_digital_assistant_4a73a9",
+      "value": "選擇 随身助手 作為預設數位助理"
+    },
+    {
+      "name": "page_clear_84fcd7",
+      "value": "清空"
+    },
+    {
+      "name": "page_configuration_d7d7ce",
+      "value": "設定"
+    },
+    {
+      "name": "page_configuration_write_failed_8c2554",
+      "value": "無法寫入設定"
+    },
+    {
+      "name": "page_context_unknown_b6ae7b",
+      "value": "內容長度未知"
+    },
+    {
+      "name": "page_continue_installation_62da0c",
+      "value": "繼續安裝"
+    },
+    {
+      "name": "page_covered_model_automatic_capabilities_3fa7d4",
+      "value": "已覆蓋模型自動能力"
+    },
+    {
+      "name": "page_create_fcbd09",
+      "value": "創建"
+    },
+    {
+      "name": "page_create_new_provider_36cab9",
+      "value": "新供應商"
+    },
+    {
+      "name": "page_created_62cfc5",
+      "value": "已創建"
+    },
+    {
+      "name": "page_created_and_set_as_current_lsposed_service_is_not_co_baa03d",
+      "value": "已建立並設為目前使用；LSPosed 服務未連線"
+    },
+    {
+      "name": "page_created_set_current_and_synced_a99010",
+      "value": "已建立、設為目前並同步"
+    },
+    {
+      "name": "page_current_model_a0af8f",
+      "value": "預設模型"
+    },
+    {
+      "name": "page_custom_model_25be0f",
+      "value": "自訂模型"
+    },
+    {
+      "name": "page_delete_3755f5",
+      "value": "刪除"
+    },
+    {
+      "name": "page_deleting_6f941d",
+      "value": "刪除中..."
+    },
+    {
+      "name": "page_didn_t_get_root_permissions_23efb3",
+      "value": "未取得 root 權限"
+    },
+    {
+      "name": "page_document_49deaf",
+      "value": "文件"
+    },
+    {
+      "name": "page_download_and_install_f4df99",
+      "value": "下載並安裝"
+    },
+    {
+      "name": "page_download_the_alpine_base_environment_8433ea",
+      "value": "下載 Alpine 基礎環境"
+    },
+    {
+      "name": "page_edit_model_29e31e",
+      "value": "編輯模型"
+    },
+    {
+      "name": "page_enabled_25d284",
+      "value": "已啟用"
+    },
+    {
+      "name": "page_enter_path_ec5f01",
+      "value": "輸入路徑"
+    },
+    {
+      "name": "page_environment_needs_to_be_checked_2a714a",
+      "value": "環境需要檢查"
+    },
+    {
+      "name": "page_eta_is_executing_032532",
+      "value": "随身助手 正在執行…"
+    },
+    {
+      "name": "page_examine_40ffb3",
+      "value": "檢查"
+    },
+    {
+      "name": "page_exceeded_the_1_mib_limit_please_delete_120a63",
+      "value": "已超過 1 MiB 上限，請刪減"
+    },
+    {
+      "name": "page_fail_3e3c80",
+      "value": "失敗"
+    },
+    {
+      "name": "page_folder_46ecac",
+      "value": "資料夾"
+    },
+    {
+      "name": "page_go_ahead_320ffe",
+      "value": "前進"
+    },
+    {
+      "name": "page_google_app_is_already_a_system_priv_app_4f33b0",
+      "value": "Google App 已是系統 priv-app"
+    },
+    {
+      "name": "page_google_app_not_installed_2e3e55",
+      "value": "未安裝 Google App"
+    },
+    {
+      "name": "page_help_me_open_wechat_65c265",
+      "value": "幫我打開微信"
+    },
+    {
+      "name": "page_hide_bb0e7e",
+      "value": "隱藏"
+    },
+    {
+      "name": "page_import_from_zip_41cc5e",
+      "value": "從 ZIP 導入"
+    },
+    {
+      "name": "page_install_087db6",
+      "value": "安裝"
+    },
+    {
+      "name": "page_install_openjdk_17_jadx_apktool_smali_and_baksmali_d_595960",
+      "value": "安裝正式版 OpenJDK 25，以及最新正式版 JADX、Apktool、smali 與 baksmali；需預留 768 MB"
+    },
+    {
+      "name": "page_installed_eb88ff",
+      "value": "已安裝"
+    },
+    {
+      "name": "page_installing_411642",
+      "value": "安裝中"
+    },
+    {
+      "name": "page_jadx_apktool_smali_and_baksmali_are_installed_d7201c",
+      "value": "JADX、Apktool、smali 與 baksmali 安裝完成"
+    },
+    {
+      "name": "page_jadx_apktool_smali_and_baksmali_are_ready_apktool_do_14eaf8",
+      "value": "JADX、Apktool、smali 與 baksmali 已就緒；Apktool 暫時不支援回編譯"
+    },
+    {
+      "name": "page_kernelsu_needs_to_enable_metamodule_support_first_5d29de",
+      "value": "請先在 KernelSU 中啟用 metamodule 支援"
+    },
+    {
+      "name": "page_leave_it_to_eta_to_finish_3d378f",
+      "value": "交給 随身助手 完成"
+    },
+    {
+      "name": "page_linux_tool_environment_is_ready_9b845b",
+      "value": "Linux 工具環境已經就緒"
+    },
+    {
+      "name": "page_magisk_or_kernelsu_not_detected_ae18c5",
+      "value": "未偵測到 Magisk 或 KernelSU"
+    },
+    {
+      "name": "page_missing_2fe9b7",
+      "value": "缺失"
+    },
+    {
+      "name": "page_model_98fd0c",
+      "value": "模型"
+    },
+    {
+      "name": "page_name_cannot_be_empty_ca8984",
+      "value": "名稱不能為空"
+    },
+    {
+      "name": "page_no_application_can_open_the_current_webpage_faef56",
+      "value": "沒有應用程式可以開啟目前網頁"
+    },
+    {
+      "name": "page_no_description_2070d9",
+      "value": "無描述"
+    },
+    {
+      "name": "page_no_matching_model_found_ae7e96",
+      "value": "未找到匹配的模型"
+    },
+    {
+      "name": "page_no_matching_provider_found_be81e9",
+      "value": "找不到相符的供應商"
+    },
+    {
+      "name": "page_normal_f78d03",
+      "value": "正常"
+    },
+    {
+      "name": "page_not_checked_yet_039989",
+      "value": "尚未檢查"
+    },
+    {
+      "name": "page_not_configured_63595e",
+      "value": "尚未設定"
+    },
+    {
+      "name": "page_not_enabled_8bb38e",
+      "value": "未啟用"
+    },
+    {
+      "name": "page_not_installed_yet_e9c3e3",
+      "value": "尚未安裝"
+    },
+    {
+      "name": "page_not_supported_ef8274",
+      "value": "不支援"
+    },
+    {
+      "name": "page_open_agent_browser_to_search_and_summarize_today_s_t_bbf6ba",
+      "value": "開啟 Agent 瀏覽器，搜尋並總結今天的科技新聞要點"
+    },
+    {
+      "name": "page_open_with_external_application_ab3d4c",
+      "value": "用外部應用程式打開"
+    },
+    {
+      "name": "page_opening_web_page_5f7c08",
+      "value": "正在開啟網頁"
+    },
+    {
+      "name": "page_picture_be8da6",
+      "value": "圖片"
+    },
+    {
+      "name": "page_please_complete_the_linux_basic_tool_installation_fi_2ab81b",
+      "value": "請先完成 Linux 基礎工具安裝"
+    },
+    {
+      "name": "page_please_grant_eta_root_permissions_in_kernelsu_7b1bc8",
+      "value": "請在 KernelSU 中授予 随身助手 root 權限"
+    },
+    {
+      "name": "page_please_grant_eta_root_permissions_in_magisk_298c7d",
+      "value": "請在 Magisk 中授予 随身助手 root 權限"
+    },
+    {
+      "name": "page_processing_dde1db",
+      "value": "處理中..."
+    },
+    {
+      "name": "page_read_proc_meminfo_and_proc_pressure_focus_on_analyzi_43156d",
+      "value": "讀取 /proc/meminfo 和 /proc/pressure/，重點分析 PSI（Pressure Stall Information）指標，總結目前記憶體壓力和系統狀態"
+    },
+    {
+      "name": "page_ready_7cca0c",
+      "value": "} 已就緒"
+    },
+    {
+      "name": "page_ready_f2afde",
+      "value": "已就緒"
+    },
+    {
+      "name": "page_refresh_38108e",
+      "value": "重新整理"
+    },
+    {
+      "name": "page_remove_provider_9f848f",
+      "value": "刪除供應商"
+    },
+    {
+      "name": "page_repair_590253",
+      "value": "修復"
+    },
+    {
+      "name": "page_replace_855241",
+      "value": "替換"
+    },
+    {
+      "name": "page_requires_root_and_magisk_kernelsu_or_apatch_busybox_47166a",
+      "value": "需要 Root 與 Magisk、KernelSU 或 APatch BusyBox"
+    },
+    {
+      "name": "page_reset_3d8134",
+      "value": "重設"
+    },
+    {
+      "name": "page_reset_a0cc65",
+      "value": "已重設"
+    },
+    {
+      "name": "page_reset_built_in_configuration_35b6ec",
+      "value": "重設內建設定"
+    },
+    {
+      "name": "page_reset_session_911448",
+      "value": "重設工作階段"
+    },
+    {
+      "name": "page_resetting_616090",
+      "value": "重設中…"
+    },
+    {
+      "name": "page_retrieving_a880c9",
+      "value": "拉取中..."
+    },
+    {
+      "name": "page_root_environment_is_missing_available_busybox_or_nec_76f454",
+      "value": "Root 環境缺少可用的 BusyBox 或必要 applet"
+    },
+    {
+      "name": "page_root_permission_is_not_obtained_please_authorize_eta_fdb6ab",
+      "value": "未取得 Root 權限，請在 Root 管理員中授權 随身助手"
+    },
+    {
+      "name": "page_save_configuration_817af1",
+      "value": "儲存設定"
+    },
+    {
+      "name": "page_save_fadf24",
+      "value": "儲存"
+    },
+    {
+      "name": "page_save_failed_40525a",
+      "value": "儲存失敗"
+    },
+    {
+      "name": "page_saved_and_set_as_current_lsposed_service_not_connect_08da2c",
+      "value": "已儲存並設為目前使用；LSPosed 服務未連線"
+    },
+    {
+      "name": "page_saved_current_and_synced_95dac1",
+      "value": "已儲存、設為目前並同步"
+    },
+    {
+      "name": "page_saved_provider_not_enabled_7afa54",
+      "value": "已儲存，Provider 未啟用"
+    },
+    {
+      "name": "page_saving_a032e8",
+      "value": "儲存中"
+    },
+    {
+      "name": "page_saving_d70d42",
+      "value": "儲存中..."
+    },
+    {
+      "name": "page_sdcard_is_available_cbb808",
+      "value": "/sdcard 可用"
+    },
+    {
+      "name": "page_sdcard_is_currently_unavailable_8195de",
+      "value": "/sdcard 目前不可用"
+    },
+    {
+      "name": "page_select_all_3e44b2",
+      "value": "全選"
+    },
+    {
+      "name": "page_select_none_ba20eb",
+      "value": "全不選"
+    },
+    {
+      "name": "page_select_the_skill_pack_containing_skill_md_18af9d",
+      "value": "選擇包含 SKILL.md 的 Skill 包"
+    },
+    {
+      "name": "page_select_zip_skills_package_982a44",
+      "value": "選擇 ZIP Skill 包"
+    },
+    {
+      "name": "page_selected_0a3020",
+      "value": "已選取"
+    },
+    {
+      "name": "page_send_1214d6",
+      "value": "傳送"
+    },
+    {
+      "name": "page_set_as_current_df334e",
+      "value": "設為當前"
+    },
+    {
+      "name": "page_set_as_current_model_183d7d",
+      "value": "設為預設模型"
+    },
+    {
+      "name": "page_set_as_default_digital_assistant_dd2078",
+      "value": "已設為預設數位助理"
+    },
+    {
+      "name": "page_show_71b677",
+      "value": "顯示"
+    },
+    {
+      "name": "page_stop_a17f70",
+      "value": "停止"
+    },
+    {
+      "name": "page_stop_loading_c62fbc",
+      "value": "停止載入"
+    },
+    {
+      "name": "page_support_thinking_5b9e4c",
+      "value": "支援思考"
+    },
+    {
+      "name": "page_sure_f526c8",
+      "value": "確定"
+    },
+    {
+      "name": "page_system_default_assistant_576746",
+      "value": "系統預設助手"
+    },
+    {
+      "name": "page_take_a_screenshot_and_describe_the_current_screen_555fbd",
+      "value": "截圖並描述當前螢幕"
+    },
+    {
+      "name": "page_testing_f43705",
+      "value": "測試中..."
+    },
+    {
+      "name": "page_the_accessibility_protection_backend_is_unavailable__e50b64",
+      "value": "無障礙保護後端不可用，請確認 system 作用域已啟用並重新啟動"
+    },
+    {
+      "name": "page_the_basic_environment_is_available_and_the_new_versi_594d27",
+      "value": "基礎環境可用，升級後補齊新版 Agent 與 Python 工具集"
+    },
+    {
+      "name": "page_the_basic_environment_is_ready_5d1426",
+      "value": "基礎環境已就緒"
+    },
+    {
+      "name": "page_the_current_root_environment_cannot_create_an_isolat_4ca00a",
+      "value": "目前 Root 環境無法建立隔離 mount namespace 或 chroot"
+    },
+    {
+      "name": "page_the_environment_is_normal_77b826",
+      "value": "環境正常"
+    },
+    {
+      "name": "page_the_installation_is_complete_and_will_take_effect_af_82329a",
+      "value": "安裝完成，重開機後生效"
+    },
+    {
+      "name": "page_the_installation_of_common_tools_has_not_been_comple_d7f7c2",
+      "value": "常用工具安裝尚未完成，可以從當前進度繼續"
+    },
+    {
+      "name": "page_the_remote_end_did_not_return_a_usable_conversation__781487",
+      "value": "遠端未傳回可用對話模型，已保留現有模型"
+    },
+    {
+      "name": "page_there_is_currently_no_model_provider_please_add_one_78ab6a",
+      "value": "尚無模型供應商，請新增"
+    },
+    {
+      "name": "page_there_is_no_model_yet_please_pull_it_from_the_remote_ced865",
+      "value": "暫無模型，請從遠端拉取或手動新增"
+    },
+    {
+      "name": "page_this_message_and_subsequent_content_will_be_replaced_086779",
+      "value": "發送後將替換此訊息及之後內容"
+    },
+    {
+      "name": "page_this_message_will_be_replaced_after_sending_fb95e4",
+      "value": "發送後將替換此訊息"
+    },
+    {
+      "name": "page_tool_a72ef1",
+      "value": "工具"
+    },
+    {
+      "name": "page_unauthorized_86bddc",
+      "value": "未授權"
+    },
+    {
+      "name": "page_under_inspection_9908c9",
+      "value": "檢查中"
+    },
+    {
+      "name": "page_unsaved_changes_376474",
+      "value": "未儲存的更改"
+    },
+    {
+      "name": "page_upgrade_tools_be5a84",
+      "value": "升級工具"
+    },
+    {
+      "name": "page_use_standard_chat_completions_ee4b1a",
+      "value": "使用 Chat Completions API"
+    },
+    {
+      "name": "page_using_typed_items_with_semantic_streaming_events_f9c906",
+      "value": "使用 Responses API、typed Items 與語意化串流事件"
+    },
+    {
+      "name": "page_verifying_and_installing_please_wait_6d7c8c",
+      "value": "正在驗證並安裝，請稍候"
+    },
+    {
+      "name": "page_workspace_is_available_704a92",
+      "value": "/workspace 可用"
+    },
+    {
+      "name": "page_workspace_is_not_available_3db427",
+      "value": "/workspace 不可用"
+    },
+    {
+      "name": "page_workspace_mount_exception_fc0ef2",
+      "value": "工作區掛載異常"
+    },
+    {
+      "name": "page_you_are_taking_over_the_current_session_and_the_agen_2347ef",
+      "value": "你正在接管目前的工作階段，Agent 的網頁操作已暫停；返回後可讓 Agent 繼續。"
+    },
+    {
+      "name": "permission_health_ok",
+      "value": "正常"
+    },
+    {
+      "name": "permission_local_network_denied",
+      "value": "尚未授予區域網路存取權限。需要連線至本機服務時，可前往系統應用程式權限設定，允許「附近的裝置」；網際網路連線不受影響。"
+    },
+    {
+      "name": "permission_local_network_settings_unavailable",
+      "value": "無法開啟設定，請在系統設定中找到 随身助手 的應用程式權限，允許「附近的裝置」。"
+    },
+    {
+      "name": "permission_local_network_summary",
+      "value": "用於模型、MCP、內建瀏覽器和終端機存取區域網路，請按需授權；未授權仍可存取網際網路。"
+    },
+    {
+      "name": "permission_local_network_title",
+      "value": "區域網路存取"
+    },
+    {
+      "name": "permission_status_disabled",
+      "value": "未啟用"
+    },
+    {
+      "name": "permission_status_missing",
+      "value": "缺少"
+    },
+    {
+      "name": "permission_status_ok",
+      "value": "正常"
+    },
+    {
+      "name": "permission_status_warning",
+      "value": "異常"
+    },
+    {
+      "name": "power_assistant_system_default",
+      "value": "系統預設助理"
+    },
+    {
+      "name": "provider_auto_reasoning_detected",
+      "value": "已自動識別"
+    },
+    {
+      "name": "provider_auto_reasoning_unknown",
+      "value": "自動：不支援或未知"
+    },
+    {
+      "name": "provider_context_tag",
+      "value": "%1$s 內容脈絡"
+    },
+    {
+      "name": "provider_context_window_hint",
+      "value": "選擇常用大小或手動填寫，用於判斷何時自動壓縮"
+    },
+    {
+      "name": "provider_context_window_invalid",
+      "value": "請輸入正整數"
+    },
+    {
+      "name": "provider_context_window_usage",
+      "value": "對話接近這個長度時會自動壓縮"
+    },
+    {
+      "name": "provider_context_window_value",
+      "value": "約 %1$s tokens"
+    },
+    {
+      "name": "provider_delete_failed",
+      "value": "刪除失敗"
+    },
+    {
+      "name": "provider_delete_models_pick_hint",
+      "value": "選擇要刪除的模型"
+    },
+    {
+      "name": "provider_delete_summary",
+      "value": "「%1$s」將永久刪除。"
+    },
+    {
+      "name": "provider_empty",
+      "value": "尚無模型供應商，請新增"
+    },
+    {
+      "name": "provider_error",
+      "value": "失敗：%1$s"
+    },
+    {
+      "name": "provider_model_delete_summary",
+      "value": "「%1$s」將永久刪除。"
+    },
+    {
+      "name": "provider_model_deleted",
+      "value": "已刪除：%1$s"
+    },
+    {
+      "name": "provider_model_list_count",
+      "value": "模型清單（共 %1$d 個）"
+    },
+    {
+      "name": "provider_model_list_matches",
+      "value": "模型清單（符合 %1$d / %2$d 個）"
+    },
+    {
+      "name": "provider_model_saved",
+      "value": "已儲存：%1$s"
+    },
+    {
+      "name": "provider_models_endpoint_summary",
+      "value": "讀取 %1$s 的 /models 清單"
+    },
+    {
+      "name": "provider_models_up_to_date",
+      "value": "已是最新，沒有新模型"
+    },
+    {
+      "name": "provider_no_matches",
+      "value": "找不到相符的供應商"
+    },
+    {
+      "name": "provider_reset_failed",
+      "value": "重設失敗"
+    },
+    {
+      "name": "provider_reset_summary",
+      "value": "將還原「%1$s」的預設設定與官方模型清單，並保留 API Key。"
+    },
+    {
+      "name": "provider_save_failed",
+      "value": "儲存失敗"
+    },
+    {
+      "name": "provider_selected",
+      "value": "已選取"
+    },
+    {
+      "name": "provider_set_current",
+      "value": "設為預設"
+    },
+    {
+      "name": "provider_sync_failed",
+      "value": "同步失敗"
+    },
+    {
+      "name": "read_aloud_channel",
+      "value": "朗讀"
+    },
+    {
+      "name": "read_aloud_notification_title",
+      "value": "随身助手 正在朗讀"
+    },
+    {
+      "name": "reasoning_collapse",
+      "value": "收合思考過程"
+    },
+    {
+      "name": "reasoning_completed",
+      "value": "思考完成"
+    },
+    {
+      "name": "reasoning_expand",
+      "value": "展開思考過程"
+    },
+    {
+      "name": "reasoning_in_progress",
+      "value": "正在思考…"
+    },
+    {
+      "name": "recognition_service_label",
+      "value": "随身助手 語音辨識"
+    },
+    {
+      "name": "remote_model_import_confirm",
+      "value": "新增 %1$d 個"
+    },
+    {
+      "name": "remote_model_import_pick_hint",
+      "value": "選擇要新增的模型"
+    },
+    {
+      "name": "remote_model_import_summary",
+      "value": "遠端有 %1$d 個尚未新增的模型"
+    },
+    {
+      "name": "remote_model_import_title",
+      "value": "新增模型"
+    },
+    {
+      "name": "route_linux_environment",
+      "value": "Linux 工具環境"
+    },
+    {
+      "name": "route_linux_files",
+      "value": "Linux 檔案"
+    },
+    {
+      "name": "route_mcp_server_detail",
+      "value": "MCP 伺服器"
+    },
+    {
+      "name": "route_mcp_servers",
+      "value": "MCP 伺服器"
+    },
+    {
+      "name": "route_memory",
+      "value": "記憶"
+    },
+    {
+      "name": "route_model_providers",
+      "value": "模型供應商"
+    },
+    {
+      "name": "route_new_provider",
+      "value": "新增供應商"
+    },
+    {
+      "name": "route_permissions",
+      "value": "權限"
+    },
+    {
+      "name": "route_provider_details",
+      "value": "Provider 詳細資料"
+    },
+    {
+      "name": "route_settings",
+      "value": "設定"
+    },
+    {
+      "name": "route_shared_folders",
+      "value": "共享資料夾"
+    },
+    {
+      "name": "route_skills",
+      "value": "Skills"
+    },
+    {
+      "name": "route_system_enhancements",
+      "value": "系統增強"
+    },
+    {
+      "name": "route_terminal",
+      "value": "終端機"
+    },
+    {
+      "name": "route_tools",
+      "value": "工具"
+    },
+    {
+      "name": "run_gui_user_paused",
+      "value": "使用者接管中"
+    },
+    {
+      "name": "run_waiting_for_gui",
+      "value": "等待手機控制權"
+    },
+    {
+      "name": "settings_auto_compaction",
+      "value": "自動壓縮上下文"
+    },
+    {
+      "name": "settings_context_extensions",
+      "value": "上下文與擴充"
+    },
+    {
+      "name": "settings_general",
+      "value": "一般"
+    },
+    {
+      "name": "settings_language",
+      "value": "語言"
+    },
+    {
+      "name": "settings_language_system",
+      "value": "跟隨系統"
+    },
+    {
+      "name": "settings_llm_providers",
+      "value": "LLM 供應商"
+    },
+    {
+      "name": "settings_model_not_selected",
+      "value": "尚未選擇模型"
+    },
+    {
+      "name": "settings_not_configured",
+      "value": "尚未設定"
+    },
+    {
+      "name": "settings_open_assistant_failed",
+      "value": "無法開啟預設助理設定"
+    },
+    {
+      "name": "settings_tools_list",
+      "value": "工具清單"
+    },
+    {
+      "name": "settings_write_failed",
+      "value": "無法儲存設定"
+    },
+    {
+      "name": "shared_folders_add",
+      "value": "新增共享資料夾"
+    },
+    {
+      "name": "shared_folders_browse_unavailable",
+      "value": "無法開啟該目錄"
+    },
+    {
+      "name": "shared_folders_empty",
+      "value": "尚未設定共享資料夾"
+    },
+    {
+      "name": "shared_folders_entry_summary",
+      "value": "將 Android 目錄掛載到 Linux 環境的 /workspace/mounts/ 下"
+    },
+    {
+      "name": "shared_folders_entry_title",
+      "value": "共享資料夾"
+    },
+    {
+      "name": "shared_folders_error_limit",
+      "value": "最多設定 %1$d 個共享資料夾"
+    },
+    {
+      "name": "shared_folders_error_name_duplicate",
+      "value": "掛載名稱已被使用"
+    },
+    {
+      "name": "shared_folders_error_name_invalid",
+      "value": "僅限 1–48 個字母、數字、點、底線或連字號"
+    },
+    {
+      "name": "shared_folders_error_path_duplicate",
+      "value": "該目錄已共享"
+    },
+    {
+      "name": "shared_folders_error_path_forbidden",
+      "value": "該目錄無法共享"
+    },
+    {
+      "name": "shared_folders_error_path_invalid",
+      "value": "目錄路徑無效"
+    },
+    {
+      "name": "shared_folders_error_save",
+      "value": "儲存失敗，請重試"
+    },
+    {
+      "name": "shared_folders_footer",
+      "value": "共享資料夾在新的 Linux 終端工作階段建立時掛載到 /workspace/mounts/ 下，設定變更對下一條指令或新工作階段生效；/sdcard 等模擬儲存在 Linux 中不支援修改權限位元。"
+    },
+    {
+      "name": "shared_folders_mount_point",
+      "value": "掛載點：%1$s"
+    },
+    {
+      "name": "shared_folders_name_label",
+      "value": "掛載名稱"
+    },
+    {
+      "name": "shared_folders_path_label",
+      "value": "目錄"
+    },
+    {
+      "name": "shared_folders_picker_no_subfolders",
+      "value": "此處沒有子資料夾"
+    },
+    {
+      "name": "shared_folders_picker_title",
+      "value": "新增共享資料夾"
+    },
+    {
+      "name": "shared_folders_remove_message",
+      "value": "移除「%1$s」（%2$s）？來源目錄中的檔案不會被刪除。"
+    },
+    {
+      "name": "shared_folders_remove_title",
+      "value": "移除共享資料夾"
+    },
+    {
+      "name": "shared_folders_selected_source",
+      "value": "掛載目錄：%1$s"
+    },
+    {
+      "name": "shared_folders_source_missing",
+      "value": "來源目錄不存在"
+    },
+    {
+      "name": "shared_folders_title",
+      "value": "共享資料夾"
+    },
+    {
+      "name": "shell_command",
+      "value": "Shell 指令"
+    },
+    {
+      "name": "skill_deleted_message",
+      "value": "「%1$s」已從 随身助手 刪除。"
+    },
+    {
+      "name": "skill_enabled_message",
+      "value": "「%1$s」已啟用，將從下一輪對話開始可用。"
+    },
+    {
+      "name": "skills_checking_package",
+      "value": "正在檢查 Skill 包"
+    },
+    {
+      "name": "skills_choose_package",
+      "value": "選擇包含 SKILL.md 的 Skill 包"
+    },
+    {
+      "name": "skills_choose_zip",
+      "value": "選擇 ZIP Skill 包"
+    },
+    {
+      "name": "skills_delete_summary",
+      "value": "刪除「%1$s」後，需要重新安裝才能復原。"
+    },
+    {
+      "name": "skills_import_zip",
+      "value": "從 ZIP 匯入"
+    },
+    {
+      "name": "skills_installing_package",
+      "value": "正在驗證並安裝，請稍候"
+    },
+    {
+      "name": "skills_more_named",
+      "value": "%1$s 的更多操作"
+    },
+    {
+      "name": "skills_no_description",
+      "value": "沒有說明"
+    },
+    {
+      "name": "skills_replace",
+      "value": "取代"
+    },
+    {
+      "name": "skills_replace_summary",
+      "value": "已有使用者 Skill「%1$s」（%2$s）。取代後會覆寫其目前的所有檔案。"
+    },
+    {
+      "name": "speech_access_token",
+      "value": "Access Token"
+    },
+    {
+      "name": "speech_advanced",
+      "value": "進階設定"
+    },
+    {
+      "name": "speech_api_key",
+      "value": "API Key"
+    },
+    {
+      "name": "speech_app_id",
+      "value": "App ID"
+    },
+    {
+      "name": "speech_asr_doubao",
+      "value": "豆包 · 串流識別 2.0"
+    },
+    {
+      "name": "speech_asr_note_file",
+      "value": "錄音先上傳自有 OSS，再非同步轉寫，等待時間較長。"
+    },
+    {
+      "name": "speech_asr_note_flash",
+      "value": "錄音完成後上傳識別，適合短句輸入。"
+    },
+    {
+      "name": "speech_asr_note_streaming",
+      "value": "邊說邊顯示文字。聊天聽寫點擊完成；助手浮窗可在停頓後自動提交。"
+    },
+    {
+      "name": "speech_asr_note_system",
+      "value": "使用裝置已有的語音服務；雲端服務不依賴系統識別引擎。"
+    },
+    {
+      "name": "speech_asr_qwen_file",
+      "value": "千問 · 檔案轉寫"
+    },
+    {
+      "name": "speech_asr_qwen_flash",
+      "value": "千問 · 短音訊識別"
+    },
+    {
+      "name": "speech_asr_qwen_realtime",
+      "value": "千問 · 即時識別"
+    },
+    {
+      "name": "speech_asr_system",
+      "value": "系統語音服務"
+    },
+    {
+      "name": "speech_auto_send_note",
+      "value": "僅對助手浮窗生效；按住麥克風說話時，放開才傳送。"
+    },
+    {
+      "name": "speech_auto_send_off",
+      "value": "不自動傳送"
+    },
+    {
+      "name": "speech_auto_send_seconds",
+      "value": "%1$s 秒"
+    },
+    {
+      "name": "speech_auto_send_title",
+      "value": "停頓後自動傳送"
+    },
+    {
+      "name": "speech_auto_speak",
+      "value": "自動播報回答"
+    },
+    {
+      "name": "speech_auto_speak_summary",
+      "value": "僅在助手浮窗可見時播報語音提問的最終回答"
+    },
+    {
+      "name": "speech_base_url",
+      "value": "服務地址"
+    },
+    {
+      "name": "speech_collapse",
+      "value": "收起"
+    },
+    {
+      "name": "speech_credentials_lost",
+      "value": "語音憑據無法解密，請重新填寫並儲存"
+    },
+    {
+      "name": "speech_dictation",
+      "value": "語音輸入"
+    },
+    {
+      "name": "speech_dictation_finish",
+      "value": "完成聽寫"
+    },
+    {
+      "name": "speech_disable_auto_read",
+      "value": "關閉自動朗讀"
+    },
+    {
+      "name": "speech_doubao_asr_note",
+      "value": "預設使用 volc.seedasr.sauc.duration，按時長計費。"
+    },
+    {
+      "name": "speech_doubao_tts_note",
+      "value": "預設使用 seed-tts-2.0。"
+    },
+    {
+      "name": "speech_doubao_voice_note",
+      "value": "模型：豆包語音合成 2.0。"
+    },
+    {
+      "name": "speech_enable_auto_read",
+      "value": "開啟自動朗讀"
+    },
+    {
+      "name": "speech_expand",
+      "value": "展開"
+    },
+    {
+      "name": "speech_gemini_connection_note",
+      "value": "使用 Google AI Studio 的 API Key。自定义地址须支持 Gemini 语音接口，填写服务根地址。"
+    },
+    {
+      "name": "speech_gemini_flash",
+      "value": "Gemini 3.8 Flash · 品质优先"
+    },
+    {
+      "name": "speech_gemini_flash_lite",
+      "value": "Gemini 3.8 Flash-Lite · 更低延迟"
+    },
+    {
+      "name": "speech_gemini_style",
+      "value": "朗读风格（可选，最多 500 字）"
+    },
+    {
+      "name": "speech_gemini_voice_note",
+      "value": "音色可用于中文及其他支持的语言。朗读风格可填写“自然、温和，语速稍慢”；留空使用默认风格。也可填写账号已有的音色 ID。"
+    },
+    {
+      "name": "speech_group_assistant",
+      "value": "助手"
+    },
+    {
+      "name": "speech_group_connection",
+      "value": "連接"
+    },
+    {
+      "name": "speech_group_credentials",
+      "value": "憑據"
+    },
+    {
+      "name": "speech_group_result",
+      "value": "識別結果"
+    },
+    {
+      "name": "speech_group_service",
+      "value": "服務"
+    },
+    {
+      "name": "speech_group_storage",
+      "value": "儲存"
+    },
+    {
+      "name": "speech_group_voice",
+      "value": "聲音"
+    },
+    {
+      "name": "speech_language_hint",
+      "value": "識別語言（留空自動識別，如 zh、en、yue）"
+    },
+    {
+      "name": "speech_legacy_auth",
+      "value": "使用舊版鑑權"
+    },
+    {
+      "name": "speech_load_failed",
+      "value": "無法讀取語音設定，請返回後重試"
+    },
+    {
+      "name": "speech_mic_permission",
+      "value": "請允許 随身助手 使用麥克風"
+    },
+    {
+      "name": "speech_minimax_connection_note",
+      "value": "默认连接 MiniMax 中国站。海外账号请填写对应的服务根地址，API Key 须与站点匹配。"
+    },
+    {
+      "name": "speech_minimax_hd",
+      "value": "Speech 2.8 HD · 品质优先"
+    },
+    {
+      "name": "speech_minimax_turbo",
+      "value": "Speech 2.8 Turbo · 响应更快"
+    },
+    {
+      "name": "speech_minimax_voice_note",
+      "value": "预设为普通话音色，也可填写账号已有的系统或自定义音色 ID。"
+    },
+    {
+      "name": "speech_open_settings",
+      "value": "語音設定"
+    },
+    {
+      "name": "speech_oss_configure",
+      "value": "配置自有 OSS"
+    },
+    {
+      "name": "speech_oss_note",
+      "value": "錄音以私有物件上傳，轉寫結束後刪除。請為此目錄授予上傳、讀取和刪除權限，並配置一天過期的生命週期規則作為異常清理保障。"
+    },
+    {
+      "name": "speech_oss_prefix",
+      "value": "目錄前綴"
+    },
+    {
+      "name": "speech_oss_region",
+      "value": "地域"
+    },
+    {
+      "name": "speech_oss_title",
+      "value": "錄音儲存"
+    },
+    {
+      "name": "speech_overview_note",
+      "value": "聊天中的語音輸入會先轉成可編輯文字。回答可手動朗讀，開始錄音會停止播放。"
+    },
+    {
+      "name": "speech_preview_default_text",
+      "value": "你好，我是 随身助手。今天下午三点半有一场会议，预计持续 45 分钟。我们也可以用中文聊聊 Android 和 AI。"
+    },
+    {
+      "name": "speech_preview_loading",
+      "value": "正在合成…"
+    },
+    {
+      "name": "speech_preview_note",
+      "value": "試聽使用當前填寫的配置，不會自動儲存。"
+    },
+    {
+      "name": "speech_preview_stop",
+      "value": "停止試聽"
+    },
+    {
+      "name": "speech_preview_text",
+      "value": "试听文本（最多 500 字）"
+    },
+    {
+      "name": "speech_preview_voice",
+      "value": "試聽音色"
+    },
+    {
+      "name": "speech_qwen_base_url_hint",
+      "value": "服務地址（留空使用地域預設地址）"
+    },
+    {
+      "name": "speech_qwen_base_url_note",
+      "value": "填寫服務根地址，不包含 /api/v1 或 /compatible-mode/v1。地域須與 API Key 匹配。"
+    },
+    {
+      "name": "speech_qwen_voice_note",
+      "value": "模型：qwen3-tts-flash。音色須支援該模型。"
+    },
+    {
+      "name": "speech_read_aloud",
+      "value": "朗讀回答"
+    },
+    {
+      "name": "speech_read_stop",
+      "value": "停止朗讀"
+    },
+    {
+      "name": "speech_recognition_disabled",
+      "value": "已关闭"
+    },
+    {
+      "name": "speech_recognition_disabled_note",
+      "value": "保存后隐藏聊天和助手浮窗中的麦克风入口。全局唤醒会在入场动画结束后打开文字输入和键盘，可使用输入法自带的语音输入。原服务配置会保留。"
+    },
+    {
+      "name": "speech_recognition_enabled",
+      "value": "启用语音识别"
+    },
+    {
+      "name": "speech_recognition_enabled_summary",
+      "value": "使用 随身助手 的系统或云端语音输入"
+    },
+    {
+      "name": "speech_recognition_title",
+      "value": "語音識別"
+    },
+    {
+      "name": "speech_refine_summary",
+      "value": "用目前對話模型修正同音字和中英文術語，會增加少量延遲和費用"
+    },
+    {
+      "name": "speech_refine_title",
+      "value": "智慧糾錯"
+    },
+    {
+      "name": "speech_region",
+      "value": "地域"
+    },
+    {
+      "name": "speech_region_beijing",
+      "value": "北京"
+    },
+    {
+      "name": "speech_region_singapore",
+      "value": "新加坡"
+    },
+    {
+      "name": "speech_resource_id_hint",
+      "value": "資源 ID（留空使用預設值）"
+    },
+    {
+      "name": "speech_save",
+      "value": "儲存"
+    },
+    {
+      "name": "speech_save_failed",
+      "value": "儲存失敗：%1$s"
+    },
+    {
+      "name": "speech_save_retry",
+      "value": "請重試"
+    },
+    {
+      "name": "speech_saved",
+      "value": "已儲存"
+    },
+    {
+      "name": "speech_saved_with_pending",
+      "value": "已儲存，仍有未儲存的修改"
+    },
+    {
+      "name": "speech_saving",
+      "value": "儲存中…"
+    },
+    {
+      "name": "speech_service_and_model",
+      "value": "服務與模型"
+    },
+    {
+      "name": "speech_settings_title",
+      "value": "語音"
+    },
+    {
+      "name": "speech_speed",
+      "value": "语速"
+    },
+    {
+      "name": "speech_synthesis_title",
+      "value": "語音播報"
+    },
+    {
+      "name": "speech_test_finish",
+      "value": "完成錄音"
+    },
+    {
+      "name": "speech_test_note",
+      "value": "測試會調用所選服務，可能產生費用；使用當前填寫的配置，不會自動儲存。"
+    },
+    {
+      "name": "speech_test_recognition",
+      "value": "測試識別"
+    },
+    {
+      "name": "speech_test_result",
+      "value": "識別結果：%1$s"
+    },
+    {
+      "name": "speech_tts_doubao",
+      "value": "豆包"
+    },
+    {
+      "name": "speech_tts_gemini",
+      "value": "Gemini"
+    },
+    {
+      "name": "speech_tts_minimax",
+      "value": "MiniMax"
+    },
+    {
+      "name": "speech_tts_model",
+      "value": "语音模型"
+    },
+    {
+      "name": "speech_tts_none",
+      "value": "關閉"
+    },
+    {
+      "name": "speech_tts_qwen",
+      "value": "千問"
+    },
+    {
+      "name": "speech_tts_service",
+      "value": "播报服务"
+    },
+    {
+      "name": "speech_voice",
+      "value": "音色"
+    },
+    {
+      "name": "speech_voice_beijing_male",
+      "value": "北京話男聲"
+    },
+    {
+      "name": "speech_voice_breezy",
+      "value": "轻松"
+    },
+    {
+      "name": "speech_voice_bright",
+      "value": "明亮"
+    },
+    {
+      "name": "speech_voice_custom",
+      "value": "自訂音色"
+    },
+    {
+      "name": "speech_voice_doubao_ahu",
+      "value": "溫暖阿虎"
+    },
+    {
+      "name": "speech_voice_doubao_cancan",
+      "value": "知性燦燦"
+    },
+    {
+      "name": "speech_voice_doubao_linjia",
+      "value": "鄰家女孩"
+    },
+    {
+      "name": "speech_voice_doubao_liufei",
+      "value": "劉飛"
+    },
+    {
+      "name": "speech_voice_doubao_podcast",
+      "value": "深夜播客"
+    },
+    {
+      "name": "speech_voice_doubao_qingxin",
+      "value": "清新女聲"
+    },
+    {
+      "name": "speech_voice_doubao_sisi",
+      "value": "爽快思思"
+    },
+    {
+      "name": "speech_voice_doubao_taozi",
+      "value": "甜美桃子"
+    },
+    {
+      "name": "speech_voice_doubao_vv",
+      "value": "Vivi"
+    },
+    {
+      "name": "speech_voice_doubao_xiaohe",
+      "value": "小何"
+    },
+    {
+      "name": "speech_voice_doubao_xiaoming",
+      "value": "解說小明"
+    },
+    {
+      "name": "speech_voice_doubao_xiaotian",
+      "value": "小天"
+    },
+    {
+      "name": "speech_voice_doubao_xiaoyuan",
+      "value": "甜美小源"
+    },
+    {
+      "name": "speech_voice_doubao_yichen",
+      "value": "儒雅逸辰"
+    },
+    {
+      "name": "speech_voice_doubao_yunzhou",
+      "value": "雲舟"
+    },
+    {
+      "name": "speech_voice_doubao_zixin",
+      "value": "少年梓辛"
+    },
+    {
+      "name": "speech_voice_female",
+      "value": "女聲"
+    },
+    {
+      "name": "speech_voice_firm",
+      "value": "坚定"
+    },
+    {
+      "name": "speech_voice_gemini_achernar",
+      "value": "Achernar"
+    },
+    {
+      "name": "speech_voice_gemini_aoede",
+      "value": "Aoede"
+    },
+    {
+      "name": "speech_voice_gemini_charon",
+      "value": "Charon"
+    },
+    {
+      "name": "speech_voice_gemini_kore",
+      "value": "Kore"
+    },
+    {
+      "name": "speech_voice_gemini_leda",
+      "value": "Leda"
+    },
+    {
+      "name": "speech_voice_gemini_puck",
+      "value": "Puck"
+    },
+    {
+      "name": "speech_voice_gemini_sulafat",
+      "value": "Sulafat"
+    },
+    {
+      "name": "speech_voice_gemini_zephyr",
+      "value": "Zephyr"
+    },
+    {
+      "name": "speech_voice_id",
+      "value": "音色 ID"
+    },
+    {
+      "name": "speech_voice_informative",
+      "value": "解说"
+    },
+    {
+      "name": "speech_voice_male",
+      "value": "男聲"
+    },
+    {
+      "name": "speech_voice_minimax_elite",
+      "value": "精英青年"
+    },
+    {
+      "name": "speech_voice_minimax_executive",
+      "value": "沉稳高管"
+    },
+    {
+      "name": "speech_voice_minimax_girl",
+      "value": "少女音色"
+    },
+    {
+      "name": "speech_voice_minimax_mature",
+      "value": "成熟女声"
+    },
+    {
+      "name": "speech_voice_minimax_news",
+      "value": "新闻女声"
+    },
+    {
+      "name": "speech_voice_minimax_sweet",
+      "value": "甜美女声"
+    },
+    {
+      "name": "speech_voice_minimax_young",
+      "value": "青涩青年"
+    },
+    {
+      "name": "speech_voice_minimax_yujie",
+      "value": "御姐音色"
+    },
+    {
+      "name": "speech_voice_qwen_bella",
+      "value": "萌寶"
+    },
+    {
+      "name": "speech_voice_qwen_chelsie",
+      "value": "千雪"
+    },
+    {
+      "name": "speech_voice_qwen_cherry",
+      "value": "芊悅"
+    },
+    {
+      "name": "speech_voice_qwen_dylan",
+      "value": "曉東"
+    },
+    {
+      "name": "speech_voice_qwen_ethan",
+      "value": "晨煦"
+    },
+    {
+      "name": "speech_voice_qwen_jada",
+      "value": "阿珍"
+    },
+    {
+      "name": "speech_voice_qwen_kai",
+      "value": "凱"
+    },
+    {
+      "name": "speech_voice_qwen_katerina",
+      "value": "卡捷琳娜"
+    },
+    {
+      "name": "speech_voice_qwen_maia",
+      "value": "四月"
+    },
+    {
+      "name": "speech_voice_qwen_momo",
+      "value": "茉兔"
+    },
+    {
+      "name": "speech_voice_qwen_moon",
+      "value": "月白"
+    },
+    {
+      "name": "speech_voice_qwen_neil",
+      "value": "阿聞"
+    },
+    {
+      "name": "speech_voice_qwen_nofish",
+      "value": "不吃魚"
+    },
+    {
+      "name": "speech_voice_qwen_serena",
+      "value": "蘇瑤"
+    },
+    {
+      "name": "speech_voice_qwen_vincent",
+      "value": "田叔"
+    },
+    {
+      "name": "speech_voice_qwen_vivian",
+      "value": "十三"
+    },
+    {
+      "name": "speech_voice_shanghai_female",
+      "value": "上海話女聲"
+    },
+    {
+      "name": "speech_voice_soft",
+      "value": "柔和"
+    },
+    {
+      "name": "speech_voice_upbeat",
+      "value": "轻快"
+    },
+    {
+      "name": "speech_voice_warm",
+      "value": "温暖"
+    },
+    {
+      "name": "speech_voice_youthful",
+      "value": "年轻"
+    },
+    {
+      "name": "state_accessibility_permissions_f80103",
+      "value": "無障礙輔助權限"
+    },
+    {
+      "name": "state_application_list_reading_135f16",
+      "value": "應用程式列表讀取"
+    },
+    {
+      "name": "state_applications_and_systems_9624e6",
+      "value": "應用與系統"
+    },
+    {
+      "name": "state_background_running_permission_dde21b",
+      "value": "背景執行權限"
+    },
+    {
+      "name": "state_core_memory_is_automatically_injected_and_detailed_c_07232b",
+      "value": "核心記憶自動注入，詳細內容由模型按需檢索"
+    },
+    {
+      "name": "state_deletion_is_not_complete_eta_will_try_to_recover_whe_c4297e",
+      "value": "刪除未完成。随身助手 會在重新整理 Skills 清單時嘗試恢復，請確認狀態後再重試。"
+    },
+    {
+      "name": "state_direct_access_to_equipment_eda92c",
+      "value": "裝置直達"
+    },
+    {
+      "name": "state_direct_access_to_personal_data_387d7b",
+      "value": "個人上下文"
+    },
+    {
+      "name": "state_document_vision_6a65a7",
+      "value": "文件視覺辨識"
+    },
+    {
+      "name": "state_floating_window_permissions_076b77",
+      "value": "懸浮窗權限"
+    },
+    {
+      "name": "state_follow_up_ability_589688",
+      "value": "後續能力"
+    },
+    {
+      "name": "state_hook_secondary_ability_95afe3",
+      "value": "Hook 二級能力"
+    },
+    {
+      "name": "state_location_permissions_b53f9c",
+      "value": "位置權限"
+    },
+    {
+      "name": "state_memory_b55ff5",
+      "value": "記憶"
+    },
+    {
+      "name": "state_memory_system_4903eb",
+      "value": "記憶系統"
+    },
+    {
+      "name": "state_model_increments_tool_calls_and_final_results_are_sy_3f2321",
+      "value": "模型增量、工具呼叫和最終結果會同步到目前對話"
+    },
+    {
+      "name": "state_notice_of_use_rights_1ae29a",
+      "value": "通知使用權"
+    },
+    {
+      "name": "state_please_select_the_zip_file_provided_by_the_system_fi_fea145",
+      "value": "請選擇由系統檔案選擇器提供的 ZIP 檔案。"
+    },
+    {
+      "name": "state_replacement_confirmation_has_expired_please_select_t_fce9f2",
+      "value": "替換確認已失效，請重新選擇 ZIP 檔案。"
+    },
+    {
+      "name": "state_root_permissions_958906",
+      "value": "Root 權限"
+    },
+    {
+      "name": "state_run_floating_window_48af02",
+      "value": "執行浮動視窗"
+    },
+    {
+      "name": "state_runtime_displays_a_status_pop_up_window_when_the_ser_54f285",
+      "value": "Runtime 服務運作時顯示狀態浮窗"
+    },
+    {
+      "name": "state_screens_and_controls_3f095b",
+      "value": "螢幕與控制"
+    },
+    {
+      "name": "state_sensitive_equipment_capabilities_fbdc4b",
+      "value": "敏感裝置能力"
+    },
+    {
+      "name": "state_skill_has_been_deleted_34c29b",
+      "value": "Skill 已刪除"
+    },
+    {
+      "name": "state_skill_installed_b07e54",
+      "value": "Skill 已安裝"
+    },
+    {
+      "name": "state_skill_pack_is_no_longer_available_please_select_the__7cdfb4",
+      "value": "Skill 包已不可用，請重新選擇 ZIP 檔案。"
+    },
+    {
+      "name": "state_streaming_events_360e09",
+      "value": "串流事件"
+    },
+    {
+      "name": "state_system_enhancement_capabilities_are_reserved_for_sub_0a8b21",
+      "value": "系統增強能力保留為後續二級功能"
+    },
+    {
+      "name": "state_terminal_and_files_ae7c54",
+      "value": "終端與檔案"
+    },
+    {
+      "name": "state_text_and_clipboard_3a7340",
+      "value": "文字與剪貼簿"
+    },
+    {
+      "name": "state_the_built_in_skills_have_not_changed_please_try_agai_34e5e3",
+      "value": "內建 Skills 未發生變化，請稍後重試。"
+    },
+    {
+      "name": "state_the_skill_list_is_temporarily_unavailable_please_try_29b0be",
+      "value": "Skills 清單暫時不可用，請稍後重試。"
+    },
+    {
+      "name": "state_the_skill_switch_has_not_changed_please_try_again_la_fa262f",
+      "value": "Skill 開關未發生變化，請稍後再試。"
+    },
+    {
+      "name": "state_ui_built_in_skills_with_the_same_name_are_protected_446ad3",
+      "value": "同名內建 Skill 受保護，不能由 ZIP 取代。"
+    },
+    {
+      "name": "state_ui_conversation_switched_selected_path_not_added_5bf91e",
+      "value": "對話已切換，未新增所選路徑"
+    },
+    {
+      "name": "state_ui_failed_to_read_memory_please_try_again_later_caeaa6",
+      "value": "讀取記憶失敗，請稍後重試"
+    },
+    {
+      "name": "state_ui_file_path_reference_requires_opening_the_termina_deca4c",
+      "value": "使用檔案路徑參照前，請先啟用終端機與檔案工具"
+    },
+    {
+      "name": "state_ui_go_to_settings_1f2998",
+      "value": "去設定"
+    },
+    {
+      "name": "state_ui_memory_cleared_b415bb",
+      "value": "記憶已清空"
+    },
+    {
+      "name": "state_ui_memory_clearing_failed_7f0aba",
+      "value": "記憶清空失敗"
+    },
+    {
+      "name": "state_ui_memory_save_failed_1f501e",
+      "value": "記憶儲存失敗"
+    },
+    {
+      "name": "state_ui_memory_saved_a2c61c",
+      "value": "記憶已儲存"
+    },
+    {
+      "name": "state_ui_memory_switch_failed_to_save_83b5d6",
+      "value": "記憶開關儲存失敗"
+    },
+    {
+      "name": "state_ui_model_switching_failed_please_try_again_later_4af439",
+      "value": "模型切換失敗，請稍後重試"
+    },
+    {
+      "name": "state_ui_natively_bounded_storage_of_last_7_days_of_notif_ca7f01",
+      "value": "在本機限量儲存最近 7 天通知，僅在工具呼叫時讀取"
+    },
+    {
+      "name": "state_ui_only_read_when_the_agent_calls_the_tool_8cf77b",
+      "value": "僅在 Agent 呼叫工具時讀取"
+    },
+    {
+      "name": "state_ui_only_supports_normal_files_and_folders_4adea0",
+      "value": "僅支援一般檔案與資料夾"
+    },
+    {
+      "name": "state_ui_path_verification_timed_out_please_try_again_703687",
+      "value": "路徑校驗逾時，請重試"
+    },
+    {
+      "name": "state_ui_please_configure_the_model_provider_and_model_fi_a36e15",
+      "value": "請先設定模型供應商與模型"
+    },
+    {
+      "name": "state_ui_please_enter_a_valid_absolute_path_6afeb4",
+      "value": "請輸入有效的絕對路徑"
+    },
+    {
+      "name": "state_ui_root_is_not_available_and_the_path_cannot_be_ver_fc4c81",
+      "value": "Root 不可用，無法校驗路徑"
+    },
+    {
+      "name": "state_ui_skill_md_is_missing_required_information_or_is_i_debe6e",
+      "value": "SKILL.md 缺少必要資訊或格式無效。"
+    },
+    {
+      "name": "state_ui_skill_md_not_found_in_zip_a57975",
+      "value": "ZIP 中沒有找到 SKILL.md。"
+    },
+    {
+      "name": "state_ui_start_logging_searchable_notification_history_af_b36af6",
+      "value": "授權後開始記錄可檢索的通知歷史"
+    },
+    {
+      "name": "state_ui_system_location_service_is_turned_off_3902e7",
+      "value": "系統定位服務已關閉"
+    },
+    {
+      "name": "state_ui_the_earlier_context_has_been_compressed_and_will_cf6c86",
+      "value": "較早的對話內容已壓縮，將從此訊息重新開始"
+    },
+    {
+      "name": "state_ui_the_installation_failed_and_automatic_recovery_d_0d9e01",
+      "value": "安裝失敗且自動復原未完整完成。随身助手 已在應用程式私人目錄保留復原備份，請先檢查 Skills 清單並停止繼續安裝。"
+    },
+    {
+      "name": "state_ui_the_local_zip_must_contain_only_one_skill_b89daf",
+      "value": "本機 ZIP 必須只包含一個 Skill。"
+    },
+    {
+      "name": "state_ui_the_path_does_not_exist_or_is_no_longer_accessib_a9776e",
+      "value": "路徑不存在或已無法存取"
+    },
+    {
+      "name": "state_ui_the_selected_file_cannot_be_read_please_select_a_7265b9",
+      "value": "無法讀取所選檔案，請重新選擇。"
+    },
+    {
+      "name": "state_ui_the_selected_file_is_not_a_valid_zip_package_bff052",
+      "value": "所選檔案不是有效的 ZIP Skill 包。"
+    },
+    {
+      "name": "state_ui_the_selected_path_has_been_added_42b432",
+      "value": "所選路徑已經新增"
+    },
+    {
+      "name": "state_ui_the_selected_project_type_does_not_match_3a5c49",
+      "value": "選擇的項目類型不符"
+    },
+    {
+      "name": "state_ui_the_skill_pack_contains_an_unsafe_file_path_and__d8cfc0",
+      "value": "Skill 包內含不安全的檔案路徑，因此未安裝。"
+    },
+    {
+      "name": "state_ui_the_skill_pack_exceeds_the_safe_size_or_file_num_42e151",
+      "value": "Skill 包超過安全大小或檔案數量限制。"
+    },
+    {
+      "name": "state_ui_the_target_with_the_same_name_is_not_a_user_skil_00474b",
+      "value": "同名目標不是可安全取代的使用者 Skill，現有檔案未被覆蓋。"
+    },
+    {
+      "name": "state_ui_the_zip_content_has_changed_please_reselect_and__ab8b12",
+      "value": "ZIP 內容已變化，請重新選擇並確認要取代的 Skill。"
+    },
+    {
+      "name": "state_ui_to_authorize_762ec4",
+      "value": "去授權"
+    },
+    {
+      "name": "state_ui_to_open_13ec17",
+      "value": "去開啟"
+    },
+    {
+      "name": "state_ui_unable_to_obtain_the_real_path_please_select_fro_32f367",
+      "value": "無法取得真實路徑，請從「內部儲存」選擇或手動輸入路徑"
+    },
+    {
+      "name": "state_ui_unable_to_open_selection_9f0004",
+      "value": "無法開啟所選內容"
+    },
+    {
+      "name": "state_ui_unable_to_read_this_image_please_try_again_or_us_d94978",
+      "value": "無法讀取這張圖片，請重試或改用其他圖片"
+    },
+    {
+      "name": "state_ui_unable_to_save_skills_original_skills_have_been__9d4748",
+      "value": "無法儲存 Skills，原有 Skills 已自動復原。"
+    },
+    {
+      "name": "state_ui_unnamed_skill_a58008",
+      "value": "未命名 Skill"
+    },
+    {
+      "name": "state_ui_used_to_understand_the_location_of_mobile_phones_af52e9",
+      "value": "用於按需理解手機所在位置"
+    },
+    {
+      "name": "state_ui_xiaobu_s_entrance_needs_to_be_set_to_always_allo_cc74cb",
+      "value": "小佈入口需要設為“始終允許”"
+    },
+    {
+      "name": "state_unable_to_continue_installation_136d7c",
+      "value": "無法繼續安裝"
+    },
+    {
+      "name": "state_unable_to_delete_skill_1583c9",
+      "value": "無法刪除 Skill"
+    },
+    {
+      "name": "state_unable_to_install_skill_0ec70b",
+      "value": "無法安裝 Skill"
+    },
+    {
+      "name": "state_unable_to_read_skill_pack_a53563",
+      "value": "無法讀取 Skill 包"
+    },
+    {
+      "name": "state_unable_to_read_skills_599082",
+      "value": "無法讀取 Skills"
+    },
+    {
+      "name": "state_unable_to_restore_skills_6b3d23",
+      "value": "無法復原 Skills"
+    },
+    {
+      "name": "state_unable_to_update_skills_04e56c",
+      "value": "無法更新 Skills"
+    },
+    {
+      "name": "state_usage_access_20f1f8",
+      "value": "使用情況存取權"
+    },
+    {
+      "name": "state_used_to_read_recently_opened_applications_and_foregr_73e796",
+      "value": "用於讀取最近開啟的應用程式和前台使用時長"
+    },
+    {
+      "name": "state_web_browsing_e56105",
+      "value": "網頁工具"
+    },
+    {
+      "name": "status_authorized",
+      "value": "已授權"
+    },
+    {
+      "name": "status_cancelled",
+      "value": "已取消"
+    },
+    {
+      "name": "status_disabled",
+      "value": "未啟用"
+    },
+    {
+      "name": "status_enabled",
+      "value": "已啟用"
+    },
+    {
+      "name": "status_needs_attention",
+      "value": "需留意"
+    },
+    {
+      "name": "status_processing",
+      "value": "處理中…"
+    },
+    {
+      "name": "status_ready",
+      "value": "已就緒"
+    },
+    {
+      "name": "status_unauthorized",
+      "value": "未授權"
+    },
+    {
+      "name": "status_unsupported",
+      "value": "不支援"
+    },
+    {
+      "name": "suggestion_analyze_screen_prompt",
+      "value": "擷取螢幕畫面並描述目前內容"
+    },
+    {
+      "name": "suggestion_browse_web_prompt",
+      "value": "開啟 Agent 瀏覽器，搜尋並摘要今天的重要科技新聞"
+    },
+    {
+      "name": "suggestion_memory_pressure_prompt",
+      "value": "讀取 /proc/meminfo 與 /proc/pressure/，重點分析 PSI（Pressure Stall Information）指標，摘要目前的記憶體壓力與系統狀態"
+    },
+    {
+      "name": "suggestion_open_wechat_prompt",
+      "value": "幫我開啟微信"
+    },
+    {
+      "name": "system_notice_empty_result",
+      "value": "執行已完成，但沒有文字回覆。"
+    },
+    {
+      "name": "system_notice_interrupted",
+      "value": "任務已中斷。已保留部分輸出，未自動重試尚未完成的操作。"
+    },
+    {
+      "name": "system_notice_model_retry",
+      "value": "模型請求重試"
+    },
+    {
+      "name": "system_notice_runtime_failed",
+      "value": "Runtime 執行失敗"
+    },
+    {
+      "name": "system_notice_stopped",
+      "value": "已停止"
+    },
+    {
+      "name": "systemizer_already_system",
+      "value": "Google App 已是系統 priv-app"
+    },
+    {
+      "name": "systemizer_google_missing",
+      "value": "尚未安裝 Google App"
+    },
+    {
+      "name": "systemizer_grant_kernelsu",
+      "value": "請在 KernelSU 授予 随身助手 root 權限"
+    },
+    {
+      "name": "systemizer_grant_magisk",
+      "value": "請在 Magisk 授予 随身助手 root 權限"
+    },
+    {
+      "name": "systemizer_installed",
+      "value": "安裝完成，重新啟動後生效"
+    },
+    {
+      "name": "systemizer_metamodule_missing",
+      "value": "請先在 KernelSU 啟用 metamodule 支援"
+    },
+    {
+      "name": "systemizer_root_denied",
+      "value": "未取得 root 權限"
+    },
+    {
+      "name": "systemizer_root_manager_missing",
+      "value": "未偵測到 Magisk 或 KernelSU"
+    },
+    {
+      "name": "task_completion_channel",
+      "value": "任務完成提示"
+    },
+    {
+      "name": "task_completion_notice_failed",
+      "value": "任務未完成"
+    },
+    {
+      "name": "task_completion_notice_stopped",
+      "value": "任務已終止"
+    },
+    {
+      "name": "task_completion_notice_success",
+      "value": "任務已完成"
+    },
+    {
+      "name": "terminal_block_mode",
+      "value": "簡潔模式"
+    },
+    {
+      "name": "terminal_close_session",
+      "value": "關閉"
+    },
+    {
+      "name": "terminal_console_mode",
+      "value": "控制台模式"
+    },
+    {
+      "name": "terminal_copy_command",
+      "value": "複製指令"
+    },
+    {
+      "name": "terminal_copy_output",
+      "value": "複製輸出"
+    },
+    {
+      "name": "terminal_daemon_empty",
+      "value": "暫無背景任務"
+    },
+    {
+      "name": "terminal_daemon_exited",
+      "value": "已退出"
+    },
+    {
+      "name": "terminal_daemon_hide_logs",
+      "value": "收合日誌"
+    },
+    {
+      "name": "terminal_daemon_logs_empty",
+      "value": "暫無日誌輸出"
+    },
+    {
+      "name": "terminal_daemon_running",
+      "value": "執行中"
+    },
+    {
+      "name": "terminal_daemon_tasks",
+      "value": "背景任務"
+    },
+    {
+      "name": "terminal_daemon_view_logs",
+      "value": "日誌"
+    },
+    {
+      "name": "terminal_empty_hint",
+      "value": "常駐 Shell 工作階段：指令之間保留工作目錄與環境，離開頁面不會中斷執行。"
+    },
+    {
+      "name": "terminal_env_switched",
+      "value": "已切換到 %1$s 環境"
+    },
+    {
+      "name": "terminal_exit_code",
+      "value": "結束代碼 %1$d"
+    },
+    {
+      "name": "terminal_input_hint",
+      "value": "輸入指令"
+    },
+    {
+      "name": "terminal_input_running_hint",
+      "value": "向執行中的指令發送輸入"
+    },
+    {
+      "name": "terminal_interrupted",
+      "value": "已停止"
+    },
+    {
+      "name": "terminal_key_down",
+      "value": "下"
+    },
+    {
+      "name": "terminal_key_enter",
+      "value": "Enter 鍵"
+    },
+    {
+      "name": "terminal_key_left",
+      "value": "左"
+    },
+    {
+      "name": "terminal_key_paste",
+      "value": "貼上"
+    },
+    {
+      "name": "terminal_key_right",
+      "value": "右"
+    },
+    {
+      "name": "terminal_key_up",
+      "value": "上"
+    },
+    {
+      "name": "terminal_keyboard_hide",
+      "value": "收起鍵盤"
+    },
+    {
+      "name": "terminal_keyboard_show",
+      "value": "顯示鍵盤"
+    },
+    {
+      "name": "terminal_linux_not_ready",
+      "value": "Linux 工具環境尚未安裝"
+    },
+    {
+      "name": "terminal_new_session",
+      "value": "新增工作階段"
+    },
+    {
+      "name": "terminal_open_environment",
+      "value": "前往安裝"
+    },
+    {
+      "name": "terminal_output_truncated",
+      "value": "輸出過長，已截斷"
+    },
+    {
+      "name": "terminal_reconnect",
+      "value": "重新連線"
+    },
+    {
+      "name": "terminal_reinput",
+      "value": "重新填入"
+    },
+    {
+      "name": "terminal_restart_session",
+      "value": "重新啟動"
+    },
+    {
+      "name": "terminal_running",
+      "value": "執行中…"
+    },
+    {
+      "name": "terminal_send",
+      "value": "傳送"
+    },
+    {
+      "name": "terminal_session_closed",
+      "value": "工作階段已退出"
+    },
+    {
+      "name": "terminal_session_current",
+      "value": "目前"
+    },
+    {
+      "name": "terminal_session_empty",
+      "value": "尚無工作階段"
+    },
+    {
+      "name": "terminal_session_exited",
+      "value": "已退出"
+    },
+    {
+      "name": "terminal_session_idle",
+      "value": "閒置"
+    },
+    {
+      "name": "terminal_session_restarted",
+      "value": "工作階段已中斷，重新連線"
+    },
+    {
+      "name": "terminal_sessions",
+      "value": "工作階段"
+    },
+    {
+      "name": "terminal_stop",
+      "value": "停止"
+    },
+    {
+      "name": "time_now",
+      "value": "現在"
+    },
+    {
+      "name": "time_recent",
+      "value": "最近"
+    },
+    {
+      "name": "time_yesterday",
+      "value": "昨日"
+    },
+    {
+      "name": "tool_app_state_control",
+      "value": "應用程式狀態"
+    },
+    {
+      "name": "tool_background_finish",
+      "value": "保留頁面與接續"
+    },
+    {
+      "name": "tool_background_finish_description",
+      "value": "本輪結束後保留頁面，可在原通知繼續指令或開啟應用程式接手，不自動切換目前螢幕。"
+    },
+    {
+      "name": "tool_background_gesture",
+      "value": "背景手勢操作"
+    },
+    {
+      "name": "tool_background_gesture_description",
+      "value": "在目標螢幕點選、長按、滑動或拖曳，分別回報輸入是否接受、畫面是否觀察到變化。"
+    },
+    {
+      "name": "tool_background_open",
+      "value": "開啟背景應用程式"
+    },
+    {
+      "name": "tool_background_open_description",
+      "value": "明確要求背景執行時使用虛擬螢幕。需要 Root 和無障礙服務；最多兩個不同應用程式並行，其他工作排隊，螢幕關閉時暫停。"
+    },
+    {
+      "name": "tool_background_read",
+      "value": "讀取背景畫面"
+    },
+    {
+      "name": "tool_background_read_description",
+      "value": "讀取可見文字、控制項、位置與捲動目標。沒有節點不代表頁面空白。"
+    },
+    {
+      "name": "tool_background_scroll",
+      "value": "捲動指定清單"
+    },
+    {
+      "name": "tool_background_scroll_description",
+      "value": "多個容器時明確選擇目標清單，只核對該清單內變化；連續無進展時停止重複操作。"
+    },
+    {
+      "name": "tool_background_shot",
+      "value": "擷取背景畫面"
+    },
+    {
+      "name": "tool_background_shot_description",
+      "value": "依目前方向截圖，附帶尺寸與影格參照。查看圖片需要啟用圖片讀取工具，座標始終綁定對應影格。"
+    },
+    {
+      "name": "tool_background_state",
+      "value": "查看背景狀態"
+    },
+    {
+      "name": "tool_background_state_description",
+      "value": "檢查引擎和工作階段狀態。視窗診斷回報可見性與焦點，不傳送試探性手勢。"
+    },
+    {
+      "name": "tool_background_text",
+      "value": "背景輸入文字"
+    },
+    {
+      "name": "tool_background_text_description",
+      "value": "選擇可編輯輸入框，寫入後讀回核對，區分已提交與已確認的輸入結果。"
+    },
+    {
+      "name": "tool_browser_loading",
+      "value": "載入中 · %1$d%%"
+    },
+    {
+      "name": "tool_browser_preview",
+      "value": "頁面預覽"
+    },
+    {
+      "name": "tool_browser_use",
+      "value": "瀏覽網頁"
+    },
+    {
+      "name": "tool_clear_text",
+      "value": "清除文字"
+    },
+    {
+      "name": "tool_current_context",
+      "value": "時間與位置"
+    },
+    {
+      "name": "tool_details_collapse",
+      "value": "收合工具詳情"
+    },
+    {
+      "name": "tool_details_expand",
+      "value": "展開工具詳情"
+    },
+    {
+      "name": "tool_device_status",
+      "value": "裝置狀態"
+    },
+    {
+      "name": "tool_edit_file",
+      "value": "精确编辑文件"
+    },
+    {
+      "name": "tool_edit_file_description",
+      "value": "使用旧文本定位片段，检查匹配和版本后替换。"
+    },
+    {
+      "name": "tool_elapsed_seconds",
+      "value": "%1$d 秒"
+    },
+    {
+      "name": "tool_fetch_url",
+      "value": "读取网页正文"
+    },
+    {
+      "name": "tool_fetch_url_description",
+      "value": "读取网页正文并分页续读，支持内置静态抓取、DeepSeek 或自定义接口，失败时自动回退到本地静态抓取。"
+    },
+    {
+      "name": "tool_get_clipboard",
+      "value": "讀取剪貼簿"
+    },
+    {
+      "name": "tool_get_logcat",
+      "value": "讀取系統記錄"
+    },
+    {
+      "name": "tool_get_setting",
+      "value": "讀取系統設定"
+    },
+    {
+      "name": "tool_glob_files",
+      "value": "按路径查找文件"
+    },
+    {
+      "name": "tool_glob_files_description",
+      "value": "使用路径模式递归查找文件，支持有界续查。"
+    },
+    {
+      "name": "tool_grep_files",
+      "value": "搜索文件内容"
+    },
+    {
+      "name": "tool_grep_files_description",
+      "value": "搜索 UTF-8 文本，返回匹配路径、行号与采集范围。"
+    },
+    {
+      "name": "tool_input_text",
+      "value": "輸入文字"
+    },
+    {
+      "name": "tool_inspect_app",
+      "value": "检查应用"
+    },
+    {
+      "name": "tool_inspect_app_description",
+      "value": "查看指定应用的版本、UID、安装信息、启用状态与权限。"
+    },
+    {
+      "name": "tool_launch_app",
+      "value": "開啟應用程式"
+    },
+    {
+      "name": "tool_list_directory",
+      "value": "列出目錄"
+    },
+    {
+      "name": "tool_long_press",
+      "value": "長按"
+    },
+    {
+      "name": "tool_long_press_element",
+      "value": "長按元素"
+    },
+    {
+      "name": "tool_media_control",
+      "value": "媒體控制"
+    },
+    {
+      "name": "tool_memory_get",
+      "value": "讀取記憶"
+    },
+    {
+      "name": "tool_memory_write",
+      "value": "整理記憶"
+    },
+    {
+      "name": "tool_network_info",
+      "value": "網路狀態"
+    },
+    {
+      "name": "tool_observe_screen",
+      "value": "查看畫面"
+    },
+    {
+      "name": "tool_open_system_panel",
+      "value": "系統面板"
+    },
+    {
+      "name": "tool_open_uri",
+      "value": "使用應用程式開啟"
+    },
+    {
+      "name": "tool_paste_text",
+      "value": "貼上文字"
+    },
+    {
+      "name": "tool_personal_context",
+      "value": "個人上下文"
+    },
+    {
+      "name": "tool_personal_context_description",
+      "value": "按內容與時間檢索照片、便箋、記憶、帳單和行程索引，讀取詳情並統計彙總。"
+    },
+    {
+      "name": "tool_press_key",
+      "value": "按鍵"
+    },
+    {
+      "name": "tool_read_file",
+      "value": "讀取檔案"
+    },
+    {
+      "name": "tool_read_sms_code",
+      "value": "讀取驗證碼"
+    },
+    {
+      "name": "tool_recent_notifications",
+      "value": "讀取通知"
+    },
+    {
+      "name": "tool_release_gui",
+      "value": "釋放手機操作"
+    },
+    {
+      "name": "tool_release_gui_description",
+      "value": "完成目前的手機操作階段，將控制權交給等待中的任務。"
+    },
+    {
+      "name": "tool_replace_text",
+      "value": "取代文字"
+    },
+    {
+      "name": "tool_run_command",
+      "value": "執行指令"
+    },
+    {
+      "name": "tool_scroll",
+      "value": "捲動"
+    },
+    {
+      "name": "tool_scroll_element",
+      "value": "捲動元素"
+    },
+    {
+      "name": "tool_search_apps",
+      "value": "搜尋應用程式"
+    },
+    {
+      "name": "tool_set_alarm",
+      "value": "設定鬧鐘"
+    },
+    {
+      "name": "tool_set_clipboard",
+      "value": "寫入剪貼簿"
+    },
+    {
+      "name": "tool_set_device_state",
+      "value": "裝置開關"
+    },
+    {
+      "name": "tool_set_setting",
+      "value": "修改系統設定"
+    },
+    {
+      "name": "tool_set_timer",
+      "value": "設定計時器"
+    },
+    {
+      "name": "tool_set_volume",
+      "value": "設定音量"
+    },
+    {
+      "name": "tool_stat_file",
+      "value": "查看文件信息"
+    },
+    {
+      "name": "tool_stat_file_description",
+      "value": "查询 Android 或 Linux 文件的类型、大小和版本。"
+    },
+    {
+      "name": "tool_status_failed",
+      "value": "失敗"
+    },
+    {
+      "name": "tool_status_running",
+      "value": "執行中"
+    },
+    {
+      "name": "tool_status_success",
+      "value": "已完成"
+    },
+    {
+      "name": "tool_status_unknown",
+      "value": "結果未知"
+    },
+    {
+      "name": "tool_swipe",
+      "value": "滑動"
+    },
+    {
+      "name": "tool_tap",
+      "value": "點按"
+    },
+    {
+      "name": "tool_tap_area",
+      "value": "點按區域"
+    },
+    {
+      "name": "tool_tap_element",
+      "value": "點按元素"
+    },
+    {
+      "name": "tool_terminal",
+      "value": "終端機"
+    },
+    {
+      "name": "tool_terminal_daemon",
+      "value": "后台服务"
+    },
+    {
+      "name": "tool_terminal_daemon_description",
+      "value": "启动、查看和停止可跨 Agent 任务运行的后台服务"
+    },
+    {
+      "name": "tool_terminal_job",
+      "value": "异步命令"
+    },
+    {
+      "name": "tool_terminal_job_description",
+      "value": "启动、查看和停止后台命令；回复结束后继续运行，完成时通知"
+    },
+    {
+      "name": "tool_top_memory_apps",
+      "value": "記憶體用量"
+    },
+    {
+      "name": "tool_top_storage_apps",
+      "value": "儲存空間用量"
+    },
+    {
+      "name": "tool_ui_activity_timer_36f107",
+      "value": "活動計時器"
+    },
+    {
+      "name": "tool_ui_address_book_9070cb",
+      "value": "通訊錄"
+    },
+    {
+      "name": "tool_ui_agent_browser_a66bd5",
+      "value": "Agent 瀏覽器"
+    },
+    {
+      "name": "tool_ui_alarm_clock_schedule_acae32",
+      "value": "鬧鐘計劃"
+    },
+    {
+      "name": "tool_ui_album_pictures_23bcc2",
+      "value": "相簿圖片"
+    },
+    {
+      "name": "tool_ui_app_usage_statistics_ee20d3",
+      "value": "應用使用統計"
+    },
+    {
+      "name": "tool_ui_application_status_930ff0",
+      "value": "應用程式狀態"
+    },
+    {
+      "name": "tool_ui_audio_file_1ccf2e",
+      "value": "音訊檔案"
+    },
+    {
+      "name": "tool_ui_bounded_reading_and_filtering_of_recent_logs_0a268a",
+      "value": "有界讀取並過濾最近日誌"
+    },
+    {
+      "name": "tool_ui_button_02eafa",
+      "value": "按鍵"
+    },
+    {
+      "name": "tool_ui_calendar_events_970349",
+      "value": "日曆事件"
+    },
+    {
+      "name": "tool_ui_call_history_88e57b",
+      "value": "通話記錄"
+    },
+    {
+      "name": "tool_ui_check_application_data_and_cache_usage_837e9f",
+      "value": "查看應用程式、資料與快取佔用"
+    },
+    {
+      "name": "tool_ui_click_area_cbaa08",
+      "value": "點擊區域"
+    },
+    {
+      "name": "tool_ui_click_by_coordinate_area_2ad961",
+      "value": "按座標區域點擊"
+    },
+    {
+      "name": "tool_ui_click_element_7a3d91",
+      "value": "點擊元素"
+    },
+    {
+      "name": "tool_ui_click_on_the_most_recently_observed_node_b4cf5a",
+      "value": "按最近一次觀察到的節點點擊"
+    },
+    {
+      "name": "tool_ui_clipboard_history_b377bb",
+      "value": "剪貼簿歷史"
+    },
+    {
+      "name": "tool_ui_coloros_notes_6c324c",
+      "value": "ColorOS 便簽"
+    },
+    {
+      "name": "tool_ui_coloros_recording_a4e425",
+      "value": "ColorOS 錄音"
+    },
+    {
+      "name": "tool_ui_coloros_system_memory_eff961",
+      "value": "ColorOS 系統記憶"
+    },
+    {
+      "name": "tool_ui_create_a_system_alarm_directly_and_open_the_cloc_9aa214",
+      "value": "直接建立系統鬧鐘，失敗時開啟時鐘確認"
+    },
+    {
+      "name": "tool_ui_current_location_b458ea",
+      "value": "目前位置"
+    },
+    {
+      "name": "tool_ui_device_status_567a4c",
+      "value": "裝置狀態"
+    },
+    {
+      "name": "tool_ui_directly_control_wi_fi_or_bluetooth_4fa0b9",
+      "value": "直接控制 Wi‑Fi 或藍牙"
+    },
+    {
+      "name": "tool_ui_directly_create_system_timers_up_to_24_hours_87c476",
+      "value": "直接建立最長 24 小時的系統計時器"
+    },
+    {
+      "name": "tool_ui_directly_execute_a_single_shell_command_c40cef",
+      "value": "直接執行單一 shell 指令"
+    },
+    {
+      "name": "tool_ui_download_history_8494d7",
+      "value": "下載記錄"
+    },
+    {
+      "name": "tool_ui_enter_text_ae47ab",
+      "value": "輸入文字"
+    },
+    {
+      "name": "tool_ui_equipment_environment_1026ec",
+      "value": "裝置環境"
+    },
+    {
+      "name": "tool_ui_execute_command_bf1627",
+      "value": "執行命令"
+    },
+    {
+      "name": "tool_ui_explicitly_hand_over_links_or_deep_links_to_exte_35ff26",
+      "value": "把連結或 deep link 明確交給外部應用"
+    },
+    {
+      "name": "tool_ui_extract_rendered_text_lists_and_links_8bdcdd",
+      "value": "提取渲染後的正文、列表與連結"
+    },
+    {
+      "name": "tool_ui_find_click_and_enter_page_elements_8f102d",
+      "value": "尋找、點擊並輸入頁面元素"
+    },
+    {
+      "name": "tool_ui_give_the_current_web_page_viewport_to_the_visual_f62274",
+      "value": "把目前網頁視口交給視覺模型"
+    },
+    {
+      "name": "tool_ui_health_summary_951c0b",
+      "value": "健康摘要"
+    },
+    {
+      "name": "tool_ui_list_directory_96e765",
+      "value": "列目錄"
+    },
+    {
+      "name": "tool_ui_list_directory_contents_feff30",
+      "value": "列出目錄內容"
+    },
+    {
+      "name": "tool_ui_long_press_f7a417",
+      "value": "長按"
+    },
+    {
+      "name": "tool_ui_long_press_on_coordinates_or_elements_796384",
+      "value": "長按座標或元素"
+    },
+    {
+      "name": "tool_ui_media_control_585edc",
+      "value": "媒體控制"
+    },
+    {
+      "name": "tool_ui_memory_ranking_408ca1",
+      "value": "記憶體排行"
+    },
+    {
+      "name": "tool_ui_modify_android_settings_keys_91a37e",
+      "value": "修改 Android Settings 鍵"
+    },
+    {
+      "name": "tool_ui_modify_system_settings_ae1f4c",
+      "value": "修改系統設定"
+    },
+    {
+      "name": "tool_ui_network_status_6bd556",
+      "value": "網路狀態"
+    },
+    {
+      "name": "tool_ui_network_switch_834347",
+      "value": "網路開關"
+    },
+    {
+      "name": "tool_ui_notification_history_95d015",
+      "value": "通知歷史"
+    },
+    {
+      "name": "tool_ui_only_extract_verification_codes_from_recent_sms__0fb8c1",
+      "value": "只提取最近簡訊中的驗證碼"
+    },
+    {
+      "name": "tool_ui_open_app_7c65e7",
+      "value": "開啟 App"
+    },
+    {
+      "name": "tool_ui_open_the_notification_bar_quick_settings_and_oth_5e51cf",
+      "value": "開啟通知列、快速設定等面板"
+    },
+    {
+      "name": "tool_ui_open_web_pages_off_screen_and_keep_a_takeover_br_72972e",
+      "value": "在背景開啟網頁，並保留可接管的瀏覽工作階段"
+    },
+    {
+      "name": "tool_ui_open_with_app_32c24e",
+      "value": "用應用程式打開"
+    },
+    {
+      "name": "tool_ui_organize_memory_2b08eb",
+      "value": "整理記憶"
+    },
+    {
+      "name": "tool_ui_page_screenshot_c823a2",
+      "value": "頁面截圖"
+    },
+    {
+      "name": "tool_ui_paged_to_read_or_retrieve_long_term_memory_in_me_88afc4",
+      "value": "分頁讀取或檢索 MEMORY.md 中的長期記憶"
+    },
+    {
+      "name": "tool_ui_partially_update_append_or_clear_long_term_memor_c1bab6",
+      "value": "局部更新、追加或清空長期記憶"
+    },
+    {
+      "name": "tool_ui_perform_up_down_left_and_right_swipe_gestures_3ef0de",
+      "value": "執行上下左右滑動手勢"
+    },
+    {
+      "name": "tool_ui_personal_order_25e4c9",
+      "value": "個人訂單"
+    },
+    {
+      "name": "tool_ui_play_pause_and_switch_songs_without_operating_th_311cb8",
+      "value": "播放、暫停、切歌，不操作介面"
+    },
+    {
+      "name": "tool_ui_qq_chat_pictures_e21bf9",
+      "value": "QQ 聊天圖片"
+    },
+    {
+      "name": "tool_ui_query_installed_applications_by_name_or_package__32b004",
+      "value": "按名稱或套件名稱查詢已安裝應用"
+    },
+    {
+      "name": "tool_ui_read_file_dc995c",
+      "value": "讀取檔案"
+    },
+    {
+      "name": "tool_ui_read_lock_screen_do_not_disturb_audio_output_and_9260b8",
+      "value": "讀取鎖定螢幕、勿擾、音訊輸出和外接螢幕狀態"
+    },
+    {
+      "name": "tool_ui_read_memory_979135",
+      "value": "讀取記憶"
+    },
+    {
+      "name": "tool_ui_read_networking_method_and_current_wi_fi_status_68016a",
+      "value": "讀取聯網方式和目前 Wi‑Fi 狀態"
+    },
+    {
+      "name": "tool_ui_read_notification_7fdc09",
+      "value": "讀取通知"
+    },
+    {
+      "name": "tool_ui_read_pictures_ae993b",
+      "value": "讀取圖片"
+    },
+    {
+      "name": "tool_ui_read_pictures_of_known_paths_and_hand_them_over__7f9569",
+      "value": "讀取已知路徑的圖片並交給視覺模型解讀"
+    },
+    {
+      "name": "tool_ui_read_power_memory_storage_and_system_version_c501d5",
+      "value": "讀取電量、記憶體、儲存與系統版本"
+    },
+    {
+      "name": "tool_ui_read_running_or_paused_timers_3437c8",
+      "value": "讀取正在運作或暫停的計時器"
+    },
+    {
+      "name": "tool_ui_read_system_settings_d455ce",
+      "value": "讀取系統設定"
+    },
+    {
+      "name": "tool_ui_read_system_time_and_recent_location_b9f4ae",
+      "value": "讀取系統時間與最近位置"
+    },
+    {
+      "name": "tool_ui_read_the_alarm_clock_that_has_been_created_in_th_2320d6",
+      "value": "讀取時鐘中已建立的鬧鐘"
+    },
+    {
+      "name": "tool_ui_read_the_closest_location_the_system_already_has_255a6c",
+      "value": "讀取系統已有的最近位置"
+    },
+    {
+      "name": "tool_ui_read_the_contents_of_mobile_phone_files_bf3066",
+      "value": "讀取手機檔案內容"
+    },
+    {
+      "name": "tool_ui_read_the_current_node_and_attach_the_original_im_df1fec",
+      "value": "讀取目前節點，必要時附原圖"
+    },
+    {
+      "name": "tool_ui_read_the_current_notification_title_and_text_0faee7",
+      "value": "讀取目前通知標題與正文"
+    },
+    {
+      "name": "tool_ui_read_the_network_credentials_saved_by_the_phone_96d43a",
+      "value": "讀取手機儲存的網路憑證"
+    },
+    {
+      "name": "tool_ui_read_the_specified_settings_key_496975",
+      "value": "讀取指定 Settings 鍵"
+    },
+    {
+      "name": "tool_ui_read_verification_code_7d1121",
+      "value": "讀取驗證碼"
+    },
+    {
+      "name": "tool_ui_read_web_pages_4f0bb9",
+      "value": "閱讀網頁"
+    },
+    {
+      "name": "tool_ui_recently_applied_08f74c",
+      "value": "最近應用"
+    },
+    {
+      "name": "tool_ui_recording_summary_2fe550",
+      "value": "錄音摘要"
+    },
+    {
+      "name": "tool_ui_retrieve_calls_by_number_or_contact_name_2ce431",
+      "value": "按號碼或聯絡人名稱檢索通話"
+    },
+    {
+      "name": "tool_ui_retrieve_clipboard_contents_saved_by_system_inpu_1dc9db",
+      "value": "搜尋系統輸入法儲存的剪貼簿內容"
+    },
+    {
+      "name": "tool_ui_retrieve_collected_information_and_its_structure_9c1c71",
+      "value": "檢索已收集的資訊及其結構化關聯內容"
+    },
+    {
+      "name": "tool_ui_retrieve_contact_name_and_open_address_6dacc5",
+      "value": "檢索聯絡人姓名與開啟地址"
+    },
+    {
+      "name": "tool_ui_retrieve_documents_and_files_from_shared_storage_7d6193",
+      "value": "搜尋文件及共用儲存空間中的檔案"
+    },
+    {
+      "name": "tool_ui_retrieve_location_information_from_system_memory_52ea48",
+      "value": "檢索系統記憶中的地點資訊"
+    },
+    {
+      "name": "tool_ui_retrieve_normal_recordings_and_call_recordings_55c192",
+      "value": "檢索普通錄音與通話錄音"
+    },
+    {
+      "name": "tool_ui_retrieve_notes_to_dos_and_text_content_e806d7",
+      "value": "檢索便籤、待辦事項及內文內容"
+    },
+    {
+      "name": "tool_ui_retrieve_pictures_by_file_name_or_album_path_c08236",
+      "value": "依檔案名稱或相簿路徑檢索圖片"
+    },
+    {
+      "name": "tool_ui_retrieve_recent_pictures_in_qq_chat_picture_cach_b8f009",
+      "value": "檢索 QQ 聊天圖片快取中的最近圖片"
+    },
+    {
+      "name": "tool_ui_retrieve_recent_pictures_in_wechat_chat_picture__ab66f7",
+      "value": "檢索微信聊天圖片快取中的最近圖片"
+    },
+    {
+      "name": "tool_ui_retrieve_recording_files_from_system_media_libra_314c4d",
+      "value": "從系統媒體庫搜尋錄音檔案"
+    },
+    {
+      "name": "tool_ui_retrieve_system_download_tasks_and_files_3301b9",
+      "value": "搜尋系統下載工作與檔案"
+    },
+    {
+      "name": "tool_ui_retrieve_takeout_shopping_express_delivery_ticke_f8d002",
+      "value": "檢索外帶、購物、快遞、票券和旅行訂單"
+    },
+    {
+      "name": "tool_ui_retrieve_the_last_7_days_of_notifications_saved__643e43",
+      "value": "搜尋授權後儲存在本機的最近 7 天通知"
+    },
+    {
+      "name": "tool_ui_retrieve_transcribed_summaries_and_notes_associa_9cb00f",
+      "value": "檢索錄音關聯的轉寫摘要和便簽"
+    },
+    {
+      "name": "tool_ui_save_location_c29782",
+      "value": "儲存地點"
+    },
+    {
+      "name": "tool_ui_scroll_220e68",
+      "value": "捲動"
+    },
+    {
+      "name": "tool_ui_scroll_the_page_or_specify_a_node_83ab24",
+      "value": "捲動頁面或指定節點"
+    },
+    {
+      "name": "tool_ui_search_apps_897fdf",
+      "value": "搜尋應用程式"
+    },
+    {
+      "name": "tool_ui_search_audio_by_title_filename_or_author_82e20d",
+      "value": "依標題、檔名或作者搜尋音訊"
+    },
+    {
+      "name": "tool_ui_search_events_by_title_location_or_description_1afd77",
+      "value": "按標題、地點或說明檢索日程"
+    },
+    {
+      "name": "tool_ui_search_text_messages_by_sender_or_text_keywords_e14363",
+      "value": "按發送者或正文關鍵字檢索簡訊"
+    },
+    {
+      "name": "tool_ui_session_terminal_09c6e6",
+      "value": "互動式終端機"
+    },
+    {
+      "name": "tool_ui_set_alarm_25ca3c",
+      "value": "設定鬧鐘"
+    },
+    {
+      "name": "tool_ui_set_by_media_alarm_clock_ringtone_and_other_chan_3fcc3e",
+      "value": "依媒體、鬧鐘、鈴聲等頻道設定"
+    },
+    {
+      "name": "tool_ui_set_timer_aee60c",
+      "value": "設定計時器"
+    },
+    {
+      "name": "tool_ui_set_volume_85a691",
+      "value": "設定音量"
+    },
+    {
+      "name": "tool_ui_share_files_a3b376",
+      "value": "分享檔案"
+    },
+    {
+      "name": "tool_ui_short_message_17e1a4",
+      "value": "簡訊"
+    },
+    {
+      "name": "tool_ui_slide_3723aa",
+      "value": "滑動"
+    },
+    {
+      "name": "tool_ui_start_the_specified_package_name_or_application__beabff",
+      "value": "啟動指定包名或應用程式名"
+    },
+    {
+      "name": "tool_ui_stop_freeze_or_unfreeze_apps_a27438",
+      "value": "停止、凍結或解凍應用"
+    },
+    {
+      "name": "tool_ui_storage_ranking_86a16c",
+      "value": "儲存排行"
+    },
+    {
+      "name": "tool_ui_summarize_recent_app_usage_by_foreground_duratio_b346c8",
+      "value": "按前台時長匯總近期應用使用"
+    },
+    {
+      "name": "tool_ui_summarize_steps_sleep_exercise_and_body_metrics_6ff66f",
+      "value": "總結步數、睡眠、運動和身體指標"
+    },
+    {
+      "name": "tool_ui_system_buttons_such_as_return_homepage_recent_ta_1b4cf0",
+      "value": "返回、首頁、最近任務等系統按鍵"
+    },
+    {
+      "name": "tool_ui_system_log_096733",
+      "value": "系統日誌"
+    },
+    {
+      "name": "tool_ui_system_panel_b0f7a3",
+      "value": "系統面板"
+    },
+    {
+      "name": "tool_ui_system_recording_15eb19",
+      "value": "系統錄音"
+    },
+    {
+      "name": "tool_ui_time_and_location_693893",
+      "value": "時間與位置"
+    },
+    {
+      "name": "tool_ui_type_text_summary",
+      "value": "取代、追加或清空輸入框文字，可直接送出，寫入後讀回校驗"
+    },
+    {
+      "name": "tool_ui_user_root_shell_conversational_execution_and_asy_13c2ab",
+      "value": "执行命令或复用持久 Shell 会话"
+    },
+    {
+      "name": "tool_ui_view_recently_opened_apps_and_times_bf9d50",
+      "value": "查看最近開啟的應用程式和時間"
+    },
+    {
+      "name": "tool_ui_view_the_currently_most_occupied_processes_8646c4",
+      "value": "查看目前佔用最高的進程"
+    },
+    {
+      "name": "tool_ui_wait_for_text_9e9a54",
+      "value": "等待文字"
+    },
+    {
+      "name": "tool_ui_wait_for_the_specified_text_to_appear_on_the_scr_43f9b0",
+      "value": "等待指定文字出現在螢幕上"
+    },
+    {
+      "name": "tool_ui_watch_the_screen_e70f2a",
+      "value": "觀察螢幕"
+    },
+    {
+      "name": "tool_ui_web_page_interaction_331b3f",
+      "value": "網頁交互"
+    },
+    {
+      "name": "tool_ui_wechat_chat_pictures_72b268",
+      "value": "微信聊天圖片"
+    },
+    {
+      "name": "tool_ui_wi_fi_password_80e9a4",
+      "value": "Wi‑Fi 密碼"
+    },
+    {
+      "name": "tool_ui_write_file_e620fd",
+      "value": "寫入檔案"
+    },
+    {
+      "name": "tool_ui_write_or_overwrite_mobile_files_29fae4",
+      "value": "寫入或覆寫手機檔案"
+    },
+    {
+      "name": "tool_wait",
+      "value": "等待"
+    },
+    {
+      "name": "tool_wait_for_package",
+      "value": "等待應用程式"
+    },
+    {
+      "name": "tool_wait_for_text",
+      "value": "等待文字"
+    },
+    {
+      "name": "tool_web_search",
+      "value": "搜索网页"
+    },
+    {
+      "name": "tool_web_search_description",
+      "value": "未使用 Provider 托管搜索时检索公开网页，返回标题、链接与摘要，可在网页工具服务中切换内置、DeepSeek 或自定义接口。"
+    },
+    {
+      "name": "tool_wifi_credentials",
+      "value": "讀取 Wi-Fi 密碼"
+    },
+    {
+      "name": "tool_write_file",
+      "value": "寫入檔案"
+    },
+    {
+      "name": "tools_background_group",
+      "value": "背景應用程式操作"
+    },
+    {
+      "name": "tools_manage_permissions",
+      "value": "管理權限"
+    },
+    {
+      "name": "tools_view_enhancements",
+      "value": "查看系統增強"
+    },
+    {
+      "name": "ui_about_bed172",
+      "value": "關於"
+    },
+    {
+      "name": "ui_about_feedback_title",
+      "value": "問題回饋"
+    },
+    {
+      "name": "ui_about_github_star_hint",
+      "value": "如果 随身助手 幫到了你，請在 GitHub 點個 Star，這對我們意義重大"
+    },
+    {
+      "name": "ui_about_github_star_title",
+      "value": "原始碼"
+    },
+    {
+      "name": "ui_about_update_checking",
+      "value": "正在檢查…"
+    },
+    {
+      "name": "ui_about_update_title",
+      "value": "檢查更新"
+    },
+    {
+      "name": "ui_about_version_title",
+      "value": "版本"
+    },
+    {
+      "name": "ui_absolute_path_9ac6fc",
+      "value": "絕對路徑"
+    },
+    {
+      "name": "ui_accessibility_enhancement_tools_8fd257",
+      "value": "無障礙增強工具"
+    },
+    {
+      "name": "ui_add_attachment_dba9e8",
+      "value": "新增附件"
+    },
+    {
+      "name": "ui_add_custom_model_a5ddc0",
+      "value": "新增自訂模型"
+    },
+    {
+      "name": "ui_add_new_provider_74df54",
+      "value": "新增供應商"
+    },
+    {
+      "name": "ui_added_openai_compatible_6bd471",
+      "value": "新增 OpenAI-compatible"
+    },
+    {
+      "name": "ui_after_closing_no_memory_will_be_injected_and_the_mod_db3d23",
+      "value": "關閉後不注入記憶，也不允許模型讀寫；已有內容會保留"
+    },
+    {
+      "name": "ui_agent_and_local_tools_can_still_be_used_but_the_syst_b14479",
+      "value": "Agent 與本機工具仍可使用；系統助理接管、Gemini 與圈選搜尋設定目前無法修改"
+    },
+    {
+      "name": "ui_allow_reading_of_sensitive_device_information_feaec0",
+      "value": "允許讀取敏感裝置資訊"
+    },
+    {
+      "name": "ui_allow_sensitive_device_operation_3d42ea",
+      "value": "允許敏感裝置操作"
+    },
+    {
+      "name": "ui_allows_the_model_to_call_web_searches_provided_by_th_2f752f",
+      "value": "允許模型呼叫 Provider 提供的網頁搜尋"
+    },
+    {
+      "name": "ui_analyze_current_screen_ebf08f",
+      "value": "分析目前螢幕"
+    },
+    {
+      "name": "ui_apk_analysis_95ad17",
+      "value": "APK 分析"
+    },
+    {
+      "name": "ui_automatically_set_default_assistant_f86963",
+      "value": "自動設定預設助理"
+    },
+    {
+      "name": "ui_available_capacity_743337",
+      "value": "可用能力"
+    },
+    {
+      "name": "ui_back_to_bottom_32282e",
+      "value": "回到底部"
+    },
+    {
+      "name": "ui_bright_screen_evokes_automatic_voice_input_4358fe",
+      "value": "亮屏喚起自動語音輸入"
+    },
+    {
+      "name": "ui_browse_the_web_da7afb",
+      "value": "瀏覽網頁"
+    },
+    {
+      "name": "ui_built_in_09ceea",
+      "value": "內建"
+    },
+    {
+      "name": "ui_built_in_skills_1ceedf",
+      "value": "內建"
+    },
+    {
+      "name": "ui_cancel_edit_c698df",
+      "value": "取消編輯"
+    },
+    {
+      "name": "ui_check_memory_pressure_2d9600",
+      "value": "查看記憶體壓力"
+    },
+    {
+      "name": "ui_clear_all_memory_a43bd3",
+      "value": "清空全部記憶？"
+    },
+    {
+      "name": "ui_click_to_reinstall_dc60de",
+      "value": "點選重新安裝"
+    },
+    {
+      "name": "ui_connection_configuration_7d057b",
+      "value": "連線設定"
+    },
+    {
+      "name": "ui_context_length_tokens_227860",
+      "value": "內容長度上限（tokens）"
+    },
+    {
+      "name": "ui_contextual_usage_d12810",
+      "value": "內容用量"
+    },
+    {
+      "name": "ui_convert_google_apps_to_system_apps_0f6d89",
+      "value": "將 Google App 轉為系統應用程式"
+    },
+    {
+      "name": "ui_copy_4edd1d",
+      "value": "複製"
+    },
+    {
+      "name": "ui_core_memory_injection_budget_48b5d5",
+      "value": "核心記憶注入預算"
+    },
+    {
+      "name": "ui_core_memory_user_name_long_term_preferences_aa6ff9",
+      "value": "# 核心記憶 - 使用者名稱： - 長期偏好："
+    },
+    {
+      "name": "ui_current_25e74d",
+      "value": "目前"
+    },
+    {
+      "name": "ui_current_model_a0af8f",
+      "value": "目前模型"
+    },
+    {
+      "name": "ui_deep_thinking_enabled_by_default_c032d6",
+      "value": "預設啟用思考"
+    },
+    {
+      "name": "ui_delete_3755f5",
+      "value": "刪除"
+    },
+    {
+      "name": "ui_delete_model_cf24da",
+      "value": "刪除模型"
+    },
+    {
+      "name": "ui_delete_this_conversation_3f351b",
+      "value": "刪除這輪對話"
+    },
+    {
+      "name": "ui_delete_user_skills_f319a9",
+      "value": "刪除 Skill"
+    },
+    {
+      "name": "ui_description_named",
+      "value": "查看 %1$s 的說明"
+    },
+    {
+      "name": "ui_disabled_0fe5a9",
+      "value": "已停用"
+    },
+    {
+      "name": "ui_display_name_ed16be",
+      "value": "展示名稱"
+    },
+    {
+      "name": "ui_edit_a7f814",
+      "value": "編輯"
+    },
+    {
+      "name": "ui_edit_model_parameters_ba4864",
+      "value": "編輯模型參數"
+    },
+    {
+      "name": "ui_edited_c36776",
+      "value": "已編輯"
+    },
+    {
+      "name": "ui_enable_device_direct_tools_e2d595",
+      "value": "啟用裝置直達工具"
+    },
+    {
+      "name": "ui_enable_memory_4b69b7",
+      "value": "啟用記憶"
+    },
+    {
+      "name": "ui_enable_terminal_file_tools_18bb43",
+      "value": "啟用終端機/檔案工具"
+    },
+    {
+      "name": "ui_enable_this_provider_683a76",
+      "value": "啟用此 Provider"
+    },
+    {
+      "name": "ui_enable_vendor_assistant_custom_models_c8e465",
+      "value": "啟用廠商助手自訂模型"
+    },
+    {
+      "name": "ui_enable_web_browsing_tools_8b6b03",
+      "value": "啟用網頁搜尋、讀取與瀏覽器"
+    },
+    {
+      "name": "ui_endpoint_mode_3c8546",
+      "value": "Endpoint 模式"
+    },
+    {
+      "name": "ui_enforce_accessibility_55e838",
+      "value": "強制維持無障礙"
+    },
+    {
+      "name": "ui_environmental_status_5b32a1",
+      "value": "環境狀態"
+    },
+    {
+      "name": "ui_eta_system_assistant_003e9b",
+      "value": "數位助理應用"
+    },
+    {
+      "name": "ui_exit_multiple_selection_c194fd",
+      "value": "結束多選"
+    },
+    {
+      "name": "ui_floating_window_permissions_076b77",
+      "value": "懸浮窗權限"
+    },
+    {
+      "name": "ui_how_can_i_help_you_e75391",
+      "value": "有什麼可以幫你？"
+    },
+    {
+      "name": "ui_input_file_path_36d474",
+      "value": "輸入檔路徑"
+    },
+    {
+      "name": "ui_install_087db6",
+      "value": "安裝"
+    },
+    {
+      "name": "ui_knew_cb63c6",
+      "value": "知道了"
+    },
+    {
+      "name": "ui_leave_blank_to_use_the_default_mobile_agent_prompt_w_21e7c8",
+      "value": "你可以在這裡告訴 AI 如何與你交流、需要遵循哪些要求，也可以留空。使用角色卡時，會改用角色卡的提示詞。"
+    },
+    {
+      "name": "ui_linux_tool_environment_314d22",
+      "value": "Linux 工具環境"
+    },
+    {
+      "name": "ui_lock_screen_evokes_automatic_voice_input_1cde18",
+      "value": "鎖定畫面喚起自動語音輸入"
+    },
+    {
+      "name": "ui_long_press_on_the_gesture_bar_triggers_a_circle_to_s_b80117",
+      "value": "長按手勢列啟動圈選搜尋"
+    },
+    {
+      "name": "ui_long_press_the_power_button_1958d0",
+      "value": "電源鍵長按"
+    },
+    {
+      "name": "ui_long_press_with_two_fingers_to_trigger_a_circle_sear_ab597a",
+      "value": "雙指長按啟動圈選搜尋"
+    },
+    {
+      "name": "ui_lsposed_service_is_not_connected_44734d",
+      "value": "LSPosed 服務未連線"
+    },
+    {
+      "name": "ui_maintain_hey_google_detection_after_screen_rest_9d6877",
+      "value": "息屏後維持 Hey Google 檢測"
+    },
+    {
+      "name": "ui_manually_fill_in_the_display_name_and_model_id_077a7b",
+      "value": "手動填寫展示名稱與 Model ID"
+    },
+    {
+      "name": "ui_memory_b55ff5",
+      "value": "記憶"
+    },
+    {
+      "name": "ui_model_management_183414",
+      "value": "模型管理"
+    },
+    {
+      "name": "ui_model_provider_e8c7f5",
+      "value": "模型供應商"
+    },
+    {
+      "name": "ui_name_1be7ae",
+      "value": "名稱"
+    },
+    {
+      "name": "ui_new_anthropic_db6098",
+      "value": "新增 Anthropic"
+    },
+    {
+      "name": "ui_no_skills_installed_yet_4e960f",
+      "value": "尚未安裝任何 Skill"
+    },
+    {
+      "name": "ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d",
+      "value": "只選模型或閘道實際支援的檔位"
+    },
+    {
+      "name": "ui_only_take_over_with_agent_prefix_d17556",
+      "value": "僅以 /agent 前綴接管"
+    },
+    {
+      "name": "ui_open_current_browser_58358e",
+      "value": "開啟目前瀏覽器"
+    },
+    {
+      "name": "ui_open_wechat_6b2c28",
+      "value": "打開微信"
+    },
+    {
+      "name": "ui_optional_tools_3097d6",
+      "value": "選用工具"
+    },
+    {
+      "name": "ui_permission_health_3048bb",
+      "value": "權限健康"
+    },
+    {
+      "name": "ui_permissions_560165",
+      "value": "權限"
+    },
+    {
+      "name": "ui_permissions_and_status_35f368",
+      "value": "權限與狀態"
+    },
+    {
+      "name": "ui_preferences_and_strategies_2abd3c",
+      "value": "偏好與策略"
+    },
+    {
+      "name": "ui_provider_does_not_exist_83cee6",
+      "value": "Provider 不存在"
+    },
+    {
+      "name": "ui_regenerate_2e1905",
+      "value": "重新產生"
+    },
+    {
+      "name": "ui_regenerate_reply_84a7d9",
+      "value": "重新產生回覆"
+    },
+    {
+      "name": "ui_remove_file_reference_04bbfc",
+      "value": "移除檔案參照"
+    },
+    {
+      "name": "ui_remove_image_089db3",
+      "value": "移除圖片"
+    },
+    {
+      "name": "ui_remove_provider_9f848f",
+      "value": "刪除供應商"
+    },
+    {
+      "name": "ui_removed_4e5c49",
+      "value": "已移除"
+    },
+    {
+      "name": "ui_replace_user_skills_250e98",
+      "value": "取代 Skill？"
+    },
+    {
+      "name": "ui_reset_built_in_configuration_35b6ec",
+      "value": "重設內建設定"
+    },
+    {
+      "name": "ui_restore_automatic_8d4e1e",
+      "value": "恢復自動"
+    },
+    {
+      "name": "ui_return_11d024",
+      "value": "返回"
+    },
+    {
+      "name": "ui_search_in_one_turn_179584",
+      "value": "圈選搜尋"
+    },
+    {
+      "name": "ui_search_model_df5586",
+      "value": "搜尋模型"
+    },
+    {
+      "name": "ui_search_provider_74e049",
+      "value": "搜尋供應商"
+    },
+    {
+      "name": "ui_server_side_web_search_ddb8e0",
+      "value": "Provider 代管網頁搜尋"
+    },
+    {
+      "name": "ui_set_up_7debf9",
+      "value": "設定"
+    },
+    {
+      "name": "ui_stop_a17f70",
+      "value": "停止"
+    },
+    {
+      "name": "ui_support_anthropic_claude_official_or_compatible_api_de3f80",
+      "value": "支援 Anthropic Claude 官方或相容 API"
+    },
+    {
+      "name": "ui_support_chatgpt_deepseek_kimi_glm_qwen_etc_b31d02",
+      "value": "支援 ChatGPT、DeepSeek、Kimi、GLM、Qwen 等服務"
+    },
+    {
+      "name": "ui_support_thinking_5b9e4c",
+      "value": "支援思考"
+    },
+    {
+      "name": "ui_supports_files_and_folders_under_internal_storage_or_520786",
+      "value": "支援任意本機絕對路徑下的檔案和資料夾"
+    },
+    {
+      "name": "ui_system_applications_have_voice_wake_up_permissions_f_0190f2",
+      "value": "系統應用程式享有語音喚醒權限、較少的自啟動限制，體驗接近原生。將透過 Magisk / KernelSU 模組安裝，重新啟動後生效。"
+    },
+    {
+      "name": "ui_system_assistant_takes_over_f46043",
+      "value": "系統助理接管"
+    },
+    {
+      "name": "ui_system_enhancement_dcd4ad",
+      "value": "系統增強"
+    },
+    {
+      "name": "ui_system_prompt_word_193981",
+      "value": "System prompt"
+    },
+    {
+      "name": "ui_test_connection_10b7d8",
+      "value": "測試連線"
+    },
+    {
+      "name": "ui_the_entire_contents_of_memory_md_will_be_deleted_and_83a8ac",
+      "value": "MEMORY.md 的全部內容將被刪除，記憶開關保持目前狀態。"
+    },
+    {
+      "name": "ui_this_will_close_the_current_page_and_clear_eta_brows_1cd331",
+      "value": "將關閉目前頁面並清除 随身助手 瀏覽器的 Cookie 與網站資料。外部瀏覽器不會受到影響。"
+    },
+    {
+      "name": "ui_tool_a72ef1",
+      "value": "工具"
+    },
+    {
+      "name": "ui_tool_ability_9f0f80",
+      "value": "工具能力"
+    },
+    {
+      "name": "ui_update_already_latest",
+      "value": "目前已是最新版本"
+    },
+    {
+      "name": "ui_update_available_message",
+      "value": "最新版本 %1$s，目前版本 %2$s"
+    },
+    {
+      "name": "ui_update_available_title",
+      "value": "發現新版本"
+    },
+    {
+      "name": "ui_update_check_failed",
+      "value": "檢查更新失敗，請稍後重試"
+    },
+    {
+      "name": "ui_update_go_download",
+      "value": "前往下載"
+    },
+    {
+      "name": "ui_user_skills_748e7f",
+      "value": "使用者安裝"
+    },
+    {
+      "name": "ui_view_description",
+      "value": "查看說明"
+    },
+    {
+      "name": "ui_xiaobu_xiaoai_compatible_entrance_ae918a",
+      "value": "小布／小愛相容入口"
+    },
+    {
+      "name": "voice_audio_permission",
+      "value": "请在 随身助手 应用权限中允许麦克风，然后重新唤醒；点击麦克风可打开设置"
+    },
+    {
+      "name": "voice_completed",
+      "value": "已完成"
+    },
+    {
+      "name": "voice_download_model",
+      "value": "下載"
+    },
+    {
+      "name": "voice_failed",
+      "value": "随身助手 執行失敗"
+    },
+    {
+      "name": "voice_finish_speech",
+      "value": "结束录音并发送"
+    },
+    {
+      "name": "voice_input_hint",
+      "value": "傳訊息給 随身助手…"
+    },
+    {
+      "name": "voice_input_request",
+      "value": "輸入要求"
+    },
+    {
+      "name": "voice_interaction_service_label",
+      "value": "随身助手"
+    },
+    {
+      "name": "voice_language_not_supported",
+      "value": "目前辨識服務不支援此語言"
+    },
+    {
+      "name": "voice_language_unavailable",
+      "value": "目前語言的語音辨識尚未就緒"
+    },
+    {
+      "name": "voice_listening",
+      "value": "聆聽中..."
+    },
+    {
+      "name": "voice_model_download_failed",
+      "value": "語音套件下載失敗"
+    },
+    {
+      "name": "voice_model_downloading",
+      "value": "正在請求下載語音套件…"
+    },
+    {
+      "name": "voice_model_needed",
+      "value": "目前語言需要下載語音套件"
+    },
+    {
+      "name": "voice_model_pending",
+      "value": "語音套件正在等待下載，請稍後重試"
+    },
+    {
+      "name": "voice_model_ready",
+      "value": "語音套件已就緒，點擊麥克風重試"
+    },
+    {
+      "name": "voice_model_scheduled",
+      "value": "已安排下載語音套件，請稍後重試"
+    },
+    {
+      "name": "voice_no_speech",
+      "value": "没有听清，请点击麦克风重试，或改用键盘输入"
+    },
+    {
+      "name": "voice_processing",
+      "value": "處理中…"
+    },
+    {
+      "name": "voice_recognizing",
+      "value": "識別中..."
+    },
+    {
+      "name": "voice_release_to_send",
+      "value": "放開傳送，移出取消"
+    },
+    {
+      "name": "voice_request_failed",
+      "value": "請求失敗，請重試。"
+    },
+    {
+      "name": "voice_running_tool",
+      "value": "随身助手 正在執行 %1$s"
+    },
+    {
+      "name": "voice_send",
+      "value": "傳送"
+    },
+    {
+      "name": "voice_speech_audio_error",
+      "value": "麥克風啟動失敗，請檢查是否被其他應用程式佔用"
+    },
+    {
+      "name": "voice_speech_busy",
+      "value": "語音辨識正忙，請稍後重試"
+    },
+    {
+      "name": "voice_speech_network_error",
+      "value": "語音辨識需要網路，請檢查連線後重試，或改用鍵盤"
+    },
+    {
+      "name": "voice_speech_no_service",
+      "value": "裝置上沒有可用的語音辨識服務"
+    },
+    {
+      "name": "voice_speech_rate_limited",
+      "value": "語音請求過於頻繁，請稍後重試"
+    },
+    {
+      "name": "voice_speech_service_error",
+      "value": "語音辨識服務已中斷，請重試"
+    },
+    {
+      "name": "voice_speech_service_timeout",
+      "value": "語音辨識服務沒有回應，請重試"
+    },
+    {
+      "name": "voice_speech_unavailable",
+      "value": "無法使用語音辨識"
+    },
+    {
+      "name": "voice_tap_to_speak",
+      "value": "點按以說話"
+    },
+    {
+      "name": "voice_use_keyboard",
+      "value": "切换键盘输入"
+    },
+    {
+      "name": "web_tools_api_key_optional",
+      "value": "API Key（選填）"
+    },
+    {
+      "name": "web_tools_backend_builtin",
+      "value": "內建預設"
+    },
+    {
+      "name": "web_tools_backend_custom",
+      "value": "自訂介面"
+    },
+    {
+      "name": "web_tools_backend_deepseek",
+      "value": "DeepSeek"
+    },
+    {
+      "name": "web_tools_body_template",
+      "value": "請求體範本 (JSON)"
+    },
+    {
+      "name": "web_tools_configure_action",
+      "value": "設定服務"
+    },
+    {
+      "name": "web_tools_content_field",
+      "value": "內文欄位路徑（留空則直接取回應文字）"
+    },
+    {
+      "name": "web_tools_credentials_lost",
+      "value": "網頁工具憑據無法解密，請重新填寫並儲存"
+    },
+    {
+      "name": "web_tools_custom_fetch_note",
+      "value": "支援 {{url}}、{{raw_url}} 與 {{url_json}} 佔位符；遠端讀取失敗時自動回退到本地靜態抓取。"
+    },
+    {
+      "name": "web_tools_custom_headers",
+      "value": "自訂請求標頭（選填，每行 Header: Value）"
+    },
+    {
+      "name": "web_tools_custom_search_note",
+      "value": "支援 {{query}}、{{query_json}} 與 {{count}} 佔位符；填寫 API Key 時預設附加 Bearer 鑑權標頭。"
+    },
+    {
+      "name": "web_tools_deepseek_linked_note",
+      "value": "已自動關聯 DeepSeek 模型提供商的 API Key；也可在此填寫獨立金鑰覆蓋。"
+    },
+    {
+      "name": "web_tools_deepseek_note",
+      "value": "呼叫 DeepSeek /v1/tools/search 與 /v1/tools/fetch 介面；留空時將嘗試複用 DeepSeek 模型提供商的金鑰。"
+    },
+    {
+      "name": "web_tools_endpoint_url",
+      "value": "介面位址 (URL)"
+    },
+    {
+      "name": "web_tools_fetch_service",
+      "value": "網頁讀取"
+    },
+    {
+      "name": "web_tools_group_custom_fetch",
+      "value": "自訂讀取"
+    },
+    {
+      "name": "web_tools_group_custom_search",
+      "value": "自訂搜尋"
+    },
+    {
+      "name": "web_tools_group_service",
+      "value": "服務"
+    },
+    {
+      "name": "web_tools_http_method",
+      "value": "請求方式"
+    },
+    {
+      "name": "web_tools_load_failed",
+      "value": "無法讀取網頁工具設定，請返回重試"
+    },
+    {
+      "name": "web_tools_mapping_and_template",
+      "value": "請求範本與回應欄位"
+    },
+    {
+      "name": "web_tools_overview_builtin_note",
+      "value": "內建方案免設定開箱即用；切換為 DeepSeek 或自訂介面可獲得更佳的檢索品質與 Markdown 內文擷取。"
+    },
+    {
+      "name": "web_tools_overview_remote_note",
+      "value": "遠端網頁讀取失敗時會自動回退到本地靜態抓取；同一網頁翻頁複用目前執行快取，不重複請求。"
+    },
+    {
+      "name": "web_tools_overview_resilient_note",
+      "value": "內建搜尋優先使用必應，失敗時嘗試 DuckDuckGo；每個來源的網路逾時預算為 10 秒。DeepSeek 和自訂介面依所選設定執行。"
+    },
+    {
+      "name": "web_tools_results_path",
+      "value": "結果陣列路徑"
+    },
+    {
+      "name": "web_tools_search_service",
+      "value": "網頁搜尋"
+    },
+    {
+      "name": "web_tools_settings_title",
+      "value": "網頁搜尋與讀取"
+    },
+    {
+      "name": "web_tools_snippet_field",
+      "value": "摘要欄位"
+    },
+    {
+      "name": "web_tools_title_field",
+      "value": "標題欄位"
+    },
+    {
+      "name": "web_tools_url_field",
+      "value": "連結欄位"
+    },
+    {
+      "name": "work_analyzing",
+      "value": "正在分析任務"
+    },
+    {
+      "name": "work_collapse",
+      "value": "收合工作過程"
+    },
+    {
+      "name": "work_completed",
+      "value": "分析完成"
+    },
+    {
+      "name": "work_expand",
+      "value": "展開工作過程"
+    },
+    {
+      "name": "xposed_description",
+      "value": "系統級 AI Agent，接管小布與超級小愛，解鎖 Gemini 與圈選搜尋，整合瀏覽器、終端機與裝置工具。"
+    }
+  ]
+}

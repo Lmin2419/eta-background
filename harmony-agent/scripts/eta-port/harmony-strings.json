@@ -1,0 +1,23 @@
+{
+  "base": {
+    "eta_port_about_title": "基于 Eta 移植",
+    "eta_port_about_author": "原作者：蛮吉 (Mangi-11)",
+    "eta_port_about_license": "PolyForm Noncommercial 1.0.0，仅限非商业用途",
+    "eta_port_required_notice": "Required Notice: Copyright © 2026 蛮吉 (Mangi-11).",
+    "eta_port_unavailable": "鸿蒙版尚未接入"
+  },
+  "en_US": {
+    "eta_port_about_title": "Based on Eta",
+    "eta_port_about_author": "Original author: 蛮吉 (Mangi-11)",
+    "eta_port_about_license": "PolyForm Noncommercial 1.0.0. Noncommercial use only.",
+    "eta_port_required_notice": "Required Notice: Copyright © 2026 蛮吉 (Mangi-11).",
+    "eta_port_unavailable": "Not yet integrated in the HarmonyOS version"
+  },
+  "zh_Hant": {
+    "eta_port_about_title": "基於 Eta 移植",
+    "eta_port_about_author": "原作者：蛮吉 (Mangi-11)",
+    "eta_port_about_license": "PolyForm Noncommercial 1.0.0，僅限非商業用途",
+    "eta_port_required_notice": "Required Notice: Copyright © 2026 蛮吉 (Mangi-11).",
+    "eta_port_unavailable": "鴻蒙版尚未接入"
+  }
+}
