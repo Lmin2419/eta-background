@@ -1,6 +1,6 @@
 {
   "name": "harmony-agent-core",
-  "version": "0.9.12",
+  "version": "0.9.13",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,8 +14,8 @@
     "build:preview": "python3 scripts/build-preview.py",
     "package:framework": "python3 scripts/export-project.py",
     "verify:package": "python3 scripts/verify-release.py",
-    "port:eta": "python3 scripts/port-eta-strings.py && node scripts/port-eta-icons.mjs && python3 scripts/port-eta-theme.py && python3 scripts/port-eta-assets.py",
-    "port:eta:check": "python3 scripts/port-eta-strings.py --check && node scripts/port-eta-icons.mjs --check && python3 scripts/port-eta-theme.py --check && python3 scripts/port-eta-assets.py --check"
+    "port:eta": "python3 scripts/port-eta-strings.py && node scripts/port-eta-icons.mjs && python3 scripts/port-eta-theme.py && python3 scripts/port-eta-assets.py && python3 scripts/port-eta-branding.py",
+    "port:eta:check": "python3 scripts/port-eta-strings.py --check && node scripts/port-eta-icons.mjs --check && python3 scripts/port-eta-theme.py --check && python3 scripts/port-eta-assets.py --check && python3 scripts/port-eta-branding.py --check"
   },
   "devDependencies": {
     "@material-design-icons/svg": "0.14.15",

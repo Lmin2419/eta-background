@@ -41,6 +41,24 @@ export class EtaChatDefaults {
   static readonly StopIconSize: number = 10.0;
   static readonly ThinkingIconSize: number = 21.0;
   static readonly InputCornerRadius: number = 20.0;
+  static readonly InputLineHeight: number = 22.0;
+  static readonly InputMaxLines: number = 6;
+  static readonly ActionSize: number = 40.0;
+}
+
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentModelPicker.kt @ 3b1794d
+export class EtaModelPickerDefaults {
+  static readonly ModelPopupWidth: number = 248.0;
+  static readonly ModelPopupLimit: number = 8;
+  static readonly SelectionConfirmMs: number = 140;
+  static readonly SheetHeightFraction: number = 0.68;
+  static readonly FallbackIconFraction: number = 0.56;
+}
+
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatModelControls.kt @ 3b1794d
+export class EtaContextDefaults {
+  static readonly ErrorThreshold: number = 0.95;
+  static readonly WarningThreshold: number = 0.8;
 }
 
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationSidePaneScaffold.kt @ 3b1794d
@@ -94,6 +112,7 @@ export class EtaComponentSizes {
   static readonly Dp0_5: number = 0.5;
   static readonly Dp1: number = 1.0;
   static readonly Dp2: number = 2.0;
+  static readonly Dp2_5: number = 2.5;
   static readonly Dp4: number = 4.0;
   static readonly Dp6: number = 6.0;
   static readonly Dp7: number = 7.0;
@@ -113,6 +132,7 @@ export class EtaComponentSizes {
   static readonly Dp26: number = 26.0;
   static readonly Dp28: number = 28.0;
   static readonly Dp32: number = 32.0;
+  static readonly Dp34: number = 34.0;
   static readonly Dp38: number = 38.0;
   static readonly Dp40: number = 40.0;
   static readonly Dp42: number = 42.0;
@@ -120,8 +140,11 @@ export class EtaComponentSizes {
   static readonly Dp48: number = 48.0;
   static readonly Dp50: number = 50.0;
   static readonly Dp52: number = 52.0;
+  static readonly Dp56: number = 56.0;
   static readonly Dp60: number = 60.0;
+  static readonly Dp88: number = 88.0;
   static readonly Dp136: number = 136.0;
+  static readonly Dp248: number = 248.0;
   static readonly Dp250: number = 250.0;
   static readonly Dp280: number = 280.0;
   static readonly Dp340: number = 340.0;

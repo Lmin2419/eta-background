@@ -83,7 +83,7 @@ def generate(eta_root, output, check=False):
     source_names = ['EtaPreferenceStyle.kt', 'EtaCard.kt', 'EtaControls.kt', 'StatusColors.kt', 'AgentChatFileAttachments.kt', 'AgentChatInputBar.kt', 'ConversationSidePaneScaffold.kt',
                     'EtaPreferenceRow.kt', 'EtaPreferenceGroupItem.kt', 'EtaSelectionPreferences.kt', 'EtaDropdownPreference.kt',
                     'EtaFeatureCard.kt', 'EtaChoiceChip.kt', 'ToolChip.kt', 'SectionHeader.kt', 'ListEmptyState.kt',
-                    'MiuixDialogActions.kt', 'ItemDescriptionDialog.kt', 'MiuixScaffoldPage.kt', 'AdaptiveTopAppBar.kt', 'MiuixBackButton.kt', 'TopBarBackdrop.kt']
+                    'MiuixDialogActions.kt', 'ItemDescriptionDialog.kt', 'MiuixScaffoldPage.kt', 'AdaptiveTopAppBar.kt', 'MiuixBackButton.kt', 'TopBarBackdrop.kt', 'AgentChatBody.kt', 'AgentModelPicker.kt', 'AgentChatModelControls.kt']
     texts = {name: (components / name).read_text() for name in source_names}
     upstream = PROJECT / 'scripts/eta-upstream/miuix-0.9.4'
     miuix = (upstream / 'Colors.kt').read_text(); style = texts['EtaPreferenceStyle.kt']; status = texts['StatusColors.kt']
@@ -108,6 +108,10 @@ def generate(eta_root, output, check=False):
         def blend(role, alpha):
             return '#' + f'{math.floor(alpha * 255 + 0.5):02X}' + colors[role][3:]
         row = texts['EtaPreferenceRow.kt']; chip = texts['EtaChoiceChip.kt']
+        input_source=texts['AgentChatInputBar.kt']; body_source=texts['AgentChatBody.kt']
+        result['eta_input_outline']=blend('outline',float(re.search(r'outline.copy\(alpha = ([\d.]+)f',input_source)[1]))
+        result['eta_suggestion_outline']=blend('outline',float(re.search(r'outline.copy\(alpha = ([\d.]+)f',body_source.split('private fun SuggestionCard',1)[1])[1]))
+        result['eta_input_shadow']=parse_color('Color.Black.copy(alpha = '+re.search(r'alpha = ([\d.]+)f',input_source)[1]+'f)')
         result['eta_pane_scrim'] = parse_color('Color.Black.copy(alpha = ' + re.search(r'ChatScrimAlpha = ([\d.]+)f', texts['ConversationSidePaneScaffold.kt'])[1] + 'f)')
         result['eta_transparent'] = parse_color('Color.Transparent')
         result['eta_preference_arrow'] = blend('onBackground', float(re.search(r'onBackground.copy\(alpha = ([\d.]+)f\)', row)[1]))
@@ -132,6 +136,22 @@ def generate(eta_root, output, check=False):
     objects['EtaChatDefaults'].update({k: float(v) for k, v in re.findall(r'private val (\w+) = ([\d.]+)\.dp', texts['AgentChatInputBar.kt'])})
     objects['EtaChatDefaults']['InputCornerRadius'] = float(re.search(r'InputContainerShape = RoundedCornerShape\(([\d.]+)\.dp\)', texts['AgentChatInputBar.kt'])[1])
     source_for['EtaChatDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatInputBar.kt, AgentChatFileAttachments.kt @ 3b1794d'
+    objects['EtaChatDefaults']['InputLineHeight'] = float(re.search(r'lineHeight = ([\d.]+)\.sp', texts['AgentChatInputBar.kt'])[1])
+    objects['EtaChatDefaults']['InputMaxLines'] = int(re.search(r'maxHeightInLines = (\d+)', texts['AgentChatInputBar.kt'])[1])
+    objects['EtaChatDefaults']['ActionSize'] = float(re.search(r'ChatInputActionSize = ([\d.]+)\.dp', texts['AgentChatFileAttachments.kt'])[1])
+    picker = texts['AgentModelPicker.kt']
+    objects['EtaModelPickerDefaults'] = {
+        'ModelPopupWidth': float(re.search(r'ModelPopupWidth = ([\d.]+)\.dp', picker)[1]),
+        'ModelPopupLimit': int(re.search(r'ModelPopupLimit = (\d+)', picker)[1]),
+        'SelectionConfirmMs': int(re.search(r'SelectionConfirmMs = (\d+)L', picker)[1]),
+        'SheetHeightFraction': float(re.search(r'containerSize.height.toDp\(\) } \* ([\d.]+)f', picker)[1]),
+        'FallbackIconFraction': float(re.search(r'size \* ([\d.]+)f',picker)[1]),
+    }
+    context=texts['AgentChatModelControls.kt']
+    thresholds=re.findall(r'progress >= ([\d.]+)f',context)
+    objects['EtaContextDefaults']={'ErrorThreshold':float(thresholds[0]),'WarningThreshold':float(thresholds[1])}
+    source_for['EtaContextDefaults']='app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatModelControls.kt @ 3b1794d'
+    source_for['EtaModelPickerDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentModelPicker.kt @ 3b1794d'
     objects['EtaPaneDefaults'] = {'PaneMaxWidth': float(re.search(r'val PaneMaxWidth = ([\d.]+)\.dp', texts['ConversationSidePaneScaffold.kt'])[1])}
     objects['EtaPaneDefaults'].update({k: float(v) for k, v in re.findall(r'(?:const )?val (\w+) = ([\d.]+)f', texts['ConversationSidePaneScaffold.kt'])})
     source_for['EtaPaneDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationSidePaneScaffold.kt @ 3b1794d'

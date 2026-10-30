@@ -6,6 +6,8 @@ import { FoundationChatRuntime } from './chatRuntime';
 import { ProviderEditor, ProviderEditorState } from './providerEditor';
 import { EtaShellNavigation, Screen, Sheet } from '../eta/etaShellNavigation';
 import { AppRoute } from '../eta/routes';
+import { AgentModelPickerUiState, AgentModelProviderGroupUi, AgentModelOptionUi, AgentContextUsageUi, ModelPickerSession, projectModelPicker, filterModelGroups, modelCount } from '../eta/modelPicker';
+import { foundationPickerProviders } from '../eta/foundationModelPicker';
 import { DiagnosticArea, DiagnosticEnvironment, DiagnosticFact, DiagnosticLog, diagnosticReport, emptyEnvironment, environmentFacts, formatEvent } from '../diagnostics';
 
 export interface MessageRow { id: string; request: string; reply: string; reasoning: string; model: string; status: string; notice: string; active: boolean }
@@ -20,6 +22,7 @@ export interface ShellState {
   routes: AppRoute[]; ready: boolean; busy: boolean; error: string; screen: Screen; drawer: boolean; sheet: Sheet;
   conversations: ConversationSummary[]; search: string; providers: ModelProfile[]; providerSearch: string;
   chat: ChatView; editor: ProviderEditorState; choices: ModelChoice[]; modelQuery: string;
+  picker: AgentModelPickerUiState; pickerGroups: AgentModelProviderGroupUi[]; pickerFilter: string | null; pickerPending: string | null; contextUsage: AgentContextUsageUi;
   appVersion: string; diagnostics: DiagnosticView;
 }
 export interface FoundationDependencies {
@@ -29,7 +32,7 @@ export interface FoundationDependencies {
   diagnostics?: DiagnosticLog; environment?: () => Promise<DiagnosticEnvironment>;
 }
 export function emptyShellState(): ShellState {
-  return { routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
+  return { routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', picker: {providerGroups: [],selectedModel:null,isChanging:false},pickerGroups:[],pickerFilter:null,pickerPending:null,contextUsage:{contextTokens:null,contextWindow:null},appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
     chat: { id: '', title: '新对话', input: '', inputVersion: 0, rows: [], model: '', provider: '', profileId: '', active: false, phase: '', error: '', followBottom: true, scroll: 0 },
     editor: { draft: { id: '', name: '我的模型', baseUrl: '', apiKey: '', model: '', models: [], rememberKey: false, screenshots: false, allowInsecureHttp: false, streaming: true, protocol: 'chat_completions' }, busy: false, working: '', error: '', message: '', connection: '', catalog: [], selected: [], query: '', tab: 'config' } };
 }
@@ -44,6 +47,7 @@ export class FoundationController {
   private error = '';
   private search = '';
   private providerSearch = '';
+  private pickerSession = new ModelPickerSession();
   private modelQuery = '';
   private inputVersion = 0;
   private listeners = new Set<() => void>();
@@ -77,7 +81,13 @@ export class FoundationController {
     for (const p of this.ports.profiles.document.profiles) for (const model of modelCatalog(p.models, p.model)) {
       if ((p.name + ' ' + model).toLowerCase().includes(this.modelQuery.trim().toLowerCase())) choices.push({ key: p.id + ':' + model, profileId: p.id, provider: p.name, model });
     }
+    const picker = projectModelPicker(foundationPickerProviders(this.ports.profiles.document.profiles),choice?.profileId??null,choice?.key??null);
+    picker.isChanging=this.busy;
+    let contextTokens: number | null = null;
+    for(let i=(selected?.turns.length||0)-1;i>=0;i--){const usage=selected?.turns[i].usage;if(usage){contextTokens=usage.input;break;}}
     return {
+      picker,pickerGroups:filterModelGroups(picker,this.modelQuery,this.pickerSession.provider),pickerFilter:this.pickerSession.provider,pickerPending:this.pickerSession.pendingId,
+      contextUsage:{contextTokens,contextWindow:picker.selectedModel?.contextWindow??null},
       routes: this.navigation.routes, ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
       conversations: this.ready ? chats.list(this.search) : [], search: this.search,
       providers: this.ports.profiles.document.profiles.filter(p => (p.name + ' ' + p.baseUrl).toLowerCase().includes(this.providerSearch.trim().toLowerCase())), providerSearch: this.providerSearch,
@@ -105,11 +115,13 @@ export class FoundationController {
   navigate(screen: Screen): void {
     if (this.busy || this.editor.state.working === '保存' || this.editor.state.working === '删除') return;
     if (this.navigation.screen === 'provider') this.editor.close();
+    this.pickerSession.cancel();
     this.navigation.push(screen); this.error = ''; this.changed();
   }
   drawer(value: boolean): void { this.navigation.drawer = value; this.changed(); }
   back(): boolean {
     if (this.busy || this.editor.state.working === '保存' || this.editor.state.working === '删除') return true;
+    if (this.navigation.sheet === 'models') this.pickerSession.cancel();
     if (this.navigation.sheet === 'catalog') this.editor.dismissCatalog();
     if (this.navigation.sheet === 'none' && this.navigation.screen === 'provider') this.editor.close();
     const handled = this.navigation.back(); this.changed(); return handled;
@@ -166,14 +178,22 @@ export class FoundationController {
       this.inputVersion++;
     });
   }
-  chooseModel(): void { this.modelQuery = ''; this.navigation.sheet = 'models'; this.changed(); }
+  chooseModel(): void { if(!this.ready||this.busy||this.runtime.active(this.ports.chats.selectedId)||modelCount(this.snapshot().picker)===0)return; this.pickerSession.open(); this.modelQuery = ''; this.navigation.sheet = 'models'; this.changed(); }
+  filterPickerProvider(id: string | null): void { this.pickerSession.provider=id; this.changed(); }
+  confirmPickerModel(model: AgentModelOptionUi): void {
+    if(this.navigation.sheet!=='models'||this.runtime.active(this.ports.chats.selectedId))return;
+    if(this.pickerSession.choose(model.id,()=>{
+      if(this.navigation.sheet==='models'&&!this.runtime.active(this.ports.chats.selectedId)) void this.useModel({key:model.id,profileId:model.providerId,provider:model.providerName,model:model.modelId});
+    }))this.changed();
+  }
   async useModel(choice: ModelChoice): Promise<void> {
-    await this.action(async () => {
+    const saved = await this.action(async () => {
       const id = this.ports.chats.selectedId;
       if (this.runtime.active(id)) throw new Error('生成结束后再切换当前会话模型');
       await this.ports.chats.preferences(id, choice.profileId, 'chat', choice.model);
-      this.navigation.sheet = 'none';
+      this.navigation.sheet = 'none'; this.pickerSession.cancel();
     });
+    if(!saved) {this.pickerSession.cancel();this.changed();}
   }
   async send(): Promise<void> {
     await this.action(async () => {
@@ -202,6 +222,7 @@ export class FoundationController {
   /** Lifecycle from EntryAbility. Leaving still stops replies in 0.9.x; the event is recorded for device reports. */
   foreground(value: boolean): void {
     this.runtime.setForeground(value);
+    if(!value) { this.pickerSession.cancel(); if(this.navigation.sheet==='models') {this.navigation.sheet='none';this.changed();} }
     this.log('lifecycle', value ? '回到前台' : '进入后台');
     if (!value) this.ports.diagnostics?.flush().catch(() => {});
   }

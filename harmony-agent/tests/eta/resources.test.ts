@@ -80,7 +80,7 @@ test('tokens preserve source dimensions, content alignment and fractional divide
 });
 test('light and dark resources preserve Miuix roles, Eta overrides and alpha', () => {
   const palette = (locale: string): Map<string, string> => new Map(json(`entry/src/main/resources/${locale}/element/color.json`).color.map((c: { name: string; value: string }) => [c.name, c.value]));
-  const light = palette('base'), dark = palette('dark'); assert.equal(light.size, 74); assert.equal(dark.size, 74);
+  const light = palette('base'), dark = palette('dark'); assert.equal(light.size, 77); assert.equal(dark.size, 77);
   assert.deepEqual([...light.keys()], [...dark.keys()]);
   assert.equal(light.get('miuix_primary'), '#FF3482FF'); assert.equal(dark.get('miuix_primary'), '#FF277AF7');
   assert.equal(light.get('eta_settings_primary'), '#FF0080FF'); assert.equal(light.get('eta_settings_background'), '#FFF0F1F2');
