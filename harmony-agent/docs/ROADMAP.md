@@ -6,7 +6,8 @@
 
 | 任务 | 状态 | 说明 |
 | --- | --- | --- |
-| T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，分支 `harmony/m0-0.9.1`，三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；未编译 HAP（环境没有鸿蒙 SDK） |
+| T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，PR #8（分支 `harmony/m0-0.9.1`），三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；ArkTS 检查 0 错误（OpenHarmony SDK 26.0.0.38）；未生成 HAP |
+| `.ets` 检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets`，CI 任务 `Harmony / ArkTS (.ets) check` |
 | T04 起 | 未开始 | 由 Codex（A 总）在 M0 真机通过并合并后，按顺序执行 |
 
 每完成一个任务，执行者更新本表。
@@ -173,7 +174,7 @@
 
 #### T10 原生库交付方式 + 本机无线调试连接
 
-- **原生库**：在装有 HarmonyOS 命令行工具的 Linux 环境用 `scripts/prepare-native.sh` 构建 arm64 `libagent_hdc.so`，放入 `entry/libs/arm64-v8a/` 并入库，同时记录 SHA-256 和构建来源，提供重新构建的脚本说明。这样你在 Windows 的 DevEco 中无需交叉编译。如果 Codex 环境没有 SDK，这一步由我（Claude）或其他有 SDK 的环境完成，Codex 只负责 ArkTS 部分。
+- **原生库**：在装有 HarmonyOS 命令行工具的 Linux 环境用 `scripts/prepare-native.sh` 构建 arm64 `libagent_hdc.so`，放入 `entry/libs/arm64-v8a/` 并入库，同时记录 SHA-256 和构建来源，提供重新构建的脚本说明。这样你在 Windows 的 DevEco 中无需交叉编译。公开的 OpenHarmony 7.0 SDK 也有 native 组件（含 aarch64 交叉编译器），可能可以替代 HarmonyOS 命令行工具来构建这个库，到 T10 时先验证。如果 Codex 环境做不到，这一步交给 Claude，Codex 只负责 ArkTS 部分。
 - **连接页**：设置 → “手机操作”。引导开启开发者选项和无线调试 → 填写地址和端口 → 连接 → 手机弹出授权 → 显示已连接，以及 shell 身份和 UITest 是否可用。
 - **状态机** `core/foundation/deviceLink.ts`：未配置 / 连接中 / 等待授权 / 已连接 / 已断开（附原因）。错误按阶段区分：原生库加载、TCP 连接、授权、协议握手、UITest 不可用。原生模块只在进入此页时懒加载。
 - 只做连接和“测试读屏”按钮（显示控件数量和分辨率），**不接入聊天**。迁移参考 `core/device.ts`、`platform/AppRuntime.ets` 和 `cpp/`。
@@ -259,7 +260,7 @@
 
 | 风险 | 应对 |
 | --- | --- |
-| Codex 环境没有鸿蒙 SDK，`.ets` 编译错误只能在你的 DevEco 中发现 | 逻辑放在可单测的 `core/*.ts`，`.ets` 保持薄；PR 注明未编译；你把编译报错原样贴回 |
+| `.ets` 检查器不等于完整构建（不生成 HAP，不打包资源） | 每个 PR 都有 `npm run check:ets` 和 CI 拦截类型与 ArkTS 规则错误；资源和打包问题仍以你的 DevEco 编译为准，报错原样贴回 |
 | HarmonyOS 7 对无线调试或 HDC 加密协议有变化 | M2 先只做连接和读屏，问题在 T10 中暴露，不影响聊天功能 |
 | 短时任务每日额度不足以完成长任务 | T04 提示真实原因；M4 再评估持续任务方案 |
 | 签名不一致导致无法覆盖安装、丢失数据 | T03 说明沿用旧签名的方法，禁止用卸载来解决 |

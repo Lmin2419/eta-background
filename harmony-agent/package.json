@@ -7,6 +7,7 @@
     "test": "tsx --test tests/*.test.ts",
     "test:native": "bash scripts/test-native.sh",
     "check": "tsc --noEmit",
+    "check:ets": "node scripts/check-ets.cjs",
     "build:harmony": "bash scripts/build.sh",
     "test:foundation": "tsx --test tests/foundation.test.ts",
     "build:preview": "python3 scripts/build-preview.py",

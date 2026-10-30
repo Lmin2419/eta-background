@@ -28,6 +28,7 @@ cd harmony-agent
 npm ci
 npm run check
 npm test
+bash scripts/fetch-ohos-sdk.sh && OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets
 export HARMONY_CLT_HOME=/absolute/path/to/command-line-tools
 npm run build:harmony
 npm run build:preview

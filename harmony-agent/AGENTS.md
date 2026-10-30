@@ -27,13 +27,16 @@ cd harmony-agent
 npm ci
 npm run check   # tsc，只覆盖 core/**/*.ts 和 tests/**/*.ts
 npm test        # 全部单测，必须 0 失败
+
+# .ets 检查：首次下载公开的 OpenHarmony 7.0 SDK（API 26，免登录，约 3.4 GB，只保留 ArkTS 部分）
+bash scripts/fetch-ohos-sdk.sh                      # 默认放到 ~/.cache/ohos-sdk-26
+OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets   # 必须 0 error
 ```
 
-`.ets` 文件不在 `tsc` 检查范围内。只有设置了 `HARMONY_CLT_HOME`（HarmonyOS 命令行工具）才能执行 `npm run build:harmony` 编译 HAP。没有 SDK 时：
-
-- 把逻辑写在 `core/**/*.ts` 并写单测；`.ets` 只做渲染、转发意图和调用平台 API，保持薄。
-- 只使用 API 26 中确实存在的 ArkUI / Kit 接口。不确定的接口在 PR 中列出，让用户在 DevEco 编译时确认。
-- PR 中写明“未执行 HAP 编译”。
+- `npm run check` 只覆盖 `core/**/*.ts` 和 `tests/**/*.ts`。`.ets` 用 `npm run check:ets` 检查：它调用 SDK 自带的官方检查器，做类型检查和 ArkTS 规则检查（例如 `arkts-no-any-unknown`），**但不生成 HAP**。
+- 如果你的环境访问不了 `mirrors.huaweicloud.com`，PR 上的 CI 任务 `Harmony / ArkTS (.ets) check` 也会执行同样的检查，以它的结果为准。
+- 已知误报只有 `Cannot find name '$$this'`（双向绑定语法，正式构建会预处理），脚本已经自动忽略。不要往误报列表里加别的东西来掩盖真实错误。
+- 生成 HAP 需要 HarmonyOS 命令行工具（`HARMONY_CLT_HOME`，`npm run build:harmony`），通常没有。所以：逻辑仍然写在 `core/**/*.ts` 并写单测，`.ets` 保持薄；PR 中写明“ArkTS 检查通过 / 未生成 HAP”，最终以用户的 DevEco 编译为准。
 
 ## 架构规则（违反即视为缺陷）
 
