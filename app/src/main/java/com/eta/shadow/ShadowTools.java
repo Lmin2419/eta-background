@@ -26,8 +26,12 @@ public final class ShadowTools {
     private final String sessionId;
     private volatile boolean closed;
     private volatile boolean parked;
+    private volatile boolean takenOver;
     private String openedPackage;
     private static final ParkedScreenHints parkedHints = new ParkedScreenHints();
+    private static final java.util.concurrent.ConcurrentHashMap<String, ShadowTools> activeScreens = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile Runnable takeoverListener = () -> { };
+    public void setTakeoverListener(Runnable listener) { takeoverListener = listener == null ? () -> { } : listener; }
     interface LineTransport { String send(int port, String json, int timeoutMs) throws Exception; }
     private final LineTransport transport;
     public ShadowTools(String sessionId) { this(sessionId, null); }
@@ -285,7 +289,8 @@ public final class ShadowTools {
         }
         parked = false;
         openedPackage = component.split("/")[0];
-        parkedHints.forget(openedPackage);
+        activeScreens.put(sessionId, this);
+        parkedHints.rememberActive(openedPackage, sessionId);
         mode = launched.optString("mode", "hidden");
         display = disp < 0 ? 0 : disp;
         observedGeometry = null;
@@ -302,6 +307,8 @@ public final class ShadowTools {
         boolean engineOk = false;
         try {
             JSONObject st = new JSONObject(engine("{\"cmd\":\"status\"}"));
+            if (st.optBoolean("sessionTakenOver")) return received(new JSONObject().put("ok", false)
+                    .put("code", "APP_TAKEN_OVER").put("message", "应用已离开后台屏，等待用户继续。").toString());
             o.put("engine", st);
             engineOk = st.optBoolean("ok", false);
             if (engineOk && mode != null) {
@@ -374,6 +381,8 @@ public final class ShadowTools {
 
     /** #1：引擎掉线或收尾后清掉本地会话句柄（旧虚拟屏已随引擎消失）。 */
     void resetSession() {
+        activeScreens.remove(sessionId, this);
+        parkedHints.forget(openedPackage, sessionId);
         mode = null;
         display = -1;
         observedGeometry = null;
@@ -455,8 +464,11 @@ public final class ShadowTools {
     /** Called outside registry locks. The engine acknowledges cleanup before the lease is released. */
     public boolean closeSession(boolean keepFinished) {
         closed = true;
+        activeScreens.remove(sessionId, this);
+        if (!parked) parkedHints.forget(openedPackage, sessionId);
         try {
-            if (keepFinished && !parked && "hidden".equals(mode) && display > 0) {
+            boolean preserve = keepFinished || takenOver;
+            if (preserve && !parked && "hidden".equals(mode) && display > 0) {
                 // A model answer (including a question to the user) can end without screen_finish.
                 // Preserve that page too; a failed park is retried, never treated as permission to destroy it.
                 JSONObject result = new JSONObject(engine(new JSONObject().put("cmd", "finish").put("mode", "notify").toString()));
@@ -464,7 +476,8 @@ public final class ShadowTools {
                     parked = true;
                     parkedHints.remember(openedPackage, sessionId);
                 } else if (!"NO_SESSION".equals(result.optString("code")) && !"SESSION_CLOSED".equals(result.optString("code"))
-                        && !"SYSTEM_RESTARTED".equals(result.optString("code"))) {
+                        && !"SYSTEM_RESTARTED".equals(result.optString("code"))
+                        && !"APP_TAKEN_OVER".equals(result.optString("code"))) {
                     return false;
                 }
             }
@@ -472,7 +485,7 @@ public final class ShadowTools {
             // prevent the actual release request from reaching the engine.
             JSONObject reply = new JSONObject(send(ENGINE_PORT,
                     new JSONObject().put("cmd", "release_session").put("sessionId", sessionId)
-                            .put("keep", keepFinished && parked).toString(), 5000));
+                            .put("keep", preserve && parked).toString(), 5000));
             return reply.optBoolean("ok", false);
         } catch (Exception e) {
             android.util.Log.w("EtaShadow", "screen cleanup not acknowledged: " + e.getClass().getSimpleName());
@@ -492,7 +505,7 @@ public final class ShadowTools {
 
     public void keepAlive() {
         if (closed) return;
-        try { send(ENGINE_PORT, new JSONObject().put("cmd", "keepalive").put("sessionId", sessionId).toString(), 2000); }
+        try { received(send(ENGINE_PORT, new JSONObject().put("cmd", "keepalive").put("sessionId", sessionId).toString(), 2000)); }
         catch (Exception ignored) { }
     }
 
@@ -500,8 +513,11 @@ public final class ShadowTools {
     public static void onWindowChanged(int displayId, String pkg) {
         parkedHints.onWindow(displayId, pkg, id -> {
             try {
-                new ShadowTools("foreground-hint").send(ENGINE_PORT,
+                ShadowTools active = activeScreens.get(id);
+                ShadowTools connection = active == null ? new ShadowTools("foreground-hint") : active;
+                String response = connection.send(ENGINE_PORT,
                         new JSONObject().put("cmd", "foreground_hint").put("sessionId", id).toString(), 1000);
+                if (active != null) active.received(response);
             } catch (Exception ignored) { } // The engine's own patrol remains the fallback.
         });
     }
@@ -546,6 +562,10 @@ public final class ShadowTools {
     private String received(String response) throws Exception {
         JSONObject result = new JSONObject(response);
         String code = result.optString("code");
+        if ("APP_TAKEN_OVER".equals(code)) {
+            takenOver = true;
+            if (!closed) takeoverListener.run();
+        }
         if ("STALE_OBSERVATION".equals(code) || "INVALID_OBSERVATION".equals(code)
                 || "GEOMETRY_UNAVAILABLE".equals(code) || "GEOMETRY_CHANGED_DURING_OPERATION".equals(code)) {
             lastRejection = new JSONObject();

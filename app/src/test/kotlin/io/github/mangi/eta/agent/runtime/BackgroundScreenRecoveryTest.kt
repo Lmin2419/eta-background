@@ -24,6 +24,8 @@ class BackgroundScreenRecoveryTest {
         val keeps = CopyOnWriteArrayList<Boolean>()
         var lost = false
         var lostCode = "STALE_SCREEN"
+        var onTakeover: (() -> Unit)? = null
+        override fun setTakeoverListener(listener: () -> Unit) { onTakeover = listener }
         override fun execute(name: String, arguments: String): String {
             calls += name
             if (lost && name == "screen_tap") return "{\"ok\":false,\"code\":\"$lostCode\"}"
@@ -49,6 +51,56 @@ class BackgroundScreenRecoveryTest {
             tools.execute("screen_dump", "{}")
             assertEquals("{\"ok\":true}", tools.execute("screen_tap", "{}"))
         } finally { tools.close() }
+    }
+
+    @Test fun activeForegroundTakeoverPausesOnlyItsRunAndRequiresManualResumeWithoutReplayingInput() {
+        val connections = CopyOnWriteArrayList<Connection>()
+        val controller = AgentRunController()
+        val secondController = AgentRunController()
+        val registry = ScreenLeaseRegistry()
+        val tools = BackgroundScreenTools("takeover", controller, registry = registry,
+            connectionFactory = { Connection().also { connections += it } }, retryDelayMs = 20)
+        val second = BackgroundScreenTools("other", secondController, registry = registry,
+            connectionFactory = { Connection() }, retryDelayMs = 20)
+        var waiter: Thread? = null
+        try {
+            tools.execute("screen_open", "{\"package\":\"app.one\"}")
+            second.execute("screen_open", "{\"package\":\"app.two\"}")
+            val old = connections.single()
+            old.onTakeover!!.invoke()
+            assertTrue(controller.isPaused)
+            assertTrue(controller.pausedForAppTakeover)
+            assertFalse(secondController.isPaused)
+            val resumed = CountDownLatch(1)
+            var response: String? = null
+            waiter = thread { response = tools.execute("screen_tap", "{}"); resumed.countDown() }
+            assertFalse(resumed.await(100, TimeUnit.MILLISECONDS))
+            controller.resume()
+            assertTrue(resumed.await(3, TimeUnit.SECONDS))
+            assertTrue(response!!.contains("APP_TAKEN_OVER"))
+            assertEquals(listOf("screen_open"), old.calls.toList())
+            assertTrue(old.keeps.all { it })
+            assertFalse(controller.pausedForAppTakeover)
+            tools.execute("screen_open", "{\"package\":\"app.one\"}")
+            assertEquals(2, connections.size)
+            old.onTakeover!!.invoke() // Late callback cannot pause the new binding.
+            assertFalse(controller.isPaused)
+            assertEquals("{\"ok\":true}", second.execute("screen_tap", "{}"))
+        } finally { controller.cancel(); tools.close(); second.close(); waiter?.join(3000) }
+    }
+
+    @Test fun takeoverFromAnInputReplyPausesInsteadOfAutomaticallyReopening() {
+        val connection = Connection()
+        val controller = AgentRunController()
+        val tools = BackgroundScreenTools("takeover-reply", controller, registry = ScreenLeaseRegistry(),
+            connectionFactory = { connection }, retryDelayMs = 20)
+        try {
+            tools.execute("screen_open", "{\"package\":\"app.one\"}")
+            connection.lost = true; connection.lostCode = "APP_TAKEN_OVER"
+            assertTrue(tools.execute("screen_tap", "{}")!!.contains("APP_TAKEN_OVER"))
+            assertTrue(controller.isPaused)
+            assertEquals(listOf("screen_open", "screen_tap"), connection.calls.toList())
+        } finally { controller.cancel(); tools.close() }
     }
 
     @Test fun systemRestartReleasesOnlyLostBindingAndNeverReplaysInput() {

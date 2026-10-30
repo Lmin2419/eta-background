@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="background_app_takeover_paused">應用已移出背景，任務已暫停</string>
     <string name="web_tools_overview_resilient_note">內建搜尋優先使用必應，失敗時嘗試 DuckDuckGo；每個來源的網路逾時預算為 10 秒。DeepSeek 和自訂介面依所選設定執行。</string>
     <string name="overlay_settings_choose_app">請在系統懸浮窗權限列表中選擇 Eta 後台版。</string>
     <string name="overlay_settings_app_details">已開啟應用程式資訊，請在權限設定中管理懸浮窗權限。</string>

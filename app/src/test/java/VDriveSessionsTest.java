@@ -16,7 +16,7 @@ public class VDriveSessionsTest {
         volatile boolean acknowledgeClose = true;
         boolean parked, capturing, movedToMain;
         boolean failPresent;
-        boolean handingOver, needsObservation, draining;
+        boolean handingOver, needsObservation, draining, takenOver;
         int closeCalls, reconcileCalls;
         Runnable releaseListener = () -> { };
         final CountDownLatch entered = new CountDownLatch(1), finish = new CountDownLatch(1);
@@ -48,6 +48,13 @@ public class VDriveSessionsTest {
         public boolean isParked() { return parked; }
         public boolean isCapturing() { return capturing; }
         public boolean isHandingOver() { return handingOver; }
+        public boolean isTakenOver() { return takenOver; }
+        public JSONObject foregroundGuard() {
+            if (movedToMain && !parked) { takenOver = true; handingOver = true; }
+            if (!takenOver) return null;
+            try { return new JSONObject().put("ok", false).put("code", "APP_TAKEN_OVER"); }
+            catch (Exception error) { throw new AssertionError(error); }
+        }
         public String commandState() { return draining ? "draining" : "idle"; }
         public JSONObject observationGuard(boolean mutating) {
             if (!draining && !(mutating && needsObservation)) return null;
@@ -115,6 +122,29 @@ public class VDriveSessionsTest {
         } finally { worker.finish.countDown(); holding.get(2, TimeUnit.SECONDS); executor.shutdownNow(); }
     }
 
+    @Test public void activeForegroundHintRetainsTakeoverReasonAfterCleanupWithoutStoppingOtherTask() throws Exception {
+        String a = open("app.active"), b = open("app.other");
+        assertTrue(send(a, "foreground_hint").getBoolean("ok"));
+        made.get(a).movedToMain = true;
+        assertEquals("APP_TAKEN_OVER", send(a, "foreground_hint").getString("code"));
+        assertEquals("APP_TAKEN_OVER", send(a, "keepalive").getString("code"));
+        assertTrue(send(a, "status").getBoolean("sessionTakenOver"));
+        assertEquals("APP_TAKEN_OVER", VDrive.processLine(new JSONObject().put("cmd", "launch")
+                .put("sessionId", a).put("component", "app.active").toString()).getString("code"));
+        assertTrue(send(b, "tap").getBoolean("ok"));
+        assertEquals(2, made.size());
+        assertTrue(send(a, "release_session").getBoolean("ok"));
+    }
+
+    @Test public void directNodeValidationDetectsActiveTaskMovement() throws Exception {
+        String id = open("app.nodes");
+        made.get(id).movedToMain = true;
+        JSONObject request = new JSONObject().put("cmd", "validate").put("sessionId", id)
+                .put("displayId", 12).put("action", "click2");
+        assertEquals("APP_TAKEN_OVER", VDrive.processLine(request.toString()).getString("code"));
+        assertEquals("launch", made.get(id).lastRequest.getString("cmd"));
+    }
+
     @Test public void nextOwnerReusesParkedAppAndLateOldCleanupCannotCloseIt() throws Exception {
         String old = open("app.same");
         FakeWorker worker = made.get(old);
@@ -136,14 +166,16 @@ public class VDriveSessionsTest {
         assertEquals(0, made.get(other).closeCalls);
     }
 
-    @Test public void foregroundHintsOnlyReconcileCompletedSessionsAndCleanupReturnsCapacityImmediately() throws Exception {
+    @Test public void foregroundHintsReconcileActiveAndCompletedSessionsWithoutAssumingMovement() throws Exception {
         String id = open("app.front");
         FakeWorker worker = made.get(id);
         send(id, "foreground_hint");
-        assertEquals(0, worker.reconcileCalls);
+        assertEquals(1, worker.reconcileCalls);
+        assertFalse(worker.takenOver);
+        assertEquals(1, count());
         park(id);
         send(id, "foreground_hint");
-        assertEquals(1, worker.reconcileCalls);
+        assertEquals(2, worker.reconcileCalls);
         assertEquals(1, count()); // A hint alone is not evidence of a completed handoff.
         worker.movedToMain = true;
         send(id, "foreground_hint");

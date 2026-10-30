@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="background_app_takeover_paused">App moved out of background · task paused</string>
     <string name="web_tools_overview_resilient_note">Built-in search uses Bing first and tries DuckDuckGo on failure, with a 10-second network timeout per source. DeepSeek and custom search keep using your selected configuration.</string>
     <string name="overlay_settings_choose_app">Choose Eta Background in the system overlay permission list.</string>
     <string name="overlay_settings_app_details">Open permissions in this app information page to manage display over other apps.</string>

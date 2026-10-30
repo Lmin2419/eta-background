@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Root transport. Mutable display/input/capture state lives in independent workers. */
 public final class VDrive {
-    static final String BUILD = "20261030-e39-lifecycle";
+    static final String BUILD = "20261030-e40-takeover";
     static java.util.function.BooleanSupplier health = () -> true;
     static volatile boolean systemInvalid;
     private static final String INSTANCE = UUID.randomUUID().toString();
@@ -43,6 +43,8 @@ public final class VDrive {
         default boolean claimParked() { return isParked(); }
         default boolean isCapturing() { return false; }
         default boolean isHandingOver() { return false; }
+        default boolean isTakenOver() { return false; }
+        default JSONObject foregroundGuard() { return null; }
         default String commandState() { return "idle"; }
         default JSONObject observationGuard(boolean mutating) { return null; }
         default void observationAccepted() { }
@@ -57,10 +59,14 @@ public final class VDrive {
     private static final Map<String, Slot> workers = new LinkedHashMap<>();
     private static final int LIMIT = 2;
     private static final Set<String> retired = new LinkedHashSet<>();
+    private static final Set<String> takenOverIds = new LinkedHashSet<>();
     private static void retire(String id) {
         if (id.equals("legacy-mcp")) return;
         retired.add(id);
-        while (retired.size() > 4096) retired.remove(retired.iterator().next());
+        while (retired.size() > 4096) {
+            String oldest = retired.iterator().next();
+            retired.remove(oldest); takenOverIds.remove(oldest);
+        }
     }
     private static final class Slot {
         volatile Worker worker;
@@ -190,11 +196,18 @@ public final class VDrive {
                                 .put("initializing", worker == null)
                                 .put("capturing", worker != null && worker.isCapturing())
                                 .put("handingOver", worker != null && worker.isHandingOver())
+                                .put("takenOver", worker != null && worker.isTakenOver())
                                 .put("commandState", worker == null ? "initializing" : worker.commandState())
                                 .put("displayId", worker == null ? -1 : worker.displayId()));
                     }
                 boolean ready = healthy();
+                boolean sessionTakenOver;
+                synchronized (workers) {
+                    Slot selected = workers.get(id);
+                    sessionTakenOver = takenOverIds.contains(id) || selected != null && selected.worker != null && selected.worker.isTakenOver();
+                }
                 return new JSONObject().put("ok", ready).put("pong", ready).put("healthy", ready).put("build", BUILD)
+                        .put("sessionTakenOver", sessionTakenOver)
                         .put("code", ready ? "READY" : "SYSTEM_RESTARTED").put("pid", pid).put("instance", INSTANCE)
                         .put("dexSha256", dexHash)
                         .put("sessions", sessions).put("count", sessions.length()).put("limit", LIMIT);
@@ -223,17 +236,26 @@ public final class VDrive {
                 Worker target = null;
                 synchronized (workers) {
                     Slot candidate = workers.get(id);
-                    if (candidate != null && candidate.parked && !candidate.closing) target = candidate.worker;
+                    if (takenOverIds.contains(id)) return takeoverError();
+                    if (candidate != null && candidate.worker != null && candidate.worker.isTakenOver()) return takeoverError();
+                    if (candidate != null && !candidate.closing) target = candidate.worker;
                 }
                 // A hint is never proof: the worker checks actual task/display placement.
-                if (target != null) target.reconcileForeground();
+                if (target != null) {
+                    JSONObject moved = target.foregroundGuard();
+                    target.reconcileForeground();
+                    if (moved != null) return moved;
+                }
                 return ok();
+            }
+            synchronized (workers) {
+                if (takenOverIds.contains(id)) return takeoverError();
             }
             if (cmd.equals("launch")) {
                 String pkg = req.optString("component").split("/")[0];
                 String reclaim = null;
                 synchronized (workers) {
-                    if (retired.contains(id)) return error("SESSION_CLOSED", "任务已结束");
+                    if (retired.contains(id)) return closedSessionError(id);
                     Slot old = workers.get(id);
                     if (id.equals("legacy-mcp") && old != null && !old.pkg.equals(pkg)) reclaim = id;
                     String adopt = null;
@@ -263,7 +285,7 @@ public final class VDrive {
             boolean initialize = false;
             synchronized (workers) {
                 // release can race the preliminary launch/reclaim check above.
-                if (retired.contains(id) && !cmd.equals("cancel")) return error("SESSION_CLOSED", "任务已结束");
+                if (retired.contains(id) && !cmd.equals("cancel")) return closedSessionError(id);
                 slot = workers.get(id);
                 if (id.equals("legacy-mcp") && cmd.equals("finish") && req.has("package")) {
                     for (Slot candidate : workers.values()) if (candidate.parked && candidate.pkg.equals(req.optString("package"))) slot = candidate;
@@ -284,6 +306,7 @@ public final class VDrive {
                 }
                 if (slot == null) return error("NO_SESSION", "请先打开本任务的屏幕");
                 slot.touched = now();
+                if (slot.worker != null && slot.worker.isTakenOver() && !cmd.equals("finish") && !cmd.equals("cancel")) return takeoverError();
                 if (slot.closing && !cmd.equals("cancel")) return error("SESSION_CLOSED", "屏幕正在释放");
             }
             // Reserve capacity above, but never hold the session monitor across system calls.
@@ -301,9 +324,15 @@ public final class VDrive {
                 if (discarded) { created.worker.closeSession(); return error("SESSION_CLOSED", "创建期间任务已结束"); }
             }
             if (slot.worker == null) return error("SESSION_STARTING", "屏幕正在初始化");
-            if (cmd.equals("keepalive")) { slot.worker.keepAlive(); return ok(); }
+            if (cmd.equals("keepalive")) {
+                JSONObject moved = slot.worker.foregroundGuard();
+                if (moved != null) return moved;
+                slot.worker.keepAlive(); return ok();
+            }
             if (cmd.equals("validate")) {
                     if (slot.closing || req.optInt("displayId", -1) != slot.worker.displayId()) return error("STALE_SCREEN", "屏幕已失效");
+                    JSONObject moved = slot.worker.foregroundGuard();
+                    if (moved != null) return moved;
                     JSONObject blocked = slot.worker.observationGuard(VDriveWorker.isMutatingInput(req.optString("action")));
                     if (blocked != null) return blocked;
                     // A direct DisplayManager read, never a queued worker RPC: the worker may
@@ -376,7 +405,10 @@ public final class VDrive {
             Iterator<Map.Entry<String, Slot>> entries = workers.entrySet().iterator();
             while (entries.hasNext()) {
                 Map.Entry<String, Slot> entry = entries.next();
-                if (entry.getValue() == released) { retire(entry.getKey()); entries.remove(); }
+                if (entry.getValue() == released) {
+                    if (released.worker != null && released.worker.isTakenOver()) takenOverIds.add(entry.getKey());
+                    retire(entry.getKey()); entries.remove();
+                }
             }
         }
     }
@@ -395,6 +427,14 @@ public final class VDrive {
     }
 
     static int obsPort() { return 8738; }
+    private static JSONObject takeoverError() {
+        return error("APP_TAKEN_OVER", "应用已离开后台屏，后台操作已暂停；请由用户决定是否继续，不要自动重新打开或拉回应用。");
+    }
+    private static JSONObject closedSessionError(String id) {
+        Slot slot = workers.get(id); // Called under the workers monitor.
+        return takenOverIds.contains(id) || slot != null && slot.worker != null && slot.worker.isTakenOver()
+                ? takeoverError() : error("SESSION_CLOSED", "任务已结束");
+    }
     static boolean mainDisplayOn() {
         if (context == null) return false;
         android.view.Display main = context.getSystemService(android.hardware.display.DisplayManager.class).getDisplay(0);

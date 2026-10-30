@@ -117,7 +117,7 @@ class VDriveWorker implements VDrive.Worker {
     String launchedPkg = "";
     String homeFront = "";   // component that owned the main screen before we borrowed
     String protectedPkg = ""; // app parked on the hidden display, kept out of LMK
-    int launchedTaskId = -1;
+    volatile int launchedTaskId = -1;
     int homeDisplay = 0;
     long taskCheckAt = 0;
     boolean taskCheckResult = false;
@@ -145,6 +145,7 @@ class VDriveWorker implements VDrive.Worker {
     private final java.util.concurrent.atomic.AtomicBoolean heartbeatPending = new java.util.concurrent.atomic.AtomicBoolean();
     private volatile boolean observationRequired;
     private volatile boolean handingOver;
+    private volatile boolean takenOver;
 
     /** Screenshots are confined here unless a caller explicitly opts out (P2). */
     final String SHOT_DIR = "/data/local/tmp/eta/shots/" + java.util.UUID.randomUUID();
@@ -319,6 +320,28 @@ class VDriveWorker implements VDrive.Worker {
     public boolean claimParked() { return disposition.compareAndSet(PARKED, CLAIMED); }
     public boolean isCapturing() { return reader != null; }
     public boolean isHandingOver() { return handingOver; }
+    public boolean isTakenOver() { return takenOver; }
+    public JSONObject foregroundGuard() {
+        if (takenOver) return takeoverError();
+        int task = launchedTaskId, ownedDisplay = displayId;
+        if (retired || orphanAt > 0 || task <= 0 || ownedDisplay <= 0) return null;
+        int actual = displayOfTask(task);
+        // Seeing a Recents thumbnail or another window is not evidence of movement.
+        if (actual < 0 || actual == ownedDisplay) return null;
+        markTakenOver(actual);
+        reconcileForeground();
+        return takeoverError();
+    }
+    private void markTakenOver(int actualDisplay) {
+        if (!takenOver) log("event=task_left_background task=" + launchedTaskId + " from=" + displayId + " to=" + actualDisplay);
+        takenOver = true;
+        handingOver = true;
+        long command = runningCmd;
+        if (command > 0) CANCELED.add(command);
+    }
+    private JSONObject takeoverError() {
+        return fail("APP_TAKEN_OVER", "应用已离开后台屏，后台操作已暂停；请由用户决定是否继续。不要自动重新打开或拉回应用。");
+    }
     public String commandState() {
         PendingCommand pending = pendingCommand.get();
         return pending != null ? (pending.expired ? "draining" : "executing")
@@ -337,9 +360,9 @@ class VDriveWorker implements VDrive.Worker {
         if (released.getCount() == 0) listener.run();
     }
     public void reconcileForeground() {
-        if (!isParked() || !reconcilePending.compareAndSet(false, true)) return;
-        if (!work.post(() -> {
-            try { if (isParked()) watchdog(); }
+        if (retired || !reconcilePending.compareAndSet(false, true)) return;
+        if (!work.postAtFrontOfQueue(() -> {
+            try { if (!retired) watchdog(); }
             finally { reconcilePending.set(false); }
         })) reconcilePending.set(false);
     }
@@ -448,6 +471,8 @@ class VDriveWorker implements VDrive.Worker {
             // ATM placement can precede WindowManager's new input window. Keep the empty
             // old display through that transition, without resizing or restarting the App.
             handingOver = true;
+            if (x.orphanAt <= 0) markTakenOver(movedTo);
+            if (takenOver && x.reader != null) stopCapture(x);
             if (x.handoffAt <= 0) x.handoffAt = now;
             if (!confirmHandoffWindow(x, movedTo)) return;
             // The actual tracked task left; its old display can go without touching its new window.
@@ -675,7 +700,7 @@ class VDriveWorker implements VDrive.Worker {
             } catch (CanceledException cancelled) {
                 observationRequired = true;
                 lastScreenshot = null;
-                result = failFlag("CANCELED", "command cancelled; observe before retrying input",
+                result = takenOver ? takeoverError() : failFlag("CANCELED", "command cancelled; observe before retrying input",
                         "cancelRequested", "operationMayHaveRun");
             } catch (java.net.SocketTimeoutException deadline) {
                 observationRequired = true;
@@ -755,6 +780,7 @@ class VDriveWorker implements VDrive.Worker {
 
     /** Called from the injection loops: abort the moment the command is written off. */
     void checkCanceled() throws Exception {
+        if (takenOver) throw new CanceledException();
         Long id = CURRENT_CMD.get();
         if (id != null && CANCELED.contains(id)) throw new CanceledException();
     }
@@ -860,6 +886,11 @@ class VDriveWorker implements VDrive.Worker {
 
     JSONObject handle(JSONObject req) throws Exception {
         String cmd0 = req.optString("cmd", "");
+        if (!isPassive(cmd0) && !"finish".equals(cmd0) && !"destroy".equals(cmd0)
+                && !"quit".equals(cmd0) && !"present".equals(cmd0)) {
+            JSONObject moved = foregroundGuard();
+            if (moved != null) return moved;
+        }
         boolean passive = isPassive(cmd0);
         JSONObject[] err = new JSONObject[1];
         Session target = pickSession(req, err);
@@ -1457,6 +1488,7 @@ class VDriveWorker implements VDrive.Worker {
 
     /** Point the command cursor at an existing session without recreating anything. */
     JSONObject reuseSession(Session sess, String comp) throws Exception {
+        if (takenOver) return takeoverError();
         String pkg = sess.pkg;
         long t = SystemClock.elapsedRealtime();
         Integer tid = taskOfPackage(pkg);

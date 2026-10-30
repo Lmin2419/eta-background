@@ -63,4 +63,26 @@ public class ShadowToolsCloseoutTest {
         assertEquals("release_session", requests.get(0).getString("cmd"));
         assertFalse(requests.get(0).getBoolean("keep"));
     }
+
+    @Test public void takeoverDuringHeartbeatPausesAndPreservesMovingTaskEvenWhenCancelled() throws Exception {
+        List<JSONObject> requests = new ArrayList<>();
+        ShadowTools tools = open((port, payload, timeout) -> {
+            JSONObject req = new JSONObject(payload); requests.add(req);
+            if (req.getString("cmd").equals("keepalive")) return "{\"ok\":false,\"code\":\"APP_TAKEN_OVER\"}";
+            return "{\"ok\":true,\"parked\":true}";
+        });
+        AtomicBoolean notified = new AtomicBoolean();
+        tools.setTakeoverListener(() -> notified.set(true));
+        tools.keepAlive();
+        assertTrue(notified.get());
+        assertTrue(tools.closeSession(false));
+        assertEquals("finish", requests.get(1).getString("cmd"));
+        assertTrue(requests.get(2).getBoolean("keep"));
+    }
+
+    @Test public void alreadyReleasedTakeoverDoesNotRetryParkingForever() throws Exception {
+        ShadowTools tools = open((port, payload, timeout) -> new JSONObject(payload).getString("cmd").equals("finish")
+                ? "{\"ok\":false,\"code\":\"APP_TAKEN_OVER\"}" : "{\"ok\":true}");
+        assertTrue(tools.closeSession(true));
+    }
 }

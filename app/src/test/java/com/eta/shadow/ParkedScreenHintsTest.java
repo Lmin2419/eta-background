@@ -13,6 +13,17 @@ import static org.junit.Assert.*;
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 37, application = Application.class)
 public class ParkedScreenHintsTest {
+    @Test public void activeTaskStillReceivesHintsAfterThirtyMinutesAndOldOwnerCannotRemoveNewOne() throws Exception {
+        ParkedScreenHints hints = new ParkedScreenHints();
+        hints.rememberActive("app.target", "active-run");
+        org.robolectric.shadows.ShadowSystemClock.advanceBy(java.time.Duration.ofMinutes(31));
+        CountDownLatch done = new CountDownLatch(1);
+        hints.forget("app.target", "old-run");
+        hints.onWindow(0, "app.target", id -> { assertEquals("active-run", id); done.countDown(); });
+        assertTrue(done.await(2, TimeUnit.SECONDS));
+        hints.forget("app.target", "active-run");
+        hints.onWindow(0, "app.target", id -> fail("Closed owner must not receive events"));
+    }
     @Test public void expiredLeaseDoesNotContactRoot() {
         ParkedScreenHints hints = new ParkedScreenHints();
         hints.remember("app.target", "expired-run");

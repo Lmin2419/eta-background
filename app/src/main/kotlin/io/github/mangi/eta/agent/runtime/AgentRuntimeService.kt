@@ -1171,7 +1171,11 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
 
     private fun taskStatus(run: RuntimeRunRegistry.Run): AgentOverlayStatus = when {
         run.session.controller.isCancelled -> AgentOverlayStatus.Stopping
-        run.session.controller.isPaused -> if (run.pausedForScreenOff) AgentOverlayStatus.ScreenOffPaused else AgentOverlayStatus.Paused
+        run.session.controller.isPaused -> when {
+            run.session.controller.pausedForAppTakeover -> AgentOverlayStatus.AppTakeoverPaused
+            run.pausedForScreenOff -> AgentOverlayStatus.ScreenOffPaused
+            else -> AgentOverlayStatus.Paused
+        }
         run.queued -> AgentOverlayStatus.Queued
         run.backgroundScreenPhase != null -> AgentOverlayStatus.BackgroundScreen(run.backgroundScreenPhase!!)
         else -> run.overlayState.status

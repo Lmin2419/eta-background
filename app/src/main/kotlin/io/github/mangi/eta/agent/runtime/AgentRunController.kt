@@ -24,6 +24,8 @@ internal class AgentRunController {
     private var acceptingSteering = true
     @Volatile
     private var paused = false
+    @Volatile var pausedForAppTakeover: Boolean = false
+        private set
 
     val isPaused: Boolean
         get() = paused
@@ -41,6 +43,7 @@ internal class AgentRunController {
             acceptingSteering = false
             steeringMessages.clear()
             paused = false
+            pausedForAppTakeover = false
             pauseCondition.signalAll()
         }
         resources.forEach { resource ->
@@ -83,9 +86,10 @@ internal class AgentRunController {
      * 暂停执行：后续 [throwIfCancelled] 调用会阻塞挂起，直到 [resume] 或 [cancel]。
      * 在工作线程的检查点调用，不会阻塞调用方线程。
      */
-    fun pause() {
+    fun pause(forAppTakeover: Boolean = false) {
         lock.withLock {
             paused = true
+            pausedForAppTakeover = forAppTakeover
             pauseListeners.forEach { it(true) }
         }
     }
@@ -97,6 +101,7 @@ internal class AgentRunController {
         lock.withLock {
             if (paused) resumeGeneration++
             paused = false
+            pausedForAppTakeover = false
             pauseListeners.forEach { it(false) }
             pauseCondition.signalAll()
         }

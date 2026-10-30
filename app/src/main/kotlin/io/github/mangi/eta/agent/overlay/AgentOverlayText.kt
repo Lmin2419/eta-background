@@ -10,6 +10,7 @@ import io.github.mangi.eta.R
 internal sealed interface AgentOverlayStatus {
     data object Queued : AgentOverlayStatus
     data object ScreenOffPaused : AgentOverlayStatus
+    data object AppTakeoverPaused : AgentOverlayStatus
     data object Reasoning : AgentOverlayStatus
     data class BackgroundScreen(val phase: io.github.mangi.eta.agent.runtime.BackgroundScreenPhase) : AgentOverlayStatus
     data object WaitingForModel : AgentOverlayStatus
@@ -34,6 +35,7 @@ internal fun AgentOverlayStatus.localizedText(): String = localizedText(LocalRes
 internal fun AgentOverlayStatus.localizedText(resources: Resources): String = when (this) {
     AgentOverlayStatus.Queued -> resources.getString(R.string.background_task_queued)
     AgentOverlayStatus.ScreenOffPaused -> resources.getString(R.string.background_screen_off_paused)
+    AgentOverlayStatus.AppTakeoverPaused -> resources.getString(R.string.background_app_takeover_paused)
     AgentOverlayStatus.Reasoning -> resources.getString(R.string.overlay_reasoning)
     AgentOverlayStatus.WaitingForModel -> resources.getString(R.string.background_waiting_model)
     is AgentOverlayStatus.BackgroundScreen -> resources.getString(when (phase) {

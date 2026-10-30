@@ -194,4 +194,31 @@ public class VDriveLifecycleTest {
         assertTrue(worker.handover(request).getBoolean("ok"));
         assertEquals(1, worker.moves);
     }
+
+    @Test public void activeTaskMovedByUserBlocksInputAndCannotBePulledBackByReuse() throws Exception {
+        worker = new Worker(RuntimeEnvironment.getApplication());
+        VDriveWorker.Session session = worker.new Session("audit.target");
+        session.displayId = 42; session.taskId = 71;
+        worker.sessions.put(session.pkg, session); worker.load(session);
+        worker.taskDisplay = 0;
+        assertEquals("APP_TAKEN_OVER", worker.foregroundGuard().getString("code"));
+        assertTrue(worker.isTakenOver()); assertTrue(worker.isHandingOver());
+        assertEquals("APP_TAKEN_OVER", worker.handle(new JSONObject().put("cmd", "tap")).getString("code"));
+        assertEquals("APP_TAKEN_OVER", worker.reuseSession(session, "audit.target/.Main").getString("code"));
+        assertEquals(0, worker.moves);
+    }
+
+    @Test public void recentsVisibilityOrUnknownPlacementDoesNotProveTaskMoved() throws Exception {
+        worker = new Worker(RuntimeEnvironment.getApplication());
+        VDriveWorker.Session session = worker.new Session("audit.target");
+        session.displayId = 42; session.taskId = 71;
+        worker.sessions.put(session.pkg, session); worker.load(session);
+        assertNull(worker.foregroundGuard());
+        worker.taskDisplay = -1;
+        assertNull(worker.foregroundGuard());
+        assertFalse(worker.isTakenOver());
+        // Completed pages may be deliberately reopened by a new user-authorized run.
+        worker.taskDisplay = 0; session.orphanAt = 1; worker.load(session);
+        assertNull(worker.foregroundGuard());
+    }
 }

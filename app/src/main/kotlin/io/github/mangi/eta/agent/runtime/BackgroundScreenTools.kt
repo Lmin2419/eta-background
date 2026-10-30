@@ -12,6 +12,7 @@ internal interface ScreenToolConnection {
     fun execute(name: String, arguments: String): String?
     fun release(keepFinished: Boolean): Boolean
     fun keepAlive()
+    fun setTakeoverListener(listener: () -> Unit) = Unit
 }
 
 private class ShadowScreenConnection(id: String) : ScreenToolConnection {
@@ -19,6 +20,7 @@ private class ShadowScreenConnection(id: String) : ScreenToolConnection {
     override fun execute(name: String, arguments: String) = tools.intercept(name, arguments)
     override fun release(keepFinished: Boolean) = tools.closeSession(keepFinished)
     override fun keepAlive() = tools.keepAlive()
+    override fun setTakeoverListener(listener: () -> Unit) = tools.setTakeoverListener(listener)
 }
 
 /** Capacity is reserved before launch; a cancelled owner keeps its slot until engine cleanup ACK. */
@@ -69,6 +71,7 @@ internal class BackgroundScreenTools(
 ) : AutoCloseable {
     private class Binding(val id: String, val app: String, val tools: ScreenToolConnection) {
         val closing = java.util.concurrent.atomic.AtomicBoolean()
+        val takenOver = java.util.concurrent.atomic.AtomicBoolean()
         val released = CountDownLatch(1)
         var heartbeat: java.util.concurrent.ScheduledFuture<*>? = null
     }
@@ -77,6 +80,20 @@ internal class BackgroundScreenTools(
     @Volatile private var closed = false
     @Volatile private var phase: BackgroundScreenPhase? = null
     private var observedGeneration = controller.resumeGeneration
+    private val takeoverPending = java.util.concurrent.atomic.AtomicBoolean()
+
+    private fun pauseForTakeover(value: Binding) {
+        synchronized(lock) {
+            if (binding !== value || closed || value.closing.get() || controller.isCancelled ||
+                !value.takenOver.compareAndSet(false, true)) return
+            takeoverPending.set(true)
+            controller.pause(forAppTakeover = true)
+        }
+        // Publish the existing paused status even when no opening/closing phase was active.
+        runCatching { onPhase(phase) }
+        cleanup(value, keepFinished = true)
+        RuntimeDiagnostics.record("screen_handoff", "paused_for_foreground")
+    }
 
     private fun phase(next: BackgroundScreenPhase?) {
         if (phase == next) return
@@ -92,6 +109,7 @@ internal class BackgroundScreenTools(
     private fun executeInternal(name: String, arguments: String): String? {
         if (!name.startsWith("screen_") && name != "terminal") return null
         controller.throwIfCancelled()
+        if (takeoverPending.getAndSet(false)) return """{"ok":false,"code":"APP_TAKEN_OVER","error":"应用已离开后台屏，原后台操作已暂停。用户恢复后请重新观察并取得后台屏，不能重放旧输入或自动切换到前台操作。"}"""
         if (binding != null && controller.resumeGeneration != observedGeneration && name in MUTATING_TOOLS) {
             return """{"ok":false,"code":"OBSERVE_AFTER_RESUME","error":"暂停后页面可能已经变化，请先调用 screen_dump、screen_list 或 screen_shot 重新观察，再决定下一步。此操作尚未执行。"}"""
         }
@@ -126,6 +144,7 @@ internal class BackgroundScreenTools(
                         error("任务已结束")
                     }
                     binding = candidate
+                    candidate.tools.setTakeoverListener { pauseForTakeover(candidate) }
                     candidate.heartbeat = maintenance.scheduleWithFixedDelay(candidate.tools::keepAlive, 30, 30, TimeUnit.SECONDS)
                 }
             }
@@ -145,6 +164,9 @@ internal class BackgroundScreenTools(
             if (runCatching { JSONObject(result.orEmpty()).optBoolean("ok") }.getOrDefault(false)) {
                 onAppOpened(app)
             }
+            if (runCatching { JSONObject(result.orEmpty()).optString("code") == "APP_TAKEN_OVER" }.getOrDefault(false)) {
+                pauseForTakeover(next)
+            }
             if (runCatching { JSONObject(result.orEmpty()).optString("code") in LOST_SESSION_CODES }.getOrDefault(false)) {
                 cleanup(next, keepFinished = false)
             }
@@ -161,6 +183,7 @@ internal class BackgroundScreenTools(
         val observationGeneration = controller.resumeGeneration
         return current.tools.execute(name, arguments).also { result ->
             val response = runCatching { JSONObject(result.orEmpty()) }.getOrNull()
+            if (response?.optString("code") == "APP_TAKEN_OVER") pauseForTakeover(current)
             if (response?.optString("code") in LOST_SESSION_CODES ||
                 (name == "screen_state" && response?.has("sessionValid") == true && !response.optBoolean("sessionValid"))) {
                 // Release this binding only, and never replay an input whose outcome is unknown.
