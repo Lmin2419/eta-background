@@ -1,0 +1,92 @@
+{
+  "etaCommit": "3b1794d70881c3c849b53d7778dd2bfdf0a46cc5",
+  "portedCount": 36,
+  "skippedCount": 0,
+  "files": [
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/app/AgentMessageQueueReducerTest.kt",
+      "target": "tests/eta/agentMessageQueueReducer.test.ts",
+      "ported": [
+        "enqueueAppendsInOrderAndClearsCurrentDraft",
+        "immediateInterruptPreemptsQueueHeadAndDemotesPreviousInterrupt",
+        "promoteToInterruptMovesItemToFrontWhenStreamingAndPopsImmediatelyWhenIdle",
+        "recallToDraftMergesWithUnsentTextAndAttachmentsAndBumpsSyncVersion",
+        "pollNextToSendAfterRunRespectsUserStopExceptForImmediateInterrupt"
+      ],
+      "skipped": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/app/AgentConversationRevisionReducerTest.kt",
+      "target": "tests/eta/agentConversationRevisionReducer.test.ts",
+      "ported": [
+        "editingUserTurnCoveredBySummaryDropsStaleSummary",
+        "boundaryMapsAssistantToItsUserTurnAndKeepsToolTranscriptPrefix",
+        "deleteFromMiddleTurnTruncatesMessagesAndHistoryTogether",
+        "compactedCheckpointAlignsRetainedTurnsFromTheTail",
+        "visibleMessagesStopAtEditedUserWithoutMutatingTheSource",
+        "invalidMessageDoesNotChangeConversation"
+      ],
+      "skipped": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/app/AgentRunEventCoalescerTest.kt",
+      "target": "tests/eta/agentRunEventCoalescer.test.ts",
+      "ported": [
+        "coalescesAdjacentDeltasFromTheSameBlock",
+        "flushesThePreviousBlockBeforeBufferingANewOne",
+        "keepsRunsIndependent"
+      ],
+      "skipped": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/app/AgentRuntimeHistoryReducerTest.kt",
+      "target": "tests/eta/agentRuntimeHistoryReducer.test.ts",
+      "ported": [
+        "journalRetainsOriginalsAndContextIncludesPostSnapshotSteps",
+        "editingSummarizedTurnRebuildsFromOriginalJournal",
+        "replacementKeepsLaterUserMessagesAndIsAppliedOnce",
+        "snapshotKeepsAcceptedButUnconsumedSteeringAfterCancellation",
+        "recoveryThenLiveDeliveryCommitsTranscriptOnlyOnce"
+      ],
+      "skipped": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/app/AssistantConversationSeedTest.kt",
+      "target": "tests/eta/assistantConversationSeed.test.ts",
+      "ported": [
+        "livePromptIsDurableAndNotDuplicatedByRepeatedRecovery",
+        "seedingNextPromptPreservesUnsummarizedJournal"
+      ],
+      "skipped": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/app/ConversationTimeLabelsTest.kt",
+      "target": "tests/eta/conversationTimeLabels.test.ts",
+      "ported": [
+        "labelUsesClockTimeForToday",
+        "labelUsesRelativeDayForRecentHistory",
+        "labelUsesDateForOlderHistory",
+        "labelFallsBackForInvalidTimestamp",
+        "labelSupportsEnglishAndTwelveHourClock",
+        "relativeDaysRemainCorrectAcrossDaylightSavingChanges"
+      ],
+      "skipped": []
+    },
+    {
+      "source": "app/src/test/kotlin/io/github/mangi/eta/ui/app/ConversationMarkdownExporterTest.kt",
+      "target": "tests/eta/conversationMarkdownExporter.test.ts",
+      "ported": [
+        "exportRendersFullConversationInOrder",
+        "exportParsesFileReferencesInUserContent",
+        "exportAnnotatesImagesWithoutEmbeddingDataUrls",
+        "exportSkipsBlankStreamingAndNonContentMessages",
+        "exportRendersToolStatusVariants",
+        "exportSanitizesMultilineTitle",
+        "defaultFileNameSanitizesTitle",
+        "defaultFileNameFallsBackWhenBlankAndCollapsesWhitespace",
+        "defaultFileNameTruncatesLongTitles"
+      ],
+      "skipped": []
+    }
+  ]
+}
