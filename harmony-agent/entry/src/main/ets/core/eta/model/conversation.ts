@@ -2,6 +2,7 @@
 // agent/model/AgentModelClient.kt, AgentContextSnapshot.kt and agent/runtime/AgentEvent.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 // Minimal DTO subset for L1–L4; no Android, storage or model execution dependencies.
+import { RoleplayBinding, RoleplayMessageState, emptyRoleplayMessages } from './runtimeProjection';
 export interface AgentFileReference { displayName: string; absolutePath: string; kind: 'File' | 'Directory'; }
 export interface PendingImageUi { id: string; uri: string; dataUrl: string; mimeType: string; }
 export interface PendingFileReferenceUi { id: string; reference: AgentFileReference; }
@@ -47,13 +48,14 @@ export function conversationMessage(role: string, content: string = ''): Convers
 }
 export interface MessageEditUiState { targetMessageId: string; previousInput: string; previousImages: PendingImageUi[]; previousFileReferences: PendingFileReferenceUi[]; hasLaterTurns: boolean; preserveFollowingMessages: boolean; }
 export interface AgentChatUiState {
+  roleplay: RoleplayBinding | null; roleplayMessages: RoleplayMessageState; roleplayOriginalContents: Map<string, string>;
   messages: AgentChatMessageUi[]; history: ConversationMessage[]; journal: ConversationMessage[];
   input: string; isStreaming: boolean; isCompacting: boolean; thinkingEnabled: boolean;
   pendingImages: PendingImageUi[]; pendingFileReferences: PendingFileReferenceUi[]; queuedMessages: QueuedMessageUi[];
   inputSyncVersion: number; appliedRuntimeRunIds: string[]; messageEdit: MessageEditUiState | null;
   modelId: string | null; isConversationLoaded: boolean; messageStartIndex: number; hasEarlierMessages: boolean;
 }
-export function emptyChatState(): AgentChatUiState { return { messages: [], history: [], journal: [], input: '', isStreaming: false, isCompacting: false, thinkingEnabled: false, pendingImages: [], pendingFileReferences: [], queuedMessages: [], inputSyncVersion: 0, appliedRuntimeRunIds: [], messageEdit: null, modelId: null, isConversationLoaded: true, messageStartIndex: 0, hasEarlierMessages: false }; }
+export function emptyChatState(): AgentChatUiState { return { roleplay: null, roleplayMessages: emptyRoleplayMessages(), roleplayOriginalContents: new Map(), messages: [], history: [], journal: [], input: '', isStreaming: false, isCompacting: false, thinkingEnabled: false, pendingImages: [], pendingFileReferences: [], queuedMessages: [], inputSyncVersion: 0, appliedRuntimeRunIds: [], messageEdit: null, modelId: null, isConversationLoaded: true, messageStartIndex: 0, hasEarlierMessages: false }; }
 export type AgentChatHomeUiState = AgentChatUiState;
 export interface AgentContextSnapshot { operationId: string; messages: ConversationMessage[]; consumedUserTurns: number; coveredUserTurns: number; consumedSupplementCount: number; consumedTranscriptMessages: number | null; }
 export function contextSnapshot(operationId: string, messages: ConversationMessage[]): AgentContextSnapshot { return { operationId, messages, consumedUserTurns: 0, coveredUserTurns: 0, consumedSupplementCount: 0, consumedTranscriptMessages: null }; }
