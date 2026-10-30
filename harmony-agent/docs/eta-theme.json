@@ -136,12 +136,24 @@
       "sha256": "e712c4700f1ac24f3eac3ff0edf49e6b8bd82dd903c48e2f2eb627f33cf0b0b7"
     },
     {
+      "path": "scripts/eta-upstream/miuix-0.9.4/ProgressiveBlur.kt",
+      "sha256": "a7164f6ef628a08560b0af02b0fc5754b2bad5e1b54903e3ba81ff3798eb0d23"
+    },
+    {
       "path": "scripts/eta-upstream/miuix-0.9.4/RadioButton.kt",
       "sha256": "18c5a5bc91988604c5ebb967b18235c87bee7db38ded216d8a72c5e520f64bc6"
     },
     {
+      "path": "scripts/eta-upstream/miuix-0.9.4/ScrollEndHaptic.kt",
+      "sha256": "b9fa086529b4ffb3bdbda3bb3707107be561e610df205ebbd0d7daa4691d9fe1"
+    },
+    {
       "path": "scripts/eta-upstream/miuix-0.9.4/SmallTitle.kt",
       "sha256": "434ec6cfc33e05ef6d857310c42d1595c30f7ea1503e755e120b72331d490fd5"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/Switch.kt",
+      "sha256": "0a4cb03161fbc9715a166f2b49004de55b5a7c840c71fc01c4f8ce0b998b6a4b"
     },
     {
       "path": "scripts/eta-upstream/miuix-0.9.4/TextStyles.kt",

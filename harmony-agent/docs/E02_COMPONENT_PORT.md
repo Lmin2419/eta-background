@@ -1,4 +1,4 @@
-# E02 · Eta 通用组件（0.9.9）
+# E02 · Eta 通用组件（0.9.11）
 
 来源为 `app/src/main/kotlin/io/github/mangi/eta/ui/components/`，基准 `3b1794d`。Miuix 固定为 0.9.4 / `39c40f9`，补充源码逐字保存于 `scripts/eta-upstream/`，散列见 `sources.json`。保留 Required Notice 和 Apache-2.0 归属。
 
@@ -22,7 +22,7 @@
 | AdaptiveTopAppBar | 同名文件；窄屏大标题折叠、宽屏小标题；尺寸、淡出阈值、弹簧参数从来源生成 | A，滚动和宽窄切换需渲染验证 |
 | MiuixScaffoldPage / PageBottomSpacer | 同名文件；600 vp 断点、800 vp 内容上限、24 vp 底部留白；安全区由宿主单次传入 | A，预览待测 |
 | TopBarBackdrop 均匀模糊 / 关闭 | `TopBarBackdrop.ets`；25 vp backdropBlur、0.8 surface 叠色 / 实色 | A，采样效果待测 |
-| TopBarBackdrop 渐进模糊 | 参数保留；当前走 Eta 的实色降级分支 | B；公开 ArkUI 渐变模糊作用于内容而非同一离屏背景采样，未冒充已实现 |
+| TopBarBackdrop 渐进模糊 | `linearGradientBlur` 施加于顶栏下的 Scroll；曲线 2.2、半径 10、表面 alpha 0.3，标题独立清晰层 | A 代码尝试，Gallery 可切换均匀 / 渐进 / 关闭；实际画面待测，未测量时实色降级 |
 | EtaGallery | `pages/EtaGallery.ets`，未加入 main_pages；全组件状态、深色预览、150% 字体预览 | 开发入口；已纳入 check:ets，不是截图证据 |
 
 ## 单测与检查
@@ -30,16 +30,16 @@
 - `EtaPreferenceRenderingTest` 原有 2 项依赖 Robolectric/ComposeView。完整原平台测试移植 **0 项，跳过平台部分 2 项**，原因：本环境没有 Compose 或 ArkUI 渲染器。
 - 对应 2 个原用例名称保留于 `tests/eta/etaPreferenceRendering.logic.test.ts`，只验证共用测量逻辑；不是可见文字/像素边界的原生断言。
 - 新增 3 项组件契约检查：UI 无硬编码色值与来源声明、预览不进入正式路由但纳入 ArkTS、Miuix 选择勾号的生成几何。
-- 全量 **428 项测试通过，0 失败**；ArkTS **0 error，29 条原有 warning**，只沿用既有 `$$this` 双向绑定误报过滤（目前 2 条）。
+- 全量 **430 项测试通过，0 失败**；ArkTS **0 error，30 条 warning（原有 29 条 + VIBRATE 权限声明的 SDK 提示，manifest 已声明）**，只沿用既有 `$$this` 双向绑定误报过滤（目前 2 条）。
 - restool **1,843 项资源通过，0 warning**。颜色各 73 个、生成尺寸/字号/动效常量 106 项，另补 3 个 Miuix 组件 SVG；生成器支持重复校验。
 - **ArkTS 检查通过 / 未生成 HAP**。未执行真实窗口渲染、手势、SVG/字体和 DevEco 完整编译，不写“真机通过”。
 
 ## 与 Eta 的差异、待用户确认
 
 1. 连续圆角改为 ArkUI 圆角；正文使用鸿蒙系统字体。这两项按 ETA_PORT 允许的适配执行。
-2. 可选项：现在使用鸿蒙原生 `bindMenu`，或后续连 Miuix 弹出层定位/动画一起自绘。默认前者，保留选择顺序、禁用/取消语义与上下箭头；菜单窗口/浮层两个 API 统一交给系统窗口管理，菜单尺寸、勾选动画不保证逐像素相同。没有支持 Miuix 级联子菜单 API，现有 Eta 设置选择项是平面列表。
-3. 可选项：加入 VIBRATE 权限移植边界/选择触感，或保持权限集合。默认不新增权限，暂不触发选择和滚动边界触感。
-4. 可选项：后续增加专用背景纹理渲染器实现渐进模糊，或暂按源码实色降级。默认实色；E05 的渐进选项须禁用并标记“鸿蒙版尚未接入”，不能显示为可用。
+2. 用户于 2026-10-31 确认先用鸿蒙原生菜单、弹窗和动画。检查点 ①、② 截图对照后才决定个别自绘；菜单窗口/浮层两个接口由系统窗口管理，尺寸和动画不保证逐像素一致。
+3. 用户已批准 VIBRATE。`EtaHaptics` 将 ContextClick / ToggleOff / TextHandleMove / GestureEnd 映射为系统 soft，ToggleOn 为 sharp、LongPress 为 hard、Confirm 为 success。先查询 preset 支持；不支持或调用失败静默取消触感，不能阻止动作、不用定时振动兜底、不弹权限申请。
+4. 渐进模糊按用户指定尝试：顶栏下面的滚动内容使用 17 个采样点逼近来源 `1 - pow(smoothstep(y), 2.2)`，顶栏下缘之后强度为零，另叠 0.3 surface，文字按钮不参与模糊。两平台渲染核、边缘采样不保证一致，必须对照 Gallery；无有效测量时实色。ArkUI 不提供 Compose post-fling 可用/消耗速度，边界触感以实际 Fling 位移和到边界状态门控并去重；初始布局、手拖和程序滚动不触发。
 5. 卡片 Sink 用同一刚度/阻尼转换为 ArkUI 弹簧；单选与复选勾号采用原 SVG 静态状态，未移植 Canvas 路径裁剪动画。对话框开闭/返回、菜单和滚动回弹由 ArkUI 驱动，物理动画与 Android 不保证完全相同。
 6. 列表页骨架接受内容槽，使用 Scroll；大数据页面需要 E07 自己的 List/LazyForEach，不把长列表塞进该槽。顶栏不接 Android nestedScroll，使用 ArkUI 滚动偏移；宽窄屏中途切换、过滚动、标题渐隐实际画面待测。
 7. ArkUI 的公共属性占用 `enabled`、`onClick` 等名称，端口对应名为 `isEnabled`、`onAction`，行为不变。弹窗宿主负责 `cancel` / `onDidDisappear` 和大小屏对齐，组件不持有业务选择副本。
@@ -55,6 +55,15 @@
 5. 滚动大标题折叠；切换 600 vp 以上宽度时小标题固定，内容最大 800 vp；深色下分割线和禁用色可辨认。
 6. 对照 `EtaPreferenceRenderingTest` 两项原生断言，记录文字可见性与实际边界。此步骤通过前，两项平台测试一直标为待测。
 
-新增权限：**无**。新增公开鸿蒙接口：`CustomDialogController`、`bindMenu`、`Toggle`、`Menu/MenuItem`、`backdropBlur`、`Scroller`、`curves.springCurve/springMotion`、`accessibilityRole/Checked/Selected`；预览页使用 `ApplicationContext.setFontSizeScale`。未接 HDC、后台服务、模型工具、system_basic 权限或签名。
+新增权限：**ohos.permission.VIBRATE**，normal / system_grant，用户明确批准，仅用于 Eta 原有触感点，安装自动授予、不弹窗。`scripts/verify-release.py` 的权限白名单同步为 INTERNET + VIBRATE。新增公开鸿蒙接口：`CustomDialogController`、`bindMenu`、`Toggle`、`Menu/MenuItem`、`backdropBlur`、`Scroller`、`curves.springCurve/springMotion`、`accessibilityRole/Checked/Selected`；预览页使用 `ApplicationContext.setFontSizeScale`。未接 HDC、后台服务、模型工具、system_basic 权限或签名。
 
 提交前补查：分组项目的 16 vp 间距计入父容器宽度，避免 `100% + margin` 横向溢出；长下拉标签优先收缩、箭头保持尺寸；指针移动不提前结束卡片/行按压态，抬起或取消才复位。四项检查重新通过，测试数量不变。
+
+
+## 2026-10-31 追加验证
+
+新增 2 项平台边界测试（不计 Eta 原测试）：渐变采样范围/曲线/屏幕尺寸变化、边界触感去重/重新进入/布局与手拖不震动。完整 Eta 原测试数仍 0，平台跳过仍 2。四项检查均通过，430 项测试 / 0 失败，ArkTS 0 error，restool 1,843 资源 / 0 warning。**ArkTS 检查通过 / 未生成 HAP**。
+
+新增公开接口：`vibrator.isSupportEffectSync/startVibration`（usage=touch）、`linearGradientBlur`（API 12）、`Scroller.isAtEnd`。版本使用 0.9.11，避免与已发布的 E03 0.9.10 草稿混淆。
+
+真机待测：Gallery 选择渐进，反复上下滚动彩色行到顶栏背后，确认顶端最模糊、下缘变清晰、正文和标题清晰；切换均匀/关闭、横竖屏、深色、大字体。点开关本体与行空白分别只改变一次；本体切换有触感，行空白依 Eta 父 toggleable 不额外触发；打开菜单有触感，取消/禁用不触发；惯性滚到边界只触发一次，手拖到边界不触发。无振动设备仍可操作。开关拖动中的逐阈值振动由原生 Toggle 接管，端口只在实际值改变时补触感，列为平台差异。

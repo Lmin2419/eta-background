@@ -5,13 +5,13 @@ import { EmptyEtaSlot } from './EtaCard';
 @Component
 export struct TopBarBackdrop {
   @Prop isEnabled: boolean = true;
-  // ArkUI backdropBlur implements the uniform branch. Progressive texture sampling has
-  // no identical public ArkUI counterpart; use Eta's solid fallback until it is validated.
+  // Progressive blur is applied to the underlying content by the scaffold, never to toolbar text.
   @Prop progressive: boolean = false;
+  @Prop progressiveContentReady: boolean = false;
   @BuilderParam content: () => void = EmptyEtaSlot;
   build() {
     Column() { this.content() }.width('100%')
-      .backgroundColor(this.isEnabled && !this.progressive ? $r('app.color.eta_top_bar_surface') : $r('app.color.miuix_surface'))
+      .backgroundColor(this.isEnabled ? (this.progressive ? (this.progressiveContentReady ? $r('app.color.eta_top_bar_progressive_surface') : $r('app.color.miuix_surface')) : $r('app.color.eta_top_bar_surface')) : $r('app.color.miuix_surface'))
       .backdropBlur(this.isEnabled && !this.progressive ? B.TopBarBlurRadius : S.Dp0)
   }
 }

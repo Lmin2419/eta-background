@@ -2,6 +2,9 @@
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 import { EtaControlDefaults as C, MiuixButtonDefaults as B, MiuixFontSizes as F } from '../../../core/eta/tokens';
 
+import { EtaHaptic } from '../../../core/eta/hapticFeedback';
+import { EtaHaptics } from '../../../platform/EtaHaptics';
+
 @Component
 export struct EtaTextButton {
   @Consume('etaPreferenceTheme') preferenceTheme: boolean = false;
@@ -39,6 +42,6 @@ export struct EtaSwitch {
       .width(C.SwitchWidth).height(C.SwitchHeight).enabled(this.isEnabled)
       .selectedColor((this.preferenceTheme ? $r('app.color.eta_settings_primary') : $r('app.color.miuix_primary'))).switchPointColor($r('app.color.miuix_on_primary'))
       .backgroundColor($r('app.color.miuix_secondary_variant'))
-      .onChange((checked: boolean) => { if (this.isEnabled && checked !== this.checked) this.onCheckedChange(checked); })
+      .onChange((checked: boolean) => { if (this.isEnabled && checked !== this.checked) { this.onCheckedChange(checked); EtaHaptics.perform(checked ? EtaHaptic.ToggleOn : EtaHaptic.ToggleOff); } })
   }
 }

@@ -1,6 +1,10 @@
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/MiuixScaffoldPage.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 import { EtaPageDefaults as P, EtaComponentSizes as S } from '../../../core/eta/tokens';
+import { EtaBlurDefaults as B } from '../../../core/eta/tokens';
+import { progressiveTopStops } from '../../../core/eta/progressiveBlur';
+import { ScrollEndHapticGate, EtaHaptic } from '../../../core/eta/hapticFeedback';
+import { EtaHaptics } from '../../../platform/EtaHaptics';
 import { EmptyEtaSlot } from './EtaCard';
 import { TopBarBackdrop } from './TopBarBackdrop';
 import { AdaptiveTopAppBar } from './AdaptiveTopAppBar';
@@ -28,6 +32,14 @@ export struct MiuixScaffoldPage {
   @BuilderParam overlayContent: () => void = EmptyEtaSlot;
   onBack: () => void = () => {};
   private scroller: Scroller = new Scroller();
+  @State private viewportHeight: number = S.Dp0;
+  private edgeHaptic: ScrollEndHapticGate = new ScrollEndHapticGate();
+  private gradient(): LinearGradientBlurOptions {
+    const stops: FractionStop[] = [];
+    progressiveTopStops(this.barHeight, this.viewportHeight).forEach(stop => { stops.push([stop.strength, stop.position]); });
+    return { fractionStops: stops, direction: GradientDirection.Bottom };
+  }
+  aboutToDisappear(): void { this.edgeHaptic.reset(); }
   @State private widthVp: number = S.Dp0;
   @State private barHeight: number = S.Dp0;
   @State private scrollOffset: number = S.Dp0;
@@ -49,10 +61,14 @@ export struct MiuixScaffoldPage {
           left: Math.max(S.Dp0, (this.widthVp - P.MaxPageContentWidth) / 2) + this.leftInset,
           right: Math.max(S.Dp0, (this.widthVp - P.MaxPageContentWidth) / 2) + this.rightInset })
       }.width('100%').height('100%').scrollBar(BarState.Auto).edgeEffect(EdgeEffect.Spring, { alwaysEnabled: true })
-        .onDidScroll(() => { this.scrollOffset = Math.max(S.Dp0, this.scroller.currentOffset().yOffset); })
-      TopBarBackdrop({ isEnabled: this.blurEnabled, progressive: this.progressiveBlur, content: this.topBar })
+        .linearGradientBlur(this.blurEnabled && this.progressiveBlur ? B.ProgressiveTopBarBlurRadius : S.Dp0, this.gradient())
+        .onDidScroll((_x, y, state) => {
+          this.scrollOffset = Math.max(S.Dp0, this.scroller.currentOffset().yOffset);
+          if (this.edgeHaptic.update(y, this.scrollOffset, this.scroller.isAtEnd(), state === ScrollState.Fling)) EtaHaptics.perform(EtaHaptic.TextHandleMove);
+        })
+      TopBarBackdrop({ isEnabled: this.blurEnabled, progressive: this.progressiveBlur, progressiveContentReady: this.barHeight > S.Dp0 && this.viewportHeight > S.Dp0, content: this.topBar })
       this.overlayContent()
     }.width('100%').height('100%').backgroundColor($r('app.color.eta_settings_background'))
-      .onAreaChange((_old, area) => { this.widthVp = Number(area.width); })
+      .onAreaChange((_old, area) => { this.widthVp = Number(area.width); this.viewportHeight = Number(area.height); })
   }
 }

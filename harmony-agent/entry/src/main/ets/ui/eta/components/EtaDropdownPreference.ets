@@ -1,6 +1,8 @@
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaDropdownPreference.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
+import { EtaHaptic } from '../../../core/eta/hapticFeedback';
+import { EtaHaptics } from '../../../platform/EtaHaptics';
 import { EmptyEtaSlot } from './EtaCard';
 import { EtaPreferenceRow } from './EtaPreferenceRow';
 
@@ -60,7 +62,7 @@ export struct EtaDropdownPreference {
     EtaPreferenceRow({ title: this.title, summary: this.summary,
       isEnabled: this.isEnabled && this.items.length > 0, holding: this.expanded,
       hasLeading: this.hasLeading, startAction: this.startAction, hasActions: true, hasBottom: this.hasBottom, bottomAction: this.bottomAction,
-      endActions: this.selectedLabel, onAction: () => { this.expanded = !this.expanded; } })
+      endActions: this.selectedLabel, onAction: () => { this.expanded = !this.expanded; if (this.expanded) EtaHaptics.perform(EtaHaptic.ContextClick); } })
       .bindMenu($$this.expanded, this.choices, { onDisappear: () => { this.expanded = false; } })
   }
 }
