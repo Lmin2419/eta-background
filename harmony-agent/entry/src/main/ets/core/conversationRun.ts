@@ -3,7 +3,7 @@ import { ConversationContext, ConversationMode, ConversationRepository, redactSe
 import { RunEvent } from './types';
 
 export type RunJournal = (event:RunEvent)=>Promise<void>;
-export interface TurnRequest { conversationId:string; text:string; modelLabel:string; profileId:string; mode:ConversationMode; secrets:string[]; runId?:string;revisionOf?:string;attachments?:string[] }
+export interface TurnRequest { conversationId:string; text:string; modelLabel:string; profileId:string; mode:ConversationMode; secrets:string[]; runId?:string;reviseFromTurnId?:string;onAdmitted?:()=>void;revisionOf?:string;attachments?:string[] }
 
 /** One-shot lifetime: durable user turn first, then execution, then durable outcome. */
 export class ConversationRun {
@@ -43,8 +43,8 @@ export class ConversationRun {
     let turnId='',partial='';
     try {
       if(this.cancelled) throw new Error('CANCELLED');
-      const begun=await this.repository.begin(this.request.conversationId,this.clean(this.request.text),this.clean(this.request.modelLabel),this.request.profileId,this.request.mode,this.request.runId);
-      turnId=begun.turnId;this.turnId=turnId;
+      const begun=await this.repository.begin(this.request.conversationId,this.clean(this.request.text),this.clean(this.request.modelLabel),this.request.profileId,this.request.mode,this.request.runId,this.request.reviseFromTurnId);
+      turnId=begun.turnId;this.turnId=turnId;this.request.onAdmitted?.();
       if(this.request.revisionOf||this.request.attachments?.length)await this.repository.annotate(this.request.conversationId,turnId,{revisionOf:this.request.revisionOf,attachments:this.request.attachments});
       if(this.cancelled) throw new Error('CANCELLED');
       this.task=this.factory(begun.context,async event=>{

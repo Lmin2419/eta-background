@@ -8,9 +8,22 @@ import { AgentChatBody } from '../components/AgentChatBody';
 import { AgentConversationLoading } from '../components/AgentConversationLoading';
 @Component
 export struct AgentHomeScreen {
-  @Prop state: ShellState = emptyShellState();
+  @Prop @Watch('showMutation') state: ShellState = emptyShellState();
   @Prop keyboardVisible: boolean = false;
   controller: FoundationController | undefined = undefined;
+  private shownMutation:string='';
+  private showMutation():void{
+    const target=this.state.mutation;if(!target){this.shownMutation='';return;}
+    const key=target.conversationId+target.messageId+target.kind;if(key===this.shownMutation)return;this.shownMutation=key;
+    const deleting=target.kind==='delete';
+    const summary:ResourceStr=target.laterTurns>0?this.getUIContext().getHostContext()!.resourceManager.getIntPluralStringValueSync(
+      deleting?$r('app.plural.conversation_delete_later_turns').id:$r('app.plural.conversation_regenerate_later_turns').id,target.laterTurns,target.laterTurns):
+      deleting?$r('app.string.conversation_delete_message_body'):$r('app.string.conversation_regenerate_current_turn');
+    this.getUIContext().showAlertDialog({title:deleting?$r('app.string.conversation_delete_message_title'):$r('app.string.conversation_regenerate_title'),message:summary,
+      primaryButton:{value:$r('app.string.action_cancel'),action:()=>this.controller?.dismissMessageMutation()},
+      secondaryButton:{value:deleting?$r('app.string.action_delete'):$r('app.string.action_regenerate'),fontColor:deleting?$r('app.color.miuix_error'):$r('app.color.miuix_primary'),action:()=>{void this.controller?.confirmMessageMutation();}},
+      cancel:()=>this.controller?.dismissMessageMutation()});
+  }
   @Builder private suggestion(title: Resource, icon: Resource) {
     Column() {
       Image(icon).width(S.Dp18).height(S.Dp18).fillColor($r('app.color.miuix_disabled_primary'))

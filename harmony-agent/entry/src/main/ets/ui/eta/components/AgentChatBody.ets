@@ -33,11 +33,12 @@ class ChatDataSource implements IDataSource {
 }
 @Component
 struct TimelineEntryView {
+  controller:FoundationController|undefined=undefined;
   @ObjectLink item:TimelineItem;
   @Prop activeWork:string='';
   @Prop actionsEnabled:boolean=true;
   store:MarkdownRenderStore|undefined=undefined;
-  build(){Column(){if(this.item.data.kind==='message'){ChatMessageItem({message:this.item.data.message,actionsEnabled:this.actionsEnabled,store:this.store})}else{AgentWorkProcess({identity:this.item.data.key,messages:this.item.data.messages,active:this.activeWork===this.item.data.key,store:this.store})}}.width('100%')}
+  build(){Column(){if(this.item.data.kind==='message'){ChatMessageItem({message:this.item.data.message,actionsEnabled:this.actionsEnabled,controller:this.controller,store:this.store})}else{AgentWorkProcess({identity:this.item.data.key,messages:this.item.data.messages,active:this.activeWork===this.item.data.key,store:this.store})}}.width('100%')}
 }
 @Component
 export struct AgentChatBody {
@@ -114,7 +115,7 @@ export struct AgentChatBody {
   build(){Stack({alignContent:Alignment.Bottom}){
     List({scroller:this.scroller}){
       if(this.earlier){ListItem(){Button($r('app.string.conversation_retry_earlier_messages')).height(S.Dp48).width('100%').backgroundColor($r('app.color.eta_transparent')).fontColor($r('app.color.miuix_on_surface_variant_summary')).enabled(!this.chat.active).onClick(()=>this.paging?.requestEarlier(this.viewport()))}}
-      LazyForEach(this.source,(item:TimelineItem)=>{ListItem(){TimelineEntryView({item,activeWork:this.activeWork,actionsEnabled:!this.chat.active,store:this.store}).onAreaChange(()=>{if(this.anchored)this.frames?.start();})}},(item:TimelineItem)=>item.data.key)
+      LazyForEach(this.source,(item:TimelineItem)=>{ListItem(){TimelineEntryView({item,activeWork:this.activeWork,actionsEnabled:!this.chat.active&&!this.chat.messageEdit,controller:this.controller,store:this.store}).onAreaChange(()=>{if(this.anchored)this.frames?.start();})}},(item:TimelineItem)=>item.data.key)
       ListItem(){Blank().width('100%').height(S.Dp1)}
     }.width('100%').height('100%').padding({top:S.Dp16,bottom:S.Dp16}).scrollBar(BarState.Auto)
       .onAreaChange((_old,area)=>{this.viewportHeight=Number(area.height);if(this.anchored)this.frames?.start();})

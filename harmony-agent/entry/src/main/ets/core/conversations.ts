@@ -153,18 +153,28 @@ export class ConversationRepository {
   async preferences(id:string,profileId:string,requestedMode:ConversationMode,preferredModel?:string):Promise<void> {
     return this.queue(async()=>{this.requireLoaded();const next=clone(this.state),c=this.find(next,id);this.idle(c);c.profileId=profileId;c.mode=requestedMode;if(preferredModel!==undefined)c.preferredModel=preferredModel.slice(0,256);await this.commit(next);});
   }
-  async begin(id:string,request:string,modelLabel:string,profileId:string,requestedMode:ConversationMode,runId=''):Promise<{turnId:string;context:ConversationContext}> {
+  async begin(id:string,request:string,modelLabel:string,profileId:string,requestedMode:ConversationMode,runId='',reviseFromTurnId=''):Promise<{turnId:string;context:ConversationContext}> {
     return this.queue(async()=>{
       this.requireLoaded();if(!request.trim() || request.length>CHAT_LIMITS.request) throw new Error('消息不能为空，且最多 8000 字符');
       if(this.state.conversations.reduce((n,c)=>n+c.turns.filter(t=>t.status==='running').length,0)>=this.concurrentLimit) throw new Error('已有任务运行中或等待恢复，请先停止');
-      const next=clone(this.state),c=this.find(next,id);if(c.turns.length>=CHAT_LIMITS.turns) throw new Error('当前会话已达 200 轮，请新建会话');
-      this.idle(c);
+      const next=clone(this.state),c=this.find(next,id);this.idle(c);
+      if(runId && c.turns.some(t=>t.id===runId))throw new Error('运行已经接纳，拒绝重复执行');
+      // Revision and admission are one durable write. A failed write leaves the old history intact.
+      if(reviseFromTurnId){const index=c.turns.findIndex(t=>t.id===reviseFromTurnId);if(index<0)throw new Error('要修订的轮次不存在');c.turns=c.turns.slice(0,index);}
+      if(c.turns.length>=CHAT_LIMITS.turns) throw new Error('当前会话已达 200 轮，请新建会话');
       const context=conversationContext(c),turnId=runId||this.id(),now=this.now();
       if(c.turns.some(t=>t.id===turnId))throw new Error('运行已经接纳，拒绝重复执行');
-      c.turns.push({id:turnId,request:request.trim(),reply:'',status:'running',mode:requestedMode,modelLabel:modelLabel.slice(0,256),startedAt:now,steps:[],notice:''});
+      c.turns.push({id:turnId,request:request.trim(),reply:'',status:'running',mode:requestedMode,modelLabel:modelLabel.slice(0,256),startedAt:now,steps:[],notice:'',...(reviseFromTurnId?{revisionOf:reviseFromTurnId}:{})});
       if(c.turns.length===1 && c.title==='新会话') c.title=request.trim().replace(/\s+/g,' ').slice(0,32);
       c.profileId=profileId;c.mode=requestedMode;c.updatedAt=now;if(!runId)next.selectedId=id;
       await this.commit(next);return {turnId,context};
+    });
+  }
+  async truncateFrom(id:string,turnId:string):Promise<void>{
+    return this.queue(async()=>{this.requireLoaded();const next=clone(this.state),c=this.find(next,id);this.idle(c);
+      const index=c.turns.findIndex(t=>t.id===turnId);if(index<0)throw new Error('要删除的轮次不存在');
+      if(index===0){next.conversations=next.conversations.filter(v=>v.id!==id);if(next.selectedId===id)next.selectedId=next.conversations[0]?.id||'';}
+      else {c.turns=c.turns.slice(0,index);c.updatedAt=this.now();}await this.commit(next);
     });
   }
   async step(id:string,turnId:string,event:RunEvent):Promise<void> {
