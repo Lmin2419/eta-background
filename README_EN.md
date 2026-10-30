@@ -6,17 +6,15 @@ A derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮
 
 ## Latest test build
 
-Current source adds pause-on-foreground-takeover protection in `2026103003` / `20261030-e40-takeover`, including display cleanup, handoff confirmation and timeout isolation; validation is in progress. See the [new changelog](etax/README.md#release-2026103003). The previous verified APK is listed below.
+**2026-10-30 · `3.3.5+etax.4637961` · versionCode `2026103003`**, with engine `20261030-e40-takeover`.
 
-**2026-10-30 · `3.3.5+etax.3b1794d` · versionCode `2026103001`**, with engine `20261029-e38-input`.
+When an active background app actually moves to the foreground, ETA pauses only its owning run, blocks old-screen input and prevents that session from pulling the app back. Merely viewing its Recents thumbnail does not trigger takeover. Resume manually and observe again before further input.
 
-Built-in web search now uses Bing first and tries DuckDuckGo on failure, with a 10-second network timeout per source and explicit failure diagnostics. Overlay permission settings remain clickable after authorization and provide alternative system entry points when the dedicated page is unavailable.
+This build also includes capture-allocation rollback, foreground-window handoff confirmation and timeout isolation. Completion banners, all three notification actions, inline continuation and search fixes remain available. Screen-off development remains paused.
 
-Native task completion banners, all three notification actions and the pop-up preference remain available. See the [completion notification guide](etax/README.md#completion-notice-guide) (Chinese).
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/actions/runs/41096466829/artifacts/12998081108)** · [Exact source 4637961](https://github.com/Lmin2419/eta-background/tree/4637961bc55fe546da17fda33f2dc274fdc65e20) · [Changelog and checksums](etax/README.md#release-2026103003)
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/actions/runs/41024159901/artifacts/12963208802)** · [Exact source 3b1794d](https://github.com/Lmin2419/eta-background/tree/3b1794d70881c3c849b53d7778dd2bfdf0a46cc5) · [Changelog and checksums](etax/README.md#release-2026103001)
-
-CI reported 2,086 regression tests: 2,085 passed, 1 skipped, no failures or errors. All eight engine deployment tests passed; lint reported no errors. The APK retains the previous signing certificate for installation over the existing background edition, and its embedded engine was checked against source. A live Bing response was parsed in the development environment; phone-network behavior and ColorOS 17 settings navigation still need device testing. Downloading requires a GitHub login; this artifact expires on **2026-11-29 (UTC)**.
+Local and CI checks report 2,108 tests: 2,107 passed, 1 skipped, no failures or errors. Eight deployment tests and twelve integration checks passed; lint reported no errors. The APK retains the previous signing certificate and CI verified its embedded engine assets. **The device-wide cold-start blank-screen cause remains unproven and requires device testing; this release does not claim to have eliminated it.** Downloading requires a GitHub login; the artifact expires on **2026-11-29 (UTC)**.
 
 ## What this branch adds
 
@@ -29,7 +27,9 @@ CI reported 2,086 regression tests: 2,085 passed, 1 skipped, no failures or erro
 - Separate native task notifications, streaming progress, pause/stop controls and in-place result updates. Compatible systems can show them as Live Updates / Fluid Cloud.
 - Optional native completion banners on the same task card, with separate conversation, app handoff and inline continuation actions. The Appearance switch disables pop-ups while retaining task notifications.
 - Inline notification replies to continue the original conversation, plus a separate action to open the ETA conversation.
-- Capture suspension after completion, retained app pages and explicit foreground handoff of an existing task before releasing its empty display.
+- Capture suspension after completion, retained app pages and verified foreground handoff before releasing an empty display.
+- Pause only the affected run when its app leaves the hidden display; do not pull it back or replay input without manual resume.
+- Capture-allocation rollback and command admission control while timed-out work drains, with fresh observation required before subsequent input.
 - Shared display geometry validation, landscape capture, screenshot-coordinate mapping and structured rejection diagnostics.
 - Assistant sheet transitions, optional edge lighting in Appearance settings and conversation reading-position restoration.
 
