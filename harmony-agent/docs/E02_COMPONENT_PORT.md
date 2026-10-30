@@ -56,3 +56,5 @@
 6. 对照 `EtaPreferenceRenderingTest` 两项原生断言，记录文字可见性与实际边界。此步骤通过前，两项平台测试一直标为待测。
 
 新增权限：**无**。新增公开鸿蒙接口：`CustomDialogController`、`bindMenu`、`Toggle`、`Menu/MenuItem`、`backdropBlur`、`Scroller`、`curves.springCurve/springMotion`、`accessibilityRole/Checked/Selected`；预览页使用 `ApplicationContext.setFontSizeScale`。未接 HDC、后台服务、模型工具、system_basic 权限或签名。
+
+提交前补查：分组项目的 16 vp 间距计入父容器宽度，避免 `100% + margin` 横向溢出；长下拉标签优先收缩、箭头保持尺寸；指针移动不提前结束卡片/行按压态，抬起或取消才复位。四项检查重新通过，测试数量不变。

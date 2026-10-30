@@ -56,7 +56,10 @@ export struct EtaPreferenceRow {
     }.width('100%')
       .backgroundColor(this.holding || this.pressed ? $r('app.color.eta_preference_held') : $r('app.color.eta_transparent'))
       .enabled(this.isEnabled)
-      .onTouch((event: TouchEvent) => { this.pressed = event.type === TouchType.Down; })
+      .onTouch((event: TouchEvent) => {
+        if (event.type === TouchType.Down) this.pressed = true;
+        else if (event.type === TouchType.Up || event.type === TouchType.Cancel) this.pressed = false;
+      })
       .onClick(() => { if (this.isEnabled) this.onAction(); })
       .gesture(LongPressGesture().onAction(() => { if (this.isEnabled) this.onLongClick(); }))
   }

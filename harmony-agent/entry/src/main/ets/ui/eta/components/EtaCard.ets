@@ -32,7 +32,10 @@ export struct EtaCard {
       .borderRadius(EtaCardDefaults.CornerRadius).clip(true)
       .scale({ x: this.sinkFeedback && this.pressed ? B.SinkScale : 1, y: this.sinkFeedback && this.pressed ? B.SinkScale : 1 })
       .animation({ curve: curves.springCurve(0, 1, B.SinkStiffness, 2 * B.SinkDamping * Math.sqrt(B.SinkStiffness)) })
-      .onTouch((event: TouchEvent) => { this.pressed = this.isEnabled && this.clickable && event.type === TouchType.Down; })
+      .onTouch((event: TouchEvent) => {
+        if (event.type === TouchType.Down) this.pressed = this.isEnabled && this.clickable;
+        else if (event.type === TouchType.Up || event.type === TouchType.Cancel) this.pressed = false;
+      })
       .onClick(() => { if (this.isEnabled && this.clickable) { this.onAction(); } })
       .gesture(LongPressGesture().onAction(() => {
         if (this.isEnabled && this.clickable) this.onLongClick();

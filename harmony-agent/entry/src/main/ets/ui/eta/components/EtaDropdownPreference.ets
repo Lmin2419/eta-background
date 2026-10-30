@@ -37,10 +37,10 @@ export struct EtaDropdownPreference {
   @Builder private selectedLabel() {
     Row({ space: S.Dp8 }) {
       if (this.selectedIndex >= 0 && this.selectedIndex < this.items.length) {
-        Text(this.items[this.selectedIndex].label).fontSize(F.Body2).fontColor(this.actionColor()).textAlign(TextAlign.End)
+        Text(this.items[this.selectedIndex].label).fontSize(F.Body2).fontColor(this.actionColor()).textAlign(TextAlign.End).flexShrink(1)
       }
       Image($r('app.media.ic_miuix_basic_arrow_up_down')).width(S.Dp10).height(S.Dp16)
-        .fillColor(this.actionColor()).accessibilityLevel('no')
+        .fillColor(this.actionColor()).accessibilityLevel('no').flexShrink(0)
     }
   }
   @Builder private choices() {

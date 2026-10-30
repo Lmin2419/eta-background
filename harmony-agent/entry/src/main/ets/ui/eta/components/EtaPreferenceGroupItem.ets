@@ -11,11 +11,13 @@ export struct EtaPreferenceGroupItem {
   @BuilderParam content: () => void = EmptyEtaSlot;
   build() {
     Column() {
-      this.content()
-      if (!this.last) { EtaPreferenceDivider({ hasLeading: this.hasLeading }) }
-    }.width('100%').backgroundColor($r('app.color.miuix_surface_container'))
-      .borderRadius({ topLeft: this.first ? C.CornerRadius : S.Dp0, topRight: this.first ? C.CornerRadius : S.Dp0,
-        bottomLeft: this.last ? C.CornerRadius : S.Dp0, bottomRight: this.last ? C.CornerRadius : S.Dp0 })
-      .clip(true).margin({ left: P.SidePadding, right: P.SidePadding })
+      Column() {
+        this.content()
+        if (!this.last) { EtaPreferenceDivider({ hasLeading: this.hasLeading }) }
+      }.width('100%').backgroundColor($r('app.color.miuix_surface_container'))
+        .borderRadius({ topLeft: this.first ? C.CornerRadius : S.Dp0, topRight: this.first ? C.CornerRadius : S.Dp0,
+          bottomLeft: this.last ? C.CornerRadius : S.Dp0, bottomRight: this.last ? C.CornerRadius : S.Dp0 })
+        .clip(true)
+    }.width('100%').padding({ left: P.SidePadding, right: P.SidePadding })
   }
 }
