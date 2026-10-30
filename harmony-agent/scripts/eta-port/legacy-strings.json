@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "在手机上运行的 AI 助手"
+    },
+    {
+      "name": "location_reason",
+      "value": "用于你开启的持续后台实验模式，低功耗位置更新不保存、不上传"
+    },
+    {
+      "name": "microphone_reason",
+      "value": "仅在你点击语音输入时录音并转为文字，离开助手即停止。"
+    }
+  ]
+}

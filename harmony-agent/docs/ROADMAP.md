@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，PR #8（分支 `harmony/m0-0.9.1`），三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；ArkTS 检查 0 错误（OpenHarmony SDK 26.0.0.38）；未生成 HAP |
 | `.ets` 与资源检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets` + `npm run check:res`（restool 资源打包），CI 任务 `Harmony / ArkTS (.ets) and resources check`，也覆盖 base 为 `harmony/**` 的叠加 PR |
-| E01 | PR #9，待修复 | 审查意见：去掉 entry 中重复的 `app_name`；合并 `harmony/m0-0.9.1` 的最新提交 |
+| E01（0.9.2） | PR #9，修复完成、四项检查通过 | 已合入 M0 `2d44742`；app_name 仅由 AppScope 定义。213 项测试通过，ArkTS 0 错误，restool 1,833 项资源通过；按夜间规则进入 L1 |
 | M1 其余（L1–L4、E02–E09） | 夜间队列已排好 | 见第二节“本轮队列” |
 | M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |

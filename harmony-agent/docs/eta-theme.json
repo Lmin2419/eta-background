@@ -1,0 +1,130 @@
+{
+  "etaCommit": "3b1794d70881c3c849b53d7778dd2bfdf0a46cc5",
+  "miuixVersion": "0.9.4",
+  "miuixCommit": "39c40f99844227b853f0049a0933b1f3ae6c00ba",
+  "inputs": [
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaPreferenceStyle.kt",
+      "sha256": "2068d4fc37c3a59999fd2778ca2ca9c4e21192ce0748e24cfccb488cad613c3c"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaCard.kt",
+      "sha256": "efe5eaa72cbc918d5786fc8c66f55b1344b5ce710ef2b08c3e24e7cf2ddf952a"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/EtaControls.kt",
+      "sha256": "6fb4a4696efa9ce9735a6a74300654852e91579e7104be0afdebebf4b3c929f5"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/StatusColors.kt",
+      "sha256": "3006398e65b43ce2487de72b8a238e8c530fa7b6e6d070eaca8692b989079265"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatFileAttachments.kt",
+      "sha256": "fa7c573e1ad9399fa80683412093b271a836c82e60f9e27622c98cfe8ff2777a"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatInputBar.kt",
+      "sha256": "20725c4d730beaabb4d84dbe2f37a97a1c0199272baecd770e0a74f6ed249793"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationSidePaneScaffold.kt",
+      "sha256": "ef6aa6f1497115bc34ecc275d48e721dc3a83397158d7aa34920c2a3ac44c4f1"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/ArrowRight.kt",
+      "sha256": "92e10aec73f6f93de2195c45af457c4f4c9684c7d4f994a1aa82e44d86f012dd"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/Button.kt",
+      "sha256": "1bd0eefc46d063344fc1979e9302df6a60058f759dd52ab8fef7c8bab1d3e0ba"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/Card.kt",
+      "sha256": "2c1617424e052f442474f520608a1be8d4bbb7881288666494d356c246eec5d8"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/Colors.kt",
+      "sha256": "c6885c8025dbc7cb81f11a6395032ea6c802c76862dca09c32365d5f7d40e911"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/DialogContentLayout.kt",
+      "sha256": "6f0273f44558c04cc4a5d179ac25eb0540ffaf83730cf88e862124eb3b2678cd"
+    },
+    {
+      "path": "scripts/eta-upstream/miuix-0.9.4/TextStyles.kt",
+      "sha256": "b11d9c7c545e7cdc9d5b016728538ceaf0840709a05df5c44e1b18c944b092e1"
+    }
+  ],
+  "miuixColorRoles": 53,
+  "lightColorCount": 66,
+  "darkColorCount": 66,
+  "tokens": {
+    "EtaPreferenceDefaults": {
+      "SidePadding": 16,
+      "GroupSpacing": 16,
+      "IconSize": 24,
+      "IconTextGap": 16,
+      "ContentStart": 56,
+      "RowMinHeight": 52,
+      "DividerThickness": 0.33,
+      "OpticalIconSize": 22.0
+    },
+    "EtaCardDefaults": {
+      "CornerRadius": 24
+    },
+    "EtaControlDefaults": {
+      "ButtonCornerRadius": 22,
+      "ButtonMinHeight": 44,
+      "ButtonPadding": {
+        "horizontal": 16,
+        "vertical": 10
+      },
+      "DialogInsideMargin": {
+        "width": 24,
+        "height": 24
+      },
+      "DialogOutsideMargin": {
+        "width": 16,
+        "height": 16
+      },
+      "SwitchWidth": 44.0,
+      "SwitchHeight": 24.0
+    },
+    "EtaChatDefaults": {
+      "ActionIconSize": 24.0,
+      "SendIconSize": 16.0,
+      "StopIconSize": 10.0,
+      "ThinkingIconSize": 21.0,
+      "InputCornerRadius": 20.0
+    },
+    "EtaPaneDefaults": {
+      "PaneMaxWidth": 340.0
+    },
+    "MiuixButtonDefaults": {
+      "MinWidth": 58.0,
+      "MinHeight": 40.0,
+      "CornerRadius": 16.0
+    },
+    "MiuixDialogDefaults": {
+      "MaxWidth": 420.0,
+      "CornerRadius": 32.0
+    },
+    "MiuixFontSizes": {
+      "Main": 17.0,
+      "Paragraph": 17.0,
+      "Body1": 16.0,
+      "Body2": 14.0,
+      "Button": 17.0,
+      "Footnote1": 13.0,
+      "Footnote2": 11.0,
+      "Headline1": 17.0,
+      "Headline2": 16.0,
+      "Subtitle": 14.0,
+      "Title1": 32.0,
+      "Title2": 24.0,
+      "Title3": 20.0,
+      "Title4": 18.0
+    }
+  }
+}

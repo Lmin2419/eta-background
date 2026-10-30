@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+# Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/
+# EtaPreferenceStyle.kt, EtaCard.kt, EtaControls.kt, StatusColors.kt @ 3b1794d.
+# Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+"""Extract Eta defaults and Miuix 0.9.4 light/dark values from pinned Kotlin inputs."""
+import ast
+import json
+import math
+import re
+from eta_port_common import PROJECT, ETA_COMMIT, MIUIX_COMMIT, arguments, emit, emit_json, origin
+
+
+def snake(value):
+    return re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', value).lower()
+
+
+def block(source, start):
+    pos = source.index('{', source.index(start)); depth = 1; end = pos + 1
+    while depth:
+        depth += (source[end] == '{') - (source[end] == '}'); end += 1
+    return source[pos+1:end-1]
+
+
+def numeric(expression, known):
+    expression = re.sub(r'(\d+(?:\.\d+)?)\.(?:dp|sp)', r'\1', expression).strip()
+    def evaluate(node):
+        if isinstance(node, ast.Constant) and type(node.value) in (float, int): return node.value
+        if isinstance(node, ast.Name) and node.id in known: return known[node.id]
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add): return evaluate(node.left) + evaluate(node.right)
+        raise ValueError('Unsupported Kotlin numeric expression: ' + expression)
+    return evaluate(ast.parse(expression, mode='eval').body)
+
+
+def defaults(source, name):
+    values = {}
+    for key, expr in re.findall(r'^\s*val (\w+) = ([^\n]+)', block(source, 'object ' + name), re.M):
+        if expr.startswith('PaddingValues('):
+            match = re.fullmatch(r'PaddingValues\(horizontal = (.+), vertical = (.+)\)', expr)
+            if not match: raise ValueError('Unsupported padding expression: ' + expr)
+            values[key] = {'horizontal': numeric(match[1], values), 'vertical': numeric(match[2], values)}
+        elif expr.startswith('DpSize('):
+            match = re.fullmatch(r'DpSize\((.+), (.+)\)', expr)
+            values[key] = {'width': numeric(match[1], values), 'height': numeric(match[2], values)}
+        else: values[key] = numeric(expr, values)
+    return values
+
+
+def parse_color(expr):
+    alpha = None
+    if '.copy(' in expr:
+        base, copy = expr.split('.copy(')
+        match = re.fullmatch(r'alpha\s*=\s*([\d.]+)[Ff]\)', copy)
+        if not match: raise ValueError('Unsupported color copy: ' + expr)
+        alpha = math.floor(float(match[1]) * 255 + 0.5); expr = base
+    if expr in ('Color.Black', 'Color.White', 'Color.Transparent'):
+        value = {'Color.Black': 'FF000000', 'Color.White': 'FFFFFFFF', 'Color.Transparent': '00000000'}[expr]
+    else:
+        match = re.fullmatch(r'Color\(0x([0-9a-fA-F]{8})\)', expr)
+        if not match: raise ValueError('Unsupported Kotlin color: ' + expr)
+        value = match[1].upper()
+    return '#' + (f'{alpha:02X}' + value[2:] if alpha is not None else value)
+
+
+def miuix_colors(source, mode):
+    body = source.split('fun ' + mode + 'ColorScheme(', 1)[1].split('): Colors', 1)[0]
+    values = {name: parse_color(expr) for name, expr in re.findall(r'^\s*(\w+): Color = (.+),$', body, re.M)}
+    if len(values) != 53: raise ValueError('Miuix color role count changed: ' + str(len(values)))
+    return values
+
+
+def generated_class(name, values, source):
+    text = '// Ported from ' + source + '\nexport class ' + name + ' {\n'
+    for key, value in values.items():
+        kind = 'EtaAxisInsets' if isinstance(value, dict) and 'horizontal' in value else 'EtaSize' if isinstance(value, dict) else 'number'
+        text += f'  static readonly {key}: {kind} = ' + json.dumps(value) + ';\n'
+    if name == 'EtaPreferenceDefaults':
+        text += '  static contentStart(hasLeading: boolean): number { return hasLeading ? EtaPreferenceDefaults.ContentStart : EtaPreferenceDefaults.SidePadding; }\n'
+    return text + '}\n'
+
+
+def generate(eta_root, output, check=False):
+    components = eta_root / 'app/src/main/kotlin/io/github/mangi/eta/ui/components'
+    source_names = ['EtaPreferenceStyle.kt', 'EtaCard.kt', 'EtaControls.kt', 'StatusColors.kt', 'AgentChatFileAttachments.kt', 'AgentChatInputBar.kt', 'ConversationSidePaneScaffold.kt']
+    texts = {name: (components / name).read_text() for name in source_names}
+    upstream = PROJECT / 'scripts/eta-upstream/miuix-0.9.4'
+    miuix = (upstream / 'Colors.kt').read_text(); style = texts['EtaPreferenceStyle.kt']; status = texts['StatusColors.kt']
+    legacy = json.loads((PROJECT / 'scripts/eta-port/legacy-colors.json').read_text())['color']
+    blue = parse_color(re.search(r'val Blue = (Color\(0x[0-9A-F]+\))', style)[1])
+    orange = parse_color(re.search(r'val Orange = (Color\(0x[0-9A-F]+\))', style)[1])
+    success = parse_color(re.search(r'val StatusSuccess = (Color\(0x[0-9A-F]+\))', status)[1])
+    warning = parse_color(re.search(r'val StatusWarning = (Color\(0x[0-9A-F]+\))', status)[1])
+    page = parse_color(re.search(r'colors.copy\(background = (Color\(0x[0-9A-F]+\))', style)[1])
+    palettes = {}
+    for mode, folder in [('light', 'base'), ('dark', 'dark')]:
+        colors = miuix_colors(miuix, mode)
+        result = {row['name']: row['value'] for row in legacy}
+        result.update({'miuix_' + snake(k): v for k, v in colors.items()})
+        result.update({'eta_preference_blue': blue, 'eta_preference_green': success, 'eta_preference_orange': orange,
+            'eta_preference_yellow': warning, 'eta_status_success': success, 'eta_status_warning': warning,
+            'eta_status_error': colors['error'], 'eta_status_running': colors['primary'], 'eta_status_idle': colors['onSurfaceVariantSummary'],
+            'eta_settings_background': page if mode == 'light' else colors['background'],
+            'eta_settings_primary': blue if mode == 'light' else colors['primary']})
+        alpha = float(re.search(r'onBackground.copy\(alpha = ([\d.]+)f\)', style)[1])
+        result['eta_preference_divider'] = '#' + f'{math.floor(alpha*255+0.5):02X}' + colors['onBackground'][3:]
+        emit_json(output / f'entry/src/main/resources/{folder}/element/color.json', {'color': [{'name': k, 'value': v} for k, v in sorted(result.items())]}, check)
+        palettes[mode] = result
+    objects = {}
+    source_for = {}
+    for name, file in [('EtaPreferenceDefaults', 'EtaPreferenceStyle.kt'), ('EtaCardDefaults', 'EtaCard.kt'), ('EtaControlDefaults', 'EtaControls.kt')]:
+        objects[name] = defaults(texts[file], name); source_for[name] = f'app/src/main/kotlin/io/github/mangi/eta/ui/components/{file} @ 3b1794d'
+    objects['EtaPreferenceDefaults']['DividerThickness'] = float(re.search(r'thickness = ([\d.]+)\.dp', style)[1])
+    objects['EtaPreferenceDefaults']['OpticalIconSize'] = float(re.search(r'MenuBook -> ([\d.]+)\.dp', style)[1])
+    objects['EtaControlDefaults']['SwitchWidth'] = float(re.search(r'val width = ([\d.]+)\.dp', texts['EtaControls.kt'])[1])
+    objects['EtaControlDefaults']['SwitchHeight'] = float(re.search(r'val height = ([\d.]+)\.dp', texts['EtaControls.kt'])[1])
+    objects['EtaChatDefaults'] = {'ActionIconSize': float(re.search(r'ChatInputActionIconSize = ([\d.]+)\.dp', texts['AgentChatFileAttachments.kt'])[1])}
+    objects['EtaChatDefaults'].update({k: float(v) for k, v in re.findall(r'private val (\w+) = ([\d.]+)\.dp', texts['AgentChatInputBar.kt'])})
+    objects['EtaChatDefaults']['InputCornerRadius'] = float(re.search(r'InputContainerShape = RoundedCornerShape\(([\d.]+)\.dp\)', texts['AgentChatInputBar.kt'])[1])
+    source_for['EtaChatDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatInputBar.kt, AgentChatFileAttachments.kt @ 3b1794d'
+    objects['EtaPaneDefaults'] = {'PaneMaxWidth': float(re.search(r'val PaneMaxWidth = ([\d.]+)\.dp', texts['ConversationSidePaneScaffold.kt'])[1])}
+    source_for['EtaPaneDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationSidePaneScaffold.kt @ 3b1794d'
+    for name, file, fields in [('MiuixButtonDefaults', 'Button.kt', ['MinWidth', 'MinHeight', 'CornerRadius']),
+                              ('MiuixDialogDefaults', 'DialogContentLayout.kt', ['MaxWidth', 'CornerRadius'])]:
+        text = (upstream / file).read_text(); objects[name] = {k: float(re.search(r'val ' + k + r' = ([\d.]+)\.dp', text)[1]) for k in fields}
+        source_for[name] = f'compose-miuix-ui/miuix {file} @ 39c40f9 (0.9.4), Apache-2.0'
+    font_styles = (upstream / 'TextStyles.kt').read_text()
+    objects['MiuixFontSizes'] = {k: float(v) for k, v in re.findall(r'private val (\w+): TextStyle\s+get\(\) =\s+TextStyle\(\s+fontSize = ([\d.]+)\.sp', font_styles)}
+    if len(objects['MiuixFontSizes']) != 14: raise ValueError('Unexpected Miuix text style count')
+    source_for['MiuixFontSizes'] = 'compose-miuix-ui/miuix TextStyles.kt @ 39c40f9 (0.9.4), Apache-2.0'
+    token = '// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/* @ 3b1794d.\n// Required Notice: Copyright © 2026 蛮吉 (Mangi-11).\n// Generated by scripts/port-eta-theme.py. dp → vp; sp → fp, values unchanged.\n\nexport interface EtaAxisInsets { horizontal: number; vertical: number; }\nexport interface EtaSize { width: number; height: number; }\n\n'
+    token += '\n'.join(generated_class(k, v, source_for[k]) for k, v in objects.items())
+    emit(output / 'entry/src/main/ets/core/eta/tokens.ts', token, check)
+    report = {'etaCommit': ETA_COMMIT, 'miuixVersion': '0.9.4', 'miuixCommit': MIUIX_COMMIT,
+              'inputs': [origin(components / n, eta_root) for n in source_names] + [origin(p, PROJECT) for p in sorted(upstream.glob('*.kt'))],
+              'miuixColorRoles': 53, 'lightColorCount': len(palettes['light']), 'darkColorCount': len(palettes['dark']), 'tokens': objects}
+    emit_json(output / 'docs/eta-theme.json', report, check)
+    return report
+
+
+if __name__ == '__main__':
+    args = arguments(__doc__); report = generate(args.eta_root, args.output_root, args.check)
+    print('Generated', report['lightColorCount'], 'light/dark colors;', sum(map(len, report['tokens'].values())), 'dimension/font tokens')

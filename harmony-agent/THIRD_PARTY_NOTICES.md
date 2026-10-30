@@ -1,6 +1,24 @@
 # 第三方来源与许可证
 
-本工程包含或链接以下组件。完整许可证随工程及 HAP 保存于 `entry/src/main/resources/rawfile/licenses/`。原始文件的版权声明保留在下载的源文件中。
+本工程包含或链接以下组件。完整许可证源文件保存于 `entry/src/main/resources/rawfile/licenses/`，供后续 HAP 打包使用；0.9.2 本次未生成 HAP。原始文件的版权声明保留在下载的源文件中。
+
+## 0.9.2 起：Eta 直接移植（M1 / E01）
+
+按 [ETA_PORT](docs/ETA_PORT.md) 直接移植本仓库 `app/` 的固定基准 `3b1794d70881c3c849b53d7778dd2bfdf0a46cc5`。本目录的 [LICENSE](LICENSE) 复制根目录许可证全文；移植部分属于修改后的作品，遵守 **PolyForm Noncommercial 1.0.0，仅限非商业用途**。应用名为“随身助手”。
+
+**Required Notice: Copyright © 2026 蛮吉 (Mangi-11).**
+
+| 来源 | 本次移植内容 | 许可证与归属 |
+| --- | --- | --- |
+| [Eta 固定基准](https://github.com/Lmin2419/eta-background/tree/3b1794d70881c3c849b53d7778dd2bfdf0a46cc5/app) | 文案及复数、11 个 drawable 的 SVG 转换、颜色与尺寸常量、字体配置、`LocaleResourcesTest.kt` 的 2 项单测；生成脚本注明来源 | PolyForm Noncommercial 1.0.0；保留上面的 Required Notice；全文另存 `rawfile/licenses/Eta-PolyForm-Noncommercial-1.0.0.txt` |
+| [Material Icons SVG 0.14.15](https://www.npmjs.com/package/@material-design-icons/svg/v/0.14.15) | 按 Eta 源码引用提取 148 个对应样式图标，不重绘 | Apache-2.0；`rawfile/licenses/Material-Icons-APACHE-2.0.txt`；npm 精确版本及完整性散列保存在 lockfile |
+| [Miuix 0.9.4](https://github.com/compose-miuix-ui/miuix/tree/39c40f99844227b853f0049a0933b1f3ae6c00ba) | 默认深浅色、字体大小、按钮和对话框尺寸、ArrowRight 图标；保留原始 Kotlin 输入供离线生成，不作为 Android 运行依赖 | Apache-2.0；保留原文件声明；`rawfile/licenses/Miuix-APACHE-2.0.txt` |
+| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | Eta 中的 regular / bold 两个字体文件原样复制；仅代码字体注册，正文仍用系统字体 | OFL-1.1；`rawfile/licenses/JetBrainsMono-OFL.txt` 保留 JetBrains 的版权声明；许可证文本来源 v2.304，不据此推定 Eta 内字体版本 |
+| Eta `ProviderBranding.kt` 引用的品牌图标 | 22 个 WebP 文件原样复制，未来仅用于标识对应模型服务 | 保留上游来源；品牌与商标权仍属各自权利人，项目许可证不额外授予商标权 |
+
+具体来源、逐项资源映射、散列和适配差异见 [E01 交付记录](docs/E01_RESOURCE_PORT.md)、[资源输入来源](scripts/eta-upstream/README.md) 以及 `docs/eta-{strings,icons,theme,fonts}.json`。关于页所需的作者、许可和 Required Notice 已加入资源，按计划在 E05 显示。
+
+## 原生桥及其他依赖（旧能力）
 
 | 组件 | 来源/版本 | 许可证与改动 |
 | --- | --- | --- |
@@ -16,7 +34,9 @@
 
 HDC 原始源文件声明 Copyright (C) 2021 Huawei Device Co., Ltd.；securec 原始源文件的 Huawei 版权声明、LZ4/xxHash 的 Yann Collet 版权声明以及其他上游声明均保留。修改清单在补丁脚本中，本工程不声称这些第三方实现为原创。
 
-## Eta 的使用范围
+## 0.3–0.9.1 的历史使用范围
+
+以下段落记录此前独立实现阶段的范围，不描述 0.9.2 起的直接移植；当前范围以上面的 M1 / E01 清单为准。
 
 [Mangi-11/Eta](https://github.com/Mangi-11/Eta) 在 `3019c43ce60cf53ebe1c2ba5ec86ec630830f39d` 的实现用于架构研究。其许可证为 PolyForm Noncommercial，不能视作 Apache/MIT 工程任意复制。本工程未复制它的源代码、提示词或素材；AgentLoop、模型适配、鸿蒙执行器、界面和 NAPI 桥接均独立实现。
 

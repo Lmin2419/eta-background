@@ -1,10 +1,10 @@
 {
   "name": "harmony-agent-core",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --test tests/*.test.ts tests/eta/*.test.ts",
     "test:native": "bash scripts/test-native.sh",
     "check": "tsc --noEmit",
     "check:ets": "node scripts/check-ets.cjs",
@@ -13,9 +13,12 @@
     "test:foundation": "tsx --test tests/foundation.test.ts",
     "build:preview": "python3 scripts/build-preview.py",
     "package:framework": "python3 scripts/export-project.py",
-    "verify:package": "python3 scripts/verify-release.py"
+    "verify:package": "python3 scripts/verify-release.py",
+    "port:eta": "python3 scripts/port-eta-strings.py && node scripts/port-eta-icons.mjs && python3 scripts/port-eta-theme.py && python3 scripts/port-eta-assets.py",
+    "port:eta:check": "python3 scripts/port-eta-strings.py --check && node scripts/port-eta-icons.mjs --check && python3 scripts/port-eta-theme.py --check && python3 scripts/port-eta-assets.py --check"
   },
   "devDependencies": {
+    "@material-design-icons/svg": "0.14.15",
     "@types/node": "^22.0.0",
     "tsx": "^4.20.0",
     "typescript": "~5.8.3"

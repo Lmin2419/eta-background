@@ -1,0 +1,16 @@
+{
+  "etaCommit": "3b1794d70881c3c849b53d7778dd2bfdf0a46cc5",
+  "fonts": [
+    {
+      "path": "app/src/main/res/font/jetbrains_mono_regular.ttf",
+      "sha256": "fb3b2575d7b0657359707993288f12a7360344d39387bb26050e276d61f6bd2a"
+    },
+    {
+      "path": "app/src/main/res/font/jetbrains_mono_bold.ttf",
+      "sha256": "0198e841824025f8876e5c297f0b9b497ee8d6eb9969710a3328e1303f996ec3"
+    }
+  ],
+  "registration": "UIContext.getFont().registerFont; regular and bold use separate family aliases",
+  "bodyFont": "HarmonyOS system font",
+  "license": "OFL-1.1; license text from JetBrains/JetBrainsMono v2.304"
+}

@@ -1,6 +1,8 @@
-# 随身助手 · 0.9 交互框架预览（源码 0.9.1）
+# 随身助手 · Eta 鸿蒙移植（源码 0.9.2 / E01）
 
 这次按用户要求先保存旧源码，再重建页面与交互框架。参考自有 `Lmin2419/eta-background` 的页面组织，使用原生 ArkUI 实现。**当前是框架预览版，不是上线版，也不代表已经完成 Eta 的功能对齐。**
+
+M1 已开始按固定 Eta 源码逐项直接移植。0.9.2 仅完成 **E01：许可证、文案、图标、颜色、尺寸和字体基础**，现有页面保持原样，E02–E09 尚未实施。本地 213 项测试通过，ArkTS 检查 0 错误；**未生成 HAP，未进行真机验证**。完整资源清单与差异见 [E01 交付记录](docs/E01_RESOURCE_PORT.md)。
 
 ## 仓库进度与接手入口
 
@@ -32,7 +34,7 @@
 
 完整工程：使用 `harmony-agent-0.9.0-deveco.zip`。DevEco 安装 API 26 SDK，打开工程，给 `com.example.harmonyagent` 自动生成名称为 `default` 的调试签名，然后 Run。此包自带旧原生代码的 ARM64 库，无需在 Windows 编译 OpenSSL。若签名名称不同，需要同步修改 `app.products[].signingConfig`。运行日志应安装 `signed.hap`，出现 `unsigned.hap` / `no signature file` 时先检查这个关联。
 
-0.9.0 ZIP 的应用版本代码为 90000；当前源码为 0.9.1 / 90001。编译 SDK 26，工程最低 API 20；模型网络适配要求实际运行系统 API ≥ 23。本包不包含个人证书、真实 API Key 或已签名 HAP。
+0.9.0 ZIP 的应用版本代码为 90000；当前分支源码为 0.9.2 / 90002。编译 SDK 26，工程最低 API 20；模型网络适配要求实际运行系统 API ≥ 23。本工程不包含个人证书、真实 API Key 或已签名 HAP。
 
 详细步骤：[0.9 升级与核验](docs/UPGRADE_0.9.md)。首次启动仍读取同一应用沙箱的旧对话和模型配置，旧手机执行任务不会自动恢复执行。
 
@@ -42,16 +44,18 @@
 npm ci
 npm run check
 npm test
-export HARMONY_CLT_HOME=/path/to/command-line-tools
-npm run build:harmony
-npm run build:preview
-npm run package:framework
-npm run verify:package
+bash scripts/fetch-ohos-sdk.sh
+export OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets
+npm run check:ets
+npm run check:res
+npm run port:eta:check
 ```
+
+资源生成需要仓库根目录的 `app/`（固定基准）与 `LICENSE`，以及 Node.js、Python 3.9+。`npm run port:eta` 重新生成，`port:eta:check` 只比对，不写文件。用户直接用 DevEco 打开时无需执行生成脚本，生成结果已入库。HAP 编译与签名按 [本地开发说明](docs/LOCAL_DEVELOPMENT.md) 操作。
 
 `pages/Index.ets` 是生产入口，`pages/FoundationPreview.ets` 是 DevEco 预览入口。后者使用相同的 `AssistantShell`、聊天和模型组件，配合纯内存存储与模拟 API，不会连接真实服务或读取个人数据。可以在预览中添加示例模型、发送消息和点击停止。它不在生产 `main_pages.json` 中。
 
-本轮通过 TypeScript 检查、193 项核心测试（其中 15 项专门覆盖新框架交互）与 API 26 HAP 编译。包含真实本地 HTTP/SSE 分片测试，但不能替代鸿蒙 HTTP 适配的真机测试。
+以下为 **0.9.0 的历史验证**：当时通过 TypeScript 检查、193 项核心测试（其中 15 项专门覆盖新框架交互）与 API 26 HAP 编译。包含真实本地 HTTP/SSE 分片测试，但不能替代鸿蒙 HTTP 适配的真机测试，也不代表 E01 已生成 HAP。
 
 **已取得原生画面：**在外部预览环境解决 Linux SDK 的加载兼容问题后，已用实际点击走通首页、流式回复、停止、侧栏、模型服务和多选导入流程，并保存 15 张竖屏 / 横屏截图。测试和导入后表单值保持不变。预览使用同一套 ArkUI 组件和模拟 API；真机键盘、系统栏、真实网络及持久化仍需单独验收。详见 [视觉验证记录](docs/VISUAL_VALIDATION_0.9.md)。这轮截图还修正了卡片圆角、图标裁切、发送按钮位置和短列表居中问题；此前已交付的 0.9.0 ZIP 未被覆盖，截图反映的是当前修正后的源码。
 

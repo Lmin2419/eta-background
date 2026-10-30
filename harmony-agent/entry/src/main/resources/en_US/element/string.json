@@ -1,0 +1,6184 @@
+{
+  "string": [
+    {
+      "name": "accessibility_protection_rejected",
+      "value": "The system rejected the accessibility protection request"
+    },
+    {
+      "name": "accessibility_protection_unavailable",
+      "value": "The accessibility protection backend is unavailable. Enable the system scope and restart"
+    },
+    {
+      "name": "action_add",
+      "value": "Add"
+    },
+    {
+      "name": "action_back",
+      "value": "Back"
+    },
+    {
+      "name": "action_cancel",
+      "value": "Cancel"
+    },
+    {
+      "name": "action_close",
+      "value": "Close"
+    },
+    {
+      "name": "action_confirm",
+      "value": "Confirm"
+    },
+    {
+      "name": "action_continue",
+      "value": "Continue"
+    },
+    {
+      "name": "action_conversation_history",
+      "value": "Conversation history"
+    },
+    {
+      "name": "action_delete",
+      "value": "Delete"
+    },
+    {
+      "name": "action_done",
+      "value": "Done"
+    },
+    {
+      "name": "action_edit",
+      "value": "Edit"
+    },
+    {
+      "name": "action_export",
+      "value": "Export"
+    },
+    {
+      "name": "action_import",
+      "value": "Import"
+    },
+    {
+      "name": "action_install",
+      "value": "Install"
+    },
+    {
+      "name": "action_launch_kimi_web",
+      "value": "Launch Kimi Web"
+    },
+    {
+      "name": "action_more",
+      "value": "More options"
+    },
+    {
+      "name": "action_new_conversation",
+      "value": "New conversation"
+    },
+    {
+      "name": "action_open",
+      "value": "Open"
+    },
+    {
+      "name": "action_open_browser",
+      "value": "Open browser"
+    },
+    {
+      "name": "action_open_terminal",
+      "value": "Open terminal"
+    },
+    {
+      "name": "action_regenerate",
+      "value": "Regenerate"
+    },
+    {
+      "name": "action_reinstall",
+      "value": "Reinstall"
+    },
+    {
+      "name": "action_remove",
+      "value": "Remove"
+    },
+    {
+      "name": "action_rename",
+      "value": "Rename"
+    },
+    {
+      "name": "action_retry",
+      "value": "Retry"
+    },
+    {
+      "name": "action_save",
+      "value": "Save"
+    },
+    {
+      "name": "action_settings",
+      "value": "Settings"
+    },
+    {
+      "name": "action_stop",
+      "value": "Stop"
+    },
+    {
+      "name": "agent_accessibility_description",
+      "value": "Read screen content and perform taps, swipes, text input, and other actions to help the agent complete tasks."
+    },
+    {
+      "name": "agent_accessibility_label",
+      "value": "随身助手 Agent"
+    },
+    {
+      "name": "appearance_accent_blue",
+      "value": "Blue"
+    },
+    {
+      "name": "appearance_accent_color",
+      "value": "Accent color"
+    },
+    {
+      "name": "appearance_accent_green",
+      "value": "Green"
+    },
+    {
+      "name": "appearance_accent_orange",
+      "value": "Orange"
+    },
+    {
+      "name": "appearance_accent_pink",
+      "value": "Pink"
+    },
+    {
+      "name": "appearance_accent_purple",
+      "value": "Purple"
+    },
+    {
+      "name": "appearance_accent_red",
+      "value": "Red"
+    },
+    {
+      "name": "appearance_accent_system",
+      "value": "System colors"
+    },
+    {
+      "name": "appearance_accent_teal",
+      "value": "Teal"
+    },
+    {
+      "name": "appearance_accent_yellow",
+      "value": "Yellow"
+    },
+    {
+      "name": "appearance_blur",
+      "value": "Blur effects"
+    },
+    {
+      "name": "appearance_blur_style",
+      "value": "Top bar blur style"
+    },
+    {
+      "name": "appearance_blur_style_gaussian",
+      "value": "Gaussian"
+    },
+    {
+      "name": "appearance_blur_style_gaussian_summary",
+      "value": "Apply uniform blur across the top bar"
+    },
+    {
+      "name": "appearance_blur_style_progressive",
+      "value": "Progressive"
+    },
+    {
+      "name": "appearance_blur_style_progressive_summary",
+      "value": "Increase blur progressively toward the top"
+    },
+    {
+      "name": "appearance_blur_summary",
+      "value": "Enable blur on top bars, the chat input surface, and similar areas"
+    },
+    {
+      "name": "appearance_group_color",
+      "value": "Colors & Theme"
+    },
+    {
+      "name": "appearance_group_interface",
+      "value": "Interface & Effects"
+    },
+    {
+      "name": "appearance_interface_scale",
+      "value": "Interface scale"
+    },
+    {
+      "name": "appearance_interface_scale_dialog_summary",
+      "value": "Enter an integer from 80 to 110"
+    },
+    {
+      "name": "appearance_interface_scale_dialog_title",
+      "value": "Interface scale"
+    },
+    {
+      "name": "appearance_interface_scale_input_label",
+      "value": "Percentage"
+    },
+    {
+      "name": "appearance_interface_scale_summary",
+      "value": "Adjust the global display scale (80%–110%)"
+    },
+    {
+      "name": "appearance_monet",
+      "value": "Monet colors"
+    },
+    {
+      "name": "appearance_monet_summary",
+      "value": "Use system dynamic colors when available"
+    },
+    {
+      "name": "appearance_palette_content",
+      "value": "Content"
+    },
+    {
+      "name": "appearance_palette_expressive",
+      "value": "Expressive"
+    },
+    {
+      "name": "appearance_palette_fidelity",
+      "value": "Fidelity"
+    },
+    {
+      "name": "appearance_palette_fruit_salad",
+      "value": "Fruit Salad"
+    },
+    {
+      "name": "appearance_palette_monochrome",
+      "value": "Monochrome"
+    },
+    {
+      "name": "appearance_palette_neutral",
+      "value": "Neutral"
+    },
+    {
+      "name": "appearance_palette_rainbow",
+      "value": "Rainbow"
+    },
+    {
+      "name": "appearance_palette_style",
+      "value": "Color style"
+    },
+    {
+      "name": "appearance_palette_tonal_spot",
+      "value": "Tonal Spot"
+    },
+    {
+      "name": "appearance_palette_vibrant",
+      "value": "Vibrant"
+    },
+    {
+      "name": "appearance_predictive_back",
+      "value": "Predictive back gesture"
+    },
+    {
+      "name": "appearance_predictive_back_summary",
+      "value": "Enable predictive back animations"
+    },
+    {
+      "name": "appearance_pure_black",
+      "value": "Pure black background"
+    },
+    {
+      "name": "appearance_pure_black_summary",
+      "value": "Use a pure black background in dark mode"
+    },
+    {
+      "name": "appearance_runtime_glow",
+      "value": "Runtime edge glow"
+    },
+    {
+      "name": "appearance_runtime_glow_summary",
+      "value": "Show screen edge lighting during assistant wake and task execution. Changes take effect immediately."
+    },
+    {
+      "name": "appearance_swipe_dismiss",
+      "value": "Swipe back gesture"
+    },
+    {
+      "name": "appearance_swipe_dismiss_summary",
+      "value": "Swipe horizontally anywhere on a page to return"
+    },
+    {
+      "name": "appearance_task_completion_alerts",
+      "value": "Task completion pop-up"
+    },
+    {
+      "name": "appearance_task_completion_alerts_summary",
+      "value": "Show a native top banner when a task finishes, stops, or fails. Turning this off keeps task notifications. Allow banners in system notification settings."
+    },
+    {
+      "name": "appearance_theme_dark",
+      "value": "Dark"
+    },
+    {
+      "name": "appearance_theme_light",
+      "value": "Light"
+    },
+    {
+      "name": "appearance_theme_mode",
+      "value": "Theme mode"
+    },
+    {
+      "name": "appearance_theme_system",
+      "value": "Follow system"
+    },
+    {
+      "name": "appearance_title",
+      "value": "Appearance & Theme"
+    },
+    {
+      "name": "attachment_add",
+      "value": "Add"
+    },
+    {
+      "name": "attachment_enter_path",
+      "value": "Enter path"
+    },
+    {
+      "name": "attachment_file",
+      "value": "File"
+    },
+    {
+      "name": "attachment_folder",
+      "value": "Folder"
+    },
+    {
+      "name": "attachment_image",
+      "value": "Image"
+    },
+    {
+      "name": "background_continue_instruction",
+      "value": "Continue task"
+    },
+    {
+      "name": "background_diagnostics_failed",
+      "value": "Could not save diagnostics"
+    },
+    {
+      "name": "background_diagnostics_saved",
+      "value": "Diagnostics saved"
+    },
+    {
+      "name": "background_diagnostics_summary",
+      "value": "Saves task and resource cleanup states, without chats, keys or screenshots"
+    },
+    {
+      "name": "background_diagnostics_title",
+      "value": "Export runtime diagnostics"
+    },
+    {
+      "name": "background_handoff_unavailable",
+      "value": "The background page is busy or could not be opened. Check the conversation and try again."
+    },
+    {
+      "name": "background_notifications_disabled",
+      "value": "Disabled; enable notifications to see background task progress"
+    },
+    {
+      "name": "background_notifications_enabled",
+      "value": "Enabled; tap to manage system task notifications"
+    },
+    {
+      "name": "background_notifications_title",
+      "value": "Background task notifications"
+    },
+    {
+      "name": "background_open_app",
+      "value": "Open app"
+    },
+    {
+      "name": "background_opening_app",
+      "value": "Opening app"
+    },
+    {
+      "name": "background_releasing_screen",
+      "value": "Releasing screen"
+    },
+    {
+      "name": "background_reply_failed",
+      "value": "Could not send. Wait for this conversation to finish or open ETA to check its history and model, then retry."
+    },
+    {
+      "name": "background_restoring_display",
+      "value": "Finishing screen task"
+    },
+    {
+      "name": "background_screen_off_paused",
+      "value": "Paused while screen is off; unlock to resume"
+    },
+    {
+      "name": "background_task_completed",
+      "value": "Turn ended"
+    },
+    {
+      "name": "background_task_queued",
+      "value": "Waiting to run"
+    },
+    {
+      "name": "background_waiting_app",
+      "value": "Waiting for app"
+    },
+    {
+      "name": "background_waiting_model",
+      "value": "Waiting for model"
+    },
+    {
+      "name": "browser_back",
+      "value": "Back"
+    },
+    {
+      "name": "browser_clear_shared_data",
+      "value": "Clear all browser data"
+    },
+    {
+      "name": "browser_clear_shared_data_message",
+      "value": "All pages will close. Cookies, cache, and website data, including sign-in sessions, will be cleared."
+    },
+    {
+      "name": "browser_close_page",
+      "value": "Close page"
+    },
+    {
+      "name": "browser_forward",
+      "value": "Forward"
+    },
+    {
+      "name": "browser_no_external_app",
+      "value": "No app can open this webpage"
+    },
+    {
+      "name": "browser_open_external",
+      "value": "Open in another app"
+    },
+    {
+      "name": "browser_refresh",
+      "value": "Refresh"
+    },
+    {
+      "name": "browser_search_or_address",
+      "value": "Search or enter address"
+    },
+    {
+      "name": "browser_stop_loading",
+      "value": "Stop loading"
+    },
+    {
+      "name": "browser_user_action_failed",
+      "value": "The browser action could not be completed. Please try again."
+    },
+    {
+      "name": "capability_accessibility_required",
+      "value": "Available after enabling accessibility"
+    },
+    {
+      "name": "capability_all",
+      "value": "All capabilities"
+    },
+    {
+      "name": "capability_background_failed",
+      "value": "Cannot start the background task. Return to 随身助手 and try again."
+    },
+    {
+      "name": "capability_coloros_required",
+      "value": "Available on ColorOS"
+    },
+    {
+      "name": "capability_current_device",
+      "value": "Current device"
+    },
+    {
+      "name": "capability_enhancements",
+      "value": "Root and system enhancements"
+    },
+    {
+      "name": "capability_enhancements_summary",
+      "value": "Root authorization and framework status"
+    },
+    {
+      "name": "capability_hook_accessibility",
+      "value": "Accessibility protection"
+    },
+    {
+      "name": "capability_hook_accessibility_summary",
+      "value": "Maintain service activation through system_server. Requires the LSPosed system scope. Accessibility can still be enabled manually in standard mode."
+    },
+    {
+      "name": "capability_hook_assistants",
+      "value": "Xiaobu and Super XiaoAi integration"
+    },
+    {
+      "name": "capability_hook_assistants_summary",
+      "value": "Invoke 随身助手 Runtime through system assistant entry points. Requires 随身助手 enabled in LSPosed, the corresponding assistant scope, and supported ColorOS or HyperOS."
+    },
+    {
+      "name": "capability_hook_google",
+      "value": "Gemini and Circle to Search"
+    },
+    {
+      "name": "capability_hook_google_summary",
+      "value": "Create or repair system capabilities and entry points on ColorOS. Requires LSPosed and the corresponding system and Google app scopes; systemizing the Google app also requires Root."
+    },
+    {
+      "name": "capability_import_denied",
+      "value": "Cannot read this path. Import the file or authorize a shared directory."
+    },
+    {
+      "name": "capability_import_failed",
+      "value": "File import failed. Try again."
+    },
+    {
+      "name": "capability_import_too_large",
+      "value": "Files larger than 32 MiB cannot be imported"
+    },
+    {
+      "name": "capability_kimi_checking",
+      "value": "Checking Kimi Web…"
+    },
+    {
+      "name": "capability_kimi_exited",
+      "value": "Kimi Web exited. Check its configuration in the terminal and try again."
+    },
+    {
+      "name": "capability_kimi_install",
+      "value": "Install Kimi Web"
+    },
+    {
+      "name": "capability_kimi_logs_unavailable",
+      "value": "Cannot read Kimi startup logs. Check the environment in the terminal and try again."
+    },
+    {
+      "name": "capability_kimi_not_installed",
+      "value": "Install Kimi Code in the Linux environment first"
+    },
+    {
+      "name": "capability_kimi_open",
+      "value": "Open Kimi Web · Running"
+    },
+    {
+      "name": "capability_kimi_preparing",
+      "value": "Preparing Kimi Web…"
+    },
+    {
+      "name": "capability_kimi_proot_unavailable",
+      "value": "PRoot failed to start. Check or reinstall the standard environment from the Linux environment page."
+    },
+    {
+      "name": "capability_kimi_retry",
+      "value": "Kimi Web failed to start · Retry"
+    },
+    {
+      "name": "capability_kimi_root_required",
+      "value": "This Kimi environment requires Root. Restore authorization, or install a PRoot version in the Linux environment."
+    },
+    {
+      "name": "capability_kimi_stop",
+      "value": "Stop Kimi Web"
+    },
+    {
+      "name": "capability_linux_backend",
+      "value": "Execution mode"
+    },
+    {
+      "name": "capability_linux_chroot",
+      "value": "Root mode · chroot"
+    },
+    {
+      "name": "capability_linux_chroot_summary",
+      "value": "Uses Root and a separate mount namespace while preserving the existing environment"
+    },
+    {
+      "name": "capability_linux_proot",
+      "value": "Standard mode · PRoot"
+    },
+    {
+      "name": "capability_linux_proot_requirements",
+      "value": "Uses an independent app-private directory; no Root or BusyBox required"
+    },
+    {
+      "name": "capability_linux_proot_summary",
+      "value": "An independent private Linux environment without Root"
+    },
+    {
+      "name": "capability_linux_root_lost",
+      "value": "This environment uses chroot. Restore Root access, or choose PRoot to install an independent environment."
+    },
+    {
+      "name": "capability_location_access_required",
+      "value": "Location access required"
+    },
+    {
+      "name": "capability_location_foreground",
+      "value": "Location is available while the app is in the foreground; background tasks require additional location authorization"
+    },
+    {
+      "name": "capability_notification_access_required",
+      "value": "Notification access required"
+    },
+    {
+      "name": "capability_notifications_summary",
+      "value": "View and stop running terminal and Agent tasks from notifications"
+    },
+    {
+      "name": "capability_notifications_title",
+      "value": "Background task notifications"
+    },
+    {
+      "name": "capability_optional_root",
+      "value": "Optional enhancement permissions"
+    },
+    {
+      "name": "capability_provider_created",
+      "value": "Created and selected as the current model provider"
+    },
+    {
+      "name": "capability_provider_saved",
+      "value": "Saved and selected as the current model provider"
+    },
+    {
+      "name": "capability_root_checking",
+      "value": "Checking Root authorization…"
+    },
+    {
+      "name": "capability_root_data",
+      "value": "Protected data and files"
+    },
+    {
+      "name": "capability_root_data_summary",
+      "value": "Access some data saved by other apps and the system. Requires Root; availability depends on the system, app versions, and enabled tool permissions."
+    },
+    {
+      "name": "capability_root_device",
+      "value": "App and system management"
+    },
+    {
+      "name": "capability_root_device_summary",
+      "value": "Freeze and stop apps, modify protected system settings, and read system logs. 随身助手 requires Root access."
+    },
+    {
+      "name": "capability_root_features",
+      "value": "Root capabilities"
+    },
+    {
+      "name": "capability_root_granted",
+      "value": "Root access granted"
+    },
+    {
+      "name": "capability_root_linux",
+      "value": "Linux and terminal enhancements"
+    },
+    {
+      "name": "capability_root_linux_summary",
+      "value": "Root enables chroot, system directories, and daemon tasks independent of the app. Standard mode supports the private workspace and PRoot."
+    },
+    {
+      "name": "capability_root_not_granted",
+      "value": "Root access not granted; using standard mode"
+    },
+    {
+      "name": "capability_root_partial",
+      "value": "Using standard capabilities; Root enables additional actions"
+    },
+    {
+      "name": "capability_root_refresh",
+      "value": "Check again"
+    },
+    {
+      "name": "capability_root_request",
+      "value": "Authorize"
+    },
+    {
+      "name": "capability_root_required",
+      "value": "Root access required"
+    },
+    {
+      "name": "capability_root_timeout",
+      "value": "Authorization timed out; retry manually"
+    },
+    {
+      "name": "capability_root_unavailable",
+      "value": "Root not detected; standard features remain available"
+    },
+    {
+      "name": "capability_system_features",
+      "value": "System assistant and enhancements"
+    },
+    {
+      "name": "capability_terminal_ordinary_summary",
+      "value": "Run commands and background tasks using standard Android Shell or a Linux environment without Root"
+    },
+    {
+      "name": "capability_usage_access_required",
+      "value": "Usage access required"
+    },
+    {
+      "name": "capability_workspace",
+      "value": "Workspace and files"
+    },
+    {
+      "name": "capability_workspace_directory",
+      "value": "Folder"
+    },
+    {
+      "name": "capability_workspace_empty",
+      "value": "No files"
+    },
+    {
+      "name": "capability_workspace_empty_summary",
+      "value": "Import files or generate them through terminal tasks"
+    },
+    {
+      "name": "capability_workspace_exported",
+      "value": "File exported"
+    },
+    {
+      "name": "capability_workspace_failed",
+      "value": "File operation failed. Check permissions and available space."
+    },
+    {
+      "name": "capability_workspace_file_export",
+      "value": "%1$s · Tap to export"
+    },
+    {
+      "name": "capability_workspace_files",
+      "value": "Workspace files"
+    },
+    {
+      "name": "capability_workspace_import",
+      "value": "Import files"
+    },
+    {
+      "name": "capability_workspace_imported",
+      "value": "Files imported into the workspace"
+    },
+    {
+      "name": "capability_workspace_parent",
+      "value": "Parent directory"
+    },
+    {
+      "name": "capability_workspace_private",
+      "value": "Private workspace"
+    },
+    {
+      "name": "capability_workspace_private_summary",
+      "value": "Default file directory for the terminal and standard Linux environments; no storage permission required"
+    },
+    {
+      "name": "capability_workspace_public",
+      "value": "Public directory access"
+    },
+    {
+      "name": "capability_workspace_public_denied",
+      "value": "Public directory access is not authorized. Retry authorization or import the files through Workspace and files."
+    },
+    {
+      "name": "capability_workspace_public_granted",
+      "value": "Authorized; the terminal can access public directories"
+    },
+    {
+      "name": "capability_workspace_public_summary",
+      "value": "Allow access to all files in system settings to use shared storage directories"
+    },
+    {
+      "name": "capability_workspace_summary",
+      "value": "Import, export, and directory access"
+    },
+    {
+      "name": "capability_xposed_connected",
+      "value": "Service connected; this does not indicate that the 随身助手 module is enabled"
+    },
+    {
+      "name": "capability_xposed_disconnected",
+      "value": "No framework service connection; chat, GUI, browser, and standard Linux environments remain available"
+    },
+    {
+      "name": "capability_xposed_help",
+      "value": "Module activation and scope"
+    },
+    {
+      "name": "capability_xposed_help_summary",
+      "value": "Enable 随身助手 in LSPosed and check its scope. A service connection does not indicate that the module is enabled and may remain after disabling it. Actual behavior depends on hooks loading in the target process."
+    },
+    {
+      "name": "capability_xposed_service",
+      "value": "Framework connection"
+    },
+    {
+      "name": "chat_character_input_hint",
+      "value": "Say something to %1$s…"
+    },
+    {
+      "name": "chat_character_story_start",
+      "value": "The story begins here"
+    },
+    {
+      "name": "chat_character_typing",
+      "value": "%1$s is replying…"
+    },
+    {
+      "name": "chat_edit_character_reply",
+      "value": "Edit character reply"
+    },
+    {
+      "name": "chat_edit_preserve_following",
+      "value": "Saving updates this message in place and keeps the rest of the conversation"
+    },
+    {
+      "name": "chat_edit_replace_later",
+      "value": "Sending will replace this message and everything after it"
+    },
+    {
+      "name": "chat_edit_replace_message",
+      "value": "Sending will replace this message"
+    },
+    {
+      "name": "chat_eta_working",
+      "value": "随身助手 is working…"
+    },
+    {
+      "name": "chat_image_attachment",
+      "value": "Image attachment"
+    },
+    {
+      "name": "chat_input_hint",
+      "value": "Ask 随身助手 to do something"
+    },
+    {
+      "name": "chat_next_candidate",
+      "value": "Next candidate reply"
+    },
+    {
+      "name": "chat_previous_candidate",
+      "value": "Previous candidate reply"
+    },
+    {
+      "name": "chat_queue_files_only",
+      "value": "[%1$d 个文件]"
+    },
+    {
+      "name": "chat_queue_images_only",
+      "value": "[%1$d 张图片]"
+    },
+    {
+      "name": "chat_queue_interrupting",
+      "value": "插话中"
+    },
+    {
+      "name": "chat_queue_remove",
+      "value": "移除排队消息"
+    },
+    {
+      "name": "chat_queue_status",
+      "value": "排队中"
+    },
+    {
+      "name": "chat_queue_status_count",
+      "value": "排队中 · %1$d"
+    },
+    {
+      "name": "chat_queue_steer_now",
+      "value": "立即插话发送"
+    },
+    {
+      "name": "chat_reasoning_effort",
+      "value": "Reasoning effort: %1$s"
+    },
+    {
+      "name": "chat_save_message",
+      "value": "Save message"
+    },
+    {
+      "name": "chat_send",
+      "value": "Send"
+    },
+    {
+      "name": "chat_stop",
+      "value": "Stop"
+    },
+    {
+      "name": "context_compact_action",
+      "value": "Compact context"
+    },
+    {
+      "name": "context_compaction",
+      "value": "Context compaction"
+    },
+    {
+      "name": "context_no_model_limit",
+      "value": "Context window unknown, so automatic compaction is off. You can still compact manually, or set the window in Settings → Model Providers."
+    },
+    {
+      "name": "context_no_previous_usage",
+      "value": "No usage data yet"
+    },
+    {
+      "name": "context_usage_after_response",
+      "value": "Measured after the first response"
+    },
+    {
+      "name": "context_usage_description",
+      "value": "Context usage: %1$s"
+    },
+    {
+      "name": "context_usage_previous_response",
+      "value": "%1$s\nMeasured last turn"
+    },
+    {
+      "name": "conversation_delete_message",
+      "value": "This conversation and its messages will be permanently deleted."
+    },
+    {
+      "name": "conversation_delete_message_body",
+      "value": "This message will be deleted."
+    },
+    {
+      "name": "conversation_delete_message_title",
+      "value": "Delete message?"
+    },
+    {
+      "name": "conversation_delete_save_failed",
+      "value": "Could not save or confirm the task results. The conversation has not been deleted."
+    },
+    {
+      "name": "conversation_delete_title",
+      "value": "Delete conversation?"
+    },
+    {
+      "name": "conversation_dock_models",
+      "value": "Models"
+    },
+    {
+      "name": "conversation_empty",
+      "value": "No conversations yet"
+    },
+    {
+      "name": "conversation_export_assistant",
+      "value": "Assistant"
+    },
+    {
+      "name": "conversation_export_default_name",
+      "value": "Conversation"
+    },
+    {
+      "name": "conversation_export_failed",
+      "value": "Export failed"
+    },
+    {
+      "name": "conversation_export_images",
+      "value": "Images: %1$d"
+    },
+    {
+      "name": "conversation_export_thinking",
+      "value": "Thinking"
+    },
+    {
+      "name": "conversation_export_tool_arguments",
+      "value": "Arguments: %1$s"
+    },
+    {
+      "name": "conversation_export_tool_line",
+      "value": "Tool: %1$s (%2$s)"
+    },
+    {
+      "name": "conversation_export_tool_result",
+      "value": "Result: %1$s"
+    },
+    {
+      "name": "conversation_export_tools_line",
+      "value": "Tools: %1$s"
+    },
+    {
+      "name": "conversation_export_user",
+      "value": "User"
+    },
+    {
+      "name": "conversation_exported",
+      "value": "Exported"
+    },
+    {
+      "name": "conversation_load_failed",
+      "value": "Failed to load conversation"
+    },
+    {
+      "name": "conversation_load_turn_start",
+      "value": "Scroll up to the user message that started this turn before continuing"
+    },
+    {
+      "name": "conversation_loading",
+      "value": "Loading conversation…"
+    },
+    {
+      "name": "conversation_model_unavailable",
+      "value": "Model unavailable for this conversation. Using %1$s."
+    },
+    {
+      "name": "conversation_no_results",
+      "value": "No matching conversations"
+    },
+    {
+      "name": "conversation_persistence_failed",
+      "value": "Couldn’t save the conversation. Please try again."
+    },
+    {
+      "name": "conversation_preview_empty",
+      "value": "Ask anything. 随身助手 can operate your device when needed"
+    },
+    {
+      "name": "conversation_preview_reasoning",
+      "value": "随身助手 is reasoning"
+    },
+    {
+      "name": "conversation_preview_tool_call",
+      "value": "Tool call: %1$s"
+    },
+    {
+      "name": "conversation_regenerate_current_turn",
+      "value": "The current turn will be replaced with a newly generated response."
+    },
+    {
+      "name": "conversation_regenerate_title",
+      "value": "Regenerate response?"
+    },
+    {
+      "name": "conversation_rename_hint",
+      "value": "Conversation name"
+    },
+    {
+      "name": "conversation_rename_title",
+      "value": "Rename conversation"
+    },
+    {
+      "name": "conversation_retry_earlier_messages",
+      "value": "Load failed. Tap to retry"
+    },
+    {
+      "name": "conversation_search_hint",
+      "value": "Search conversations"
+    },
+    {
+      "name": "conversation_section_pinned",
+      "value": "Pinned"
+    },
+    {
+      "name": "conversation_section_today",
+      "value": "Today"
+    },
+    {
+      "name": "conversation_stop_and_delete",
+      "value": "Stop task and delete"
+    },
+    {
+      "name": "conversation_stop_and_delete_message",
+      "value": "The task in this conversation will stop first. The conversation will be deleted after its results are saved."
+    },
+    {
+      "name": "conversation_unnamed",
+      "value": "New conversation"
+    },
+    {
+      "name": "copy_answer",
+      "value": "Copy answer"
+    },
+    {
+      "name": "copy_code",
+      "value": "Copy code"
+    },
+    {
+      "name": "copy_command",
+      "value": "Copy command"
+    },
+    {
+      "name": "copy_copied",
+      "value": "Copied"
+    },
+    {
+      "name": "data_backup_actions",
+      "value": "Backup"
+    },
+    {
+      "name": "data_backup_export",
+      "value": "Export data"
+    },
+    {
+      "name": "data_backup_export_summary",
+      "value": "Save conversations, providers, and MEMORY.md to a JSON file"
+    },
+    {
+      "name": "data_backup_exported",
+      "value": "Exported %1$d conversations and %2$d providers"
+    },
+    {
+      "name": "data_backup_failed",
+      "value": "Backup operation failed"
+    },
+    {
+      "name": "data_backup_file_open_failed",
+      "value": "Unable to open the selected file"
+    },
+    {
+      "name": "data_backup_import",
+      "value": "Import data"
+    },
+    {
+      "name": "data_backup_import_confirm_summary",
+      "value": "Current conversations, providers, and MEMORY.md will be replaced. The backup may contain API keys."
+    },
+    {
+      "name": "data_backup_import_confirm_title",
+      "value": "Import 随身助手 data?"
+    },
+    {
+      "name": "data_backup_import_summary",
+      "value": "Replace conversations, providers, and MEMORY.md from a backup file"
+    },
+    {
+      "name": "data_backup_imported",
+      "value": "Imported %1$d conversations and %2$d providers"
+    },
+    {
+      "name": "data_backup_title",
+      "value": "Data backup"
+    },
+    {
+      "name": "data_backup_warning_summary",
+      "value": "The file contains provider API keys. It only includes conversations, model providers, and MEMORY.md."
+    },
+    {
+      "name": "data_backup_warning_title",
+      "value": "Keep the backup file safe"
+    },
+    {
+      "name": "data_backup_working",
+      "value": "Working…"
+    },
+    {
+      "name": "eta_port_about_author",
+      "value": "Original author: 蛮吉 (Mangi-11)"
+    },
+    {
+      "name": "eta_port_about_license",
+      "value": "PolyForm Noncommercial 1.0.0. Noncommercial use only."
+    },
+    {
+      "name": "eta_port_about_title",
+      "value": "Based on Eta"
+    },
+    {
+      "name": "eta_port_required_notice",
+      "value": "Required Notice: Copyright © 2026 蛮吉 (Mangi-11)."
+    },
+    {
+      "name": "eta_port_unavailable",
+      "value": "Not yet integrated in the HarmonyOS version"
+    },
+    {
+      "name": "execution_channel",
+      "value": "Running tasks"
+    },
+    {
+      "name": "execution_chip_answering",
+      "value": "Answering"
+    },
+    {
+      "name": "execution_chip_running",
+      "value": "Working"
+    },
+    {
+      "name": "execution_chip_tasks",
+      "value": "%1$d tasks"
+    },
+    {
+      "name": "execution_next_task",
+      "value": "Next task"
+    },
+    {
+      "name": "execution_stop",
+      "value": "Stop running tasks"
+    },
+    {
+      "name": "execution_title",
+      "value": "随身助手 is running"
+    },
+    {
+      "name": "injected_app_tool",
+      "value": "app tool"
+    },
+    {
+      "name": "injected_breeno_context_unavailable",
+      "value": "Breeno context is unavailable"
+    },
+    {
+      "name": "injected_breeno_custom_model_disabled",
+      "value": "Enable Breeno custom models in 随身助手 settings first"
+    },
+    {
+      "name": "injected_breeno_failed",
+      "value": "Breeno custom model failed: %1$s"
+    },
+    {
+      "name": "injected_completed",
+      "value": "随身助手 completed this task"
+    },
+    {
+      "name": "injected_executing",
+      "value": "随身助手 is working…"
+    },
+    {
+      "name": "injected_failed",
+      "value": "随身助手 could not complete the task. Try again later"
+    },
+    {
+      "name": "injected_image_cache_limit",
+      "value": "Image reference data is too large to cache safely. Choose the images again or use remote image links"
+    },
+    {
+      "name": "injected_image_count_limit",
+      "value": "You can attach up to %1$d images at a time. Remove some images and try again"
+    },
+    {
+      "name": "injected_image_data_limit",
+      "value": "Image data exceeds the safe limit. Resize the image and try again"
+    },
+    {
+      "name": "injected_image_input_limit",
+      "value": "The image input is too complex. Remove some images or simplify the image data"
+    },
+    {
+      "name": "injected_image_unreadable",
+      "value": "Some images could not be read. Choose the images again and retry"
+    },
+    {
+      "name": "injected_reasoning",
+      "value": "随身助手 is reasoning…"
+    },
+    {
+      "name": "injected_reasoning_label",
+      "value": "Reasoning"
+    },
+    {
+      "name": "injected_runtime_failed",
+      "value": "Agent Runtime failed"
+    },
+    {
+      "name": "injected_screen_tool",
+      "value": "screen tool"
+    },
+    {
+      "name": "injected_system_tool",
+      "value": "system tool"
+    },
+    {
+      "name": "injected_tool",
+      "value": "tool"
+    },
+    {
+      "name": "injected_using_tool",
+      "value": "Using %1$s"
+    },
+    {
+      "name": "linux_agent_ready_summary",
+      "value": "Basic tools such as rg, fd, Git, SSH, curl, jq and SQLite are installed; the Agent uses the selected Linux environment in /workspace"
+    },
+    {
+      "name": "linux_alpine_ready",
+      "value": "Alpine %1$s ready"
+    },
+    {
+      "name": "linux_already_ready",
+      "value": "The Linux tool environment is ready"
+    },
+    {
+      "name": "linux_apk_analysis_installed",
+      "value": "JADX, Apktool, smali, and baksmali installed"
+    },
+    {
+      "name": "linux_apk_analysis_ready",
+      "value": "APK analysis tools are ready"
+    },
+    {
+      "name": "linux_apk_stage_activating",
+      "value": "Activating APK analysis tools"
+    },
+    {
+      "name": "linux_apk_stage_checking",
+      "value": "Checking the Linux base environment"
+    },
+    {
+      "name": "linux_apk_stage_complete",
+      "value": "APK analysis tools ready"
+    },
+    {
+      "name": "linux_apk_stage_downloading",
+      "value": "Downloading APK analysis tools"
+    },
+    {
+      "name": "linux_apk_stage_failed",
+      "value": "%1$s failed. Try again later"
+    },
+    {
+      "name": "linux_apk_stage_installing_java",
+      "value": "Installing OpenJDK 25"
+    },
+    {
+      "name": "linux_apk_stage_preparing",
+      "value": "Preparing tool files"
+    },
+    {
+      "name": "linux_apk_stage_verifying",
+      "value": "Verifying analysis commands"
+    },
+    {
+      "name": "linux_apk_tools_ready",
+      "value": "JADX, Apktool, smali, and baksmali are ready. Apktool rebuilding is not yet supported"
+    },
+    {
+      "name": "linux_apk_tools_summary",
+      "value": "Install stable OpenJDK 25 and the latest stable JADX, Apktool, smali, and baksmali; requires 768 MB of free space"
+    },
+    {
+      "name": "linux_base_install_complete",
+      "value": "Alpine %1$s base installed"
+    },
+    {
+      "name": "linux_base_ready",
+      "value": "Base environment ready"
+    },
+    {
+      "name": "linux_base_required",
+      "value": "Install the selected Linux base environment first"
+    },
+    {
+      "name": "linux_busy",
+      "value": "Busy"
+    },
+    {
+      "name": "linux_busybox_unavailable",
+      "value": "No usable BusyBox or required applets were found in the Root environment"
+    },
+    {
+      "name": "linux_check",
+      "value": "Check"
+    },
+    {
+      "name": "linux_checking",
+      "value": "Checking"
+    },
+    {
+      "name": "linux_continue_installation",
+      "value": "Continue installation"
+    },
+    {
+      "name": "linux_debian_agent_ready_summary",
+      "value": "Debian Trixie base tools are ready; Python, Node.js, and SSH can be installed separately as needed"
+    },
+    {
+      "name": "linux_debian_already_ready",
+      "value": "The Debian glibc environment is already ready"
+    },
+    {
+      "name": "linux_debian_base_install_complete",
+      "value": "Debian %1$s base installed"
+    },
+    {
+      "name": "linux_debian_base_ready",
+      "value": "Debian base environment ready"
+    },
+    {
+      "name": "linux_debian_install_complete",
+      "value": "Debian %1$s and common tools installed"
+    },
+    {
+      "name": "linux_debian_install_failed",
+      "value": "Debian base tool installation failed. Check repositories, other package manager tasks, and available storage in the Debian terminal."
+    },
+    {
+      "name": "linux_debian_install_timeout",
+      "value": "Debian base tool installation timed out. Retry to check and recover unfinished package operations."
+    },
+    {
+      "name": "linux_debian_not_installed",
+      "value": "Debian glibc environment is not installed"
+    },
+    {
+      "name": "linux_debian_ready",
+      "value": "Debian %1$s ready"
+    },
+    {
+      "name": "linux_debian_repair_failed",
+      "value": "Debian package checks or recovery did not complete. Ensure no other package manager task is running, then retry. If it still fails, run dpkg --configure -a and apt-get --fix-broken install in the Debian terminal to inspect the error."
+    },
+    {
+      "name": "linux_debian_requirements",
+      "value": "Requires Root and BusyBox from Magisk, KernelSU, or APatch"
+    },
+    {
+      "name": "linux_debian_tools_incomplete",
+      "value": "The Debian base is ready. Install common tools next"
+    },
+    {
+      "name": "linux_distribution_alpine",
+      "value": "Alpine"
+    },
+    {
+      "name": "linux_distribution_alpine_summary",
+      "value": "Lightweight musl environment"
+    },
+    {
+      "name": "linux_distribution_debian",
+      "value": "Debian"
+    },
+    {
+      "name": "linux_distribution_debian_summary",
+      "value": "glibc environment with broader software compatibility"
+    },
+    {
+      "name": "linux_distribution_title",
+      "value": "Linux distribution"
+    },
+    {
+      "name": "linux_download_install",
+      "value": "Download and install"
+    },
+    {
+      "name": "linux_environment_base_ready",
+      "value": "Base environment ready; install the base tools next"
+    },
+    {
+      "name": "linux_environment_configuration",
+      "value": "Environment configuration"
+    },
+    {
+      "name": "linux_environment_files",
+      "value": "Files and directories"
+    },
+    {
+      "name": "linux_environment_shared_folders_summary",
+      "value": "Mount Android directories in the Linux environment"
+    },
+    {
+      "name": "linux_environment_tools_ready",
+      "value": "Base tools ready; install extension tools as needed"
+    },
+    {
+      "name": "linux_environment_unavailable",
+      "value": "The current Root environment cannot create an isolated mount namespace or chroot"
+    },
+    {
+      "name": "linux_files_binary_hint",
+      "value": "Binary file, preview not available"
+    },
+    {
+      "name": "linux_files_empty",
+      "value": "This directory is empty"
+    },
+    {
+      "name": "linux_files_entry_summary",
+      "value": "Browse files in the Linux environment (read-only)"
+    },
+    {
+      "name": "linux_files_entry_title",
+      "value": "File browser"
+    },
+    {
+      "name": "linux_files_error_not_directory",
+      "value": "Not a directory"
+    },
+    {
+      "name": "linux_files_error_not_file",
+      "value": "Not a regular file"
+    },
+    {
+      "name": "linux_files_error_unreadable",
+      "value": "Cannot read this path"
+    },
+    {
+      "name": "linux_files_invalid_distribution",
+      "value": "Unknown Linux distribution"
+    },
+    {
+      "name": "linux_files_not_installed",
+      "value": "Linux environment is not installed yet"
+    },
+    {
+      "name": "linux_files_title",
+      "value": "Linux files"
+    },
+    {
+      "name": "linux_files_truncated_hint",
+      "value": "Content too large, only the beginning is shown"
+    },
+    {
+      "name": "linux_health_needs_check",
+      "value": "Environment needs attention"
+    },
+    {
+      "name": "linux_health_ok",
+      "value": "Environment healthy"
+    },
+    {
+      "name": "linux_health_summary",
+      "value": "Check core commands, workspace mount, shared storage, and free space"
+    },
+    {
+      "name": "linux_install",
+      "value": "Install"
+    },
+    {
+      "name": "linux_install_base",
+      "value": "Install base"
+    },
+    {
+      "name": "linux_install_base_tools",
+      "value": "Install base tools"
+    },
+    {
+      "name": "linux_install_complete",
+      "value": "Alpine %1$s and common tools installed"
+    },
+    {
+      "name": "linux_installed",
+      "value": "Installed"
+    },
+    {
+      "name": "linux_installing",
+      "value": "Installing"
+    },
+    {
+      "name": "linux_insufficient_space",
+      "value": "Not enough space: %1$s required, %2$s available"
+    },
+    {
+      "name": "linux_kimi_tools",
+      "value": "Kimi Code"
+    },
+    {
+      "name": "linux_kimi_tools_ready",
+      "value": "Kimi Code is ready; run kimi in the terminal"
+    },
+    {
+      "name": "linux_kimi_tools_summary",
+      "value": "Install the latest Kimi Code release via npm; requires the Node.js environment first"
+    },
+    {
+      "name": "linux_kimi_web_failed_browser",
+      "value": "No browser available"
+    },
+    {
+      "name": "linux_kimi_web_failed_start",
+      "value": "Failed to start Kimi Web"
+    },
+    {
+      "name": "linux_kimi_web_failed_url",
+      "value": "Web UI address not found; check background task logs"
+    },
+    {
+      "name": "linux_kimi_web_launch",
+      "value": "Launch Web UI"
+    },
+    {
+      "name": "linux_kimi_web_starting",
+      "value": "Starting…"
+    },
+    {
+      "name": "linux_missing_tools",
+      "value": "Missing %1$s"
+    },
+    {
+      "name": "linux_node_tools",
+      "value": "Node.js environment"
+    },
+    {
+      "name": "linux_node_tools_ready",
+      "value": "Node.js and npm are ready"
+    },
+    {
+      "name": "linux_node_tools_summary",
+      "value": "Install the latest stable Node.js and npm; prefer project-local dependencies and a user prefix for global tools"
+    },
+    {
+      "name": "linux_not_checked",
+      "value": "Not checked"
+    },
+    {
+      "name": "linux_not_installed",
+      "value": "Not installed"
+    },
+    {
+      "name": "linux_profile_already_ready",
+      "value": "%1$s is already ready"
+    },
+    {
+      "name": "linux_profile_dependency_missing",
+      "value": "Install %1$s first"
+    },
+    {
+      "name": "linux_profile_installed",
+      "value": "%1$s installed"
+    },
+    {
+      "name": "linux_profile_stage_checking",
+      "value": "Checking the Linux base environment"
+    },
+    {
+      "name": "linux_profile_stage_complete",
+      "value": "Installation complete"
+    },
+    {
+      "name": "linux_profile_stage_downloading",
+      "value": "Downloading %1$s"
+    },
+    {
+      "name": "linux_profile_stage_downloading_percent",
+      "value": "Downloading %1$s · %2$d%%"
+    },
+    {
+      "name": "linux_profile_stage_failed",
+      "value": "%1$s failed. Try again later"
+    },
+    {
+      "name": "linux_profile_stage_installing",
+      "value": "Installing %1$s"
+    },
+    {
+      "name": "linux_profile_stage_verifying",
+      "value": "Verifying %1$s"
+    },
+    {
+      "name": "linux_progress_percent",
+      "value": "%1$s · %2$d%%"
+    },
+    {
+      "name": "linux_python_tools",
+      "value": "Python / uv environment"
+    },
+    {
+      "name": "linux_python_tools_ready",
+      "value": "uv and the latest stable Python are ready"
+    },
+    {
+      "name": "linux_python_tools_ready_debian",
+      "value": "uv and the latest stable Python are ready"
+    },
+    {
+      "name": "linux_python_tools_summary",
+      "value": "Install the latest stable uv; uv downloads and manages Python versions and project environments as needed"
+    },
+    {
+      "name": "linux_python_tools_summary_debian",
+      "value": "Install the latest stable uv; uv downloads and manages Python versions and project environments as needed"
+    },
+    {
+      "name": "linux_ready",
+      "value": "Ready"
+    },
+    {
+      "name": "linux_repair",
+      "value": "Repair"
+    },
+    {
+      "name": "linux_requirements",
+      "value": "Requires Root and BusyBox from Magisk, KernelSU, or APatch"
+    },
+    {
+      "name": "linux_root_unavailable",
+      "value": "Root access was not granted. Authorize 随身助手 in your Root manager"
+    },
+    {
+      "name": "linux_sdcard_available",
+      "value": "/sdcard available"
+    },
+    {
+      "name": "linux_sdcard_unavailable",
+      "value": "/sdcard currently unavailable"
+    },
+    {
+      "name": "linux_space_remaining",
+      "value": "%1$s free"
+    },
+    {
+      "name": "linux_ssh_tools",
+      "value": "SSH remote access"
+    },
+    {
+      "name": "linux_ssh_tools_ready",
+      "value": "sshd, ssh-keygen, and ssh-agent are ready"
+    },
+    {
+      "name": "linux_ssh_tools_summary",
+      "value": "Install the full OpenSSH suite (sshd, ssh-keygen, ssh-agent, and sftp-server); the base environment already includes the ssh/scp/sftp client"
+    },
+    {
+      "name": "linux_stage_checking",
+      "value": "Checking Root and BusyBox"
+    },
+    {
+      "name": "linux_stage_complete",
+      "value": "Environment ready"
+    },
+    {
+      "name": "linux_stage_downloading",
+      "value": "Downloading the Linux base environment"
+    },
+    {
+      "name": "linux_stage_extracting",
+      "value": "Extracting the base environment"
+    },
+    {
+      "name": "linux_stage_failed",
+      "value": "%1$s failed. Check the network or try again later"
+    },
+    {
+      "name": "linux_stage_installing_tools",
+      "value": "Installing common tools"
+    },
+    {
+      "name": "linux_tool",
+      "value": "Tool"
+    },
+    {
+      "name": "linux_tool_progress_percent",
+      "value": "%1$s · %2$s %3$d%%"
+    },
+    {
+      "name": "linux_tools_incomplete",
+      "value": "The Alpine base is ready. Install common tools next"
+    },
+    {
+      "name": "linux_tools_upgrade_summary",
+      "value": "The base environment is available. Upgrade to add the latest Agent toolset"
+    },
+    {
+      "name": "linux_unsupported_abi",
+      "value": "Unsupported device architecture: %1$s"
+    },
+    {
+      "name": "linux_upgrade_tools",
+      "value": "Upgrade tools"
+    },
+    {
+      "name": "linux_workspace_available",
+      "value": "/workspace available"
+    },
+    {
+      "name": "linux_workspace_error",
+      "value": "Workspace mount unavailable"
+    },
+    {
+      "name": "linux_workspace_unavailable",
+      "value": "/workspace unavailable"
+    },
+    {
+      "name": "location_reason",
+      "value": "用于你开启的持续后台实验模式，低功耗位置更新不保存、不上传"
+    },
+    {
+      "name": "markdown_alert_caution",
+      "value": "Caution"
+    },
+    {
+      "name": "markdown_alert_important",
+      "value": "Important"
+    },
+    {
+      "name": "markdown_alert_note",
+      "value": "Note"
+    },
+    {
+      "name": "markdown_alert_tip",
+      "value": "Tip"
+    },
+    {
+      "name": "markdown_alert_warning",
+      "value": "Warning"
+    },
+    {
+      "name": "markdown_code_block",
+      "value": "Code"
+    },
+    {
+      "name": "mcp_add_server",
+      "value": "Add server"
+    },
+    {
+      "name": "mcp_bearer_optional",
+      "value": "Bearer token (optional)"
+    },
+    {
+      "name": "mcp_bearer_token",
+      "value": "Bearer token"
+    },
+    {
+      "name": "mcp_configured_servers",
+      "value": "Servers · %1$d"
+    },
+    {
+      "name": "mcp_connecting",
+      "value": "Connecting…"
+    },
+    {
+      "name": "mcp_connection_failed",
+      "value": "Could not connect to the MCP server"
+    },
+    {
+      "name": "mcp_delete_confirm",
+      "value": "Delete %1$s? This cannot be undone."
+    },
+    {
+      "name": "mcp_delete_server",
+      "value": "Delete server"
+    },
+    {
+      "name": "mcp_delete_server_summary",
+      "value": "Remove this endpoint, its token, and tool settings"
+    },
+    {
+      "name": "mcp_empty_summary",
+      "value": "Tap to add a server"
+    },
+    {
+      "name": "mcp_empty_title",
+      "value": "No MCP servers"
+    },
+    {
+      "name": "mcp_enable_risky_tool",
+      "value": "Enable this tool?"
+    },
+    {
+      "name": "mcp_enable_risky_tool_summary",
+      "value": "%1$s on %2$s may modify data or interact with external services. Enable it only if you trust the server."
+    },
+    {
+      "name": "mcp_enable_server",
+      "value": "Enable server"
+    },
+    {
+      "name": "mcp_enable_tool",
+      "value": "Enable"
+    },
+    {
+      "name": "mcp_may_modify_data",
+      "value": "May modify data or call an external service"
+    },
+    {
+      "name": "mcp_name_required",
+      "value": "Enter a server name"
+    },
+    {
+      "name": "mcp_no_authentication",
+      "value": "No authentication"
+    },
+    {
+      "name": "mcp_no_tools",
+      "value": "No compatible tools"
+    },
+    {
+      "name": "mcp_read_only_tool",
+      "value": "Read-only tool"
+    },
+    {
+      "name": "mcp_refresh_failed",
+      "value": "Could not refresh the tool list"
+    },
+    {
+      "name": "mcp_refresh_tools",
+      "value": "Refresh tools"
+    },
+    {
+      "name": "mcp_refresh_tools_hint",
+      "value": "Refresh after the server publishes tools"
+    },
+    {
+      "name": "mcp_refreshed",
+      "value": "Tool list refreshed · %1$d tools"
+    },
+    {
+      "name": "mcp_server_added",
+      "value": "Server added. %1$d tools discovered"
+    },
+    {
+      "name": "mcp_server_missing",
+      "value": "This MCP server no longer exists"
+    },
+    {
+      "name": "mcp_server_name",
+      "value": "Name"
+    },
+    {
+      "name": "mcp_server_row_summary",
+      "value": "%1$d of %2$d tools enabled"
+    },
+    {
+      "name": "mcp_server_settings",
+      "value": "Server"
+    },
+    {
+      "name": "mcp_server_url",
+      "value": "Server URL"
+    },
+    {
+      "name": "mcp_token_configured",
+      "value": "Bearer token configured"
+    },
+    {
+      "name": "mcp_tools_count",
+      "value": "Tools · %1$d"
+    },
+    {
+      "name": "mcp_update_token",
+      "value": "Authentication"
+    },
+    {
+      "name": "mcp_update_token_summary",
+      "value": "Enter a new token, or leave it blank to remove authentication"
+    },
+    {
+      "name": "memory_budget_summary",
+      "value": "Inject up to %1$s characters per turn. The model reads detailed content as needed"
+    },
+    {
+      "name": "memory_clear",
+      "value": "Clear"
+    },
+    {
+      "name": "memory_discard",
+      "value": "Discard"
+    },
+    {
+      "name": "memory_empty_title",
+      "value": "No memories yet"
+    },
+    {
+      "name": "memory_mode_edit",
+      "value": "Edit"
+    },
+    {
+      "name": "memory_mode_preview",
+      "value": "Preview"
+    },
+    {
+      "name": "memory_over_limit",
+      "value": "Over the 1 MiB limit. Remove some content"
+    },
+    {
+      "name": "memory_save",
+      "value": "Save"
+    },
+    {
+      "name": "memory_saving",
+      "value": "Saving"
+    },
+    {
+      "name": "memory_unsaved_changes",
+      "value": "Unsaved changes"
+    },
+    {
+      "name": "microphone_reason",
+      "value": "仅在你点击语音输入时录音并转为文字，离开助手即停止。"
+    },
+    {
+      "name": "model_not_selected",
+      "value": "Not selected"
+    },
+    {
+      "name": "model_picker_filter_all",
+      "value": "All"
+    },
+    {
+      "name": "model_picker_title",
+      "value": "Choose model"
+    },
+    {
+      "name": "model_switch_current",
+      "value": "Switch model. Current: %1$s"
+    },
+    {
+      "name": "module_desc",
+      "value": "在手机上运行的 AI 助手"
+    },
+    {
+      "name": "notification_history_service_label",
+      "value": "随身助手 notification history"
+    },
+    {
+      "name": "overlay_capsule_toggle",
+      "value": "%1$s. Tap to show controls"
+    },
+    {
+      "name": "overlay_continuation_unavailable",
+      "value": "Additional input not supported here"
+    },
+    {
+      "name": "overlay_continuing",
+      "value": "Continuing"
+    },
+    {
+      "name": "overlay_finishing",
+      "value": "Finishing up. Add input after the result appears"
+    },
+    {
+      "name": "overlay_generating_answer",
+      "value": "Generating answer"
+    },
+    {
+      "name": "overlay_hosted_tool_running",
+      "value": "Running %1$s"
+    },
+    {
+      "name": "overlay_open_conversation",
+      "value": "Open ETA conversation"
+    },
+    {
+      "name": "overlay_pause",
+      "value": "Pause"
+    },
+    {
+      "name": "overlay_paused",
+      "value": "Paused"
+    },
+    {
+      "name": "overlay_reasoning",
+      "value": "Reasoning"
+    },
+    {
+      "name": "overlay_result_done",
+      "value": "Done"
+    },
+    {
+      "name": "overlay_result_open_eta",
+      "value": "Open 随身助手"
+    },
+    {
+      "name": "overlay_result_ready",
+      "value": "Result ready"
+    },
+    {
+      "name": "overlay_resume",
+      "value": "Resume"
+    },
+    {
+      "name": "overlay_run_failed",
+      "value": "Request failed"
+    },
+    {
+      "name": "overlay_send",
+      "value": "Send"
+    },
+    {
+      "name": "overlay_settings_app_details",
+      "value": "Open permissions in this app information page to manage display over other apps."
+    },
+    {
+      "name": "overlay_settings_choose_app",
+      "value": "Choose 随身助手 Background in the system overlay permission list."
+    },
+    {
+      "name": "overlay_settings_unavailable",
+      "value": "Could not open system settings. Open Settings → Apps → 随身助手 Background to manage overlay permission."
+    },
+    {
+      "name": "overlay_stop_task",
+      "value": "Stop task"
+    },
+    {
+      "name": "overlay_stopped",
+      "value": "Stopped"
+    },
+    {
+      "name": "overlay_stopping",
+      "value": "Stopping"
+    },
+    {
+      "name": "overlay_substatus_failed",
+      "value": "Failed"
+    },
+    {
+      "name": "overlay_substatus_finished",
+      "value": "Completed"
+    },
+    {
+      "name": "overlay_supplement",
+      "value": "Add input"
+    },
+    {
+      "name": "overlay_supplement_hint",
+      "value": "Add instructions; 随身助手 continues the current task"
+    },
+    {
+      "name": "overlay_supplement_received",
+      "value": "Additional input received. Continuing"
+    },
+    {
+      "name": "overlay_task_count",
+      "value": "%1$d tasks · %2$s"
+    },
+    {
+      "name": "page_abnormal_5caf27",
+      "value": "abnormal"
+    },
+    {
+      "name": "page_accessibility_protection_request_was_denied_by_the_s_34c699",
+      "value": "Accessibility protection request was denied by the system"
+    },
+    {
+      "name": "page_add_model_532a64",
+      "value": "Add model"
+    },
+    {
+      "name": "page_add_to_94191c",
+      "value": "Add to"
+    },
+    {
+      "name": "page_agent_browser_a66bd5",
+      "value": "Agent browser"
+    },
+    {
+      "name": "page_agent_can_work_in_workspace_through_terminal_environ_9b7e2d",
+      "value": "Agent can work in /workspace through terminal environment=linux using the selected distribution"
+    },
+    {
+      "name": "page_apk_analysis_tools_are_ready_d45e3e",
+      "value": "APK analysis tools are ready"
+    },
+    {
+      "name": "page_authorized_284cc0",
+      "value": "Authorized"
+    },
+    {
+      "name": "page_automatically_pull_from_remote_f883d0",
+      "value": "Automatically pull from remote"
+    },
+    {
+      "name": "page_back_4cf4c1",
+      "value": "Back"
+    },
+    {
+      "name": "page_base_url_must_be_a_valid_http_s_address_0e7d58",
+      "value": "Base URL must be a valid HTTP(S) address"
+    },
+    {
+      "name": "page_busy_0212cc",
+      "value": "Busy"
+    },
+    {
+      "name": "page_can_t_open_default_assistant_settings_02c66f",
+      "value": "Can't open default assistant settings"
+    },
+    {
+      "name": "page_check_core_commands_workspace_mounts_shared_storage__a8ce44",
+      "value": "Check core commands, workspace mounts, shared storage and remaining space"
+    },
+    {
+      "name": "page_checking_skill_packs_42134c",
+      "value": "Checking skill packs"
+    },
+    {
+      "name": "page_choose_eta_as_your_default_digital_assistant_4a73a9",
+      "value": "Choose 随身助手 as your default digital assistant"
+    },
+    {
+      "name": "page_clear_84fcd7",
+      "value": "Clear"
+    },
+    {
+      "name": "page_configuration_d7d7ce",
+      "value": "Configuration"
+    },
+    {
+      "name": "page_configuration_write_failed_8c2554",
+      "value": "Configuration write failed"
+    },
+    {
+      "name": "page_context_unknown_b6ae7b",
+      "value": "context unknown"
+    },
+    {
+      "name": "page_continue_installation_62da0c",
+      "value": "Continue installation"
+    },
+    {
+      "name": "page_covered_model_automatic_capabilities_3fa7d4",
+      "value": "Covered model automatic capabilities"
+    },
+    {
+      "name": "page_create_fcbd09",
+      "value": "create"
+    },
+    {
+      "name": "page_create_new_provider_36cab9",
+      "value": "Create new provider"
+    },
+    {
+      "name": "page_created_62cfc5",
+      "value": "Created"
+    },
+    {
+      "name": "page_created_and_set_as_current_lsposed_service_is_not_co_baa03d",
+      "value": "Created and set as current, LSPosed service is not connected"
+    },
+    {
+      "name": "page_created_set_current_and_synced_a99010",
+      "value": "Created, set current and synced"
+    },
+    {
+      "name": "page_current_model_a0af8f",
+      "value": "default model"
+    },
+    {
+      "name": "page_custom_model_25be0f",
+      "value": "custom model"
+    },
+    {
+      "name": "page_delete_3755f5",
+      "value": "delete"
+    },
+    {
+      "name": "page_deleting_6f941d",
+      "value": "Deleting..."
+    },
+    {
+      "name": "page_didn_t_get_root_permissions_23efb3",
+      "value": "Didn't get root permissions"
+    },
+    {
+      "name": "page_document_49deaf",
+      "value": "document"
+    },
+    {
+      "name": "page_download_and_install_f4df99",
+      "value": "Download and install"
+    },
+    {
+      "name": "page_download_the_alpine_base_environment_8433ea",
+      "value": "Download the Alpine base environment"
+    },
+    {
+      "name": "page_edit_model_29e31e",
+      "value": "Edit model"
+    },
+    {
+      "name": "page_enabled_25d284",
+      "value": "Enabled"
+    },
+    {
+      "name": "page_enter_path_ec5f01",
+      "value": "Enter path"
+    },
+    {
+      "name": "page_environment_needs_to_be_checked_2a714a",
+      "value": "Environment needs to be checked"
+    },
+    {
+      "name": "page_eta_is_executing_032532",
+      "value": "随身助手 is executing…"
+    },
+    {
+      "name": "page_examine_40ffb3",
+      "value": "examine"
+    },
+    {
+      "name": "page_exceeded_the_1_mib_limit_please_delete_120a63",
+      "value": "Exceeded the 1 MiB limit, please delete"
+    },
+    {
+      "name": "page_fail_3e3c80",
+      "value": "fail"
+    },
+    {
+      "name": "page_folder_46ecac",
+      "value": "folder"
+    },
+    {
+      "name": "page_go_ahead_320ffe",
+      "value": "go ahead"
+    },
+    {
+      "name": "page_google_app_is_already_a_system_priv_app_4f33b0",
+      "value": "Google App is already a system priv-app"
+    },
+    {
+      "name": "page_google_app_not_installed_2e3e55",
+      "value": "Google App not installed"
+    },
+    {
+      "name": "page_help_me_open_wechat_65c265",
+      "value": "Help me open WeChat"
+    },
+    {
+      "name": "page_hide_bb0e7e",
+      "value": "hide"
+    },
+    {
+      "name": "page_import_from_zip_41cc5e",
+      "value": "Import from ZIP"
+    },
+    {
+      "name": "page_install_087db6",
+      "value": "Install"
+    },
+    {
+      "name": "page_install_openjdk_17_jadx_apktool_smali_and_baksmali_d_595960",
+      "value": "Install stable OpenJDK 25, JADX, Apktool, smali, and baksmali; reserve 768 MB of free space"
+    },
+    {
+      "name": "page_installed_eb88ff",
+      "value": "Installed"
+    },
+    {
+      "name": "page_installing_411642",
+      "value": "Installing"
+    },
+    {
+      "name": "page_jadx_apktool_smali_and_baksmali_are_installed_d7201c",
+      "value": "JADX, Apktool, smali and baksmali are installed"
+    },
+    {
+      "name": "page_jadx_apktool_smali_and_baksmali_are_ready_apktool_do_14eaf8",
+      "value": "JADX, Apktool, smali and baksmali are ready; Apktool does not support back compilation yet"
+    },
+    {
+      "name": "page_kernelsu_needs_to_enable_metamodule_support_first_5d29de",
+      "value": "KernelSU needs to enable metamodule support first"
+    },
+    {
+      "name": "page_leave_it_to_eta_to_finish_3d378f",
+      "value": "Leave it to 随身助手 to finish."
+    },
+    {
+      "name": "page_linux_tool_environment_is_ready_9b845b",
+      "value": "Linux tool environment is ready"
+    },
+    {
+      "name": "page_magisk_or_kernelsu_not_detected_ae18c5",
+      "value": "Magisk or KernelSU not detected"
+    },
+    {
+      "name": "page_missing_2fe9b7",
+      "value": "Missing"
+    },
+    {
+      "name": "page_model_98fd0c",
+      "value": "Model"
+    },
+    {
+      "name": "page_name_cannot_be_empty_ca8984",
+      "value": "Name cannot be empty"
+    },
+    {
+      "name": "page_no_application_can_open_the_current_webpage_faef56",
+      "value": "No application can open the current webpage"
+    },
+    {
+      "name": "page_no_description_2070d9",
+      "value": "No description"
+    },
+    {
+      "name": "page_no_matching_model_found_ae7e96",
+      "value": "No matching model found"
+    },
+    {
+      "name": "page_no_matching_provider_found_be81e9",
+      "value": "No matching provider found"
+    },
+    {
+      "name": "page_normal_f78d03",
+      "value": "normal"
+    },
+    {
+      "name": "page_not_checked_yet_039989",
+      "value": "Not checked yet"
+    },
+    {
+      "name": "page_not_configured_63595e",
+      "value": "Not configured"
+    },
+    {
+      "name": "page_not_enabled_8bb38e",
+      "value": "Not enabled"
+    },
+    {
+      "name": "page_not_installed_yet_e9c3e3",
+      "value": "Not installed yet"
+    },
+    {
+      "name": "page_not_supported_ef8274",
+      "value": "Not supported"
+    },
+    {
+      "name": "page_open_agent_browser_to_search_and_summarize_today_s_t_bbf6ba",
+      "value": "Open Agent Browser to search and summarize today’s technology news highlights"
+    },
+    {
+      "name": "page_open_with_external_application_ab3d4c",
+      "value": "Open with external application"
+    },
+    {
+      "name": "page_opening_web_page_5f7c08",
+      "value": "Opening web page"
+    },
+    {
+      "name": "page_picture_be8da6",
+      "value": "picture"
+    },
+    {
+      "name": "page_please_complete_the_linux_basic_tool_installation_fi_2ab81b",
+      "value": "Please complete the Linux basic tool installation first"
+    },
+    {
+      "name": "page_please_grant_eta_root_permissions_in_kernelsu_7b1bc8",
+      "value": "Please grant 随身助手 root permissions in KernelSU"
+    },
+    {
+      "name": "page_please_grant_eta_root_permissions_in_magisk_298c7d",
+      "value": "Please grant 随身助手 root permissions in Magisk"
+    },
+    {
+      "name": "page_processing_dde1db",
+      "value": "Processing..."
+    },
+    {
+      "name": "page_read_proc_meminfo_and_proc_pressure_focus_on_analyzi_43156d",
+      "value": "Read /proc/meminfo and /proc/pressure/, focus on analyzing PSI (Pressure Stall Information) indicators, and summarize the current memory pressure and system status"
+    },
+    {
+      "name": "page_ready_7cca0c",
+      "value": "} Ready"
+    },
+    {
+      "name": "page_ready_f2afde",
+      "value": "Ready"
+    },
+    {
+      "name": "page_refresh_38108e",
+      "value": "refresh"
+    },
+    {
+      "name": "page_remove_provider_9f848f",
+      "value": "Remove provider"
+    },
+    {
+      "name": "page_repair_590253",
+      "value": "repair"
+    },
+    {
+      "name": "page_replace_855241",
+      "value": "replace"
+    },
+    {
+      "name": "page_requires_root_and_magisk_kernelsu_or_apatch_busybox_47166a",
+      "value": "Requires Root and Magisk, KernelSU or APatch BusyBox"
+    },
+    {
+      "name": "page_reset_3d8134",
+      "value": "reset"
+    },
+    {
+      "name": "page_reset_a0cc65",
+      "value": "Reset"
+    },
+    {
+      "name": "page_reset_built_in_configuration_35b6ec",
+      "value": "Reset built-in configuration"
+    },
+    {
+      "name": "page_reset_session_911448",
+      "value": "Reset session"
+    },
+    {
+      "name": "page_resetting_616090",
+      "value": "Resetting..."
+    },
+    {
+      "name": "page_retrieving_a880c9",
+      "value": "Retrieving..."
+    },
+    {
+      "name": "page_root_environment_is_missing_available_busybox_or_nec_76f454",
+      "value": "Root environment is missing available BusyBox or necessary applets"
+    },
+    {
+      "name": "page_root_permission_is_not_obtained_please_authorize_eta_fdb6ab",
+      "value": "Root permission is not obtained, please authorize 随身助手 in Root Manager"
+    },
+    {
+      "name": "page_save_configuration_817af1",
+      "value": "Save configuration"
+    },
+    {
+      "name": "page_save_fadf24",
+      "value": "save"
+    },
+    {
+      "name": "page_save_failed_40525a",
+      "value": "Save failed"
+    },
+    {
+      "name": "page_saved_and_set_as_current_lsposed_service_not_connect_08da2c",
+      "value": "Saved and set as current, LSPosed service not connected"
+    },
+    {
+      "name": "page_saved_current_and_synced_95dac1",
+      "value": "Saved, current and synced"
+    },
+    {
+      "name": "page_saved_provider_not_enabled_7afa54",
+      "value": "Saved, provider not enabled"
+    },
+    {
+      "name": "page_saving_a032e8",
+      "value": "Saving"
+    },
+    {
+      "name": "page_saving_d70d42",
+      "value": "Saving..."
+    },
+    {
+      "name": "page_sdcard_is_available_cbb808",
+      "value": "/sdcard is available"
+    },
+    {
+      "name": "page_sdcard_is_currently_unavailable_8195de",
+      "value": "/sdcard is currently unavailable"
+    },
+    {
+      "name": "page_select_all_3e44b2",
+      "value": "Select all"
+    },
+    {
+      "name": "page_select_none_ba20eb",
+      "value": "Select none"
+    },
+    {
+      "name": "page_select_the_skill_pack_containing_skill_md_18af9d",
+      "value": "Select the skill pack containing SKILL.md"
+    },
+    {
+      "name": "page_select_zip_skills_package_982a44",
+      "value": "Select ZIP skills package"
+    },
+    {
+      "name": "page_selected_0a3020",
+      "value": "selected"
+    },
+    {
+      "name": "page_send_1214d6",
+      "value": "send"
+    },
+    {
+      "name": "page_set_as_current_df334e",
+      "value": "Set as current"
+    },
+    {
+      "name": "page_set_as_current_model_183d7d",
+      "value": "Set as default model"
+    },
+    {
+      "name": "page_set_as_default_digital_assistant_dd2078",
+      "value": "Set as default digital assistant"
+    },
+    {
+      "name": "page_show_71b677",
+      "value": "show"
+    },
+    {
+      "name": "page_stop_a17f70",
+      "value": "stop"
+    },
+    {
+      "name": "page_stop_loading_c62fbc",
+      "value": "Stop loading"
+    },
+    {
+      "name": "page_support_thinking_5b9e4c",
+      "value": "Supports Reasoning"
+    },
+    {
+      "name": "page_sure_f526c8",
+      "value": "Sure"
+    },
+    {
+      "name": "page_system_default_assistant_576746",
+      "value": "System default assistant"
+    },
+    {
+      "name": "page_take_a_screenshot_and_describe_the_current_screen_555fbd",
+      "value": "Take a screenshot and describe the current screen"
+    },
+    {
+      "name": "page_testing_f43705",
+      "value": "Testing..."
+    },
+    {
+      "name": "page_the_accessibility_protection_backend_is_unavailable__e50b64",
+      "value": "The accessibility protection backend is unavailable, please confirm that the system scope is enabled and restart"
+    },
+    {
+      "name": "page_the_basic_environment_is_available_and_the_new_versi_594d27",
+      "value": "The basic environment is available, and the new version of Agent and Python tool set will be added after upgrade."
+    },
+    {
+      "name": "page_the_basic_environment_is_ready_5d1426",
+      "value": "The basic environment is ready"
+    },
+    {
+      "name": "page_the_current_root_environment_cannot_create_an_isolat_4ca00a",
+      "value": "The current Root environment cannot create an isolated mount namespace or chroot"
+    },
+    {
+      "name": "page_the_environment_is_normal_77b826",
+      "value": "The environment is normal"
+    },
+    {
+      "name": "page_the_installation_is_complete_and_will_take_effect_af_82329a",
+      "value": "The installation is complete and will take effect after restarting."
+    },
+    {
+      "name": "page_the_installation_of_common_tools_has_not_been_comple_d7f7c2",
+      "value": "The installation of common tools has not been completed, you can continue from the current progress"
+    },
+    {
+      "name": "page_the_remote_end_did_not_return_a_usable_conversation__781487",
+      "value": "The remote end did not return a usable conversation model, the existing model has been retained"
+    },
+    {
+      "name": "page_there_is_currently_no_model_provider_please_add_one_78ab6a",
+      "value": "There is currently no model provider, please add one."
+    },
+    {
+      "name": "page_there_is_no_model_yet_please_pull_it_from_the_remote_ced865",
+      "value": "There is no model yet, please pull it from the remote end or add it manually."
+    },
+    {
+      "name": "page_this_message_and_subsequent_content_will_be_replaced_086779",
+      "value": "This message and subsequent content will be replaced after sending"
+    },
+    {
+      "name": "page_this_message_will_be_replaced_after_sending_fb95e4",
+      "value": "This message will be replaced after sending"
+    },
+    {
+      "name": "page_tool_a72ef1",
+      "value": "tool"
+    },
+    {
+      "name": "page_unauthorized_86bddc",
+      "value": "Unauthorized"
+    },
+    {
+      "name": "page_under_inspection_9908c9",
+      "value": "Under inspection"
+    },
+    {
+      "name": "page_unsaved_changes_376474",
+      "value": "Unsaved changes"
+    },
+    {
+      "name": "page_upgrade_tools_be5a84",
+      "value": "Upgrade tools"
+    },
+    {
+      "name": "page_use_standard_chat_completions_ee4b1a",
+      "value": "Uses the Chat Completions API"
+    },
+    {
+      "name": "page_using_typed_items_with_semantic_streaming_events_f9c906",
+      "value": "Uses the Responses API with typed Items and semantic streaming events"
+    },
+    {
+      "name": "page_verifying_and_installing_please_wait_6d7c8c",
+      "value": "Verifying and installing, please wait."
+    },
+    {
+      "name": "page_workspace_is_available_704a92",
+      "value": "/workspace is available"
+    },
+    {
+      "name": "page_workspace_is_not_available_3db427",
+      "value": "/workspace is not available"
+    },
+    {
+      "name": "page_workspace_mount_exception_fc0ef2",
+      "value": "Workspace mount exception"
+    },
+    {
+      "name": "page_you_are_taking_over_the_current_session_and_the_agen_2347ef",
+      "value": "You are taking over the current session and the Agent's web page operation has been stopped; you can let the Agent continue after returning."
+    },
+    {
+      "name": "permission_health_ok",
+      "value": "All good"
+    },
+    {
+      "name": "permission_local_network_denied",
+      "value": "Local network access was not granted. You can allow Nearby devices in the system app permission settings when you need a local service. Internet access remains available."
+    },
+    {
+      "name": "permission_local_network_settings_unavailable",
+      "value": "Could not open settings. Open 随身助手’s app permissions in system settings to allow Nearby devices."
+    },
+    {
+      "name": "permission_local_network_summary",
+      "value": "Allow models, MCP, the built-in browser and terminals to access your local network when needed. Internet access remains available without this permission."
+    },
+    {
+      "name": "permission_local_network_title",
+      "value": "Local network access"
+    },
+    {
+      "name": "permission_status_disabled",
+      "value": "Not enabled"
+    },
+    {
+      "name": "permission_status_missing",
+      "value": "Missing"
+    },
+    {
+      "name": "permission_status_ok",
+      "value": "Available"
+    },
+    {
+      "name": "permission_status_warning",
+      "value": "Issue"
+    },
+    {
+      "name": "power_assistant_system_default",
+      "value": "System default assistant"
+    },
+    {
+      "name": "provider_auto_reasoning_detected",
+      "value": "Detected automatically"
+    },
+    {
+      "name": "provider_auto_reasoning_unknown",
+      "value": "Auto: unsupported or unknown"
+    },
+    {
+      "name": "provider_context_tag",
+      "value": "%1$s context"
+    },
+    {
+      "name": "provider_context_window_hint",
+      "value": "Pick a common size or type one; used to decide when to compact"
+    },
+    {
+      "name": "provider_context_window_invalid",
+      "value": "Enter a positive integer"
+    },
+    {
+      "name": "provider_context_window_usage",
+      "value": "Conversations compact automatically as they approach this size"
+    },
+    {
+      "name": "provider_context_window_value",
+      "value": "About %1$s tokens"
+    },
+    {
+      "name": "provider_delete_failed",
+      "value": "Couldn't delete provider"
+    },
+    {
+      "name": "provider_delete_models_pick_hint",
+      "value": "Pick models to delete"
+    },
+    {
+      "name": "provider_delete_summary",
+      "value": "“%1$s” will be permanently deleted."
+    },
+    {
+      "name": "provider_empty",
+      "value": "No model providers yet. Add one to get started"
+    },
+    {
+      "name": "provider_error",
+      "value": "Failed: %1$s"
+    },
+    {
+      "name": "provider_model_delete_summary",
+      "value": "“%1$s” will be permanently deleted."
+    },
+    {
+      "name": "provider_model_deleted",
+      "value": "Deleted: %1$s"
+    },
+    {
+      "name": "provider_model_list_count",
+      "value": "Models (%1$d)"
+    },
+    {
+      "name": "provider_model_list_matches",
+      "value": "Models (%1$d of %2$d match)"
+    },
+    {
+      "name": "provider_model_saved",
+      "value": "Saved: %1$s"
+    },
+    {
+      "name": "provider_models_endpoint_summary",
+      "value": "Read the /models list from %1$s"
+    },
+    {
+      "name": "provider_models_up_to_date",
+      "value": "Up to date, no new models"
+    },
+    {
+      "name": "provider_no_matches",
+      "value": "No matching providers"
+    },
+    {
+      "name": "provider_reset_failed",
+      "value": "Couldn't reset provider"
+    },
+    {
+      "name": "provider_reset_summary",
+      "value": "Restore the default settings and official model catalog for “%1$s”. The API key will be kept."
+    },
+    {
+      "name": "provider_save_failed",
+      "value": "Couldn't save provider"
+    },
+    {
+      "name": "provider_selected",
+      "value": "Selected"
+    },
+    {
+      "name": "provider_set_current",
+      "value": "Set as default"
+    },
+    {
+      "name": "provider_sync_failed",
+      "value": "Sync failed"
+    },
+    {
+      "name": "read_aloud_channel",
+      "value": "Read aloud"
+    },
+    {
+      "name": "read_aloud_notification_title",
+      "value": "随身助手 is reading aloud"
+    },
+    {
+      "name": "reasoning_collapse",
+      "value": "Collapse reasoning"
+    },
+    {
+      "name": "reasoning_completed",
+      "value": "Reasoning completed"
+    },
+    {
+      "name": "reasoning_expand",
+      "value": "Expand reasoning"
+    },
+    {
+      "name": "reasoning_in_progress",
+      "value": "Reasoning…"
+    },
+    {
+      "name": "recognition_service_label",
+      "value": "随身助手 speech recognition"
+    },
+    {
+      "name": "remote_model_import_confirm",
+      "value": "Add %1$d"
+    },
+    {
+      "name": "remote_model_import_pick_hint",
+      "value": "Pick the models to add"
+    },
+    {
+      "name": "remote_model_import_summary",
+      "value": "%1$d new models available"
+    },
+    {
+      "name": "remote_model_import_title",
+      "value": "Add models"
+    },
+    {
+      "name": "route_linux_environment",
+      "value": "Linux environment"
+    },
+    {
+      "name": "route_linux_files",
+      "value": "Linux files"
+    },
+    {
+      "name": "route_mcp_server_detail",
+      "value": "MCP server"
+    },
+    {
+      "name": "route_mcp_servers",
+      "value": "MCP servers"
+    },
+    {
+      "name": "route_memory",
+      "value": "Memory"
+    },
+    {
+      "name": "route_model_providers",
+      "value": "Model providers"
+    },
+    {
+      "name": "route_new_provider",
+      "value": "New provider"
+    },
+    {
+      "name": "route_permissions",
+      "value": "Permissions"
+    },
+    {
+      "name": "route_provider_details",
+      "value": "Provider details"
+    },
+    {
+      "name": "route_settings",
+      "value": "Settings"
+    },
+    {
+      "name": "route_shared_folders",
+      "value": "Shared folders"
+    },
+    {
+      "name": "route_skills",
+      "value": "Skills"
+    },
+    {
+      "name": "route_system_enhancements",
+      "value": "System enhancements"
+    },
+    {
+      "name": "route_terminal",
+      "value": "Terminal"
+    },
+    {
+      "name": "route_tools",
+      "value": "Tools"
+    },
+    {
+      "name": "run_gui_user_paused",
+      "value": "User has control"
+    },
+    {
+      "name": "run_waiting_for_gui",
+      "value": "Waiting for phone control"
+    },
+    {
+      "name": "settings_auto_compaction",
+      "value": "Automatic context compaction"
+    },
+    {
+      "name": "settings_context_extensions",
+      "value": "Context & extensions"
+    },
+    {
+      "name": "settings_general",
+      "value": "General"
+    },
+    {
+      "name": "settings_language",
+      "value": "Language"
+    },
+    {
+      "name": "settings_language_system",
+      "value": "Follow system"
+    },
+    {
+      "name": "settings_llm_providers",
+      "value": "LLM providers"
+    },
+    {
+      "name": "settings_model_not_selected",
+      "value": "No model selected"
+    },
+    {
+      "name": "settings_not_configured",
+      "value": "Not configured"
+    },
+    {
+      "name": "settings_open_assistant_failed",
+      "value": "Couldn't open default assistant settings"
+    },
+    {
+      "name": "settings_tools_list",
+      "value": "Tool list"
+    },
+    {
+      "name": "settings_write_failed",
+      "value": "Couldn't save settings"
+    },
+    {
+      "name": "shared_folders_add",
+      "value": "Add shared folder"
+    },
+    {
+      "name": "shared_folders_browse_unavailable",
+      "value": "Cannot open this directory"
+    },
+    {
+      "name": "shared_folders_empty",
+      "value": "No shared folders yet"
+    },
+    {
+      "name": "shared_folders_entry_summary",
+      "value": "Mount Android directories at /workspace/mounts/ in the Linux environment"
+    },
+    {
+      "name": "shared_folders_entry_title",
+      "value": "Shared folders"
+    },
+    {
+      "name": "shared_folders_error_limit",
+      "value": "Up to %1$d shared folders"
+    },
+    {
+      "name": "shared_folders_error_name_duplicate",
+      "value": "Name already in use"
+    },
+    {
+      "name": "shared_folders_error_name_invalid",
+      "value": "Use 1–48 letters, digits, dots, underscores or hyphens"
+    },
+    {
+      "name": "shared_folders_error_path_duplicate",
+      "value": "This directory is already shared"
+    },
+    {
+      "name": "shared_folders_error_path_forbidden",
+      "value": "This directory cannot be shared"
+    },
+    {
+      "name": "shared_folders_error_path_invalid",
+      "value": "Invalid directory path"
+    },
+    {
+      "name": "shared_folders_error_save",
+      "value": "Failed to save. Please try again"
+    },
+    {
+      "name": "shared_folders_footer",
+      "value": "Shared folders are mounted when a new Linux terminal session starts; changes apply to the next command or session. Emulated storage such as /sdcard does not support permission changes inside Linux."
+    },
+    {
+      "name": "shared_folders_mount_point",
+      "value": "Mount point: %1$s"
+    },
+    {
+      "name": "shared_folders_name_label",
+      "value": "Mount name"
+    },
+    {
+      "name": "shared_folders_path_label",
+      "value": "Directory"
+    },
+    {
+      "name": "shared_folders_picker_no_subfolders",
+      "value": "No subfolders here"
+    },
+    {
+      "name": "shared_folders_picker_title",
+      "value": "Add shared folder"
+    },
+    {
+      "name": "shared_folders_remove_message",
+      "value": "Remove “%1$s” (%2$s)? Files in the source directory are not deleted."
+    },
+    {
+      "name": "shared_folders_remove_title",
+      "value": "Remove shared folder"
+    },
+    {
+      "name": "shared_folders_selected_source",
+      "value": "Mount: %1$s"
+    },
+    {
+      "name": "shared_folders_source_missing",
+      "value": "Source directory missing"
+    },
+    {
+      "name": "shared_folders_title",
+      "value": "Shared folders"
+    },
+    {
+      "name": "shell_command",
+      "value": "Shell command"
+    },
+    {
+      "name": "skill_deleted_message",
+      "value": "“%1$s” was removed from 随身助手."
+    },
+    {
+      "name": "skill_enabled_message",
+      "value": "“%1$s” is enabled and will be available from the next conversation turn."
+    },
+    {
+      "name": "skills_checking_package",
+      "value": "Checking skill package"
+    },
+    {
+      "name": "skills_choose_package",
+      "value": "Choose a skill package containing SKILL.md"
+    },
+    {
+      "name": "skills_choose_zip",
+      "value": "Choose ZIP skill package"
+    },
+    {
+      "name": "skills_delete_summary",
+      "value": "After deleting “%1$s”, you will need to reinstall it to restore it."
+    },
+    {
+      "name": "skills_import_zip",
+      "value": "Import from ZIP"
+    },
+    {
+      "name": "skills_installing_package",
+      "value": "Verifying and installing. Please wait"
+    },
+    {
+      "name": "skills_more_named",
+      "value": "More actions for %1$s"
+    },
+    {
+      "name": "skills_no_description",
+      "value": "No description"
+    },
+    {
+      "name": "skills_replace",
+      "value": "Replace"
+    },
+    {
+      "name": "skills_replace_summary",
+      "value": "A user skill named “%1$s” (%2$s) already exists. Replacing it will overwrite all of its current files."
+    },
+    {
+      "name": "speech_access_token",
+      "value": "Access Token"
+    },
+    {
+      "name": "speech_advanced",
+      "value": "Advanced"
+    },
+    {
+      "name": "speech_api_key",
+      "value": "API Key"
+    },
+    {
+      "name": "speech_app_id",
+      "value": "App ID"
+    },
+    {
+      "name": "speech_asr_doubao",
+      "value": "Doubao · Streaming 2.0"
+    },
+    {
+      "name": "speech_asr_note_file",
+      "value": "Recordings are uploaded to your own OSS bucket first, then transcribed asynchronously; takes longer."
+    },
+    {
+      "name": "speech_asr_note_flash",
+      "value": "Audio is uploaded for recognition after you finish recording; best for short input."
+    },
+    {
+      "name": "speech_asr_note_streaming",
+      "value": "Text appears as you speak. Tap Done to finish dictation in chat; the assistant overlay can submit automatically after a pause."
+    },
+    {
+      "name": "speech_asr_note_system",
+      "value": "Uses a speech service already on the device; cloud services do not depend on the system recognizer."
+    },
+    {
+      "name": "speech_asr_qwen_file",
+      "value": "Qwen · File transcription"
+    },
+    {
+      "name": "speech_asr_qwen_flash",
+      "value": "Qwen · Short audio"
+    },
+    {
+      "name": "speech_asr_qwen_realtime",
+      "value": "Qwen · Realtime"
+    },
+    {
+      "name": "speech_asr_system",
+      "value": "System speech service"
+    },
+    {
+      "name": "speech_auto_send_note",
+      "value": "Applies to the assistant overlay only. When you hold the microphone, it sends on release."
+    },
+    {
+      "name": "speech_auto_send_off",
+      "value": "Off"
+    },
+    {
+      "name": "speech_auto_send_seconds",
+      "value": "%1$s s"
+    },
+    {
+      "name": "speech_auto_send_title",
+      "value": "Auto-send after pause"
+    },
+    {
+      "name": "speech_auto_speak",
+      "value": "Speak answers automatically"
+    },
+    {
+      "name": "speech_auto_speak_summary",
+      "value": "Only speaks final answers to voice questions while the assistant overlay is visible"
+    },
+    {
+      "name": "speech_base_url",
+      "value": "Base URL"
+    },
+    {
+      "name": "speech_collapse",
+      "value": "Collapse"
+    },
+    {
+      "name": "speech_credentials_lost",
+      "value": "Speech credentials could not be decrypted; enter and save them again"
+    },
+    {
+      "name": "speech_dictation",
+      "value": "Voice input"
+    },
+    {
+      "name": "speech_dictation_finish",
+      "value": "Finish dictation"
+    },
+    {
+      "name": "speech_disable_auto_read",
+      "value": "Disable auto read-aloud"
+    },
+    {
+      "name": "speech_doubao_asr_note",
+      "value": "Defaults to volc.seedasr.sauc.duration, billed by duration."
+    },
+    {
+      "name": "speech_doubao_tts_note",
+      "value": "Defaults to seed-tts-2.0."
+    },
+    {
+      "name": "speech_doubao_voice_note",
+      "value": "Model: Doubao Speech Synthesis 2.0."
+    },
+    {
+      "name": "speech_enable_auto_read",
+      "value": "Enable auto read-aloud"
+    },
+    {
+      "name": "speech_expand",
+      "value": "Expand"
+    },
+    {
+      "name": "speech_gemini_connection_note",
+      "value": "使用 Google AI Studio 的 API Key。自定义地址须支持 Gemini 语音接口，填写服务根地址。"
+    },
+    {
+      "name": "speech_gemini_flash",
+      "value": "Gemini 3.8 Flash · 品质优先"
+    },
+    {
+      "name": "speech_gemini_flash_lite",
+      "value": "Gemini 3.8 Flash-Lite · 更低延迟"
+    },
+    {
+      "name": "speech_gemini_style",
+      "value": "朗读风格（可选，最多 500 字）"
+    },
+    {
+      "name": "speech_gemini_voice_note",
+      "value": "音色可用于中文及其他支持的语言。朗读风格可填写“自然、温和，语速稍慢”；留空使用默认风格。也可填写账号已有的音色 ID。"
+    },
+    {
+      "name": "speech_group_assistant",
+      "value": "Assistant"
+    },
+    {
+      "name": "speech_group_connection",
+      "value": "Connection"
+    },
+    {
+      "name": "speech_group_credentials",
+      "value": "Credentials"
+    },
+    {
+      "name": "speech_group_result",
+      "value": "Recognition result"
+    },
+    {
+      "name": "speech_group_service",
+      "value": "Service"
+    },
+    {
+      "name": "speech_group_storage",
+      "value": "Storage"
+    },
+    {
+      "name": "speech_group_voice",
+      "value": "Voice"
+    },
+    {
+      "name": "speech_language_hint",
+      "value": "Recognition language (empty = auto, e.g. zh, en, yue)"
+    },
+    {
+      "name": "speech_legacy_auth",
+      "value": "Use legacy authentication"
+    },
+    {
+      "name": "speech_load_failed",
+      "value": "Could not read speech settings; go back and try again"
+    },
+    {
+      "name": "speech_mic_permission",
+      "value": "Allow 随身助手 to use the microphone"
+    },
+    {
+      "name": "speech_minimax_connection_note",
+      "value": "默认连接 MiniMax 中国站。海外账号请填写对应的服务根地址，API Key 须与站点匹配。"
+    },
+    {
+      "name": "speech_minimax_hd",
+      "value": "Speech 2.8 HD · 品质优先"
+    },
+    {
+      "name": "speech_minimax_turbo",
+      "value": "Speech 2.8 Turbo · 响应更快"
+    },
+    {
+      "name": "speech_minimax_voice_note",
+      "value": "预设为普通话音色，也可填写账号已有的系统或自定义音色 ID。"
+    },
+    {
+      "name": "speech_open_settings",
+      "value": "Speech settings"
+    },
+    {
+      "name": "speech_oss_configure",
+      "value": "Configure your own OSS bucket"
+    },
+    {
+      "name": "speech_oss_note",
+      "value": "Recordings are uploaded as private objects and deleted after transcription. Grant put, read and delete permission for this prefix, and add a one-day expiration lifecycle rule as a cleanup fallback."
+    },
+    {
+      "name": "speech_oss_prefix",
+      "value": "Directory prefix"
+    },
+    {
+      "name": "speech_oss_region",
+      "value": "Region"
+    },
+    {
+      "name": "speech_oss_title",
+      "value": "Recording Storage"
+    },
+    {
+      "name": "speech_overview_note",
+      "value": "Dictation in chat turns speech into editable text first. Answers can be read aloud manually; recording stops playback."
+    },
+    {
+      "name": "speech_preview_default_text",
+      "value": "你好，我是 随身助手。今天下午三点半有一场会议，预计持续 45 分钟。我们也可以用中文聊聊 Android 和 AI。"
+    },
+    {
+      "name": "speech_preview_loading",
+      "value": "Synthesizing…"
+    },
+    {
+      "name": "speech_preview_note",
+      "value": "The preview uses the current form values and does not save them."
+    },
+    {
+      "name": "speech_preview_stop",
+      "value": "Stop preview"
+    },
+    {
+      "name": "speech_preview_text",
+      "value": "试听文本（最多 500 字）"
+    },
+    {
+      "name": "speech_preview_voice",
+      "value": "Preview voice"
+    },
+    {
+      "name": "speech_qwen_base_url_hint",
+      "value": "Base URL (leave empty for the region default)"
+    },
+    {
+      "name": "speech_qwen_base_url_note",
+      "value": "Enter the service root without /api/v1 or /compatible-mode/v1. The region must match the API Key."
+    },
+    {
+      "name": "speech_qwen_voice_note",
+      "value": "Model: qwen3-tts-flash. The voice must support this model."
+    },
+    {
+      "name": "speech_read_aloud",
+      "value": "Read aloud"
+    },
+    {
+      "name": "speech_read_stop",
+      "value": "Stop reading"
+    },
+    {
+      "name": "speech_recognition_disabled",
+      "value": "已关闭"
+    },
+    {
+      "name": "speech_recognition_disabled_note",
+      "value": "保存后隐藏聊天和助手浮窗中的麦克风入口。全局唤醒会在入场动画结束后打开文字输入和键盘，可使用输入法自带的语音输入。原服务配置会保留。"
+    },
+    {
+      "name": "speech_recognition_enabled",
+      "value": "启用语音识别"
+    },
+    {
+      "name": "speech_recognition_enabled_summary",
+      "value": "使用 随身助手 的系统或云端语音输入"
+    },
+    {
+      "name": "speech_recognition_title",
+      "value": "Speech Recognition"
+    },
+    {
+      "name": "speech_refine_summary",
+      "value": "Uses the current chat model to fix homophones and mixed Chinese–English terms. Adds a little latency and cost."
+    },
+    {
+      "name": "speech_refine_title",
+      "value": "Smart correction"
+    },
+    {
+      "name": "speech_region",
+      "value": "Region"
+    },
+    {
+      "name": "speech_region_beijing",
+      "value": "Beijing"
+    },
+    {
+      "name": "speech_region_singapore",
+      "value": "Singapore"
+    },
+    {
+      "name": "speech_resource_id_hint",
+      "value": "Resource ID (leave empty for the default)"
+    },
+    {
+      "name": "speech_save",
+      "value": "Save"
+    },
+    {
+      "name": "speech_save_failed",
+      "value": "Save failed: %1$s"
+    },
+    {
+      "name": "speech_save_retry",
+      "value": "try again"
+    },
+    {
+      "name": "speech_saved",
+      "value": "Saved"
+    },
+    {
+      "name": "speech_saved_with_pending",
+      "value": "Saved; some changes are still unsaved"
+    },
+    {
+      "name": "speech_saving",
+      "value": "Saving…"
+    },
+    {
+      "name": "speech_service_and_model",
+      "value": "Service & model"
+    },
+    {
+      "name": "speech_settings_title",
+      "value": "Speech"
+    },
+    {
+      "name": "speech_speed",
+      "value": "语速"
+    },
+    {
+      "name": "speech_synthesis_title",
+      "value": "Spoken Answers"
+    },
+    {
+      "name": "speech_test_finish",
+      "value": "Finish recording"
+    },
+    {
+      "name": "speech_test_note",
+      "value": "Testing calls the selected service and may incur charges. It uses the current form values and does not save them."
+    },
+    {
+      "name": "speech_test_recognition",
+      "value": "Test recognition"
+    },
+    {
+      "name": "speech_test_result",
+      "value": "Recognition result: %1$s"
+    },
+    {
+      "name": "speech_tts_doubao",
+      "value": "Doubao"
+    },
+    {
+      "name": "speech_tts_gemini",
+      "value": "Gemini"
+    },
+    {
+      "name": "speech_tts_minimax",
+      "value": "MiniMax"
+    },
+    {
+      "name": "speech_tts_model",
+      "value": "语音模型"
+    },
+    {
+      "name": "speech_tts_none",
+      "value": "Off"
+    },
+    {
+      "name": "speech_tts_qwen",
+      "value": "Qwen"
+    },
+    {
+      "name": "speech_tts_service",
+      "value": "播报服务"
+    },
+    {
+      "name": "speech_voice",
+      "value": "Voice"
+    },
+    {
+      "name": "speech_voice_beijing_male",
+      "value": "Beijing dialect, male"
+    },
+    {
+      "name": "speech_voice_breezy",
+      "value": "轻松"
+    },
+    {
+      "name": "speech_voice_bright",
+      "value": "明亮"
+    },
+    {
+      "name": "speech_voice_custom",
+      "value": "Custom voice"
+    },
+    {
+      "name": "speech_voice_doubao_ahu",
+      "value": "Ahu"
+    },
+    {
+      "name": "speech_voice_doubao_cancan",
+      "value": "Cancan"
+    },
+    {
+      "name": "speech_voice_doubao_linjia",
+      "value": "Girl Next Door"
+    },
+    {
+      "name": "speech_voice_doubao_liufei",
+      "value": "Liufei"
+    },
+    {
+      "name": "speech_voice_doubao_podcast",
+      "value": "Late Night Podcast"
+    },
+    {
+      "name": "speech_voice_doubao_qingxin",
+      "value": "Fresh Voice"
+    },
+    {
+      "name": "speech_voice_doubao_sisi",
+      "value": "Sisi"
+    },
+    {
+      "name": "speech_voice_doubao_taozi",
+      "value": "Taozi"
+    },
+    {
+      "name": "speech_voice_doubao_vv",
+      "value": "Vivi"
+    },
+    {
+      "name": "speech_voice_doubao_xiaohe",
+      "value": "Xiaohe"
+    },
+    {
+      "name": "speech_voice_doubao_xiaoming",
+      "value": "Xiaoming"
+    },
+    {
+      "name": "speech_voice_doubao_xiaotian",
+      "value": "Xiaotian"
+    },
+    {
+      "name": "speech_voice_doubao_xiaoyuan",
+      "value": "Xiaoyuan"
+    },
+    {
+      "name": "speech_voice_doubao_yichen",
+      "value": "Yichen"
+    },
+    {
+      "name": "speech_voice_doubao_yunzhou",
+      "value": "Yunzhou"
+    },
+    {
+      "name": "speech_voice_doubao_zixin",
+      "value": "Zixin"
+    },
+    {
+      "name": "speech_voice_female",
+      "value": "Female"
+    },
+    {
+      "name": "speech_voice_firm",
+      "value": "坚定"
+    },
+    {
+      "name": "speech_voice_gemini_achernar",
+      "value": "Achernar"
+    },
+    {
+      "name": "speech_voice_gemini_aoede",
+      "value": "Aoede"
+    },
+    {
+      "name": "speech_voice_gemini_charon",
+      "value": "Charon"
+    },
+    {
+      "name": "speech_voice_gemini_kore",
+      "value": "Kore"
+    },
+    {
+      "name": "speech_voice_gemini_leda",
+      "value": "Leda"
+    },
+    {
+      "name": "speech_voice_gemini_puck",
+      "value": "Puck"
+    },
+    {
+      "name": "speech_voice_gemini_sulafat",
+      "value": "Sulafat"
+    },
+    {
+      "name": "speech_voice_gemini_zephyr",
+      "value": "Zephyr"
+    },
+    {
+      "name": "speech_voice_id",
+      "value": "Voice ID"
+    },
+    {
+      "name": "speech_voice_informative",
+      "value": "解说"
+    },
+    {
+      "name": "speech_voice_male",
+      "value": "Male"
+    },
+    {
+      "name": "speech_voice_minimax_elite",
+      "value": "精英青年"
+    },
+    {
+      "name": "speech_voice_minimax_executive",
+      "value": "沉稳高管"
+    },
+    {
+      "name": "speech_voice_minimax_girl",
+      "value": "少女音色"
+    },
+    {
+      "name": "speech_voice_minimax_mature",
+      "value": "成熟女声"
+    },
+    {
+      "name": "speech_voice_minimax_news",
+      "value": "新闻女声"
+    },
+    {
+      "name": "speech_voice_minimax_sweet",
+      "value": "甜美女声"
+    },
+    {
+      "name": "speech_voice_minimax_young",
+      "value": "青涩青年"
+    },
+    {
+      "name": "speech_voice_minimax_yujie",
+      "value": "御姐音色"
+    },
+    {
+      "name": "speech_voice_qwen_bella",
+      "value": "Bella"
+    },
+    {
+      "name": "speech_voice_qwen_chelsie",
+      "value": "Chelsie"
+    },
+    {
+      "name": "speech_voice_qwen_cherry",
+      "value": "Cherry"
+    },
+    {
+      "name": "speech_voice_qwen_dylan",
+      "value": "Dylan"
+    },
+    {
+      "name": "speech_voice_qwen_ethan",
+      "value": "Ethan"
+    },
+    {
+      "name": "speech_voice_qwen_jada",
+      "value": "Jada"
+    },
+    {
+      "name": "speech_voice_qwen_kai",
+      "value": "Kai"
+    },
+    {
+      "name": "speech_voice_qwen_katerina",
+      "value": "Katerina"
+    },
+    {
+      "name": "speech_voice_qwen_maia",
+      "value": "Maia"
+    },
+    {
+      "name": "speech_voice_qwen_momo",
+      "value": "Momo"
+    },
+    {
+      "name": "speech_voice_qwen_moon",
+      "value": "Moon"
+    },
+    {
+      "name": "speech_voice_qwen_neil",
+      "value": "Neil"
+    },
+    {
+      "name": "speech_voice_qwen_nofish",
+      "value": "Nofish"
+    },
+    {
+      "name": "speech_voice_qwen_serena",
+      "value": "Serena"
+    },
+    {
+      "name": "speech_voice_qwen_vincent",
+      "value": "Vincent"
+    },
+    {
+      "name": "speech_voice_qwen_vivian",
+      "value": "Vivian"
+    },
+    {
+      "name": "speech_voice_shanghai_female",
+      "value": "Shanghai dialect, female"
+    },
+    {
+      "name": "speech_voice_soft",
+      "value": "柔和"
+    },
+    {
+      "name": "speech_voice_upbeat",
+      "value": "轻快"
+    },
+    {
+      "name": "speech_voice_warm",
+      "value": "温暖"
+    },
+    {
+      "name": "speech_voice_youthful",
+      "value": "年轻"
+    },
+    {
+      "name": "state_accessibility_permissions_f80103",
+      "value": "Accessibility permissions"
+    },
+    {
+      "name": "state_application_list_reading_135f16",
+      "value": "Application list reading"
+    },
+    {
+      "name": "state_applications_and_systems_9624e6",
+      "value": "Applications and Systems"
+    },
+    {
+      "name": "state_background_running_permission_dde21b",
+      "value": "Background running permission"
+    },
+    {
+      "name": "state_core_memory_is_automatically_injected_and_detailed_c_07232b",
+      "value": "Core memory is automatically injected, and detailed content is retrieved by the model on demand."
+    },
+    {
+      "name": "state_deletion_is_not_complete_eta_will_try_to_recover_whe_c4297e",
+      "value": "Deletion is not complete. 随身助手 will try to recover when refreshing the skill list, please confirm the status and try again."
+    },
+    {
+      "name": "state_direct_access_to_equipment_eda92c",
+      "value": "System and built-in apps"
+    },
+    {
+      "name": "state_direct_access_to_personal_data_387d7b",
+      "value": "Personal context"
+    },
+    {
+      "name": "state_document_vision_6a65a7",
+      "value": "Document vision"
+    },
+    {
+      "name": "state_floating_window_permissions_076b77",
+      "value": "Floating window permissions"
+    },
+    {
+      "name": "state_follow_up_ability_589688",
+      "value": "follow-up ability"
+    },
+    {
+      "name": "state_hook_secondary_ability_95afe3",
+      "value": "Hook secondary ability"
+    },
+    {
+      "name": "state_location_permissions_b53f9c",
+      "value": "location permissions"
+    },
+    {
+      "name": "state_memory_b55ff5",
+      "value": "memory"
+    },
+    {
+      "name": "state_memory_system_4903eb",
+      "value": "memory system"
+    },
+    {
+      "name": "state_model_increments_tool_calls_and_final_results_are_sy_3f2321",
+      "value": "Model increments, tool calls, and final results are synced to the current session"
+    },
+    {
+      "name": "state_notice_of_use_rights_1ae29a",
+      "value": "Notice of use rights"
+    },
+    {
+      "name": "state_please_select_the_zip_file_provided_by_the_system_fi_fea145",
+      "value": "Please select the ZIP file provided by the system file selector."
+    },
+    {
+      "name": "state_replacement_confirmation_has_expired_please_select_t_fce9f2",
+      "value": "Replacement confirmation has expired, please select the ZIP file again."
+    },
+    {
+      "name": "state_root_permissions_958906",
+      "value": "Root permissions"
+    },
+    {
+      "name": "state_run_floating_window_48af02",
+      "value": "Run floating window"
+    },
+    {
+      "name": "state_runtime_displays_a_status_pop_up_window_when_the_ser_54f285",
+      "value": "Runtime displays a status pop-up window when the service is running"
+    },
+    {
+      "name": "state_screens_and_controls_3f095b",
+      "value": "Screens and controls"
+    },
+    {
+      "name": "state_sensitive_equipment_capabilities_fbdc4b",
+      "value": "Sensitive equipment capabilities"
+    },
+    {
+      "name": "state_skill_has_been_deleted_34c29b",
+      "value": "Skill has been deleted"
+    },
+    {
+      "name": "state_skill_installed_b07e54",
+      "value": "Skill installed"
+    },
+    {
+      "name": "state_skill_pack_is_no_longer_available_please_select_the__7cdfb4",
+      "value": "Skill pack is no longer available, please select the ZIP file again."
+    },
+    {
+      "name": "state_streaming_events_360e09",
+      "value": "streaming events"
+    },
+    {
+      "name": "state_system_enhancement_capabilities_are_reserved_for_sub_0a8b21",
+      "value": "System enhancement capabilities are reserved for subsequent secondary functions"
+    },
+    {
+      "name": "state_terminal_and_files_ae7c54",
+      "value": "Terminal and files"
+    },
+    {
+      "name": "state_text_and_clipboard_3a7340",
+      "value": "Text and clipboard"
+    },
+    {
+      "name": "state_the_built_in_skills_have_not_changed_please_try_agai_34e5e3",
+      "value": "The built-in skills have not changed, please try again later."
+    },
+    {
+      "name": "state_the_skill_list_is_temporarily_unavailable_please_try_29b0be",
+      "value": "The skill list is temporarily unavailable, please try again later."
+    },
+    {
+      "name": "state_the_skill_switch_has_not_changed_please_try_again_la_fa262f",
+      "value": "The skill switch has not changed, please try again later."
+    },
+    {
+      "name": "state_ui_built_in_skills_with_the_same_name_are_protected_446ad3",
+      "value": "Built-in skills with the same name are protected and cannot be replaced by ZIP."
+    },
+    {
+      "name": "state_ui_conversation_switched_selected_path_not_added_5bf91e",
+      "value": "Conversation switched, selected path not added"
+    },
+    {
+      "name": "state_ui_failed_to_read_memory_please_try_again_later_caeaa6",
+      "value": "Failed to read memory, please try again later"
+    },
+    {
+      "name": "state_ui_file_path_reference_requires_opening_the_termina_deca4c",
+      "value": "File path reference requires opening the terminal and file tools first"
+    },
+    {
+      "name": "state_ui_go_to_settings_1f2998",
+      "value": "Go to settings"
+    },
+    {
+      "name": "state_ui_memory_cleared_b415bb",
+      "value": "memory cleared"
+    },
+    {
+      "name": "state_ui_memory_clearing_failed_7f0aba",
+      "value": "Memory clearing failed"
+    },
+    {
+      "name": "state_ui_memory_save_failed_1f501e",
+      "value": "Memory save failed"
+    },
+    {
+      "name": "state_ui_memory_saved_a2c61c",
+      "value": "memory saved"
+    },
+    {
+      "name": "state_ui_memory_switch_failed_to_save_83b5d6",
+      "value": "Memory switch failed to save"
+    },
+    {
+      "name": "state_ui_model_switching_failed_please_try_again_later_4af439",
+      "value": "Model switching failed, please try again later"
+    },
+    {
+      "name": "state_ui_natively_bounded_storage_of_last_7_days_of_notif_ca7f01",
+      "value": "Natively bounded storage of last 7 days of notifications, only read when the tool is called"
+    },
+    {
+      "name": "state_ui_only_read_when_the_agent_calls_the_tool_8cf77b",
+      "value": "Only read when the Agent calls the tool"
+    },
+    {
+      "name": "state_ui_only_supports_normal_files_and_folders_4adea0",
+      "value": "Only supports normal files and folders"
+    },
+    {
+      "name": "state_ui_path_verification_timed_out_please_try_again_703687",
+      "value": "Path verification timed out, please try again"
+    },
+    {
+      "name": "state_ui_please_configure_the_model_provider_and_model_fi_a36e15",
+      "value": "Please configure the model provider and model first"
+    },
+    {
+      "name": "state_ui_please_enter_a_valid_absolute_path_6afeb4",
+      "value": "Please enter a valid absolute path"
+    },
+    {
+      "name": "state_ui_root_is_not_available_and_the_path_cannot_be_ver_fc4c81",
+      "value": "Root is not available and the path cannot be verified."
+    },
+    {
+      "name": "state_ui_skill_md_is_missing_required_information_or_is_i_debe6e",
+      "value": "SKILL.md is missing required information or is in an invalid format."
+    },
+    {
+      "name": "state_ui_skill_md_not_found_in_zip_a57975",
+      "value": "SKILL.md not found in ZIP."
+    },
+    {
+      "name": "state_ui_start_logging_searchable_notification_history_af_b36af6",
+      "value": "Start logging searchable notification history after authorization"
+    },
+    {
+      "name": "state_ui_system_location_service_is_turned_off_3902e7",
+      "value": "System location service is turned off"
+    },
+    {
+      "name": "state_ui_the_earlier_context_has_been_compressed_and_will_cf6c86",
+      "value": "The earlier context has been compressed and will be restarted with this message"
+    },
+    {
+      "name": "state_ui_the_installation_failed_and_automatic_recovery_d_0d9e01",
+      "value": "The installation failed and automatic recovery did not complete completely. 随身助手 has retained a recovery backup in the application private directory. Please check the skill list first and stop the installation."
+    },
+    {
+      "name": "state_ui_the_local_zip_must_contain_only_one_skill_b89daf",
+      "value": "The local ZIP must contain only one skill."
+    },
+    {
+      "name": "state_ui_the_path_does_not_exist_or_is_no_longer_accessib_a9776e",
+      "value": "The path does not exist or is no longer accessible"
+    },
+    {
+      "name": "state_ui_the_selected_file_cannot_be_read_please_select_a_7265b9",
+      "value": "The selected file cannot be read, please select again."
+    },
+    {
+      "name": "state_ui_the_selected_file_is_not_a_valid_zip_package_bff052",
+      "value": "The selected file is not a valid ZIP package."
+    },
+    {
+      "name": "state_ui_the_selected_path_has_been_added_42b432",
+      "value": "The selected path has been added"
+    },
+    {
+      "name": "state_ui_the_selected_project_type_does_not_match_3a5c49",
+      "value": "The selected project type does not match"
+    },
+    {
+      "name": "state_ui_the_skill_pack_contains_an_unsafe_file_path_and__d8cfc0",
+      "value": "The skill pack contains an unsafe file path and was not installed."
+    },
+    {
+      "name": "state_ui_the_skill_pack_exceeds_the_safe_size_or_file_num_42e151",
+      "value": "The skill pack exceeds the safe size or file number limit."
+    },
+    {
+      "name": "state_ui_the_target_with_the_same_name_is_not_a_user_skil_00474b",
+      "value": "The target with the same name is not a user skill that can be safely replaced and existing files are not overwritten."
+    },
+    {
+      "name": "state_ui_the_zip_content_has_changed_please_reselect_and__ab8b12",
+      "value": "The ZIP content has changed, please reselect and confirm the skill you want to replace."
+    },
+    {
+      "name": "state_ui_to_authorize_762ec4",
+      "value": "to authorize"
+    },
+    {
+      "name": "state_ui_to_open_13ec17",
+      "value": "to open"
+    },
+    {
+      "name": "state_ui_unable_to_obtain_the_real_path_please_select_fro_32f367",
+      "value": "Unable to obtain the real path, please select from Internal Storage or enter the path manually"
+    },
+    {
+      "name": "state_ui_unable_to_open_selection_9f0004",
+      "value": "Unable to open selection"
+    },
+    {
+      "name": "state_ui_unable_to_read_this_image_please_try_again_or_us_d94978",
+      "value": "Unable to read this image, please try again or use another image"
+    },
+    {
+      "name": "state_ui_unable_to_save_skills_original_skills_have_been__9d4748",
+      "value": "Unable to save skills, original skills have been automatically restored."
+    },
+    {
+      "name": "state_ui_unnamed_skill_a58008",
+      "value": "Unnamed skill"
+    },
+    {
+      "name": "state_ui_used_to_understand_the_location_of_mobile_phones_af52e9",
+      "value": "Used to understand the location of mobile phones on demand"
+    },
+    {
+      "name": "state_ui_xiaobu_s_entrance_needs_to_be_set_to_always_allo_cc74cb",
+      "value": "Xiaobu's entrance needs to be set to Always Allow"
+    },
+    {
+      "name": "state_unable_to_continue_installation_136d7c",
+      "value": "Unable to continue installation"
+    },
+    {
+      "name": "state_unable_to_delete_skill_1583c9",
+      "value": "Unable to delete skill"
+    },
+    {
+      "name": "state_unable_to_install_skill_0ec70b",
+      "value": "Unable to install skill"
+    },
+    {
+      "name": "state_unable_to_read_skill_pack_a53563",
+      "value": "Unable to read skill pack"
+    },
+    {
+      "name": "state_unable_to_read_skills_599082",
+      "value": "Unable to read skills"
+    },
+    {
+      "name": "state_unable_to_restore_skills_6b3d23",
+      "value": "Unable to restore skills"
+    },
+    {
+      "name": "state_unable_to_update_skills_04e56c",
+      "value": "Unable to update skills"
+    },
+    {
+      "name": "state_usage_access_20f1f8",
+      "value": "usage access"
+    },
+    {
+      "name": "state_used_to_read_recently_opened_applications_and_foregr_73e796",
+      "value": "Used to read recently opened applications and foreground usage time"
+    },
+    {
+      "name": "state_web_browsing_e56105",
+      "value": "Web tools"
+    },
+    {
+      "name": "status_authorized",
+      "value": "Authorized"
+    },
+    {
+      "name": "status_cancelled",
+      "value": "Cancelled"
+    },
+    {
+      "name": "status_disabled",
+      "value": "Disabled"
+    },
+    {
+      "name": "status_enabled",
+      "value": "Enabled"
+    },
+    {
+      "name": "status_needs_attention",
+      "value": "Needs attention"
+    },
+    {
+      "name": "status_processing",
+      "value": "Processing…"
+    },
+    {
+      "name": "status_ready",
+      "value": "Ready"
+    },
+    {
+      "name": "status_unauthorized",
+      "value": "Not authorized"
+    },
+    {
+      "name": "status_unsupported",
+      "value": "Unsupported"
+    },
+    {
+      "name": "suggestion_analyze_screen_prompt",
+      "value": "Take a screenshot and describe the current screen"
+    },
+    {
+      "name": "suggestion_browse_web_prompt",
+      "value": "Open Agent Browser, then search for and summarize today’s top technology news"
+    },
+    {
+      "name": "suggestion_memory_pressure_prompt",
+      "value": "Read /proc/meminfo and /proc/pressure/, focus on PSI (Pressure Stall Information), and summarize current memory pressure and system status"
+    },
+    {
+      "name": "suggestion_open_wechat_prompt",
+      "value": "Open WeChat"
+    },
+    {
+      "name": "system_notice_empty_result",
+      "value": "The run completed without a text response."
+    },
+    {
+      "name": "system_notice_interrupted",
+      "value": "The run was interrupted. Partial output is preserved; unfinished actions were not retried."
+    },
+    {
+      "name": "system_notice_model_retry",
+      "value": "Retrying model request"
+    },
+    {
+      "name": "system_notice_runtime_failed",
+      "value": "Runtime failed"
+    },
+    {
+      "name": "system_notice_stopped",
+      "value": "Stopped"
+    },
+    {
+      "name": "systemizer_already_system",
+      "value": "Google App is already a system priv-app"
+    },
+    {
+      "name": "systemizer_google_missing",
+      "value": "Google App is not installed"
+    },
+    {
+      "name": "systemizer_grant_kernelsu",
+      "value": "Grant 随身助手 root access in KernelSU"
+    },
+    {
+      "name": "systemizer_grant_magisk",
+      "value": "Grant 随身助手 root access in Magisk"
+    },
+    {
+      "name": "systemizer_installed",
+      "value": "Installation complete. Restart to apply changes"
+    },
+    {
+      "name": "systemizer_metamodule_missing",
+      "value": "Enable metamodule support in KernelSU first"
+    },
+    {
+      "name": "systemizer_root_denied",
+      "value": "Root access was not granted"
+    },
+    {
+      "name": "systemizer_root_manager_missing",
+      "value": "Magisk or KernelSU was not detected"
+    },
+    {
+      "name": "task_completion_channel",
+      "value": "Task completion alerts"
+    },
+    {
+      "name": "task_completion_notice_failed",
+      "value": "Failed"
+    },
+    {
+      "name": "task_completion_notice_stopped",
+      "value": "Stopped"
+    },
+    {
+      "name": "task_completion_notice_success",
+      "value": "Done"
+    },
+    {
+      "name": "terminal_block_mode",
+      "value": "Simple mode"
+    },
+    {
+      "name": "terminal_close_session",
+      "value": "Close"
+    },
+    {
+      "name": "terminal_console_mode",
+      "value": "Console mode"
+    },
+    {
+      "name": "terminal_copy_command",
+      "value": "Copy command"
+    },
+    {
+      "name": "terminal_copy_output",
+      "value": "Copy output"
+    },
+    {
+      "name": "terminal_daemon_empty",
+      "value": "No background tasks"
+    },
+    {
+      "name": "terminal_daemon_exited",
+      "value": "Exited"
+    },
+    {
+      "name": "terminal_daemon_hide_logs",
+      "value": "Hide logs"
+    },
+    {
+      "name": "terminal_daemon_logs_empty",
+      "value": "No log output yet"
+    },
+    {
+      "name": "terminal_daemon_running",
+      "value": "Running"
+    },
+    {
+      "name": "terminal_daemon_tasks",
+      "value": "Background tasks"
+    },
+    {
+      "name": "terminal_daemon_view_logs",
+      "value": "Logs"
+    },
+    {
+      "name": "terminal_empty_hint",
+      "value": "Persistent shell session. Working directory and environment carry over between commands."
+    },
+    {
+      "name": "terminal_env_switched",
+      "value": "Switched to %1$s"
+    },
+    {
+      "name": "terminal_exit_code",
+      "value": "Exit code %1$d"
+    },
+    {
+      "name": "terminal_input_hint",
+      "value": "Enter a command"
+    },
+    {
+      "name": "terminal_input_running_hint",
+      "value": "Send input to the running command"
+    },
+    {
+      "name": "terminal_interrupted",
+      "value": "Stopped"
+    },
+    {
+      "name": "terminal_key_down",
+      "value": "Down"
+    },
+    {
+      "name": "terminal_key_enter",
+      "value": "Enter"
+    },
+    {
+      "name": "terminal_key_left",
+      "value": "Left"
+    },
+    {
+      "name": "terminal_key_paste",
+      "value": "Paste"
+    },
+    {
+      "name": "terminal_key_right",
+      "value": "Right"
+    },
+    {
+      "name": "terminal_key_up",
+      "value": "Up"
+    },
+    {
+      "name": "terminal_keyboard_hide",
+      "value": "Hide keyboard"
+    },
+    {
+      "name": "terminal_keyboard_show",
+      "value": "Show keyboard"
+    },
+    {
+      "name": "terminal_linux_not_ready",
+      "value": "Linux environment is not installed yet"
+    },
+    {
+      "name": "terminal_new_session",
+      "value": "New session"
+    },
+    {
+      "name": "terminal_open_environment",
+      "value": "Install now"
+    },
+    {
+      "name": "terminal_output_truncated",
+      "value": "Output too long; truncated"
+    },
+    {
+      "name": "terminal_reconnect",
+      "value": "Reconnect"
+    },
+    {
+      "name": "terminal_reinput",
+      "value": "Reuse command"
+    },
+    {
+      "name": "terminal_restart_session",
+      "value": "Restart"
+    },
+    {
+      "name": "terminal_running",
+      "value": "Running…"
+    },
+    {
+      "name": "terminal_send",
+      "value": "Send"
+    },
+    {
+      "name": "terminal_session_closed",
+      "value": "Session exited"
+    },
+    {
+      "name": "terminal_session_current",
+      "value": "Current"
+    },
+    {
+      "name": "terminal_session_empty",
+      "value": "No sessions yet"
+    },
+    {
+      "name": "terminal_session_exited",
+      "value": "Exited"
+    },
+    {
+      "name": "terminal_session_idle",
+      "value": "Idle"
+    },
+    {
+      "name": "terminal_session_restarted",
+      "value": "Session ended; reconnected"
+    },
+    {
+      "name": "terminal_sessions",
+      "value": "Sessions"
+    },
+    {
+      "name": "terminal_stop",
+      "value": "Stop"
+    },
+    {
+      "name": "time_now",
+      "value": "Now"
+    },
+    {
+      "name": "time_recent",
+      "value": "Recent"
+    },
+    {
+      "name": "time_yesterday",
+      "value": "Yesterday"
+    },
+    {
+      "name": "tool_app_state_control",
+      "value": "App controls"
+    },
+    {
+      "name": "tool_background_finish",
+      "value": "Keep the page and continue"
+    },
+    {
+      "name": "tool_background_finish_description",
+      "value": "Keep the page after this step. Continue instructions in the existing notification or open the app to take over; finishing does not switch your current screen."
+    },
+    {
+      "name": "tool_background_gesture",
+      "value": "Background gestures"
+    },
+    {
+      "name": "tool_background_gesture_description",
+      "value": "Tap, hold, swipe or drag on the target display. Input acceptance and observed page changes are reported separately."
+    },
+    {
+      "name": "tool_background_open",
+      "value": "Open a background app"
+    },
+    {
+      "name": "tool_background_open_description",
+      "value": "Use a virtual display when background work is requested. Requires Root and accessibility; up to two different apps, with extra tasks queued. Pauses when the screen turns off."
+    },
+    {
+      "name": "tool_background_read",
+      "value": "Read the background page"
+    },
+    {
+      "name": "tool_background_read_description",
+      "value": "Read visible text, controls, bounds and scroll targets. Missing nodes do not mean the page is empty."
+    },
+    {
+      "name": "tool_background_scroll",
+      "value": "Scroll a selected list"
+    },
+    {
+      "name": "tool_background_scroll_description",
+      "value": "Choose the actual list when several containers exist. Verify changes within that list and stop repeating actions with no observed progress."
+    },
+    {
+      "name": "tool_background_shot",
+      "value": "Capture the background page"
+    },
+    {
+      "name": "tool_background_shot_description",
+      "value": "Capture the current orientation with dimensions and a frame reference. Viewing it requires image-reading tools; coordinates remain tied to that frame."
+    },
+    {
+      "name": "tool_background_state",
+      "value": "Check background status"
+    },
+    {
+      "name": "tool_background_state_description",
+      "value": "Inspect engine and session status. Window diagnostics report visibility and focus without sending test gestures."
+    },
+    {
+      "name": "tool_background_text",
+      "value": "Enter background text"
+    },
+    {
+      "name": "tool_background_text_description",
+      "value": "Target an editable field and read its value back to distinguish a submitted action from verified text entry."
+    },
+    {
+      "name": "tool_browser_loading",
+      "value": "Loading · %1$d%%"
+    },
+    {
+      "name": "tool_browser_preview",
+      "value": "Page preview"
+    },
+    {
+      "name": "tool_browser_use",
+      "value": "Browse web"
+    },
+    {
+      "name": "tool_clear_text",
+      "value": "Clear text"
+    },
+    {
+      "name": "tool_current_context",
+      "value": "Time and location"
+    },
+    {
+      "name": "tool_details_collapse",
+      "value": "Collapse tool details"
+    },
+    {
+      "name": "tool_details_expand",
+      "value": "Expand tool details"
+    },
+    {
+      "name": "tool_device_status",
+      "value": "Device status"
+    },
+    {
+      "name": "tool_edit_file",
+      "value": "精确编辑文件"
+    },
+    {
+      "name": "tool_edit_file_description",
+      "value": "使用旧文本定位片段，检查匹配和版本后替换。"
+    },
+    {
+      "name": "tool_elapsed_seconds",
+      "value": "%1$ds"
+    },
+    {
+      "name": "tool_fetch_url",
+      "value": "读取网页正文"
+    },
+    {
+      "name": "tool_fetch_url_description",
+      "value": "读取网页正文并分页续读，支持内置静态抓取、DeepSeek 或自定义接口，失败时自动回退到本地静态抓取。"
+    },
+    {
+      "name": "tool_get_clipboard",
+      "value": "Read clipboard"
+    },
+    {
+      "name": "tool_get_logcat",
+      "value": "Read system logs"
+    },
+    {
+      "name": "tool_get_setting",
+      "value": "Read system setting"
+    },
+    {
+      "name": "tool_glob_files",
+      "value": "按路径查找文件"
+    },
+    {
+      "name": "tool_glob_files_description",
+      "value": "使用路径模式递归查找文件，支持有界续查。"
+    },
+    {
+      "name": "tool_grep_files",
+      "value": "搜索文件内容"
+    },
+    {
+      "name": "tool_grep_files_description",
+      "value": "搜索 UTF-8 文本，返回匹配路径、行号与采集范围。"
+    },
+    {
+      "name": "tool_input_text",
+      "value": "Enter text"
+    },
+    {
+      "name": "tool_inspect_app",
+      "value": "检查应用"
+    },
+    {
+      "name": "tool_inspect_app_description",
+      "value": "查看指定应用的版本、UID、安装信息、启用状态与权限。"
+    },
+    {
+      "name": "tool_launch_app",
+      "value": "Launch app"
+    },
+    {
+      "name": "tool_list_directory",
+      "value": "List directory"
+    },
+    {
+      "name": "tool_long_press",
+      "value": "Long press"
+    },
+    {
+      "name": "tool_long_press_element",
+      "value": "Long-press element"
+    },
+    {
+      "name": "tool_media_control",
+      "value": "Media controls"
+    },
+    {
+      "name": "tool_memory_get",
+      "value": "Read memory"
+    },
+    {
+      "name": "tool_memory_write",
+      "value": "Update memory"
+    },
+    {
+      "name": "tool_network_info",
+      "value": "Network status"
+    },
+    {
+      "name": "tool_observe_screen",
+      "value": "Observe screen"
+    },
+    {
+      "name": "tool_open_system_panel",
+      "value": "Open system panel"
+    },
+    {
+      "name": "tool_open_uri",
+      "value": "Open with app"
+    },
+    {
+      "name": "tool_paste_text",
+      "value": "Paste text"
+    },
+    {
+      "name": "tool_personal_context",
+      "value": "Personal context"
+    },
+    {
+      "name": "tool_personal_context_description",
+      "value": "Search indexed photos, notes, memories, bills and travel by content or time; read details and calculate totals."
+    },
+    {
+      "name": "tool_press_key",
+      "value": "Press key"
+    },
+    {
+      "name": "tool_read_file",
+      "value": "Read file"
+    },
+    {
+      "name": "tool_read_sms_code",
+      "value": "Read verification code"
+    },
+    {
+      "name": "tool_recent_notifications",
+      "value": "Read notifications"
+    },
+    {
+      "name": "tool_release_gui",
+      "value": "Release phone control"
+    },
+    {
+      "name": "tool_release_gui_description",
+      "value": "Finish the current phone interaction and hand control to waiting tasks."
+    },
+    {
+      "name": "tool_replace_text",
+      "value": "Replace text"
+    },
+    {
+      "name": "tool_run_command",
+      "value": "Run command"
+    },
+    {
+      "name": "tool_scroll",
+      "value": "Scroll"
+    },
+    {
+      "name": "tool_scroll_element",
+      "value": "Scroll element"
+    },
+    {
+      "name": "tool_search_apps",
+      "value": "Search apps"
+    },
+    {
+      "name": "tool_set_alarm",
+      "value": "Set alarm"
+    },
+    {
+      "name": "tool_set_clipboard",
+      "value": "Set clipboard"
+    },
+    {
+      "name": "tool_set_device_state",
+      "value": "Device controls"
+    },
+    {
+      "name": "tool_set_setting",
+      "value": "Change system setting"
+    },
+    {
+      "name": "tool_set_timer",
+      "value": "Set timer"
+    },
+    {
+      "name": "tool_set_volume",
+      "value": "Set volume"
+    },
+    {
+      "name": "tool_stat_file",
+      "value": "查看文件信息"
+    },
+    {
+      "name": "tool_stat_file_description",
+      "value": "查询 Android 或 Linux 文件的类型、大小和版本。"
+    },
+    {
+      "name": "tool_status_failed",
+      "value": "Failed"
+    },
+    {
+      "name": "tool_status_running",
+      "value": "Running"
+    },
+    {
+      "name": "tool_status_success",
+      "value": "Completed"
+    },
+    {
+      "name": "tool_status_unknown",
+      "value": "Result unknown"
+    },
+    {
+      "name": "tool_swipe",
+      "value": "Swipe"
+    },
+    {
+      "name": "tool_tap",
+      "value": "Tap"
+    },
+    {
+      "name": "tool_tap_area",
+      "value": "Tap area"
+    },
+    {
+      "name": "tool_tap_element",
+      "value": "Tap element"
+    },
+    {
+      "name": "tool_terminal",
+      "value": "Terminal"
+    },
+    {
+      "name": "tool_terminal_daemon",
+      "value": "后台服务"
+    },
+    {
+      "name": "tool_terminal_daemon_description",
+      "value": "启动、查看和停止可跨 Agent 任务运行的后台服务"
+    },
+    {
+      "name": "tool_terminal_job",
+      "value": "异步命令"
+    },
+    {
+      "name": "tool_terminal_job_description",
+      "value": "启动、查看和停止后台命令；回复结束后继续运行，完成时通知"
+    },
+    {
+      "name": "tool_top_memory_apps",
+      "value": "Memory usage"
+    },
+    {
+      "name": "tool_top_storage_apps",
+      "value": "Storage usage"
+    },
+    {
+      "name": "tool_ui_activity_timer_36f107",
+      "value": "Activity timer"
+    },
+    {
+      "name": "tool_ui_address_book_9070cb",
+      "value": "Address book"
+    },
+    {
+      "name": "tool_ui_agent_browser_a66bd5",
+      "value": "Agent browser"
+    },
+    {
+      "name": "tool_ui_alarm_clock_schedule_acae32",
+      "value": "alarm clock schedule"
+    },
+    {
+      "name": "tool_ui_album_pictures_23bcc2",
+      "value": "Album pictures"
+    },
+    {
+      "name": "tool_ui_app_usage_statistics_ee20d3",
+      "value": "App usage statistics"
+    },
+    {
+      "name": "tool_ui_application_status_930ff0",
+      "value": "Application status"
+    },
+    {
+      "name": "tool_ui_audio_file_1ccf2e",
+      "value": "audio file"
+    },
+    {
+      "name": "tool_ui_bounded_reading_and_filtering_of_recent_logs_0a268a",
+      "value": "Bounded reading and filtering of recent logs"
+    },
+    {
+      "name": "tool_ui_button_02eafa",
+      "value": "button"
+    },
+    {
+      "name": "tool_ui_calendar_events_970349",
+      "value": "Calendar events"
+    },
+    {
+      "name": "tool_ui_call_history_88e57b",
+      "value": "call history"
+    },
+    {
+      "name": "tool_ui_check_application_data_and_cache_usage_837e9f",
+      "value": "Check application, data and cache usage"
+    },
+    {
+      "name": "tool_ui_click_area_cbaa08",
+      "value": "click area"
+    },
+    {
+      "name": "tool_ui_click_by_coordinate_area_2ad961",
+      "value": "Click by coordinate area"
+    },
+    {
+      "name": "tool_ui_click_element_7a3d91",
+      "value": "click element"
+    },
+    {
+      "name": "tool_ui_click_on_the_most_recently_observed_node_b4cf5a",
+      "value": "Click on the most recently observed node"
+    },
+    {
+      "name": "tool_ui_clipboard_history_b377bb",
+      "value": "Clipboard history"
+    },
+    {
+      "name": "tool_ui_coloros_notes_6c324c",
+      "value": "ColorOS Notes"
+    },
+    {
+      "name": "tool_ui_coloros_recording_a4e425",
+      "value": "ColorOS recording"
+    },
+    {
+      "name": "tool_ui_coloros_system_memory_eff961",
+      "value": "ColorOS system memory"
+    },
+    {
+      "name": "tool_ui_create_a_system_alarm_directly_and_open_the_cloc_9aa214",
+      "value": "Create a system alarm directly, and open the clock to confirm if it fails."
+    },
+    {
+      "name": "tool_ui_current_location_b458ea",
+      "value": "Current location"
+    },
+    {
+      "name": "tool_ui_device_status_567a4c",
+      "value": "Device status"
+    },
+    {
+      "name": "tool_ui_directly_control_wi_fi_or_bluetooth_4fa0b9",
+      "value": "Directly control Wi‑Fi or Bluetooth"
+    },
+    {
+      "name": "tool_ui_directly_create_system_timers_up_to_24_hours_87c476",
+      "value": "Directly create system timers up to 24 hours"
+    },
+    {
+      "name": "tool_ui_directly_execute_a_single_shell_command_c40cef",
+      "value": "Directly execute a single shell command"
+    },
+    {
+      "name": "tool_ui_download_history_8494d7",
+      "value": "Download history"
+    },
+    {
+      "name": "tool_ui_enter_text_ae47ab",
+      "value": "Enter text"
+    },
+    {
+      "name": "tool_ui_equipment_environment_1026ec",
+      "value": "Equipment environment"
+    },
+    {
+      "name": "tool_ui_execute_command_bf1627",
+      "value": "execute command"
+    },
+    {
+      "name": "tool_ui_explicitly_hand_over_links_or_deep_links_to_exte_35ff26",
+      "value": "Explicitly hand over links or deep links to external applications"
+    },
+    {
+      "name": "tool_ui_extract_rendered_text_lists_and_links_8bdcdd",
+      "value": "Extract rendered text, lists and links"
+    },
+    {
+      "name": "tool_ui_find_click_and_enter_page_elements_8f102d",
+      "value": "Find, click and enter page elements"
+    },
+    {
+      "name": "tool_ui_give_the_current_web_page_viewport_to_the_visual_f62274",
+      "value": "Give the current web page viewport to the visual model"
+    },
+    {
+      "name": "tool_ui_health_summary_951c0b",
+      "value": "health summary"
+    },
+    {
+      "name": "tool_ui_list_directory_96e765",
+      "value": "list directory"
+    },
+    {
+      "name": "tool_ui_list_directory_contents_feff30",
+      "value": "List directory contents"
+    },
+    {
+      "name": "tool_ui_long_press_f7a417",
+      "value": "Long press"
+    },
+    {
+      "name": "tool_ui_long_press_on_coordinates_or_elements_796384",
+      "value": "Long press on coordinates or elements"
+    },
+    {
+      "name": "tool_ui_media_control_585edc",
+      "value": "media control"
+    },
+    {
+      "name": "tool_ui_memory_ranking_408ca1",
+      "value": "Memory ranking"
+    },
+    {
+      "name": "tool_ui_modify_android_settings_keys_91a37e",
+      "value": "Modify Android Settings keys"
+    },
+    {
+      "name": "tool_ui_modify_system_settings_ae1f4c",
+      "value": "Modify system settings"
+    },
+    {
+      "name": "tool_ui_network_status_6bd556",
+      "value": "network status"
+    },
+    {
+      "name": "tool_ui_network_switch_834347",
+      "value": "network switch"
+    },
+    {
+      "name": "tool_ui_notification_history_95d015",
+      "value": "Notification history"
+    },
+    {
+      "name": "tool_ui_only_extract_verification_codes_from_recent_sms__0fb8c1",
+      "value": "Only extract verification codes from recent SMS messages"
+    },
+    {
+      "name": "tool_ui_open_app_7c65e7",
+      "value": "Open App"
+    },
+    {
+      "name": "tool_ui_open_the_notification_bar_quick_settings_and_oth_5e51cf",
+      "value": "Open the notification bar, quick settings and other panels"
+    },
+    {
+      "name": "tool_ui_open_web_pages_off_screen_and_keep_a_takeover_br_72972e",
+      "value": "Open web pages off-screen and keep a takeover browsing session"
+    },
+    {
+      "name": "tool_ui_open_with_app_32c24e",
+      "value": "Open with app"
+    },
+    {
+      "name": "tool_ui_organize_memory_2b08eb",
+      "value": "organize memory"
+    },
+    {
+      "name": "tool_ui_page_screenshot_c823a2",
+      "value": "Page screenshot"
+    },
+    {
+      "name": "tool_ui_paged_to_read_or_retrieve_long_term_memory_in_me_88afc4",
+      "value": "Paged to read or retrieve long-term memory in MEMORY.md"
+    },
+    {
+      "name": "tool_ui_partially_update_append_or_clear_long_term_memor_c1bab6",
+      "value": "Partially update, append or clear long-term memory"
+    },
+    {
+      "name": "tool_ui_perform_up_down_left_and_right_swipe_gestures_3ef0de",
+      "value": "Perform up, down, left, and right swipe gestures"
+    },
+    {
+      "name": "tool_ui_personal_order_25e4c9",
+      "value": "Personal order"
+    },
+    {
+      "name": "tool_ui_play_pause_and_switch_songs_without_operating_th_311cb8",
+      "value": "Play, pause, and switch songs without operating the interface"
+    },
+    {
+      "name": "tool_ui_qq_chat_pictures_e21bf9",
+      "value": "QQ chat pictures"
+    },
+    {
+      "name": "tool_ui_query_installed_applications_by_name_or_package__32b004",
+      "value": "Query installed applications by name or package name"
+    },
+    {
+      "name": "tool_ui_read_file_dc995c",
+      "value": "read file"
+    },
+    {
+      "name": "tool_ui_read_lock_screen_do_not_disturb_audio_output_and_9260b8",
+      "value": "Read lock screen, do not disturb, audio output and external screen status"
+    },
+    {
+      "name": "tool_ui_read_memory_979135",
+      "value": "Read memory"
+    },
+    {
+      "name": "tool_ui_read_networking_method_and_current_wi_fi_status_68016a",
+      "value": "Read networking method and current Wi‑Fi status"
+    },
+    {
+      "name": "tool_ui_read_notification_7fdc09",
+      "value": "read notification"
+    },
+    {
+      "name": "tool_ui_read_pictures_ae993b",
+      "value": "Read pictures"
+    },
+    {
+      "name": "tool_ui_read_pictures_of_known_paths_and_hand_them_over__7f9569",
+      "value": "Read pictures of known paths and hand them over to the visual model for interpretation"
+    },
+    {
+      "name": "tool_ui_read_power_memory_storage_and_system_version_c501d5",
+      "value": "Read power, memory, storage and system version"
+    },
+    {
+      "name": "tool_ui_read_running_or_paused_timers_3437c8",
+      "value": "Read running or paused timers"
+    },
+    {
+      "name": "tool_ui_read_system_settings_d455ce",
+      "value": "Read system settings"
+    },
+    {
+      "name": "tool_ui_read_system_time_and_recent_location_b9f4ae",
+      "value": "Read system time and recent location"
+    },
+    {
+      "name": "tool_ui_read_the_alarm_clock_that_has_been_created_in_th_2320d6",
+      "value": "Read the alarm clock that has been created in the clock"
+    },
+    {
+      "name": "tool_ui_read_the_closest_location_the_system_already_has_255a6c",
+      "value": "Read the closest location the system already has"
+    },
+    {
+      "name": "tool_ui_read_the_contents_of_mobile_phone_files_bf3066",
+      "value": "Read the contents of mobile phone files"
+    },
+    {
+      "name": "tool_ui_read_the_current_node_and_attach_the_original_im_df1fec",
+      "value": "Read the current node and attach the original image if necessary"
+    },
+    {
+      "name": "tool_ui_read_the_current_notification_title_and_text_0faee7",
+      "value": "Read the current notification title and text"
+    },
+    {
+      "name": "tool_ui_read_the_network_credentials_saved_by_the_phone_96d43a",
+      "value": "Read the network credentials saved by the phone"
+    },
+    {
+      "name": "tool_ui_read_the_specified_settings_key_496975",
+      "value": "Read the specified Settings key"
+    },
+    {
+      "name": "tool_ui_read_verification_code_7d1121",
+      "value": "Read verification code"
+    },
+    {
+      "name": "tool_ui_read_web_pages_4f0bb9",
+      "value": "read web pages"
+    },
+    {
+      "name": "tool_ui_recently_applied_08f74c",
+      "value": "Recently applied"
+    },
+    {
+      "name": "tool_ui_recording_summary_2fe550",
+      "value": "Recording summary"
+    },
+    {
+      "name": "tool_ui_retrieve_calls_by_number_or_contact_name_2ce431",
+      "value": "Retrieve calls by number or contact name"
+    },
+    {
+      "name": "tool_ui_retrieve_clipboard_contents_saved_by_system_inpu_1dc9db",
+      "value": "Retrieve clipboard contents saved by system input method"
+    },
+    {
+      "name": "tool_ui_retrieve_collected_information_and_its_structure_9c1c71",
+      "value": "Retrieve collected information and its structured associated content"
+    },
+    {
+      "name": "tool_ui_retrieve_contact_name_and_open_address_6dacc5",
+      "value": "Retrieve contact name and open address"
+    },
+    {
+      "name": "tool_ui_retrieve_documents_and_files_from_shared_storage_7d6193",
+      "value": "Retrieve documents and files from shared storage"
+    },
+    {
+      "name": "tool_ui_retrieve_location_information_from_system_memory_52ea48",
+      "value": "Retrieve location information from system memory"
+    },
+    {
+      "name": "tool_ui_retrieve_normal_recordings_and_call_recordings_55c192",
+      "value": "Retrieve normal recordings and call recordings"
+    },
+    {
+      "name": "tool_ui_retrieve_notes_to_dos_and_text_content_e806d7",
+      "value": "Retrieve notes, to-dos and text content"
+    },
+    {
+      "name": "tool_ui_retrieve_pictures_by_file_name_or_album_path_c08236",
+      "value": "Retrieve pictures by file name or album path"
+    },
+    {
+      "name": "tool_ui_retrieve_recent_pictures_in_qq_chat_picture_cach_b8f009",
+      "value": "Retrieve recent pictures in QQ chat picture cache"
+    },
+    {
+      "name": "tool_ui_retrieve_recent_pictures_in_wechat_chat_picture__ab66f7",
+      "value": "Retrieve recent pictures in WeChat chat picture cache"
+    },
+    {
+      "name": "tool_ui_retrieve_recording_files_from_system_media_libra_314c4d",
+      "value": "Retrieve recording files from system media library"
+    },
+    {
+      "name": "tool_ui_retrieve_system_download_tasks_and_files_3301b9",
+      "value": "Retrieve system download tasks and files"
+    },
+    {
+      "name": "tool_ui_retrieve_takeout_shopping_express_delivery_ticke_f8d002",
+      "value": "Retrieve takeout, shopping, express delivery, tickets and travel orders"
+    },
+    {
+      "name": "tool_ui_retrieve_the_last_7_days_of_notifications_saved__643e43",
+      "value": "Retrieve the last 7 days of notifications saved locally after authorization"
+    },
+    {
+      "name": "tool_ui_retrieve_transcribed_summaries_and_notes_associa_9cb00f",
+      "value": "Retrieve transcribed summaries and notes associated with recordings"
+    },
+    {
+      "name": "tool_ui_save_location_c29782",
+      "value": "save location"
+    },
+    {
+      "name": "tool_ui_scroll_220e68",
+      "value": "scroll"
+    },
+    {
+      "name": "tool_ui_scroll_the_page_or_specify_a_node_83ab24",
+      "value": "Scroll the page or specify a node"
+    },
+    {
+      "name": "tool_ui_search_apps_897fdf",
+      "value": "Search apps"
+    },
+    {
+      "name": "tool_ui_search_audio_by_title_filename_or_author_82e20d",
+      "value": "Search audio by title, filename or author"
+    },
+    {
+      "name": "tool_ui_search_events_by_title_location_or_description_1afd77",
+      "value": "Search events by title, location or description"
+    },
+    {
+      "name": "tool_ui_search_text_messages_by_sender_or_text_keywords_e14363",
+      "value": "Search text messages by sender or text keywords"
+    },
+    {
+      "name": "tool_ui_session_terminal_09c6e6",
+      "value": "session terminal"
+    },
+    {
+      "name": "tool_ui_set_alarm_25ca3c",
+      "value": "Set alarm"
+    },
+    {
+      "name": "tool_ui_set_by_media_alarm_clock_ringtone_and_other_chan_3fcc3e",
+      "value": "Set by media, alarm clock, ringtone and other channels"
+    },
+    {
+      "name": "tool_ui_set_timer_aee60c",
+      "value": "Set timer"
+    },
+    {
+      "name": "tool_ui_set_volume_85a691",
+      "value": "Set volume"
+    },
+    {
+      "name": "tool_ui_share_files_a3b376",
+      "value": "Share files"
+    },
+    {
+      "name": "tool_ui_short_message_17e1a4",
+      "value": "Short message"
+    },
+    {
+      "name": "tool_ui_slide_3723aa",
+      "value": "slide"
+    },
+    {
+      "name": "tool_ui_start_the_specified_package_name_or_application__beabff",
+      "value": "Start the specified package name or application name"
+    },
+    {
+      "name": "tool_ui_stop_freeze_or_unfreeze_apps_a27438",
+      "value": "Stop, freeze or unfreeze apps"
+    },
+    {
+      "name": "tool_ui_storage_ranking_86a16c",
+      "value": "Storage ranking"
+    },
+    {
+      "name": "tool_ui_summarize_recent_app_usage_by_foreground_duratio_b346c8",
+      "value": "Summarize recent app usage by foreground duration"
+    },
+    {
+      "name": "tool_ui_summarize_steps_sleep_exercise_and_body_metrics_6ff66f",
+      "value": "Summarize steps, sleep, exercise and body metrics"
+    },
+    {
+      "name": "tool_ui_system_buttons_such_as_return_homepage_recent_ta_1b4cf0",
+      "value": "System buttons such as return, homepage, recent tasks, etc."
+    },
+    {
+      "name": "tool_ui_system_log_096733",
+      "value": "System log"
+    },
+    {
+      "name": "tool_ui_system_panel_b0f7a3",
+      "value": "System panel"
+    },
+    {
+      "name": "tool_ui_system_recording_15eb19",
+      "value": "System recording"
+    },
+    {
+      "name": "tool_ui_time_and_location_693893",
+      "value": "time and location"
+    },
+    {
+      "name": "tool_ui_type_text_summary",
+      "value": "Replace, append or clear text and optionally submit; the result is read back"
+    },
+    {
+      "name": "tool_ui_user_root_shell_conversational_execution_and_asy_13c2ab",
+      "value": "执行命令或复用持久 Shell 会话"
+    },
+    {
+      "name": "tool_ui_view_recently_opened_apps_and_times_bf9d50",
+      "value": "View recently opened apps and times"
+    },
+    {
+      "name": "tool_ui_view_the_currently_most_occupied_processes_8646c4",
+      "value": "View the currently most occupied processes"
+    },
+    {
+      "name": "tool_ui_wait_for_text_9e9a54",
+      "value": "Wait for text"
+    },
+    {
+      "name": "tool_ui_wait_for_the_specified_text_to_appear_on_the_scr_43f9b0",
+      "value": "Wait for the specified text to appear on the screen"
+    },
+    {
+      "name": "tool_ui_watch_the_screen_e70f2a",
+      "value": "Watch the screen"
+    },
+    {
+      "name": "tool_ui_web_page_interaction_331b3f",
+      "value": "Web page interaction"
+    },
+    {
+      "name": "tool_ui_wechat_chat_pictures_72b268",
+      "value": "WeChat chat pictures"
+    },
+    {
+      "name": "tool_ui_wi_fi_password_80e9a4",
+      "value": "Wi‑Fi password"
+    },
+    {
+      "name": "tool_ui_write_file_e620fd",
+      "value": "write file"
+    },
+    {
+      "name": "tool_ui_write_or_overwrite_mobile_files_29fae4",
+      "value": "Write or overwrite mobile files"
+    },
+    {
+      "name": "tool_wait",
+      "value": "Wait"
+    },
+    {
+      "name": "tool_wait_for_package",
+      "value": "Wait for app"
+    },
+    {
+      "name": "tool_wait_for_text",
+      "value": "Wait for text"
+    },
+    {
+      "name": "tool_web_search",
+      "value": "搜索网页"
+    },
+    {
+      "name": "tool_web_search_description",
+      "value": "未使用 Provider 托管搜索时检索公开网页，返回标题、链接与摘要，可在网页工具服务中切换内置、DeepSeek 或自定义接口。"
+    },
+    {
+      "name": "tool_wifi_credentials",
+      "value": "Read Wi-Fi password"
+    },
+    {
+      "name": "tool_write_file",
+      "value": "Write file"
+    },
+    {
+      "name": "tools_background_group",
+      "value": "Background app operation"
+    },
+    {
+      "name": "tools_manage_permissions",
+      "value": "Manage permissions"
+    },
+    {
+      "name": "tools_view_enhancements",
+      "value": "View system enhancements"
+    },
+    {
+      "name": "ui_about_bed172",
+      "value": "about"
+    },
+    {
+      "name": "ui_about_feedback_title",
+      "value": "Feedback"
+    },
+    {
+      "name": "ui_about_github_star_hint",
+      "value": "If 随身助手 helps you, please star it on GitHub — it means a lot to us"
+    },
+    {
+      "name": "ui_about_github_star_title",
+      "value": "Source Code"
+    },
+    {
+      "name": "ui_about_update_checking",
+      "value": "Checking…"
+    },
+    {
+      "name": "ui_about_update_title",
+      "value": "Check for updates"
+    },
+    {
+      "name": "ui_about_version_title",
+      "value": "Version"
+    },
+    {
+      "name": "ui_absolute_path_9ac6fc",
+      "value": "absolute path"
+    },
+    {
+      "name": "ui_accessibility_enhancement_tools_8fd257",
+      "value": "Accessibility enhancement tools"
+    },
+    {
+      "name": "ui_add_attachment_dba9e8",
+      "value": "Add attachment"
+    },
+    {
+      "name": "ui_add_custom_model_a5ddc0",
+      "value": "Add custom model"
+    },
+    {
+      "name": "ui_add_new_provider_74df54",
+      "value": "Add new provider"
+    },
+    {
+      "name": "ui_added_openai_compatible_6bd471",
+      "value": "Add OpenAI-compatible provider"
+    },
+    {
+      "name": "ui_after_closing_no_memory_will_be_injected_and_the_mod_db3d23",
+      "value": "After closing, no memory will be injected, and the model will not be allowed to read or write; existing content will be retained."
+    },
+    {
+      "name": "ui_agent_and_local_tools_can_still_be_used_but_the_syst_b14479",
+      "value": "Agent and local tools remain available. System assistant takeover, Gemini, and Circle to Search settings cannot be changed right now."
+    },
+    {
+      "name": "ui_allow_reading_of_sensitive_device_information_feaec0",
+      "value": "Allow reading of sensitive device information"
+    },
+    {
+      "name": "ui_allow_sensitive_device_operation_3d42ea",
+      "value": "Allow sensitive device operation"
+    },
+    {
+      "name": "ui_allows_the_model_to_call_web_searches_provided_by_th_2f752f",
+      "value": "Allows the model to call web searches provided by the Provider"
+    },
+    {
+      "name": "ui_analyze_current_screen_ebf08f",
+      "value": "Analyze current screen"
+    },
+    {
+      "name": "ui_apk_analysis_95ad17",
+      "value": "APK analysis"
+    },
+    {
+      "name": "ui_automatically_set_default_assistant_f86963",
+      "value": "Automatically set default assistant"
+    },
+    {
+      "name": "ui_available_capacity_743337",
+      "value": "Available capabilities"
+    },
+    {
+      "name": "ui_back_to_bottom_32282e",
+      "value": "back to bottom"
+    },
+    {
+      "name": "ui_bright_screen_evokes_automatic_voice_input_4358fe",
+      "value": "Bright screen evokes automatic voice input"
+    },
+    {
+      "name": "ui_browse_the_web_da7afb",
+      "value": "Browse the web"
+    },
+    {
+      "name": "ui_built_in_09ceea",
+      "value": "built-in"
+    },
+    {
+      "name": "ui_built_in_skills_1ceedf",
+      "value": "Built-in"
+    },
+    {
+      "name": "ui_cancel_edit_c698df",
+      "value": "Cancel edit"
+    },
+    {
+      "name": "ui_check_memory_pressure_2d9600",
+      "value": "Check memory pressure"
+    },
+    {
+      "name": "ui_clear_all_memory_a43bd3",
+      "value": "Clear all memory?"
+    },
+    {
+      "name": "ui_click_to_reinstall_dc60de",
+      "value": "Click to reinstall"
+    },
+    {
+      "name": "ui_connection_configuration_7d057b",
+      "value": "Connection"
+    },
+    {
+      "name": "ui_context_length_tokens_227860",
+      "value": "Context window (tokens)"
+    },
+    {
+      "name": "ui_contextual_usage_d12810",
+      "value": "Context usage"
+    },
+    {
+      "name": "ui_convert_google_apps_to_system_apps_0f6d89",
+      "value": "Convert Google Apps to system apps"
+    },
+    {
+      "name": "ui_copy_4edd1d",
+      "value": "copy"
+    },
+    {
+      "name": "ui_core_memory_injection_budget_48b5d5",
+      "value": "Core memory injection budget"
+    },
+    {
+      "name": "ui_core_memory_user_name_long_term_preferences_aa6ff9",
+      "value": "# core memory - User name: - Long-term preferences:"
+    },
+    {
+      "name": "ui_current_25e74d",
+      "value": "current"
+    },
+    {
+      "name": "ui_current_model_a0af8f",
+      "value": "current model"
+    },
+    {
+      "name": "ui_deep_thinking_enabled_by_default_c032d6",
+      "value": "Reasoning enabled by default"
+    },
+    {
+      "name": "ui_delete_3755f5",
+      "value": "delete"
+    },
+    {
+      "name": "ui_delete_model_cf24da",
+      "value": "Delete model"
+    },
+    {
+      "name": "ui_delete_this_conversation_3f351b",
+      "value": "Delete this conversation"
+    },
+    {
+      "name": "ui_delete_user_skills_f319a9",
+      "value": "Delete Skill"
+    },
+    {
+      "name": "ui_description_named",
+      "value": "View the description for %1$s"
+    },
+    {
+      "name": "ui_disabled_0fe5a9",
+      "value": "Disabled"
+    },
+    {
+      "name": "ui_display_name_ed16be",
+      "value": "Display name"
+    },
+    {
+      "name": "ui_edit_a7f814",
+      "value": "edit"
+    },
+    {
+      "name": "ui_edit_model_parameters_ba4864",
+      "value": "Edit model parameters"
+    },
+    {
+      "name": "ui_edited_c36776",
+      "value": "Edited"
+    },
+    {
+      "name": "ui_enable_device_direct_tools_e2d595",
+      "value": "Enable device direct tools"
+    },
+    {
+      "name": "ui_enable_memory_4b69b7",
+      "value": "Enable memory"
+    },
+    {
+      "name": "ui_enable_terminal_file_tools_18bb43",
+      "value": "Enable terminal/file tools"
+    },
+    {
+      "name": "ui_enable_this_provider_683a76",
+      "value": "Enable this provider"
+    },
+    {
+      "name": "ui_enable_vendor_assistant_custom_models_c8e465",
+      "value": "Enable vendor assistant custom models"
+    },
+    {
+      "name": "ui_enable_web_browsing_tools_8b6b03",
+      "value": "Enable web search, reading and browser"
+    },
+    {
+      "name": "ui_endpoint_mode_3c8546",
+      "value": "Endpoint mode"
+    },
+    {
+      "name": "ui_enforce_accessibility_55e838",
+      "value": "Enforce accessibility"
+    },
+    {
+      "name": "ui_environmental_status_5b32a1",
+      "value": "Environment status"
+    },
+    {
+      "name": "ui_eta_system_assistant_003e9b",
+      "value": "Digital assistant app"
+    },
+    {
+      "name": "ui_exit_multiple_selection_c194fd",
+      "value": "Exit multiple selection"
+    },
+    {
+      "name": "ui_floating_window_permissions_076b77",
+      "value": "Floating window permissions"
+    },
+    {
+      "name": "ui_how_can_i_help_you_e75391",
+      "value": "How can I help you?"
+    },
+    {
+      "name": "ui_input_file_path_36d474",
+      "value": "input file path"
+    },
+    {
+      "name": "ui_install_087db6",
+      "value": "Install"
+    },
+    {
+      "name": "ui_knew_cb63c6",
+      "value": "Got it"
+    },
+    {
+      "name": "ui_leave_blank_to_use_the_default_mobile_agent_prompt_w_21e7c8",
+      "value": "Tell the AI how you'd like it to communicate and what instructions to follow, or leave this blank. When using a character card, its prompt is used instead."
+    },
+    {
+      "name": "ui_linux_tool_environment_314d22",
+      "value": "Linux tool environment"
+    },
+    {
+      "name": "ui_lock_screen_evokes_automatic_voice_input_1cde18",
+      "value": "Lock screen evokes automatic voice input"
+    },
+    {
+      "name": "ui_long_press_on_the_gesture_bar_triggers_a_circle_to_s_b80117",
+      "value": "Touch and hold the gesture bar to start Circle to Search"
+    },
+    {
+      "name": "ui_long_press_the_power_button_1958d0",
+      "value": "Long press the power button"
+    },
+    {
+      "name": "ui_long_press_with_two_fingers_to_trigger_a_circle_sear_ab597a",
+      "value": "Touch and hold with two fingers to start Circle to Search"
+    },
+    {
+      "name": "ui_lsposed_service_is_not_connected_44734d",
+      "value": "LSPosed service is not connected"
+    },
+    {
+      "name": "ui_maintain_hey_google_detection_after_screen_rest_9d6877",
+      "value": "Maintain Hey Google detection after screen rest"
+    },
+    {
+      "name": "ui_manually_fill_in_the_display_name_and_model_id_077a7b",
+      "value": "Manually fill in the display name and Model ID"
+    },
+    {
+      "name": "ui_memory_b55ff5",
+      "value": "Memory"
+    },
+    {
+      "name": "ui_model_management_183414",
+      "value": "Model management"
+    },
+    {
+      "name": "ui_model_provider_e8c7f5",
+      "value": "Model providers"
+    },
+    {
+      "name": "ui_name_1be7ae",
+      "value": "name"
+    },
+    {
+      "name": "ui_new_anthropic_db6098",
+      "value": "Add Anthropic provider"
+    },
+    {
+      "name": "ui_no_skills_installed_yet_4e960f",
+      "value": "No Skills installed yet"
+    },
+    {
+      "name": "ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d",
+      "value": "Only pick levels the model or gateway supports."
+    },
+    {
+      "name": "ui_only_take_over_with_agent_prefix_d17556",
+      "value": "Only take over with /agent prefix"
+    },
+    {
+      "name": "ui_open_current_browser_58358e",
+      "value": "Open current browser"
+    },
+    {
+      "name": "ui_open_wechat_6b2c28",
+      "value": "Open WeChat"
+    },
+    {
+      "name": "ui_optional_tools_3097d6",
+      "value": "Optional tools"
+    },
+    {
+      "name": "ui_permission_health_3048bb",
+      "value": "Permissions"
+    },
+    {
+      "name": "ui_permissions_560165",
+      "value": "Permissions"
+    },
+    {
+      "name": "ui_permissions_and_status_35f368",
+      "value": "Permissions and status"
+    },
+    {
+      "name": "ui_preferences_and_strategies_2abd3c",
+      "value": "Preferences and Strategies"
+    },
+    {
+      "name": "ui_provider_does_not_exist_83cee6",
+      "value": "Provider does not exist"
+    },
+    {
+      "name": "ui_regenerate_2e1905",
+      "value": "Regenerate"
+    },
+    {
+      "name": "ui_regenerate_reply_84a7d9",
+      "value": "Regenerate reply"
+    },
+    {
+      "name": "ui_remove_file_reference_04bbfc",
+      "value": "Remove file reference"
+    },
+    {
+      "name": "ui_remove_image_089db3",
+      "value": "Remove image"
+    },
+    {
+      "name": "ui_remove_provider_9f848f",
+      "value": "Remove provider"
+    },
+    {
+      "name": "ui_removed_4e5c49",
+      "value": "Removed"
+    },
+    {
+      "name": "ui_replace_user_skills_250e98",
+      "value": "Replace Skill?"
+    },
+    {
+      "name": "ui_reset_built_in_configuration_35b6ec",
+      "value": "Reset built-in settings"
+    },
+    {
+      "name": "ui_restore_automatic_8d4e1e",
+      "value": "Restore automatic"
+    },
+    {
+      "name": "ui_return_11d024",
+      "value": "return"
+    },
+    {
+      "name": "ui_search_in_one_turn_179584",
+      "value": "Circle to Search"
+    },
+    {
+      "name": "ui_search_model_df5586",
+      "value": "Search model"
+    },
+    {
+      "name": "ui_search_provider_74e049",
+      "value": "Search provider"
+    },
+    {
+      "name": "ui_server_side_web_search_ddb8e0",
+      "value": "Provider-hosted web search"
+    },
+    {
+      "name": "ui_set_up_7debf9",
+      "value": "set up"
+    },
+    {
+      "name": "ui_stop_a17f70",
+      "value": "stop"
+    },
+    {
+      "name": "ui_support_anthropic_claude_official_or_compatible_api_de3f80",
+      "value": "Support Anthropic Claude official or compatible API"
+    },
+    {
+      "name": "ui_support_chatgpt_deepseek_kimi_glm_qwen_etc_b31d02",
+      "value": "Support ChatGPT, DeepSeek, Kimi, GLM, Qwen, etc."
+    },
+    {
+      "name": "ui_support_thinking_5b9e4c",
+      "value": "Supports reasoning"
+    },
+    {
+      "name": "ui_supports_files_and_folders_under_internal_storage_or_520786",
+      "value": "Supports files and folders at any local absolute path"
+    },
+    {
+      "name": "ui_system_applications_have_voice_wake_up_permissions_f_0190f2",
+      "value": "System applications have voice wake-up permissions, fewer self-start restrictions, and the experience is close to native. Will be installed via Magisk/KernelSU module and will take effect after reboot."
+    },
+    {
+      "name": "ui_system_assistant_takes_over_f46043",
+      "value": "System assistant takes over"
+    },
+    {
+      "name": "ui_system_enhancement_dcd4ad",
+      "value": "System enhancement"
+    },
+    {
+      "name": "ui_system_prompt_word_193981",
+      "value": "System prompt"
+    },
+    {
+      "name": "ui_test_connection_10b7d8",
+      "value": "test connection"
+    },
+    {
+      "name": "ui_the_entire_contents_of_memory_md_will_be_deleted_and_83a8ac",
+      "value": "The entire contents of MEMORY.md will be deleted and the memory switch will remain in its current state."
+    },
+    {
+      "name": "ui_this_will_close_the_current_page_and_clear_eta_brows_1cd331",
+      "value": "This will close the current page and clear 随身助手 Browser's cookies and site data. External browsers are not affected."
+    },
+    {
+      "name": "ui_tool_a72ef1",
+      "value": "tool"
+    },
+    {
+      "name": "ui_tool_ability_9f0f80",
+      "value": "Tools"
+    },
+    {
+      "name": "ui_update_already_latest",
+      "value": "Already on the latest version"
+    },
+    {
+      "name": "ui_update_available_message",
+      "value": "Latest version %1$s, current version %2$s"
+    },
+    {
+      "name": "ui_update_available_title",
+      "value": "Update available"
+    },
+    {
+      "name": "ui_update_check_failed",
+      "value": "Update check failed. Try again later"
+    },
+    {
+      "name": "ui_update_go_download",
+      "value": "Download"
+    },
+    {
+      "name": "ui_user_skills_748e7f",
+      "value": "Installed by you"
+    },
+    {
+      "name": "ui_view_description",
+      "value": "View description"
+    },
+    {
+      "name": "ui_xiaobu_xiaoai_compatible_entrance_ae918a",
+      "value": "Xiaobu/Xiaoai compatible entrance"
+    },
+    {
+      "name": "voice_audio_permission",
+      "value": "请在 随身助手 应用权限中允许麦克风，然后重新唤醒；点击麦克风可打开设置"
+    },
+    {
+      "name": "voice_completed",
+      "value": "Completed"
+    },
+    {
+      "name": "voice_download_model",
+      "value": "Download"
+    },
+    {
+      "name": "voice_failed",
+      "value": "随身助手 failed to complete the task"
+    },
+    {
+      "name": "voice_finish_speech",
+      "value": "结束录音并发送"
+    },
+    {
+      "name": "voice_input_hint",
+      "value": "Message 随身助手…"
+    },
+    {
+      "name": "voice_input_request",
+      "value": "Enter a request"
+    },
+    {
+      "name": "voice_interaction_service_label",
+      "value": "随身助手"
+    },
+    {
+      "name": "voice_language_not_supported",
+      "value": "The current language is not supported by this speech service"
+    },
+    {
+      "name": "voice_language_unavailable",
+      "value": "The current language is not ready for speech recognition"
+    },
+    {
+      "name": "voice_listening",
+      "value": "Listening..."
+    },
+    {
+      "name": "voice_model_download_failed",
+      "value": "Could not download the speech model"
+    },
+    {
+      "name": "voice_model_downloading",
+      "value": "Requesting speech model download…"
+    },
+    {
+      "name": "voice_model_needed",
+      "value": "The current language needs a speech model"
+    },
+    {
+      "name": "voice_model_pending",
+      "value": "The speech model is waiting to download"
+    },
+    {
+      "name": "voice_model_ready",
+      "value": "Speech model is ready; tap the microphone to try again"
+    },
+    {
+      "name": "voice_model_scheduled",
+      "value": "Speech model download scheduled; try again later"
+    },
+    {
+      "name": "voice_no_speech",
+      "value": "没有听清，请点击麦克风重试，或改用键盘输入"
+    },
+    {
+      "name": "voice_processing",
+      "value": "Processing…"
+    },
+    {
+      "name": "voice_recognizing",
+      "value": "Recognizing..."
+    },
+    {
+      "name": "voice_release_to_send",
+      "value": "Release to send, slide away to cancel"
+    },
+    {
+      "name": "voice_request_failed",
+      "value": "The request failed. Please try again."
+    },
+    {
+      "name": "voice_running_tool",
+      "value": "随身助手 is running %1$s"
+    },
+    {
+      "name": "voice_send",
+      "value": "Send"
+    },
+    {
+      "name": "voice_speech_audio_error",
+      "value": "The microphone could not be started; check whether another app is using it"
+    },
+    {
+      "name": "voice_speech_busy",
+      "value": "Speech recognition is busy; try again in a moment"
+    },
+    {
+      "name": "voice_speech_network_error",
+      "value": "Speech recognition needs a network connection; try again or use the keyboard"
+    },
+    {
+      "name": "voice_speech_no_service",
+      "value": "No speech recognition service is available on this device"
+    },
+    {
+      "name": "voice_speech_rate_limited",
+      "value": "Too many speech requests; try again later"
+    },
+    {
+      "name": "voice_speech_service_error",
+      "value": "The speech recognition service disconnected; try again"
+    },
+    {
+      "name": "voice_speech_service_timeout",
+      "value": "The speech recognition service did not respond; try again"
+    },
+    {
+      "name": "voice_speech_unavailable",
+      "value": "Speech recognition is unavailable"
+    },
+    {
+      "name": "voice_tap_to_speak",
+      "value": "Tap to speak"
+    },
+    {
+      "name": "voice_use_keyboard",
+      "value": "切换键盘输入"
+    },
+    {
+      "name": "web_tools_api_key_optional",
+      "value": "API Key（选填）"
+    },
+    {
+      "name": "web_tools_backend_builtin",
+      "value": "内置默认"
+    },
+    {
+      "name": "web_tools_backend_custom",
+      "value": "自定义接口"
+    },
+    {
+      "name": "web_tools_backend_deepseek",
+      "value": "DeepSeek"
+    },
+    {
+      "name": "web_tools_body_template",
+      "value": "请求体模板 (JSON)"
+    },
+    {
+      "name": "web_tools_configure_action",
+      "value": "配置服务"
+    },
+    {
+      "name": "web_tools_content_field",
+      "value": "正文字段路径（留空则直接取响应文本）"
+    },
+    {
+      "name": "web_tools_credentials_lost",
+      "value": "网页工具凭据无法解密，请重新填写并保存"
+    },
+    {
+      "name": "web_tools_custom_fetch_note",
+      "value": "支持 {{url}}、{{raw_url}} 与 {{url_json}} 占位符；远端读取失败时自动回退到本地静态抓取。"
+    },
+    {
+      "name": "web_tools_custom_headers",
+      "value": "自定义请求头（选填，每行 Header: Value）"
+    },
+    {
+      "name": "web_tools_custom_search_note",
+      "value": "支持 {{query}}、{{query_json}} 与 {{count}} 占位符；填写 API Key 时默认附加 Bearer 鉴权头。"
+    },
+    {
+      "name": "web_tools_deepseek_linked_note",
+      "value": "已自动关联 DeepSeek 模型提供商的 API Key；也可在此填写独立密钥覆盖。"
+    },
+    {
+      "name": "web_tools_deepseek_note",
+      "value": "调用 DeepSeek /v1/tools/search 与 /v1/tools/fetch 接口；留空时将尝试复用 DeepSeek 模型提供商的密钥。"
+    },
+    {
+      "name": "web_tools_endpoint_url",
+      "value": "接口地址 (URL)"
+    },
+    {
+      "name": "web_tools_fetch_service",
+      "value": "网页读取"
+    },
+    {
+      "name": "web_tools_group_custom_fetch",
+      "value": "自定义读取"
+    },
+    {
+      "name": "web_tools_group_custom_search",
+      "value": "自定义搜索"
+    },
+    {
+      "name": "web_tools_group_service",
+      "value": "服务"
+    },
+    {
+      "name": "web_tools_http_method",
+      "value": "请求方式"
+    },
+    {
+      "name": "web_tools_load_failed",
+      "value": "无法读取网页工具设置，请返回重试"
+    },
+    {
+      "name": "web_tools_mapping_and_template",
+      "value": "请求模板与响应字段"
+    },
+    {
+      "name": "web_tools_overview_builtin_note",
+      "value": "内置方案免配置开箱即用；切换为 DeepSeek 或自定义接口可获得更佳的检索质量与 Markdown 正文提取。"
+    },
+    {
+      "name": "web_tools_overview_remote_note",
+      "value": "远端网页读取失败时会自动回退到本地静态抓取；同一网页翻页复用当前运行缓存，不重复请求。"
+    },
+    {
+      "name": "web_tools_overview_resilient_note",
+      "value": "Built-in search uses Bing first and tries DuckDuckGo on failure, with a 10-second network timeout per source. DeepSeek and custom search keep using your selected configuration."
+    },
+    {
+      "name": "web_tools_results_path",
+      "value": "结果数组路径"
+    },
+    {
+      "name": "web_tools_search_service",
+      "value": "网页搜索"
+    },
+    {
+      "name": "web_tools_settings_title",
+      "value": "网页搜索与读取"
+    },
+    {
+      "name": "web_tools_snippet_field",
+      "value": "摘要字段"
+    },
+    {
+      "name": "web_tools_title_field",
+      "value": "标题字段"
+    },
+    {
+      "name": "web_tools_url_field",
+      "value": "链接字段"
+    },
+    {
+      "name": "work_analyzing",
+      "value": "Analyzing task"
+    },
+    {
+      "name": "work_collapse",
+      "value": "Collapse work details"
+    },
+    {
+      "name": "work_completed",
+      "value": "Analysis complete"
+    },
+    {
+      "name": "work_expand",
+      "value": "Expand work details"
+    },
+    {
+      "name": "xposed_description",
+      "value": "A system-level AI agent that takes over Breeno and Super XiaoAI, enables Gemini and Circle to Search, and integrates browser, terminal, and device tools."
+    }
+  ]
+}

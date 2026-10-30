@@ -1,16 +1,6184 @@
 {
   "string": [
     {
-      "name": "module_desc",
-      "value": "在手机上运行的 AI 助手"
+      "name": "accessibility_protection_rejected",
+      "value": "无障碍保护请求被系统拒绝"
+    },
+    {
+      "name": "accessibility_protection_unavailable",
+      "value": "无障碍保护后端不可用，请确认 system 作用域已启用并重启"
+    },
+    {
+      "name": "action_add",
+      "value": "添加"
+    },
+    {
+      "name": "action_back",
+      "value": "返回"
+    },
+    {
+      "name": "action_cancel",
+      "value": "取消"
+    },
+    {
+      "name": "action_close",
+      "value": "关闭"
+    },
+    {
+      "name": "action_confirm",
+      "value": "确认"
+    },
+    {
+      "name": "action_continue",
+      "value": "继续"
+    },
+    {
+      "name": "action_conversation_history",
+      "value": "会话历史"
+    },
+    {
+      "name": "action_delete",
+      "value": "删除"
+    },
+    {
+      "name": "action_done",
+      "value": "完成"
+    },
+    {
+      "name": "action_edit",
+      "value": "编辑"
+    },
+    {
+      "name": "action_export",
+      "value": "导出"
+    },
+    {
+      "name": "action_import",
+      "value": "导入"
+    },
+    {
+      "name": "action_install",
+      "value": "安装"
+    },
+    {
+      "name": "action_launch_kimi_web",
+      "value": "启动 Kimi Web"
+    },
+    {
+      "name": "action_more",
+      "value": "更多选项"
+    },
+    {
+      "name": "action_new_conversation",
+      "value": "新建对话"
+    },
+    {
+      "name": "action_open",
+      "value": "打开"
+    },
+    {
+      "name": "action_open_browser",
+      "value": "打开浏览器"
+    },
+    {
+      "name": "action_open_terminal",
+      "value": "打开终端"
+    },
+    {
+      "name": "action_regenerate",
+      "value": "重新生成"
+    },
+    {
+      "name": "action_reinstall",
+      "value": "重新安装"
+    },
+    {
+      "name": "action_remove",
+      "value": "移除"
+    },
+    {
+      "name": "action_rename",
+      "value": "重命名"
+    },
+    {
+      "name": "action_retry",
+      "value": "重试"
+    },
+    {
+      "name": "action_save",
+      "value": "保存"
+    },
+    {
+      "name": "action_settings",
+      "value": "设置"
+    },
+    {
+      "name": "action_stop",
+      "value": "停止"
+    },
+    {
+      "name": "agent_accessibility_description",
+      "value": "读取屏幕内容并执行点击、滑动、文字输入等操作，协助 Agent 完成任务。"
+    },
+    {
+      "name": "agent_accessibility_label",
+      "value": "随身助手 Agent"
+    },
+    {
+      "name": "appearance_accent_blue",
+      "value": "蓝色"
+    },
+    {
+      "name": "appearance_accent_color",
+      "value": "强调色"
+    },
+    {
+      "name": "appearance_accent_green",
+      "value": "绿色"
+    },
+    {
+      "name": "appearance_accent_orange",
+      "value": "橙色"
+    },
+    {
+      "name": "appearance_accent_pink",
+      "value": "粉色"
+    },
+    {
+      "name": "appearance_accent_purple",
+      "value": "紫色"
+    },
+    {
+      "name": "appearance_accent_red",
+      "value": "红色"
+    },
+    {
+      "name": "appearance_accent_system",
+      "value": "系统取色"
+    },
+    {
+      "name": "appearance_accent_teal",
+      "value": "青色"
+    },
+    {
+      "name": "appearance_accent_yellow",
+      "value": "黄色"
+    },
+    {
+      "name": "appearance_blur",
+      "value": "模糊效果"
+    },
+    {
+      "name": "appearance_blur_style",
+      "value": "顶栏模糊样式"
+    },
+    {
+      "name": "appearance_blur_style_gaussian",
+      "value": "高斯"
+    },
+    {
+      "name": "appearance_blur_style_gaussian_summary",
+      "value": "顶栏整体均匀模糊"
+    },
+    {
+      "name": "appearance_blur_style_progressive",
+      "value": "渐进"
+    },
+    {
+      "name": "appearance_blur_style_progressive_summary",
+      "value": "顶部渐强模糊"
+    },
+    {
+      "name": "appearance_blur_summary",
+      "value": "启用顶栏、聊天输入区等表面的模糊效果"
+    },
+    {
+      "name": "appearance_group_color",
+      "value": "颜色与主题"
+    },
+    {
+      "name": "appearance_group_interface",
+      "value": "界面与效果"
+    },
+    {
+      "name": "appearance_interface_scale",
+      "value": "界面缩放"
+    },
+    {
+      "name": "appearance_interface_scale_dialog_summary",
+      "value": "请输入 80 至 110 之间的整数"
+    },
+    {
+      "name": "appearance_interface_scale_dialog_title",
+      "value": "界面缩放"
+    },
+    {
+      "name": "appearance_interface_scale_input_label",
+      "value": "百分比"
+    },
+    {
+      "name": "appearance_interface_scale_summary",
+      "value": "调整全局显示比例（80%–110%）"
+    },
+    {
+      "name": "appearance_monet",
+      "value": "Monet 取色"
+    },
+    {
+      "name": "appearance_monet_summary",
+      "value": "可用时使用系统动态取色"
+    },
+    {
+      "name": "appearance_palette_content",
+      "value": "内容（Content）"
+    },
+    {
+      "name": "appearance_palette_expressive",
+      "value": "表现力（Expressive）"
+    },
+    {
+      "name": "appearance_palette_fidelity",
+      "value": "保真（Fidelity）"
+    },
+    {
+      "name": "appearance_palette_fruit_salad",
+      "value": "水果沙拉（FruitSalad）"
+    },
+    {
+      "name": "appearance_palette_monochrome",
+      "value": "单色（Monochrome）"
+    },
+    {
+      "name": "appearance_palette_neutral",
+      "value": "中性（Neutral）"
+    },
+    {
+      "name": "appearance_palette_rainbow",
+      "value": "彩虹（Rainbow）"
+    },
+    {
+      "name": "appearance_palette_style",
+      "value": "色彩风格"
+    },
+    {
+      "name": "appearance_palette_tonal_spot",
+      "value": "色调点（TonalSpot）"
+    },
+    {
+      "name": "appearance_palette_vibrant",
+      "value": "鲜明（Vibrant）"
+    },
+    {
+      "name": "appearance_predictive_back",
+      "value": "预测性返回手势"
+    },
+    {
+      "name": "appearance_predictive_back_summary",
+      "value": "启用预测性返回动画效果"
+    },
+    {
+      "name": "appearance_pure_black",
+      "value": "纯黑背景"
+    },
+    {
+      "name": "appearance_pure_black_summary",
+      "value": "深色模式下使用纯黑背景"
+    },
+    {
+      "name": "appearance_runtime_glow",
+      "value": "运行时屏幕流光"
+    },
+    {
+      "name": "appearance_runtime_glow_summary",
+      "value": "显示助手唤醒及任务执行时的屏幕边缘光效，修改后立即生效。"
+    },
+    {
+      "name": "appearance_swipe_dismiss",
+      "value": "横移返回手势"
+    },
+    {
+      "name": "appearance_swipe_dismiss_summary",
+      "value": "在页面任意位置横移即可返回上一页"
+    },
+    {
+      "name": "appearance_task_completion_alerts",
+      "value": "任务完成时弹出提示"
+    },
+    {
+      "name": "appearance_task_completion_alerts_summary",
+      "value": "任务完成、停止或失败时从顶部弹出原生通知。关闭后仍保留任务通知。需在系统通知设置中允许横幅。"
+    },
+    {
+      "name": "appearance_theme_dark",
+      "value": "深色"
+    },
+    {
+      "name": "appearance_theme_light",
+      "value": "浅色"
+    },
+    {
+      "name": "appearance_theme_mode",
+      "value": "主题模式"
+    },
+    {
+      "name": "appearance_theme_system",
+      "value": "跟随系统"
+    },
+    {
+      "name": "appearance_title",
+      "value": "外观与主题"
+    },
+    {
+      "name": "attachment_add",
+      "value": "添加"
+    },
+    {
+      "name": "attachment_enter_path",
+      "value": "输入路径"
+    },
+    {
+      "name": "attachment_file",
+      "value": "文件"
+    },
+    {
+      "name": "attachment_folder",
+      "value": "文件夹"
+    },
+    {
+      "name": "attachment_image",
+      "value": "图片"
+    },
+    {
+      "name": "background_continue_instruction",
+      "value": "继续指令"
+    },
+    {
+      "name": "background_diagnostics_failed",
+      "value": "诊断文件保存失败"
+    },
+    {
+      "name": "background_diagnostics_saved",
+      "value": "诊断文件已保存"
+    },
+    {
+      "name": "background_diagnostics_summary",
+      "value": "保存任务状态与屏幕恢复结果，不含聊天、密钥或截图"
+    },
+    {
+      "name": "background_diagnostics_title",
+      "value": "导出运行诊断"
+    },
+    {
+      "name": "background_handoff_unavailable",
+      "value": "后台页面仍在使用或暂时无法接管，请查看聊天后重试。"
+    },
+    {
+      "name": "background_notifications_disabled",
+      "value": "通知已关闭，开启后可查看后台任务进度"
+    },
+    {
+      "name": "background_notifications_enabled",
+      "value": "已开启，点击管理系统任务通知"
+    },
+    {
+      "name": "background_notifications_title",
+      "value": "后台任务通知"
+    },
+    {
+      "name": "background_open_app",
+      "value": "打开 App"
+    },
+    {
+      "name": "background_opening_app",
+      "value": "正在打开应用"
+    },
+    {
+      "name": "background_releasing_screen",
+      "value": "正在回收屏幕"
+    },
+    {
+      "name": "background_reply_failed",
+      "value": "未能发送，请等待本会话任务结束，或打开 ETA 检查记录和模型配置后重试。"
+    },
+    {
+      "name": "background_restoring_display",
+      "value": "正在收尾屏幕任务"
+    },
+    {
+      "name": "background_screen_off_paused",
+      "value": "已息屏暂停，解锁后继续"
+    },
+    {
+      "name": "background_task_completed",
+      "value": "本轮已结束"
+    },
+    {
+      "name": "background_task_queued",
+      "value": "等待执行"
+    },
+    {
+      "name": "background_waiting_app",
+      "value": "等待应用空闲"
+    },
+    {
+      "name": "background_waiting_model",
+      "value": "等待模型回复"
+    },
+    {
+      "name": "browser_back",
+      "value": "后退"
+    },
+    {
+      "name": "browser_clear_shared_data",
+      "value": "清除全部浏览器数据"
+    },
+    {
+      "name": "browser_clear_shared_data_message",
+      "value": "将关闭全部页面，清除 Cookie、缓存和网站数据，包括登录状态。"
+    },
+    {
+      "name": "browser_close_page",
+      "value": "关闭网页"
+    },
+    {
+      "name": "browser_forward",
+      "value": "前进"
+    },
+    {
+      "name": "browser_no_external_app",
+      "value": "没有应用可以打开当前网页"
+    },
+    {
+      "name": "browser_open_external",
+      "value": "用外部应用打开"
+    },
+    {
+      "name": "browser_refresh",
+      "value": "刷新"
+    },
+    {
+      "name": "browser_search_or_address",
+      "value": "搜索或输入网址"
+    },
+    {
+      "name": "browser_stop_loading",
+      "value": "停止加载"
+    },
+    {
+      "name": "browser_user_action_failed",
+      "value": "浏览器操作未完成，请重试。"
+    },
+    {
+      "name": "capability_accessibility_required",
+      "value": "开启无障碍后可用"
+    },
+    {
+      "name": "capability_all",
+      "value": "全部能力"
+    },
+    {
+      "name": "capability_background_failed",
+      "value": "无法开始后台任务，请回到 随身助手 后重试"
+    },
+    {
+      "name": "capability_coloros_required",
+      "value": "适用于 ColorOS"
+    },
+    {
+      "name": "capability_current_device",
+      "value": "当前设备"
+    },
+    {
+      "name": "capability_enhancements",
+      "value": "Root 与系统增强"
+    },
+    {
+      "name": "capability_enhancements_summary",
+      "value": "Root 授权与框架状态"
+    },
+    {
+      "name": "capability_hook_accessibility",
+      "value": "无障碍保护"
+    },
+    {
+      "name": "capability_hook_accessibility_summary",
+      "value": "通过 system_server 维护服务启用状态，需要 LSPosed 的系统作用域。普通模式仍可手动开启无障碍。"
+    },
+    {
+      "name": "capability_hook_assistants",
+      "value": "小布与超级小爱接管"
+    },
+    {
+      "name": "capability_hook_assistants_summary",
+      "value": "通过系统助手入口调用 随身助手 Runtime。需要 LSPosed 启用 随身助手、对应助手作用域，以及支持的 ColorOS 或 HyperOS。"
+    },
+    {
+      "name": "capability_hook_google",
+      "value": "Gemini 与一圈即搜"
+    },
+    {
+      "name": "capability_hook_google_summary",
+      "value": "在 ColorOS 创建或修复系统能力与触发入口。需要 LSPosed、对应系统与 Google 应用作用域；Google 应用系统化另需 Root。"
+    },
+    {
+      "name": "capability_import_denied",
+      "value": "没有权限读取该路径，请选择文件导入或授权共享目录"
+    },
+    {
+      "name": "capability_import_failed",
+      "value": "文件导入失败，请重试"
+    },
+    {
+      "name": "capability_import_too_large",
+      "value": "文件超过 32 MiB，无法导入"
+    },
+    {
+      "name": "capability_kimi_checking",
+      "value": "检查 Kimi Web…"
+    },
+    {
+      "name": "capability_kimi_exited",
+      "value": "Kimi Web 进程已退出，请在终端检查 Kimi 配置后重试"
+    },
+    {
+      "name": "capability_kimi_install",
+      "value": "安装 Kimi Web"
+    },
+    {
+      "name": "capability_kimi_logs_unavailable",
+      "value": "无法读取 Kimi 启动日志，请在终端检查环境后重试"
+    },
+    {
+      "name": "capability_kimi_not_installed",
+      "value": "请先在 Linux 环境中安装 Kimi Code"
+    },
+    {
+      "name": "capability_kimi_open",
+      "value": "打开 Kimi Web · 运行中"
+    },
+    {
+      "name": "capability_kimi_preparing",
+      "value": "Kimi Web 准备中…"
+    },
+    {
+      "name": "capability_kimi_proot_unavailable",
+      "value": "PRoot 未能启动，请在 Linux 环境中检查或重新安装普通环境"
+    },
+    {
+      "name": "capability_kimi_retry",
+      "value": "Kimi Web 启动失败 · 重试"
+    },
+    {
+      "name": "capability_kimi_root_required",
+      "value": "当前 Kimi 环境需要 Root，请恢复授权或在 Linux 环境中安装 PRoot 版本"
+    },
+    {
+      "name": "capability_kimi_stop",
+      "value": "停止 Kimi Web"
+    },
+    {
+      "name": "capability_linux_backend",
+      "value": "运行方式"
+    },
+    {
+      "name": "capability_linux_chroot",
+      "value": "Root 模式 · chroot"
+    },
+    {
+      "name": "capability_linux_chroot_summary",
+      "value": "使用 Root 与独立挂载空间，保留已有环境"
+    },
+    {
+      "name": "capability_linux_proot",
+      "value": "普通模式 · PRoot"
+    },
+    {
+      "name": "capability_linux_proot_requirements",
+      "value": "使用独立的 App 私有目录，无需 Root 或 BusyBox"
+    },
+    {
+      "name": "capability_linux_proot_summary",
+      "value": "无需 Root，使用独立的私有 Linux 环境"
+    },
+    {
+      "name": "capability_linux_root_lost",
+      "value": "当前环境使用 chroot，需要恢复 Root 授权；也可以选择 PRoot 安装独立环境"
+    },
+    {
+      "name": "capability_location_access_required",
+      "value": "授权位置访问后可用"
+    },
+    {
+      "name": "capability_location_foreground",
+      "value": "前台使用时可读取位置；后台任务需要额外的位置授权"
+    },
+    {
+      "name": "capability_notification_access_required",
+      "value": "授权通知使用权后可用"
+    },
+    {
+      "name": "capability_notifications_summary",
+      "value": "在通知栏查看和停止正在运行的终端与 Agent 任务"
+    },
+    {
+      "name": "capability_notifications_title",
+      "value": "后台任务通知"
+    },
+    {
+      "name": "capability_optional_root",
+      "value": "可选增强权限"
+    },
+    {
+      "name": "capability_provider_created",
+      "value": "已创建并设为当前模型服务商"
+    },
+    {
+      "name": "capability_provider_saved",
+      "value": "已保存并设为当前模型服务商"
+    },
+    {
+      "name": "capability_root_checking",
+      "value": "正在检查 Root 授权…"
+    },
+    {
+      "name": "capability_root_data",
+      "value": "受保护数据与文件"
+    },
+    {
+      "name": "capability_root_data_summary",
+      "value": "访问其他应用和系统保存的部分数据。需要 Root，具体范围取决于系统、应用版本与已开启的工具权限。"
+    },
+    {
+      "name": "capability_root_device",
+      "value": "应用与系统管理"
+    },
+    {
+      "name": "capability_root_device_summary",
+      "value": "冻结与停止应用、修改受保护系统设置、读取系统日志。需要 随身助手 获得 Root 授权。"
+    },
+    {
+      "name": "capability_root_features",
+      "value": "Root 能力"
+    },
+    {
+      "name": "capability_root_granted",
+      "value": "已获得 Root 授权"
+    },
+    {
+      "name": "capability_root_linux",
+      "value": "Linux 与终端增强"
+    },
+    {
+      "name": "capability_root_linux_summary",
+      "value": "Root 可使用 chroot、系统目录与脱离 App 的守护任务；普通模式可使用私有工作区与 PRoot。"
+    },
+    {
+      "name": "capability_root_not_granted",
+      "value": "未获得 Root 授权，当前使用普通模式"
+    },
+    {
+      "name": "capability_root_partial",
+      "value": "当前使用普通能力，Root 可扩展操作范围"
+    },
+    {
+      "name": "capability_root_refresh",
+      "value": "重新检测"
+    },
+    {
+      "name": "capability_root_request",
+      "value": "授权"
+    },
+    {
+      "name": "capability_root_required",
+      "value": "需要 Root 授权"
+    },
+    {
+      "name": "capability_root_timeout",
+      "value": "授权等待已结束，可手动重试"
+    },
+    {
+      "name": "capability_root_unavailable",
+      "value": "未检测到 Root，普通功能可正常使用"
+    },
+    {
+      "name": "capability_system_features",
+      "value": "系统助手与增强"
+    },
+    {
+      "name": "capability_terminal_ordinary_summary",
+      "value": "使用普通 Android Shell 或免 Root Linux 环境执行命令与后台任务"
+    },
+    {
+      "name": "capability_usage_access_required",
+      "value": "授权使用情况访问后可用"
+    },
+    {
+      "name": "capability_workspace",
+      "value": "工作区与文件"
+    },
+    {
+      "name": "capability_workspace_directory",
+      "value": "文件夹"
+    },
+    {
+      "name": "capability_workspace_empty",
+      "value": "暂无文件"
+    },
+    {
+      "name": "capability_workspace_empty_summary",
+      "value": "导入文件，或通过终端任务生成文件"
+    },
+    {
+      "name": "capability_workspace_exported",
+      "value": "文件已导出"
+    },
+    {
+      "name": "capability_workspace_failed",
+      "value": "文件操作失败，请检查权限与剩余空间"
+    },
+    {
+      "name": "capability_workspace_file_export",
+      "value": "%1$s · 点按导出"
+    },
+    {
+      "name": "capability_workspace_files",
+      "value": "工作区文件"
+    },
+    {
+      "name": "capability_workspace_import",
+      "value": "导入文件"
+    },
+    {
+      "name": "capability_workspace_imported",
+      "value": "文件已导入工作区"
+    },
+    {
+      "name": "capability_workspace_parent",
+      "value": "返回上级目录"
+    },
+    {
+      "name": "capability_workspace_private",
+      "value": "私有工作区"
+    },
+    {
+      "name": "capability_workspace_private_summary",
+      "value": "终端与普通 Linux 环境的默认文件目录，无需存储权限"
+    },
+    {
+      "name": "capability_workspace_public",
+      "value": "公共目录访问"
+    },
+    {
+      "name": "capability_workspace_public_denied",
+      "value": "公共目录尚未授权。可重试授权，或通过“工作区与文件”导入需要的文件"
+    },
+    {
+      "name": "capability_workspace_public_granted",
+      "value": "已授权，终端可访问公共目录"
+    },
+    {
+      "name": "capability_workspace_public_summary",
+      "value": "在系统设置中允许访问所有文件后，可使用共享存储中的目录"
+    },
+    {
+      "name": "capability_workspace_summary",
+      "value": "导入、导出与目录访问"
+    },
+    {
+      "name": "capability_xposed_connected",
+      "value": "服务已连接，不代表 随身助手 模块已启用"
+    },
+    {
+      "name": "capability_xposed_disconnected",
+      "value": "未收到框架服务连接；不影响聊天、GUI、浏览器与普通 Linux 环境"
+    },
+    {
+      "name": "capability_xposed_help",
+      "value": "模块启用与作用域"
+    },
+    {
+      "name": "capability_xposed_help_summary",
+      "value": "在 LSPosed 中启用 随身助手 并检查作用域。服务连接不代表模块已启用，关闭模块后连接仍可能保留；实际生效取决于目标进程是否加载 Hook。"
+    },
+    {
+      "name": "capability_xposed_service",
+      "value": "框架通信"
+    },
+    {
+      "name": "chat_character_input_hint",
+      "value": "对%1$s说点什么…"
+    },
+    {
+      "name": "chat_character_story_start",
+      "value": "故事从这里开始"
+    },
+    {
+      "name": "chat_character_typing",
+      "value": "%1$s 正在回复…"
+    },
+    {
+      "name": "chat_edit_character_reply",
+      "value": "编辑角色回复"
+    },
+    {
+      "name": "chat_edit_preserve_following",
+      "value": "保存后原位更新这条消息，并保留后续对话"
+    },
+    {
+      "name": "chat_edit_replace_later",
+      "value": "发送后将替换此消息及之后内容"
+    },
+    {
+      "name": "chat_edit_replace_message",
+      "value": "发送后将替换此消息"
+    },
+    {
+      "name": "chat_eta_working",
+      "value": "随身助手 正在执行…"
+    },
+    {
+      "name": "chat_image_attachment",
+      "value": "图片附件"
+    },
+    {
+      "name": "chat_input_hint",
+      "value": "交给 随身助手 去完成"
+    },
+    {
+      "name": "chat_next_candidate",
+      "value": "下一条候选回复"
+    },
+    {
+      "name": "chat_previous_candidate",
+      "value": "上一条候选回复"
+    },
+    {
+      "name": "chat_queue_files_only",
+      "value": "[%1$d 个文件]"
+    },
+    {
+      "name": "chat_queue_images_only",
+      "value": "[%1$d 张图片]"
+    },
+    {
+      "name": "chat_queue_interrupting",
+      "value": "插话中"
+    },
+    {
+      "name": "chat_queue_remove",
+      "value": "移除排队消息"
+    },
+    {
+      "name": "chat_queue_status",
+      "value": "排队中"
+    },
+    {
+      "name": "chat_queue_status_count",
+      "value": "排队中 · %1$d"
+    },
+    {
+      "name": "chat_queue_steer_now",
+      "value": "立即插话发送"
+    },
+    {
+      "name": "chat_reasoning_effort",
+      "value": "思考强度，当前为 %1$s"
+    },
+    {
+      "name": "chat_save_message",
+      "value": "保存消息"
+    },
+    {
+      "name": "chat_send",
+      "value": "发送"
+    },
+    {
+      "name": "chat_stop",
+      "value": "停止"
+    },
+    {
+      "name": "context_compact_action",
+      "value": "压缩上下文"
+    },
+    {
+      "name": "context_compaction",
+      "value": "上下文压缩"
+    },
+    {
+      "name": "context_no_model_limit",
+      "value": "未知上下文窗口，自动压缩已关闭。仍可手动压缩，也可在设置 → 模型提供商中填写窗口。"
+    },
+    {
+      "name": "context_no_previous_usage",
+      "value": "暂无上轮用量"
+    },
+    {
+      "name": "context_usage_after_response",
+      "value": "完成首次回复后显示实测用量"
+    },
+    {
+      "name": "context_usage_description",
+      "value": "上下文用量：%1$s"
+    },
+    {
+      "name": "context_usage_previous_response",
+      "value": "%1$s\n上轮实测"
+    },
+    {
+      "name": "conversation_delete_message",
+      "value": "该对话及其中的消息将被永久删除。"
+    },
+    {
+      "name": "conversation_delete_message_body",
+      "value": "这条消息将被删除。"
+    },
+    {
+      "name": "conversation_delete_message_title",
+      "value": "删除消息？"
+    },
+    {
+      "name": "conversation_delete_save_failed",
+      "value": "无法保存或确认任务结果，会话尚未删除。"
+    },
+    {
+      "name": "conversation_delete_title",
+      "value": "删除对话？"
+    },
+    {
+      "name": "conversation_dock_models",
+      "value": "模型"
+    },
+    {
+      "name": "conversation_empty",
+      "value": "还没有对话"
+    },
+    {
+      "name": "conversation_export_assistant",
+      "value": "助手"
+    },
+    {
+      "name": "conversation_export_default_name",
+      "value": "对话"
+    },
+    {
+      "name": "conversation_export_failed",
+      "value": "导出失败"
+    },
+    {
+      "name": "conversation_export_images",
+      "value": "图片：%1$d 张"
+    },
+    {
+      "name": "conversation_export_thinking",
+      "value": "思考过程"
+    },
+    {
+      "name": "conversation_export_tool_arguments",
+      "value": "参数：%1$s"
+    },
+    {
+      "name": "conversation_export_tool_line",
+      "value": "工具：%1$s（%2$s）"
+    },
+    {
+      "name": "conversation_export_tool_result",
+      "value": "结果：%1$s"
+    },
+    {
+      "name": "conversation_export_tools_line",
+      "value": "工具：%1$s"
+    },
+    {
+      "name": "conversation_export_user",
+      "value": "用户"
+    },
+    {
+      "name": "conversation_exported",
+      "value": "已导出"
+    },
+    {
+      "name": "conversation_load_failed",
+      "value": "会话加载失败"
+    },
+    {
+      "name": "conversation_load_turn_start",
+      "value": "请向上翻到这一轮的用户提问后再操作"
+    },
+    {
+      "name": "conversation_loading",
+      "value": "正在加载会话…"
+    },
+    {
+      "name": "conversation_model_unavailable",
+      "value": "此会话原用的模型不可用，已改用 %1$s"
+    },
+    {
+      "name": "conversation_no_results",
+      "value": "没有匹配的对话"
+    },
+    {
+      "name": "conversation_persistence_failed",
+      "value": "无法保存对话，请重试"
+    },
+    {
+      "name": "conversation_preview_empty",
+      "value": "直接输入问题，必要时 随身助手 会操作手机"
+    },
+    {
+      "name": "conversation_preview_reasoning",
+      "value": "随身助手 正在思考"
+    },
+    {
+      "name": "conversation_preview_tool_call",
+      "value": "调用工具：%1$s"
+    },
+    {
+      "name": "conversation_regenerate_current_turn",
+      "value": "当前轮次将由新生成的回复替换。"
+    },
+    {
+      "name": "conversation_regenerate_title",
+      "value": "重新生成回复？"
+    },
+    {
+      "name": "conversation_rename_hint",
+      "value": "对话名称"
+    },
+    {
+      "name": "conversation_rename_title",
+      "value": "重命名对话"
+    },
+    {
+      "name": "conversation_retry_earlier_messages",
+      "value": "加载失败，点击重试"
+    },
+    {
+      "name": "conversation_search_hint",
+      "value": "搜索对话"
+    },
+    {
+      "name": "conversation_section_pinned",
+      "value": "置顶"
+    },
+    {
+      "name": "conversation_section_today",
+      "value": "今天"
+    },
+    {
+      "name": "conversation_stop_and_delete",
+      "value": "停止任务并删除"
+    },
+    {
+      "name": "conversation_stop_and_delete_message",
+      "value": "此会话的任务将先停止，结果保存后删除会话。"
+    },
+    {
+      "name": "conversation_unnamed",
+      "value": "新对话"
+    },
+    {
+      "name": "copy_answer",
+      "value": "复制回答"
+    },
+    {
+      "name": "copy_code",
+      "value": "复制代码"
+    },
+    {
+      "name": "copy_command",
+      "value": "复制命令"
+    },
+    {
+      "name": "copy_copied",
+      "value": "已复制"
+    },
+    {
+      "name": "data_backup_actions",
+      "value": "备份"
+    },
+    {
+      "name": "data_backup_export",
+      "value": "导出数据"
+    },
+    {
+      "name": "data_backup_export_summary",
+      "value": "将对话、模型提供商和 MEMORY.md 保存为 JSON 文件"
+    },
+    {
+      "name": "data_backup_exported",
+      "value": "已导出 %1$d 个对话和 %2$d 个模型提供商"
+    },
+    {
+      "name": "data_backup_failed",
+      "value": "备份操作失败"
+    },
+    {
+      "name": "data_backup_file_open_failed",
+      "value": "无法打开所选文件"
+    },
+    {
+      "name": "data_backup_import",
+      "value": "导入数据"
+    },
+    {
+      "name": "data_backup_import_confirm_summary",
+      "value": "当前对话、模型提供商和 MEMORY.md 将被替换，备份文件可能包含 API Key。"
+    },
+    {
+      "name": "data_backup_import_confirm_title",
+      "value": "导入 随身助手 数据？"
+    },
+    {
+      "name": "data_backup_import_summary",
+      "value": "从备份文件替换对话、模型提供商和 MEMORY.md"
+    },
+    {
+      "name": "data_backup_imported",
+      "value": "已导入 %1$d 个对话和 %2$d 个模型提供商"
+    },
+    {
+      "name": "data_backup_title",
+      "value": "数据备份"
+    },
+    {
+      "name": "data_backup_warning_summary",
+      "value": "文件包含模型提供商 API Key，仅包含对话、模型提供商和 MEMORY.md。"
+    },
+    {
+      "name": "data_backup_warning_title",
+      "value": "请妥善保管备份文件"
+    },
+    {
+      "name": "data_backup_working",
+      "value": "处理中…"
+    },
+    {
+      "name": "eta_port_about_author",
+      "value": "原作者：蛮吉 (Mangi-11)"
+    },
+    {
+      "name": "eta_port_about_license",
+      "value": "PolyForm Noncommercial 1.0.0，仅限非商业用途"
+    },
+    {
+      "name": "eta_port_about_title",
+      "value": "基于 Eta 移植"
+    },
+    {
+      "name": "eta_port_required_notice",
+      "value": "Required Notice: Copyright © 2026 蛮吉 (Mangi-11)."
+    },
+    {
+      "name": "eta_port_unavailable",
+      "value": "鸿蒙版尚未接入"
+    },
+    {
+      "name": "execution_channel",
+      "value": "任务运行"
+    },
+    {
+      "name": "execution_chip_answering",
+      "value": "回答中"
+    },
+    {
+      "name": "execution_chip_running",
+      "value": "操作中"
+    },
+    {
+      "name": "execution_chip_tasks",
+      "value": "%1$d 个任务"
+    },
+    {
+      "name": "execution_next_task",
+      "value": "切换任务"
+    },
+    {
+      "name": "execution_stop",
+      "value": "停止运行任务"
+    },
+    {
+      "name": "execution_title",
+      "value": "随身助手 正在运行"
+    },
+    {
+      "name": "injected_app_tool",
+      "value": "应用工具"
+    },
+    {
+      "name": "injected_breeno_context_unavailable",
+      "value": "无法获取小布进程 Context"
+    },
+    {
+      "name": "injected_breeno_custom_model_disabled",
+      "value": "请先在 随身助手 设置中启用“小布自定义模型”"
+    },
+    {
+      "name": "injected_breeno_failed",
+      "value": "小布自定义模型调用失败：%1$s"
+    },
+    {
+      "name": "injected_completed",
+      "value": "随身助手 已完成本轮任务"
+    },
+    {
+      "name": "injected_executing",
+      "value": "随身助手 正在执行任务…"
+    },
+    {
+      "name": "injected_failed",
+      "value": "随身助手 处理失败，请稍后重试"
+    },
+    {
+      "name": "injected_image_cache_limit",
+      "value": "图片引用数据过大，无法安全暂存，请重新选择图片或使用远程图片链接"
+    },
+    {
+      "name": "injected_image_count_limit",
+      "value": "一次最多支持 %1$d 张图片，请减少图片数量后再试"
+    },
+    {
+      "name": "injected_image_data_limit",
+      "value": "图片输入数据超过安全上限，请缩小图片后重试"
+    },
+    {
+      "name": "injected_image_input_limit",
+      "value": "图片输入结构超过安全上限，请减少图片数量或简化图片数据后再试"
+    },
+    {
+      "name": "injected_image_unreadable",
+      "value": "无法读取请求中的全部图片，请重新选择图片后再试"
+    },
+    {
+      "name": "injected_reasoning",
+      "value": "随身助手 正在思考…"
+    },
+    {
+      "name": "injected_reasoning_label",
+      "value": "思考"
+    },
+    {
+      "name": "injected_runtime_failed",
+      "value": "Agent Runtime 调用失败"
+    },
+    {
+      "name": "injected_screen_tool",
+      "value": "屏幕工具"
+    },
+    {
+      "name": "injected_system_tool",
+      "value": "系统工具"
+    },
+    {
+      "name": "injected_tool",
+      "value": "工具"
+    },
+    {
+      "name": "injected_using_tool",
+      "value": "正在使用%1$s"
+    },
+    {
+      "name": "linux_agent_ready_summary",
+      "value": "已安装 rg、fd、Git、SSH、curl、jq、SQLite 等基础工具，Agent 使用当前选中的 Linux 环境在 /workspace 工作"
+    },
+    {
+      "name": "linux_alpine_ready",
+      "value": "Alpine %1$s 已就绪"
+    },
+    {
+      "name": "linux_already_ready",
+      "value": "Linux 工具环境已经就绪"
+    },
+    {
+      "name": "linux_apk_analysis_installed",
+      "value": "JADX、Apktool、smali 与 baksmali 安装完成"
+    },
+    {
+      "name": "linux_apk_analysis_ready",
+      "value": "APK 分析工具已经就绪"
+    },
+    {
+      "name": "linux_apk_stage_activating",
+      "value": "启用 APK 分析工具"
+    },
+    {
+      "name": "linux_apk_stage_checking",
+      "value": "检查 Linux 基础环境"
+    },
+    {
+      "name": "linux_apk_stage_complete",
+      "value": "APK 分析工具已就绪"
+    },
+    {
+      "name": "linux_apk_stage_downloading",
+      "value": "下载 APK 分析工具"
+    },
+    {
+      "name": "linux_apk_stage_failed",
+      "value": "%1$s失败，可以稍后重试"
+    },
+    {
+      "name": "linux_apk_stage_installing_java",
+      "value": "安装 OpenJDK 25"
+    },
+    {
+      "name": "linux_apk_stage_preparing",
+      "value": "准备工具文件"
+    },
+    {
+      "name": "linux_apk_stage_verifying",
+      "value": "验证分析命令"
+    },
+    {
+      "name": "linux_apk_tools_ready",
+      "value": "JADX、Apktool、smali 与 baksmali 已就绪；Apktool 暂不支持回编译"
+    },
+    {
+      "name": "linux_apk_tools_summary",
+      "value": "安装正式版 OpenJDK 25，以及最新正式版 JADX、Apktool、smali 与 baksmali；需预留 768 MB"
+    },
+    {
+      "name": "linux_base_install_complete",
+      "value": "Alpine %1$s 基础环境安装完成"
+    },
+    {
+      "name": "linux_base_ready",
+      "value": "基础环境已就绪"
+    },
+    {
+      "name": "linux_base_required",
+      "value": "请先安装当前选中的 Linux 基础环境"
+    },
+    {
+      "name": "linux_busy",
+      "value": "忙碌"
+    },
+    {
+      "name": "linux_busybox_unavailable",
+      "value": "Root 环境缺少可用的 BusyBox 或必要 applet"
+    },
+    {
+      "name": "linux_check",
+      "value": "检查"
+    },
+    {
+      "name": "linux_checking",
+      "value": "检查中"
+    },
+    {
+      "name": "linux_continue_installation",
+      "value": "继续安装"
+    },
+    {
+      "name": "linux_debian_agent_ready_summary",
+      "value": "Debian Trixie 基础工具已就绪，Python、Node.js 与 SSH 可继续按需单独安装"
+    },
+    {
+      "name": "linux_debian_already_ready",
+      "value": "Debian glibc 环境已经就绪"
+    },
+    {
+      "name": "linux_debian_base_install_complete",
+      "value": "Debian %1$s 基础环境安装完成"
+    },
+    {
+      "name": "linux_debian_base_ready",
+      "value": "Debian 基础环境已就绪"
+    },
+    {
+      "name": "linux_debian_install_complete",
+      "value": "Debian %1$s 与常用工具安装完成"
+    },
+    {
+      "name": "linux_debian_install_failed",
+      "value": "Debian 基础工具安装失败，请在 Debian 终端检查软件源、包管理器占用和存储空间。"
+    },
+    {
+      "name": "linux_debian_install_timeout",
+      "value": "Debian 基础工具安装超时，请重试；重试时会检查并恢复未完成的包操作。"
+    },
+    {
+      "name": "linux_debian_not_installed",
+      "value": "Debian glibc 环境尚未安装"
+    },
+    {
+      "name": "linux_debian_ready",
+      "value": "Debian %1$s 已就绪"
+    },
+    {
+      "name": "linux_debian_repair_failed",
+      "value": "Debian 软件包检查或修复未完成。请确认没有其他包管理任务后重试；若仍失败，可在 Debian 终端执行 dpkg --configure -a 和 apt-get --fix-broken install 查看错误。"
+    },
+    {
+      "name": "linux_debian_requirements",
+      "value": "需要 Root 与 Magisk、KernelSU 或 APatch BusyBox"
+    },
+    {
+      "name": "linux_debian_tools_incomplete",
+      "value": "Debian 基础环境已就绪，下一步安装常用工具"
+    },
+    {
+      "name": "linux_distribution_alpine",
+      "value": "Alpine"
+    },
+    {
+      "name": "linux_distribution_alpine_summary",
+      "value": "轻量的 musl 环境"
+    },
+    {
+      "name": "linux_distribution_debian",
+      "value": "Debian"
+    },
+    {
+      "name": "linux_distribution_debian_summary",
+      "value": "软件兼容性更好的 glibc 环境"
+    },
+    {
+      "name": "linux_distribution_title",
+      "value": "Linux 发行版"
+    },
+    {
+      "name": "linux_download_install",
+      "value": "下载并安装"
+    },
+    {
+      "name": "linux_environment_base_ready",
+      "value": "基础环境已就绪，下一步安装基础工具"
+    },
+    {
+      "name": "linux_environment_configuration",
+      "value": "环境配置"
+    },
+    {
+      "name": "linux_environment_files",
+      "value": "文件与目录"
+    },
+    {
+      "name": "linux_environment_shared_folders_summary",
+      "value": "把 Android 目录挂载到 Linux 环境"
+    },
+    {
+      "name": "linux_environment_tools_ready",
+      "value": "基础工具已就绪，可按需安装扩展工具"
+    },
+    {
+      "name": "linux_environment_unavailable",
+      "value": "当前 Root 环境无法创建隔离 mount namespace 或 chroot"
+    },
+    {
+      "name": "linux_files_binary_hint",
+      "value": "二进制文件，无法预览"
+    },
+    {
+      "name": "linux_files_empty",
+      "value": "该目录为空"
+    },
+    {
+      "name": "linux_files_entry_summary",
+      "value": "浏览 Linux 环境中的文件（只读）"
+    },
+    {
+      "name": "linux_files_entry_title",
+      "value": "文件浏览"
+    },
+    {
+      "name": "linux_files_error_not_directory",
+      "value": "不是目录"
+    },
+    {
+      "name": "linux_files_error_not_file",
+      "value": "不是普通文件"
+    },
+    {
+      "name": "linux_files_error_unreadable",
+      "value": "无法读取该路径"
+    },
+    {
+      "name": "linux_files_invalid_distribution",
+      "value": "未知的 Linux 发行版"
+    },
+    {
+      "name": "linux_files_not_installed",
+      "value": "尚未安装 Linux 环境"
+    },
+    {
+      "name": "linux_files_title",
+      "value": "Linux 文件"
+    },
+    {
+      "name": "linux_files_truncated_hint",
+      "value": "内容过大，仅显示开头部分"
+    },
+    {
+      "name": "linux_health_needs_check",
+      "value": "环境需要检查"
+    },
+    {
+      "name": "linux_health_ok",
+      "value": "环境正常"
+    },
+    {
+      "name": "linux_health_summary",
+      "value": "检查核心命令、工作区挂载、共享存储与剩余空间"
+    },
+    {
+      "name": "linux_install",
+      "value": "安装"
+    },
+    {
+      "name": "linux_install_base",
+      "value": "安装基础环境"
+    },
+    {
+      "name": "linux_install_base_tools",
+      "value": "安装基础工具"
+    },
+    {
+      "name": "linux_install_complete",
+      "value": "Alpine %1$s 与常用工具安装完成"
+    },
+    {
+      "name": "linux_installed",
+      "value": "已安装"
+    },
+    {
+      "name": "linux_installing",
+      "value": "安装中"
+    },
+    {
+      "name": "linux_insufficient_space",
+      "value": "空间不足：至少需要 %1$s，当前剩余 %2$s"
+    },
+    {
+      "name": "linux_kimi_tools",
+      "value": "Kimi Code"
+    },
+    {
+      "name": "linux_kimi_tools_ready",
+      "value": "Kimi Code 已就绪，在终端运行 kimi 即可开始"
+    },
+    {
+      "name": "linux_kimi_tools_summary",
+      "value": "通过 npm 安装最新正式版 Kimi Code；需要先安装 Node.js 环境"
+    },
+    {
+      "name": "linux_kimi_web_failed_browser",
+      "value": "没有可用的浏览器"
+    },
+    {
+      "name": "linux_kimi_web_failed_start",
+      "value": "Kimi Web 启动失败"
+    },
+    {
+      "name": "linux_kimi_web_failed_url",
+      "value": "未获取到 Web UI 地址，请到后台任务查看日志"
+    },
+    {
+      "name": "linux_kimi_web_launch",
+      "value": "启动 Web UI"
+    },
+    {
+      "name": "linux_kimi_web_starting",
+      "value": "正在启动…"
+    },
+    {
+      "name": "linux_missing_tools",
+      "value": "缺少 %1$s"
+    },
+    {
+      "name": "linux_node_tools",
+      "value": "Node.js 环境"
+    },
+    {
+      "name": "linux_node_tools_ready",
+      "value": "Node.js 与 npm 已就绪"
+    },
+    {
+      "name": "linux_node_tools_summary",
+      "value": "安装最新正式版 Node.js 与 npm；项目依赖优先装进项目本地，全局工具使用用户前缀"
+    },
+    {
+      "name": "linux_not_checked",
+      "value": "尚未检查"
+    },
+    {
+      "name": "linux_not_installed",
+      "value": "尚未安装"
+    },
+    {
+      "name": "linux_profile_already_ready",
+      "value": "%1$s已经就绪"
+    },
+    {
+      "name": "linux_profile_dependency_missing",
+      "value": "需要先安装 %1$s"
+    },
+    {
+      "name": "linux_profile_installed",
+      "value": "%1$s安装完成"
+    },
+    {
+      "name": "linux_profile_stage_checking",
+      "value": "检查 Linux 基础环境"
+    },
+    {
+      "name": "linux_profile_stage_complete",
+      "value": "安装完成"
+    },
+    {
+      "name": "linux_profile_stage_downloading",
+      "value": "下载%1$s"
+    },
+    {
+      "name": "linux_profile_stage_downloading_percent",
+      "value": "下载%1$s · %2$d%%"
+    },
+    {
+      "name": "linux_profile_stage_failed",
+      "value": "%1$s失败，可以稍后重试"
+    },
+    {
+      "name": "linux_profile_stage_installing",
+      "value": "安装 %1$s"
+    },
+    {
+      "name": "linux_profile_stage_verifying",
+      "value": "验证 %1$s"
+    },
+    {
+      "name": "linux_progress_percent",
+      "value": "%1$s · %2$d%%"
+    },
+    {
+      "name": "linux_python_tools",
+      "value": "Python / uv 环境"
+    },
+    {
+      "name": "linux_python_tools_ready",
+      "value": "uv 与最新正式版 Python 已就绪"
+    },
+    {
+      "name": "linux_python_tools_ready_debian",
+      "value": "uv 与最新正式版 Python 已就绪"
+    },
+    {
+      "name": "linux_python_tools_summary",
+      "value": "安装最新正式版 uv；Python 版本和项目环境由 uv 按需下载与管理"
+    },
+    {
+      "name": "linux_python_tools_summary_debian",
+      "value": "安装最新正式版 uv；Python 版本和项目环境由 uv 按需下载与管理"
+    },
+    {
+      "name": "linux_ready",
+      "value": "已就绪"
+    },
+    {
+      "name": "linux_repair",
+      "value": "修复"
+    },
+    {
+      "name": "linux_requirements",
+      "value": "需要 Root 与 Magisk、KernelSU 或 APatch BusyBox"
+    },
+    {
+      "name": "linux_root_unavailable",
+      "value": "未获得 Root 权限，请在 Root 管理器中授权 随身助手"
+    },
+    {
+      "name": "linux_sdcard_available",
+      "value": "/sdcard 可用"
+    },
+    {
+      "name": "linux_sdcard_unavailable",
+      "value": "/sdcard 当前不可用"
+    },
+    {
+      "name": "linux_space_remaining",
+      "value": "剩余 %1$s"
+    },
+    {
+      "name": "linux_ssh_tools",
+      "value": "SSH 远程访问"
+    },
+    {
+      "name": "linux_ssh_tools_ready",
+      "value": "sshd、ssh-keygen 与 ssh-agent 已就绪"
+    },
+    {
+      "name": "linux_ssh_tools_summary",
+      "value": "安装完整 OpenSSH（sshd、ssh-keygen、ssh-agent 与 sftp-server）；基础环境已含 ssh/scp/sftp 客户端"
+    },
+    {
+      "name": "linux_stage_checking",
+      "value": "检查 Root 与 BusyBox"
+    },
+    {
+      "name": "linux_stage_complete",
+      "value": "环境已就绪"
+    },
+    {
+      "name": "linux_stage_downloading",
+      "value": "下载 Linux 基础环境"
+    },
+    {
+      "name": "linux_stage_extracting",
+      "value": "解压基础环境"
+    },
+    {
+      "name": "linux_stage_failed",
+      "value": "%1$s失败，请检查网络或稍后重试"
+    },
+    {
+      "name": "linux_stage_installing_tools",
+      "value": "安装常用工具"
+    },
+    {
+      "name": "linux_tool",
+      "value": "工具"
+    },
+    {
+      "name": "linux_tool_progress_percent",
+      "value": "%1$s · %2$s %3$d%%"
+    },
+    {
+      "name": "linux_tools_incomplete",
+      "value": "Alpine 基础环境已就绪，下一步安装常用工具"
+    },
+    {
+      "name": "linux_tools_upgrade_summary",
+      "value": "基础环境可用，升级后补齐新版 Agent 工具集"
+    },
+    {
+      "name": "linux_unsupported_abi",
+      "value": "暂不支持设备架构：%1$s"
+    },
+    {
+      "name": "linux_upgrade_tools",
+      "value": "升级工具"
+    },
+    {
+      "name": "linux_workspace_available",
+      "value": "/workspace 可用"
+    },
+    {
+      "name": "linux_workspace_error",
+      "value": "工作区挂载异常"
+    },
+    {
+      "name": "linux_workspace_unavailable",
+      "value": "/workspace 不可用"
     },
     {
       "name": "location_reason",
       "value": "用于你开启的持续后台实验模式，低功耗位置更新不保存、不上传"
     },
     {
+      "name": "markdown_alert_caution",
+      "value": "注意"
+    },
+    {
+      "name": "markdown_alert_important",
+      "value": "重要"
+    },
+    {
+      "name": "markdown_alert_note",
+      "value": "说明"
+    },
+    {
+      "name": "markdown_alert_tip",
+      "value": "提示"
+    },
+    {
+      "name": "markdown_alert_warning",
+      "value": "警告"
+    },
+    {
+      "name": "markdown_code_block",
+      "value": "代码"
+    },
+    {
+      "name": "mcp_add_server",
+      "value": "添加服务器"
+    },
+    {
+      "name": "mcp_bearer_optional",
+      "value": "Bearer Token（可选）"
+    },
+    {
+      "name": "mcp_bearer_token",
+      "value": "Bearer Token"
+    },
+    {
+      "name": "mcp_configured_servers",
+      "value": "服务器 · %1$d"
+    },
+    {
+      "name": "mcp_connecting",
+      "value": "正在连接…"
+    },
+    {
+      "name": "mcp_connection_failed",
+      "value": "无法连接 MCP 服务器"
+    },
+    {
+      "name": "mcp_delete_confirm",
+      "value": "删除 %1$s？此操作无法撤销。"
+    },
+    {
+      "name": "mcp_delete_server",
+      "value": "删除服务器"
+    },
+    {
+      "name": "mcp_delete_server_summary",
+      "value": "移除此地址、Token 和工具设置"
+    },
+    {
+      "name": "mcp_empty_summary",
+      "value": "点击添加服务器"
+    },
+    {
+      "name": "mcp_empty_title",
+      "value": "还没有 MCP 服务器"
+    },
+    {
+      "name": "mcp_enable_risky_tool",
+      "value": "启用这个工具？"
+    },
+    {
+      "name": "mcp_enable_risky_tool_summary",
+      "value": "%2$s 的 %1$s 可能修改数据或访问外部服务，请仅在信任该服务器时启用。"
+    },
+    {
+      "name": "mcp_enable_server",
+      "value": "启用服务器"
+    },
+    {
+      "name": "mcp_enable_tool",
+      "value": "启用"
+    },
+    {
+      "name": "mcp_may_modify_data",
+      "value": "可能修改数据或访问外部服务"
+    },
+    {
+      "name": "mcp_name_required",
+      "value": "请输入服务器名称"
+    },
+    {
+      "name": "mcp_no_authentication",
+      "value": "未配置身份认证"
+    },
+    {
+      "name": "mcp_no_tools",
+      "value": "没有兼容工具"
+    },
+    {
+      "name": "mcp_read_only_tool",
+      "value": "只读工具"
+    },
+    {
+      "name": "mcp_refresh_failed",
+      "value": "无法刷新工具列表"
+    },
+    {
+      "name": "mcp_refresh_tools",
+      "value": "刷新工具"
+    },
+    {
+      "name": "mcp_refresh_tools_hint",
+      "value": "服务器发布工具后可在此刷新"
+    },
+    {
+      "name": "mcp_refreshed",
+      "value": "工具列表已刷新 · %1$d 个"
+    },
+    {
+      "name": "mcp_server_added",
+      "value": "服务器已添加，发现 %1$d 个工具"
+    },
+    {
+      "name": "mcp_server_missing",
+      "value": "该 MCP 服务器已不存在"
+    },
+    {
+      "name": "mcp_server_name",
+      "value": "名称"
+    },
+    {
+      "name": "mcp_server_row_summary",
+      "value": "已启用 %1$d/%2$d 个工具"
+    },
+    {
+      "name": "mcp_server_settings",
+      "value": "服务器"
+    },
+    {
+      "name": "mcp_server_url",
+      "value": "服务器地址"
+    },
+    {
+      "name": "mcp_token_configured",
+      "value": "已配置 Bearer Token"
+    },
+    {
+      "name": "mcp_tools_count",
+      "value": "工具 · %1$d"
+    },
+    {
+      "name": "mcp_update_token",
+      "value": "身份认证"
+    },
+    {
+      "name": "mcp_update_token_summary",
+      "value": "输入新 Token，留空则移除身份认证"
+    },
+    {
+      "name": "memory_budget_summary",
+      "value": "每轮最多注入 %1$s 字符，详细内容由模型按需读取"
+    },
+    {
+      "name": "memory_clear",
+      "value": "清空"
+    },
+    {
+      "name": "memory_discard",
+      "value": "放弃"
+    },
+    {
+      "name": "memory_empty_title",
+      "value": "还没有记忆"
+    },
+    {
+      "name": "memory_mode_edit",
+      "value": "编辑"
+    },
+    {
+      "name": "memory_mode_preview",
+      "value": "预览"
+    },
+    {
+      "name": "memory_over_limit",
+      "value": "已超过 1 MiB 上限，请删减"
+    },
+    {
+      "name": "memory_save",
+      "value": "保存"
+    },
+    {
+      "name": "memory_saving",
+      "value": "保存中"
+    },
+    {
+      "name": "memory_unsaved_changes",
+      "value": "未保存的更改"
+    },
+    {
       "name": "microphone_reason",
       "value": "仅在你点击语音输入时录音并转为文字，离开助手即停止。"
+    },
+    {
+      "name": "model_not_selected",
+      "value": "未选择"
+    },
+    {
+      "name": "model_picker_filter_all",
+      "value": "全部"
+    },
+    {
+      "name": "model_picker_title",
+      "value": "选择模型"
+    },
+    {
+      "name": "model_switch_current",
+      "value": "切换模型，当前为 %1$s"
+    },
+    {
+      "name": "module_desc",
+      "value": "在手机上运行的 AI 助手"
+    },
+    {
+      "name": "notification_history_service_label",
+      "value": "随身助手 通知历史"
+    },
+    {
+      "name": "overlay_capsule_toggle",
+      "value": "%1$s，点击展开控制"
+    },
+    {
+      "name": "overlay_continuation_unavailable",
+      "value": "当前入口不支持补充"
+    },
+    {
+      "name": "overlay_continuing",
+      "value": "继续执行"
+    },
+    {
+      "name": "overlay_finishing",
+      "value": "收尾中，结果出来后再补充"
+    },
+    {
+      "name": "overlay_generating_answer",
+      "value": "生成回答中"
+    },
+    {
+      "name": "overlay_hosted_tool_running",
+      "value": "%1$s中"
+    },
+    {
+      "name": "overlay_open_conversation",
+      "value": "打开 ETA 会话"
+    },
+    {
+      "name": "overlay_pause",
+      "value": "暂停"
+    },
+    {
+      "name": "overlay_paused",
+      "value": "已暂停"
+    },
+    {
+      "name": "overlay_reasoning",
+      "value": "思考中"
+    },
+    {
+      "name": "overlay_result_done",
+      "value": "完成"
+    },
+    {
+      "name": "overlay_result_open_eta",
+      "value": "回到 随身助手"
+    },
+    {
+      "name": "overlay_result_ready",
+      "value": "已返回结果"
+    },
+    {
+      "name": "overlay_resume",
+      "value": "继续"
+    },
+    {
+      "name": "overlay_run_failed",
+      "value": "调用失败"
+    },
+    {
+      "name": "overlay_send",
+      "value": "发送"
+    },
+    {
+      "name": "overlay_settings_app_details",
+      "value": "已打开应用信息，请在权限设置中管理悬浮窗权限。"
+    },
+    {
+      "name": "overlay_settings_choose_app",
+      "value": "请在系统悬浮窗权限列表中选择 随身助手 后台版。"
+    },
+    {
+      "name": "overlay_settings_unavailable",
+      "value": "无法打开系统设置，请手动进入系统设置 → 应用 → 随身助手 后台版管理悬浮窗权限。"
+    },
+    {
+      "name": "overlay_stop_task",
+      "value": "停止当前任务"
+    },
+    {
+      "name": "overlay_stopped",
+      "value": "已停止"
+    },
+    {
+      "name": "overlay_stopping",
+      "value": "停止中"
+    },
+    {
+      "name": "overlay_substatus_failed",
+      "value": "执行失败"
+    },
+    {
+      "name": "overlay_substatus_finished",
+      "value": "已完成"
+    },
+    {
+      "name": "overlay_supplement",
+      "value": "补充"
+    },
+    {
+      "name": "overlay_supplement_hint",
+      "value": "补充指令，随身助手 会继续当前任务"
+    },
+    {
+      "name": "overlay_supplement_received",
+      "value": "收到补充，继续执行"
+    },
+    {
+      "name": "overlay_task_count",
+      "value": "%1$d 个任务 · %2$s"
+    },
+    {
+      "name": "page_abnormal_5caf27",
+      "value": "异常"
+    },
+    {
+      "name": "page_accessibility_protection_request_was_denied_by_the_s_34c699",
+      "value": "无障碍保护请求被系统拒绝"
+    },
+    {
+      "name": "page_add_model_532a64",
+      "value": "添加模型"
+    },
+    {
+      "name": "page_add_to_94191c",
+      "value": "添加"
+    },
+    {
+      "name": "page_agent_browser_a66bd5",
+      "value": "Agent 浏览器"
+    },
+    {
+      "name": "page_agent_can_work_in_workspace_through_terminal_environ_9b7e2d",
+      "value": "Agent 通过 terminal 的 environment=linux 使用当前选中的发行版在 /workspace 工作"
+    },
+    {
+      "name": "page_apk_analysis_tools_are_ready_d45e3e",
+      "value": "APK 分析工具已经就绪"
+    },
+    {
+      "name": "page_authorized_284cc0",
+      "value": "已授权"
+    },
+    {
+      "name": "page_automatically_pull_from_remote_f883d0",
+      "value": "从远端自动拉取"
+    },
+    {
+      "name": "page_back_4cf4c1",
+      "value": "后退"
+    },
+    {
+      "name": "page_base_url_must_be_a_valid_http_s_address_0e7d58",
+      "value": "Base URL 必须是有效的 HTTP(S) 地址"
+    },
+    {
+      "name": "page_busy_0212cc",
+      "value": "忙碌"
+    },
+    {
+      "name": "page_can_t_open_default_assistant_settings_02c66f",
+      "value": "无法打开默认助理设置"
+    },
+    {
+      "name": "page_check_core_commands_workspace_mounts_shared_storage__a8ce44",
+      "value": "检查核心命令、工作区挂载、共享存储与剩余空间"
+    },
+    {
+      "name": "page_checking_skill_packs_42134c",
+      "value": "正在检查 Skill 包"
+    },
+    {
+      "name": "page_choose_eta_as_your_default_digital_assistant_4a73a9",
+      "value": "选择 随身助手 作为默认数字助理"
+    },
+    {
+      "name": "page_clear_84fcd7",
+      "value": "清空"
+    },
+    {
+      "name": "page_configuration_d7d7ce",
+      "value": "配置"
+    },
+    {
+      "name": "page_configuration_write_failed_8c2554",
+      "value": "配置写入失败"
+    },
+    {
+      "name": "page_context_unknown_b6ae7b",
+      "value": "上下文未知"
+    },
+    {
+      "name": "page_continue_installation_62da0c",
+      "value": "继续安装"
+    },
+    {
+      "name": "page_covered_model_automatic_capabilities_3fa7d4",
+      "value": "已覆盖模型自动能力"
+    },
+    {
+      "name": "page_create_fcbd09",
+      "value": "创建"
+    },
+    {
+      "name": "page_create_new_provider_36cab9",
+      "value": "新建提供商"
+    },
+    {
+      "name": "page_created_62cfc5",
+      "value": "已创建"
+    },
+    {
+      "name": "page_created_and_set_as_current_lsposed_service_is_not_co_baa03d",
+      "value": "已创建并设为当前，LSPosed 服务未连接"
+    },
+    {
+      "name": "page_created_set_current_and_synced_a99010",
+      "value": "已创建、设为当前并同步"
+    },
+    {
+      "name": "page_current_model_a0af8f",
+      "value": "默认模型"
+    },
+    {
+      "name": "page_custom_model_25be0f",
+      "value": "自定义模型"
+    },
+    {
+      "name": "page_delete_3755f5",
+      "value": "删除"
+    },
+    {
+      "name": "page_deleting_6f941d",
+      "value": "删除中..."
+    },
+    {
+      "name": "page_didn_t_get_root_permissions_23efb3",
+      "value": "未获得 root 权限"
+    },
+    {
+      "name": "page_document_49deaf",
+      "value": "文件"
+    },
+    {
+      "name": "page_download_and_install_f4df99",
+      "value": "下载并安装"
+    },
+    {
+      "name": "page_download_the_alpine_base_environment_8433ea",
+      "value": "下载 Alpine 基础环境"
+    },
+    {
+      "name": "page_edit_model_29e31e",
+      "value": "编辑模型"
+    },
+    {
+      "name": "page_enabled_25d284",
+      "value": "已启用"
+    },
+    {
+      "name": "page_enter_path_ec5f01",
+      "value": "输入路径"
+    },
+    {
+      "name": "page_environment_needs_to_be_checked_2a714a",
+      "value": "环境需要检查"
+    },
+    {
+      "name": "page_eta_is_executing_032532",
+      "value": "随身助手 正在执行…"
+    },
+    {
+      "name": "page_examine_40ffb3",
+      "value": "检查"
+    },
+    {
+      "name": "page_exceeded_the_1_mib_limit_please_delete_120a63",
+      "value": "已超过 1 MiB 上限，请删减"
+    },
+    {
+      "name": "page_fail_3e3c80",
+      "value": "失败"
+    },
+    {
+      "name": "page_folder_46ecac",
+      "value": "文件夹"
+    },
+    {
+      "name": "page_go_ahead_320ffe",
+      "value": "前进"
+    },
+    {
+      "name": "page_google_app_is_already_a_system_priv_app_4f33b0",
+      "value": "Google App 已是系统 priv-app"
+    },
+    {
+      "name": "page_google_app_not_installed_2e3e55",
+      "value": "未安装 Google App"
+    },
+    {
+      "name": "page_help_me_open_wechat_65c265",
+      "value": "帮我打开微信"
+    },
+    {
+      "name": "page_hide_bb0e7e",
+      "value": "隐藏"
+    },
+    {
+      "name": "page_import_from_zip_41cc5e",
+      "value": "从 ZIP 导入"
+    },
+    {
+      "name": "page_install_087db6",
+      "value": "安装"
+    },
+    {
+      "name": "page_install_openjdk_17_jadx_apktool_smali_and_baksmali_d_595960",
+      "value": "安装正式版 OpenJDK 25，以及最新正式版 JADX、Apktool、smali 与 baksmali；需预留 768 MB"
+    },
+    {
+      "name": "page_installed_eb88ff",
+      "value": "已安装"
+    },
+    {
+      "name": "page_installing_411642",
+      "value": "安装中"
+    },
+    {
+      "name": "page_jadx_apktool_smali_and_baksmali_are_installed_d7201c",
+      "value": "JADX、Apktool、smali 与 baksmali 安装完成"
+    },
+    {
+      "name": "page_jadx_apktool_smali_and_baksmali_are_ready_apktool_do_14eaf8",
+      "value": "JADX、Apktool、smali 与 baksmali 已就绪；Apktool 暂不支持回编译"
+    },
+    {
+      "name": "page_kernelsu_needs_to_enable_metamodule_support_first_5d29de",
+      "value": "KernelSU 需先启用 metamodule 支持"
+    },
+    {
+      "name": "page_leave_it_to_eta_to_finish_3d378f",
+      "value": "交给 随身助手 去完成"
+    },
+    {
+      "name": "page_linux_tool_environment_is_ready_9b845b",
+      "value": "Linux 工具环境已经就绪"
+    },
+    {
+      "name": "page_magisk_or_kernelsu_not_detected_ae18c5",
+      "value": "未检测到 Magisk 或 KernelSU"
+    },
+    {
+      "name": "page_missing_2fe9b7",
+      "value": "缺失"
+    },
+    {
+      "name": "page_model_98fd0c",
+      "value": "模型"
+    },
+    {
+      "name": "page_name_cannot_be_empty_ca8984",
+      "value": "名称不能为空"
+    },
+    {
+      "name": "page_no_application_can_open_the_current_webpage_faef56",
+      "value": "没有应用可以打开当前网页"
+    },
+    {
+      "name": "page_no_description_2070d9",
+      "value": "无描述"
+    },
+    {
+      "name": "page_no_matching_model_found_ae7e96",
+      "value": "未找到匹配的模型"
+    },
+    {
+      "name": "page_no_matching_provider_found_be81e9",
+      "value": "未找到匹配的提供商"
+    },
+    {
+      "name": "page_normal_f78d03",
+      "value": "正常"
+    },
+    {
+      "name": "page_not_checked_yet_039989",
+      "value": "尚未检查"
+    },
+    {
+      "name": "page_not_configured_63595e",
+      "value": "未配置"
+    },
+    {
+      "name": "page_not_enabled_8bb38e",
+      "value": "未启用"
+    },
+    {
+      "name": "page_not_installed_yet_e9c3e3",
+      "value": "尚未安装"
+    },
+    {
+      "name": "page_not_supported_ef8274",
+      "value": "不支持"
+    },
+    {
+      "name": "page_open_agent_browser_to_search_and_summarize_today_s_t_bbf6ba",
+      "value": "打开 Agent 浏览器，搜索并总结今天的科技新闻要点"
+    },
+    {
+      "name": "page_open_with_external_application_ab3d4c",
+      "value": "用外部应用打开"
+    },
+    {
+      "name": "page_opening_web_page_5f7c08",
+      "value": "正在打开网页"
+    },
+    {
+      "name": "page_picture_be8da6",
+      "value": "图片"
+    },
+    {
+      "name": "page_please_complete_the_linux_basic_tool_installation_fi_2ab81b",
+      "value": "请先完成 Linux 基础工具安装"
+    },
+    {
+      "name": "page_please_grant_eta_root_permissions_in_kernelsu_7b1bc8",
+      "value": "请在 KernelSU 中授予 随身助手 root 权限"
+    },
+    {
+      "name": "page_please_grant_eta_root_permissions_in_magisk_298c7d",
+      "value": "请在 Magisk 中授予 随身助手 root 权限"
+    },
+    {
+      "name": "page_processing_dde1db",
+      "value": "处理中..."
+    },
+    {
+      "name": "page_read_proc_meminfo_and_proc_pressure_focus_on_analyzi_43156d",
+      "value": "读取 /proc/meminfo 和 /proc/pressure/，重点分析 PSI（Pressure Stall Information）指标，总结当前内存压力和系统状态"
+    },
+    {
+      "name": "page_ready_7cca0c",
+      "value": "} 已就绪"
+    },
+    {
+      "name": "page_ready_f2afde",
+      "value": "已就绪"
+    },
+    {
+      "name": "page_refresh_38108e",
+      "value": "刷新"
+    },
+    {
+      "name": "page_remove_provider_9f848f",
+      "value": "删除提供商"
+    },
+    {
+      "name": "page_repair_590253",
+      "value": "修复"
+    },
+    {
+      "name": "page_replace_855241",
+      "value": "替换"
+    },
+    {
+      "name": "page_requires_root_and_magisk_kernelsu_or_apatch_busybox_47166a",
+      "value": "需要 Root 与 Magisk、KernelSU 或 APatch BusyBox"
+    },
+    {
+      "name": "page_reset_3d8134",
+      "value": "重置"
+    },
+    {
+      "name": "page_reset_a0cc65",
+      "value": "已重置"
+    },
+    {
+      "name": "page_reset_built_in_configuration_35b6ec",
+      "value": "重置内置配置"
+    },
+    {
+      "name": "page_reset_session_911448",
+      "value": "重置会话"
+    },
+    {
+      "name": "page_resetting_616090",
+      "value": "重置中..."
+    },
+    {
+      "name": "page_retrieving_a880c9",
+      "value": "拉取中..."
+    },
+    {
+      "name": "page_root_environment_is_missing_available_busybox_or_nec_76f454",
+      "value": "Root 环境缺少可用的 BusyBox 或必要 applet"
+    },
+    {
+      "name": "page_root_permission_is_not_obtained_please_authorize_eta_fdb6ab",
+      "value": "未获得 Root 权限，请在 Root 管理器中授权 随身助手"
+    },
+    {
+      "name": "page_save_configuration_817af1",
+      "value": "保存配置"
+    },
+    {
+      "name": "page_save_fadf24",
+      "value": "保存"
+    },
+    {
+      "name": "page_save_failed_40525a",
+      "value": "保存失败"
+    },
+    {
+      "name": "page_saved_and_set_as_current_lsposed_service_not_connect_08da2c",
+      "value": "已保存并设为当前，LSPosed 服务未连接"
+    },
+    {
+      "name": "page_saved_current_and_synced_95dac1",
+      "value": "已保存、设为当前并同步"
+    },
+    {
+      "name": "page_saved_provider_not_enabled_7afa54",
+      "value": "已保存，Provider 未启用"
+    },
+    {
+      "name": "page_saving_a032e8",
+      "value": "保存中"
+    },
+    {
+      "name": "page_saving_d70d42",
+      "value": "保存中..."
+    },
+    {
+      "name": "page_sdcard_is_available_cbb808",
+      "value": "/sdcard 可用"
+    },
+    {
+      "name": "page_sdcard_is_currently_unavailable_8195de",
+      "value": "/sdcard 当前不可用"
+    },
+    {
+      "name": "page_select_all_3e44b2",
+      "value": "全选"
+    },
+    {
+      "name": "page_select_none_ba20eb",
+      "value": "全不选"
+    },
+    {
+      "name": "page_select_the_skill_pack_containing_skill_md_18af9d",
+      "value": "选择包含 SKILL.md 的 Skill 包"
+    },
+    {
+      "name": "page_select_zip_skills_package_982a44",
+      "value": "选择 ZIP Skill 包"
+    },
+    {
+      "name": "page_selected_0a3020",
+      "value": "已选中"
+    },
+    {
+      "name": "page_send_1214d6",
+      "value": "发送"
+    },
+    {
+      "name": "page_set_as_current_df334e",
+      "value": "设为当前"
+    },
+    {
+      "name": "page_set_as_current_model_183d7d",
+      "value": "设为默认模型"
+    },
+    {
+      "name": "page_set_as_default_digital_assistant_dd2078",
+      "value": "已设为默认数字助理"
+    },
+    {
+      "name": "page_show_71b677",
+      "value": "显示"
+    },
+    {
+      "name": "page_stop_a17f70",
+      "value": "停止"
+    },
+    {
+      "name": "page_stop_loading_c62fbc",
+      "value": "停止加载"
+    },
+    {
+      "name": "page_support_thinking_5b9e4c",
+      "value": "支持思考"
+    },
+    {
+      "name": "page_sure_f526c8",
+      "value": "确定"
+    },
+    {
+      "name": "page_system_default_assistant_576746",
+      "value": "系统默认助手"
+    },
+    {
+      "name": "page_take_a_screenshot_and_describe_the_current_screen_555fbd",
+      "value": "截图并描述当前屏幕"
+    },
+    {
+      "name": "page_testing_f43705",
+      "value": "测试中..."
+    },
+    {
+      "name": "page_the_accessibility_protection_backend_is_unavailable__e50b64",
+      "value": "无障碍保护后端不可用，请确认 system 作用域已启用并重启"
+    },
+    {
+      "name": "page_the_basic_environment_is_available_and_the_new_versi_594d27",
+      "value": "基础环境可用，升级后补齐新版 Agent 与 Python 工具集"
+    },
+    {
+      "name": "page_the_basic_environment_is_ready_5d1426",
+      "value": "基础环境已就绪"
+    },
+    {
+      "name": "page_the_current_root_environment_cannot_create_an_isolat_4ca00a",
+      "value": "当前 Root 环境无法创建隔离 mount namespace 或 chroot"
+    },
+    {
+      "name": "page_the_environment_is_normal_77b826",
+      "value": "环境正常"
+    },
+    {
+      "name": "page_the_installation_is_complete_and_will_take_effect_af_82329a",
+      "value": "安装完成，重启后生效"
+    },
+    {
+      "name": "page_the_installation_of_common_tools_has_not_been_comple_d7f7c2",
+      "value": "常用工具安装尚未完成，可以从当前进度继续"
+    },
+    {
+      "name": "page_the_remote_end_did_not_return_a_usable_conversation__781487",
+      "value": "远端未返回可用对话模型，已保留现有模型"
+    },
+    {
+      "name": "page_there_is_currently_no_model_provider_please_add_one_78ab6a",
+      "value": "暂无模型提供商，请新增"
+    },
+    {
+      "name": "page_there_is_no_model_yet_please_pull_it_from_the_remote_ced865",
+      "value": "暂无模型，请从远端拉取或手动添加"
+    },
+    {
+      "name": "page_this_message_and_subsequent_content_will_be_replaced_086779",
+      "value": "发送后将替换此消息及之后内容"
+    },
+    {
+      "name": "page_this_message_will_be_replaced_after_sending_fb95e4",
+      "value": "发送后将替换此消息"
+    },
+    {
+      "name": "page_tool_a72ef1",
+      "value": "工具"
+    },
+    {
+      "name": "page_unauthorized_86bddc",
+      "value": "未授权"
+    },
+    {
+      "name": "page_under_inspection_9908c9",
+      "value": "检查中"
+    },
+    {
+      "name": "page_unsaved_changes_376474",
+      "value": "未保存的更改"
+    },
+    {
+      "name": "page_upgrade_tools_be5a84",
+      "value": "升级工具"
+    },
+    {
+      "name": "page_use_standard_chat_completions_ee4b1a",
+      "value": "使用 Chat Completions API"
+    },
+    {
+      "name": "page_using_typed_items_with_semantic_streaming_events_f9c906",
+      "value": "使用 Responses API、typed Items 与语义化流式事件"
+    },
+    {
+      "name": "page_verifying_and_installing_please_wait_6d7c8c",
+      "value": "正在验证并安装，请稍候"
+    },
+    {
+      "name": "page_workspace_is_available_704a92",
+      "value": "/workspace 可用"
+    },
+    {
+      "name": "page_workspace_is_not_available_3db427",
+      "value": "/workspace 不可用"
+    },
+    {
+      "name": "page_workspace_mount_exception_fc0ef2",
+      "value": "工作区挂载异常"
+    },
+    {
+      "name": "page_you_are_taking_over_the_current_session_and_the_agen_2347ef",
+      "value": "你正在接管当前会话，Agent 的网页操作已停止；返回后可让 Agent 继续。"
+    },
+    {
+      "name": "permission_health_ok",
+      "value": "正常"
+    },
+    {
+      "name": "permission_local_network_denied",
+      "value": "尚未授予局域网访问权限。需要连接本地服务时，可前往系统应用权限设置，允许“附近的设备”；公网连接不受影响。"
+    },
+    {
+      "name": "permission_local_network_settings_unavailable",
+      "value": "无法打开设置，请在系统设置中找到 随身助手 的应用权限，允许“附近的设备”。"
+    },
+    {
+      "name": "permission_local_network_summary",
+      "value": "用于模型、MCP、内置浏览器和终端访问局域网，请按需授权；不授权仍可访问公网。"
+    },
+    {
+      "name": "permission_local_network_title",
+      "value": "局域网访问"
+    },
+    {
+      "name": "permission_status_disabled",
+      "value": "未启用"
+    },
+    {
+      "name": "permission_status_missing",
+      "value": "缺失"
+    },
+    {
+      "name": "permission_status_ok",
+      "value": "正常"
+    },
+    {
+      "name": "permission_status_warning",
+      "value": "异常"
+    },
+    {
+      "name": "power_assistant_system_default",
+      "value": "系统默认助手"
+    },
+    {
+      "name": "provider_auto_reasoning_detected",
+      "value": "已自动识别"
+    },
+    {
+      "name": "provider_auto_reasoning_unknown",
+      "value": "自动：不支持或未知"
+    },
+    {
+      "name": "provider_context_tag",
+      "value": "%1$s 上下文"
+    },
+    {
+      "name": "provider_context_window_hint",
+      "value": "选择常用大小或手动填写，用于判断何时自动压缩"
+    },
+    {
+      "name": "provider_context_window_invalid",
+      "value": "请输入正整数"
+    },
+    {
+      "name": "provider_context_window_usage",
+      "value": "对话接近这个长度时会自动压缩"
+    },
+    {
+      "name": "provider_context_window_value",
+      "value": "约 %1$s tokens"
+    },
+    {
+      "name": "provider_delete_failed",
+      "value": "删除失败"
+    },
+    {
+      "name": "provider_delete_models_pick_hint",
+      "value": "选择要删除的模型"
+    },
+    {
+      "name": "provider_delete_summary",
+      "value": "删除“%1$s”后将不可恢复。"
+    },
+    {
+      "name": "provider_empty",
+      "value": "暂无模型提供商，请新增"
+    },
+    {
+      "name": "provider_error",
+      "value": "失败：%1$s"
+    },
+    {
+      "name": "provider_model_delete_summary",
+      "value": "删除“%1$s”后将不可恢复。"
+    },
+    {
+      "name": "provider_model_deleted",
+      "value": "已删除：%1$s"
+    },
+    {
+      "name": "provider_model_list_count",
+      "value": "模型列表（共 %1$d 个）"
+    },
+    {
+      "name": "provider_model_list_matches",
+      "value": "模型列表（匹配 %1$d / %2$d 个）"
+    },
+    {
+      "name": "provider_model_saved",
+      "value": "已保存：%1$s"
+    },
+    {
+      "name": "provider_models_endpoint_summary",
+      "value": "读取 %1$s 的 /models 列表"
+    },
+    {
+      "name": "provider_models_up_to_date",
+      "value": "已是最新，没有新模型"
+    },
+    {
+      "name": "provider_no_matches",
+      "value": "未找到匹配的提供商"
+    },
+    {
+      "name": "provider_reset_failed",
+      "value": "重置失败"
+    },
+    {
+      "name": "provider_reset_summary",
+      "value": "将恢复“%1$s”的默认配置和官方模型列表，API Key 会保留。"
+    },
+    {
+      "name": "provider_save_failed",
+      "value": "保存失败"
+    },
+    {
+      "name": "provider_selected",
+      "value": "已选中"
+    },
+    {
+      "name": "provider_set_current",
+      "value": "设为默认"
+    },
+    {
+      "name": "provider_sync_failed",
+      "value": "同步失败"
+    },
+    {
+      "name": "read_aloud_channel",
+      "value": "朗读"
+    },
+    {
+      "name": "read_aloud_notification_title",
+      "value": "随身助手 正在朗读"
+    },
+    {
+      "name": "reasoning_collapse",
+      "value": "收起思考过程"
+    },
+    {
+      "name": "reasoning_completed",
+      "value": "思考已完成"
+    },
+    {
+      "name": "reasoning_expand",
+      "value": "展开思考过程"
+    },
+    {
+      "name": "reasoning_in_progress",
+      "value": "正在思考…"
+    },
+    {
+      "name": "recognition_service_label",
+      "value": "随身助手 语音识别"
+    },
+    {
+      "name": "remote_model_import_confirm",
+      "value": "添加 %1$d 个"
+    },
+    {
+      "name": "remote_model_import_pick_hint",
+      "value": "选择要添加的模型"
+    },
+    {
+      "name": "remote_model_import_summary",
+      "value": "远端有 %1$d 个尚未添加的模型"
+    },
+    {
+      "name": "remote_model_import_title",
+      "value": "添加模型"
+    },
+    {
+      "name": "route_linux_environment",
+      "value": "Linux 工具环境"
+    },
+    {
+      "name": "route_linux_files",
+      "value": "Linux 文件"
+    },
+    {
+      "name": "route_mcp_server_detail",
+      "value": "MCP 服务器"
+    },
+    {
+      "name": "route_mcp_servers",
+      "value": "MCP 服务器"
+    },
+    {
+      "name": "route_memory",
+      "value": "记忆"
+    },
+    {
+      "name": "route_model_providers",
+      "value": "模型提供商"
+    },
+    {
+      "name": "route_new_provider",
+      "value": "新建提供商"
+    },
+    {
+      "name": "route_permissions",
+      "value": "权限"
+    },
+    {
+      "name": "route_provider_details",
+      "value": "Provider 详情"
+    },
+    {
+      "name": "route_settings",
+      "value": "设置"
+    },
+    {
+      "name": "route_shared_folders",
+      "value": "共享文件夹"
+    },
+    {
+      "name": "route_skills",
+      "value": "Skills"
+    },
+    {
+      "name": "route_system_enhancements",
+      "value": "系统增强"
+    },
+    {
+      "name": "route_terminal",
+      "value": "终端"
+    },
+    {
+      "name": "route_tools",
+      "value": "工具能力"
+    },
+    {
+      "name": "run_gui_user_paused",
+      "value": "用户接管中"
+    },
+    {
+      "name": "run_waiting_for_gui",
+      "value": "等待手机控制权"
+    },
+    {
+      "name": "settings_auto_compaction",
+      "value": "自动压缩上下文"
+    },
+    {
+      "name": "settings_context_extensions",
+      "value": "上下文与扩展"
+    },
+    {
+      "name": "settings_general",
+      "value": "通用"
+    },
+    {
+      "name": "settings_language",
+      "value": "语言"
+    },
+    {
+      "name": "settings_language_system",
+      "value": "跟随系统"
+    },
+    {
+      "name": "settings_llm_providers",
+      "value": "LLM 提供商"
+    },
+    {
+      "name": "settings_model_not_selected",
+      "value": "未选择模型"
+    },
+    {
+      "name": "settings_not_configured",
+      "value": "未配置"
+    },
+    {
+      "name": "settings_open_assistant_failed",
+      "value": "无法打开默认助理设置"
+    },
+    {
+      "name": "settings_tools_list",
+      "value": "工具列表"
+    },
+    {
+      "name": "settings_write_failed",
+      "value": "配置写入失败"
+    },
+    {
+      "name": "shared_folders_add",
+      "value": "添加共享文件夹"
+    },
+    {
+      "name": "shared_folders_browse_unavailable",
+      "value": "无法打开该目录"
+    },
+    {
+      "name": "shared_folders_empty",
+      "value": "还没有共享文件夹"
+    },
+    {
+      "name": "shared_folders_entry_summary",
+      "value": "把 Android 目录挂载到 Linux 环境的 /workspace/mounts/ 下"
+    },
+    {
+      "name": "shared_folders_entry_title",
+      "value": "共享文件夹"
+    },
+    {
+      "name": "shared_folders_error_limit",
+      "value": "最多配置 %1$d 个共享文件夹"
+    },
+    {
+      "name": "shared_folders_error_name_duplicate",
+      "value": "挂载名已被使用"
+    },
+    {
+      "name": "shared_folders_error_name_invalid",
+      "value": "仅限 1–48 个字母、数字、点、下划线或连字符"
+    },
+    {
+      "name": "shared_folders_error_path_duplicate",
+      "value": "该目录已共享"
+    },
+    {
+      "name": "shared_folders_error_path_forbidden",
+      "value": "该目录不能共享"
+    },
+    {
+      "name": "shared_folders_error_path_invalid",
+      "value": "目录路径无效"
+    },
+    {
+      "name": "shared_folders_error_save",
+      "value": "保存失败，请重试"
+    },
+    {
+      "name": "shared_folders_footer",
+      "value": "共享文件夹在新的 Linux 终端会话建立时挂载到 /workspace/mounts/ 下，配置改动对下一条命令或新会话生效；/sdcard 等模拟存储在 Linux 中不支持修改权限位。"
+    },
+    {
+      "name": "shared_folders_mount_point",
+      "value": "挂载点：%1$s"
+    },
+    {
+      "name": "shared_folders_name_label",
+      "value": "挂载名"
+    },
+    {
+      "name": "shared_folders_path_label",
+      "value": "目录"
+    },
+    {
+      "name": "shared_folders_picker_no_subfolders",
+      "value": "此处没有子文件夹"
+    },
+    {
+      "name": "shared_folders_picker_title",
+      "value": "添加共享文件夹"
+    },
+    {
+      "name": "shared_folders_remove_message",
+      "value": "移除“%1$s”（%2$s）？源目录中的文件不会被删除。"
+    },
+    {
+      "name": "shared_folders_remove_title",
+      "value": "移除共享文件夹"
+    },
+    {
+      "name": "shared_folders_selected_source",
+      "value": "挂载目录：%1$s"
+    },
+    {
+      "name": "shared_folders_source_missing",
+      "value": "源目录不存在"
+    },
+    {
+      "name": "shared_folders_title",
+      "value": "共享文件夹"
+    },
+    {
+      "name": "shell_command",
+      "value": "Shell 命令"
+    },
+    {
+      "name": "skill_deleted_message",
+      "value": "“%1$s”已从 随身助手 删除。"
+    },
+    {
+      "name": "skill_enabled_message",
+      "value": "“%1$s”已启用，将从下一轮对话开始可用。"
+    },
+    {
+      "name": "skills_checking_package",
+      "value": "正在检查 Skill 包"
+    },
+    {
+      "name": "skills_choose_package",
+      "value": "选择包含 SKILL.md 的 Skill 包"
+    },
+    {
+      "name": "skills_choose_zip",
+      "value": "选择 ZIP Skill 包"
+    },
+    {
+      "name": "skills_delete_summary",
+      "value": "删除“%1$s”后需要重新安装才能恢复。"
+    },
+    {
+      "name": "skills_import_zip",
+      "value": "从 ZIP 导入"
+    },
+    {
+      "name": "skills_installing_package",
+      "value": "正在验证并安装，请稍候"
+    },
+    {
+      "name": "skills_more_named",
+      "value": "%1$s 的更多操作"
+    },
+    {
+      "name": "skills_no_description",
+      "value": "无描述"
+    },
+    {
+      "name": "skills_replace",
+      "value": "替换"
+    },
+    {
+      "name": "skills_replace_summary",
+      "value": "已存在用户 Skill“%1$s”（%2$s）。替换会覆盖它当前的全部文件。"
+    },
+    {
+      "name": "speech_access_token",
+      "value": "Access Token"
+    },
+    {
+      "name": "speech_advanced",
+      "value": "高级设置"
+    },
+    {
+      "name": "speech_api_key",
+      "value": "API Key"
+    },
+    {
+      "name": "speech_app_id",
+      "value": "App ID"
+    },
+    {
+      "name": "speech_asr_doubao",
+      "value": "豆包 · 流式识别 2.0"
+    },
+    {
+      "name": "speech_asr_note_file",
+      "value": "录音先上传自有 OSS，再异步转写，等待时间较长。"
+    },
+    {
+      "name": "speech_asr_note_flash",
+      "value": "录音完成后上传识别，适合短句输入。"
+    },
+    {
+      "name": "speech_asr_note_streaming",
+      "value": "边说边显示文字。聊天听写点击完成；助手浮窗可在停顿后自动提交。"
+    },
+    {
+      "name": "speech_asr_note_system",
+      "value": "使用设备已有的语音服务；云端服务不依赖系统识别引擎。"
+    },
+    {
+      "name": "speech_asr_qwen_file",
+      "value": "千问 · 文件转写"
+    },
+    {
+      "name": "speech_asr_qwen_flash",
+      "value": "千问 · 短音频识别"
+    },
+    {
+      "name": "speech_asr_qwen_realtime",
+      "value": "千问 · 实时识别"
+    },
+    {
+      "name": "speech_asr_system",
+      "value": "系统语音服务"
+    },
+    {
+      "name": "speech_auto_send_note",
+      "value": "仅对助手浮窗生效；按住麦克风说话时，松手才发送。"
+    },
+    {
+      "name": "speech_auto_send_off",
+      "value": "不自动发送"
+    },
+    {
+      "name": "speech_auto_send_seconds",
+      "value": "%1$s 秒"
+    },
+    {
+      "name": "speech_auto_send_title",
+      "value": "停顿后自动发送"
+    },
+    {
+      "name": "speech_auto_speak",
+      "value": "自动播报回答"
+    },
+    {
+      "name": "speech_auto_speak_summary",
+      "value": "仅在助手浮窗可见时播报语音提问的最终回答"
+    },
+    {
+      "name": "speech_base_url",
+      "value": "服务地址"
+    },
+    {
+      "name": "speech_collapse",
+      "value": "收起"
+    },
+    {
+      "name": "speech_credentials_lost",
+      "value": "语音凭据无法解密，请重新填写并保存"
+    },
+    {
+      "name": "speech_dictation",
+      "value": "语音输入"
+    },
+    {
+      "name": "speech_dictation_finish",
+      "value": "完成听写"
+    },
+    {
+      "name": "speech_disable_auto_read",
+      "value": "关闭自动朗读"
+    },
+    {
+      "name": "speech_doubao_asr_note",
+      "value": "默认使用 volc.seedasr.sauc.duration，按时长计费。"
+    },
+    {
+      "name": "speech_doubao_tts_note",
+      "value": "默认使用 seed-tts-2.0。"
+    },
+    {
+      "name": "speech_doubao_voice_note",
+      "value": "模型：豆包语音合成 2.0。"
+    },
+    {
+      "name": "speech_enable_auto_read",
+      "value": "开启自动朗读"
+    },
+    {
+      "name": "speech_expand",
+      "value": "展开"
+    },
+    {
+      "name": "speech_gemini_connection_note",
+      "value": "使用 Google AI Studio 的 API Key。自定义地址须支持 Gemini 语音接口，填写服务根地址。"
+    },
+    {
+      "name": "speech_gemini_flash",
+      "value": "Gemini 3.8 Flash · 品质优先"
+    },
+    {
+      "name": "speech_gemini_flash_lite",
+      "value": "Gemini 3.8 Flash-Lite · 更低延迟"
+    },
+    {
+      "name": "speech_gemini_style",
+      "value": "朗读风格（可选，最多 500 字）"
+    },
+    {
+      "name": "speech_gemini_voice_note",
+      "value": "音色可用于中文及其他支持的语言。朗读风格可填写“自然、温和，语速稍慢”；留空使用默认风格。也可填写账号已有的音色 ID。"
+    },
+    {
+      "name": "speech_group_assistant",
+      "value": "助手"
+    },
+    {
+      "name": "speech_group_connection",
+      "value": "连接"
+    },
+    {
+      "name": "speech_group_credentials",
+      "value": "凭据"
+    },
+    {
+      "name": "speech_group_result",
+      "value": "识别结果"
+    },
+    {
+      "name": "speech_group_service",
+      "value": "服务"
+    },
+    {
+      "name": "speech_group_storage",
+      "value": "存储"
+    },
+    {
+      "name": "speech_group_voice",
+      "value": "声音"
+    },
+    {
+      "name": "speech_language_hint",
+      "value": "识别语言（留空自动识别，如 zh、en、yue）"
+    },
+    {
+      "name": "speech_legacy_auth",
+      "value": "使用旧版鉴权"
+    },
+    {
+      "name": "speech_load_failed",
+      "value": "无法读取语音设置，请返回后重试"
+    },
+    {
+      "name": "speech_mic_permission",
+      "value": "请允许 随身助手 使用麦克风"
+    },
+    {
+      "name": "speech_minimax_connection_note",
+      "value": "默认连接 MiniMax 中国站。海外账号请填写对应的服务根地址，API Key 须与站点匹配。"
+    },
+    {
+      "name": "speech_minimax_hd",
+      "value": "Speech 2.8 HD · 品质优先"
+    },
+    {
+      "name": "speech_minimax_turbo",
+      "value": "Speech 2.8 Turbo · 响应更快"
+    },
+    {
+      "name": "speech_minimax_voice_note",
+      "value": "预设为普通话音色，也可填写账号已有的系统或自定义音色 ID。"
+    },
+    {
+      "name": "speech_open_settings",
+      "value": "语音设置"
+    },
+    {
+      "name": "speech_oss_configure",
+      "value": "配置自有 OSS"
+    },
+    {
+      "name": "speech_oss_note",
+      "value": "录音以私有对象上传，转写结束后删除。请为此目录授予上传、读取和删除权限，并配置一天过期的生命周期规则作为异常清理保障。"
+    },
+    {
+      "name": "speech_oss_prefix",
+      "value": "目录前缀"
+    },
+    {
+      "name": "speech_oss_region",
+      "value": "地域"
+    },
+    {
+      "name": "speech_oss_title",
+      "value": "录音存储"
+    },
+    {
+      "name": "speech_overview_note",
+      "value": "聊天中的语音输入会先转成可编辑文字。回答可手动朗读，开始录音会停止播放。"
+    },
+    {
+      "name": "speech_preview_default_text",
+      "value": "你好，我是 随身助手。今天下午三点半有一场会议，预计持续 45 分钟。我们也可以用中文聊聊 Android 和 AI。"
+    },
+    {
+      "name": "speech_preview_loading",
+      "value": "正在合成…"
+    },
+    {
+      "name": "speech_preview_note",
+      "value": "试听使用当前填写的配置，不会自动保存。"
+    },
+    {
+      "name": "speech_preview_stop",
+      "value": "停止试听"
+    },
+    {
+      "name": "speech_preview_text",
+      "value": "试听文本（最多 500 字）"
+    },
+    {
+      "name": "speech_preview_voice",
+      "value": "试听音色"
+    },
+    {
+      "name": "speech_qwen_base_url_hint",
+      "value": "服务地址（留空使用地域默认地址）"
+    },
+    {
+      "name": "speech_qwen_base_url_note",
+      "value": "填写服务根地址，不包含 /api/v1 或 /compatible-mode/v1。地域须与 API Key 匹配。"
+    },
+    {
+      "name": "speech_qwen_voice_note",
+      "value": "模型：qwen3-tts-flash。音色须支持该模型。"
+    },
+    {
+      "name": "speech_read_aloud",
+      "value": "朗读回答"
+    },
+    {
+      "name": "speech_read_stop",
+      "value": "停止朗读"
+    },
+    {
+      "name": "speech_recognition_disabled",
+      "value": "已关闭"
+    },
+    {
+      "name": "speech_recognition_disabled_note",
+      "value": "保存后隐藏聊天和助手浮窗中的麦克风入口。全局唤醒会在入场动画结束后打开文字输入和键盘，可使用输入法自带的语音输入。原服务配置会保留。"
+    },
+    {
+      "name": "speech_recognition_enabled",
+      "value": "启用语音识别"
+    },
+    {
+      "name": "speech_recognition_enabled_summary",
+      "value": "使用 随身助手 的系统或云端语音输入"
+    },
+    {
+      "name": "speech_recognition_title",
+      "value": "语音识别"
+    },
+    {
+      "name": "speech_refine_summary",
+      "value": "用当前对话模型修正同音字和中英文术语，会增加少量延迟和费用"
+    },
+    {
+      "name": "speech_refine_title",
+      "value": "智能纠错"
+    },
+    {
+      "name": "speech_region",
+      "value": "地域"
+    },
+    {
+      "name": "speech_region_beijing",
+      "value": "北京"
+    },
+    {
+      "name": "speech_region_singapore",
+      "value": "新加坡"
+    },
+    {
+      "name": "speech_resource_id_hint",
+      "value": "资源 ID（留空使用默认值）"
+    },
+    {
+      "name": "speech_save",
+      "value": "保存"
+    },
+    {
+      "name": "speech_save_failed",
+      "value": "保存失败：%1$s"
+    },
+    {
+      "name": "speech_save_retry",
+      "value": "请重试"
+    },
+    {
+      "name": "speech_saved",
+      "value": "已保存"
+    },
+    {
+      "name": "speech_saved_with_pending",
+      "value": "已保存，仍有未保存的修改"
+    },
+    {
+      "name": "speech_saving",
+      "value": "保存中…"
+    },
+    {
+      "name": "speech_service_and_model",
+      "value": "服务与模型"
+    },
+    {
+      "name": "speech_settings_title",
+      "value": "语音"
+    },
+    {
+      "name": "speech_speed",
+      "value": "语速"
+    },
+    {
+      "name": "speech_synthesis_title",
+      "value": "语音播报"
+    },
+    {
+      "name": "speech_test_finish",
+      "value": "完成录音"
+    },
+    {
+      "name": "speech_test_note",
+      "value": "测试会调用所选服务，可能产生费用；使用当前填写的配置，不会自动保存。"
+    },
+    {
+      "name": "speech_test_recognition",
+      "value": "测试识别"
+    },
+    {
+      "name": "speech_test_result",
+      "value": "识别结果：%1$s"
+    },
+    {
+      "name": "speech_tts_doubao",
+      "value": "豆包"
+    },
+    {
+      "name": "speech_tts_gemini",
+      "value": "Gemini"
+    },
+    {
+      "name": "speech_tts_minimax",
+      "value": "MiniMax"
+    },
+    {
+      "name": "speech_tts_model",
+      "value": "语音模型"
+    },
+    {
+      "name": "speech_tts_none",
+      "value": "关闭"
+    },
+    {
+      "name": "speech_tts_qwen",
+      "value": "千问"
+    },
+    {
+      "name": "speech_tts_service",
+      "value": "播报服务"
+    },
+    {
+      "name": "speech_voice",
+      "value": "音色"
+    },
+    {
+      "name": "speech_voice_beijing_male",
+      "value": "北京话男声"
+    },
+    {
+      "name": "speech_voice_breezy",
+      "value": "轻松"
+    },
+    {
+      "name": "speech_voice_bright",
+      "value": "明亮"
+    },
+    {
+      "name": "speech_voice_custom",
+      "value": "自定义音色"
+    },
+    {
+      "name": "speech_voice_doubao_ahu",
+      "value": "温暖阿虎"
+    },
+    {
+      "name": "speech_voice_doubao_cancan",
+      "value": "知性灿灿"
+    },
+    {
+      "name": "speech_voice_doubao_linjia",
+      "value": "邻家女孩"
+    },
+    {
+      "name": "speech_voice_doubao_liufei",
+      "value": "刘飞"
+    },
+    {
+      "name": "speech_voice_doubao_podcast",
+      "value": "深夜播客"
+    },
+    {
+      "name": "speech_voice_doubao_qingxin",
+      "value": "清新女声"
+    },
+    {
+      "name": "speech_voice_doubao_sisi",
+      "value": "爽快思思"
+    },
+    {
+      "name": "speech_voice_doubao_taozi",
+      "value": "甜美桃子"
+    },
+    {
+      "name": "speech_voice_doubao_vv",
+      "value": "Vivi"
+    },
+    {
+      "name": "speech_voice_doubao_xiaohe",
+      "value": "小何"
+    },
+    {
+      "name": "speech_voice_doubao_xiaoming",
+      "value": "解说小明"
+    },
+    {
+      "name": "speech_voice_doubao_xiaotian",
+      "value": "小天"
+    },
+    {
+      "name": "speech_voice_doubao_xiaoyuan",
+      "value": "甜美小源"
+    },
+    {
+      "name": "speech_voice_doubao_yichen",
+      "value": "儒雅逸辰"
+    },
+    {
+      "name": "speech_voice_doubao_yunzhou",
+      "value": "云舟"
+    },
+    {
+      "name": "speech_voice_doubao_zixin",
+      "value": "少年梓辛"
+    },
+    {
+      "name": "speech_voice_female",
+      "value": "女声"
+    },
+    {
+      "name": "speech_voice_firm",
+      "value": "坚定"
+    },
+    {
+      "name": "speech_voice_gemini_achernar",
+      "value": "Achernar"
+    },
+    {
+      "name": "speech_voice_gemini_aoede",
+      "value": "Aoede"
+    },
+    {
+      "name": "speech_voice_gemini_charon",
+      "value": "Charon"
+    },
+    {
+      "name": "speech_voice_gemini_kore",
+      "value": "Kore"
+    },
+    {
+      "name": "speech_voice_gemini_leda",
+      "value": "Leda"
+    },
+    {
+      "name": "speech_voice_gemini_puck",
+      "value": "Puck"
+    },
+    {
+      "name": "speech_voice_gemini_sulafat",
+      "value": "Sulafat"
+    },
+    {
+      "name": "speech_voice_gemini_zephyr",
+      "value": "Zephyr"
+    },
+    {
+      "name": "speech_voice_id",
+      "value": "音色 ID"
+    },
+    {
+      "name": "speech_voice_informative",
+      "value": "解说"
+    },
+    {
+      "name": "speech_voice_male",
+      "value": "男声"
+    },
+    {
+      "name": "speech_voice_minimax_elite",
+      "value": "精英青年"
+    },
+    {
+      "name": "speech_voice_minimax_executive",
+      "value": "沉稳高管"
+    },
+    {
+      "name": "speech_voice_minimax_girl",
+      "value": "少女音色"
+    },
+    {
+      "name": "speech_voice_minimax_mature",
+      "value": "成熟女声"
+    },
+    {
+      "name": "speech_voice_minimax_news",
+      "value": "新闻女声"
+    },
+    {
+      "name": "speech_voice_minimax_sweet",
+      "value": "甜美女声"
+    },
+    {
+      "name": "speech_voice_minimax_young",
+      "value": "青涩青年"
+    },
+    {
+      "name": "speech_voice_minimax_yujie",
+      "value": "御姐音色"
+    },
+    {
+      "name": "speech_voice_qwen_bella",
+      "value": "萌宝"
+    },
+    {
+      "name": "speech_voice_qwen_chelsie",
+      "value": "千雪"
+    },
+    {
+      "name": "speech_voice_qwen_cherry",
+      "value": "芊悦"
+    },
+    {
+      "name": "speech_voice_qwen_dylan",
+      "value": "晓东"
+    },
+    {
+      "name": "speech_voice_qwen_ethan",
+      "value": "晨煦"
+    },
+    {
+      "name": "speech_voice_qwen_jada",
+      "value": "阿珍"
+    },
+    {
+      "name": "speech_voice_qwen_kai",
+      "value": "凯"
+    },
+    {
+      "name": "speech_voice_qwen_katerina",
+      "value": "卡捷琳娜"
+    },
+    {
+      "name": "speech_voice_qwen_maia",
+      "value": "四月"
+    },
+    {
+      "name": "speech_voice_qwen_momo",
+      "value": "茉兔"
+    },
+    {
+      "name": "speech_voice_qwen_moon",
+      "value": "月白"
+    },
+    {
+      "name": "speech_voice_qwen_neil",
+      "value": "阿闻"
+    },
+    {
+      "name": "speech_voice_qwen_nofish",
+      "value": "不吃鱼"
+    },
+    {
+      "name": "speech_voice_qwen_serena",
+      "value": "苏瑶"
+    },
+    {
+      "name": "speech_voice_qwen_vincent",
+      "value": "田叔"
+    },
+    {
+      "name": "speech_voice_qwen_vivian",
+      "value": "十三"
+    },
+    {
+      "name": "speech_voice_shanghai_female",
+      "value": "上海话女声"
+    },
+    {
+      "name": "speech_voice_soft",
+      "value": "柔和"
+    },
+    {
+      "name": "speech_voice_upbeat",
+      "value": "轻快"
+    },
+    {
+      "name": "speech_voice_warm",
+      "value": "温暖"
+    },
+    {
+      "name": "speech_voice_youthful",
+      "value": "年轻"
+    },
+    {
+      "name": "state_accessibility_permissions_f80103",
+      "value": "无障碍辅助权限"
+    },
+    {
+      "name": "state_application_list_reading_135f16",
+      "value": "应用列表读取"
+    },
+    {
+      "name": "state_applications_and_systems_9624e6",
+      "value": "应用与系统"
+    },
+    {
+      "name": "state_background_running_permission_dde21b",
+      "value": "后台运行权限"
+    },
+    {
+      "name": "state_core_memory_is_automatically_injected_and_detailed_c_07232b",
+      "value": "核心记忆自动注入，详细内容由模型按需检索"
+    },
+    {
+      "name": "state_deletion_is_not_complete_eta_will_try_to_recover_whe_c4297e",
+      "value": "删除未完成。随身助手 会在刷新 Skills 列表时尝试恢复，请确认状态后再重试。"
+    },
+    {
+      "name": "state_direct_access_to_equipment_eda92c",
+      "value": "系统与一方应用操作"
+    },
+    {
+      "name": "state_direct_access_to_personal_data_387d7b",
+      "value": "个人上下文"
+    },
+    {
+      "name": "state_document_vision_6a65a7",
+      "value": "文件视觉"
+    },
+    {
+      "name": "state_floating_window_permissions_076b77",
+      "value": "悬浮窗权限"
+    },
+    {
+      "name": "state_follow_up_ability_589688",
+      "value": "后续能力"
+    },
+    {
+      "name": "state_hook_secondary_ability_95afe3",
+      "value": "Hook 二级能力"
+    },
+    {
+      "name": "state_location_permissions_b53f9c",
+      "value": "位置权限"
+    },
+    {
+      "name": "state_memory_b55ff5",
+      "value": "记忆"
+    },
+    {
+      "name": "state_memory_system_4903eb",
+      "value": "记忆系统"
+    },
+    {
+      "name": "state_model_increments_tool_calls_and_final_results_are_sy_3f2321",
+      "value": "模型增量、工具调用和最终结果会同步到当前对话"
+    },
+    {
+      "name": "state_notice_of_use_rights_1ae29a",
+      "value": "通知使用权"
+    },
+    {
+      "name": "state_please_select_the_zip_file_provided_by_the_system_fi_fea145",
+      "value": "请选择由系统文件选择器提供的 ZIP 文件。"
+    },
+    {
+      "name": "state_replacement_confirmation_has_expired_please_select_t_fce9f2",
+      "value": "替换确认已失效，请重新选择 ZIP 文件。"
+    },
+    {
+      "name": "state_root_permissions_958906",
+      "value": "Root 权限"
+    },
+    {
+      "name": "state_run_floating_window_48af02",
+      "value": "运行浮窗"
+    },
+    {
+      "name": "state_runtime_displays_a_status_pop_up_window_when_the_ser_54f285",
+      "value": "Runtime 服务运行时显示状态浮窗"
+    },
+    {
+      "name": "state_screens_and_controls_3f095b",
+      "value": "屏幕与控件"
+    },
+    {
+      "name": "state_sensitive_equipment_capabilities_fbdc4b",
+      "value": "敏感设备能力"
+    },
+    {
+      "name": "state_skill_has_been_deleted_34c29b",
+      "value": "Skill 已删除"
+    },
+    {
+      "name": "state_skill_installed_b07e54",
+      "value": "Skill 已安装"
+    },
+    {
+      "name": "state_skill_pack_is_no_longer_available_please_select_the__7cdfb4",
+      "value": "Skill 包已不可用，请重新选择 ZIP 文件。"
+    },
+    {
+      "name": "state_streaming_events_360e09",
+      "value": "流式事件"
+    },
+    {
+      "name": "state_system_enhancement_capabilities_are_reserved_for_sub_0a8b21",
+      "value": "系统增强能力保留为后续二级功能"
+    },
+    {
+      "name": "state_terminal_and_files_ae7c54",
+      "value": "终端与文件"
+    },
+    {
+      "name": "state_text_and_clipboard_3a7340",
+      "value": "文本与剪贴板"
+    },
+    {
+      "name": "state_the_built_in_skills_have_not_changed_please_try_agai_34e5e3",
+      "value": "内置 Skills 未发生变化，请稍后重试。"
+    },
+    {
+      "name": "state_the_skill_list_is_temporarily_unavailable_please_try_29b0be",
+      "value": "Skills 列表暂时不可用，请稍后重试。"
+    },
+    {
+      "name": "state_the_skill_switch_has_not_changed_please_try_again_la_fa262f",
+      "value": "Skill 开关未发生变化，请稍后重试。"
+    },
+    {
+      "name": "state_ui_built_in_skills_with_the_same_name_are_protected_446ad3",
+      "value": "同名内置 Skill 受保护，不能由 ZIP 替换。"
+    },
+    {
+      "name": "state_ui_conversation_switched_selected_path_not_added_5bf91e",
+      "value": "对话已切换，未添加所选路径"
+    },
+    {
+      "name": "state_ui_failed_to_read_memory_please_try_again_later_caeaa6",
+      "value": "读取记忆失败，请稍后重试"
+    },
+    {
+      "name": "state_ui_file_path_reference_requires_opening_the_termina_deca4c",
+      "value": "文件路径引用需要先开启终端与文件工具"
+    },
+    {
+      "name": "state_ui_go_to_settings_1f2998",
+      "value": "去设置"
+    },
+    {
+      "name": "state_ui_memory_cleared_b415bb",
+      "value": "记忆已清空"
+    },
+    {
+      "name": "state_ui_memory_clearing_failed_7f0aba",
+      "value": "记忆清空失败"
+    },
+    {
+      "name": "state_ui_memory_save_failed_1f501e",
+      "value": "记忆保存失败"
+    },
+    {
+      "name": "state_ui_memory_saved_a2c61c",
+      "value": "记忆已保存"
+    },
+    {
+      "name": "state_ui_memory_switch_failed_to_save_83b5d6",
+      "value": "记忆开关保存失败"
+    },
+    {
+      "name": "state_ui_model_switching_failed_please_try_again_later_4af439",
+      "value": "模型切换失败，请稍后重试"
+    },
+    {
+      "name": "state_ui_natively_bounded_storage_of_last_7_days_of_notif_ca7f01",
+      "value": "本机有界保存最近 7 天通知，仅在工具调用时读取"
+    },
+    {
+      "name": "state_ui_only_read_when_the_agent_calls_the_tool_8cf77b",
+      "value": "仅在 Agent 调用工具时读取"
+    },
+    {
+      "name": "state_ui_only_supports_normal_files_and_folders_4adea0",
+      "value": "仅支持普通文件和文件夹"
+    },
+    {
+      "name": "state_ui_path_verification_timed_out_please_try_again_703687",
+      "value": "路径校验超时，请重试"
+    },
+    {
+      "name": "state_ui_please_configure_the_model_provider_and_model_fi_a36e15",
+      "value": "请先配置模型提供商和模型"
+    },
+    {
+      "name": "state_ui_please_enter_a_valid_absolute_path_6afeb4",
+      "value": "请输入有效的绝对路径"
+    },
+    {
+      "name": "state_ui_root_is_not_available_and_the_path_cannot_be_ver_fc4c81",
+      "value": "Root 不可用，无法校验路径"
+    },
+    {
+      "name": "state_ui_skill_md_is_missing_required_information_or_is_i_debe6e",
+      "value": "SKILL.md 缺少必要信息或格式无效。"
+    },
+    {
+      "name": "state_ui_skill_md_not_found_in_zip_a57975",
+      "value": "ZIP 中没有找到 SKILL.md。"
+    },
+    {
+      "name": "state_ui_start_logging_searchable_notification_history_af_b36af6",
+      "value": "授权后开始记录可检索的通知历史"
+    },
+    {
+      "name": "state_ui_system_location_service_is_turned_off_3902e7",
+      "value": "系统定位服务已关闭"
+    },
+    {
+      "name": "state_ui_the_earlier_context_has_been_compressed_and_will_cf6c86",
+      "value": "较早上下文已压缩，将从此消息重新开始"
+    },
+    {
+      "name": "state_ui_the_installation_failed_and_automatic_recovery_d_0d9e01",
+      "value": "安装失败且自动恢复未完整完成。随身助手 已在应用私有目录保留恢复备份，请先检查 Skills 列表并停止继续安装。"
+    },
+    {
+      "name": "state_ui_the_local_zip_must_contain_only_one_skill_b89daf",
+      "value": "本地 ZIP 必须只包含一个 Skill。"
+    },
+    {
+      "name": "state_ui_the_path_does_not_exist_or_is_no_longer_accessib_a9776e",
+      "value": "路径不存在或已不可访问"
+    },
+    {
+      "name": "state_ui_the_selected_file_cannot_be_read_please_select_a_7265b9",
+      "value": "无法读取所选文件，请重新选择。"
+    },
+    {
+      "name": "state_ui_the_selected_file_is_not_a_valid_zip_package_bff052",
+      "value": "所选文件不是有效的 ZIP Skill 包。"
+    },
+    {
+      "name": "state_ui_the_selected_path_has_been_added_42b432",
+      "value": "所选路径已经添加"
+    },
+    {
+      "name": "state_ui_the_selected_project_type_does_not_match_3a5c49",
+      "value": "选择的项目类型不匹配"
+    },
+    {
+      "name": "state_ui_the_skill_pack_contains_an_unsafe_file_path_and__d8cfc0",
+      "value": "Skill 包包含不安全的文件路径，未进行安装。"
+    },
+    {
+      "name": "state_ui_the_skill_pack_exceeds_the_safe_size_or_file_num_42e151",
+      "value": "Skill 包超过安全大小或文件数量限制。"
+    },
+    {
+      "name": "state_ui_the_target_with_the_same_name_is_not_a_user_skil_00474b",
+      "value": "同名目标不是可安全替换的用户 Skill，现有文件未被覆盖。"
+    },
+    {
+      "name": "state_ui_the_zip_content_has_changed_please_reselect_and__ab8b12",
+      "value": "ZIP 内容已变化，请重新选择并确认要替换的 Skill。"
+    },
+    {
+      "name": "state_ui_to_authorize_762ec4",
+      "value": "去授权"
+    },
+    {
+      "name": "state_ui_to_open_13ec17",
+      "value": "去开启"
+    },
+    {
+      "name": "state_ui_unable_to_obtain_the_real_path_please_select_fro_32f367",
+      "value": "无法取得真实路径，请从“内部存储”选择或手动输入路径"
+    },
+    {
+      "name": "state_ui_unable_to_open_selection_9f0004",
+      "value": "无法打开所选内容"
+    },
+    {
+      "name": "state_ui_unable_to_read_this_image_please_try_again_or_us_d94978",
+      "value": "无法读取这张图片，请重试或改用其他图片"
+    },
+    {
+      "name": "state_ui_unable_to_save_skills_original_skills_have_been__9d4748",
+      "value": "无法保存 Skills，原有 Skills 已自动恢复。"
+    },
+    {
+      "name": "state_ui_unnamed_skill_a58008",
+      "value": "未命名 Skill"
+    },
+    {
+      "name": "state_ui_used_to_understand_the_location_of_mobile_phones_af52e9",
+      "value": "用于按需理解手机所在位置"
+    },
+    {
+      "name": "state_ui_xiaobu_s_entrance_needs_to_be_set_to_always_allo_cc74cb",
+      "value": "小布入口需要设为“始终允许”"
+    },
+    {
+      "name": "state_unable_to_continue_installation_136d7c",
+      "value": "无法继续安装"
+    },
+    {
+      "name": "state_unable_to_delete_skill_1583c9",
+      "value": "无法删除 Skill"
+    },
+    {
+      "name": "state_unable_to_install_skill_0ec70b",
+      "value": "无法安装 Skill"
+    },
+    {
+      "name": "state_unable_to_read_skill_pack_a53563",
+      "value": "无法读取 Skill 包"
+    },
+    {
+      "name": "state_unable_to_read_skills_599082",
+      "value": "无法读取 Skills"
+    },
+    {
+      "name": "state_unable_to_restore_skills_6b3d23",
+      "value": "无法恢复 Skills"
+    },
+    {
+      "name": "state_unable_to_update_skills_04e56c",
+      "value": "无法更新 Skills"
+    },
+    {
+      "name": "state_usage_access_20f1f8",
+      "value": "使用情况访问"
+    },
+    {
+      "name": "state_used_to_read_recently_opened_applications_and_foregr_73e796",
+      "value": "用于读取最近打开的应用和前台使用时长"
+    },
+    {
+      "name": "state_web_browsing_e56105",
+      "value": "网页工具"
+    },
+    {
+      "name": "status_authorized",
+      "value": "已授权"
+    },
+    {
+      "name": "status_cancelled",
+      "value": "已取消"
+    },
+    {
+      "name": "status_disabled",
+      "value": "未启用"
+    },
+    {
+      "name": "status_enabled",
+      "value": "已启用"
+    },
+    {
+      "name": "status_needs_attention",
+      "value": "需注意"
+    },
+    {
+      "name": "status_processing",
+      "value": "处理中…"
+    },
+    {
+      "name": "status_ready",
+      "value": "已就绪"
+    },
+    {
+      "name": "status_unauthorized",
+      "value": "未授权"
+    },
+    {
+      "name": "status_unsupported",
+      "value": "不支持"
+    },
+    {
+      "name": "suggestion_analyze_screen_prompt",
+      "value": "截图并描述当前屏幕"
+    },
+    {
+      "name": "suggestion_browse_web_prompt",
+      "value": "打开 Agent 浏览器，搜索并总结今天的科技新闻要点"
+    },
+    {
+      "name": "suggestion_memory_pressure_prompt",
+      "value": "读取 /proc/meminfo 和 /proc/pressure/，重点分析 PSI（Pressure Stall Information）指标，总结当前内存压力和系统状态"
+    },
+    {
+      "name": "suggestion_open_wechat_prompt",
+      "value": "帮我打开微信"
+    },
+    {
+      "name": "system_notice_empty_result",
+      "value": "运行已完成，但没有返回文字。"
+    },
+    {
+      "name": "system_notice_interrupted",
+      "value": "任务已中断。已保留部分输出，未自动重试尚未完成的操作。"
+    },
+    {
+      "name": "system_notice_model_retry",
+      "value": "模型请求重试"
+    },
+    {
+      "name": "system_notice_runtime_failed",
+      "value": "Runtime 运行失败"
+    },
+    {
+      "name": "system_notice_stopped",
+      "value": "已停止"
+    },
+    {
+      "name": "systemizer_already_system",
+      "value": "Google App 已是系统 priv-app"
+    },
+    {
+      "name": "systemizer_google_missing",
+      "value": "未安装 Google App"
+    },
+    {
+      "name": "systemizer_grant_kernelsu",
+      "value": "请在 KernelSU 中授予 随身助手 root 权限"
+    },
+    {
+      "name": "systemizer_grant_magisk",
+      "value": "请在 Magisk 中授予 随身助手 root 权限"
+    },
+    {
+      "name": "systemizer_installed",
+      "value": "安装完成，重启后生效"
+    },
+    {
+      "name": "systemizer_metamodule_missing",
+      "value": "KernelSU 需先启用 metamodule 支持"
+    },
+    {
+      "name": "systemizer_root_denied",
+      "value": "未获得 root 权限"
+    },
+    {
+      "name": "systemizer_root_manager_missing",
+      "value": "未检测到 Magisk 或 KernelSU"
+    },
+    {
+      "name": "task_completion_channel",
+      "value": "任务完成提示"
+    },
+    {
+      "name": "task_completion_notice_failed",
+      "value": "任务未完成"
+    },
+    {
+      "name": "task_completion_notice_stopped",
+      "value": "任务已终止"
+    },
+    {
+      "name": "task_completion_notice_success",
+      "value": "任务已完成"
+    },
+    {
+      "name": "terminal_block_mode",
+      "value": "简洁模式"
+    },
+    {
+      "name": "terminal_close_session",
+      "value": "关闭"
+    },
+    {
+      "name": "terminal_console_mode",
+      "value": "控制台模式"
+    },
+    {
+      "name": "terminal_copy_command",
+      "value": "复制命令"
+    },
+    {
+      "name": "terminal_copy_output",
+      "value": "复制输出"
+    },
+    {
+      "name": "terminal_daemon_empty",
+      "value": "暂无后台任务"
+    },
+    {
+      "name": "terminal_daemon_exited",
+      "value": "已退出"
+    },
+    {
+      "name": "terminal_daemon_hide_logs",
+      "value": "收起日志"
+    },
+    {
+      "name": "terminal_daemon_logs_empty",
+      "value": "暂无日志输出"
+    },
+    {
+      "name": "terminal_daemon_running",
+      "value": "运行中"
+    },
+    {
+      "name": "terminal_daemon_tasks",
+      "value": "后台任务"
+    },
+    {
+      "name": "terminal_daemon_view_logs",
+      "value": "日志"
+    },
+    {
+      "name": "terminal_empty_hint",
+      "value": "常驻 Shell 会话：命令之间保留工作目录与环境，切出页面不中断运行。"
+    },
+    {
+      "name": "terminal_env_switched",
+      "value": "已切换到 %1$s 环境"
+    },
+    {
+      "name": "terminal_exit_code",
+      "value": "退出码 %1$d"
+    },
+    {
+      "name": "terminal_input_hint",
+      "value": "输入命令"
+    },
+    {
+      "name": "terminal_input_running_hint",
+      "value": "向运行中的命令发送输入"
+    },
+    {
+      "name": "terminal_interrupted",
+      "value": "已停止"
+    },
+    {
+      "name": "terminal_key_down",
+      "value": "下"
+    },
+    {
+      "name": "terminal_key_enter",
+      "value": "回车"
+    },
+    {
+      "name": "terminal_key_left",
+      "value": "左"
+    },
+    {
+      "name": "terminal_key_paste",
+      "value": "粘贴"
+    },
+    {
+      "name": "terminal_key_right",
+      "value": "右"
+    },
+    {
+      "name": "terminal_key_up",
+      "value": "上"
+    },
+    {
+      "name": "terminal_keyboard_hide",
+      "value": "收起键盘"
+    },
+    {
+      "name": "terminal_keyboard_show",
+      "value": "显示键盘"
+    },
+    {
+      "name": "terminal_linux_not_ready",
+      "value": "Linux 工具环境尚未安装"
+    },
+    {
+      "name": "terminal_new_session",
+      "value": "新建会话"
+    },
+    {
+      "name": "terminal_open_environment",
+      "value": "前往安装"
+    },
+    {
+      "name": "terminal_output_truncated",
+      "value": "输出过长，已截断"
+    },
+    {
+      "name": "terminal_reconnect",
+      "value": "重新连接"
+    },
+    {
+      "name": "terminal_reinput",
+      "value": "重新填入"
+    },
+    {
+      "name": "terminal_restart_session",
+      "value": "重启"
+    },
+    {
+      "name": "terminal_running",
+      "value": "运行中…"
+    },
+    {
+      "name": "terminal_send",
+      "value": "发送"
+    },
+    {
+      "name": "terminal_session_closed",
+      "value": "会话已退出"
+    },
+    {
+      "name": "terminal_session_current",
+      "value": "当前"
+    },
+    {
+      "name": "terminal_session_empty",
+      "value": "暂无会话"
+    },
+    {
+      "name": "terminal_session_exited",
+      "value": "已退出"
+    },
+    {
+      "name": "terminal_session_idle",
+      "value": "空闲"
+    },
+    {
+      "name": "terminal_session_restarted",
+      "value": "会话已断开，重新连接"
+    },
+    {
+      "name": "terminal_sessions",
+      "value": "会话"
+    },
+    {
+      "name": "terminal_stop",
+      "value": "停止"
+    },
+    {
+      "name": "time_now",
+      "value": "现在"
+    },
+    {
+      "name": "time_recent",
+      "value": "最近"
+    },
+    {
+      "name": "time_yesterday",
+      "value": "昨天"
+    },
+    {
+      "name": "tool_app_state_control",
+      "value": "应用状态"
+    },
+    {
+      "name": "tool_background_finish",
+      "value": "保留页面与续接"
+    },
+    {
+      "name": "tool_background_finish_description",
+      "value": "本轮结束后保留页面，可在原通知继续指令或打开应用接管，不自动切换当前屏幕。"
+    },
+    {
+      "name": "tool_background_gesture",
+      "value": "后台手势操作"
+    },
+    {
+      "name": "tool_background_gesture_description",
+      "value": "在目标屏幕点击、长按、滑动或拖动，分别报告输入是否接受、页面是否观察到变化。"
+    },
+    {
+      "name": "tool_background_open",
+      "value": "打开后台应用"
+    },
+    {
+      "name": "tool_background_open_description",
+      "value": "明确要求后台执行时使用虚拟屏。需要 Root 和无障碍服务；最多两个不同应用并行，其他任务排队，息屏暂停。"
+    },
+    {
+      "name": "tool_background_read",
+      "value": "读取后台界面"
+    },
+    {
+      "name": "tool_background_read_description",
+      "value": "读取可见文字、控件、位置与滚动目标。没有节点不代表页面为空。"
+    },
+    {
+      "name": "tool_background_scroll",
+      "value": "滚动指定列表"
+    },
+    {
+      "name": "tool_background_scroll_description",
+      "value": "多个容器时明确选择目标列表，只核对该列表内变化；连续无进展时停止重复操作。"
+    },
+    {
+      "name": "tool_background_shot",
+      "value": "截取后台画面"
+    },
+    {
+      "name": "tool_background_shot_description",
+      "value": "按当前方向截图，附带尺寸与帧引用。查看图片需要开启图片读取工具，坐标始终绑定对应帧。"
+    },
+    {
+      "name": "tool_background_state",
+      "value": "查看后台状态"
+    },
+    {
+      "name": "tool_background_state_description",
+      "value": "检查引擎和会话状态。窗口诊断报告可见性与焦点，不发送试探性手势。"
+    },
+    {
+      "name": "tool_background_text",
+      "value": "后台输入文字"
+    },
+    {
+      "name": "tool_background_text_description",
+      "value": "选择可编辑输入框，写入后回读核对，区分已提交与已确认的输入结果。"
+    },
+    {
+      "name": "tool_browser_loading",
+      "value": "正在加载 · %1$d%%"
+    },
+    {
+      "name": "tool_browser_preview",
+      "value": "页面预览"
+    },
+    {
+      "name": "tool_browser_use",
+      "value": "浏览网页"
+    },
+    {
+      "name": "tool_clear_text",
+      "value": "清空文字"
+    },
+    {
+      "name": "tool_current_context",
+      "value": "时间与位置"
+    },
+    {
+      "name": "tool_details_collapse",
+      "value": "收起工具详情"
+    },
+    {
+      "name": "tool_details_expand",
+      "value": "展开工具详情"
+    },
+    {
+      "name": "tool_device_status",
+      "value": "设备状态"
+    },
+    {
+      "name": "tool_edit_file",
+      "value": "精确编辑文件"
+    },
+    {
+      "name": "tool_edit_file_description",
+      "value": "使用旧文本定位片段，检查匹配和版本后替换。"
+    },
+    {
+      "name": "tool_elapsed_seconds",
+      "value": "%1$d 秒"
+    },
+    {
+      "name": "tool_fetch_url",
+      "value": "读取网页正文"
+    },
+    {
+      "name": "tool_fetch_url_description",
+      "value": "读取网页正文并分页续读，支持内置静态抓取、DeepSeek 或自定义接口，失败时自动回退到本地静态抓取。"
+    },
+    {
+      "name": "tool_get_clipboard",
+      "value": "读取剪贴板"
+    },
+    {
+      "name": "tool_get_logcat",
+      "value": "读取系统日志"
+    },
+    {
+      "name": "tool_get_setting",
+      "value": "读取系统设置"
+    },
+    {
+      "name": "tool_glob_files",
+      "value": "按路径查找文件"
+    },
+    {
+      "name": "tool_glob_files_description",
+      "value": "使用路径模式递归查找文件，支持有界续查。"
+    },
+    {
+      "name": "tool_grep_files",
+      "value": "搜索文件内容"
+    },
+    {
+      "name": "tool_grep_files_description",
+      "value": "搜索 UTF-8 文本，返回匹配路径、行号与采集范围。"
+    },
+    {
+      "name": "tool_input_text",
+      "value": "输入文字"
+    },
+    {
+      "name": "tool_inspect_app",
+      "value": "检查应用"
+    },
+    {
+      "name": "tool_inspect_app_description",
+      "value": "查看指定应用的版本、UID、安装信息、启用状态与权限。"
+    },
+    {
+      "name": "tool_launch_app",
+      "value": "打开应用"
+    },
+    {
+      "name": "tool_list_directory",
+      "value": "列出目录"
+    },
+    {
+      "name": "tool_long_press",
+      "value": "长按"
+    },
+    {
+      "name": "tool_long_press_element",
+      "value": "长按元素"
+    },
+    {
+      "name": "tool_media_control",
+      "value": "媒体控制"
+    },
+    {
+      "name": "tool_memory_get",
+      "value": "读取记忆"
+    },
+    {
+      "name": "tool_memory_write",
+      "value": "整理记忆"
+    },
+    {
+      "name": "tool_network_info",
+      "value": "网络状态"
+    },
+    {
+      "name": "tool_observe_screen",
+      "value": "观察屏幕"
+    },
+    {
+      "name": "tool_open_system_panel",
+      "value": "系统面板"
+    },
+    {
+      "name": "tool_open_uri",
+      "value": "用应用打开"
+    },
+    {
+      "name": "tool_paste_text",
+      "value": "粘贴文字"
+    },
+    {
+      "name": "tool_personal_context",
+      "value": "个人上下文"
+    },
+    {
+      "name": "tool_personal_context_description",
+      "value": "按内容与时间检索照片、便签、记忆、账单和行程索引，读取详情并统计汇总。"
+    },
+    {
+      "name": "tool_press_key",
+      "value": "按键"
+    },
+    {
+      "name": "tool_read_file",
+      "value": "读取文件"
+    },
+    {
+      "name": "tool_read_sms_code",
+      "value": "读取验证码"
+    },
+    {
+      "name": "tool_recent_notifications",
+      "value": "读取通知"
+    },
+    {
+      "name": "tool_release_gui",
+      "value": "释放手机操作"
+    },
+    {
+      "name": "tool_release_gui_description",
+      "value": "完成当前手机操作阶段，将控制权交给等待中的任务。"
+    },
+    {
+      "name": "tool_replace_text",
+      "value": "替换文字"
+    },
+    {
+      "name": "tool_run_command",
+      "value": "执行命令"
+    },
+    {
+      "name": "tool_scroll",
+      "value": "滚动"
+    },
+    {
+      "name": "tool_scroll_element",
+      "value": "滚动元素"
+    },
+    {
+      "name": "tool_search_apps",
+      "value": "搜索应用"
+    },
+    {
+      "name": "tool_set_alarm",
+      "value": "设置闹钟"
+    },
+    {
+      "name": "tool_set_clipboard",
+      "value": "写入剪贴板"
+    },
+    {
+      "name": "tool_set_device_state",
+      "value": "设备开关"
+    },
+    {
+      "name": "tool_set_setting",
+      "value": "修改系统设置"
+    },
+    {
+      "name": "tool_set_timer",
+      "value": "设置计时器"
+    },
+    {
+      "name": "tool_set_volume",
+      "value": "设置音量"
+    },
+    {
+      "name": "tool_stat_file",
+      "value": "查看文件信息"
+    },
+    {
+      "name": "tool_stat_file_description",
+      "value": "查询 Android 或 Linux 文件的类型、大小和版本。"
+    },
+    {
+      "name": "tool_status_failed",
+      "value": "失败"
+    },
+    {
+      "name": "tool_status_running",
+      "value": "执行中"
+    },
+    {
+      "name": "tool_status_success",
+      "value": "已完成"
+    },
+    {
+      "name": "tool_status_unknown",
+      "value": "结果未知"
+    },
+    {
+      "name": "tool_swipe",
+      "value": "滑动"
+    },
+    {
+      "name": "tool_tap",
+      "value": "点击"
+    },
+    {
+      "name": "tool_tap_area",
+      "value": "点击区域"
+    },
+    {
+      "name": "tool_tap_element",
+      "value": "点击元素"
+    },
+    {
+      "name": "tool_terminal",
+      "value": "终端"
+    },
+    {
+      "name": "tool_terminal_daemon",
+      "value": "后台服务"
+    },
+    {
+      "name": "tool_terminal_daemon_description",
+      "value": "启动、查看和停止可跨 Agent 任务运行的后台服务"
+    },
+    {
+      "name": "tool_terminal_job",
+      "value": "异步命令"
+    },
+    {
+      "name": "tool_terminal_job_description",
+      "value": "启动、查看和停止后台命令；回复结束后继续运行，完成时通知"
+    },
+    {
+      "name": "tool_top_memory_apps",
+      "value": "内存排行"
+    },
+    {
+      "name": "tool_top_storage_apps",
+      "value": "存储排行"
+    },
+    {
+      "name": "tool_ui_activity_timer_36f107",
+      "value": "活动计时器"
+    },
+    {
+      "name": "tool_ui_address_book_9070cb",
+      "value": "通讯录"
+    },
+    {
+      "name": "tool_ui_agent_browser_a66bd5",
+      "value": "Agent 浏览器"
+    },
+    {
+      "name": "tool_ui_alarm_clock_schedule_acae32",
+      "value": "闹钟计划"
+    },
+    {
+      "name": "tool_ui_album_pictures_23bcc2",
+      "value": "相册图片"
+    },
+    {
+      "name": "tool_ui_app_usage_statistics_ee20d3",
+      "value": "应用使用统计"
+    },
+    {
+      "name": "tool_ui_application_status_930ff0",
+      "value": "应用状态"
+    },
+    {
+      "name": "tool_ui_audio_file_1ccf2e",
+      "value": "音频文件"
+    },
+    {
+      "name": "tool_ui_bounded_reading_and_filtering_of_recent_logs_0a268a",
+      "value": "有界读取并过滤最近日志"
+    },
+    {
+      "name": "tool_ui_button_02eafa",
+      "value": "按键"
+    },
+    {
+      "name": "tool_ui_calendar_events_970349",
+      "value": "日历事件"
+    },
+    {
+      "name": "tool_ui_call_history_88e57b",
+      "value": "通话记录"
+    },
+    {
+      "name": "tool_ui_check_application_data_and_cache_usage_837e9f",
+      "value": "查看应用、数据与缓存占用"
+    },
+    {
+      "name": "tool_ui_click_area_cbaa08",
+      "value": "点击区域"
+    },
+    {
+      "name": "tool_ui_click_by_coordinate_area_2ad961",
+      "value": "按坐标区域点击"
+    },
+    {
+      "name": "tool_ui_click_element_7a3d91",
+      "value": "点击元素"
+    },
+    {
+      "name": "tool_ui_click_on_the_most_recently_observed_node_b4cf5a",
+      "value": "按最近一次观察到的节点点击"
+    },
+    {
+      "name": "tool_ui_clipboard_history_b377bb",
+      "value": "剪贴板历史"
+    },
+    {
+      "name": "tool_ui_coloros_notes_6c324c",
+      "value": "ColorOS 便签"
+    },
+    {
+      "name": "tool_ui_coloros_recording_a4e425",
+      "value": "ColorOS 录音"
+    },
+    {
+      "name": "tool_ui_coloros_system_memory_eff961",
+      "value": "ColorOS 系统记忆"
+    },
+    {
+      "name": "tool_ui_create_a_system_alarm_directly_and_open_the_cloc_9aa214",
+      "value": "直接创建系统闹钟，失败时打开时钟确认"
+    },
+    {
+      "name": "tool_ui_current_location_b458ea",
+      "value": "当前位置"
+    },
+    {
+      "name": "tool_ui_device_status_567a4c",
+      "value": "设备状态"
+    },
+    {
+      "name": "tool_ui_directly_control_wi_fi_or_bluetooth_4fa0b9",
+      "value": "直接控制 Wi‑Fi 或蓝牙"
+    },
+    {
+      "name": "tool_ui_directly_create_system_timers_up_to_24_hours_87c476",
+      "value": "直接创建最长 24 小时的系统计时器"
+    },
+    {
+      "name": "tool_ui_directly_execute_a_single_shell_command_c40cef",
+      "value": "直接执行单条 shell 命令"
+    },
+    {
+      "name": "tool_ui_download_history_8494d7",
+      "value": "下载记录"
+    },
+    {
+      "name": "tool_ui_enter_text_ae47ab",
+      "value": "输入文字"
+    },
+    {
+      "name": "tool_ui_equipment_environment_1026ec",
+      "value": "设备环境"
+    },
+    {
+      "name": "tool_ui_execute_command_bf1627",
+      "value": "执行命令"
+    },
+    {
+      "name": "tool_ui_explicitly_hand_over_links_or_deep_links_to_exte_35ff26",
+      "value": "把链接或 deep link 显式交给外部应用"
+    },
+    {
+      "name": "tool_ui_extract_rendered_text_lists_and_links_8bdcdd",
+      "value": "提取渲染后的正文、列表与链接"
+    },
+    {
+      "name": "tool_ui_find_click_and_enter_page_elements_8f102d",
+      "value": "查找、点击并输入页面元素"
+    },
+    {
+      "name": "tool_ui_give_the_current_web_page_viewport_to_the_visual_f62274",
+      "value": "把当前网页视口交给视觉模型"
+    },
+    {
+      "name": "tool_ui_health_summary_951c0b",
+      "value": "健康摘要"
+    },
+    {
+      "name": "tool_ui_list_directory_96e765",
+      "value": "列目录"
+    },
+    {
+      "name": "tool_ui_list_directory_contents_feff30",
+      "value": "列出目录内容"
+    },
+    {
+      "name": "tool_ui_long_press_f7a417",
+      "value": "长按"
+    },
+    {
+      "name": "tool_ui_long_press_on_coordinates_or_elements_796384",
+      "value": "长按坐标或元素"
+    },
+    {
+      "name": "tool_ui_media_control_585edc",
+      "value": "媒体控制"
+    },
+    {
+      "name": "tool_ui_memory_ranking_408ca1",
+      "value": "内存排行"
+    },
+    {
+      "name": "tool_ui_modify_android_settings_keys_91a37e",
+      "value": "修改 Android Settings 键"
+    },
+    {
+      "name": "tool_ui_modify_system_settings_ae1f4c",
+      "value": "修改系统设置"
+    },
+    {
+      "name": "tool_ui_network_status_6bd556",
+      "value": "网络状态"
+    },
+    {
+      "name": "tool_ui_network_switch_834347",
+      "value": "网络开关"
+    },
+    {
+      "name": "tool_ui_notification_history_95d015",
+      "value": "通知历史"
+    },
+    {
+      "name": "tool_ui_only_extract_verification_codes_from_recent_sms__0fb8c1",
+      "value": "只提取最近短信中的验证码"
+    },
+    {
+      "name": "tool_ui_open_app_7c65e7",
+      "value": "打开 App"
+    },
+    {
+      "name": "tool_ui_open_the_notification_bar_quick_settings_and_oth_5e51cf",
+      "value": "打开通知栏、快捷设置等面板"
+    },
+    {
+      "name": "tool_ui_open_web_pages_off_screen_and_keep_a_takeover_br_72972e",
+      "value": "离屏打开网页，并保持可接管的浏览会话"
+    },
+    {
+      "name": "tool_ui_open_with_app_32c24e",
+      "value": "用应用打开"
+    },
+    {
+      "name": "tool_ui_organize_memory_2b08eb",
+      "value": "整理记忆"
+    },
+    {
+      "name": "tool_ui_page_screenshot_c823a2",
+      "value": "页面截图"
+    },
+    {
+      "name": "tool_ui_paged_to_read_or_retrieve_long_term_memory_in_me_88afc4",
+      "value": "分页读取或检索 MEMORY.md 中的长期记忆"
+    },
+    {
+      "name": "tool_ui_partially_update_append_or_clear_long_term_memor_c1bab6",
+      "value": "局部更新、追加或清空长期记忆"
+    },
+    {
+      "name": "tool_ui_perform_up_down_left_and_right_swipe_gestures_3ef0de",
+      "value": "执行上下左右滑动手势"
+    },
+    {
+      "name": "tool_ui_personal_order_25e4c9",
+      "value": "个人订单"
+    },
+    {
+      "name": "tool_ui_play_pause_and_switch_songs_without_operating_th_311cb8",
+      "value": "播放、暂停、切歌，不操作界面"
+    },
+    {
+      "name": "tool_ui_qq_chat_pictures_e21bf9",
+      "value": "QQ 聊天图片"
+    },
+    {
+      "name": "tool_ui_query_installed_applications_by_name_or_package__32b004",
+      "value": "按名称或包名查询已安装应用"
+    },
+    {
+      "name": "tool_ui_read_file_dc995c",
+      "value": "读取文件"
+    },
+    {
+      "name": "tool_ui_read_lock_screen_do_not_disturb_audio_output_and_9260b8",
+      "value": "读取锁屏、勿扰、音频输出和外接屏状态"
+    },
+    {
+      "name": "tool_ui_read_memory_979135",
+      "value": "读取记忆"
+    },
+    {
+      "name": "tool_ui_read_networking_method_and_current_wi_fi_status_68016a",
+      "value": "读取联网方式和当前 Wi‑Fi 状态"
+    },
+    {
+      "name": "tool_ui_read_notification_7fdc09",
+      "value": "读取通知"
+    },
+    {
+      "name": "tool_ui_read_pictures_ae993b",
+      "value": "读取图片"
+    },
+    {
+      "name": "tool_ui_read_pictures_of_known_paths_and_hand_them_over__7f9569",
+      "value": "读取已知路径的图片并交给视觉模型解读"
+    },
+    {
+      "name": "tool_ui_read_power_memory_storage_and_system_version_c501d5",
+      "value": "读取电量、内存、存储与系统版本"
+    },
+    {
+      "name": "tool_ui_read_running_or_paused_timers_3437c8",
+      "value": "读取正在运行或暂停的计时器"
+    },
+    {
+      "name": "tool_ui_read_system_settings_d455ce",
+      "value": "读取系统设置"
+    },
+    {
+      "name": "tool_ui_read_system_time_and_recent_location_b9f4ae",
+      "value": "读取系统时间与最近位置"
+    },
+    {
+      "name": "tool_ui_read_the_alarm_clock_that_has_been_created_in_th_2320d6",
+      "value": "读取时钟中已创建的闹钟"
+    },
+    {
+      "name": "tool_ui_read_the_closest_location_the_system_already_has_255a6c",
+      "value": "读取系统已有的最近位置"
+    },
+    {
+      "name": "tool_ui_read_the_contents_of_mobile_phone_files_bf3066",
+      "value": "读取手机文件内容"
+    },
+    {
+      "name": "tool_ui_read_the_current_node_and_attach_the_original_im_df1fec",
+      "value": "读取当前节点，必要时附原图"
+    },
+    {
+      "name": "tool_ui_read_the_current_notification_title_and_text_0faee7",
+      "value": "读取当前通知标题与正文"
+    },
+    {
+      "name": "tool_ui_read_the_network_credentials_saved_by_the_phone_96d43a",
+      "value": "读取手机保存的网络凭据"
+    },
+    {
+      "name": "tool_ui_read_the_specified_settings_key_496975",
+      "value": "读取指定 Settings 键"
+    },
+    {
+      "name": "tool_ui_read_verification_code_7d1121",
+      "value": "读取验证码"
+    },
+    {
+      "name": "tool_ui_read_web_pages_4f0bb9",
+      "value": "阅读网页"
+    },
+    {
+      "name": "tool_ui_recently_applied_08f74c",
+      "value": "最近应用"
+    },
+    {
+      "name": "tool_ui_recording_summary_2fe550",
+      "value": "录音摘要"
+    },
+    {
+      "name": "tool_ui_retrieve_calls_by_number_or_contact_name_2ce431",
+      "value": "按号码或联系人名称检索通话"
+    },
+    {
+      "name": "tool_ui_retrieve_clipboard_contents_saved_by_system_inpu_1dc9db",
+      "value": "检索系统输入法保存的剪贴板内容"
+    },
+    {
+      "name": "tool_ui_retrieve_collected_information_and_its_structure_9c1c71",
+      "value": "检索已收集的信息及其结构化关联内容"
+    },
+    {
+      "name": "tool_ui_retrieve_contact_name_and_open_address_6dacc5",
+      "value": "检索联系人姓名与打开地址"
+    },
+    {
+      "name": "tool_ui_retrieve_documents_and_files_from_shared_storage_7d6193",
+      "value": "检索文档和共享存储中的文件"
+    },
+    {
+      "name": "tool_ui_retrieve_location_information_from_system_memory_52ea48",
+      "value": "检索系统记忆中的地点信息"
+    },
+    {
+      "name": "tool_ui_retrieve_normal_recordings_and_call_recordings_55c192",
+      "value": "检索普通录音与通话录音"
+    },
+    {
+      "name": "tool_ui_retrieve_notes_to_dos_and_text_content_e806d7",
+      "value": "检索便签、待办及正文内容"
+    },
+    {
+      "name": "tool_ui_retrieve_pictures_by_file_name_or_album_path_c08236",
+      "value": "按文件名或相册路径检索图片"
+    },
+    {
+      "name": "tool_ui_retrieve_recent_pictures_in_qq_chat_picture_cach_b8f009",
+      "value": "检索 QQ 聊天图片缓存中的最近图片"
+    },
+    {
+      "name": "tool_ui_retrieve_recent_pictures_in_wechat_chat_picture__ab66f7",
+      "value": "检索微信聊天图片缓存中的最近图片"
+    },
+    {
+      "name": "tool_ui_retrieve_recording_files_from_system_media_libra_314c4d",
+      "value": "从系统媒体库检索录音文件"
+    },
+    {
+      "name": "tool_ui_retrieve_system_download_tasks_and_files_3301b9",
+      "value": "检索系统下载任务和文件"
+    },
+    {
+      "name": "tool_ui_retrieve_takeout_shopping_express_delivery_ticke_f8d002",
+      "value": "检索外卖、购物、快递、票券和出行订单"
+    },
+    {
+      "name": "tool_ui_retrieve_the_last_7_days_of_notifications_saved__643e43",
+      "value": "检索授权后本机保存的最近 7 天通知"
+    },
+    {
+      "name": "tool_ui_retrieve_transcribed_summaries_and_notes_associa_9cb00f",
+      "value": "检索录音关联的转写摘要和便签"
+    },
+    {
+      "name": "tool_ui_save_location_c29782",
+      "value": "保存地点"
+    },
+    {
+      "name": "tool_ui_scroll_220e68",
+      "value": "滚动"
+    },
+    {
+      "name": "tool_ui_scroll_the_page_or_specify_a_node_83ab24",
+      "value": "滚动页面或指定节点"
+    },
+    {
+      "name": "tool_ui_search_apps_897fdf",
+      "value": "搜索应用"
+    },
+    {
+      "name": "tool_ui_search_audio_by_title_filename_or_author_82e20d",
+      "value": "按标题、文件名或作者检索音频"
+    },
+    {
+      "name": "tool_ui_search_events_by_title_location_or_description_1afd77",
+      "value": "按标题、地点或说明检索日程"
+    },
+    {
+      "name": "tool_ui_search_text_messages_by_sender_or_text_keywords_e14363",
+      "value": "按发送方或正文关键词检索短信"
+    },
+    {
+      "name": "tool_ui_session_terminal_09c6e6",
+      "value": "会话终端"
+    },
+    {
+      "name": "tool_ui_set_alarm_25ca3c",
+      "value": "设置闹钟"
+    },
+    {
+      "name": "tool_ui_set_by_media_alarm_clock_ringtone_and_other_chan_3fcc3e",
+      "value": "按媒体、闹钟、铃声等通道设置"
+    },
+    {
+      "name": "tool_ui_set_timer_aee60c",
+      "value": "设置计时器"
+    },
+    {
+      "name": "tool_ui_set_volume_85a691",
+      "value": "设置音量"
+    },
+    {
+      "name": "tool_ui_share_files_a3b376",
+      "value": "共享文件"
+    },
+    {
+      "name": "tool_ui_short_message_17e1a4",
+      "value": "短信"
+    },
+    {
+      "name": "tool_ui_slide_3723aa",
+      "value": "滑动"
+    },
+    {
+      "name": "tool_ui_start_the_specified_package_name_or_application__beabff",
+      "value": "启动指定包名或应用名"
+    },
+    {
+      "name": "tool_ui_stop_freeze_or_unfreeze_apps_a27438",
+      "value": "停止、冻结或解冻应用"
+    },
+    {
+      "name": "tool_ui_storage_ranking_86a16c",
+      "value": "存储排行"
+    },
+    {
+      "name": "tool_ui_summarize_recent_app_usage_by_foreground_duratio_b346c8",
+      "value": "按前台时长汇总近期应用使用"
+    },
+    {
+      "name": "tool_ui_summarize_steps_sleep_exercise_and_body_metrics_6ff66f",
+      "value": "汇总步数、睡眠、运动和身体指标"
+    },
+    {
+      "name": "tool_ui_system_buttons_such_as_return_homepage_recent_ta_1b4cf0",
+      "value": "返回、主页、最近任务等系统按键"
+    },
+    {
+      "name": "tool_ui_system_log_096733",
+      "value": "系统日志"
+    },
+    {
+      "name": "tool_ui_system_panel_b0f7a3",
+      "value": "系统面板"
+    },
+    {
+      "name": "tool_ui_system_recording_15eb19",
+      "value": "系统录音"
+    },
+    {
+      "name": "tool_ui_time_and_location_693893",
+      "value": "时间与位置"
+    },
+    {
+      "name": "tool_ui_type_text_summary",
+      "value": "替换、追加或清空输入框文本，可直接提交，写入后读回校验"
+    },
+    {
+      "name": "tool_ui_user_root_shell_conversational_execution_and_asy_13c2ab",
+      "value": "执行命令或复用持久 Shell 会话"
+    },
+    {
+      "name": "tool_ui_view_recently_opened_apps_and_times_bf9d50",
+      "value": "查看最近打开过的应用和时间"
+    },
+    {
+      "name": "tool_ui_view_the_currently_most_occupied_processes_8646c4",
+      "value": "查看当前占用最高的进程"
+    },
+    {
+      "name": "tool_ui_wait_for_text_9e9a54",
+      "value": "等待文本"
+    },
+    {
+      "name": "tool_ui_wait_for_the_specified_text_to_appear_on_the_scr_43f9b0",
+      "value": "等待指定文本出现在屏幕上"
+    },
+    {
+      "name": "tool_ui_watch_the_screen_e70f2a",
+      "value": "观察屏幕"
+    },
+    {
+      "name": "tool_ui_web_page_interaction_331b3f",
+      "value": "网页交互"
+    },
+    {
+      "name": "tool_ui_wechat_chat_pictures_72b268",
+      "value": "微信聊天图片"
+    },
+    {
+      "name": "tool_ui_wi_fi_password_80e9a4",
+      "value": "Wi‑Fi 密码"
+    },
+    {
+      "name": "tool_ui_write_file_e620fd",
+      "value": "写入文件"
+    },
+    {
+      "name": "tool_ui_write_or_overwrite_mobile_files_29fae4",
+      "value": "写入或覆盖手机文件"
+    },
+    {
+      "name": "tool_wait",
+      "value": "等待"
+    },
+    {
+      "name": "tool_wait_for_package",
+      "value": "等待应用"
+    },
+    {
+      "name": "tool_wait_for_text",
+      "value": "等待文本"
+    },
+    {
+      "name": "tool_web_search",
+      "value": "搜索网页"
+    },
+    {
+      "name": "tool_web_search_description",
+      "value": "未使用 Provider 托管搜索时检索公开网页，返回标题、链接与摘要，可在网页工具服务中切换内置、DeepSeek 或自定义接口。"
+    },
+    {
+      "name": "tool_wifi_credentials",
+      "value": "读取 Wi-Fi 密码"
+    },
+    {
+      "name": "tool_write_file",
+      "value": "写入文件"
+    },
+    {
+      "name": "tools_background_group",
+      "value": "后台应用操作"
+    },
+    {
+      "name": "tools_manage_permissions",
+      "value": "管理权限"
+    },
+    {
+      "name": "tools_view_enhancements",
+      "value": "查看系统增强"
+    },
+    {
+      "name": "ui_about_bed172",
+      "value": "关于"
+    },
+    {
+      "name": "ui_about_feedback_title",
+      "value": "问题反馈"
+    },
+    {
+      "name": "ui_about_github_star_hint",
+      "value": "如果 随身助手 帮到了你，请在 GitHub 点个 Star，这对我们意义重大"
+    },
+    {
+      "name": "ui_about_github_star_title",
+      "value": "源代码"
+    },
+    {
+      "name": "ui_about_update_checking",
+      "value": "正在检查…"
+    },
+    {
+      "name": "ui_about_update_title",
+      "value": "检查更新"
+    },
+    {
+      "name": "ui_about_version_title",
+      "value": "版本"
+    },
+    {
+      "name": "ui_absolute_path_9ac6fc",
+      "value": "绝对路径"
+    },
+    {
+      "name": "ui_accessibility_enhancement_tools_8fd257",
+      "value": "无障碍增强工具"
+    },
+    {
+      "name": "ui_add_attachment_dba9e8",
+      "value": "添加附件"
+    },
+    {
+      "name": "ui_add_custom_model_a5ddc0",
+      "value": "添加自定义模型"
+    },
+    {
+      "name": "ui_add_new_provider_74df54",
+      "value": "新增提供商"
+    },
+    {
+      "name": "ui_added_openai_compatible_6bd471",
+      "value": "新增 OpenAI-compatible"
+    },
+    {
+      "name": "ui_after_closing_no_memory_will_be_injected_and_the_mod_db3d23",
+      "value": "关闭后不注入记忆，也不允许模型读写；已有内容会保留"
+    },
+    {
+      "name": "ui_agent_and_local_tools_can_still_be_used_but_the_syst_b14479",
+      "value": "Agent 与本地工具仍可使用，系统助手接管、Gemini 和一圈即搜设置暂不可修改"
+    },
+    {
+      "name": "ui_allow_reading_of_sensitive_device_information_feaec0",
+      "value": "允许读取敏感设备信息"
+    },
+    {
+      "name": "ui_allow_sensitive_device_operation_3d42ea",
+      "value": "允许敏感设备操作"
+    },
+    {
+      "name": "ui_allows_the_model_to_call_web_searches_provided_by_th_2f752f",
+      "value": "允许模型调用 Provider 提供的网页搜索"
+    },
+    {
+      "name": "ui_analyze_current_screen_ebf08f",
+      "value": "分析当前屏幕"
+    },
+    {
+      "name": "ui_apk_analysis_95ad17",
+      "value": "APK 分析"
+    },
+    {
+      "name": "ui_automatically_set_default_assistant_f86963",
+      "value": "自动设置默认助理"
+    },
+    {
+      "name": "ui_available_capacity_743337",
+      "value": "可用能力"
+    },
+    {
+      "name": "ui_back_to_bottom_32282e",
+      "value": "回到底部"
+    },
+    {
+      "name": "ui_bright_screen_evokes_automatic_voice_input_4358fe",
+      "value": "亮屏唤起自动语音输入"
+    },
+    {
+      "name": "ui_browse_the_web_da7afb",
+      "value": "浏览网页"
+    },
+    {
+      "name": "ui_built_in_09ceea",
+      "value": "内置"
+    },
+    {
+      "name": "ui_built_in_skills_1ceedf",
+      "value": "内置"
+    },
+    {
+      "name": "ui_cancel_edit_c698df",
+      "value": "取消编辑"
+    },
+    {
+      "name": "ui_check_memory_pressure_2d9600",
+      "value": "查看内存压力"
+    },
+    {
+      "name": "ui_clear_all_memory_a43bd3",
+      "value": "清空全部记忆？"
+    },
+    {
+      "name": "ui_click_to_reinstall_dc60de",
+      "value": "点击重新安装"
+    },
+    {
+      "name": "ui_connection_configuration_7d057b",
+      "value": "连接配置"
+    },
+    {
+      "name": "ui_context_length_tokens_227860",
+      "value": "上下文窗口（tokens）"
+    },
+    {
+      "name": "ui_contextual_usage_d12810",
+      "value": "上下文用量"
+    },
+    {
+      "name": "ui_convert_google_apps_to_system_apps_0f6d89",
+      "value": "将 Google App 转为系统应用"
+    },
+    {
+      "name": "ui_copy_4edd1d",
+      "value": "复制"
+    },
+    {
+      "name": "ui_core_memory_injection_budget_48b5d5",
+      "value": "核心记忆注入预算"
+    },
+    {
+      "name": "ui_core_memory_user_name_long_term_preferences_aa6ff9",
+      "value": "# 核心记忆 - 用户名字： - 长期偏好："
+    },
+    {
+      "name": "ui_current_25e74d",
+      "value": "当前"
+    },
+    {
+      "name": "ui_current_model_a0af8f",
+      "value": "当前模型"
+    },
+    {
+      "name": "ui_deep_thinking_enabled_by_default_c032d6",
+      "value": "默认启用思考"
+    },
+    {
+      "name": "ui_delete_3755f5",
+      "value": "删除"
+    },
+    {
+      "name": "ui_delete_model_cf24da",
+      "value": "删除模型"
+    },
+    {
+      "name": "ui_delete_this_conversation_3f351b",
+      "value": "删除这轮对话"
+    },
+    {
+      "name": "ui_delete_user_skills_f319a9",
+      "value": "删除 Skill"
+    },
+    {
+      "name": "ui_description_named",
+      "value": "查看 %1$s 的说明"
+    },
+    {
+      "name": "ui_disabled_0fe5a9",
+      "value": "已禁用"
+    },
+    {
+      "name": "ui_display_name_ed16be",
+      "value": "展示名称"
+    },
+    {
+      "name": "ui_edit_a7f814",
+      "value": "编辑"
+    },
+    {
+      "name": "ui_edit_model_parameters_ba4864",
+      "value": "编辑模型参数"
+    },
+    {
+      "name": "ui_edited_c36776",
+      "value": "已编辑"
+    },
+    {
+      "name": "ui_enable_device_direct_tools_e2d595",
+      "value": "启用设备直达工具"
+    },
+    {
+      "name": "ui_enable_memory_4b69b7",
+      "value": "启用记忆"
+    },
+    {
+      "name": "ui_enable_terminal_file_tools_18bb43",
+      "value": "启用终端/文件工具"
+    },
+    {
+      "name": "ui_enable_this_provider_683a76",
+      "value": "启用此 Provider"
+    },
+    {
+      "name": "ui_enable_vendor_assistant_custom_models_c8e465",
+      "value": "启用厂商助手自定义模型"
+    },
+    {
+      "name": "ui_enable_web_browsing_tools_8b6b03",
+      "value": "启用网页搜索、读取与浏览器"
+    },
+    {
+      "name": "ui_endpoint_mode_3c8546",
+      "value": "Endpoint 模式"
+    },
+    {
+      "name": "ui_enforce_accessibility_55e838",
+      "value": "强制保持无障碍"
+    },
+    {
+      "name": "ui_environmental_status_5b32a1",
+      "value": "环境状态"
+    },
+    {
+      "name": "ui_eta_system_assistant_003e9b",
+      "value": "数字助理应用"
+    },
+    {
+      "name": "ui_exit_multiple_selection_c194fd",
+      "value": "退出多选"
+    },
+    {
+      "name": "ui_floating_window_permissions_076b77",
+      "value": "悬浮窗权限"
+    },
+    {
+      "name": "ui_how_can_i_help_you_e75391",
+      "value": "有什么可以帮你？"
+    },
+    {
+      "name": "ui_input_file_path_36d474",
+      "value": "输入文件路径"
+    },
+    {
+      "name": "ui_install_087db6",
+      "value": "安装"
+    },
+    {
+      "name": "ui_knew_cb63c6",
+      "value": "知道了"
+    },
+    {
+      "name": "ui_leave_blank_to_use_the_default_mobile_agent_prompt_w_21e7c8",
+      "value": "你可以在这里告诉 AI 如何与你交流、需要遵循哪些要求，也可以留空。使用角色卡时，会改用角色卡的提示词。"
+    },
+    {
+      "name": "ui_linux_tool_environment_314d22",
+      "value": "Linux 工具环境"
+    },
+    {
+      "name": "ui_lock_screen_evokes_automatic_voice_input_1cde18",
+      "value": "锁屏唤起自动语音输入"
+    },
+    {
+      "name": "ui_long_press_on_the_gesture_bar_triggers_a_circle_to_s_b80117",
+      "value": "手势条长按触发一圈即搜"
+    },
+    {
+      "name": "ui_long_press_the_power_button_1958d0",
+      "value": "电源键长按"
+    },
+    {
+      "name": "ui_long_press_with_two_fingers_to_trigger_a_circle_sear_ab597a",
+      "value": "双指长按触发一圈即搜"
+    },
+    {
+      "name": "ui_lsposed_service_is_not_connected_44734d",
+      "value": "LSPosed 服务未连接"
+    },
+    {
+      "name": "ui_maintain_hey_google_detection_after_screen_rest_9d6877",
+      "value": "息屏后维持 Hey Google 检测"
+    },
+    {
+      "name": "ui_manually_fill_in_the_display_name_and_model_id_077a7b",
+      "value": "手动填写展示名称与 Model ID"
+    },
+    {
+      "name": "ui_memory_b55ff5",
+      "value": "记忆"
+    },
+    {
+      "name": "ui_model_management_183414",
+      "value": "模型管理"
+    },
+    {
+      "name": "ui_model_provider_e8c7f5",
+      "value": "模型提供商"
+    },
+    {
+      "name": "ui_name_1be7ae",
+      "value": "名称"
+    },
+    {
+      "name": "ui_new_anthropic_db6098",
+      "value": "新增 Anthropic"
+    },
+    {
+      "name": "ui_no_skills_installed_yet_4e960f",
+      "value": "尚未安装任何 Skill"
+    },
+    {
+      "name": "ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d",
+      "value": "只选模型或网关实际支持的档位"
+    },
+    {
+      "name": "ui_only_take_over_with_agent_prefix_d17556",
+      "value": "仅以 /agent 前缀接管"
+    },
+    {
+      "name": "ui_open_current_browser_58358e",
+      "value": "打开当前浏览器"
+    },
+    {
+      "name": "ui_open_wechat_6b2c28",
+      "value": "打开微信"
+    },
+    {
+      "name": "ui_optional_tools_3097d6",
+      "value": "可选工具"
+    },
+    {
+      "name": "ui_permission_health_3048bb",
+      "value": "权限健康"
+    },
+    {
+      "name": "ui_permissions_560165",
+      "value": "权限"
+    },
+    {
+      "name": "ui_permissions_and_status_35f368",
+      "value": "权限与状态"
+    },
+    {
+      "name": "ui_preferences_and_strategies_2abd3c",
+      "value": "偏好与策略"
+    },
+    {
+      "name": "ui_provider_does_not_exist_83cee6",
+      "value": "Provider 不存在"
+    },
+    {
+      "name": "ui_regenerate_2e1905",
+      "value": "重新生成"
+    },
+    {
+      "name": "ui_regenerate_reply_84a7d9",
+      "value": "重新生成回复"
+    },
+    {
+      "name": "ui_remove_file_reference_04bbfc",
+      "value": "移除文件引用"
+    },
+    {
+      "name": "ui_remove_image_089db3",
+      "value": "移除图片"
+    },
+    {
+      "name": "ui_remove_provider_9f848f",
+      "value": "删除提供商"
+    },
+    {
+      "name": "ui_removed_4e5c49",
+      "value": "已移除"
+    },
+    {
+      "name": "ui_replace_user_skills_250e98",
+      "value": "替换 Skill？"
+    },
+    {
+      "name": "ui_reset_built_in_configuration_35b6ec",
+      "value": "重置内置配置"
+    },
+    {
+      "name": "ui_restore_automatic_8d4e1e",
+      "value": "恢复自动"
+    },
+    {
+      "name": "ui_return_11d024",
+      "value": "返回"
+    },
+    {
+      "name": "ui_search_in_one_turn_179584",
+      "value": "一圈即搜"
+    },
+    {
+      "name": "ui_search_model_df5586",
+      "value": "搜索模型"
+    },
+    {
+      "name": "ui_search_provider_74e049",
+      "value": "搜索提供商"
+    },
+    {
+      "name": "ui_server_side_web_search_ddb8e0",
+      "value": "Provider 托管网页搜索"
+    },
+    {
+      "name": "ui_set_up_7debf9",
+      "value": "设置"
+    },
+    {
+      "name": "ui_stop_a17f70",
+      "value": "停止"
+    },
+    {
+      "name": "ui_support_anthropic_claude_official_or_compatible_api_de3f80",
+      "value": "支持 Anthropic Claude 官方或兼容 API"
+    },
+    {
+      "name": "ui_support_chatgpt_deepseek_kimi_glm_qwen_etc_b31d02",
+      "value": "支持 ChatGPT, DeepSeek, Kimi, GLM, Qwen等"
+    },
+    {
+      "name": "ui_support_thinking_5b9e4c",
+      "value": "支持思考"
+    },
+    {
+      "name": "ui_supports_files_and_folders_under_internal_storage_or_520786",
+      "value": "支持任意本地绝对路径下的文件和文件夹"
+    },
+    {
+      "name": "ui_system_applications_have_voice_wake_up_permissions_f_0190f2",
+      "value": "系统应用享有语音唤醒权限、更少的自启限制，体验接近原生。将通过 Magisk / KernelSU 模块安装，重启后生效。"
+    },
+    {
+      "name": "ui_system_assistant_takes_over_f46043",
+      "value": "系统助手接管"
+    },
+    {
+      "name": "ui_system_enhancement_dcd4ad",
+      "value": "系统增强"
+    },
+    {
+      "name": "ui_system_prompt_word_193981",
+      "value": "系统提示词"
+    },
+    {
+      "name": "ui_test_connection_10b7d8",
+      "value": "测试连接"
+    },
+    {
+      "name": "ui_the_entire_contents_of_memory_md_will_be_deleted_and_83a8ac",
+      "value": "MEMORY.md 的全部内容将被删除，记忆开关保持当前状态。"
+    },
+    {
+      "name": "ui_this_will_close_the_current_page_and_clear_eta_brows_1cd331",
+      "value": "将关闭当前页面并清除 随身助手 浏览器的 Cookie 与站点数据。外部浏览器不会受到影响。"
+    },
+    {
+      "name": "ui_tool_a72ef1",
+      "value": "工具"
+    },
+    {
+      "name": "ui_tool_ability_9f0f80",
+      "value": "工具能力"
+    },
+    {
+      "name": "ui_update_already_latest",
+      "value": "当前已是最新版本"
+    },
+    {
+      "name": "ui_update_available_message",
+      "value": "最新版本 %1$s，当前版本 %2$s"
+    },
+    {
+      "name": "ui_update_available_title",
+      "value": "发现新版本"
+    },
+    {
+      "name": "ui_update_check_failed",
+      "value": "检查更新失败，请稍后重试"
+    },
+    {
+      "name": "ui_update_go_download",
+      "value": "前往下载"
+    },
+    {
+      "name": "ui_user_skills_748e7f",
+      "value": "用户安装"
+    },
+    {
+      "name": "ui_view_description",
+      "value": "查看说明"
+    },
+    {
+      "name": "ui_xiaobu_xiaoai_compatible_entrance_ae918a",
+      "value": "小布/小爱兼容入口"
+    },
+    {
+      "name": "voice_audio_permission",
+      "value": "请在 随身助手 应用权限中允许麦克风，然后重新唤醒；点击麦克风可打开设置"
+    },
+    {
+      "name": "voice_completed",
+      "value": "已完成"
+    },
+    {
+      "name": "voice_download_model",
+      "value": "下载"
+    },
+    {
+      "name": "voice_failed",
+      "value": "随身助手 执行失败"
+    },
+    {
+      "name": "voice_finish_speech",
+      "value": "结束录音并发送"
+    },
+    {
+      "name": "voice_input_hint",
+      "value": "发消息问 随身助手…"
+    },
+    {
+      "name": "voice_input_request",
+      "value": "输入请求"
+    },
+    {
+      "name": "voice_interaction_service_label",
+      "value": "随身助手"
+    },
+    {
+      "name": "voice_language_not_supported",
+      "value": "当前识别服务不支持此语言"
+    },
+    {
+      "name": "voice_language_unavailable",
+      "value": "当前语言的语音识别尚未就绪"
+    },
+    {
+      "name": "voice_listening",
+      "value": "聆听中..."
+    },
+    {
+      "name": "voice_model_download_failed",
+      "value": "语音包下载失败"
+    },
+    {
+      "name": "voice_model_downloading",
+      "value": "正在请求下载语音包…"
+    },
+    {
+      "name": "voice_model_needed",
+      "value": "当前语言需要下载语音包"
+    },
+    {
+      "name": "voice_model_pending",
+      "value": "语音包已等待下载，请稍后重试"
+    },
+    {
+      "name": "voice_model_ready",
+      "value": "语音包已就绪，点击麦克风重试"
+    },
+    {
+      "name": "voice_model_scheduled",
+      "value": "已安排下载语音包，请稍后重试"
+    },
+    {
+      "name": "voice_no_speech",
+      "value": "没有听清，请点击麦克风重试，或改用键盘输入"
+    },
+    {
+      "name": "voice_processing",
+      "value": "正在处理…"
+    },
+    {
+      "name": "voice_recognizing",
+      "value": "识别中..."
+    },
+    {
+      "name": "voice_release_to_send",
+      "value": "松开发送，移出取消"
+    },
+    {
+      "name": "voice_request_failed",
+      "value": "请求失败，请重试。"
+    },
+    {
+      "name": "voice_running_tool",
+      "value": "随身助手 正在执行 %1$s"
+    },
+    {
+      "name": "voice_send",
+      "value": "发送"
+    },
+    {
+      "name": "voice_speech_audio_error",
+      "value": "麦克风启动失败，请检查是否被其他应用占用"
+    },
+    {
+      "name": "voice_speech_busy",
+      "value": "语音识别正忙，请稍后重试"
+    },
+    {
+      "name": "voice_speech_network_error",
+      "value": "语音识别需要网络，请检查连接后重试，或改用键盘"
+    },
+    {
+      "name": "voice_speech_no_service",
+      "value": "设备上没有可用的语音识别服务"
+    },
+    {
+      "name": "voice_speech_rate_limited",
+      "value": "语音请求过于频繁，请稍后重试"
+    },
+    {
+      "name": "voice_speech_service_error",
+      "value": "语音识别服务已断开，请重试"
+    },
+    {
+      "name": "voice_speech_service_timeout",
+      "value": "语音识别服务无响应，请重试"
+    },
+    {
+      "name": "voice_speech_unavailable",
+      "value": "语音识别不可用"
+    },
+    {
+      "name": "voice_tap_to_speak",
+      "value": "点击说话"
+    },
+    {
+      "name": "voice_use_keyboard",
+      "value": "切换键盘输入"
+    },
+    {
+      "name": "web_tools_api_key_optional",
+      "value": "API Key（选填）"
+    },
+    {
+      "name": "web_tools_backend_builtin",
+      "value": "内置默认"
+    },
+    {
+      "name": "web_tools_backend_custom",
+      "value": "自定义接口"
+    },
+    {
+      "name": "web_tools_backend_deepseek",
+      "value": "DeepSeek"
+    },
+    {
+      "name": "web_tools_body_template",
+      "value": "请求体模板 (JSON)"
+    },
+    {
+      "name": "web_tools_configure_action",
+      "value": "配置服务"
+    },
+    {
+      "name": "web_tools_content_field",
+      "value": "正文字段路径（留空则直接取响应文本）"
+    },
+    {
+      "name": "web_tools_credentials_lost",
+      "value": "网页工具凭据无法解密，请重新填写并保存"
+    },
+    {
+      "name": "web_tools_custom_fetch_note",
+      "value": "支持 {{url}}、{{raw_url}} 与 {{url_json}} 占位符；远端读取失败时自动回退到本地静态抓取。"
+    },
+    {
+      "name": "web_tools_custom_headers",
+      "value": "自定义请求头（选填，每行 Header: Value）"
+    },
+    {
+      "name": "web_tools_custom_search_note",
+      "value": "支持 {{query}}、{{query_json}} 与 {{count}} 占位符；填写 API Key 时默认附加 Bearer 鉴权头。"
+    },
+    {
+      "name": "web_tools_deepseek_linked_note",
+      "value": "已自动关联 DeepSeek 模型提供商的 API Key；也可在此填写独立密钥覆盖。"
+    },
+    {
+      "name": "web_tools_deepseek_note",
+      "value": "调用 DeepSeek /v1/tools/search 与 /v1/tools/fetch 接口；留空时将尝试复用 DeepSeek 模型提供商的密钥。"
+    },
+    {
+      "name": "web_tools_endpoint_url",
+      "value": "接口地址 (URL)"
+    },
+    {
+      "name": "web_tools_fetch_service",
+      "value": "网页读取"
+    },
+    {
+      "name": "web_tools_group_custom_fetch",
+      "value": "自定义读取"
+    },
+    {
+      "name": "web_tools_group_custom_search",
+      "value": "自定义搜索"
+    },
+    {
+      "name": "web_tools_group_service",
+      "value": "服务"
+    },
+    {
+      "name": "web_tools_http_method",
+      "value": "请求方式"
+    },
+    {
+      "name": "web_tools_load_failed",
+      "value": "无法读取网页工具设置，请返回重试"
+    },
+    {
+      "name": "web_tools_mapping_and_template",
+      "value": "请求模板与响应字段"
+    },
+    {
+      "name": "web_tools_overview_builtin_note",
+      "value": "内置方案免配置开箱即用；切换为 DeepSeek 或自定义接口可获得更佳的检索质量与 Markdown 正文提取。"
+    },
+    {
+      "name": "web_tools_overview_remote_note",
+      "value": "远端网页读取失败时会自动回退到本地静态抓取；同一网页翻页复用当前运行缓存，不重复请求。"
+    },
+    {
+      "name": "web_tools_overview_resilient_note",
+      "value": "内置搜索优先使用必应，失败时尝试 DuckDuckGo；每个来源的网络超时预算为 10 秒。DeepSeek 和自定义接口按所选配置执行。"
+    },
+    {
+      "name": "web_tools_results_path",
+      "value": "结果数组路径"
+    },
+    {
+      "name": "web_tools_search_service",
+      "value": "网页搜索"
+    },
+    {
+      "name": "web_tools_settings_title",
+      "value": "网页搜索与读取"
+    },
+    {
+      "name": "web_tools_snippet_field",
+      "value": "摘要字段"
+    },
+    {
+      "name": "web_tools_title_field",
+      "value": "标题字段"
+    },
+    {
+      "name": "web_tools_url_field",
+      "value": "链接字段"
+    },
+    {
+      "name": "work_analyzing",
+      "value": "正在分析任务"
+    },
+    {
+      "name": "work_collapse",
+      "value": "收起工作过程"
+    },
+    {
+      "name": "work_completed",
+      "value": "已完成分析"
+    },
+    {
+      "name": "work_expand",
+      "value": "展开工作过程"
+    },
+    {
+      "name": "xposed_description",
+      "value": "系统级 AI Agent，接管小布与小爱，解锁 Gemini 与一圈即搜，集成浏览器、终端与设备工具"
     }
   ]
 }
