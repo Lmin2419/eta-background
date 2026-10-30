@@ -58,13 +58,7 @@ export struct AgentAppShell {
         onOpenPane: () => this.controller?.drawer(true), onNewConversation: () => { void this.controller?.newConversation(); } })
       this.error()
       Column() {
-        if (this.state.ready) { AgentHomeScreen({ state: this.state, keyboardVisible: this.keyboardVisible, controller: this.controller }) }
-        else {
-          Column({ space: S.Dp16 }) {
-            if (this.state.busy) { LoadingProgress().width(S.Dp32).height(S.Dp32).color($r('app.color.miuix_primary')); Text($r('app.string.conversation_loading')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')) }
-            else { Button($r('app.string.action_retry')).onClick(() => { void this.controller?.initialize(); }) }
-          }.width('100%').height('100%').justifyContent(FlexAlign.Center)
-        }
+        AgentHomeScreen({state:this.state,keyboardVisible:this.keyboardVisible,controller:this.controller})
       }.width('100%').layoutWeight(1)
     }.width('100%').height('100%').backgroundColor($r('app.color.miuix_background'))
   }

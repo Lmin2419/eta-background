@@ -56,7 +56,10 @@ const logger = {
   info: () => {}, debug: () => {}, printError: e => found.error.push(clean(JSON.stringify(e)))
 };
 
-require(path.join(loader, 'main.js'));
+const loaderMain = require(path.join(loader, 'main.js'));
+// SinceWarningSuppressor also reads this path list from projectConfig. The normal
+// Hvigor build supplies it; use the loader's discovered SDK paths for standalone checks.
+config.globalModulePaths = loaderMain.globalModulePaths;
 const checker = require(path.join(loader, 'lib/ets_checker.js'));
 checker.etsStandaloneChecker(entries, logger, config);
 fs.rmSync(cache, { recursive: true, force: true });

@@ -1,4 +1,6 @@
-import { ConversationRepository, ConversationSummary, ChatTurn, statusLabel } from '../conversations';
+import { foundationChatMessages } from '../eta/foundationChatMessages';
+import { AgentChatMessageUi } from '../eta/model/conversation';
+import { ConversationRepository, ConversationSummary, ChatTurn, TurnStatus, statusLabel } from '../conversations';
 import { DraftRepository } from '../drafts';
 import { ProfileRepository, ModelProfile, modelCatalog } from '../profiles';
 import { HttpTransport } from '../model';
@@ -10,10 +12,10 @@ import { AgentModelPickerUiState, AgentModelProviderGroupUi, AgentModelOptionUi,
 import { foundationPickerProviders } from '../eta/foundationModelPicker';
 import { DiagnosticArea, DiagnosticEnvironment, DiagnosticFact, DiagnosticLog, diagnosticReport, emptyEnvironment, environmentFacts, formatEvent } from '../diagnostics';
 
-export interface MessageRow { id: string; request: string; reply: string; reasoning: string; model: string; status: string; notice: string; active: boolean }
+export interface MessageRow { id: string; request: string; reply: string; reasoning: string; model: string; status: string; notice: string; active: boolean; resultStatus?: TurnStatus }
 export interface ModelChoice { key: string; profileId: string; provider: string; model: string }
 export interface ChatView {
-  id: string; title: string; input: string; inputVersion: number; rows: MessageRow[];
+  id: string; title: string; input: string; inputVersion: number; rows: MessageRow[]; messages: AgentChatMessageUi[];
   model: string; provider: string; profileId: string; active: boolean; phase: string; error: string;
   followBottom: boolean; scroll: number;
 }
@@ -33,7 +35,7 @@ export interface FoundationDependencies {
 }
 export function emptyShellState(): ShellState {
   return { routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', picker: {providerGroups: [],selectedModel:null,isChanging:false},pickerGroups:[],pickerFilter:null,pickerPending:null,contextUsage:{contextTokens:null,contextWindow:null},appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
-    chat: { id: '', title: '新对话', input: '', inputVersion: 0, rows: [], model: '', provider: '', profileId: '', active: false, phase: '', error: '', followBottom: true, scroll: 0 },
+    chat: { id: '', title: '新对话', input: '', inputVersion: 0, rows: [], messages: [], model: '', provider: '', profileId: '', active: false, phase: '', error: '', followBottom: true, scroll: 0 },
     editor: { draft: { id: '', name: '我的模型', baseUrl: '', apiKey: '', model: '', models: [], rememberKey: false, screenshots: false, allowInsecureHttp: false, streaming: true, protocol: 'chat_completions' }, busy: false, working: '', error: '', message: '', connection: '', catalog: [], selected: [], query: '', tab: 'config' } };
 }
 
@@ -50,6 +52,7 @@ export class FoundationController {
   private pickerSession = new ModelPickerSession();
   private modelQuery = '';
   private inputVersion = 0;
+  private messageCache = new Map<string,AgentChatMessageUi[]>();
   private listeners = new Set<() => void>();
   private draftTimer: ReturnType<typeof setTimeout> | undefined;
   private environment: DiagnosticEnvironment = emptyEnvironment();
@@ -73,10 +76,13 @@ export class FoundationController {
     const rows: MessageRow[] = (selected?.turns || []).map((turn: ChatTurn): MessageRow => ({
       id: turn.id, request: turn.request, reply: activity?.id === turn.id && activity.reply ? activity.reply : turn.reply,
       reasoning: activity?.id === turn.id && activity.reasoning ? activity.reasoning : turn.reasoning || '',
-      model: turn.modelLabel, status: activity?.id === turn.id && activity.active ? activity.phase : statusLabel(turn.status),
+      resultStatus:turn.status, model: turn.modelLabel, status: activity?.id === turn.id && activity.active ? activity.phase : statusLabel(turn.status),
       notice: activity?.id === turn.id && activity.error ? activity.error : turn.notice, active: turn.status === 'running'
     }));
     if (activity && !rows.some(row => row.id === activity.id)) rows.push({ id: activity.id, request: activity.text, reply: activity.reply, reasoning: activity.reasoning, model: activity.model, status: activity.phase, notice: activity.error, active: activity.active });
+    const messages = foundationChatMessages(rows,this.messageCache.get(id));
+    this.messageCache.set(id,messages);
+    for(const key of this.messageCache.keys()) if(key!==id&&!chats.get(key))this.messageCache.delete(key);
     const choices: ModelChoice[] = [];
     for (const p of this.ports.profiles.document.profiles) for (const model of modelCatalog(p.models, p.model)) {
       if ((p.name + ' ' + model).toLowerCase().includes(this.modelQuery.trim().toLowerCase())) choices.push({ key: p.id + ':' + model, profileId: p.id, provider: p.name, model });
@@ -91,7 +97,7 @@ export class FoundationController {
       routes: this.navigation.routes, ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
       conversations: this.ready ? chats.list(this.search) : [], search: this.search,
       providers: this.ports.profiles.document.profiles.filter(p => (p.name + ' ' + p.baseUrl).toLowerCase().includes(this.providerSearch.trim().toLowerCase())), providerSearch: this.providerSearch,
-      chat: { id, title: selected?.title || '新对话', input: draft.text, inputVersion: this.inputVersion, rows, model: choice?.model || '', provider: choice?.provider || '', profileId: choice?.profileId || '',
+      chat: { id, title: selected?.title || '新对话', input: draft.text, inputVersion: this.inputVersion, rows, messages, model: choice?.model || '', provider: choice?.provider || '', profileId: choice?.profileId || '',
         active: Boolean(activity?.active), phase: activity?.phase || '', error: activity?.error || '', followBottom: draft.followBottom !== false, scroll: draft.scroll },
       editor: this.editor.snapshot(), choices, modelQuery: this.modelQuery,
       appVersion: this.environment.appVersion, diagnostics: this.diagnosticView()

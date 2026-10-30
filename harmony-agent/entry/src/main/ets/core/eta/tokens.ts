@@ -105,6 +105,48 @@ export class MiuixFontSizes {
   static readonly Title4: number = 18.0;
 }
 
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownStyle.kt @ 3b1794d
+export class EtaMarkdownFonts {
+  static readonly Fp0: number = 0.0;
+  static readonly Fp3: number = 3.0;
+  static readonly Fp4: number = 4.0;
+  static readonly Fp12: number = 12.0;
+  static readonly Fp13: number = 13.0;
+  static readonly Fp14: number = 14.0;
+  static readonly Fp15: number = 15.0;
+  static readonly Fp16: number = 16.0;
+  static readonly Fp17: number = 17.0;
+  static readonly Fp18: number = 18.0;
+  static readonly Fp19: number = 19.0;
+  static readonly Fp20: number = 20.0;
+  static readonly Fp21: number = 21.0;
+  static readonly Fp25: number = 25.0;
+  static readonly Fp26: number = 26.0;
+  static readonly Fp28: number = 28.0;
+}
+
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownStyle.kt, MarkdownContent.kt @ 3b1794d
+export class EtaMarkdownDefaults {
+  static readonly ANSWER_LINE_HEIGHT_SP: number = 26.0;
+  static readonly THINKING_LINE_HEIGHT_SP: number = 22.0;
+  static readonly THINKING_GAP_SCALE: number = 0.75;
+  static readonly TableMinColumnWidth: number = 72.0;
+  static readonly TableMaxColumnWidth: number = 260.0;
+  static readonly ListMarkerDigitWidth: number = 9.0;
+  static readonly CopyResetMs: number = 1400;
+}
+
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt, AgentWorkProcess.kt; ui/app/AgentConversationStore.kt @ 3b1794d
+export class EtaMessageDefaults {
+  static readonly PageSize: number = 128;
+  static readonly ThinkingTailLines: number = 4;
+  static readonly WorkRowHeight: number = 32.0;
+  static readonly WorkGutterWidth: number = 22.0;
+  static readonly WorkGutterGap: number = 8.0;
+  static readonly WorkNodeSize: number = 20.0;
+  static readonly ChevronExpandedDegrees: number = 90.0;
+}
+
 // Ported from Eta E02 components @ 3b1794d; Miuix 0.9.4 pinned sources (see docs/eta-theme.json)
 export class EtaComponentSizes {
   static readonly Dp0: number = 0.0;
@@ -113,13 +155,16 @@ export class EtaComponentSizes {
   static readonly Dp1: number = 1.0;
   static readonly Dp2: number = 2.0;
   static readonly Dp2_5: number = 2.5;
+  static readonly Dp3: number = 3.0;
   static readonly Dp4: number = 4.0;
+  static readonly Dp5: number = 5.0;
   static readonly Dp6: number = 6.0;
   static readonly Dp7: number = 7.0;
   static readonly Dp8: number = 8.0;
   static readonly Dp10: number = 10.0;
   static readonly Dp11: number = 11.0;
   static readonly Dp12: number = 12.0;
+  static readonly Dp13: number = 13.0;
   static readonly Dp14: number = 14.0;
   static readonly Dp15: number = 15.0;
   static readonly Dp16: number = 16.0;
@@ -133,6 +178,7 @@ export class EtaComponentSizes {
   static readonly Dp28: number = 28.0;
   static readonly Dp32: number = 32.0;
   static readonly Dp34: number = 34.0;
+  static readonly Dp36: number = 36.0;
   static readonly Dp38: number = 38.0;
   static readonly Dp40: number = 40.0;
   static readonly Dp42: number = 42.0;
@@ -142,11 +188,16 @@ export class EtaComponentSizes {
   static readonly Dp52: number = 52.0;
   static readonly Dp56: number = 56.0;
   static readonly Dp60: number = 60.0;
+  static readonly Dp64: number = 64.0;
+  static readonly Dp72: number = 72.0;
   static readonly Dp88: number = 88.0;
+  static readonly Dp100: number = 100.0;
   static readonly Dp136: number = 136.0;
   static readonly Dp248: number = 248.0;
   static readonly Dp250: number = 250.0;
+  static readonly Dp260: number = 260.0;
   static readonly Dp280: number = 280.0;
+  static readonly Dp320: number = 320.0;
   static readonly Dp340: number = 340.0;
   static readonly Dp360: number = 360.0;
 }

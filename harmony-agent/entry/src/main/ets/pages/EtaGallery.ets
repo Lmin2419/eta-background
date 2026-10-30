@@ -2,6 +2,7 @@
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 // Preview only: intentionally absent from main_pages.json. Selection state here is a fixture.
 import { EtaComponentSizes as S, MiuixFontSizes as F, MiuixDialogDefaults as D } from '../core/eta/tokens';
+import { AgentStatusCard } from '../ui/eta/components/AgentStatusCard';
 import { EtaCard } from '../ui/eta/components/EtaCard';
 import { EtaPreferenceGroup, EtaPreferenceGroupTitle, EtaPreferenceIcon, EtaPreferenceDivider } from '../ui/eta/components/EtaPreferenceStyle';
 import { EtaPreference, EtaArrowPreference, EtaPreferenceRow } from '../ui/eta/components/EtaPreferenceRow';
@@ -97,6 +98,7 @@ struct EtaGallery {
   @Builder private lastRow() { EtaPreference({ title: $r('app.string.appearance_theme_dark') }) }
   @Builder private emptyAction() { EtaTextButton({ text: $r('app.string.action_confirm'), onAction: () => { this.openOverlay(); } }) }
   @Builder private body() {
+    AgentStatusCard({title:$r('app.string.work_completed'),currentStep:$r('app.string.status_ready'),status:'Success'})
     EtaPreferenceGroupTitle({ title: $r('app.string.appearance_group_interface') })
     EtaPreferenceGroup({ content: this.preferenceRows })
     EtaPreferenceGroupItem({ first: true, content: this.firstRow })

@@ -104,6 +104,26 @@
       "sha256": "6ca48abba8349da2405792f18eb3910ccd48c67aa23ed91c62b15578dd52ec2e"
     },
     {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+      "sha256": "c571f6a0fedd7f06e9e04c54ef2626f84822832267ab1d1eaab2a39332a67676"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentWorkProcess.kt",
+      "sha256": "8b4803153f44b11a045fe56a29857f07184ba2564afe1a56429d2fb712390767"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentToolActivity.kt",
+      "sha256": "4260c452babd45ad64221d7c05e63803b41d0bd9139a76839b83e52af3ed8d1f"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentStatusCard.kt",
+      "sha256": "b9384c6bae80ba3d82b9e58a37adec7bc9e33b3530249d3dc495568e800030ef"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentConversationLoading.kt",
+      "sha256": "8331efd444aaa62eea4c6cadf08db82fd9d5e8f2417d9cafd7f31de951a091be"
+    },
+    {
       "path": "scripts/eta-upstream/miuix-0.9.4/ArrowRight.kt",
       "sha256": "92e10aec73f6f93de2195c45af457c4f4c9684c7d4f994a1aa82e44d86f012dd"
     },
@@ -177,8 +197,8 @@
     }
   ],
   "miuixColorRoles": 53,
-  "lightColorCount": 77,
-  "darkColorCount": 77,
+  "lightColorCount": 83,
+  "darkColorCount": 83,
   "tokens": {
     "EtaPreferenceDefaults": {
       "SidePadding": 16,
@@ -268,6 +288,42 @@
       "Title3": 20.0,
       "Title4": 18.0
     },
+    "EtaMarkdownFonts": {
+      "Fp0": 0.0,
+      "Fp3": 3.0,
+      "Fp4": 4.0,
+      "Fp12": 12.0,
+      "Fp13": 13.0,
+      "Fp14": 14.0,
+      "Fp15": 15.0,
+      "Fp16": 16.0,
+      "Fp17": 17.0,
+      "Fp18": 18.0,
+      "Fp19": 19.0,
+      "Fp20": 20.0,
+      "Fp21": 21.0,
+      "Fp25": 25.0,
+      "Fp26": 26.0,
+      "Fp28": 28.0
+    },
+    "EtaMarkdownDefaults": {
+      "ANSWER_LINE_HEIGHT_SP": 26.0,
+      "THINKING_LINE_HEIGHT_SP": 22.0,
+      "THINKING_GAP_SCALE": 0.75,
+      "TableMinColumnWidth": 72.0,
+      "TableMaxColumnWidth": 260.0,
+      "ListMarkerDigitWidth": 9.0,
+      "CopyResetMs": 1400
+    },
+    "EtaMessageDefaults": {
+      "PageSize": 128,
+      "ThinkingTailLines": 4,
+      "WorkRowHeight": 32.0,
+      "WorkGutterWidth": 22.0,
+      "WorkGutterGap": 8.0,
+      "WorkNodeSize": 20.0,
+      "ChevronExpandedDegrees": 90.0
+    },
     "EtaComponentSizes": {
       "Dp0": 0.0,
       "Dp0_33": 0.33,
@@ -275,13 +331,16 @@
       "Dp1": 1.0,
       "Dp2": 2.0,
       "Dp2_5": 2.5,
+      "Dp3": 3.0,
       "Dp4": 4.0,
+      "Dp5": 5.0,
       "Dp6": 6.0,
       "Dp7": 7.0,
       "Dp8": 8.0,
       "Dp10": 10.0,
       "Dp11": 11.0,
       "Dp12": 12.0,
+      "Dp13": 13.0,
       "Dp14": 14.0,
       "Dp15": 15.0,
       "Dp16": 16.0,
@@ -295,6 +354,7 @@
       "Dp28": 28.0,
       "Dp32": 32.0,
       "Dp34": 34.0,
+      "Dp36": 36.0,
       "Dp38": 38.0,
       "Dp40": 40.0,
       "Dp42": 42.0,
@@ -304,11 +364,16 @@
       "Dp52": 52.0,
       "Dp56": 56.0,
       "Dp60": 60.0,
+      "Dp64": 64.0,
+      "Dp72": 72.0,
       "Dp88": 88.0,
+      "Dp100": 100.0,
       "Dp136": 136.0,
       "Dp248": 248.0,
       "Dp250": 250.0,
+      "Dp260": 260.0,
       "Dp280": 280.0,
+      "Dp320": 320.0,
       "Dp340": 340.0,
       "Dp360": 360.0
     },

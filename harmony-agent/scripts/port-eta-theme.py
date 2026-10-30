@@ -83,8 +83,11 @@ def generate(eta_root, output, check=False):
     source_names = ['EtaPreferenceStyle.kt', 'EtaCard.kt', 'EtaControls.kt', 'StatusColors.kt', 'AgentChatFileAttachments.kt', 'AgentChatInputBar.kt', 'ConversationSidePaneScaffold.kt',
                     'EtaPreferenceRow.kt', 'EtaPreferenceGroupItem.kt', 'EtaSelectionPreferences.kt', 'EtaDropdownPreference.kt',
                     'EtaFeatureCard.kt', 'EtaChoiceChip.kt', 'ToolChip.kt', 'SectionHeader.kt', 'ListEmptyState.kt',
-                    'MiuixDialogActions.kt', 'ItemDescriptionDialog.kt', 'MiuixScaffoldPage.kt', 'AdaptiveTopAppBar.kt', 'MiuixBackButton.kt', 'TopBarBackdrop.kt', 'AgentChatBody.kt', 'AgentModelPicker.kt', 'AgentChatModelControls.kt']
+                    'MiuixDialogActions.kt', 'ItemDescriptionDialog.kt', 'MiuixScaffoldPage.kt', 'AdaptiveTopAppBar.kt', 'MiuixBackButton.kt', 'TopBarBackdrop.kt', 'AgentChatBody.kt', 'AgentModelPicker.kt', 'AgentChatModelControls.kt', 'ChatMessageItem.kt', 'AgentWorkProcess.kt', 'AgentToolActivity.kt', 'AgentStatusCard.kt', 'AgentConversationLoading.kt']
     texts = {name: (components / name).read_text() for name in source_names}
+    markdown_dir=components.parent / 'markdown'
+    markdown_style=(markdown_dir/'MarkdownStyle.kt').read_text()
+    markdown_content=(markdown_dir/'MarkdownContent.kt').read_text()
     upstream = PROJECT / 'scripts/eta-upstream/miuix-0.9.4'
     miuix = (upstream / 'Colors.kt').read_text(); style = texts['EtaPreferenceStyle.kt']; status = texts['StatusColors.kt']
     legacy = json.loads((PROJECT / 'scripts/eta-port/legacy-colors.json').read_text())['color']
@@ -109,6 +112,12 @@ def generate(eta_root, output, check=False):
             return '#' + f'{math.floor(alpha * 255 + 0.5):02X}' + colors[role][3:]
         row = texts['EtaPreferenceRow.kt']; chip = texts['EtaChoiceChip.kt']
         input_source=texts['AgentChatInputBar.kt']; body_source=texts['AgentChatBody.kt']
+        result['eta_message_action']=blend('onSurfaceVariantSummary',float(re.search(r'onSurfaceVariantSummary.copy\(alpha = ([\d.]+)f',texts['ChatMessageItem.kt'].split('internal fun AnswerActionButton',1)[1])[1]))
+        result['eta_message_chevron']=blend('onSurfaceVariantSummary',float(re.search(r'onSurfaceVariantSummary.copy\(alpha = ([\d.]+)f',texts['AgentWorkProcess.kt'].split('internal fun ExpandChevron',1)[1])[1]))
+        result['eta_markdown_divider']=blend('outline',float(re.search(r'dividerColor = colors.outline.copy\(alpha = ([\d.]+)f',markdown_style)[1]))
+        result['eta_markdown_inline_code']=blend('onSurface',float(re.search(r'codeBackground = colors.onSurface.copy\(alpha = ([\d.]+)f',markdown_style)[1]))
+        result['eta_markdown_marker']=blend('onSurface',float(re.search(r'markerColor = if \(answer\) colors.onSurface.copy\(alpha = ([\d.]+)f',markdown_style)[1]))
+        result['eta_markdown_important']=parse_color(re.search(r'AlertImportantColor = (Color\(0x[0-9A-F]+\))',markdown_content)[1])
         result['eta_input_outline']=blend('outline',float(re.search(r'outline.copy\(alpha = ([\d.]+)f',input_source)[1]))
         result['eta_suggestion_outline']=blend('outline',float(re.search(r'outline.copy\(alpha = ([\d.]+)f',body_source.split('private fun SuggestionCard',1)[1])[1]))
         result['eta_input_shadow']=parse_color('Color.Black.copy(alpha = '+re.search(r'alpha = ([\d.]+)f',input_source)[1]+'f)')
@@ -164,8 +173,20 @@ def generate(eta_root, output, check=False):
     if len(objects['MiuixFontSizes']) != 14: raise ValueError('Unexpected Miuix text style count')
     source_for['MiuixFontSizes'] = 'compose-miuix-ui/miuix TextStyles.kt @ 39c40f9 (0.9.4), Apache-2.0'
     # Literal dimensions are generated from the same pinned files as the components.
-    size_sources = list(texts.values()) + [(upstream / name).read_text() for name in ['Card.kt', 'IconButton.kt', 'SmallTitle.kt', 'TopAppBar.kt', 'Checkbox.kt', 'RadioButton.kt']]
+    size_sources = list(texts.values()) + [markdown_style,markdown_content] + [(upstream / name).read_text() for name in ['Card.kt', 'IconButton.kt', 'SmallTitle.kt', 'TopAppBar.kt', 'Checkbox.kt', 'RadioButton.kt']]
     sizes = sorted({float(value) for text in size_sources for value in re.findall(r'(?<![\w.])([\d.]+)\.dp', text)})
+    objects['EtaMarkdownFonts'] = {'Fp'+format(float(v),'g').replace('.','_'):float(v) for v in sorted(set(re.findall(r'([\d.]+)\.sp',markdown_style)),key=float)}
+    source_for['EtaMarkdownFonts']='app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownStyle.kt @ 3b1794d'
+    objects['EtaMarkdownDefaults']={k:float(v) for k,v in re.findall(r'const val (\w+) = ([\d.]+)',markdown_style)}
+    objects['EtaMarkdownDefaults'].update({k:float(v) for k,v in re.findall(r'private val (Table\w+Width) = ([\d.]+)\.dp',markdown_content)})
+    objects['EtaMarkdownDefaults']['ListMarkerDigitWidth']=float(re.search(r'digits \* (\d+) \+',markdown_content)[1])
+    objects['EtaMarkdownDefaults']['CopyResetMs']=int(re.search(r'delay\(([\d_]+)\)',markdown_content)[1].replace('_',''))
+    source_for['EtaMarkdownDefaults']='app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownStyle.kt, MarkdownContent.kt @ 3b1794d'
+    store=(components.parent/'app/AgentConversationStore.kt').read_text()
+    objects['EtaMessageDefaults']={'PageSize':int(re.search(r'MESSAGE_LOAD_PAGE_SIZE = (\d+)',store)[1]),'ThinkingTailLines':int(re.search(r'THINKING_TAIL_WINDOW_LINES = (\d+)',texts['ChatMessageItem.kt'])[1])}
+    objects['EtaMessageDefaults'].update({k:float(v) for k,v in re.findall(r'(?:private |internal )?val (Work\w+)(?:: Dp)? = ([\d.]+)\.dp',texts['AgentWorkProcess.kt'])})
+    objects['EtaMessageDefaults']['ChevronExpandedDegrees']=float(re.search(r'targetValue = if \(expanded\) ([\d.]+)f',texts['AgentWorkProcess.kt'].split('internal fun ExpandChevron',1)[1])[1])
+    source_for['EtaMessageDefaults']='app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt, AgentWorkProcess.kt; ui/app/AgentConversationStore.kt @ 3b1794d'
     objects['EtaComponentSizes'] = {'Dp' + format(value, 'g').replace('.', '_'): value for value in sizes}
     source_for['EtaComponentSizes'] = 'Eta E02 components @ 3b1794d; Miuix 0.9.4 pinned sources (see docs/eta-theme.json)'
     row = texts['EtaPreferenceRow.kt']; feedback = (upstream / 'PressFeedback.kt').read_text()
