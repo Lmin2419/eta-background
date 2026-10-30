@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-HarmonyOS 原生 AI 助手，ArkUI + ArkTS。借鉴 Eta（Android）的页面组织与交互逻辑，但不移植 Kotlin / Android 代码。用户自带模型 API。目标设备：Pura X Max / HarmonyOS 7 / API 26。
+HarmonyOS 原生 AI 助手，ArkUI + ArkTS。**界面、文案和交互逻辑按 Eta（Android）源码 1:1 移植**，规范见 [docs/ETA_PORT.md](docs/ETA_PORT.md)：Kotlin / Compose 翻译为 ArkTS / ArkUI，不在鸿蒙中运行 Android 代码。用户自带模型 API。目标设备：Pura X Max / HarmonyOS 7 / API 26。
 
 仓库根目录是 Android Eta（Gradle）。**鸿蒙工程只在 `harmony-agent/`。** 不要修改根目录的 Android 代码、Gradle 配置或现有 `.github/workflows/pr-check.yml`、`etax-build.yml`。
 
@@ -12,12 +12,14 @@ HarmonyOS 原生 AI 助手，ArkUI + ArkTS。借鉴 Eta（Android）的页面组
 
 | 路径 | 内容 |
 | --- | --- |
-| `entry/src/main/ets/core/` | 纯 TypeScript 逻辑（可单测）。`core/foundation/` 是 0.9 新框架 |
-| `entry/src/main/ets/ui/foundation/` | 新框架 ArkUI 页面 |
+| `entry/src/main/ets/core/` | 纯 TypeScript 逻辑（可单测）。`core/foundation/` 是 0.9 框架；`core/eta/` 放从 Eta 移植的逻辑和 `tokens.ts` |
+| `entry/src/main/ets/ui/eta/` | 从 Eta 移植的 ArkUI 组件和页面（M1 起） |
+| `entry/src/main/ets/ui/foundation/` | 0.9 页面，M1 完成后删除 |
+| 仓库根目录 `app/` | Eta Android 源码（移植来源，只读），基准提交 `3b1794d` |
 | `entry/src/main/ets/platform/` | 鸿蒙平台适配（RDB、ASSET、HTTP、通知、后台） |
 | `entry/src/main/ets/pages/Index.ets` | 正式入口；`FoundationPreview.ets` 为预览入口 |
 | `entry/src/main/cpp/` | 旧 HDC 原生桥（0.9 入口未加载） |
-| `tests/` | `tsx --test` 单测 |
+| `tests/` | `tsx --test` 单测；`tests/eta/` 放从 Eta 移植的单测 |
 | `archives/` | 0.8 源码归档，只读 |
 
 ## 命令
@@ -40,13 +42,23 @@ OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets   # 必须 0 error
 
 ## 架构规则（违反即视为缺陷）
 
-- 页面只渲染 `FoundationController.snapshot()` 并发送意图；状态归属在 controller / runtime / editor，页面不维护第二份选择状态。
+- 页面只渲染控制器快照（`FoundationController` 或 `core/eta/` 中的控制器）并发送意图；状态归属在 controller / runtime / editor，页面不维护第二份选择状态。
 - 会话 ID、模型、正文、草稿来自同一会话投影。
 - 模型配置页使用独立草稿；测试连接和获取目录不保存、不改变聊天模型。
 - 离页、改地址、切换服务要作废旧请求；迟到的异步结果不能覆盖新状态。
 - 发送前先持久化用户轮次，再访问网络；停止要保留已收到内容；不自动重发请求，不自动重放手机动作。
 - 新入口不初始化旧 `AppRuntime`、HDC、后台服务或扩展。接回旧能力时一次只接一个，按 ROADMAP 任务卡执行。
 - 旧代码只作为参考，从 `core/`、`platform/` 或 `archives/` 迁移需要的部分；不要整体恢复旧入口。
+
+## Eta 移植规则（M1 起，详见 docs/ETA_PORT.md）
+
+- **照抄，不重新设计。** 结构、顺序、文案、尺寸、颜色、交互都以 `app/` 中的 Eta 源码为准。觉得 Eta 有问题时，先在 PR 中提出，由用户决定。
+- 每个移植文件开头写来源注释：`// Ported from app/src/main/kotlin/.../X.kt @ 3b1794d`。
+- Eta 的 Store / Reducer 逻辑移植到 `core/eta/`，并**把对应的 Eta 单测一起翻译**到 `tests/eta/`。
+- 颜色只用 `$r('app.color.*')`，尺寸只用 `core/eta/tokens.ts`，文案只用 `$r('app.string.*')`，图标只用脚本生成的 SVG。
+- 鸿蒙做不到的功能按 ETA_PORT §6、§7 分级处理：A 完整实现；B 显示为灰色，摘要写“鸿蒙版尚未接入”；C 隐藏。不要做看起来可用、点了没反应的入口。
+- 许可证：Eta 为 PolyForm Noncommercial 1.0.0。保留 Required Notice，仅限非商业用途；应用名保持“随身助手”，文案中的“Eta”替换为“随身助手”。
+- 不修改根目录 `app/` 下的任何文件。
 
 ## 安全和权限
 
@@ -74,4 +86,5 @@ OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets   # 必须 0 error
   2. 自动验证：`npm run check`、`npm test` 的结果（测试数量 / 失败数）；是否执行了 HAP 编译；
   3. 新增权限（没有就写“无”）；
   4. **真机验证步骤**：用户在手机上逐步操作的清单和预期结果；
-  5. 已知限制和未完成项。
+  5. 已知限制和未完成项；
+  6. **Eta 移植任务额外要求**：逐项对照表（Eta 元素 → 鸿蒙实现 → A / B / C 状态）、“与 Eta 的差异”清单，以及移植了哪些 Eta 单测（数量）。
