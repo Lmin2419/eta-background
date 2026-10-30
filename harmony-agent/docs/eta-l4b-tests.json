@@ -1,0 +1,141 @@
+{
+  "upstream": "3b1794d",
+  "ported": 22,
+  "skipped": 0,
+  "taskTests": 8,
+  "dependencyTests": 14,
+  "tests": [
+    {
+      "source": "AgentPendingResultRecoveryTest.kt",
+      "name": "recoveryDoesNotReplaceFailedAttemptOrRetryNotice",
+      "target": "tests/eta/agentPendingResultRecovery.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentPendingResultRecoveryTest.kt",
+      "name": "recoveryFinalizesLatestRoundAndAppendsTranscriptExactlyOnce",
+      "target": "tests/eta/agentPendingResultRecovery.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentPendingResultRecoveryTest.kt",
+      "name": "recoveryCreatesAssistantWhenStreamingPlaceholderWasNeverPersisted",
+      "target": "tests/eta/agentPendingResultRecovery.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentPendingResultRecoveryTest.kt",
+      "name": "recoveryDoesNotMergeEarlierTextBlockIntoSameRoundFinalBlock",
+      "target": "tests/eta/agentPendingResultRecovery.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentPendingResultRecoveryTest.kt",
+      "name": "recoveryUsesSemanticNoticeForSuccessfulRunWithoutText",
+      "target": "tests/eta/agentPendingResultRecovery.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentPendingResultRecoveryTest.kt",
+      "name": "completedOutboxResultKeepsToolTraceAndRemovesInterruptedNotice",
+      "target": "tests/eta/agentPendingResultRecovery.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentPendingResultRecoveryTest.kt",
+      "name": "appliedMarkerPreventsOldOutboxReplayAfterLaterTurns",
+      "target": "tests/eta/agentPendingResultRecovery.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "AgentPendingResultRecoveryTest.kt",
+      "name": "continuationPromptIsAddedToUiAndDurableHistoryOnce",
+      "target": "tests/eta/agentPendingResultRecovery.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "editingUserPreservesFollowingMessagesAndExecutionAudit",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "rewriteUsesOnlyPrefixAndRetainsToolEvidence",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "rewriteResultIsIdempotentAndCandidatesCanBeRestored",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "interruptedRewriteKeepsOriginalAndRemovesPendingMarker",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "greetingCanBeEditedWithoutUserTurnAndDuplicateTextDoesNotChooseTarget",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "rewriteOfLaterBlockKeepsEarlierSiblingWithoutFabricatingToolCalls",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "legacySummaryIsRetainedWhenItIsTheOnlyEarlyHistory",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "interruptedPendingSupplementRemainsEditableAfterRecovery",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "mismatchedRewriteTargetCannotModifyAnotherReply",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "editingAPagedBlockPreservesItsUnloadedSiblings",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "rewritingAPagedBlockUsesTheUnloadedPrefix",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "pagedRunLinkingKeepsOriginalBlockOrder",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "missingSiblingRejectsTheRevisionInsteadOfDroppingItsBody",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "RoleplayConversationReducerTest.kt",
+      "name": "pendingRewriteCanFinishWhenItsTargetIsOutsideTheWindow",
+      "target": "tests/eta/roleplayConversationReducer.test.ts",
+      "status": "ported"
+    }
+  ]
+}
