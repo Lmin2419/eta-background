@@ -1,0 +1,219 @@
+{
+  "upstream": "3b1794d",
+  "ported": 35,
+  "skipped": 0,
+  "remainingInL2": 44,
+  "additionalAdapterTests": 6,
+  "tests": [
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "boldClosingBetweenCjkPunctuationAndTextIsPairedByIntent",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "boldFollowedImmediatelyByCjkTextIsPairedByIntent",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "boldAroundInlineCodeInCjkSentenceIsPairedByIntent",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "unmatchedDelimiterStaysLiteral",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "spacedAsterisksStayLiteral",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "looseSingleStarPairsAsItalic",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "looseTildePairsAsStrikethrough",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "parserStrongKeepsWorkingWithoutLoosePairing",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "nestedLooseEmphasisPairsIndependently",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "streamingPrefixAndFinalTextRenderTheSameBold",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "MarkdownInlineTest.kt",
+      "name": "kbdTagRendersContentAsInlineCode",
+      "target": "tests/eta/markdownInline.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "headingIsParsedAsHeadingFromFirstStreamingSnapshot",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "tableHeaderIsBufferedUntilDelimiterConfirmsTheBlock",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "ordinaryPipeTextIsReleasedWhenNextLineCannotBeATableDelimiter",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "incompleteStrongDelimiterUsesVirtualEofClosure",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "incompleteInlineCodeUsesVirtualEofClosure",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "incompleteLinkIsNotPublishedAsRawMarkdown",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "openFenceRendersAsCodeWithoutChangingStoredSource",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "completionParsesExactOriginalSourceWithoutVirtualCharacters",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "stableHandoffKeepsTheCompletedDocumentAndFormattedBlocks",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "unfinishedOrOutdatedSnapshotCannotBeUsedForStableHandoff",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "completedSnapshotIncludesReferenceLinksBeforeStableHandoff",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "StreamingGfmParserTest.kt",
+      "name": "correctedSnapshotDoesNotRetainOrMutatePreviousLinkDefinitions",
+      "target": "tests/eta/streamingGfmParser.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "inlineParenthesesKeepLatexSourceIntact",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "displayBracketsBecomeMathBlockWithoutLosingEscapes",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "singleLineDisplayBracketsAreMath",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "normalizationPreservesOffsets",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "escapedMarkdownBracketsAndCodeAreNotMath",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "fencedBlankLinesPreserveCodeAndNormalizeSurroundingMath",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "unclosedFencesPreserveBlankLinesThroughEof",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "shortOrMismatchedFencesDoNotExposeCodeToMathNormalization",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "unmatchedBacktickDoesNotHideLaterFormula",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "dollarMathAndCurrencyStayUnchanged",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "streamingUnclosedDisplayMathConvertsOnceClosed",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    },
+    {
+      "source": "TexMathDelimitersTest.kt",
+      "name": "streamingFencedBlankLinesKeepCodeAndResumeMathAfterClosing",
+      "target": "tests/eta/texMathDelimiters.test.ts",
+      "status": "ported"
+    }
+  ]
+}
