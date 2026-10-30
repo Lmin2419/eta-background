@@ -1,0 +1,94 @@
+{
+  "dateUtc": "2026-10-30",
+  "sourceVersion": "0.9.0 working source after visual fixes",
+  "renderer": "HarmonyOS API 26 Linux Previewer",
+  "api": "mock in-memory fixture",
+  "screenshots": [
+    {
+      "file": "01-home.jpg",
+      "label": "竖屏首页"
+    },
+    {
+      "file": "02-compose.jpg",
+      "label": "建议填入草稿"
+    },
+    {
+      "file": "03-streaming.jpg",
+      "label": "流式中间状态"
+    },
+    {
+      "file": "04-chat.jpg",
+      "label": "回复完成"
+    },
+    {
+      "file": "05-sidebar.jpg",
+      "label": "会话侧栏"
+    },
+    {
+      "file": "06-providers.jpg",
+      "label": "模型服务列表"
+    },
+    {
+      "file": "07-provider-config.jpg",
+      "label": "模型配置"
+    },
+    {
+      "file": "08-catalog.jpg",
+      "label": "远端模型目录"
+    },
+    {
+      "file": "09-catalog-selected.jpg",
+      "label": "多选两个模型"
+    },
+    {
+      "file": "10-provider-models.jpg",
+      "label": "导入后的模型"
+    },
+    {
+      "file": "11-config-preserved.jpg",
+      "label": "表单值保留"
+    },
+    {
+      "file": "12-stopped.jpg",
+      "label": "停止并保留部分回复"
+    },
+    {
+      "file": "13-chat-model-picker.jpg",
+      "label": "聊天模型选择器"
+    },
+    {
+      "file": "14-wide-home.jpg",
+      "label": "横屏首页"
+    },
+    {
+      "file": "15-wide-chat.jpg",
+      "label": "横屏聊天"
+    }
+  ],
+  "sha256": {
+    "01-home.jpg": "48b1231d5f65a50c99df6b9c3773e12182fe787c5ecba19eb97cf015c757ef50",
+    "02-compose.jpg": "b4a78356b6ce74b2b00c3cdc7bd8e17cdbbaa26a13d299f1ba4a8225b46acdc2",
+    "03-streaming.jpg": "7e8d9181b093c6a8fd13159965a333dccd67efef7aebb02f48d3d49e95036756",
+    "04-chat.jpg": "8971b7d1057d5b380d1375139cb90e3fd2de7947a6072e6850fe4309cccf1ee0",
+    "05-sidebar.jpg": "98ba2377dcf098cfa07126d1e7b154aeef3e9e86467f9f5e9db9b94eec44d2f8",
+    "06-providers.jpg": "a661b5f45e4a3e0de8d7a064960ba9d6724c11ff4fbee41524d1db58011754fd",
+    "07-provider-config.jpg": "b1f7f0f99896822cb79e975e08a6df219d68b2e86ab809bc588cfbfd659da6f1",
+    "08-catalog.jpg": "851fe7d798477f11fcea361d95db5e2cf529a08ab50c04faee1133291d98d699",
+    "09-catalog-selected.jpg": "7e9887531ff457072f98b5564646d12233088b528094b494882d2213e42d5fab",
+    "10-provider-models.jpg": "f7737689c1a75f06c8cbc252ec4d88f561e0988cab63f1d4849b0fc50f3ffff1",
+    "11-config-preserved.jpg": "9e3b001bac8f33ca3df210bf19362ac1bb382a34cb368b06a1fc7ee30cb19b5b",
+    "12-stopped.jpg": "3773b14ac37ebd77fcf15d6e30a7c978a9697e0301bc561cbc0ae794e0cabd3d",
+    "13-chat-model-picker.jpg": "faabcb97761a54e7d3017b57e837333b84cad000767f13e98086958cf1d3d876",
+    "14-wide-home.jpg": "8b34f8fb435e5b0986754a2e714311f41b7b53758c3d296dd6eb98bd59924959",
+    "15-wide-chat.jpg": "254d284fa27f8e1d94da041047250d8e8a88c23561ac8c3d0a86c7944f2f8cda",
+    "README.md": "4ac94647c5e26cba7d271fc5795185e1206f3ba5997f23da7a958b7f114b73fd",
+    "build-native-visual.txt": "1bd1a42f8a1fcd16950b3d58ede06d9fc493d4a92edcfb1ef5f5c84495056ce4",
+    "build-preview.txt": "090670586c56d9125c545e52549a330f14f58d4c5151bdc5f742d3b6be2d1f2b",
+    "eta-reference-home.jpg": "b52261d66f78b41ce5c67f6d24925a795868a37544f44163d56652de98cc9111",
+    "flow.json": "d44e9a34f42f56f857f641e06981ccb24c63b6d6c74678a0ca09566cce7991b5",
+    "native-view-trees.zip": "1ee548db0f077e0b286c015fc5c4d9786a2c9e20d75e2e01a4786ed401a9930a",
+    "stop-flow.json": "fc4a5f31e7a0931d9d78894c2be064b5ccb522ef3cac1dabf70ab7844e808655",
+    "test-native-visual.txt": "ae04ae172af46f529d530b6588a992f7c8103b6732fea9c27958027fc85a5f35",
+    "wide-flow.json": "0e2b606bd8944ba2e754802c740b616529feb92846da6ff1dd6c840a3c77dffc"
+  }
+}

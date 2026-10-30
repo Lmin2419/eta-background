@@ -1,0 +1,48 @@
+[
+  {
+    "tap": {
+      "resource": "ic_back.svg"
+    },
+    "rect": "36.000000,32.000000,48.000000,48.000000"
+  },
+  {
+    "tap": {
+      "resource": "ic_back.svg"
+    },
+    "rect": "36.000000,32.000000,48.000000,48.000000"
+  },
+  {
+    "tap": {
+      "text": "编辑重发"
+    },
+    "rect": "1068.000000,558.000000,160.000000,64.000000"
+  },
+  {
+    "tap": {
+      "resource": "ic_send.svg"
+    },
+    "rect": "1146.000000,1738.000000,48.000000,48.000000"
+  },
+  {
+    "tap": {
+      "resource": "ic_stop.svg"
+    },
+    "rect": "1150.000000,1742.000000,40.000000,40.000000"
+  },
+  {
+    "capture": "12-stopped"
+  },
+  {
+    "assertion": "Stopped via native button; stop icon disappears and partial response remains",
+    "passed": true
+  },
+  {
+    "tap": {
+      "resource": "ic_chevron_down.svg"
+    },
+    "rect": "560.000000,1746.000000,32.000000,32.000000"
+  },
+  {
+    "capture": "13-chat-model-picker"
+  }
+]

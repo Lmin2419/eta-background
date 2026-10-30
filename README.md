@@ -72,3 +72,7 @@ Android 应用位于 `app/`；后台桥接在 `app/src/main/java/com/eta/shadow/
 本项目沿用 **[PolyForm Noncommercial 1.0.0](LICENSE)**，保留上游版权与 Required Notice。源码可按该许可证使用、修改和分发，商业用途不在其一般授权范围内。这是带非商业限制的源码公开项目，不是 MIT/Apache 或 OSI 定义的开源许可。第三方组件继续遵循各自许可证。
 
 Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+
+## 鸿蒙助手开发进度
+
+鸿蒙原生工程、当前交互框架、重构前源码归档、验收说明和 UI 截图已保存到 [harmony-agent/](harmony-agent/README.md)。从 [鸿蒙项目总览](HARMONY.md) 查看当前范围与开发接手说明；目前为 0.9 交互框架预览。

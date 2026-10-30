@@ -1,0 +1,1718 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-10-29",
+  "type": "source-review-and-proposed-plan-not-implementation",
+  "reference": {
+    "repository": "Lmin2419/eta-background",
+    "visibility": "private",
+    "commit": "8ae286a8993efaa4650426ae450ab4634f2b2354",
+    "tree": "92963eaee8680fc9ca8c9301f99885f1b87819cc",
+    "branch": "main"
+  },
+  "comparison": {
+    "repository": "Lmin2419/Eta",
+    "commit": "3019c43ce60cf53ebe1c2ba5ec86ec630830f39d",
+    "tree": "889e77ff6e5b69e81dff2971484738b3a0dcd22c",
+    "comparison_type": "path and git-blob SHA snapshot comparison; not ancestry or authorship attribution"
+  },
+  "counts": {
+    "private_blobs": 1142,
+    "comparison_blobs": 1068,
+    "private_only": 79,
+    "comparison_only": 5,
+    "different_common": 73,
+    "selected_files": 176,
+    "selected_unique": 176
+  },
+  "scope_note": "Complete tree metadata fetched. Selected 176 text files downloaded; key implementation paths and tests reviewed by targeted reads. Not a full repository clone or line-by-line audit of every source. Android tests not rerun. No target HarmonyOS device connected.",
+  "local_baseline": {
+    "project": "harmony-agent",
+    "version": "0.5.0",
+    "validation_source": "VALIDATION.md",
+    "tests_reported": 112,
+    "target_device": "Pura X Max",
+    "target_os": "HarmonyOS 7",
+    "sdk": "26.0.0.105",
+    "device_validation": "pending"
+  },
+  "source_files": [
+    {
+      "path": "README.md",
+      "git_blob_sha": "f78c076c3d4114d16a18c6193e5a6a62620491b1",
+      "local_sha256": "2e6607ef32db2995f0af23cbe66e6543ad6b055891f5c1f5501873ce586b9e3c",
+      "local_bytes": 7702
+    },
+    {
+      "path": "LICENSE",
+      "git_blob_sha": "fb0f1ccfc1359ddc7f331e7a17eae1003c43f4e0",
+      "local_sha256": "d55cbdddb80acd777c322d120cbf69756908f77fbd6e8d9738fafa650a02af2f",
+      "local_bytes": 4618
+    },
+    {
+      "path": "etax/README.md",
+      "git_blob_sha": "4939b5562a113504380c2654dabc31af3d14c800",
+      "local_sha256": "58b55bb91df32aaaa9cf1a34fcea539ad1f6e76274d3beeca4d3f236b000bb08",
+      "local_bytes": 45461
+    },
+    {
+      "path": ".github/RELEASING.md",
+      "git_blob_sha": "3e783c6599ffc2eb7e56990a8be114a8568a4a7d",
+      "local_sha256": "91b60eccb24271edd8b879be0f628f396e873ca0bf2f0c7a9621a4c49e4afe3e",
+      "local_bytes": 4410
+    },
+    {
+      "path": "app/src/main/AndroidManifest.xml",
+      "git_blob_sha": "b8947e316f19cf63c7aaec640ef0d9331ed3bc26",
+      "local_sha256": "9e0f4bb4151f1ae49b9ee10ea3800e6850938ed870927d776d6f80bb259c2c29",
+      "local_bytes": 9226
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentExecutionService.kt",
+      "git_blob_sha": "987e9c61baab186596942460ea85228427a16b31",
+      "local_sha256": "d2e1986d7efa636df7bdb6fc606d285afa96cb96bcdfe694b395d5029ffd1d29",
+      "local_bytes": 29283
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/TaskNotificationDismissReceiver.kt",
+      "git_blob_sha": "178b697310f34a1635f8fe5bc7bb4a063f17ed53",
+      "local_sha256": "4a6f43d8defdc81bf5f389d49e553a395a1733b02e2220245ffdf5144d78831e",
+      "local_bytes": 456
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/NotificationReplyRequest.kt",
+      "git_blob_sha": "97ed1772aa3c798f680b880c1fdf07c0f4022dee",
+      "local_sha256": "9d4defffcba30efb9c2d14aac87a55cadcc5881544f5643c1e80ef48419c9ce6",
+      "local_bytes": 4864
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/NotificationReplyConnection.kt",
+      "git_blob_sha": "0a634ec572ee90b2b5a2d9ecd1a3d0124e61509c",
+      "local_sha256": "edb4bbda550a71cb39e892636d61077a79dbf7befb5e5186cc00c3174544166e",
+      "local_bytes": 1845
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/CompletedAppActivity.kt",
+      "git_blob_sha": "f4ba802d7cc66bbb830413d1d3361dca7ada03ff",
+      "local_sha256": "c641a048b14a4f687d9fb037f9e7be2cc20f2449e490be951f65834616cd9356",
+      "local_bytes": 2262
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/RuntimeRunRegistry.kt",
+      "git_blob_sha": "aa1224ddc024b2b0c616d5eaeedca1082077d614",
+      "local_sha256": "8f24acac7f5cee5d6e7e5cce0d9f05fcad7300b1265e5b6bdc2f43c033df9b40",
+      "local_bytes": 8908
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimePolicy.kt",
+      "git_blob_sha": "e87d72d9196be01ee0a722c166c9e4603a5fdb10",
+      "local_sha256": "b50cdff2e8e638e147920b233d4cd99f98ff003eda1d247877cabd68a7134f72",
+      "local_bytes": 5445
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeService.kt",
+      "git_blob_sha": "e3a765f5e4192606853e3a7acf110ac7c5bfde45",
+      "local_sha256": "ccb6ccab188be4f9911a1cdae9e64e7a9f27a9e8051b4937a86e9789e23b9ae8",
+      "local_bytes": 78615
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/BackgroundScreenTools.kt",
+      "git_blob_sha": "5bcce50560f4e3846555c08c34aebb1300c7a730",
+      "local_sha256": "9bb7ff9fa5efad5ea42ec75a1194d2671b58c54e29ee2a79f19bd0b45f1550b1",
+      "local_bytes": 11332
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentBackgroundToolCatalog.kt",
+      "git_blob_sha": "4000c8f49c39dc450aaf1479054fe7e678ebbb50",
+      "local_sha256": "815fe28a784396ff6e840488a30f14e74cb55cea81bc32497b4f2b6137cdbc5d",
+      "local_bytes": 2866
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/RuntimeDiagnostics.kt",
+      "git_blob_sha": "2a2c88ebd07a7f94ce04efe5b875f73a7e5ec127",
+      "local_sha256": "29b0eb396e694f2a5d8fdb084471e02c4ac177454f9cc4eb6254b681ea9adf28",
+      "local_bytes": 2429
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/AppearanceSettingsScreen.kt",
+      "git_blob_sha": "1f941f1e7ab7d570c0e2062afd1c3504f9c9a419",
+      "local_sha256": "fc8e19d9cb3c35199e34cfb51db551f69e8ded7cfe48a6a65ca2596b1a2ea0ca",
+      "local_bytes": 16459
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/data/datastore/SettingsDataStore.kt",
+      "git_blob_sha": "b93ff477a2733069ec125c48228be73bee4af70b",
+      "local_sha256": "303b65c337a46d4505d837a45c805de9f8e06f6b231eb637a04ef59503248e45",
+      "local_bytes": 13788
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/TaskCompletionNotificationTest.kt",
+      "git_blob_sha": "cc54c7bacd49f4424564eac1622323f10c6c6f83",
+      "local_sha256": "ad568bb895ee0d25880b1169636105ec3f7094d325cd6529f75088f8461cb99c",
+      "local_bytes": 11781
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentSystemNotificationTest.kt",
+      "git_blob_sha": "a28207a025adc134758cffc634e878f38e199a6f",
+      "local_sha256": "f0c66cc8a54fed1b066445d1d47d7e81e643de4fb758abaa3ca61a755b8e0d09",
+      "local_bytes": 12109
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/NotificationReplyRequestTest.kt",
+      "git_blob_sha": "ac782e55ebdcf461ae5672414947957f8e57dcef",
+      "local_sha256": "6b1605bdf6da578876d81523bc45f87762383ddc297f115ae7ca2100240d1a40",
+      "local_bytes": 4432
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeScreenOnTest.kt",
+      "git_blob_sha": "2682d4f1909d38183c97ab1c0431caedd2749688",
+      "local_sha256": "919121bc426738723d6eb169e50db94268363eb3766c75af625836948a9e4c71",
+      "local_bytes": 22489
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/RuntimeRunRegistryTest.kt",
+      "git_blob_sha": "131669cabe4b455789f888d17e36e9e4b836bb95",
+      "local_sha256": "2ec69f2537e893febb1c227bd9f313b892de17c2c0fa071448ac99b0fdba8837",
+      "local_bytes": 11135
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ShadowNotice.java",
+      "git_blob_sha": "2587ec895e60936d255b41f90a4524107aca08ac",
+      "local_sha256": "99bdf8040fcb087970dd4f1ae3efd6f7ddc7fc695650449a6bdc5bc5d37d07c4",
+      "local_bytes": 10537
+    },
+    {
+      "path": ".github/actions/setup-build/action.yml",
+      "git_blob_sha": "cbd6aa9c91154654c902c90eeaf03c853e59e671",
+      "local_sha256": "e4097b2e3b56fc131526a5fe68136c55b6652e0ea9065d95eeff3c584936f644",
+      "local_bytes": 1099
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "git_blob_sha": "a7ee2f5f6a22e60a3290407bdcb773c6034a6bce",
+      "local_sha256": "c272c3c4a8742d5ec76eef67e827a14815a1b9c1829a7c3d68430edc5ceb5290",
+      "local_bytes": 340
+    },
+    {
+      "path": ".github/workflows/etax-build.yml",
+      "git_blob_sha": "ddd8992636f3660d0fe778dca75e3ee5c92e59c1",
+      "local_sha256": "a24d272e8746c4fab38dc55d57a745760c9846d6250abcec8f8fdf882016848c",
+      "local_bytes": 7633
+    },
+    {
+      "path": ".github/workflows/pr-check.yml",
+      "git_blob_sha": "e054d0ff5cc7511d3bcc06292bea8ad1c9e274a8",
+      "local_sha256": "e44801a6dcfe73b06b58ad1c0c5d55a90be1b9128d0f96563cc9878733ef62ef",
+      "local_bytes": 1886
+    },
+    {
+      "path": "README_EN.md",
+      "git_blob_sha": "1fddd1c60f3731914446367f07ea25bb96c52b56",
+      "local_sha256": "68d1ffd93af3df981d2c9a220f8ad138d847fc422639ba2120f2bc0fd54db5fc",
+      "local_bytes": 6507
+    },
+    {
+      "path": "app/build.gradle.kts",
+      "git_blob_sha": "75c5d7304cc4045a7ee72b3a6ad37380f0415999",
+      "local_sha256": "4fa8fc0202340f5a54559fa78506f4f90a6d00d198d563f36151730e229f2ec9",
+      "local_bytes": 7728
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/BackgroundObservation.java",
+      "git_blob_sha": "9eb66bcf8bc3da9ca998dd8f951a4aa3b53a35c0",
+      "local_sha256": "66fca66ab2aa9b08db45a489e469cfa2d24b50d6ea51fa411a7a362ce0a35acd",
+      "local_bytes": 6512
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/BackgroundScroll.java",
+      "git_blob_sha": "631242fed3d7312d39744b5e8f2aab1276f12044",
+      "local_sha256": "ed7f7567877ae8e16748ccb12f6b63acc70914d10fcb065226746a725a2cfe3d",
+      "local_bytes": 8372
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/Boot.java",
+      "git_blob_sha": "e69e4bb7a5438b1fc1fdc50f2be3ee670b58005b",
+      "local_sha256": "15f1dd616ddc4472154746707d07b4c5f5ef62e373e5fea1cdc3d6f7a63d4577",
+      "local_bytes": 46474
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/Engine.java",
+      "git_blob_sha": "0534c1986b597097cd0bf8666e40509f9565f63b",
+      "local_sha256": "e0e3981ff9674c6f910581fbf37f9c138a5c5b5abe035067bb0c87be5f1f2206",
+      "local_bytes": 15849
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/EngineCredential.java",
+      "git_blob_sha": "95e485a8e57084465a29a78b1960a57b5fa4a283",
+      "local_sha256": "19f426b6831090909ba7d9a75c160dc20d2e9dce8a5a71e577658bd32f264e9b",
+      "local_bytes": 1759
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/EngineJournal.java",
+      "git_blob_sha": "7fa85a792cd87a5c6d0e72450145dcfb6077865e",
+      "local_sha256": "f0ddc27273aec728f296c2ea43bb17ff420271d090a8588d492c6da3e11b72ca",
+      "local_bytes": 2761
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ParkedScreenHints.java",
+      "git_blob_sha": "56738d5920213d171104f78e9891ffde9a20c2b1",
+      "local_sha256": "b339044eaeeca560af0611796d0a03669a3f205414b0cebdbd33792ab274fc5a",
+      "local_bytes": 2313
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ShadowSchema.java",
+      "git_blob_sha": "930fc762d03d992abfdf0cf44d474273af062f43",
+      "local_sha256": "307a47b63887723e938b58ad8e119b5e381ad7eba020ba61ffddb5a72d76a892",
+      "local_bytes": 12815
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ShadowSettings.java",
+      "git_blob_sha": "300f1f0ebe08ab18705521f7d5b2e8ac7bcbbe2f",
+      "local_sha256": "ce927c3678f78ce6289749254e95d9951bdd46f13e9932452eafd8532529776f",
+      "local_bytes": 4968
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ShadowTools.java",
+      "git_blob_sha": "632e9459dd18d6e818dab86f3da4eeebb17b7cfa",
+      "local_sha256": "da0b9e7dc0c0236170b9a496c25c1f8f11c5cbc9f6b630a7ffab77753f7e9a54",
+      "local_bytes": 30137
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/accessibility/AccessibilityProtectionProtocol.kt",
+      "git_blob_sha": "38d01f270aeb7bde8d0002a344ee6b193658d344",
+      "local_sha256": "bc8097ff2f0a79727688957971cbeb2140b2e98aaa49ef2a2ae340cf640083ae",
+      "local_bytes": 2018
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/accessibility/AgentAccessibilityService.kt",
+      "git_blob_sha": "88ddcb3441934ee54097130289ca92fa809157db",
+      "local_sha256": "f630acea3709be7c216d5398df288845138c8cb3701e7c5600f7e84d0d9348a4",
+      "local_bytes": 100205
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/mcp/McpRunContext.kt",
+      "git_blob_sha": "b2e15a9ee5e99b1177df8d46678882b565a78a60",
+      "local_sha256": "db354b70445065d9a543ad42387df37b4521a42f6f2e3d407b53eda7fbd502f8",
+      "local_bytes": 13325
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentDeviceToolCatalog.kt",
+      "git_blob_sha": "bdfeb13a0f6e489c947f6e529991ab533d6d3f9e",
+      "local_sha256": "d9ab9d1275fe1436cad35d82794b4f3ae5fb3ab79b3b5f342933b16b1598dc78",
+      "local_bytes": 19875
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentPromptBuilder.kt",
+      "git_blob_sha": "f0ccc730ace40127f60706a47161b22e5b8ad577",
+      "local_sha256": "d8900ec21910161c74dbb5666abcff1a932cab5e207c96789938f9bffed3aa72",
+      "local_bytes": 23214
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentToolCatalog.kt",
+      "git_blob_sha": "b9a8f2535d49715dc8bf8eb2264807263fb5c37e",
+      "local_sha256": "f1ff2df25cb107b3ec690e8b47f1016436196e17a8d80da59e1ee6bb02b65f8b",
+      "local_bytes": 2028
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentTraceFormatter.kt",
+      "git_blob_sha": "a214d2b09f54553e742a7fa9c1ab8e3626730125",
+      "local_sha256": "60cfe8373b96b45b01dd7799a588bbb335df93d9da0cf5a904a2e67d485a2070",
+      "local_bytes": 37156
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayCapsule.kt",
+      "git_blob_sha": "eddb486d5e23356afe30cbbc35b01a34784bc027",
+      "local_sha256": "75c329ffb15d5da32047bf03c90f3cd4e531a0d67d2343edae09f75c88495325",
+      "local_bytes": 18319
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayState.kt",
+      "git_blob_sha": "fecc710b40ce291ee4627fb5c57b26bcb047c176",
+      "local_sha256": "d995640b4d965073f0fff2c56a09427232b3913880a6ef755f71864d49e9f1ce",
+      "local_bytes": 6556
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayText.kt",
+      "git_blob_sha": "18723dd776b531b15364b4f8436370b67ba57423",
+      "local_sha256": "f18c665b7c0a417f50f0ae597e7ae85a620fb4d22b7b89834f5b66c097c496e6",
+      "local_bytes": 7620
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRunCheckpointStore.kt",
+      "git_blob_sha": "8870944a98c227c93cc6f0b68d7240eb2b9c259d",
+      "local_sha256": "8392f0ad78edd6ac842544d7289aafc72126c942dc83cbf95d64896a84fed68d",
+      "local_bytes": 5908
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRunController.kt",
+      "git_blob_sha": "c96eabb42182944711c5744eeb1c0b666986bf99",
+      "local_sha256": "7db5b1c46f2a7e1f14ecd703afcc31651bd6b7e3f90f1e52f9285fb7f44e781a",
+      "local_bytes": 5740
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeRunExecutor.kt",
+      "git_blob_sha": "a19a83affbc6f2799ac24da2e9d5e5c91c846449",
+      "local_sha256": "691431755ea020fbe15d47396a44a5ca8397c653d00c219a7adab68f3da17e14",
+      "local_bytes": 25254
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeWire.kt",
+      "git_blob_sha": "a9f228ed2ba5c0871f8a0f47e03d9db0369daa24",
+      "local_sha256": "115becb4ca45dbe1001f556fe479a9caa42f819c4c7955844d0a2fc7c47dc566",
+      "local_bytes": 49249
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AssistantRunRecovery.kt",
+      "git_blob_sha": "bd2de81d63924f883df07c0ed2999509fd7b6d49",
+      "local_sha256": "5f0ad929c76333e95b6c887ce64d16dcc152d8cba53e4802b3d8f58d6b51d913",
+      "local_bytes": 1055
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/EntrySurfaceGuard.kt",
+      "git_blob_sha": "563cb60b0a431a29d4141e597c7af0ed30450ea8",
+      "local_sha256": "86e2cb68c84b90b3f85ec048c6767ea296aed1aa5b22407159ffa6a3a8329a3e",
+      "local_bytes": 6948
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/subagent/SubagentExecutor.kt",
+      "git_blob_sha": "baac0387808ddc2884a3d535addbf6c662c01a6e",
+      "local_sha256": "8a4a314b67c93c6afaa331eed583420d224cfc1063ceaabf878c152fabd8b109",
+      "local_bytes": 27141
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/subagent/SubagentProfile.kt",
+      "git_blob_sha": "d1d6a4ac27f473d34289c11f8b972e64bd699eb3",
+      "local_sha256": "e901aa8c17fdecceecf1b8c7218854de004c71cf03dd3ad2535b628fd749fb89",
+      "local_bytes": 11928
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/terminal/AppStateCommandGuard.kt",
+      "git_blob_sha": "6e49edde6d5670bdc5d490619f368ce0b6aebfee",
+      "local_sha256": "1784fa99a8c3dab65b49ea69dbd147d8252f13cb8f3e5112cd262a1fb1f29578",
+      "local_bytes": 1230
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/terminal/RootShellTerminalController.kt",
+      "git_blob_sha": "8a4624455ebf82ee80a63ebb536c15dcc08cee74",
+      "local_sha256": "1e3c5b8b79449c2cff612b120fe518e15b39c2ab94fb4e226ab21c98de498083",
+      "local_bytes": 37382
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/tool/AgentToolRequirements.kt",
+      "git_blob_sha": "8502a898eb2cbe027860a4a7db369f7ef50c63fb",
+      "local_sha256": "499ff6d9b47d24c3f1659360114acf04afdb7b701bdf67d60aab7fcca9db43de",
+      "local_bytes": 9816
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/tool/AppInspectionTool.kt",
+      "git_blob_sha": "42696be2eed8073e1ea98a5b55b7da7f4c649ba3",
+      "local_sha256": "0edf2602908f66f4abcfb7f17b313144ab2a27b847ca6997c58f89f39023d64e",
+      "local_bytes": 5505
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/tool/DeviceStateMutations.kt",
+      "git_blob_sha": "93c9814e1ec99ea610b0d52a9ad7cd42119a9c2b",
+      "local_sha256": "1bab535e17ea390a33ff378337b9f238583d98a29d0b606a3eb77954b9bc7012",
+      "local_bytes": 9403
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/voice/EtaAssistantOverlayService.kt",
+      "git_blob_sha": "ddf9c34b48082b30cb7d5cdc9eb98b7113d319cc",
+      "local_sha256": "868c33a519eb1dcb568073a2e3c752c2a168d4cd240150851929873cb3d56c6e",
+      "local_bytes": 42941
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/voice/EtaVoicePanel.kt",
+      "git_blob_sha": "170548e66fe1308b266142aadb1c7934fec4e570",
+      "local_sha256": "2423184e88bd50473d8b3845de3199d15a95b0824404f368c50aa8278a5f7b76",
+      "local_bytes": 33741
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/core/ModuleConfig.kt",
+      "git_blob_sha": "0bda6bb51dc785971eb3fa9c2552c82ece1fd3d0",
+      "local_sha256": "386259188a418ae8571dfed8f66136dd8bea182bf658a1052358ab4ad98b2a17",
+      "local_bytes": 3115
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/data/model/AppearanceSettings.kt",
+      "git_blob_sha": "39e9925fe6d04f828fdbbfe0f3a3920da9aa8e3a",
+      "local_sha256": "89713e9edf35858d6d0b3d56e716e0fad25fe08277008f7c15421a3638cbf0da",
+      "local_bytes": 2817
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/hook/system/AccessibilityServiceEnforcer.kt",
+      "git_blob_sha": "2054a034300102b689e4f581def03a0821a87a22",
+      "local_sha256": "0d3a8d763d3702fe19683e09a45998efdf7df09ce01539fd905265c1eae4dcb8",
+      "local_bytes": 38082
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/MainActivity.kt",
+      "git_blob_sha": "4aec2bfae59958269cc3a0404e1873250e1fc144",
+      "local_sha256": "ee3bc6bddda7d0387d5fa67da8105a6a2d645b9ab3f343a8a62f282abf220a56",
+      "local_bytes": 9011
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/MainActivityLaunchRequests.kt",
+      "git_blob_sha": "d6bcdc4f2d9e355320a58860afeb53672396897a",
+      "local_sha256": "f34ec9d981876e754b5702f0faa317ed6af399e8b38aad87653a7cdb3ca653f1",
+      "local_bytes": 3640
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+      "git_blob_sha": "cc029d4b7cf187772c5212ea971dfa0b5ec63263",
+      "local_sha256": "0be179b1c405269d31987cd107733eb7e034c3f80c95f4933f2807fea4fd43cb",
+      "local_bytes": 54157
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppRoot.kt",
+      "git_blob_sha": "5184ebaf7b2a1fde741c1b3e6db46958a8313103",
+      "local_sha256": "9ed982dd619222f5ef084c2613270aed70b51205e1409e393a5dfbbdd92ecbd9",
+      "local_bytes": 46864
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppState.kt",
+      "git_blob_sha": "53fb81f632e45ffcd4a1c4927c9e28ae7e3f44be",
+      "local_sha256": "6f087bcc1172468fdd153eabab66c49bb0320c3e3fd528365713989fef06f1d9",
+      "local_bytes": 117337
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentToolsCatalogUi.kt",
+      "git_blob_sha": "31e1b9bf414b4eb201cbbfbc3aba4552da7a190e",
+      "local_sha256": "053909f863b5c84e285fdbf4c8b3366be8b71a292c6dd1bee4b8487cec5ec8bb",
+      "local_bytes": 19533
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AssistantConversationSeed.kt",
+      "git_blob_sha": "b8092968d00e1af7885e895fbeee38a89e4fd63e",
+      "local_sha256": "f23da72bc44384978e626f07e66d21de88446a4e98bdef45a0f6e0cf1756ee62",
+      "local_bytes": 924
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatBody.kt",
+      "git_blob_sha": "74b07150b89c6e687dea12c6153f46b33e8b2239",
+      "local_sha256": "ead950d2b7f30faa3c70fdd3a583935536b931654eaf31732612452088e5e45b",
+      "local_bytes": 54883
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatInputBar.kt",
+      "git_blob_sha": "94205619b22674dc19cb7f8f5a4e9fdfe30a67a4",
+      "local_sha256": "20725c4d730beaabb4d84dbe2f37a97a1c0199272baecd770e0a74f6ed249793",
+      "local_bytes": 30068
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+      "git_blob_sha": "2058f6026009e929ac5d97879f36fc230fcddeb0",
+      "local_sha256": "5b5755a2cb51926931abacb10a3ed1767187ce43894e53ed634d0399fe57f0f1",
+      "local_bytes": 8939
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/screens/home/AgentHomeScreen.kt",
+      "git_blob_sha": "ecab707d55886fc181b1c4f0b7d628b485b29488",
+      "local_sha256": "171a0e32d66e89e0d12b5b00af6a713c026ad2ea2044d8b551fb5fd9d00fe9a7",
+      "local_bytes": 7262
+    },
+    {
+      "path": "app/src/main/res/values-b+zh+Hans/background_runtime.xml",
+      "git_blob_sha": "fe99ab97f9be17cc6608cd5a8074bef1355a015b",
+      "local_sha256": "e67402404f13810f4b8125f53954821782cbac6f5c5f34d130a843c35f5cad27",
+      "local_bytes": 2188
+    },
+    {
+      "path": "app/src/main/res/values-b+zh+Hans/strings.xml",
+      "git_blob_sha": "6e7dd41e14d51a1120b888d94870c1cadf91fd76",
+      "local_sha256": "e87f4cc5680a87df31b4c64072f4713138a02289b4bee81802f9ae6dc3b0526f",
+      "local_bytes": 116601
+    },
+    {
+      "path": "app/src/main/res/values-b+zh+Hant/background_runtime.xml",
+      "git_blob_sha": "3c0965f80b3a3558180c0d4d15c7167ef304a8f3",
+      "local_sha256": "483ac2c4be7b930cdc0e352fc0fe1d0f286c675a9572cfc5697b99a7d9013991",
+      "local_bytes": 2200
+    },
+    {
+      "path": "app/src/main/res/values-b+zh+Hant/strings.xml",
+      "git_blob_sha": "8cce37a77582c83e0bf10375fb8a07b8fb515966",
+      "local_sha256": "f9fef5b31c737927e1fc60bd5aaf3d5f4c22a64ee6f75eeabac81a8745481c3d",
+      "local_bytes": 111477
+    },
+    {
+      "path": "app/src/main/res/values/background_runtime.xml",
+      "git_blob_sha": "3be7c9daaf8ab50e5ee74ebc68c67218f614ce44",
+      "local_sha256": "9e8dd2bee55c64db79ca354b60e00955e2a4d904e81aa1687005dfc37c2915f9",
+      "local_bytes": 2212
+    },
+    {
+      "path": "app/src/main/res/values/strings.xml",
+      "git_blob_sha": "a8b618b5feeeefeb26f28e0c95f033967745288f",
+      "local_sha256": "d3fe1b6d852bdc5c8513972db7e4475ba2b8d7d1c7311af83dc22be26c5b3ed9",
+      "local_bytes": 122040
+    },
+    {
+      "path": "app/src/test/java/ActionEvidenceTest.java",
+      "git_blob_sha": "06dd009d546c8376fad03b54102ae54e4210702e",
+      "local_sha256": "3420995209e8528a99a27df3f2598edb49a6fd7375e9cfff1dce4392f3b47d22",
+      "local_bytes": 3217
+    },
+    {
+      "path": "app/src/test/java/CapturePixelsTest.java",
+      "git_blob_sha": "e688d0e2be61dab14ad840fb071b8f9e8e727b67",
+      "local_sha256": "5f419b308621c24de3b4f163749286d16f2976c9c1822db82053c5f8f93c1bf4",
+      "local_bytes": 1643
+    },
+    {
+      "path": "app/src/test/java/DisplayGeometryTest.java",
+      "git_blob_sha": "91d96b17b89f030374481da7fb3e350e6302998b",
+      "local_sha256": "346eaa4a6667e06a441ca4c08575f5c751c66c476b6ed888ad8b84bc186f65a3",
+      "local_bytes": 2510
+    },
+    {
+      "path": "app/src/test/java/EngineRecoveryTest.java",
+      "git_blob_sha": "63797b073a0c5753cf7b3fa1c12f95f413757bf9",
+      "local_sha256": "5fb4834456b863e15f70904a73d636dd7a8cfc6a23baf0d8b079775d34b9d2e0",
+      "local_bytes": 6161
+    },
+    {
+      "path": "app/src/test/java/EngineStagingTest.java",
+      "git_blob_sha": "264855fe12ddf0af211252e51fb081e013327cfc",
+      "local_sha256": "6245b3f29b26853f762d61826de335ebf3a83741509cc4594022f06aac450f7e",
+      "local_bytes": 1492
+    },
+    {
+      "path": "app/src/test/java/EngineWireTest.java",
+      "git_blob_sha": "c6302792bc1e032afa3baa86c06fb2e2e81b8ca8",
+      "local_sha256": "9cdd42dbd83292472f625794020785c6291c7f6eb44152d3fb062f4154f90581",
+      "local_bytes": 2107
+    },
+    {
+      "path": "app/src/test/java/ProcessProtectionTest.java",
+      "git_blob_sha": "2d519addf778b75e1e5099f8cdaf0ab841b578ae",
+      "local_sha256": "92a6c10cb2c498fc1cfd1756d43474935a8a2a484d043c623190392c1cc01b3e",
+      "local_bytes": 1733
+    },
+    {
+      "path": "app/src/test/java/VDriveInputReadinessTest.java",
+      "git_blob_sha": "d274593249823832008e6f215451210c53fa081e",
+      "local_sha256": "e3aefafe64897e3a5128476be57f09bab3ca0b779559f7e886edfedbe50d4250",
+      "local_bytes": 6827
+    },
+    {
+      "path": "app/src/test/java/VDrivePointerTest.java",
+      "git_blob_sha": "b037a857a8cd69caaf9b78ab3cadfb3e50077d64",
+      "local_sha256": "320bb79c1597f644d5f2b3cc10c31284204a397f6d37dd157ce885ef601b285d",
+      "local_bytes": 6451
+    },
+    {
+      "path": "app/src/test/java/VDriveSessionsTest.java",
+      "git_blob_sha": "25511a8ca092eeba31646ae314f5010efe7b3b2f",
+      "local_sha256": "80b7af12b37d6b183c57a7fdb9a830c9d47ab4bb60146373da1f1f37b263d525",
+      "local_bytes": 14027
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/BackgroundScrollTest.java",
+      "git_blob_sha": "8fc115f304951780ff3ebcfe987a8993bbce7b6b",
+      "local_sha256": "cd047ac6d36fdc8f0a0d2a0befb506fa8c5d48bd36ed28851640db6c6299ed83",
+      "local_bytes": 10165
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/BootGeometryTest.java",
+      "git_blob_sha": "9dac3bd72b81d3b323b49b62194dba36594304fe",
+      "local_sha256": "35344f9b351eabf13de684d38375d0f3f00dc2d576fbfaf4c7e75a6ebce6a4fe",
+      "local_bytes": 5119
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/BootNodeTargetTest.java",
+      "git_blob_sha": "791c84623d60a878ba8af1e914977f1897804374",
+      "local_sha256": "6567d005814bda2d46b93e0cfa23a2a8acaf764e11a2289fd289e323202fe326",
+      "local_bytes": 3546
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/EngineDeploymentFailureTest.java",
+      "git_blob_sha": "f9235c8e77ab1fbe45eda93fa472cd7e213bc0fa",
+      "local_sha256": "face92ceab147a1419a0778b3f0160ba2eec68b5de3a1b5a59c66d808ca3ed4c",
+      "local_bytes": 1021
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/ParkedScreenHintsTest.java",
+      "git_blob_sha": "ebbc5fe0ef21b69c8a1d235b8af12212f07c0a62",
+      "local_sha256": "98b885e4f2bbbc7928bbdcbb6dcd8f20b2af5132269750c57b8a2741d0da8410",
+      "local_bytes": 1734
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/ShadowSchemaTest.java",
+      "git_blob_sha": "d7c6b381d3a1ab512f724e05aed7fd8f94d0052f",
+      "local_sha256": "2653483992f77703138ef4c75e454c4b48a7ca4f8bdfadf97d263b2b145bf943",
+      "local_bytes": 2701
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/ShadowToolsCloseoutTest.java",
+      "git_blob_sha": "02e497aeab2f9e4f3ceaf2f70eb8cb3afc2e4b7d",
+      "local_sha256": "c36b6febd97df0214ebe3d1af2eed15e7c3f0baf7339c0186126117a7ddb6a5b",
+      "local_bytes": 3101
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/ShadowToolsGeometryTest.java",
+      "git_blob_sha": "e22333b7b34b9afb41e3ebca734c4401e93e5778",
+      "local_sha256": "37d6d2848d7c94928015ec507159c8d548fdf0f1804c928db18714dc6e9b79cc",
+      "local_bytes": 5034
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/mcp/BackgroundToolResultTest.kt",
+      "git_blob_sha": "790dec603a1516faa055f716bf505f5b3099cf23",
+      "local_sha256": "1441cadd9311c4306ca24ebaf63b73a71d3e00b713e5dc71ded179a00a2f7098",
+      "local_bytes": 1412
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/model/AgentModelRetryTest.kt",
+      "git_blob_sha": "dc9de841291c1372dc671b566f4b0a14b282b170",
+      "local_sha256": "deab7ce27272f4a3c8eeaaa8039004053aa90aa2934c22364115c8c64cb7d8bc",
+      "local_bytes": 6464
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/model/AgentPromptBuilderTest.kt",
+      "git_blob_sha": "26942157105e557be0022f912df4fdbe4c485196",
+      "local_sha256": "a1c23e71e1f564ccd110c9df04e95e7e51decd21b9195db3b7eaec59d7d64ec3",
+      "local_bytes": 16271
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/model/AgentTraceFormatterTest.kt",
+      "git_blob_sha": "25557b8e46a57c6c9eb76d7002725bddb27ccf77",
+      "local_sha256": "334a4880598613041669e5117d15711de40c1902afb1d56987a85853077af0fa",
+      "local_bytes": 28569
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayStateTest.kt",
+      "git_blob_sha": "14bd4c961bb35a3458ca93e6407e24b9fa144a9a",
+      "local_sha256": "e5b9099149b3bb19b6a9357a5b43634cc739a9b02fbbe61d9a41fae986dc0608",
+      "local_bytes": 4076
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentExecutionServiceTest.kt",
+      "git_blob_sha": "99455e5089420345fc5884cd9bb5a7caeab802b8",
+      "local_sha256": "6c1b37a34a95ffc7204cfc7a2192d2125d66204df92d19b3f7ef0ec9dfd02fcb",
+      "local_bytes": 3804
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentRunControllerTest.kt",
+      "git_blob_sha": "d872d942bf7f22ac4e659d5373cff5e6047528e0",
+      "local_sha256": "cb02cfe7029fa5f0f008e131e48dfca3abbed984fe668801663c29c800c7b164",
+      "local_bytes": 7965
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimePreparationFailureTest.kt",
+      "git_blob_sha": "57c08ef7249b3cf699066ebcd6c2a591c991cd9f",
+      "local_sha256": "04344ac20588b99b50cb225f9e5682c4edff8a3f3616a905dc2a3a99391f32d0",
+      "local_bytes": 4437
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeServiceRetentionTest.kt",
+      "git_blob_sha": "82ad34c743cc7a618a103b4c7acb6a9acb748645",
+      "local_sha256": "322cd49f43d1d37b993cb556319c1793c1240158f2906cee937e8eb3d6ea16d4",
+      "local_bytes": 2212
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AssistantRunRecoveryTest.kt",
+      "git_blob_sha": "24f151446c3f38e4b5b2607e5fa48872aa8f64c4",
+      "local_sha256": "17f78578b5d0771a63676b5a5dbd9649a70979dfa0dbea0e77caaee27c756287",
+      "local_bytes": 1465
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/BackgroundScreenRecoveryTest.kt",
+      "git_blob_sha": "53ad0a9f6e6658a5c0ce1e110745b09179ce7676",
+      "local_sha256": "684d4c6069f9a788194238d3a432dae303908cad5ce3bde4c5d8f1e6018acaac",
+      "local_bytes": 7224
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/EntrySurfaceGuardTest.kt",
+      "git_blob_sha": "013e059d6870a9aa60ae82097ee1f2bc3b591e46",
+      "local_sha256": "453725b739d644d8e21e1eb3528e844bb785b26e0cb7641b9090c38c064b7964",
+      "local_bytes": 5292
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/RuntimeDiagnosticsTest.kt",
+      "git_blob_sha": "61e1cd2a694766ce8e041c07569ef1205a1b4c06",
+      "local_sha256": "46085bc60248e186d37496f0369162842ef8eece46615007c9a848430358c3b7",
+      "local_bytes": 1626
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/ScreenLeaseRegistryTest.kt",
+      "git_blob_sha": "0c1b8d832ecfddf7b20eb82465d2c4e793be2d73",
+      "local_sha256": "47184309c70502443f2e52567e1cb5838d80014867fb2c338d4b624020e62966",
+      "local_bytes": 2410
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/subagent/SubagentTest.kt",
+      "git_blob_sha": "d76db27d5857d5a5d16e84d2d9116aa4b75c5cf7",
+      "local_sha256": "6c5e2a9743244f1468ff4ca54d346694c069b84bf4581a81c02a067bce4b7111",
+      "local_bytes": 14141
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/terminal/AppStateCommandGuardTest.kt",
+      "git_blob_sha": "1af523ea2e1cfe9a6f676de65bda204a70d6c4ac",
+      "local_sha256": "18ac80fc543cdc537344d29f0b4e4b876663ffcbab211ee91087fb6cc95159f0",
+      "local_bytes": 913
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/tool/AgentToolRequirementsTest.kt",
+      "git_blob_sha": "3d741af24240db84297ed90ce5f97a7bb25dc13b",
+      "local_sha256": "66f6f340dbb7fc5251a8aebbe3fd225217d83a363d201f774c33e87e07e10369",
+      "local_bytes": 7454
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/tool/AppInspectionToolTest.kt",
+      "git_blob_sha": "c18e53751620ea430e3c7857b862e71aa6584656",
+      "local_sha256": "045776603e41cc3ad8a75203078673c4f36108baeb2d96c30d95d44fb8ebe83f",
+      "local_bytes": 4169
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/tool/DeviceStateMutationsTest.kt",
+      "git_blob_sha": "e19fe13c99a8ebfd3f2e3c5c917d51cb7a3b3104",
+      "local_sha256": "95cd22d205960df5d7fce70c44b47ae897d507ccfc8e3d7f7dd82358b837efc7",
+      "local_bytes": 5115
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/voice/EtaAssistantDismissalTest.kt",
+      "git_blob_sha": "83cee7c91ce469398569446be8e83ccee11b956e",
+      "local_sha256": "6fb3b99624d7de67916da1da32ac7d5cb5dedc231f00c0a602656aad8a519fac",
+      "local_bytes": 1949
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/voice/EtaVoicePanelTouchTest.kt",
+      "git_blob_sha": "0255511796732d333dd6112f9174bdafc4811ccf",
+      "local_sha256": "7f48a5c2549e9733775090bfa4689b6349d5c6cfdb8e2bb23d05d3c4ffb6a0b3",
+      "local_bytes": 19636
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/data/model/AppearanceSettingsTest.kt",
+      "git_blob_sha": "a99a4e822bcb97685852db357eaf5cf30cbeab32",
+      "local_sha256": "6b7bd8ef9483a41e5e62e2a906ad5db2d4fcf6ca7e230df4e6476ccb14ee81e4",
+      "local_bytes": 1676
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/data/repository/AppearanceSettingsRepositoryTest.kt",
+      "git_blob_sha": "5e7ef97ca25599e95b7e23e32e62704682322596",
+      "local_sha256": "dba343f4384f8727ec6d1ef4b7ecc7d73b8ba5f30b7ca52aed3d2eb60ee5763a",
+      "local_bytes": 2603
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/ui/MainActivityLaunchRequestsTest.kt",
+      "git_blob_sha": "8a86d7b058418c230146df264b7d4141cf4f28ed",
+      "local_sha256": "dc2fa4000fa6017b5d518248dbf79abfd7efc224309e433be80ff73fafb77e6f",
+      "local_bytes": 5264
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/ui/app/AgentAppStateConversationLoadingTest.kt",
+      "git_blob_sha": "251b1f7915337beaf3d44656f83fd442858dd0b5",
+      "local_sha256": "a53b3dc6dd9efd032305188cd7da024ecd9d9d8514f1e9bd849366fb18402eeb",
+      "local_bytes": 19995
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/ui/app/AssistantConversationSeedTest.kt",
+      "git_blob_sha": "7c59de169e9d56255ca2722fadeda2c54233ae2f",
+      "local_sha256": "a74bcb1080abdc5a346824ecf5308cbe67f1401eeca728a426fa5acc50e190a1",
+      "local_bytes": 1919
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/ui/app/ToolCatalogUiTest.kt",
+      "git_blob_sha": "8e80cbd4278abd25710cecb82ccb8894f4629ba4",
+      "local_sha256": "55b1ce28e9ba8d81008693172fafc0024b73daf3e712bdd1e363fa2a13aabbd9",
+      "local_bytes": 5894
+    },
+    {
+      "path": "etax/check_hooks.sh",
+      "git_blob_sha": "1429837f2c85a488d5949379a06e16e042a7474a",
+      "local_sha256": "be38159ef11422edb25050fcdd69c5ec1e577d8b42363d623f24b1d5c350de99",
+      "local_bytes": 2496
+    },
+    {
+      "path": "etax/embed_engine.sh",
+      "git_blob_sha": "fada1405d791974788bffee065e95f3bc76fcf81",
+      "local_sha256": "579d628118f4244d22197d998495e5e9dc9b6fb6ccfc85e87c6ab5c240f28cfe",
+      "local_bytes": 1180
+    },
+    {
+      "path": "etax/engine/build_engine.sh",
+      "git_blob_sha": "5d8049c2cc05f4ad8f3e2a78f95aa93a3b76ea57",
+      "local_sha256": "534db63676d3d9ca6ae8eceb0078dcd5fd31a3dc5c5fab244d6a130ff3a4a4f3",
+      "local_bytes": 1456
+    },
+    {
+      "path": "etax/engine/check_pair.sh",
+      "git_blob_sha": "ef9eba9a1611f1fd6db0063327171fad1d7592f8",
+      "local_sha256": "c70647956bc5cc099cd9e498e54c9be349288be2fb88aa392eecbf8bd6031d0f",
+      "local_bytes": 1497
+    },
+    {
+      "path": "etax/engine/install_vdrive.sh",
+      "git_blob_sha": "5ebb88ee0203224b517b7f13ad3c1ce44a4b3340",
+      "local_sha256": "01fc8949f5a1f0d4d63c3846881edc0c0ebd8417d84a70ec1c4ac4302993b193",
+      "local_bytes": 3109
+    },
+    {
+      "path": "etax/engine/src/BoundedShell.java",
+      "git_blob_sha": "7cd9a52efa661756c5738c2afc5ac3488f4989f7",
+      "local_sha256": "fe7333b618f912fff2c0cfc3b646ad72156318fff3f8243fabbd6819861418b3",
+      "local_bytes": 2669
+    },
+    {
+      "path": "etax/engine/src/CapturePixels.java",
+      "git_blob_sha": "c6ad974cedfa501ecedc80a6aebb2edf2ea48ffe",
+      "local_sha256": "fb5cc0510cd7613a5c55bdf621e750a35283eb1bf795f45784fb66162b6a2c48",
+      "local_bytes": 1148
+    },
+    {
+      "path": "etax/engine/src/DisplayGeometry.java",
+      "git_blob_sha": "45a58e361ed51c43b87dc19f60dcd405aeac7406",
+      "local_sha256": "fda019434e22079dbb1db7c41645e16eacd541e72dccebea7e84595299b70eaf",
+      "local_bytes": 3358
+    },
+    {
+      "path": "etax/engine/src/EngineControl.java",
+      "git_blob_sha": "57b74c263f8d384430ddfb78a27f5d2da488e885",
+      "local_sha256": "9f155182729123e9392596de7f7980a18270b32a85c6e367101c958537c1a07c",
+      "local_bytes": 1966
+    },
+    {
+      "path": "etax/engine/src/McpEndpoint.java",
+      "git_blob_sha": "a4f8969752f9ca6838fc5761590560454dd0510b",
+      "local_sha256": "8fffbd23f4307d96dc973dd2a052132e9f048fefbb47f95d0b16052804466424",
+      "local_bytes": 28111
+    },
+    {
+      "path": "etax/engine/src/ProcessProtection.java",
+      "git_blob_sha": "46cfeb68185c1177f93422db80467b0ff277cbd2",
+      "local_sha256": "82c880f046c27cb31f4eb4a25ff4a0dfdf7c8411e0fe0e54ccf0bba2e7190952",
+      "local_bytes": 2181
+    },
+    {
+      "path": "etax/engine/src/SystemServiceHealth.java",
+      "git_blob_sha": "bc606d64be6b13e19200e4880e9901b1054abe5a",
+      "local_sha256": "23811f843dc429b39384a3be9b3c7c236c4e4d0f7119b2cf1a2e131595546aca",
+      "local_bytes": 1103
+    },
+    {
+      "path": "etax/engine/src/VDrive.java",
+      "git_blob_sha": "f2a8551fa804bc00ac5ad5c47ad54ee1e2aa1388",
+      "local_sha256": "3e499035467e29fc6e6003fceedb3d59c6bb626d7c4a8d37dbdf5e458a6bf58c",
+      "local_bytes": 21358
+    },
+    {
+      "path": "etax/engine/src/VDriveWorker.java",
+      "git_blob_sha": "33e826dfe7f3d81851e9885607ebcc30533273b0",
+      "local_sha256": "34676f1450c89adb327303b2b6dba102e6b6bd1f84c33c76fbffb549c2065209",
+      "local_bytes": 122912
+    },
+    {
+      "path": "etax/engine/tests/shell_compat.py",
+      "git_blob_sha": "ed9771422f908470db34b41a5f84fc1ca78e07d5",
+      "local_sha256": "42d89f8e33dc61de8f4f9b8b543defc3a1c9d84bc8e65db96788d90a4d9ab660",
+      "local_bytes": 1153
+    },
+    {
+      "path": "etax/engine/tests/test_controller.py",
+      "git_blob_sha": "bf1f5cc9528b42f7f4b6806993c8ac9de0a8edc0",
+      "local_sha256": "e83749a0d4e82c0ef4a3da77406c83b433d90d54a4b8e5f471dff9598fead00b",
+      "local_bytes": 4309
+    },
+    {
+      "path": "etax/engine/tests/test_install.py",
+      "git_blob_sha": "01112805ee2d3d16039978afb5f911f711be5c28",
+      "local_sha256": "6141fa9ae2694f39987c62050ace0f9ff13287cc9a73deb316a807e6eb9102a6",
+      "local_bytes": 5691
+    },
+    {
+      "path": "etax/engine/tests/test_process_identity.py",
+      "git_blob_sha": "6ae50efd71911e29a59e89b85e4adf03b71b4362",
+      "local_sha256": "484420df867009ba538b670983c4e3c11ac688f03fef26ff750da521d2b6c1ad",
+      "local_bytes": 2295
+    },
+    {
+      "path": "etax/engine/vd.sh",
+      "git_blob_sha": "6b0937b5ed46d9c512d771a021a965b59211f37b",
+      "local_sha256": "6e1bc279931467b428731efe20ca452c1d91849f0afcbd9bb4db4d123bebe21f",
+      "local_bytes": 5699
+    },
+    {
+      "path": "etax/shared/src/com/eta/shadow/ActionEvidence.java",
+      "git_blob_sha": "8f178053a4798da2387e3ebc1b802eec7501230f",
+      "local_sha256": "397dad0cb5f0bb1c65cae9a7fbaa0c72d19325e4997676b37e884b94a8f53f28",
+      "local_bytes": 4444
+    },
+    {
+      "path": "etax/shared/src/com/eta/shadow/EngineFailures.java",
+      "git_blob_sha": "eb30e6e50d80d56796ad67f5aec246cffdde079c",
+      "local_sha256": "9b76161a7a91b113416757dbf4d0f72a1e7a7f6e259a8e01acce0eb552daa79d",
+      "local_bytes": 765
+    },
+    {
+      "path": "etax/shared/src/com/eta/shadow/EngineWire.java",
+      "git_blob_sha": "c19f71dc6a1cf1e494b69ba9b04507e6d05ff41c",
+      "local_sha256": "0bce6f368624cd147e8b9d4d514e321f33ebbbd9f4282ff6ecce7a2ed36f41dc",
+      "local_bytes": 2754
+    },
+    {
+      "path": "etax/shared/src/com/eta/shadow/ScreenGeometry.java",
+      "git_blob_sha": "b507715e4cd03571693fa36b2e97851d8f7fa607",
+      "local_sha256": "9801c9c1f0cf3aac1d56ac5d39a751181120d2293407c475c731d52bf793950a",
+      "local_bytes": 2874
+    },
+    {
+      "path": "docs/TECHNICAL.md",
+      "git_blob_sha": "f52cb96a56c4201a9443d3ef87d1b3a3d3f6b34a",
+      "local_sha256": "c1377cc12796cdf9b379c97b5bb1c8622fbb946401544abb9143936967b7b7cc",
+      "local_bytes": 57686
+    },
+    {
+      "path": "docs/UI_COMPONENTS.md",
+      "git_blob_sha": "45428d7d0c02da00b4e116285caab26d5716974f",
+      "local_sha256": "9a58333375e42ed3e5485c190bfeb1bbb1506758742ba8cbab068edc7b1458d5",
+      "local_bytes": 5088
+    },
+    {
+      "path": "docs/AGENT_RUNTIME.md",
+      "git_blob_sha": "a24d22d4b1e175a98e01291d11089c502e196cb6",
+      "local_sha256": "7d6a4431bfe22e8886f41662b544e2fdb18fda210bcf2027d302bfb5a8e07d32",
+      "local_bytes": 78634
+    },
+    {
+      "path": "docs/ROOTLESS_SUPPORT.md",
+      "git_blob_sha": "02dec9dcff53325740a9b730fd75f8cdedb5f99c",
+      "local_sha256": "eeee659b6fd4cbc1a2775cfcf74140ed3bf9df3a1486269d63e3489a2e7dbfd5",
+      "local_bytes": 9538
+    },
+    {
+      "path": "docs/VOICE.md",
+      "git_blob_sha": "70bad0db14ae07eeb68de529a64f2d259bb7f89d",
+      "local_sha256": "d276a7dc41e92051e945973de4d3f00fb3ab0b5498adf6cc906d5666b7849171",
+      "local_bytes": 13427
+    },
+    {
+      "path": "docs/CHARACTERS.md",
+      "git_blob_sha": "8218901d91ad3038750db4bb3d4e77b22949119a",
+      "local_sha256": "de63f11dc2939089b78eb3e7ae0bfab3aca34bf66b90d9647243d041e363e91f",
+      "local_bytes": 5974
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ChatMessageItem.kt",
+      "git_blob_sha": "094111f07af1d276f1df7bc4b3267e743cdca983",
+      "local_sha256": "c571f6a0fedd7f06e9e04c54ef2626f84822832267ab1d1eaab2a39332a67676",
+      "local_bytes": 48528
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentModelPicker.kt",
+      "git_blob_sha": "89e66201ef773eaa4525c52aaf125d9595bc5029",
+      "local_sha256": "093d5f445e2ba5b7c226134afc9e1043eec9da42c680ba3759e3d7867b04e970",
+      "local_bytes": 16332
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationSidePaneScaffold.kt",
+      "git_blob_sha": "6c035c007ced628544eac0eabccb979ed1fb3ea3",
+      "local_sha256": "ef6aa6f1497115bc34ecc275d48e721dc3a83397158d7aa34920c2a3ac44c4f1",
+      "local_bytes": 13398
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentToolActivity.kt",
+      "git_blob_sha": "0026204591bfd7bf0737be404e7e6ca1b64eb467",
+      "local_sha256": "4260c452babd45ad64221d7c05e63803b41d0bd9139a76839b83e52af3ed8d1f",
+      "local_bytes": 23736
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentWorkProcess.kt",
+      "git_blob_sha": "a46492a1bfd9e9ae74a249c8fc2be68482b61c67",
+      "local_sha256": "8b4803153f44b11a045fe56a29857f07184ba2564afe1a56429d2fb712390767",
+      "local_bytes": 17809
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ModelProviderListScreen.kt",
+      "git_blob_sha": "45d6028e95e9ed6c4a759df3c09f9e003ae438ed",
+      "local_sha256": "4f7e57e0f51043987245c09dc48e6ec3a0260171d609a0a3b321243599fbf53e",
+      "local_bytes": 11828
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ModelProviderDetailScreen.kt",
+      "git_blob_sha": "644936928c2d8ed2350951a94a897ec1e555c9e4",
+      "local_sha256": "a26652c809003dc3cf172191334d37e1953baf4ac285f8dcbeb65a8db8f7f58f",
+      "local_bytes": 24644
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderConfigDraft.kt",
+      "git_blob_sha": "6cd614f2c81993cdcf77b1a8cb69fe1eca8e6e8c",
+      "local_sha256": "c9a9e5d4c06bbb9c961fc52f24af624ed7afc197779a8d0d88479fca81b850a8",
+      "local_bytes": 8834
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderModelsTab.kt",
+      "git_blob_sha": "8fa7aee9fc3062b86a2fd550a2fe73f41335ffcb",
+      "local_sha256": "d58fa3a6ac3642d4add817f96903d77a4320fb46da0ef7a1daa914618a881290",
+      "local_bytes": 55791
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/RemoteModelImportSheet.kt",
+      "git_blob_sha": "177afc6f35e3561950e2b827f4c97ab6d0d76f88",
+      "local_sha256": "d13b0501d95d1effa442503e0958add639083d092c1fc28ff81ae777080c3fe5",
+      "local_bytes": 9192
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeSession.kt",
+      "git_blob_sha": "14bb61868e701c0c871f6fc269225c41c6f6c335",
+      "local_sha256": "4ce79ca5f2d8efff94462a6f57dcae7a0b56792754306135dc4705f154828f74",
+      "local_bytes": 7520
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/GuiControlCoordinator.kt",
+      "git_blob_sha": "10f6c499eb511550b7a8e99d671918c3e7f1db15",
+      "local_sha256": "d8b159c4250f356bd45bcbef95c91e94f3d060f6af026b4c573af951c5fa78c9",
+      "local_bytes": 7144
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRunArchiveStore.kt",
+      "git_blob_sha": "da2d252ea3a375a5212bc8f50387d158e0f04f9d",
+      "local_sha256": "f13fab025a25c629a7ba3635d51f500c8932757f8e40a8f04cbb340ef878beec",
+      "local_bytes": 7355
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentEvent.kt",
+      "git_blob_sha": "6b281b1048afec087054d0c525fe4754a8a1773c",
+      "local_sha256": "267af201c4e5f04729c9aca9ff5263ade61f824af7ca38adf3964b5aceccfd14",
+      "local_bytes": 9574
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentRunMessageProjector.kt",
+      "git_blob_sha": "5822ae0ec77b11133126613e7df2562dfd2575da",
+      "local_sha256": "f50f2e051e0b170b8eaaeb0df44e383611201b413001ebfd3650bee43607ad8f",
+      "local_bytes": 30071
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentMessageQueueReducer.kt",
+      "git_blob_sha": "8dce063088eb4fae846c7cb996601a1872910c6a",
+      "local_sha256": "c06dd3074c76de7073b660d4c422815ae28f1736333f7255e0d4512d5d35a8a8",
+      "local_bytes": 4942
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentConversationRevisionReducer.kt",
+      "git_blob_sha": "68d89251dedbd2c1bc47d6bf2d642c85a9445f55",
+      "local_sha256": "4d82a0933940ad3296d03233930b92e80692940d0d61cbb8c485f3f7d7579d42",
+      "local_bytes": 3290
+    }
+  ],
+  "differences": [
+    {
+      "path": ".github/RELEASING.md",
+      "status": "different"
+    },
+    {
+      "path": ".github/actions/setup-build/action.yml",
+      "status": "different"
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "status": "private_only"
+    },
+    {
+      "path": ".github/workflows/etax-build.yml",
+      "status": "private_only"
+    },
+    {
+      "path": ".github/workflows/pr-check.yml",
+      "status": "different"
+    },
+    {
+      "path": ".gitignore",
+      "status": "different"
+    },
+    {
+      "path": "README.md",
+      "status": "different"
+    },
+    {
+      "path": "README_EN.md",
+      "status": "different"
+    },
+    {
+      "path": "app/build.gradle.kts",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/AndroidManifest.xml",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/BackgroundObservation.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/BackgroundScroll.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/Boot.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/Engine.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/EngineCredential.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/EngineJournal.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ParkedScreenHints.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ShadowNotice.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ShadowSchema.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ShadowSettings.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/java/com/eta/shadow/ShadowTools.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/accessibility/AccessibilityProtectionProtocol.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/accessibility/AgentAccessibilityService.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/mcp/McpRunContext.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentBackgroundToolCatalog.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentDeviceToolCatalog.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentPromptBuilder.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentToolCatalog.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentTraceFormatter.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayCapsule.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayState.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayText.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentExecutionService.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRunCheckpointStore.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRunController.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeRunExecutor.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeService.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeWire.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AssistantRunRecovery.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/BackgroundScreenTools.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/CompletedAppActivity.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/EntrySurfaceGuard.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/NotificationReplyConnection.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/NotificationReplyRequest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/RuntimeDiagnostics.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/RuntimeRunRegistry.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/runtime/TaskNotificationDismissReceiver.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/subagent/SubagentExecutor.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/subagent/SubagentProfile.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/terminal/AppStateCommandGuard.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/terminal/RootShellTerminalController.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/tool/AgentToolRequirements.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/tool/AppInspectionTool.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/tool/DeviceStateMutations.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/voice/EtaAssistantOverlayService.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/voice/EtaVoicePanel.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/core/ModuleConfig.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/data/datastore/SettingsDataStore.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/data/model/AppearanceSettings.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/hook/system/AccessibilityServiceEnforcer.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/AppearanceSettingsScreen.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/MainActivity.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/MainActivityLaunchRequests.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppRoot.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppState.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentToolsCatalogUi.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/app/AssistantConversationSeed.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatBody.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatInputBar.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ToolIcons.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/screens/home/AgentHomeScreen.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/res/values-b+zh+Hans/background_runtime.xml",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/res/values-b+zh+Hans/strings.xml",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/res/values-b+zh+Hant/background_runtime.xml",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/res/values-b+zh+Hant/strings.xml",
+      "status": "different"
+    },
+    {
+      "path": "app/src/main/res/values/background_runtime.xml",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/main/res/values/strings.xml",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/java/ActionEvidenceTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/CapturePixelsTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/DisplayGeometryTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/EngineRecoveryTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/EngineStagingTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/EngineWireTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/ProcessProtectionTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/VDriveInputReadinessTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/VDrivePointerTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/VDriveSessionsTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/BackgroundScrollTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/BootGeometryTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/BootNodeTargetTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/EngineDeploymentFailureTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/ParkedScreenHintsTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/ShadowSchemaTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/ShadowToolsCloseoutTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/java/com/eta/shadow/ShadowToolsGeometryTest.java",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/mcp/BackgroundToolResultTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/model/AgentModelRetryTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/model/AgentPromptBuilderTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/model/AgentTraceFormatterTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/overlay/AgentOverlayStateTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentExecutionServiceTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentRunControllerTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimePreparationFailureTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeScreenOnTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentRuntimeServiceRetentionTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AgentSystemNotificationTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/AssistantRunRecoveryTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/BackgroundScreenRecoveryTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/EntrySurfaceGuardTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/NotificationReplyRequestTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/RuntimeDiagnosticsTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/RuntimeRunRegistryTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/ScreenLeaseRegistryTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/runtime/TaskCompletionNotificationTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/subagent/SubagentTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/terminal/AppStateCommandGuardTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/tool/AgentToolRequirementsTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/tool/AppInspectionToolTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/tool/DeviceStateMutationsTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/voice/EtaAssistantDismissalTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/agent/voice/EtaVoicePanelTouchTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/data/model/AppearanceSettingsTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/data/repository/AppearanceSettingsRepositoryTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/ui/MainActivityLaunchRequestsTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/ui/app/AgentAppStateConversationLoadingTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/ui/app/AssistantConversationSeedTest.kt",
+      "status": "private_only"
+    },
+    {
+      "path": "app/src/test/kotlin/io/github/mangi/eta/ui/app/ToolCatalogUiTest.kt",
+      "status": "different"
+    },
+    {
+      "path": "etax/README.md",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/check_hooks.sh",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/embed_engine.sh",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/build_engine.sh",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/check_pair.sh",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/install_vdrive.sh",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/src/BoundedShell.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/src/CapturePixels.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/src/DisplayGeometry.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/src/EngineControl.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/src/McpEndpoint.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/src/ProcessProtection.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/src/SystemServiceHealth.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/src/VDrive.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/src/VDriveWorker.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/tests/shell_compat.py",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/tests/test_controller.py",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/tests/test_install.py",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/tests/test_process_identity.py",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/engine/vd.sh",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/shared/src/com/eta/shadow/ActionEvidence.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/shared/src/com/eta/shadow/EngineFailures.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/shared/src/com/eta/shadow/EngineWire.java",
+      "status": "private_only"
+    },
+    {
+      "path": "etax/shared/src/com/eta/shadow/ScreenGeometry.java",
+      "status": "private_only"
+    }
+  ],
+  "comparison_only_paths": [
+    ".github/workflows/android-release.yml",
+    "docs/Screenshots/chat_breeno_analysis.jpg",
+    "docs/Screenshots/chat_device_direct.jpg",
+    "docs/Screenshots/demo_gui_agent.gif",
+    "docs/Screenshots/demo_tools.gif"
+  ],
+  "local_extraction_verification": {
+    "git_blob_matches": 176,
+    "normalized_one_added_trailing_newline": 176,
+    "unmatched_paths": []
+  }
+}

@@ -1,0 +1,6 @@
+[
+  {"name":"hdc","url":"https://codeload.github.com/openharmony/developtools_hdc/tar.gz/10e867eb30f43b605089458be20fd85e943a327d","sha256":"46b60f7fdfc6d4f56a06dd9f2ab28785ca9f662376f54201ab8afc5312a25209","directory":"developtools_hdc-OpenHarmony-6.0-Release"},
+  {"name":"securec","url":"https://codeload.github.com/openharmony/third_party_bounds_checking_function/tar.gz/61baa7a3eb9347efca58397d1d0504faa96d79f0","sha256":"f0e1539c13812672d52144427eb7ddb0c7db03661aa274b473bdbae44a356dd3","directory":"third_party_bounds_checking_function-master"},
+  {"name":"lz4","url":"https://codeload.github.com/lz4/lz4/tar.gz/refs/tags/v1.10.0","sha256":"537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b","directory":"lz4-1.10.0"},
+  {"name":"openssl","url":"https://codeload.github.com/openssl/openssl/tar.gz/refs/tags/openssl-3.0.16","sha256":"9642aa3d97ac37da45dadabb3b576f399016acdb1df5d0e2751733e1cdf9f328","directory":"openssl-openssl-3.0.16"}
+]

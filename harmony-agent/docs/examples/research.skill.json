@@ -1,0 +1,1 @@
+{"id":"research_notes","version":"1.0.0","name":"资料整理","instructions":"根据用户指定材料整理事实、来源和不确定项。需要时读取本技能模板；不自动搜索或发布用户没有要求的内容。","resources":[{"path":"templates/report.md","text":"# 资料整理\n\n## 已确认事实\n\n## 来源\n\n## 待核实内容\n"}],"enabled":false}

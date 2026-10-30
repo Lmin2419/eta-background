@@ -1,0 +1,120 @@
+> hvigor [32mTYPE CHECK SUCCESSFUL in 597 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@PreBuild...  [39m
+> hvigor [32mFinished :entry:default@CreateModuleInfo... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateMetadata...  [39m
+> hvigor [32mFinished :entry:default@ConfigureCmake... after 40 ms [39m
+> hvigor [32mFinished :entry:default@MergeProfile... after 37 ms [39m
+> hvigor [32mFinished :entry:default@CreateBuildProfile... after 2 ms [39m
+> hvigor [32mFinished :entry:default@PreCheckSyscap... after 1 ms [39m
+> hvigor [32mFinished :entry:default@GeneratePkgContextInfo... after 7 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GeneratePkgSdkInfo...  [39m
+> hvigor [32mFinished :entry:default@ProcessIntegratedHsp... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithCmake... after 14 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MakePackInfo...  [39m
+> hvigor [32mFinished :entry:default@SyscapTransform... after 9 ms [39m
+> hvigor [32mFinished :entry:default@ProcessProfile... after 59 ms [39m
+> hvigor [32mFinished :entry:default@ProcessRouterMap... after 3 ms [39m
+> hvigor [32mFinished :entry:default@ProcessShareConfig... after 2 ms [39m
+> hvigor [32mFinished :entry:default@ProcessStartupConfig... after 2 ms [39m
+> hvigor [32mFinished :entry:default@ProcessResource... after 4 ms [39m
+> hvigor [32mFinished :entry:default@GenerateLoaderJson... after 6 ms [39m
+> hvigor [32mFinished :entry:default@CompileResource... after 86 ms [39m
+> hvigor [32mFinished :entry:default@BuildJS... after 2 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithNinja... after 66 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessLibs...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@DoNativeStrip...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CacheNativeLibs...  [39m
+> hvigor [33mWARN: [33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:19:36
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:20:14
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:21:14
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:22:14
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:28:50
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:29:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:29:41
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:29:71
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:62:50
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:63:20
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:63:78
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:63:123
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:91:61
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:92:11
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:93:18
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:106:158
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:106:191
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/RuntimeStorage.ets:106:261
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/ProfileStore.ets:10:45
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/ProfileStore.ets:10:72
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/ProfileStore.ets:13:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/ProfileStore.ets:16:14
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/ProfileStore.ets:17:10
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/ProfileStore.ets:18:20
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/platform/ProfileStore.ets:19:8
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/entryability/EntryAbility.ets:26:17
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: /workspace/harmony-agent/entry/src/main/ets/pages/Index.ets:18:37
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[39m
+> hvigor [32mFinished :entry:default@CompileArkTS... after 4 s 584 ms [39m
+> hvigor [32mFinished :entry:default@GeneratePkgModuleJson... after 2 ms [39m
+> hvigor [32mFinished :entry:default@ProcessCompiledResources... after 1 ms [39m
+> hvigor [32mFinished :entry:default@PackageHap... after 465 ms [39m
+> hvigor [32mFinished :entry:default@PackingCheck... after 4 ms [39m
+> hvigor [33mWARN: No signingConfig found for product default[39m
+> hvigor [32mFinished :entry:default@SignHap... after 2 ms [39m
+> hvigor [32mFinished :entry:default@CollectDebugSymbol... after 1 ms [39m
+> hvigor [32mFinished :entry:assembleHap... after 1 ms [39m
+> hvigor [32mBUILD SUCCESSFUL in 8 s 289 ms [39m
+
+33 tasks in total: 26 executed, 7 up-to-date

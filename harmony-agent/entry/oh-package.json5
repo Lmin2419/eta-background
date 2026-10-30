@@ -1,0 +1,9 @@
+{
+  "name": "entry",
+  "version": "0.9.0",
+  "description": "Harmony agent app",
+  "main": "",
+  "dependencies": {
+    "libagent_hdc.so": "file:./src/main/cpp/types/libagent_hdc"
+  }
+}

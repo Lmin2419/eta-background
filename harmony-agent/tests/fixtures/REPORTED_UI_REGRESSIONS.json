@@ -1,0 +1,10 @@
+{
+  "source": "用户在本会话提供的 Pura X Max 截图与文字反馈；截图原件保留在会话中",
+  "device": "Pura X Max / HarmonyOS 7 / API 26",
+  "cases": [
+    {"id":"UI-01","reported":"获取模型/测试连接清空输入框","assert":"成功、失败、超时、同值回调、切服务迟到结果均不覆盖当前草稿","automation":"tests/experience.test.ts + tests/models.test.ts + tests/parity.test.ts","device":"待验证"},
+    {"id":"UI-02","reported":"顶部/底部留白，横屏聊天消息区域狭小","assert":"内外屏、键盘、折叠和大字体均能看见正文与停止按钮","automation":"API 26 构建，仅能验证语法与类型","device":"待截图比较"},
+    {"id":"UI-03","reported":"执行中看不到流式正文","assert":"首段文本即显示，上滑不拉回，停止保留部分文本","automation":"tests/streaming.test.ts + tests/runtime.test.ts","device":"待验证真实网络与排版"},
+    {"id":"UI-04","reported":"后台模式没有通知栏提醒","assert":"通知授权/拒绝可见；任务卡与后台租约分别显示；删除不复活","automation":"tests/runtime.test.ts + tests/session.test.ts","device":"待验证通知样式、投递和持续时间"}
+  ]
+}

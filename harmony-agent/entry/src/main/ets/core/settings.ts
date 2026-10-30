@@ -1,0 +1,7 @@
+export type SettingValue=string|number|boolean;
+export const SETTING_KEYS=['target','continuousBackground','blurEnabled','darkTheme','contextTokens','completionAlerts','inlineReply','useWorkspace','useWeb','useSystem','memoryEnabled','searchUrl'];
+export function parseSettings(raw:string):Record<string,SettingValue>{const out:Record<string,SettingValue>={};const v=JSON.parse(raw);if(!v||typeof v!=='object'||Array.isArray(v))throw new Error('偏好设置格式无效');for(const key of SETTING_KEYS){if(v[key]===undefined)continue;const x=v[key];if(key==='target'||key==='searchUrl'){if(typeof x!=='string'||x.length>2048)throw new Error('设置地址无效');}else if(key==='contextTokens'){if(typeof x!=='number'||!Number.isInteger(x)||x<8000||x>1000000)throw new Error('上下文预算无效');}else if(typeof x!=='boolean')throw new Error('开关设置无效');out[key]=x;}return out;}
+export interface SavedEditor {id:string;text:string;scroll:number;followBottom?:boolean;attachments?:string[]}
+export function parseEditors(value:unknown):SavedEditor[]{
+ if(!Array.isArray(value)||value.length>50)throw new Error('备份草稿数量无效');return value.map((m:any)=>{if(typeof m.id!=='string'||m.id.length>128||typeof m.text!=='string'||m.text.length>8000||!Number.isFinite(m.scroll)||m.scroll<0)throw new Error('备份草稿无效');const attachments=m.attachments||[];if(!Array.isArray(attachments)||attachments.length>5||attachments.some((n:unknown)=>typeof n!=='string'||n.length>128||/[\\/\0]/.test(n)))throw new Error('备份附件引用无效');return {id:m.id,text:m.text,scroll:m.scroll,followBottom:m.followBottom!==false,attachments};});
+}

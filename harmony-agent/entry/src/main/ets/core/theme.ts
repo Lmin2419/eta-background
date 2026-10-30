@@ -1,0 +1,4 @@
+const dark:Record<string,string>={
+ '#E4EAFE':'#2A3550','#E4E8F2':'#394355','#FFFFFF':'#202634','#F8F9FC':'#111724','#F3F5FA':'#151C29','#182237':'#F0F3FC','#18202F':'#F0F3FC','#263248':'#E1E7F4','#344460':'#D8E0F1','#3F5278':'#C1CEE7','#435BDA':'#A8B7FF','#697589':'#ACB8CD','#7C8798':'#ACB8CD','#8A95A6':'#A4B1C9','#98A2B2':'#A4B1C9','#718098':'#ACB8CD','#6A7891':'#ACB8CD','#E8EDFF':'#29354E','#E7ECFD':'#2A3550','#E9EDF7':'#2A3448','#E9EDFA':'#29344F','#E9EDF5':'#151C29','#EDF1FF':'#2B3752','#EDF0F7':'#2B3447','#EEF1F8':'#293348','#EDF0F5':'#394355','#EFF5F3':'#213B36','#FBF4E6':'#443A28','#FAEDEC':'#422E31','#BFCBF8':'#697FC0','#B46A6A':'#F0A6AA','#8B5148':'#F2AAA0','#9D6855':'#E4BCA7','#9D8155':'#DDC293','#34856B':'#83D2B5','#6272B6':'#7289DB'
+};
+export function tone(color:string,isDark:boolean):string{return isDark?(dark[color]||color):color;}

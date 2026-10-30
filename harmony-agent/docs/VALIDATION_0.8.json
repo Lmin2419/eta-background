@@ -1,0 +1,65 @@
+{
+  "version": "0.8.0",
+  "date_utc": "2026-10-30",
+  "reference_commit": "8ae286a8993efaa4650426ae450ab4634f2b2354",
+  "checks": {
+    "typescript": {
+      "result": "passed",
+      "log": "typecheck-0.8.log",
+      "log_sha256": "d0d3d9b7fe810931841a2f9cf613850508148e3b61862698da6da882a4b137bd"
+    },
+    "unit_tests": {
+      "result": "passed",
+      "log": "test-0.8.log",
+      "log_sha256": "ddb26248600e85dfc1ab58d7e6f27e6b72edee8dfde961f68868af2d1de46c8f",
+      "passed": 178,
+      "added_since_0_7": 17
+    },
+    "native": {
+      "result": "passed",
+      "log": "native-0.8.log",
+      "log_sha256": "bc2cc437d12dc0878a99542fd906a27038d2efc37594c96261c4d9c2a9fe15be",
+      "passed": 8
+    },
+    "harmony_build": {
+      "result": "passed",
+      "log": "build-0.8.log",
+      "log_sha256": "6876f2330222ce464c4711429a6443ca3907269250ad3ee0ea221c60ebdbc652",
+      "sdk_api": 26,
+      "warnings_retained": true
+    },
+    "exported_deveco_build": {
+      "result": "passed",
+      "tasks_executed": 34,
+      "tasks_up_to_date": 0,
+      "log": "export-build-0.8.log",
+      "log_sha256": "0e272baf47c10895ce9c056eb1fa032a4cc8844a14bba4249bab964139999e5e",
+      "method": "Freshly extracted DevEco project; ohpm install; only the test copy signingConfig reference removed to build unsigned without personal credentials."
+    },
+    "upgrade_native_compatibility": {
+      "result": "passed",
+      "method": "HDC and libc++ ARM64 libraries byte-identical to 0.7; overlay preserves root/module build-profile files."
+    }
+  },
+  "source_fingerprint_sha256": "e2655d8be5a98eba1e67c627cf52ad890b29520266bf23b3694473204bb4330c",
+  "backlog_count": 83,
+  "implementation_states": {
+    "文档/基线已完成": 2,
+    "代码已实现；自动化/编译通过，待端到端验收": 60,
+    "等待真机验收；适配代码已接入": 6,
+    "本轮自动化验收通过": 1,
+    "发布阻塞：真机与稳定性验收未完成": 1,
+    "部分实现：应用目录、核验启动与三个任务模板已接入；真实流程待真机": 1,
+    "条件受限：未获真机/权益闭环证据": 12
+  },
+  "packaging": "See PACKAGING_VALIDATION_0.8.json in the acceptance bundle.",
+  "device_validation": "NOT RUN: no connected phone, personal signing credentials or model/MCP service credentials in this environment.",
+  "release_gate": "BLOCKED pending PHONE/EXT/DATA/REG acceptance.",
+  "limitations": [
+    "Templates prepare Agent goals and verification steps; actual clock/note workflows have not passed phone acceptance.",
+    "MCP editor and foreground/background lifecycle changes compile but require real UI/event validation.",
+    "No physical RDB disk-full/process-kill fault injection.",
+    "No claimed virtual-screen, power-key replacement or long-term background entitlement.",
+    "HAP unsigned; use your existing DevEco signature to upgrade."
+  ]
+}

@@ -1,0 +1,17 @@
+node_modules/
+oh_modules/
+.hvigor/
+**/build/
+**/.cxx/
+**/.preview/
+__pycache__/
+vendor/
+native-build/
+dist/
+local.properties
+*.p12
+*.p7b
+*.cer
+*.pem
+build-profile.local.json5
+*.log

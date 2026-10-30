@@ -1,0 +1,23 @@
+> hvigor [32mTYPE CHECK SUCCESSFUL in 573 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@PreBuild...  [39m
+> hvigor [32mFinished :entry:default@CreateModuleInfo... after 2 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MergeProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CreateBuildProfile...  [39m
+> hvigor [32mFinished :entry:default@PreCheckSyscap... after 1 ms [39m
+> hvigor [32mFinished :entry:default@GeneratePkgContextInfo... after 9 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessRouterMap...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessShareConfig...  [39m
+> hvigor [32mFinished :entry:default@ProcessStartupConfig... after 2 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateLoaderJson...  [39m
+> hvigor [32mFinished :entry:default@CompileResource... after 140 ms [39m
+> hvigor [32mFinished :entry:default@PreviewHookCompileResource... after 1 ms [39m
+> hvigor [32mFinished :entry:default@ReplacePreviewerPage... after 5 ms [39m
+> hvigor [32mFinished :entry:buildPreviewerResource... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@PreviewUpdateAssets...  [39m
+> hvigor [32mFinished :entry:default@PreviewArkTS... after 6 s 347 ms [39m
+> hvigor [32mFinished :entry:PreviewBuild... after 1 ms [39m
+> hvigor [32mBUILD SUCCESSFUL in 8 s 133 ms [39m
+
+19 tasks in total: 10 executed, 9 up-to-date

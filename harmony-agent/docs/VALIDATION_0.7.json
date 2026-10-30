@@ -1,0 +1,69 @@
+{
+  "version": "0.7.0",
+  "date_utc": "2026-10-30",
+  "reference_commit": "8ae286a8993efaa4650426ae450ab4634f2b2354",
+  "checks": {
+    "typescript": {
+      "result": "passed",
+      "log": "typecheck-0.7.log",
+      "log_sha256": "fedb4eb3e3a4a525bc83b4af073bf12133f39de8098ec931f89907c030ad18a1"
+    },
+    "unit_tests": {
+      "result": "passed",
+      "log": "test-0.7.log",
+      "log_sha256": "62bf117df41bf928bfd537f6ad47a3ae78fc091cb5ffecb385c49d1b048a9bd3",
+      "passed": 161
+    },
+    "native": {
+      "result": "passed",
+      "log": "native-0.7.log",
+      "log_sha256": "471818df55c5285a0efe71f23d5e1e4fb7f9be47afe3f444ea9963b73f8a2642",
+      "passed": 8
+    },
+    "harmony_build": {
+      "result": "passed",
+      "log": "build-0.7.log",
+      "log_sha256": "3940d09c645a1f4b2b605f96b936bc99cbb8b3de480ec518ec33f35d732758a6",
+      "sdk_api": 26,
+      "warnings_retained": true
+    },
+    "exported_deveco_build": {
+      "result": "passed",
+      "tasks_executed": 34,
+      "tasks_up_to_date": 0,
+      "log": "export-build-0.7.log",
+      "log_sha256": "9b8fcd4afae6e83701b2ab555028b36c50645532de909c7ecf4058400d4c7690",
+      "method": "Fresh extracted DevEco ZIP; ohpm install; removed only the local test copy signingConfig reference to build unsigned without user credentials; no native source build."
+    },
+    "skill_packer": {
+      "result": "passed",
+      "cases": [
+        "valid text resource bundle",
+        "reject symbolic links"
+      ]
+    },
+    "upgrade_native_compatibility": {
+      "result": "passed",
+      "method": "ARM64 HDC and libc++ bytes identical to 0.5 and 0.6 HAPs; overlay needs no native rebuild."
+    }
+  },
+  "backlog_count": 83,
+  "implementation_states": {
+    "文档/基线已完成": 2,
+    "代码已实现；自动化/编译通过，待端到端验收": 60,
+    "等待真机验收；适配代码已接入": 6,
+    "本轮自动化验收通过": 1,
+    "发布阻塞：真机与稳定性验收未完成": 1,
+    "部分实现：目录已接入；具体流程待真机": 1,
+    "条件受限：未获真机/权益闭环证据": 12
+  },
+  "packaging": "See PACKAGING_VALIDATION_0.7.json in the acceptance bundle.",
+  "device_validation": "NOT RUN: no connected phone, signing credentials or model service credentials in this environment.",
+  "release_gate": "BLOCKED pending PHONE/EXT/DATA acceptance.",
+  "limitations": [
+    "No actual Pura X Max UI/layout or notification delivery verification.",
+    "No physical RDB disk-full/process-kill fault injection.",
+    "No claimed virtual-screen, power-key replacement, long-term background entitlement.",
+    "Exported HAP unsigned; install through your own DevEco signing."
+  ]
+}

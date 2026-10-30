@@ -1,0 +1,135 @@
+{
+  "sdk_version": "26.0.0.105",
+  "audit_date": "2026-10-29",
+  "note": "SDK source evidence only; permissions, service eligibility and behavior are not device-validated.",
+  "files": [
+    {
+      "path": "openharmony/ets/api/notification/notificationRequest.d.ts",
+      "sha256": "bec73f5c50e0c0fdab9eec02d15ae90d9bc08f222ea1043d7b5f93c0d94b01d2"
+    },
+    {
+      "path": "openharmony/ets/api/notification/notificationActionButton.d.ts",
+      "sha256": "dfe09f0edbfa932670e1fdae2f0a8d601eaf13a4d0e7c8a0a9002840e4443b1b"
+    },
+    {
+      "path": "openharmony/ets/api/notification/notificationUserInput.d.ts",
+      "sha256": "2a36cfb4dd68846575638c2aef8970acf82c53e278807b2d7b650b6a70ae9fb1"
+    },
+    {
+      "path": "openharmony/ets/api/@ohos.notificationManager.d.ts",
+      "sha256": "f2c6a58e74ca88a2728ce34c79a57d50e26043f61f2232610180cbb28530d4e3"
+    },
+    {
+      "path": "hms/ets/api/@hms.core.liveview.liveViewManager.d.ts",
+      "sha256": "f5ea19cddca48ebe059ca2c854285af96805f8647144911fd106189b108c1471"
+    },
+    {
+      "path": "openharmony/ets/api/@ohos.window.floatingBall.d.ts",
+      "sha256": "5d81f37627e5115191bcad7a967b77dba565841bc797fec85320419857c98ef1"
+    },
+    {
+      "path": "openharmony/ets/api/@ohos.window.floatView.d.ts",
+      "sha256": "317a331a19984dca060dab12e225e5283fbba0d545726c17319aca21f5c7767e"
+    },
+    {
+      "path": "openharmony/ets/api/@ohos.resourceschedule.backgroundTaskManager.d.ts",
+      "sha256": "846b061552680ebf976ecd69b3fbe716768e9c64760676f166c717ab6455b708"
+    },
+    {
+      "path": "openharmony/ets/api/@ohos.display.d.ts",
+      "sha256": "dabd0bf15351878936c2bf5923a9ba80a93a8f2aa161bf2f0226c6377f310f8d"
+    },
+    {
+      "path": "openharmony/toolchains/lib/PermissionDefinitions.json",
+      "sha256": "443e73fbabd97c3129fea9b446211f06cea4957ed0702793dc0ef009fe269ae1"
+    }
+  ],
+  "permissions": [
+    {
+      "name": "ohos.permission.SYSTEM_FLOAT_WINDOW",
+      "grantMode": "system_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 7,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false
+    },
+    {
+      "name": "ohos.permission.KEEP_BACKGROUND_RUNNING",
+      "grantMode": "system_grant",
+      "availableLevel": "normal",
+      "availableType": "NORMAL",
+      "since": 8,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false
+    },
+    {
+      "name": "ohos.permission.ACCESS_VIRTUAL_SCREEN",
+      "grantMode": "system_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 16,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false
+    },
+    {
+      "name": "ohos.permission.USE_FLOAT_BALL",
+      "grantMode": "system_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 20,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "deviceTypes": [
+        "phone",
+        "tablet",
+        "2in1"
+      ]
+    },
+    {
+      "name": "ohos.permission.FLOAT_VIEW",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": "26.0.0",
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "deviceTypes": [
+        "phone",
+        "tablet",
+        "2in1"
+      ]
+    },
+    {
+      "name": "ohos.permission.KEEP_BACKGROUND_RUNNING_SPECIAL_SCENARIO",
+      "grantMode": "system_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 24,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "deviceTypes": [
+        "2in1",
+        "tablet",
+        "phone"
+      ]
+    }
+  ],
+  "facts": {
+    "phone_notification_max_buttons": 2,
+    "notification_isOngoing_supported": false,
+    "notification_updateOnly_since": 18,
+    "notification_userInput_public_api": true,
+    "removalWantAgent_delivery": "common event only; not UIAbility",
+    "liveview_entitlement_error": 1003500005,
+    "liveview_PROGRESS_requires_scenario_entitlement": true,
+    "special_background_ai_generic_eligibility": "not established; SDK describes media processing / video casting matching subtypes",
+    "virtual_screen_creation_does_not_prove_third_party_input": true
+  }
+}

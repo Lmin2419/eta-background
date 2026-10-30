@@ -1,0 +1,120 @@
+{
+  "upstream_commit": "3019c43ce60cf53ebe1c2ba5ec86ec630830f39d",
+  "audit_date": "2026-10-29",
+  "scope": "工具权限注册表 + Phone/PersonalSearch 动态条目 + 会话/子任务工具；包含兼容别名，不表示所有条目同时向模型公开",
+  "tool_rows": 129,
+  "source_files": [
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/context/PersonalSearchTools.kt",
+      "sha256": "8ad60bb068ea7f270122da1daeeba766f2d32aef91986bed3d1fccb1024a4b16"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentBrowserToolCatalog.kt",
+      "sha256": "7c8b9b5f114b9c1db2256b2dc9f33b4eecf2369fae87cf92739c2c16eb8fbdbf"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentContextAppToolCatalog.kt",
+      "sha256": "713738510cf8cdd28312201126355b00bf779f84aafb69680bf36c1532ff1d97"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentConversationToolCatalog.kt",
+      "sha256": "d5f6cfc8631d099af2c853aeb3c0dcb4e98484262c868a33affb4761ad07800f"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentDeviceToolCatalog.kt",
+      "sha256": "9b859e674107e116697c7fd24fa92f7abfce55ccbe3aa3fceac87d2cf3e05145"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentFileToolCatalog.kt",
+      "sha256": "c20e847fe9025087068b639a6a237a463416271c90c5f745f5c71adca741eab8"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentFileVisionToolCatalog.kt",
+      "sha256": "bf4b8428f5c5f76ea2df93f5dfca59567b728e263d1e7ab06052e6c1b38b556c"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentGestureToolCatalog.kt",
+      "sha256": "e656eeecb456c647a043fc48c8e98f144cc636ae39124fa6ff8f9d49c238017c"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentMemoryToolCatalog.kt",
+      "sha256": "60403767b6e4c9a05fbd61b74dad7fcc54662c14598caa0634fe1a09b0043f18"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentPersonalSearchToolCatalog.kt",
+      "sha256": "9d5965a26042e999d16337cfefd39a4bc91170be496b4f8604bb64ad8b266a20"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentPhoneToolCatalog.kt",
+      "sha256": "6afe51cbf37428714b46664cf80a3e6f389883651d03b6772312f3ad48d76980"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentSkillToolCatalog.kt",
+      "sha256": "6fcc9d9ce03e04bb4826a34d20007a80cabb6df85325dc0fc00527a8fcb179d3"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentTerminalToolCatalog.kt",
+      "sha256": "4e32528b9535947a05dca85bdda2da25d510d65a6621cb5c99f9b32a21ec1a3b"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentTextSystemToolCatalog.kt",
+      "sha256": "3a10ab2e1ad7e033cf4637511d701c3bfd900d24baa904cfede3e1119853a92c"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentToolCatalog.kt",
+      "sha256": "1da1b9846281e385b30af6d324b826d83a627dd8ff2e8b2560b3e42b076abb28"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentWebToolCatalog.kt",
+      "sha256": "135e4295235e3d0c5ba10dfef5b957924c29a9485eca72e45f031eaf1c95eebf"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/roleplay/CharacterMemoryTools.kt",
+      "sha256": "c085832ca4cfe9ed3bc2412d41446f90d8b327b7bb1a85ddc3b0e73edfa6f4e3"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/subagent/AgentSubagentToolCatalog.kt",
+      "sha256": "810def7d813859ea71adff351be25fcc2e2260967095f36981df76a62fc371f4"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/tool/AgentToolCapabilities.kt",
+      "sha256": "ae5fdf8eeac0f81b70f0c707df0307d0849893aba408f495f6544e66b4b34a83"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/tool/AgentToolRequirements.kt",
+      "sha256": "99b177cd6e5a9b5bfb15ddc22d51619092b789b13feba97b14e4760259febada"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/agent/tool/SystemStateControls.kt",
+      "sha256": "2cce953fdba995401e31c59035d488003766ab152906ff130e242e381e14fc07"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/data/provider/ProviderConnectionProfile.kt",
+      "sha256": "bcd84459da0c2955e72e6c28e568141bd743dd6fb42fa4f67209b6a92d1f7ca0"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/AppearanceSettingsScreen.kt",
+      "sha256": "f0ab6587176ba2a89c24f168d69991152d2253ade3d89b70b98ee83842381bdb"
+    },
+    {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/SettingsScreen.kt",
+      "sha256": "b40d25794e3db4e08273d57c0cd917e3d2f2db52db73772e6a3c70e0aa48937c"
+    },
+    {
+      "path": "docs/AGENT_RUNTIME.md",
+      "sha256": "602a7ea511e66312e325e9c4cd7a732987ef075545077dd8344eb29b1899ee27"
+    },
+    {
+      "path": "docs/CHARACTERS.md",
+      "sha256": "e20c846659ba871a169c2ef406f7cbbda622180173d28a423cff9b6aa6fc0831"
+    },
+    {
+      "path": "docs/TECHNICAL.md",
+      "sha256": "a0ce04402c6c906292114bca871f432559e015d57502bae47b1f4d3b7b667cf6"
+    },
+    {
+      "path": "docs/VOICE.md",
+      "sha256": "ff285420a73ecff4a41a7190dbd95a68deb8ea575d8a3d6eb9d842624da6e4d7"
+    }
+  ]
+}

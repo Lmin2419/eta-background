@@ -1,0 +1,309 @@
+{
+  "sdk": "HarmonyOS SDK 26.0.0.105 / OpenHarmony API declarations",
+  "source_path": "openharmony/toolchains/lib/PermissionDefinitions.json",
+  "source_sha256": "443e73fbabd97c3129fea9b446211f06cea4957ed0702793dc0ef009fe269ae1",
+  "note": "SDK 定义不是目标设备授权证明；user_grant 仍可能同时要求 system_basic/ACL 资格。availableType=NORMAL 不等同 availableLevel=normal。",
+  "permissions": [
+    {
+      "name": "ohos.permission.CAPTURE_SCREEN",
+      "grantMode": "system_grant",
+      "availableLevel": "system_core",
+      "availableType": "SYSTEM",
+      "since": 7,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false
+    },
+    {
+      "name": "ohos.permission.BUNDLE_ACTIVE_INFO",
+      "grantMode": "system_grant",
+      "availableLevel": "system_basic",
+      "availableType": "SYSTEM",
+      "since": 7,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false
+    },
+    {
+      "name": "ohos.permission.cli.BUNDLE_ACTIVE_INFO",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "SYSTEM",
+      "since": "26.0.0",
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "deviceTypes": [
+        "phone",
+        "2in1",
+        "tablet"
+      ]
+    },
+    {
+      "name": "ohos.permission.SYSTEM_FLOAT_WINDOW",
+      "grantMode": "system_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 7,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false
+    },
+    {
+      "name": "ohos.permission.KEEP_BACKGROUND_RUNNING",
+      "grantMode": "system_grant",
+      "availableLevel": "normal",
+      "availableType": "NORMAL",
+      "since": 8,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false
+    },
+    {
+      "name": "ohos.permission.INTERNET",
+      "grantMode": "system_grant",
+      "availableLevel": "normal",
+      "availableType": "NORMAL",
+      "since": 9,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false
+    },
+    {
+      "name": "ohos.permission.READ_HEALTH_DATA",
+      "grantMode": "user_grant",
+      "availableLevel": "normal",
+      "availableType": "NORMAL",
+      "since": 7,
+      "deprecated": "",
+      "provisionEnable": false,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_read_health_data",
+      "description": "$string:ohos_desc_read_health_data",
+      "deviceTypes": [
+        "phone",
+        "2in1",
+        "tablet",
+        "tv",
+        "wearable"
+      ]
+    },
+    {
+      "name": "ohos.permission.LOCATION",
+      "grantMode": "user_grant",
+      "availableLevel": "normal",
+      "availableType": "NORMAL",
+      "since": 7,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": true,
+      "label": "$string:ohos_lab_location",
+      "description": "$string:ohos_desc_location"
+    },
+    {
+      "name": "ohos.permission.MICROPHONE",
+      "grantMode": "user_grant",
+      "availableLevel": "normal",
+      "availableType": "NORMAL",
+      "since": 8,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_microphone",
+      "description": "$string:ohos_desc_microphone"
+    },
+    {
+      "name": "ohos.permission.WRITE_CALENDAR",
+      "grantMode": "user_grant",
+      "availableLevel": "normal",
+      "availableType": "NORMAL",
+      "since": 8,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_write_calendar",
+      "description": "$string:ohos_desc_write_calendar"
+    },
+    {
+      "name": "ohos.permission.WRITE_CONTACTS",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 8,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_write_contacts",
+      "description": "$string:ohos_desc_write_contacts"
+    },
+    {
+      "name": "ohos.permission.READ_CONTACTS",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 8,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_read_contacts",
+      "description": "$string:ohos_desc_read_contacts"
+    },
+    {
+      "name": "ohos.permission.READ_CALL_LOG",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "SYSTEM",
+      "since": 8,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_read_call_log",
+      "description": "$string:ohos_desc_read_call_log"
+    },
+    {
+      "name": "ohos.permission.READ_CALENDAR",
+      "grantMode": "user_grant",
+      "availableLevel": "normal",
+      "availableType": "NORMAL",
+      "since": 8,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_read_calendar",
+      "description": "$string:ohos_desc_read_calendar"
+    },
+    {
+      "name": "ohos.permission.APPROXIMATELY_LOCATION",
+      "grantMode": "user_grant",
+      "availableLevel": "normal",
+      "availableType": "NORMAL",
+      "since": 9,
+      "deprecated": "",
+      "provisionEnable": false,
+      "distributedSceneEnable": true,
+      "label": "$string:ohos_lab_approximately_location",
+      "description": "$string:ohos_desc_approximately_location"
+    },
+    {
+      "name": "ohos.permission.READ_IMAGEVIDEO",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 9,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_read_imagevideo",
+      "description": "$string:ohos_desc_read_imagevideo"
+    },
+    {
+      "name": "ohos.permission.READ_WHOLE_CALENDAR",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 9,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "deviceTypes": [
+        "phone",
+        "tv",
+        "wearable",
+        "2in1",
+        "tablet",
+        "car"
+      ],
+      "label": "$string:ohos_lab_read_whole_calendar",
+      "description": "$string:ohos_desc_read_whole_calendar"
+    },
+    {
+      "name": "ohos.permission.WRITE_WHOLE_CALENDAR",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 9,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "deviceTypes": [
+        "phone",
+        "tv",
+        "wearable",
+        "2in1",
+        "tablet",
+        "car"
+      ],
+      "label": "$string:ohos_lab_write_whole_calendar",
+      "description": "$string:ohos_desc_write_whole_calendar"
+    },
+    {
+      "name": "ohos.permission.GET_INSTALLED_BUNDLE_LIST",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "SYSTEM",
+      "since": 10,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_get_installed_bundle_list",
+      "description": "$string:ohos_desc_get_installed_bundle_list"
+    },
+    {
+      "name": "ohos.permission.READ_PASTEBOARD",
+      "grantMode": "user_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 11,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "label": "$string:ohos_lab_read_pasteboard",
+      "description": "$string:ohos_desc_read_pasteboard",
+      "deviceTypes": [
+        "phone",
+        "wearable",
+        "tv",
+        "2in1",
+        "tablet",
+        "car"
+      ]
+    },
+    {
+      "name": "ohos.permission.MANAGE_SETTINGS",
+      "grantMode": "system_grant",
+      "availableLevel": "system_basic",
+      "availableType": "SYSTEM",
+      "since": 12,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false
+    },
+    {
+      "name": "ohos.permission.ACCESSIBILITY_EXTENSION_ABILITY",
+      "grantMode": "system_grant",
+      "availableLevel": "system_basic",
+      "availableType": "SYSTEM",
+      "since": 20,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "deviceTypes": [
+        "general"
+      ]
+    },
+    {
+      "name": "ohos.permission.SUBSCRIBE_NOTIFICATION",
+      "grantMode": "system_grant",
+      "availableLevel": "system_basic",
+      "availableType": "NORMAL",
+      "since": 22,
+      "deprecated": "",
+      "provisionEnable": true,
+      "distributedSceneEnable": false,
+      "deviceTypes": [
+        "phone",
+        "tablet"
+      ]
+    }
+  ]
+}

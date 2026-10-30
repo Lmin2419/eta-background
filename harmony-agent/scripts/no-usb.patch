@@ -1,0 +1,216 @@
+diff --git a/src/common/common.h b/src/common/common.h
+index fbf13bc..2992eec 100644
+--- a/src/common/common.h
++++ b/src/common/common.h
+@@ -58,7 +58,7 @@ using std::vector;
+ 
+ // clang-format off
+ #include <uv.h>  // libuv 1.35
+-#ifdef HDC_HOST
++#if defined(HDC_HOST) && !defined(HDC_NO_USB)
+ 
+ #ifdef HARMONY_PROJECT
+ #include <libusb/libusb.h>
+@@ -66,7 +66,7 @@ using std::vector;
+ #include <libusb-1.0/libusb.h>
+ #endif // END HARMONY_PROJECT
+ 
+-#else // NOT HDC_HOST
++#else // NOT HDC_HOST / HDC_NO_USB
+ #endif // HDC_HOST
+ 
+ #ifndef _WIN32
+diff --git a/src/common/define_enum.h b/src/common/define_enum.h
+index c17bb11..fc0d1c8 100644
+--- a/src/common/define_enum.h
++++ b/src/common/define_enum.h
+@@ -78,7 +78,9 @@ enum RetErrCode {
+     ERR_GENERIC = -1,
+     ERR_NO_SUPPORT = -2,
+     ERR_PARAM_NULLPTR = -5,
++#ifndef HDC_NO_USB
+     ERR_LIBUSB_OPEN = -100,
++#endif
+     ERR_BUF_SIZE = -10000,
+     ERR_BUF_ALLOC,
+     ERR_BUF_OVERFLOW,
+diff --git a/src/common/define_plus.h b/src/common/define_plus.h
+index 3abbe05..024d1e8 100644
+--- a/src/common/define_plus.h
++++ b/src/common/define_plus.h
+@@ -24,7 +24,7 @@
+ #include "uv_status.h"
+ #include "heartbeat.h"
+ #include "securec.h"
+-#ifdef HDC_HOST
++#if defined(HDC_HOST) && !defined(HDC_NO_USB)
+ #include <libusb.h>
+ #endif
+ #include <list>
+@@ -110,7 +110,7 @@ using HTaskInfo = TaskInformation *;
+ 
+ #pragma pack(pop)
+ 
+-#ifdef HDC_HOST
++#if defined(HDC_HOST) && !defined(HDC_NO_USB)
+ struct HostUSBEndpoint {
+     HostUSBEndpoint(uint32_t epBufSize)
+     {
+@@ -142,7 +142,7 @@ struct HostUSBEndpoint {
+ #endif
+ 
+ struct HdcUSB {
+-#ifdef HDC_HOST
++#if defined(HDC_HOST) && !defined(HDC_NO_USB)
+     libusb_context *ctxUSB = nullptr;  // child-use, main null
+     libusb_device *device = nullptr;
+     libusb_device_handle *devHandle = nullptr;
+@@ -157,6 +157,19 @@ struct HdcUSB {
+     HdcUSB() : hostBulkIn(513 * 1024), hostBulkOut(512 * 1024) {} // 513: 512 + 1, 1024: 1KB
+     // 512 * 1024 + 1024 = 513 * 1024, MAX_USBFFS_BULK: 512 * 1024
+ 
++#elif defined(HDC_HOST)
++    // USB host backend removed for LGPL-2.1 compliance (HDC_NO_USB).
++    // Keep the non-libusb members referenced by common/session code.
++    void *ctxUSB = nullptr;
++    void *device = nullptr;
++    void *devHandle = nullptr;
++    uint16_t retryCount = 0;
++    uint8_t devId = 0;
++    uint8_t busId = 0;
++    uint8_t interfaceNumber = 0;
++    std::string serialNumber;
++    std::string usbMountPoint;
++    HdcUSB() = default;
+ #else
+     // usb accessory FunctionFS
+     // USB main thread use, sub-thread disable, sub-thread uses the main thread USB handle
+diff --git a/src/common/session.cpp b/src/common/session.cpp
+index d70a7c2..1beec23 100644
+--- a/src/common/session.cpp
++++ b/src/common/session.cpp
+@@ -53,7 +53,7 @@ HdcSessionBase::HdcSessionBase(bool serverOrDaemonIn, size_t uvThreadSize) : loo
+     wantRestart = false;
+     threadSessionMain = uv_thread_self();
+ 
+-#ifdef HDC_HOST
++#if defined(HDC_HOST) && !defined(HDC_NO_USB)
+     if (serverOrDaemon) {
+         if (libusb_init((libusb_context **)&ctxUSB) != 0) {
+             ctxUSB = nullptr;
+@@ -72,7 +72,7 @@ HdcSessionBase::~HdcSessionBase()
+     // clear base
+     uv_rwlock_destroy(&mainAsync);
+     uv_rwlock_destroy(&lockMapSession);
+-#ifdef HDC_HOST
++#if defined(HDC_HOST) && !defined(HDC_NO_USB)
+     if (serverOrDaemon and ctxUSB != nullptr) {
+         libusb_exit((libusb_context *)ctxUSB);
+     }
+@@ -255,7 +255,7 @@ void HdcSessionBase::EnumUSBDeviceRegister(void (*pCallBack)(HSession hSession))
+ // PDEV and Busid Devid two choices
+ HSession HdcSessionBase::QueryUSBDeviceRegister(void *pDev, uint8_t busIDIn, uint8_t devIDIn)
+ {
+-#ifdef HDC_HOST
++#if defined(HDC_HOST) && !defined(HDC_NO_USB)
+     libusb_device *dev = (libusb_device *)pDev;
+     HSession hResult = nullptr;
+     if (!mapSession.size()) {
+@@ -532,13 +532,13 @@ void HdcSessionBase::FreeSessionByConnectType(HSession hSession)
+         if (!hUSB) {
+             return;
+         }
+-#ifdef HDC_HOST
++#if defined(HDC_HOST) && !defined(HDC_NO_USB)
+         if (hUSB->devHandle) {
+             libusb_release_interface(hUSB->devHandle, hUSB->interfaceNumber);
+             libusb_close(hUSB->devHandle);
+             hUSB->devHandle = nullptr;
+         }
+-#else
++#elif !defined(HDC_HOST)
+         Base::CloseFd(hUSB->bulkIn);
+         Base::CloseFd(hUSB->bulkOut);
+ #endif
+@@ -644,7 +644,7 @@ void HdcSessionBase::FreeSessionOpeate(uv_timer_t *handle)
+ {
+     StartTraceScope("HdcSessionBase::FreeSessionOpeate");
+     HSession hSession = (HSession)handle->data;
+-#ifdef HDC_HOST
++#if defined(HDC_HOST) && !defined(HDC_NO_USB)
+     if (hSession->hUSB != nullptr
+         && (!hSession->hUSB->hostBulkIn.isShutdown || !hSession->hUSB->hostBulkOut.isShutdown)) {
+         HdcUSBBase *pUSB = ((HdcUSBBase *)hSession->classModule);
+diff --git a/src/host/host_usb.h b/src/host/host_usb.h
+index 8a17823..5476693 100644
+--- a/src/host/host_usb.h
++++ b/src/host/host_usb.h
+@@ -24,6 +24,46 @@ struct ClearUsbChannelWorkInfo {
+ };
+ using HClearUsbChannelWorkInfo = struct ClearUsbChannelWorkInfo *;
+ 
++#ifdef HDC_NO_USB
++// USB host backend removed for LGPL-2.1 compliance.
++// This no-op stub keeps the HdcHostUSB interface referenced by host/server code
++// compiling while guaranteeing that no libusb object code is linked in.
++class HdcHostUSB : public HdcUSBBase {
++public:
++    HdcHostUSB(const bool serverOrDaemonIn, void *ptrMainBase, void *)
++        : HdcUSBBase(serverOrDaemonIn, ptrMainBase)
++    {
++    }
++    virtual ~HdcHostUSB() {}
++    int Initial()
++    {
++        return RET_SUCCESS;
++    }
++    static void InitLogging(void *) {}
++    int SendUSBRaw(HSession, uint8_t *, const int) override
++    {
++        return 0;
++    }
++    HSession ConnectDetectDaemon(const HSession, const HDaemonInfo)
++    {
++        return nullptr;
++    }
++    void Stop() {}
++    void RemoveIgnoreDevice(string &) {}
++    void SendSoftResetToDaemon(HSession, uint32_t) {}
++
++private:
++    bool ReadyForWorkThread(HSession) override
++    {
++        return false;
++    }
++    void CancelUsbIo(HSession) override {}
++    int UsbToHdcProtocol(uv_stream_t *, uint8_t *, int) override
++    {
++        return 0;
++    }
++};
++#else
+ class HdcHostUSB : public HdcUSBBase {
+ public:
+     HdcHostUSB(const bool serverOrDaemonIn, void *ptrMainBase, void *ctxUSBin);
+@@ -80,5 +120,6 @@ private:
+ private:
+     uv_thread_t threadUsbWork;
+ };
++#endif  // HDC_NO_USB
+ }  // namespace Hdc
+ #endif
+diff --git a/src/host/main.cpp b/src/host/main.cpp
+index a87bbef..e9f9823 100644
+--- a/src/host/main.cpp
++++ b/src/host/main.cpp
+@@ -174,7 +174,9 @@ int RunServerMode(string &serverListenString)
+      * call uv_os_tmpdir and libuv inner wiil call getenv
+      * setenv and getenv concurrent calling wiil cause crash
+     */
++#ifndef HDC_NO_USB
+     HdcHostUSB::SetLibusbLogLevelEnv(HdcHostUSB::GetLibusbLogLevel());
++#endif
+     HdcServer server(true);
+     if (!server.Initial(serverListenString.c_str())) {
+         Base::PrintMessage("Initial failed");
+
