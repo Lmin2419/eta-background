@@ -11,6 +11,8 @@
 | [AgentExecutionService.kt](../app/src/main/kotlin/io/github/mangi/eta/agent/runtime/AgentExecutionService.kt) | 原生任务卡片、完成横幅、三个操作入口与结束回调去重 |
 | [TaskNotificationDismissReceiver.kt](../app/src/main/kotlin/io/github/mangi/eta/agent/runtime/TaskNotificationDismissReceiver.kt) | 用户划掉完成通知时取消待弹提示，防止晚到的结果重新显示卡片 |
 | [AppearanceSettingsScreen.kt](../app/src/main/kotlin/io/github/mangi/eta/ui/AppearanceSettingsScreen.kt) / [SettingsDataStore.kt](../app/src/main/kotlin/io/github/mangi/eta/data/datastore/SettingsDataStore.kt) | 流光与任务完成提示开关，以及设置持久保存 |
+| [BuiltInWebSearch.kt](../app/src/main/kotlin/io/github/mangi/eta/agent/web/BuiltInWebSearch.kt) / [BingWebSearch.kt](../app/src/main/kotlin/io/github/mangi/eta/agent/web/BingWebSearch.kt) | 必应与 DuckDuckGo 的有界切换、结果解析和失败来源记录 |
+| [OverlayPermissionSettings.kt](../app/src/main/kotlin/io/github/mangi/eta/ui/app/OverlayPermissionSettings.kt) | 设置页及权限健康页共用的悬浮窗授权入口与系统页面回退 |
 | `app/src/main/java/com/eta/shadow/` | 后台屏工具、节点观察、通知桥接和 Root 引擎部署 |
 | `etax/engine/src/` | 虚拟屏传输、worker、图像复制与显示几何的 Root 引擎源码 |
 | `etax/shared/src/` | App 与 Root 共用的屏幕几何、操作证据与无进展追踪 |
@@ -45,6 +47,19 @@
 顶部横幅和流体云的动画、停留时间及按钮展开方式由系统控制。默认不发声、不振动。ColorOS 17 的具体展示仍需真机验证；当前自动化结果和安装包校验信息见[2026102902 版本记录](#release-2026102902)。
 
 ## 版本更新记录
+
+<a id="release-2026103001"></a>
+
+### 2026103001 · 联网搜索容错与悬浮窗设置入口（3.3.5 后台版）
+
+- 内置搜索优先请求必应 RSS，网络、站点验证或解析失败时尝试 DuckDuckGo。每个来源仅请求一次、网络超时预算 10 秒；取消任务后不继续备用请求。正常无结果会如实返回，不增加无意义重试。
+- 返回实际使用的 `provider`、各来源的 `attempts` 和切换原因。两者都不可用时返回 `SEARCH_UNAVAILABLE`，不伪装成零条结果；明确区分域名解析、安全连接、连接失败、传输中断及超时。不输出底层异常中的查询、凭证或服务器错误正文。
+- DeepSeek、自定义搜索继续使用用户所选服务和凭证，不自动转发到公开搜索站点；相关网络错误分类同样改进。设置页说明内置搜索的来源和等待策略，工具描述提醒模型避免重复失败查询和无依据的网络归因。
+- 修复设置页悬浮窗权限已授权后点击无响应的问题。设置页及权限健康页统一进入系统授权入口；系统不支持专用页面时依次尝试授权列表和本应用信息页，仍无法打开时显示操作指引。继续使用返回前台时的真实权限刷新，不自动修改系统权限。
+- 虚拟屏引擎仍为 `20261029-e38-input`，完成提示、状态栏、任务通知和两个后台任务的规则不变。
+
+本地全量回归：2,086 项，2,085 项通过、1 项跳过，0 失败、0 错误；12 项后台接线检查通过。开发环境已用实际必应响应验证 5 条搜索结果的解析。签名构建和 lint 结果将在完成后补齐；ColorOS 17 的系统设置跳转和手机网络下的搜索仍需要真机复测。
+
 
 <a id="release-2026102902"></a>
 

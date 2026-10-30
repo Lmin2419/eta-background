@@ -37,8 +37,13 @@ internal class AgentWebTools(
             "fetch_url" -> fetch(args)
             else -> throw WebRequestException("UNKNOWN_TOOL", "未知网页工具")
         }.toString()
+    } catch (unavailable: BuiltInSearchUnavailable) {
+        failure(name, "SEARCH_UNAVAILABLE", "内置搜索来源均未返回可用结果，请根据 attempts 检查网络或在网页搜索与读取设置中选择其他服务；这不表示没有搜索结果")
+            .put("attempts", searchAttempts(unavailable.attempts))
+            .put("local_network_access", localNetworkAccess()).toString()
     } catch (failure: WebRequestException) {
-        failure(name, failure.code, failure.message ?: "网页请求失败", failure.status).toString()
+        failure(name, failure.code, failure.message ?: "网页请求失败", failure.status)
+            .apply { failure.host?.let { put("host", it) } }.toString()
     } catch (failure: WebPageContentException) {
         failure(name, failure.code, failure.message ?: "网页正文处理失败").toString()
     } catch (failure: WebSearchException) {
@@ -54,7 +59,7 @@ internal class AgentWebTools(
         val query = args.getString("query")
         val config = runtimeConfig()
         val page = when (config.searchBackend) {
-            WebToolBackend.BUILTIN -> searchBuiltIn(query, limit)
+            WebToolBackend.BUILTIN -> BuiltInWebSearch.search(transport, query, limit)
             WebToolBackend.DEEPSEEK -> ConfigurableWebBackends.searchDeepSeek(
                 transport = transport,
                 baseUrl = config.deepSeekBaseUrl,
@@ -93,18 +98,15 @@ internal class AgentWebTools(
             .put("limit_reasons", JSONArray(page.limitReasons)).put("skipped_results", page.skippedResults)
             .put("source_role", "untrusted_web_content")
             .put("citation_hint", "引用检索结果时使用其标题和原始 URL；摘要不等于已读取完整网页。")
+            .apply {
+                if (page.attempts.isNotEmpty()) put("attempts", searchAttempts(page.attempts))
+                if (page.attempts.size > 1) put("fallback_from", page.attempts.first().provider)
+            }
     }
 
-    private fun searchBuiltIn(query: String, limit: Int): SearchPage {
-        val url = PublicWebSearch.searchUrl(query, limit)
-        val response = transport.get(url)
-        if (response.status == 202) throw WebRequestException("SEARCH_CHALLENGE", "搜索站点要求人工验证，未取得搜索结果", 202)
-        if (response.status == 429) throw WebRequestException("SEARCH_RATE_LIMITED", "搜索站点限制了请求，请稍后重试", 429)
-        requireSuccess(response)
-        if (response.truncated) throw WebRequestException("SEARCH_RESPONSE_TOO_LARGE", "搜索响应超过大小限制，请缩小查询范围")
-        val decoded = WebResponseDecoder.decode(response)
-        if (decoded.lossy) throw WebRequestException("SEARCH_ENCODING_ERROR", "搜索页面包含无法可靠解码的内容")
-        return PublicWebSearch.parse(decoded.text, response.finalUrl, limit, ::ensureActive)
+    private fun searchAttempts(attempts: List<SearchAttempt>) = JSONArray().apply {
+        attempts.forEach { attempt -> put(JSONObject().put("provider", attempt.provider).put("code", attempt.code)
+            .apply { attempt.httpStatus?.let { put("http_status", it) } }) }
     }
 
     private fun fetch(args: JSONObject): JSONObject {
@@ -259,7 +261,7 @@ internal class AgentWebTools(
         JSONObject().put("ok", false).put("tool", tool).put("code", code).put("message", message)
             .also {
                 status?.let { value -> it.put("http_status", value) }
-                if (code in setOf("WEB_NETWORK_ERROR", "WEB_TIMEOUT", "WEB_ACCESS_DENIED")) it.put("local_network_access", localNetworkAccess())
+                if (code in setOf("WEB_NETWORK_ERROR", "WEB_TIMEOUT", "WEB_ACCESS_DENIED", "WEB_DNS_ERROR", "WEB_TLS_ERROR", "WEB_CONNECTION_ERROR")) it.put("local_network_access", localNetworkAccess())
             }
 
     override fun close() {

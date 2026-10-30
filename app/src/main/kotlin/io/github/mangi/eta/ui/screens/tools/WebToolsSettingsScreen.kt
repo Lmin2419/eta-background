@@ -105,7 +105,7 @@ internal fun WebToolsSettingsScreen(onBack: () -> Unit) {
                 WebToolsNote(
                     stringResource(
                         if (usesRemote) R.string.web_tools_overview_remote_note
-                        else R.string.web_tools_overview_builtin_note,
+                        else R.string.web_tools_overview_resilient_note,
                     ),
                 )
             }

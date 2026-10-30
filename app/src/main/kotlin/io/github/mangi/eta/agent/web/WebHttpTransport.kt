@@ -5,6 +5,10 @@ import java.io.Closeable
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.net.ProtocolException
+import java.net.ConnectException
+import java.net.UnknownHostException
+import java.net.NoRouteToHostException
+import javax.net.ssl.SSLException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -18,7 +22,9 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.Locale
 
-internal class WebRequestException(val code: String, message: String, val status: Int? = null) : IOException(message)
+internal class WebRequestException(
+    val code: String, message: String, val status: Int? = null, val host: String? = null,
+) : IOException(message)
 
 internal data class WebHttpResponse(
     val requestedUrl: String,
@@ -48,8 +54,8 @@ internal class WebHttpTransport(baseClient: OkHttpClient) : Closeable {
         if (closed.get() || Thread.currentThread().isInterrupted) throw WebRequestException("WEB_CANCELLED", "网页请求已取消")
     }
 
-    fun get(rawUrl: String, maxBytes: Int = MAX_RESPONSE_BYTES): WebHttpResponse =
-        request(rawUrl = rawUrl, method = "GET", maxBytes = maxBytes)
+    fun get(rawUrl: String, maxBytes: Int = MAX_RESPONSE_BYTES, timeoutMillis: Long = 30_000): WebHttpResponse =
+        request(rawUrl = rawUrl, method = "GET", maxBytes = maxBytes, timeoutMillis = timeoutMillis)
 
     fun request(
         rawUrl: String,
@@ -58,8 +64,10 @@ internal class WebHttpTransport(baseClient: OkHttpClient) : Closeable {
         body: ByteArray? = null,
         contentType: String? = null,
         maxBytes: Int = MAX_RESPONSE_BYTES,
+        timeoutMillis: Long = 30_000,
     ): WebHttpResponse {
         require(maxBytes in 1..MAX_RESPONSE_BYTES)
+        require(timeoutMillis in 1..30_000)
         val normalizedMethod = method.trim().uppercase(Locale.ROOT)
         if (normalizedMethod != "GET" && normalizedMethod != "POST") {
             throw WebRequestException("INVALID_ARGUMENT", "仅支持 GET 或 POST 请求方式")
@@ -69,12 +77,12 @@ internal class WebHttpTransport(baseClient: OkHttpClient) : Closeable {
         var currentMethod = normalizedMethod
         var currentBody = if (normalizedMethod == "POST") body ?: byteArrayOf() else null
         val visited = hashSetOf<String>()
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30)
+        val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis)
         repeat(MAX_REDIRECTS + 1) { redirectCount ->
             ensureActive()
             if (!visited.add("$currentMethod:${url}")) throw WebRequestException("WEB_REDIRECT_LOOP", "网页重定向形成循环")
             val remaining = deadline - System.nanoTime()
-            if (remaining <= 0) throw WebRequestException("WEB_TIMEOUT", "网页请求超时")
+            if (remaining <= 0) throw WebRequestException("WEB_TIMEOUT", "网页请求超时", host = url.host)
             val sameOrigin = url.scheme == initial.scheme && url.host == initial.host && url.port == initial.port
             val requestBuilder = Request.Builder().url(url)
                 .header("User-Agent", DEFAULT_USER_AGENT)
@@ -142,13 +150,20 @@ internal class WebHttpTransport(baseClient: OkHttpClient) : Closeable {
                 throw failure
             } catch (_: InterruptedIOException) {
                 ensureActive()
-                throw WebRequestException("WEB_TIMEOUT", "网页连接或读取超时")
+                throw WebRequestException("WEB_TIMEOUT", "网页连接或读取超时", host = url.host)
             } catch (_: ProtocolException) {
                 ensureActive()
-                throw WebRequestException("WEB_PROTOCOL_ERROR", "服务器返回了无法处理的 HTTP 响应")
-            } catch (_: IOException) {
+                throw WebRequestException("WEB_PROTOCOL_ERROR", "服务器返回了无法处理的 HTTP 响应", host = url.host)
+            } catch (failure: IOException) {
                 ensureActive()
-                throw WebRequestException("WEB_NETWORK_ERROR", "无法完成网页请求，请检查网络、证书及相关网络授权")
+                // Do not expose exception messages: they can contain query text, URLs or credentials.
+                val (code, message) = when (failure) {
+                    is UnknownHostException -> "WEB_DNS_ERROR" to "无法解析目标网站域名，请检查当前网络或 DNS"
+                    is SSLException -> "WEB_TLS_ERROR" to "目标网站的安全连接或证书校验失败，未跳过证书验证"
+                    is ConnectException, is NoRouteToHostException -> "WEB_CONNECTION_ERROR" to "无法连接目标网站，可能是网络路径或目标服务不可达"
+                    else -> "WEB_NETWORK_ERROR" to "网页传输中断，尚不能确定是本机网络还是目标服务问题"
+                }
+                throw WebRequestException(code, message, host = url.host)
             } finally {
                 activeCalls -= call
             }

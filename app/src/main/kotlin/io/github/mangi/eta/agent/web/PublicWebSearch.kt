@@ -25,6 +25,7 @@ internal data class SearchPage(
     val scope: String = "first_page",
     val limitReasons: List<String> = emptyList(),
     val skippedResults: Int = 0,
+    val attempts: List<SearchAttempt> = emptyList(),
 )
 
 internal class WebSearchException(val code: String, message: String) : IllegalArgumentException(message)

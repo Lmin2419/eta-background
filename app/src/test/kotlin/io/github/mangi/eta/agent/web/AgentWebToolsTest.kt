@@ -113,7 +113,8 @@ class AgentWebToolsTest {
         AgentWebTools(WebHttpTransport(client)).use { tools ->
             val result = call(tools, "web_search", JSONObject().put("query", "example"))
             assertFalse(result.getBoolean("ok"))
-            assertEquals("SEARCH_CHALLENGE", result.getString("code"))
+            assertEquals("SEARCH_UNAVAILABLE", result.getString("code"))
+            assertEquals("SEARCH_CHALLENGE", result.getJSONArray("attempts").getJSONObject(0).getString("code"))
         }
     }
 

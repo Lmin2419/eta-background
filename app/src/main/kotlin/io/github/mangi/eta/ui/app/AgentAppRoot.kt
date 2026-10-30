@@ -560,14 +560,7 @@ fun AgentAppRoot(
                                         }
                                     }
                                     "overlay" -> {
-                                        runCatching {
-                                            context.startActivity(
-                                                Intent(
-                                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                                    Uri.parse("package:${context.packageName}")
-                                                )
-                                            )
-                                        }
+                                        OverlayPermissionSettings.open(context)
                                     }
                                     "background" -> {
                                         if (RootAccess.isGranted && Build.MANUFACTURER.lowercase() in setOf("oppo", "realme", "oneplus")) {

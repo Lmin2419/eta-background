@@ -717,16 +717,7 @@ private fun SettingsPageContent(
                             )
                         },
                         onClick = {
-                            if (!overlayGranted) {
-                                runCatching {
-                                    context.startActivity(
-                                        android.content.Intent(
-                                            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                            android.net.Uri.parse("package:${context.packageName}"),
-                                        ),
-                                    )
-                                }
-                            }
+                            io.github.mangi.eta.ui.app.OverlayPermissionSettings.open(context)
                         },
                     )
 

@@ -20,6 +20,39 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WebHttpTransportTest {
+    @Test fun networkFailuresHaveDistinctSafeCodesAndOnlyExposeTheHost() {
+        val failures = listOf(
+            java.net.UnknownHostException("private-query") to "WEB_DNS_ERROR",
+            javax.net.ssl.SSLHandshakeException("private-query") to "WEB_TLS_ERROR",
+            java.net.ConnectException("private-query") to "WEB_CONNECTION_ERROR",
+            java.io.IOException("private-query") to "WEB_NETWORK_ERROR",
+        )
+        for ((cause, code) in failures) {
+            val client = OkHttpClient.Builder().addInterceptor { throw cause }.build()
+            WebHttpTransport(client).use { transport ->
+                val failure = assertThrows(WebRequestException::class.java) {
+                    transport.get("https://example.test/search?q=private-query")
+                }
+                assertEquals(code, failure.code)
+                assertEquals("example.test", failure.host)
+                assertFalse(failure.message.orEmpty().contains("private-query"))
+            }
+        }
+    }
+
+    @Test fun searchBudgetAlsoBoundsAStalledResponse() {
+        WebFixtureServer {
+            Thread.sleep(400)
+            WebFixtureResponse(body = "late response".toByteArray())
+        }.use { server ->
+            WebHttpTransport(OkHttpClient()).use { transport ->
+                assertEquals("WEB_TIMEOUT", assertThrows(WebRequestException::class.java) {
+                    transport.get(server.url(), timeoutMillis = 100)
+                }.code)
+            }
+        }
+    }
+
     @Test fun redirectsResolveRelativeUrlsWithoutSharingCookies() {
         WebFixtureServer { path ->
             if (path == "/start") WebFixtureResponse(302, headers = mapOf("Location" to "/article", "Set-Cookie" to "secret=hidden"))

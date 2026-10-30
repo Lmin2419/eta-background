@@ -4,6 +4,8 @@
 
 A derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮吉 / Mangi-11](https://github.com/Mangi-11)**, based on upstream v3.3.5. This repository maintains background virtual-display automation and related task, notification and lifecycle extensions. It is an independent distribution. The internal project name remains `Etax`; its Android package is `io.github.mangi.etax`.
 
+Current source adds resilient built-in web search and fixes overlay-permission settings navigation (`2026103001`). See the [change log](etax/README.md#release-2026103001). The signed download below will be updated after build verification.
+
 ## Latest test build
 
 **2026-10-29 · `3.3.5+etax.70844e7` · versionCode `2026102902`**, with engine `20261029-e38-input`.
