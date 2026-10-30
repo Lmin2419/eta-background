@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Root transport. Mutable display/input/capture state lives in independent workers. */
 public final class VDrive {
-    static final String BUILD = "20261029-e38-input";
+    static final String BUILD = "20261030-e39-lifecycle";
     static java.util.function.BooleanSupplier health = () -> true;
     static volatile boolean systemInvalid;
     private static final String INSTANCE = UUID.randomUUID().toString();
@@ -42,6 +42,10 @@ public final class VDrive {
         default boolean isParked() { return false; }
         default boolean claimParked() { return isParked(); }
         default boolean isCapturing() { return false; }
+        default boolean isHandingOver() { return false; }
+        default String commandState() { return "idle"; }
+        default JSONObject observationGuard(boolean mutating) { return null; }
+        default void observationAccepted() { }
         default void reconcileForeground() { }
         default void setReleaseListener(Runnable listener) { }
     }
@@ -184,7 +188,10 @@ public final class VDrive {
                         sessions.put(new JSONObject().put("sessionId", e.getKey()).put("package", e.getValue().pkg)
                                 .put("closing", e.getValue().closing).put("parked", e.getValue().parked)
                                 .put("initializing", worker == null)
-                                .put("capturing", worker != null && worker.isCapturing()).put("displayId", worker == null ? -1 : worker.displayId()));
+                                .put("capturing", worker != null && worker.isCapturing())
+                                .put("handingOver", worker != null && worker.isHandingOver())
+                                .put("commandState", worker == null ? "initializing" : worker.commandState())
+                                .put("displayId", worker == null ? -1 : worker.displayId()));
                     }
                 boolean ready = healthy();
                 return new JSONObject().put("ok", ready).put("pong", ready).put("healthy", ready).put("build", BUILD)
@@ -232,7 +239,7 @@ public final class VDrive {
                     String adopt = null;
                     if (old == null) for (Map.Entry<String, Slot> entry : workers.entrySet()) {
                         Slot candidate = entry.getValue();
-                        if (candidate.pkg.equals(pkg) && candidate.parked && !candidate.closing
+                        if (candidate.pkg.equals(pkg) && candidate.parked && !candidate.closing && !candidate.worker.isHandingOver()
                                 && candidate.inFlight == 0 && retired.contains(entry.getKey()) && candidate.worker.claimParked()) {
                             adopt = entry.getKey(); break;
                         }
@@ -244,6 +251,7 @@ public final class VDrive {
                         workers.put(id, candidate);
                     } else for (Map.Entry<String, Slot> entry : workers.entrySet()) {
                         if (entry.getValue().parked && entry.getValue().inFlight == 0 && entry.getValue().worker.isParked()
+                                && !entry.getValue().worker.isHandingOver()
                                 && (entry.getValue().pkg.equals(pkg) || workers.size() >= LIMIT)) {
                             reclaim = entry.getKey(); break;
                         }
@@ -266,7 +274,8 @@ public final class VDrive {
                         if (existing.pkg.equals(pkg)) return error("APP_BUSY", "应用正被另一任务使用");
                     }
                     if (workers.size() >= LIMIT) return error(
-                            workers.values().stream().anyMatch(value -> value.closing) ? "CLEANUP_PENDING" : "SESSION_LIMIT",
+                            workers.values().stream().anyMatch(value -> value.closing ||
+                                    value.worker != null && value.worker.isHandingOver()) ? "CLEANUP_PENDING" : "SESSION_LIMIT",
                             "等待旧屏幕清理完成");
                     Slot created = new Slot(null, pkg);
                     slot = created;
@@ -295,6 +304,8 @@ public final class VDrive {
             if (cmd.equals("keepalive")) { slot.worker.keepAlive(); return ok(); }
             if (cmd.equals("validate")) {
                     if (slot.closing || req.optInt("displayId", -1) != slot.worker.displayId()) return error("STALE_SCREEN", "屏幕已失效");
+                    JSONObject blocked = slot.worker.observationGuard(VDriveWorker.isMutatingInput(req.optString("action")));
+                    if (blocked != null) return blocked;
                     // A direct DisplayManager read, never a queued worker RPC: the worker may
                     // be waiting for this observer callback on its own handler.
                     JSONObject geometry = slot.worker.geometrySnapshot();
@@ -303,6 +314,9 @@ public final class VDrive {
                     synchronized (workers) {
                         if (workers.get(id) != slot || slot.closing) return error("STALE_SCREEN", "屏幕已释放");
                     }
+                    if (req.optBoolean("observed") && ("dump".equals(req.optString("action")) || "list".equals(req.optString("action")))
+                            && com.eta.shadow.ScreenGeometry.same(req.optJSONObject("expectedGeometry"), geometry))
+                        slot.worker.observationAccepted();
                     return ok().put("geometry", geometry);
             }
             if (!id.equals("legacy-mcp")) {

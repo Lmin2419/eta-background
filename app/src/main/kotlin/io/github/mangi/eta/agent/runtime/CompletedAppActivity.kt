@@ -27,14 +27,18 @@ internal class CompletedAppActivity : ComponentActivity() {
             val result = withContext(Dispatchers.IO) {
                 runCatching { JSONObject(ShadowTools.presentCompleted(runId, pkg)) }.getOrNull()
             }
-            if (result?.optBoolean("ok") != true) {
-                if (result?.optString("code") == "NOT_FOUND") {
+            when (completedAppHandoff(result)) {
+                CompletedAppHandoff.Ready -> Unit
+                CompletedAppHandoff.Pending -> Toast.makeText(this@CompletedAppActivity,
+                    R.string.background_handoff_pending, Toast.LENGTH_LONG).show()
+                CompletedAppHandoff.Launch -> {
                     val launcher = packageManager.getLaunchIntentForPackage(pkg)
                     if (launcher != null) runCatching {
                         startActivity(launcher.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                             ActivityOptions.makeBasic().setLaunchDisplayId(0).toBundle())
                     }.onFailure { showUnavailable() } else showUnavailable()
-                } else showUnavailable() // Unknown/busy handoffs must not relaunch an existing game.
+                }
+                CompletedAppHandoff.Unavailable -> showUnavailable()
             }
             finish()
         }

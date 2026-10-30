@@ -16,6 +16,7 @@ public class VDriveSessionsTest {
         volatile boolean acknowledgeClose = true;
         boolean parked, capturing, movedToMain;
         boolean failPresent;
+        boolean handingOver, needsObservation, draining;
         int closeCalls, reconcileCalls;
         Runnable releaseListener = () -> { };
         final CountDownLatch entered = new CountDownLatch(1), finish = new CountDownLatch(1);
@@ -46,6 +47,14 @@ public class VDriveSessionsTest {
         }
         public boolean isParked() { return parked; }
         public boolean isCapturing() { return capturing; }
+        public boolean isHandingOver() { return handingOver; }
+        public String commandState() { return draining ? "draining" : "idle"; }
+        public JSONObject observationGuard(boolean mutating) {
+            if (!draining && !(mutating && needsObservation)) return null;
+            try { return new JSONObject().put("ok", false).put("code", draining ? "COMMAND_DRAINING" : "OBSERVE_AFTER_TIMEOUT"); }
+            catch (Exception error) { throw new AssertionError(error); }
+        }
+        public void observationAccepted() { needsObservation = false; }
         public boolean claimParked() { if (!parked) return false; parked = false; return true; }
         public void setReleaseListener(Runnable listener) { releaseListener = listener; }
         public void reconcileForeground() {
@@ -268,5 +277,41 @@ public class VDriveSessionsTest {
         }
         assertEquals("BACKGROUND_ONLY", send(id, "handover").getString("code"));
         assertEquals("finish", made.get(id).lastRequest.getString("cmd"));
+    }
+
+    @Test public void pendingHandoffCannotBeAdoptedOrEvictedByAnotherRun() throws Exception {
+        String first = open("app.first"); park(first);
+        FakeWorker worker = made.get(first); worker.handingOver = true;
+        open("app.second");
+        String next = UUID.randomUUID().toString(); ids.add(next);
+        JSONObject request = new JSONObject().put("cmd", "launch").put("sessionId", next).put("component", "app.third");
+        assertEquals("CLEANUP_PENDING", VDrive.processLine(request.toString()).getString("code"));
+        assertEquals(0, worker.closeCalls);
+        request.put("component", "app.first");
+        assertEquals("APP_BUSY", VDrive.processLine(request.toString()).getString("code"));
+        assertEquals(0, worker.closeCalls);
+        worker.handingOver = false;
+        request.put("component", "app.third");
+        assertTrue(VDrive.processLine(request.toString()).getBoolean("ok"));
+        assertEquals(1, worker.closeCalls);
+    }
+
+    @Test public void nodeObservationUsesSameTimeoutGateAndAcknowledgesOnlyMatchingCompletedRead() throws Exception {
+        String id = open("app.nodes");
+        FakeWorker worker = made.get(id); worker.needsObservation = true;
+        JSONObject request = new JSONObject().put("cmd", "validate").put("sessionId", id)
+                .put("displayId", 12).put("action", "click2");
+        assertEquals("OBSERVE_AFTER_TIMEOUT", VDrive.processLine(request.toString()).getString("code"));
+        request.put("action", "list");
+        assertTrue(VDrive.processLine(request.toString()).getBoolean("ok"));
+        assertTrue(worker.needsObservation);
+        request.put("observed", true).put("expectedGeometry", worker.geometrySnapshot().put("rotation", 1));
+        VDrive.processLine(request.toString());
+        assertTrue(worker.needsObservation);
+        request.put("expectedGeometry", worker.geometrySnapshot());
+        assertTrue(VDrive.processLine(request.toString()).getBoolean("ok"));
+        assertFalse(worker.needsObservation);
+        worker.draining = true;
+        assertEquals("COMMAND_DRAINING", VDrive.processLine(request.toString()).getString("code"));
     }
 }

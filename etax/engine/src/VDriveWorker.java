@@ -79,8 +79,11 @@ class VDriveWorker implements VDrive.Worker {
         DisplayGeometry geometry;
         long receivedAt;
         void close() {
-            if (image != null) { image.close(); image = null; }
-            if (bmp != null) { bmp.recycle(); bmp = null; }
+            Image oldImage = image;
+            Bitmap oldBitmap = bmp;
+            image = null; bmp = null;
+            try { if (oldImage != null) oldImage.close(); }
+            finally { if (oldBitmap != null) oldBitmap.recycle(); }
         }
     }
 
@@ -131,6 +134,17 @@ class VDriveWorker implements VDrive.Worker {
     final ThreadLocal<Long> CURRENT_CMD = new ThreadLocal<>();
     volatile long runningCmd = -1;
     final long COMMAND_TIMEOUT_MS = 30_000;
+    private static final class PendingCommand {
+        final long id;
+        final java.util.concurrent.CountDownLatch finished = new java.util.concurrent.CountDownLatch(1);
+        volatile JSONObject result;
+        volatile boolean expired;
+        PendingCommand(long id) { this.id = id; }
+    }
+    private final java.util.concurrent.atomic.AtomicReference<PendingCommand> pendingCommand = new java.util.concurrent.atomic.AtomicReference<>();
+    private final java.util.concurrent.atomic.AtomicBoolean heartbeatPending = new java.util.concurrent.atomic.AtomicBoolean();
+    private volatile boolean observationRequired;
+    private volatile boolean handingOver;
 
     /** Screenshots are confined here unless a caller explicitly opts out (P2). */
     final String SHOT_DIR = "/data/local/tmp/eta/shots/" + java.util.UUID.randomUUID();
@@ -162,6 +176,7 @@ class VDriveWorker implements VDrive.Worker {
         long orphanAt = 0;
         long emptySince = 0;
         long handoffAt = 0;
+        int handoffReadyChecks;
         long createdAt = SystemClock.elapsedRealtime();
         long lastCmdAt = SystemClock.elapsedRealtime();
         String protectedPkg = "";
@@ -217,6 +232,7 @@ class VDriveWorker implements VDrive.Worker {
      * fourth app cannot kill one the caller is working in.
      */
     Session oldestParked(Session keep) {
+        if (handingOver) return null;
         Session worst = null;
         for (Session x : sessions.values()) {
             if (x == keep) continue;
@@ -301,7 +317,21 @@ class VDriveWorker implements VDrive.Worker {
     public JSONObject geometrySnapshot() throws Exception { return geometry(displayId).json(); }
     public boolean isParked() { return disposition.get() == PARKED && !retired && orphanAt > 0 && displayId > 0; }
     public boolean claimParked() { return disposition.compareAndSet(PARKED, CLAIMED); }
-    public boolean isCapturing() { return !retired && reader != null; }
+    public boolean isCapturing() { return reader != null; }
+    public boolean isHandingOver() { return handingOver; }
+    public String commandState() {
+        PendingCommand pending = pendingCommand.get();
+        return pending != null ? (pending.expired ? "draining" : "executing")
+                : observationRequired ? "needs_observation" : "idle";
+    }
+    public JSONObject observationGuard(boolean mutating) {
+        PendingCommand pending = pendingCommand.get();
+        if (pending != null) return busyCommand(pending);
+        return mutating && observationRequired ? observeAfterTimeout() : null;
+    }
+    public void observationAccepted() {
+        if (pendingCommand.get() == null) observationRequired = false;
+    }
     public void setReleaseListener(Runnable listener) {
         releaseListener = listener;
         if (released.getCount() == 0) listener.run();
@@ -315,11 +345,14 @@ class VDriveWorker implements VDrive.Worker {
     }
 
     public void keepAlive() {
-        if (!retired) work.post(() -> {
-            long now = android.os.SystemClock.elapsedRealtime();
-            for (Session session : sessions.values()) session.lastCmdAt = now;
-            lastCmdAt = now;
-        });
+        if (retired || "draining".equals(commandState()) || !heartbeatPending.compareAndSet(false, true)) return;
+        if (!work.post(() -> {
+            try {
+                long now = android.os.SystemClock.elapsedRealtime();
+                for (Session session : sessions.values()) session.lastCmdAt = now;
+                lastCmdAt = now;
+            } finally { heartbeatPending.set(false); }
+        })) heartbeatPending.set(false);
     }
 
     public boolean closeSession() {
@@ -328,7 +361,7 @@ class VDriveWorker implements VDrive.Worker {
         long command = runningCmd;
         if (command > 0) CANCELED.add(command);
         if (releaseRequested.compareAndSet(false, true)) {
-            work.post(() -> {
+            if (!work.postAtFrontOfQueue(() -> {
                 try {
                     shutdown();
                     work.removeCallbacks(patrol);
@@ -339,7 +372,7 @@ class VDriveWorker implements VDrive.Worker {
                     log("cleanup incomplete: " + error);
                     releaseRequested.set(false);
                 }
-            });
+            })) releaseRequested.set(false);
         }
         // Acknowledge only actual cleanup, but do not tie up a socket for 32 seconds.
         // The transport and app retry this idempotent request while the worker drains.
@@ -414,7 +447,9 @@ class VDriveWorker implements VDrive.Worker {
         if (!occupied && movedTo >= 0 && movedTo != x.displayId) {
             // ATM placement can precede WindowManager's new input window. Keep the empty
             // old display through that transition, without resizing or restarting the App.
-            if (x.handoffAt > 0 && now - x.handoffAt < 5_000 && !foregroundWindowReady(x.pkg, movedTo)) return;
+            handingOver = true;
+            if (x.handoffAt <= 0) x.handoffAt = now;
+            if (!confirmHandoffWindow(x, movedTo)) return;
             // The actual tracked task left; its old display can go without touching its new window.
             retireFromPatrol(x);
             return;
@@ -494,9 +529,21 @@ class VDriveWorker implements VDrive.Worker {
                 log("return task failed: " + t);
             }
         }
-        stopCapture(x);
+        Throwable captureFailure = null;
+        try { stopCapture(x); } catch (Throwable error) { captureFailure = error; }
         try { if (x.vd != null) x.vd.release(); }
-        catch (Throwable error) { if (!com.eta.shadow.EngineFailures.systemUnavailable(error)) throw error; VDrive.systemFailed(); }
+        catch (Throwable error) {
+            if (!com.eta.shadow.EngineFailures.systemUnavailable(error)) {
+                if (captureFailure != null) error.addSuppressed(captureFailure);
+                throw error;
+            }
+            VDrive.systemFailed();
+        }
+        x.vd = null;
+        if (x == current) vd = null;
+        // Releasing the whole display also detaches its Surface. A failed graceful
+        // park must not prevent final cleanup of the local capture buffers.
+        if (captureFailure != null) stopCapture(x);
         int gone = x.displayId;
         x.reader = null;
         x.vd = null;
@@ -515,6 +562,7 @@ class VDriveWorker implements VDrive.Worker {
         orphanAt = 0; emptySince = 0;
         protectedPkg = ""; homeFront = "";
         taskCheckAt = 0; taskCheckResult = false;
+        handingOver = false;
     }
 
     boolean taskOnDisplay(int did) {
@@ -600,67 +648,99 @@ class VDriveWorker implements VDrive.Worker {
             }
         }
         if (retired) return fail("SESSION_CLOSED", "screen session has been released");
-        final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
-        final JSONObject[] holder = new JSONObject[1];
-        long t = SystemClock.elapsedRealtime();
-        work.post(() -> {
-            JSONObject res;
-            if (retired || CANCELED.remove(id)) {
-                // it was already written off by the timeout: do not touch the screen
-                try {
-                    holder[0] = fail("CANCELED", "command expired before it started");
-                } finally {
-                    latch.countDown();
-                }
-                return;
-            }
-            CURRENT_CMD.set(id);
-            runningCmd = id;
+        final PendingCommand ticket = new PendingCommand(id);
+        if (!pendingCommand.compareAndSet(null, ticket)) {
+            PendingCommand pending = pendingCommand.get();
+            return pending == null ? fail("COMMAND_BUSY", "worker is finishing its previous command; retry observation") : busyCommand(pending);
+        }
+        long started = SystemClock.elapsedRealtime();
+        boolean posted = work.post(() -> {
+            JSONObject result;
             try {
-                res = handle(new JSONObject(payload));
-            } catch (CanceledException ce) {
-                res = failFlag("CANCELED",
-                        "command was cancelled; input already injected may still arrive",
+                if (retired || ticket.expired || CANCELED.remove(id)) {
+                    result = fail("CANCELED", "command expired before it started");
+                } else {
+                    CURRENT_CMD.set(id);
+                    runningCmd = id;
+                    JSONObject request = new JSONObject(payload);
+                    String command = request.optString("cmd");
+                    if (observationRequired && isMutatingInput(command)) {
+                        result = observeAfterTimeout();
+                    } else {
+                        result = handle(request);
+                        if (result.optBoolean("ok") && ("shot".equals(command) || "tree".equals(command)))
+                            observationRequired = false;
+                    }
+                }
+            } catch (CanceledException cancelled) {
+                observationRequired = true;
+                lastScreenshot = null;
+                result = failFlag("CANCELED", "command cancelled; observe before retrying input",
                         "cancelRequested", "operationMayHaveRun");
             } catch (java.net.SocketTimeoutException deadline) {
-                res = failFlag("TIMEOUT", "system command exceeded its deadline; observe before retrying",
+                observationRequired = true;
+                lastScreenshot = null;
+                result = failFlag("TIMEOUT", "system command exceeded its deadline; observe before retrying",
                         "operationMayHaveRun");
-            } catch (Throwable e) {
-                if (com.eta.shadow.EngineFailures.systemUnavailable(e)) {
-                    res = VDrive.failure(e);
-                } else {
-                    boolean bad = e instanceof org.json.JSONException;
-                    res = fail(bad ? "BAD_REQUEST" : "INTERNAL",
-                            e.getClass().getSimpleName() + ": " + e.getMessage());
-                }
+            } catch (Throwable error) {
+                result = com.eta.shadow.EngineFailures.systemUnavailable(error) ? VDrive.failure(error)
+                        : fail(error instanceof org.json.JSONException ? "BAD_REQUEST" : "INTERNAL",
+                                error.getClass().getSimpleName() + ": " + error.getMessage());
             } finally {
                 CURRENT_CMD.remove();
                 runningCmd = -1;
-                CANCELED.remove(id);
             }
-            try {
-                res.put("ms", SystemClock.elapsedRealtime() - t);
-                if (closed) res.put("closing", true);
-            } catch (Throwable ignored) { }
-            holder[0] = res;
-            if (res.optBoolean("released") && sessions.isEmpty() && vd == null) closeSession();
-            latch.countDown();
+            try { result.put("ms", SystemClock.elapsedRealtime() - started); }
+            catch (Exception ignored) { }
+            // Publish completion atomically with deadline expiry. A late result never
+            // admits another command while the old operation is still executing.
+            synchronized (ticket) {
+                if (ticket.expired) {
+                    observationRequired = true;
+                    lastScreenshot = null;
+                    log("event=command_drained observation_required=true");
+                }
+                CANCELED.remove(id);
+                ticket.result = result;
+                pendingCommand.compareAndSet(ticket, null);
+                ticket.finished.countDown();
+            }
+            if (result.optBoolean("released") && sessions.isEmpty() && vd == null) closeSession();
         });
-        boolean done = false;
-        try {
-            done = latch.await(COMMAND_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
-        } catch (InterruptedException ignored) { }
-        if (!done) {
-            CANCELED.add(id);   // the injecting loop polls this and stops
-            log("cmd " + id + " timed out after " + COMMAND_TIMEOUT_MS + "ms, signaling cancel");
+        if (!posted) {
+            pendingCommand.compareAndSet(ticket, null);
+            return fail("SESSION_CLOSED", "worker thread no longer accepts commands");
         }
-        JSONObject res = holder[0];
-        if (res == null) {
-            res = failFlag("TIMEOUT", "no reply in " + (COMMAND_TIMEOUT_MS / 1000)
-                    + "s; cancellation was requested, but input already injected may still arrive",
-                    "cancelRequested", "stillRunning");
+        try { ticket.finished.await(commandTimeoutMs(), java.util.concurrent.TimeUnit.MILLISECONDS); }
+        catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+        synchronized (ticket) {
+            if (ticket.result != null) return ticket.result;
+            ticket.expired = true;
+            observationRequired = true;
+            CANCELED.add(id);
         }
-        return res;
+        log("event=command_timeout state=draining");
+        return failFlag("TIMEOUT", "operation has not exited; further commands are blocked until it drains, then observe again",
+                "cancelRequested", "stillRunning", "operationMayHaveRun");
+    }
+
+    long commandTimeoutMs() { return COMMAND_TIMEOUT_MS; }
+
+    private JSONObject busyCommand(PendingCommand pending) {
+        return failFlag(pending.expired ? "COMMAND_DRAINING" : "COMMAND_BUSY",
+                pending.expired ? "旧操作超时但尚未退出；不要重复输入，等待执行器恢复后重新观察。"
+                        : "同一后台屏已有操作正在执行，本次请求未进入队列。", "requestRejected");
+    }
+
+    private JSONObject observeAfterTimeout() {
+        return fail("OBSERVE_AFTER_TIMEOUT", "旧操作结果不确定，请先重新截图或读取节点，再决定下一步；本次输入未执行。");
+    }
+
+    static boolean isMutatingInput(String command) {
+        return "tap".equals(command) || "press".equals(command) || "drag".equals(command)
+                || "swipe".equals(command) || "text".equals(command) || "key".equals(command)
+                || "click2".equals(command) || "tapnode".equals(command) || "settext".equals(command)
+                || "scroll".equals(command);
     }
 
     /** True only when the JSON command itself is "cancel", not when it is quoted inside. */
@@ -1012,6 +1092,9 @@ class VDriveWorker implements VDrive.Worker {
             JSONObject invalid = ScreenGeometry.check(req.optJSONObject("expectedGeometry"), before);
             if (invalid != null) return invalid;
             req.put("engineGeometry", before);
+            // This is an in-flight worker callback, not an independent client command.
+            // Re-entering validate(sessionId) would wait on/reject the worker itself.
+            req.remove("sessionId");
             sock.connect(new java.net.InetSocketAddress("127.0.0.1", obsPort()), Math.min(2000, timeoutMs));
             sock.setSoTimeout(timeoutMs);
             java.io.PrintStream w = new java.io.PrintStream(sock.getOutputStream(), true, "UTF-8");
@@ -1164,37 +1247,53 @@ class VDriveWorker implements VDrive.Worker {
     private Frame createCapture() {
         final Frame fr = new Frame();
         final ImageReader capture = ImageReader.newInstance(W, H, PixelFormat.RGBA_8888, 3);
+        try {
+            capture.setOnImageAvailableListener(r -> {
+                if (reader != r || orphanAt > 0 || retired) return;
+                Image img = null;
+                try {
+                    img = r.acquireLatestImage();
+                    if (img == null) return;
+                    if (fr.image != null) fr.image.close();
+                    fr.image = img;
+                    fr.geometry = geometry(displayId);
+                    fr.receivedAt = SystemClock.elapsedRealtime();
+                    img = null;
+                    frameOk++;
+                } catch (Throwable t) {
+                    if (frameErr++ < 3) log("frame error: " + t);
+                } finally { if (img != null) img.close(); }
+            }, work);
+        } catch (Throwable failure) {
+            try { capture.close(); } catch (Throwable cleanup) { failure.addSuppressed(cleanup); }
+            throw failure;
+        }
         reader = capture;
-        capture.setOnImageAvailableListener(r -> {
-            if (reader != r || orphanAt > 0 || retired) return;
-            Image img = null;
-            try {
-                img = r.acquireLatestImage();
-                if (img == null) return;
-                if (fr.image != null) fr.image.close();
-                fr.image = img;
-                fr.geometry = geometry(displayId);
-                fr.receivedAt = SystemClock.elapsedRealtime();
-                img = null;
-                frameOk++;
-            } catch (Throwable t) {
-                if (frameErr++ < 3) log("frame error: " + t);
-            } finally { if (img != null) img.close(); }
-        }, work);
         return fr;
     }
 
     /** Keep the task container while awaiting the user's next action, without capture buffers. */
     private void stopCapture(Session session) {
-        Frame frame = frames.remove(session.displayId);
-        if (frame != null) frame.close();
         ImageReader capture = session.reader;
-        if (capture == null) return;
-        try { capture.setOnImageAvailableListener(null, null); } catch (Throwable ignored) { }
-        try { if (session.vd != null) session.vd.setSurface(null); } catch (Throwable t) { log("detach capture surface: " + t); }
-        try { capture.close(); } catch (Throwable ignored) { }
-        session.reader = null;
-        if (session == current) reader = null;
+        // A failed detach must leave the reader/listener usable. Closing it while the
+        // display still owns its Surface abandons the producer and hides cleanup failure.
+        if (capture != null) detachCaptureSurface(session);
+        Frame frame = frames.get(session.displayId);
+        Throwable failure = null;
+        try { if (frame != null) frame.close(); } catch (Throwable error) { failure = error; }
+        try {
+            if (capture != null) capture.close();
+            session.reader = null;
+            if (session == current) reader = null;
+            frames.remove(session.displayId);
+        } catch (Throwable error) {
+            if (failure == null) failure = error; else failure.addSuppressed(error);
+        }
+        if (failure != null) throw new IllegalStateException("capture cleanup incomplete", failure);
+    }
+
+    void detachCaptureSurface(Session session) {
+        if (session.vd != null) session.vd.setSurface(null);
     }
 
     private void resumeCapture(Session session) {
@@ -1206,9 +1305,9 @@ class VDriveWorker implements VDrive.Worker {
             session.reader = reader;
             frames.put(session.displayId, frame);
         } catch (Throwable error) {
-            frame.close();
-            reader.close();
-            reader = null;
+            try { frame.close(); } catch (Throwable cleanup) { error.addSuppressed(cleanup); }
+            try { reader.close(); reader = null; }
+            catch (Throwable cleanup) { session.reader = reader; error.addSuppressed(cleanup); }
             throw error;
         }
     }
@@ -1268,23 +1367,32 @@ class VDriveWorker implements VDrive.Worker {
                 | flag("STEAL_TOP_FOCUS_DISABLED") | flag("ROTATES_WITH_CONTENT")
                 | flag("DESTROY_CONTENT_ON_REMOVAL");
         long t = SystemClock.elapsedRealtime();
-        vd = dm.createVirtualDisplay("eta-bg", W, H, DPI, reader.getSurface(), flags, null, work);
-        log("virtual display flags = 0x" + Integer.toHexString(flags));
-        displayId = vd.getDisplay().getDisplayId();
-        lastDisplayGeometry = geometry(displayId);
-        // Some ROMs inherit an orientation-ignore policy on secondary displays.
         try {
-            Class<?> global = Class.forName("android.view.WindowManagerGlobal");
-            Object wm = global.getMethod("getWindowManagerService").invoke(null);
-            Method allow = wm.getClass().getMethod("setIgnoreOrientationRequest", int.class, boolean.class);
-            allow.setAccessible(true);
-            allow.invoke(wm, displayId, false);
-        } catch (Throwable ignored) { } // Framework orientation remains the fallback.
-        hadDisplay = true;
-        frames.put(displayId, fr);   // keyed by the display id, which only exists now
-        return new JSONObject().put("ok", true).put("displayId", displayId)
-                .put("createMs", SystemClock.elapsedRealtime() - t)
-                .put("width", W).put("height", H);
+            vd = dm.createVirtualDisplay("eta-bg", W, H, DPI, reader.getSurface(), flags, null, work);
+            if (vd == null || vd.getDisplay() == null) throw new IllegalStateException("virtual display creation returned no display");
+            log("virtual display flags = 0x" + Integer.toHexString(flags));
+            displayId = vd.getDisplay().getDisplayId();
+            frames.put(displayId, fr);
+            lastDisplayGeometry = geometry(displayId);
+            // Some ROMs inherit an orientation-ignore policy on secondary displays.
+            try {
+                Class<?> global = Class.forName("android.view.WindowManagerGlobal");
+                Object wm = global.getMethod("getWindowManagerService").invoke(null);
+                Method allow = wm.getClass().getMethod("setIgnoreOrientationRequest", int.class, boolean.class);
+                allow.setAccessible(true);
+                allow.invoke(wm, displayId, false);
+            } catch (Throwable ignored) { } // Framework orientation remains the fallback.
+            hadDisplay = true;
+            return new JSONObject().put("ok", true).put("displayId", displayId)
+                    .put("createMs", SystemClock.elapsedRealtime() - t)
+                    .put("width", W).put("height", H);
+        } catch (Throwable failure) {
+            // The ImageReader exists before Android creates the display. Roll it back
+            // even if createVirtualDisplay itself failed, before a frame/session was registered.
+            try { fr.close(); } catch (Throwable cleanup) { failure.addSuppressed(cleanup); }
+            try { destroyIdleDisplay(); } catch (Throwable cleanup) { failure.addSuppressed(cleanup); }
+            throw failure;
+        }
     }
 
     /**
@@ -2082,10 +2190,10 @@ class VDriveWorker implements VDrive.Worker {
             releaseSessionFully(s, false);
             out.put("released", true);
         } else {
+            stopCapture(s);
             s.orphanAt = SystemClock.elapsedRealtime();
             if (s == current) orphanAt = s.orphanAt;
             save();
-            stopCapture(s);
             disposition.set(PARKED);
             work.removeCallbacks(patrol);
             work.postDelayed(patrol, 500);
@@ -2116,11 +2224,13 @@ class VDriveWorker implements VDrive.Worker {
             boolean ready = false;
             long readyDeadline = SystemClock.elapsedRealtime() + 1200;
             for (int attempt = 0; attempt < 8 && SystemClock.elapsedRealtime() < readyDeadline; attempt++) {
-                if (foregroundWindowReady(session.pkg, 0)) { ready = true; break; }
+                if (confirmHandoffWindow(session, 0)) { ready = true; break; }
                 sleepCancellable(100);
             }
             disposition.compareAndSet(CLAIMED, PARKED);
-            tickSession(session, SystemClock.elapsedRealtime());
+            if (ready) tickSession(session, SystemClock.elapsedRealtime());
+            if (!ready) result.put("ok", false).put("code", "HANDOFF_PENDING")
+                    .put("message", "应用任务已移至主屏，窗口尚未就绪；保留旧屏等待确认，不重复启动应用。");
             return result.put("released", session.vd == null).put("windowReady", ready)
                     .put("geometry", geometry(0).json());
         } finally {
@@ -2154,23 +2264,27 @@ class VDriveWorker implements VDrive.Worker {
         if (did < 0 || taskId == null) {
             return fail("NO_SESSION", "no task on display " + did + " to hand over");
         }
-        try {
-            moveTask(taskId, to);
-        } catch (Throwable e) {
-            return fail("HANDOVER_FAILED", "moveTask(" + taskId + ") threw " + e
-                    + "; the hidden display was kept");
+        handingOver = true;
+        // A retry after a slow transition observes the same task; it must not move it again.
+        if (displayOfTask(taskId) != to) {
+            try {
+                moveTask(taskId, to);
+            } catch (Throwable e) {
+                return fail("HANDOVER_FAILED", "moveTask(" + taskId + ") threw " + e
+                        + "; the hidden display was kept");
+            }
         }
         if (!waitForTaskDisplay(taskId, to, 30)) {
             return fail("HANDOVER_FAILED", "task " + taskId + " stayed on display "
                     + displayOfTask(taskId) + " (wanted " + to + "); the hidden display was kept");
         }
         if (sess != null) {
-            sess.handoffAt = SystemClock.elapsedRealtime();
-            sess.taskId = -1;
+            if (sess.handoffAt <= 0) sess.handoffAt = SystemClock.elapsedRealtime();
+            sess.taskId = taskId;
             sess.orphanAt = SystemClock.elapsedRealtime();
             sess.homeFront = "";
             if (sess == current) {
-                launchedTaskId = -1;
+                launchedTaskId = taskId;
                 orphanAt = sess.orphanAt;
                 homeFront = "";
                 taskCheckAt = 0; taskCheckResult = false;
@@ -2192,16 +2306,29 @@ class VDriveWorker implements VDrive.Worker {
 
     boolean foregroundWindowReady(String pkg, int did) {
         JSONObject probe;
-        try { probe = proxyA11y(new JSONObject().put("cmd", "diag").put("displayId", did), 400); }
+        try { probe = proxyA11y(new JSONObject().put("cmd", "input_state").put("displayId", did)
+                .put("expectedPackage", pkg), 400); }
         catch (Exception unavailable) { return false; }
-        if (probe == null || !probe.optBoolean("ok")) return false;
+        if (probe == null || !probe.optBoolean("ok") || probe.optInt("displayId", -1) != did) return false;
+        DisplayGeometry display = geometry(did);
+        if (display.width <= 0 || display.height <= 0) return false;
         org.json.JSONArray windows = probe.optJSONArray("windows");
         if (windows == null) return false;
         for (int index = 0; index < windows.length(); index++) {
             JSONObject window = windows.optJSONObject(index);
-            if (window != null && pkg.equals(window.optString("package")) && window.optBoolean("focused")) return true;
+            if (window == null || !pkg.equals(window.optString("package")) || !window.optBoolean("focused")
+                    || !window.optBoolean("visible") || window.optInt("type", -1) != 1) continue;
+            org.json.JSONArray bounds = window.optJSONArray("bounds");
+            if (bounds == null || bounds.length() != 4) continue;
+            Rect rect = new Rect(bounds.optInt(0), bounds.optInt(1), bounds.optInt(2), bounds.optInt(3));
+            if (!rect.isEmpty() && Rect.intersects(rect, new Rect(0, 0, display.width, display.height))) return true;
         }
         return false;
+    }
+
+    private boolean confirmHandoffWindow(Session session, int display) {
+        session.handoffReadyChecks = foregroundWindowReady(session.pkg, display) ? session.handoffReadyChecks + 1 : 0;
+        return session.handoffReadyChecks >= 2;
     }
 
     /** Bring the app the user was looking at back to the front, a few times if needed. */

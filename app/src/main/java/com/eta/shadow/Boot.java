@@ -237,13 +237,19 @@ public final class Boot {
     }
 
     private static JSONObject geometryState(JSONObject req) throws Exception {
+        return geometryState(req, null);
+    }
+
+    private static JSONObject geometryState(JSONObject req, JSONObject observedGeometry) throws Exception {
         int did = req.optInt("displayId", 0);
         if (req.has("sessionId")) {
             // Accessibility can see private-display windows even when the App's
             // DisplayManager cannot see that Root-owned display. Root is authoritative.
             try {
                 return rootQuery.execute(new JSONObject().put("cmd", "validate")
-                        .put("sessionId", req.optString("sessionId")).put("displayId", did));
+                        .put("sessionId", req.optString("sessionId")).put("displayId", did)
+                        .put("action", req.optString("cmd")).put("observed", observedGeometry != null)
+                        .put("expectedGeometry", observedGeometry));
             } catch (Exception unavailable) {
                 return new JSONObject().put("ok", false).put("code", "SESSION_UNAVAILABLE")
                         .put("reason", "ROOT_GEOMETRY_UNAVAILABLE").put("displayId", did);
@@ -282,7 +288,8 @@ public final class Boot {
             if (blocked != null) return blocked;
         }
         JSONObject result = dispatch(req);
-        JSONObject after = geometryState(req);
+        JSONObject after = geometryState(req, result.optBoolean("ok") &&
+                ("dump".equals(command) || "list".equals(command)) ? geometry : null);
         boolean mutating = "click2".equals(command) || "tapnode".equals(command) || "settext".equals(command) || "scroll".equals(command);
         if (!after.optBoolean("ok")) return after.put("operationMayHaveRun", mutating);
         JSONObject actual = after.optJSONObject("geometry");

@@ -14,6 +14,7 @@
     <string name="background_continue_instruction">Continue task</string>
     <string name="background_open_app">Open app</string>
     <string name="background_handoff_unavailable">The background page is busy or could not be opened. Check the conversation and try again.</string>
+  <string name="background_handoff_pending">The app is moving to the foreground. Its window is not ready yet; please wait. The app will not be restarted.</string>
     <string name="background_waiting_model">Waiting for model</string>
     <string name="background_waiting_app">Waiting for app</string>
     <string name="background_releasing_screen">Releasing screen</string>

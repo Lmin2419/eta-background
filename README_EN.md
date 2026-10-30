@@ -6,6 +6,8 @@ A derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮
 
 ## Latest test build
 
+Current source adds virtual-display cleanup, handoff confirmation and timeout isolation in `2026103002` / `20261030-e39-lifecycle`; validation is in progress. See the [new changelog](etax/README.md#release-2026103002). The previous verified APK is listed below.
+
 **2026-10-30 · `3.3.5+etax.3b1794d` · versionCode `2026103001`**, with engine `20261029-e38-input`.
 
 Built-in web search now uses Bing first and tries DuckDuckGo on failure, with a 10-second network timeout per source and explicit failure diagnostics. Overlay permission settings remain clickable after authorization and provide alternative system entry points when the dedicated page is unavailable.

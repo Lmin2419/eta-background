@@ -14,6 +14,7 @@
     <string name="background_continue_instruction">繼續指令</string>
     <string name="background_open_app">開啟 App</string>
     <string name="background_handoff_unavailable">背景頁面仍在使用或暫時無法接管，請查看聊天後重試。</string>
+  <string name="background_handoff_pending">應用正在交還前景，視窗尚未就緒，請稍候；不會重新啟動應用。</string>
     <string name="background_waiting_model">等待模型回覆</string>
     <string name="background_waiting_app">等待應用程式空閒</string>
     <string name="background_releasing_screen">正在回收螢幕</string>
