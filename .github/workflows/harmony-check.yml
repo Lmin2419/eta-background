@@ -3,8 +3,10 @@ name: Harmony Check
 # 只检查鸿蒙工程 harmony-agent/。不修改、也不替代 Android 的 PR Check。
 on:
   pull_request:
+    # 也覆盖叠加在未合并鸿蒙分支上的 PR（例如 E01 的 base 为 harmony/m0-0.9.1）。
     branches:
       - main
+      - 'harmony/**'
     paths:
       - 'harmony-agent/**'
       - '.github/workflows/harmony-check.yml'
@@ -51,7 +53,7 @@ jobs:
         run: npm test
 
   ets:
-    name: Harmony / ArkTS (.ets) check
+    name: Harmony / ArkTS (.ets) and resources check
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -81,3 +83,7 @@ jobs:
       # 用 SDK 自带的官方检查器做类型和 ArkTS 规则检查；不生成 HAP。
       - name: ArkTS 检查
         run: OHOS_SDK_ETS="$OHOS_SDK_DIR/ets" node scripts/check-ets.cjs
+
+      # 用 SDK 的 restool 打包资源，拦截资源命名、格式、重复声明和未定义引用。
+      - name: 资源打包检查
+        run: OHOS_SDK_ETS="$OHOS_SDK_DIR/ets" node scripts/check-resources.cjs

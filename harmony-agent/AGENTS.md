@@ -30,13 +30,16 @@ npm ci
 npm run check   # tsc，只覆盖 core/**/*.ts 和 tests/**/*.ts
 npm test        # 全部单测，必须 0 失败
 
-# .ets 检查：首次下载公开的 OpenHarmony 7.0 SDK（API 26，免登录，约 3.4 GB，只保留 ArkTS 部分）
+# 首次下载公开的 OpenHarmony 7.0 SDK（API 26，免登录，约 3.4 GB，只保留 ArkTS 和 toolchains 两部分）
 bash scripts/fetch-ohos-sdk.sh                      # 默认放到 ~/.cache/ohos-sdk-26
-OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets   # 必须 0 error
+export OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets
+npm run check:ets   # .ets 类型和 ArkTS 规则，必须 0 error
+npm run check:res   # 用 SDK 的 restool 打包资源，必须 passed（任何 restool 警告都算失败）
 ```
 
 - `npm run check` 只覆盖 `core/**/*.ts` 和 `tests/**/*.ts`。`.ets` 用 `npm run check:ets` 检查：它调用 SDK 自带的官方检查器，做类型检查和 ArkTS 规则检查（例如 `arkts-no-any-unknown`），**但不生成 HAP**。
-- 如果你的环境访问不了 `mirrors.huaweicloud.com`，PR 上的 CI 任务 `Harmony / ArkTS (.ets) check` 也会执行同样的检查，以它的结果为准。
+- `npm run check:res` 用 SDK 的 restool 编译 AppScope 和 entry 的资源，能拦住资源命名、JSON 格式、未定义引用和重复声明（例如 AppScope 与 entry 都声明 `app_name`）。它不渲染 SVG 和字体。
+- 如果你的环境访问不了 `mirrors.huaweicloud.com`，PR 上的 CI 任务 `Harmony / ArkTS (.ets) and resources check` 会执行同样的两项检查，以它的结果为准。CI 也会在 base 为 `harmony/**` 的叠加 PR 上运行。
 - 已知误报只有 `Cannot find name '$$this'`（双向绑定语法，正式构建会预处理），脚本已经自动忽略。不要往误报列表里加别的东西来掩盖真实错误。
 - 生成 HAP 需要 HarmonyOS 命令行工具（`HARMONY_CLT_HOME`，`npm run build:harmony`），通常没有。所以：逻辑仍然写在 `core/**/*.ts` 并写单测，`.ets` 保持薄；PR 中写明“ArkTS 检查通过 / 未生成 HAP”，最终以用户的 DevEco 编译为准。
 

@@ -12,6 +12,7 @@
 | 网络错误提示附带 NetworkKit 错误码 | 无（平台层） | 待测（G3） |
 | 设置页版本号改为运行时读取 | 无（平台层） | 待测（A3） |
 | 文档：本地开发说明、真机验收模板、修正归档中的临时路径描述 | 不适用 | 不适用 |
+| 新增资源打包检查：`npm run check:res` 调用 SDK 的 restool 编译 AppScope 和 entry 资源；CI 一并执行，并覆盖 base 为 `harmony/**` 的叠加 PR | 0.9.1 通过（无警告）；能拦住 E01 草稿中 `app_name` 的重复声明 | 不适用 |
 | 新增 `.ets` 检查：`scripts/fetch-ohos-sdk.sh` 下载公开的 OpenHarmony 7.0 SDK（API 26），`npm run check:ets` 运行官方检查器；CI 增加对应任务 | 0 错误、29 警告，与改动前的 `main` 相同；故意注入的类型错误、`any` 和不存在的接口都能检出 | 不适用 |
 
 **未生成 HAP**：检查器覆盖类型和 ArkTS 规则，不覆盖资源打包和签名。最终以 DevEco 编译（A1）为准。

@@ -7,7 +7,7 @@
 | 任务 | 状态 | 说明 |
 | --- | --- | --- |
 | T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，PR #8（分支 `harmony/m0-0.9.1`），三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；ArkTS 检查 0 错误（OpenHarmony SDK 26.0.0.38）；未生成 HAP |
-| `.ets` 检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets`，CI 任务 `Harmony / ArkTS (.ets) check` |
+| `.ets` 与资源检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets` + `npm run check:res`（restool 资源打包），CI 任务 `Harmony / ArkTS (.ets) and resources check`，也覆盖 base 为 `harmony/**` 的叠加 PR |
 | M1：E01–E09（Eta 界面与交互 1:1 移植） | **规划完成，可以开工** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |
 
