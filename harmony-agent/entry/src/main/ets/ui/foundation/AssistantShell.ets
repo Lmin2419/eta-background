@@ -2,6 +2,7 @@ import { FoundationController, ShellState, emptyShellState } from '../../core/fo
 import { ConversationSummary } from '../../core/conversations';
 import { ChatPage } from './ChatPage';
 import { ProviderListPage, ProviderDetailPage, ModelSelectionSheet } from './ProviderPages';
+import { DiagnosticsPage } from './DiagnosticsPage';
 
 @Component
 export struct AssistantShell {
@@ -16,6 +17,7 @@ export struct AssistantShell {
     if (this.state.screen === 'providers') return '模型服务';
     if (this.state.screen === 'provider') return this.state.editor.draft.id ? this.state.editor.draft.name : '添加模型服务';
     if (this.state.screen === 'settings') return '设置';
+    if (this.state.screen === 'diagnostics') return '诊断';
     return this.state.chat.title;
   }
   private removeConversation(item: ConversationSummary): void {
@@ -74,11 +76,14 @@ export struct AssistantShell {
         Column({ space: 12 }) {
           Image($r('app.media.ic_spark')).width(40).height(40)
           Text('随身助手').fontSize(22).fontWeight(FontWeight.Medium).fontColor('#273247')
-          Text('0.9.0 · 交互框架预览').fontSize(12).fontColor('#8993A5')
+          Text(this.state.appVersion ? this.state.appVersion + ' · 交互框架预览' : '交互框架预览').fontSize(12).fontColor('#8993A5')
         }.width('100%').padding(26).backgroundColor('#FFFFFF').borderRadius(18)
         Button({ type: ButtonType.Normal }) {
           Row() { Column({ space: 5 }) { Text('模型服务').fontSize(16).fontColor('#273247'); Text('管理 API、密钥和聊天模型').fontSize(12).fontColor('#8993A5') }.alignItems(HorizontalAlign.Start); Blank(); Text('›').fontSize(22).fontColor('#8993A5') }.width('100%').padding(18)
         }.width('100%').backgroundColor('#FFFFFF').borderRadius(18).onClick(() => this.controller?.navigate('providers'))
+        Button({ type: ButtonType.Normal }) {
+          Row() { Column({ space: 5 }) { Text('诊断').fontSize(16).fontColor('#273247'); Text('设备信息和最近事件，可复制报告').fontSize(12).fontColor('#8993A5') }.alignItems(HorizontalAlign.Start); Blank(); Text('›').fontSize(22).fontColor('#8993A5') }.width('100%').padding(18)
+        }.width('100%').backgroundColor('#FFFFFF').borderRadius(18).onClick(() => this.controller?.openDiagnostics())
         Column({ space: 12 }) {
           Text('这版先把对话做好').fontSize(16).fontColor('#273247').width('100%')
           Text('聊天、会话切换和模型服务已接入。手机自动操作、后台服务和其他扩展暂不提供入口，后续逐项接回。').fontSize(14).lineHeight(23).fontColor('#8993A5').width('100%')
@@ -118,6 +123,7 @@ export struct AssistantShell {
         } else if (this.state.screen === 'chat') { ChatPage({ chat: this.state.chat, busy: this.state.busy, controller: this.controller }) }
         else if (this.state.screen === 'providers') { ProviderListPage({ state: this.state, controller: this.controller }) }
         else if (this.state.screen === 'provider') { ProviderDetailPage({ state: this.state, controller: this.controller }) }
+        else if (this.state.screen === 'diagnostics') { DiagnosticsPage({ state: this.state, controller: this.controller }) }
         else { this.settingsPage() }
       }.layoutWeight(1).width('100%')
     }.width('100%').height('100%')

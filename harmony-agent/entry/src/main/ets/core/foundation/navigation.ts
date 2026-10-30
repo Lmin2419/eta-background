@@ -1,5 +1,5 @@
 /** Screen identity, transient overlays and back behavior are independent of chat/runtime state. */
-export type Screen = 'chat' | 'providers' | 'provider' | 'settings';
+export type Screen = 'chat' | 'providers' | 'provider' | 'settings' | 'diagnostics';
 export type Sheet = 'none' | 'models' | 'catalog';
 export class ShellNavigation {
   private stack: Screen[] = ['chat'];

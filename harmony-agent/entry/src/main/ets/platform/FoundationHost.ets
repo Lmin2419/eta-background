@@ -1,5 +1,7 @@
-import { common, Want } from '@kit.AbilityKit';
+import { bundleManager, common, Want } from '@kit.AbilityKit';
 import { util } from '@kit.ArkTS';
+import { deviceInfo } from '@kit.BasicServicesKit';
+import { display } from '@kit.ArkUI';
 import { ConversationRepository } from '../core/conversations';
 import { DraftRepository } from '../core/drafts';
 import { ProfileRepository } from '../core/profiles';
@@ -9,6 +11,7 @@ import { RuntimeDatabase, DatabaseConversationStorage, DatabaseDocumentStorage, 
 import { AssetSecretStorage } from './ProfileStore';
 import { HarmonyHttpTransport } from './ModelHttp';
 import { HttpTransport } from '../core/model';
+import { DiagnosticEnvironment, DiagnosticLog, DiagnosticTransport, emptyEnvironment } from '../core/diagnostics';
 
 /** A small platform seam: database, secure keys and HTTP. No legacy GUI/background/extension startup. */
 export class FoundationHost {
@@ -21,26 +24,65 @@ export class FoundationHost {
   private loaded = false;
   private loading: Promise<void> | undefined;
   private ledger: TaskLedger;
+  private context: common.UIAbilityContext;
+  readonly diagnostics: DiagnosticLog;
   constructor(context: common.UIAbilityContext) {
+    this.context = context;
     const db = new RuntimeDatabase(context);
+    const diagnostics = new DiagnosticLog(new DatabaseDocumentStorage(db, 'diagnostics'));
+    this.diagnostics = diagnostics;
     const uuid = (): string => util.generateRandomUUID();
     const chats = new ConversationRepository(new DatabaseConversationStorage(db, context.filesDir), uuid, Date.now, (): void => { this.controller?.changed(); }, 2);
     const profiles = new ProfileRepository(new DatabaseProfileStorage(db, context.filesDir), new AssetSecretStorage(), uuid);
     const drafts = new DraftRepository(new DatabaseDocumentStorage(db, 'drafts'));
     this.ledger = new TaskLedger(new DatabaseDocumentStorage(db, 'tasks'), uuid);
     const dependencies: FoundationDependencies = {
-      chats, profiles, drafts, uuid,
-      transport: (): HttpTransport => new HarmonyHttpTransport(),
-      load: (): Promise<void> => this.load(chats, profiles, drafts)
+      chats, profiles, drafts, uuid, diagnostics,
+      transport: (): HttpTransport => new DiagnosticTransport(new HarmonyHttpTransport(), diagnostics),
+      load: (): Promise<void> => this.load(chats, profiles, drafts),
+      environment: (): Promise<DiagnosticEnvironment> => this.environment()
     };
     this.controller = new FoundationController(dependencies);
   }
   private load(chats: ConversationRepository, profiles: ProfileRepository, drafts: DraftRepository): Promise<void> {
     if (this.loaded) return Promise.resolve();
     if (!this.loading) this.loading = (async (): Promise<void> => {
+      // The diagnostic log never throws; a broken log must not block the chat data.
+      await this.diagnostics.load();
       await profiles.load(); await chats.load(); await drafts.load(); await this.ledger.load(); this.loaded = true;
-    })().catch((error: Error): never => { this.loading = undefined; throw error; });
+    })().catch((error: Error): never => { this.loading = undefined; this.diagnostics.record('storage', '载入数据失败', error.message); throw error; });
     return this.loading;
+  }
+  /** Each probe is independent: one unavailable system field must not hide the others. */
+  async environment(): Promise<DiagnosticEnvironment> {
+    const env: DiagnosticEnvironment = emptyEnvironment();
+    try {
+      const info = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT);
+      env.appVersion = info.versionName; env.versionCode = String(info.versionCode);
+    } catch (e) { this.diagnostics.record('app', '读取应用版本失败', (e as Error).message); }
+    try {
+      env.device = deviceInfo.marketName + '（' + deviceInfo.productModel + '）';
+      env.os = deviceInfo.osFullName + ' · ' + deviceInfo.displayVersion;
+      env.api = String(deviceInfo.sdkApiVersion);
+    } catch (e) { this.diagnostics.record('app', '读取系统信息失败', (e as Error).message); }
+    try {
+      const screen = display.getDefaultDisplaySync();
+      env.display = screen.width + '×' + screen.height + ' px · 密度 ' + screen.densityPixels.toFixed(2);
+    } catch (e) { this.diagnostics.record('app', '读取屏幕信息失败', (e as Error).message); }
+    try {
+      if (!display.isFoldable()) env.fold = '不可折叠';
+      else {
+        const status = display.getFoldStatus();
+        env.fold = status === display.FoldStatus.FOLD_STATUS_EXPANDED ? '展开'
+          : status === display.FoldStatus.FOLD_STATUS_FOLDED ? '折叠'
+          : status === display.FoldStatus.FOLD_STATUS_HALF_FOLDED ? '半折叠' : '其他（' + status + '）';
+      }
+    } catch (e) { this.diagnostics.record('app', '读取折叠状态失败', (e as Error).message); }
+    try {
+      const scale = this.context.config.fontSizeScale;
+      env.fontScale = scale === undefined ? '' : String(scale);
+    } catch (e) { this.diagnostics.record('app', '读取字体缩放失败', (e as Error).message); }
+    return env;
   }
   async route(want: Want): Promise<void> {
     await this.controller.initialize();

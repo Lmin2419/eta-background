@@ -1,0 +1,51 @@
+name: Harmony Check
+
+# 只检查鸿蒙工程 harmony-agent/。不修改、也不替代 Android 的 PR Check。
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'harmony-agent/**'
+      - '.github/workflows/harmony-check.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'harmony-agent/**'
+      - '.github/workflows/harmony-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: harmony-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Harmony / TypeScript / Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: harmony-agent
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      # 使用运行器自带的 Node.js；ArkTS（.ets）和 HAP 需要鸿蒙 SDK，不在此处编译。
+      - name: 安装依赖
+        run: |
+          node --version
+          npm ci --no-audit --no-fund
+
+      - name: 类型检查
+        run: npm run check
+
+      - name: 单元测试
+        run: npm test

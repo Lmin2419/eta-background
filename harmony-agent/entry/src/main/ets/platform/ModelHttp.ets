@@ -1,7 +1,10 @@
 import { http } from '@kit.NetworkKit';
-import { deviceInfo } from '@kit.BasicServicesKit';
+import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
 import { util } from '@kit.ArkTS';
 import { HttpTransport } from '../core/model';
+
+/** The NetworkKit code (e.g. DNS, TLS, timeout) is what a device report needs; the text stays the same. */
+function errorCode(e:BusinessError|undefined):string{return e&&typeof e.code==='number'?'（错误码 '+e.code+'）':'';}
 
 export class HarmonyHttpTransport implements HttpTransport {
   private request: http.HttpRequest | undefined;
@@ -37,7 +40,7 @@ export class HarmonyHttpTransport implements HttpTransport {
           .then((code:number):void=>{
             if(code<200||code>=300)fail(new Error('模型服务返回 HTTP '+code+'，请检查地址、密钥、额度或流式支持'));
             else {accepted=true;finish();}
-          }).catch(()=>fail(new Error('模型流连接中断，请检查网络和接口；不会自动重复请求')));
+          }).catch((e:BusinessError)=>fail(new Error('模型流连接中断'+errorCode(e)+'，请检查网络和接口；不会自动重复请求')));
       });
     } finally {this.abortStream=undefined;request.destroy();if(this.request===request)this.request=undefined;}
   }
@@ -63,7 +66,7 @@ export class HarmonyHttpTransport implements HttpTransport {
     } catch (e) {
       const message = (e as Error).message;
       if (message.startsWith('模型服务返回 HTTP ')) throw new Error(message);
-      throw new Error('模型请求失败：请检查网络、证书和接口地址；不自动跟随重定向');
+      throw new Error('模型请求失败'+errorCode(e as BusinessError)+'：请检查网络、证书和接口地址；不自动跟随重定向');
     } finally { request.destroy(); if (this.request === request) this.request = undefined; }
   }
 }

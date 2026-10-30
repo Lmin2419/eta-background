@@ -4,6 +4,7 @@ import { ProfileRepository } from '../profiles';
 import { HttpTransport, OpenAIClient } from '../model';
 import { AgentLoop } from '../loop';
 import { ChatDevice, RunEvent } from '../types';
+import { DiagnosticLog } from '../diagnostics';
 
 export interface ChatActivity {
   id: string; conversationId: string; text: string; model: string;
@@ -16,7 +17,8 @@ export class FoundationChatRuntime {
   private executions = new Map<string, Execution>();
   private foreground = true;
   constructor(private chats: ConversationRepository, private profiles: ProfileRepository,
-    private transport: () => HttpTransport, private uuid: () => string, private changed: () => void) {}
+    private transport: () => HttpTransport, private uuid: () => string, private changed: () => void,
+    private diagnostics?: DiagnosticLog) {}
   activity(id: string): ChatActivity | undefined {
     const a = this.executions.get(id)?.activity; return a ? { ...a } : undefined;
   }
@@ -57,9 +59,17 @@ export class FoundationChatRuntime {
     }));
     const execution: Execution = { activity, run, done: Promise.resolve() };
     this.executions.set(conversationId, execution); this.changed();
+    const started = Date.now();
+    // Only the model name, timing and size are logged; never the question or the reply.
+    this.diagnostics?.record('chat', '开始回复', '模型 ' + model + ' · 流式 ' + (snapshot.streaming === false ? '关' : '开'));
     execution.done = Promise.resolve().then(async () => {
-      try { activity.reply = await run.run(); activity.phase = '已完成'; }
-      catch (e) { activity.error = redactSecrets(e instanceof Error ? e.message : '回复未完成', secrets); activity.phase = activity.error; }
+      try {
+        activity.reply = await run.run(); activity.phase = '已完成';
+        this.diagnostics?.record('chat', '回复完成', (Date.now() - started) + 'ms · ' + activity.reply.length + ' 字');
+      } catch (e) {
+        activity.error = redactSecrets(e instanceof Error ? e.message : '回复未完成', secrets); activity.phase = activity.error;
+        this.diagnostics?.record('chat', '回复未完成', activity.error + ' · ' + (Date.now() - started) + 'ms · 已收到 ' + activity.reply.length + ' 字', 400);
+      }
       finally { activity.active = false; this.changed(); }
     });
     return activity.id;
