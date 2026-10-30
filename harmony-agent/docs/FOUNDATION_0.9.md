@@ -2,7 +2,7 @@
 
 ## 已冻结旧实现
 
-改动前的完整工作区源码快照保存在 `/workspace/snapshots/harmony-agent-before-ui-rebuild-20261030`，带逐文件 SHA-256 清单；没有用新实现覆盖这个快照。
+改动前曾在当时的云端工作区 `/workspace/snapshots/harmony-agent-before-ui-rebuild-20261030` 保存完整快照。该容器已回收，快照不再可用；长期备份以仓库中的 `archives/harmony-agent-0.8.0-archived-source.zip` 为准。
 
 供下载的精简源码归档是 `harmony-agent-0.8.0-archived-source.zip`，含 163 个源码、配置、测试和文档文件，另附清单。它排除构建缓存、下载依赖、证书和本地配置。SHA-256：`367fec9bc460be82540975498de97a9d8d60d1568263af61dea63703467ef1c7`。旧完整 DevEco 包与其他 0.8 交付也保留。
 
