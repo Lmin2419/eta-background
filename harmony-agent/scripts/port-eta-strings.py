@@ -9,6 +9,8 @@ from eta_port_common import PROJECT, ETA_COMMIT, arguments, emit_json, origin
 # API 26 ResourceManager supports %d/%f/%s, indexed variants and %%.
 FORMAT = re.compile(r'%(?:(\d+)\$)?([sdf%])')
 QUANTITIES = ('zero', 'one', 'two', 'few', 'many', 'other')
+# AppScope owns application-wide keys; entry must not redeclare them (restool rejects duplicates).
+APP_SCOPE_KEYS = {'app_name'}
 
 
 def brand(text):
@@ -101,6 +103,8 @@ def generate(eta_root, output, check=False):
     for locale, source in [('base', 'values-b+zh+Hans'), ('en_US', 'values'), ('zh_Hant', 'values-b+zh+Hant')]:
         translated, pl, paths = read_locale(res / source)
         strings = dict(english); strings.update(translated)
+        for key in APP_SCOPE_KEYS:
+            strings.pop(key, None)
         plurals = dict(en_plurals); plurals.update(pl)
         fallbacks = sorted(set(english) - set(translated))
         for row in legacy:
@@ -115,7 +119,8 @@ def generate(eta_root, output, check=False):
             {'quantity': q, 'value': values[q]} for q in QUANTITIES if q in values
         ]} for k, values in sorted(plurals.items())]}, check)
         report['locales'][locale] = {'sourceStrings': len(translated), 'sourcePlurals': len(pl),
-            'portedStrings': len(english), 'generatedStrings': len(strings), 'generatedPlurals': len(plurals),
+            'portedStrings': len(english.keys() - APP_SCOPE_KEYS), 'generatedStrings': len(strings), 'generatedPlurals': len(plurals),
+            'appScopeKeys': sorted(APP_SCOPE_KEYS),
             'fallbackKeys': fallbacks, 'inputs': [origin(p, eta_root) for p in paths]}
     emit_json(output / 'docs/eta-strings.json', report, check)
     return report

@@ -9,16 +9,16 @@
 | 改动 | 自动验证 | 真机 |
 | --- | --- | --- |
 | 许可证、Required Notice、关于页待用文案、第三方归属 | 原文/生成结果一致性检查通过 | E05 显示时检查 |
-| 1,538 条 Eta 文案与 22 组复数：简中默认、英文、保留繁中；另保留 3 条旧资源和 5 条鸿蒙说明，每套共 1,546 条 string | 转义、格式、回退、复数测试通过；Eta 的 2 项 LocaleResourcesTest 已翻译 | E01 无独立真机检查点；未验证系统语言选择 |
+| 1,538 条 Eta 文案与 22 组复数：简中默认、英文、保留繁中；另保留 3 条旧资源和 5 条鸿蒙说明，entry 每套共 1,545 条 string；app_name 仅在 AppScope 定义 | 转义、格式、回退、复数测试通过；Eta 的 2 项 LocaleResourcesTest 已翻译 | E01 无独立真机检查点；未验证系统语言选择 |
 | 148 个 Material、1 个 Miuix、11 个 drawable SVG；22 个品牌 WebP | 缺失列表为空；转换/原文件散列与重复生成检查通过 | 未验证实际 SVG 渲染 |
 | Miuix 深浅色各 53 个角色，连同 Eta 与旧启动背景共各 66 色；41 项尺寸/字号常量 | 来源提取、深浅色键一致、透明度、尺寸检查通过 | E02–E05 接入组件/主题后验证 |
 | 2 个 JetBrains Mono 字体及 UIContext 字体注册 | 原文件逐字节一致；ArkTS 检查通过 | 未验证字体渲染；正文仍为系统字体 |
 
-本地验证：`npm run check` 通过；`npm test` **213 项通过，0 失败、0 跳过**（200 项原有 + 2 项 Eta 移植 + 11 项资源测试；其中一项另执行 12 项 Python 转换测试）；`npm run check:ets` **0 错误、29 警告**，沿用检查脚本既有的 1 项 `$$this` 误报忽略；`npm run port:eta:check` 通过。
+本地验证：`npm run check` 通过；`npm test` **213 项通过，0 失败、0 跳过**（200 项原有 + 2 项 Eta 移植 + 11 项资源测试；其中一项另执行 12 项 Python 转换测试）；`npm run check:ets` **0 错误、29 警告**，沿用检查脚本既有的 1 项 `$$this` 误报忽略；`npm run port:eta:check` 通过；新增 `npm run check:res` **通过，1,833 项资源，0 警告**。
 
-**ArkTS 检查通过 / 未生成 HAP**。本地检查不覆盖资源打包、系统语言选择或真机渲染，最终以用户 DevEco 为准。没有新增权限或签名。新用到的公开鸿蒙接口为 `UIContext.getFont()`、`Font.registerFont()`，以及字体来源 `$rawfile()`。
+**ArkTS 检查通过 / 未生成 HAP**。新增 restool 检查覆盖资源打包；不覆盖系统语言选择或真机渲染，最终以用户 DevEco 为准。没有新增权限或签名。新用到的公开鸿蒙接口为 `UIContext.getFont()`、`Font.registerFont()`，以及字体来源 `$rawfile()`。
 
-当前 Harmony workflow 限定 PR 的 base 为 `main`；此分支暂基于 M0，不把“未触发”写成 CI 通过。待 #8 合并、E01 PR 改 base 到 `main` 后确认两个 Harmony CI 任务全绿，再由用户合并并开始 E02。完整对照、差异和复现说明见 [E01 交付记录](E01_RESOURCE_PORT.md)。
+2026-10-30 夜间已合入 M0 `2d44742`：修复 entry / AppScope 的 app_name 重复声明，AppScope 名称统一为“随身助手”；生成器和回归测试防止再次重复。Harmony CI 现覆盖叠加 PR。按无人值守规则，四项检查已通过，#9 可审查，L1 从 E01 继续；不合并 PR。完整对照、差异和复现说明见 [E01 交付记录](E01_RESOURCE_PORT.md)。
 
 ## 0.9.1（M0：能上真机、能回传问题）
 
@@ -30,9 +30,10 @@
 | 网络错误提示附带 NetworkKit 错误码 | 无（平台层） | 待测（G3） |
 | 设置页版本号改为运行时读取 | 无（平台层） | 待测（A3） |
 | 文档：本地开发说明、真机验收模板、修正归档中的临时路径描述 | 不适用 | 不适用 |
+| 新增资源打包检查：`npm run check:res` 调用 SDK 的 restool 编译 AppScope 和 entry 资源；CI 一并执行，并覆盖 base 为 `harmony/**` 的叠加 PR | 0.9.1 通过（无警告）；能拦住 E01 草稿中 `app_name` 的重复声明 | 不适用 |
 | 新增 `.ets` 检查：`scripts/fetch-ohos-sdk.sh` 下载公开的 OpenHarmony 7.0 SDK（API 26），`npm run check:ets` 运行官方检查器；CI 增加对应任务 | 0 错误、29 警告，与改动前的 `main` 相同；故意注入的类型错误、`any` 和不存在的接口都能检出 | 不适用 |
 
-**未生成 HAP**：检查器覆盖类型和 ArkTS 规则，不覆盖资源打包和签名。最终以 DevEco 编译（A1）为准。
+**未生成 HAP**：ArkTS 检查覆盖类型和规则，restool 补充资源打包检查；不覆盖签名。最终以 DevEco 编译（A1）为准。
 
 ## 当前工作方向
 

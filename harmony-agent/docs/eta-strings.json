@@ -6,9 +6,12 @@
     "base": {
       "sourceStrings": 1536,
       "sourcePlurals": 22,
-      "portedStrings": 1538,
-      "generatedStrings": 1546,
+      "portedStrings": 1537,
+      "generatedStrings": 1545,
       "generatedPlurals": 22,
+      "appScopeKeys": [
+        "app_name"
+      ],
       "fallbackKeys": [
         "route_skills",
         "speech_api_key"
@@ -43,9 +46,12 @@
     "en_US": {
       "sourceStrings": 1538,
       "sourcePlurals": 22,
-      "portedStrings": 1538,
-      "generatedStrings": 1546,
+      "portedStrings": 1537,
+      "generatedStrings": 1545,
       "generatedPlurals": 22,
+      "appScopeKeys": [
+        "app_name"
+      ],
       "fallbackKeys": [],
       "inputs": [
         {
@@ -89,9 +95,12 @@
     "zh_Hant": {
       "sourceStrings": 1466,
       "sourcePlurals": 22,
-      "portedStrings": 1538,
-      "generatedStrings": 1546,
+      "portedStrings": 1537,
+      "generatedStrings": 1545,
       "generatedPlurals": 22,
+      "appScopeKeys": [
+        "app_name"
+      ],
       "fallbackKeys": [
         "action_export",
         "conversation_export_assistant",

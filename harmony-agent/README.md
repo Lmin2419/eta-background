@@ -45,7 +45,9 @@ npm ci
 npm run check
 npm test
 bash scripts/fetch-ohos-sdk.sh
-OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets
+export OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets
+npm run check:ets
+npm run check:res
 npm run port:eta:check
 ```
 

@@ -24,12 +24,16 @@ test('all Eta string keys and 22 plural keys are present in each locale', () => 
   assert.deepEqual(report.locales.base.fallbackKeys, ['route_skills', 'speech_api_key']);
   for (const locale of ['base', 'en_US', 'zh_Hant']) {
     const values = json(`entry/src/main/resources/${locale}/element/string.json`).string as { name: string; value: string }[];
-    assert.equal(values.length, 1546); assert.equal(new Set(values.map(v => v.name)).size, values.length);
+    assert.equal(values.length, 1545); assert.equal(new Set(values.map(v => v.name)).size, values.length);
     assert.equal(json(`entry/src/main/resources/${locale}/element/plural.json`).plural.length, 22);
-    assert.equal(values.find(v => v.name === 'app_name')?.value, '随身助手');
+    assert.equal(values.find(v => v.name === 'app_name'), undefined, 'app_name belongs to AppScope only');
+    assert.equal(report.locales[locale].portedStrings, 1537);
+    assert.deepEqual(report.locales[locale].appScopeKeys, ['app_name']);
     assert.equal(values.find(v => v.name === 'eta_port_required_notice')?.value, 'Required Notice: Copyright © 2026 蛮吉 (Mangi-11).');
     assert.equal(values.find(v => v.name === 'module_desc')?.value, '在手机上运行的 AI 助手');
   }
+  const scope = json('AppScope/resources/base/element/string.json').string as { name: string; value: string }[];
+  assert.deepEqual(scope.filter(v => v.name === 'app_name'), [{ name: 'app_name', value: '随身助手' }]);
 });
 test('all 148 Material, 1 Miuix and 11 drawables have exact checked files', () => {
   const r = json('docs/eta-icons.json');

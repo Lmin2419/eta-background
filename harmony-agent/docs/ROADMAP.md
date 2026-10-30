@@ -7,9 +7,10 @@
 | 任务 | 状态 | 说明 |
 | --- | --- | --- |
 | T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，PR #8（分支 `harmony/m0-0.9.1`），三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；ArkTS 检查 0 错误（OpenHarmony SDK 26.0.0.38）；未生成 HAP |
-| `.ets` 检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets`，CI 任务 `Harmony / ArkTS (.ets) check` |
-| E01（M1 / 0.9.2） | **代码完成，自动测试通过，待 PR 合并** | 分支 `harmony/e01-resources`，base 暂为 `harmony/m0-0.9.1`；资源生成、许可证、字体注册完成，不改页面。213 项测试通过；ArkTS 0 错误；未生成 HAP。详见 [E01 记录](E01_RESOURCE_PORT.md)。当前 workflow 只接受 base 为 main 的 PR，待 #8 合并、改 base 后确认 CI 全绿 |
-| E02–E09（M1 后续） | **未开始** | E01 经 CI 通过并由用户合并后，才开始 E02；按 [ETA_PORT.md](ETA_PORT.md) 顺序执行 |
+| `.ets` 与资源检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets` + `npm run check:res`（restool 资源打包），CI 任务 `Harmony / ArkTS (.ets) and resources check`，也覆盖 base 为 `harmony/**` 的叠加 PR |
+| E01（0.9.2） | PR #9，修复完成、四项检查通过 | 已合入 M0 `2d44742`；app_name 仅由 AppScope 定义。213 项测试通过，ArkTS 0 错误，restool 1,833 项资源通过；按夜间规则进入 L1 |
+| M1 其余（L1–L4、E02–E09） | 夜间队列已排好 | 见第二节“本轮队列” |
+| M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |
 
 每完成一个任务，执行者更新本表。
@@ -39,6 +40,48 @@
 - **一次只做一个任务。** 上一个 PR 合并后再开始下一个，避免多个未验证的改动叠在一起。M1 的 PR 在 CI 全绿后即可合并，只在标注的真机检查点停下来测试；其他里程碑的 PR 要真机通过后才合并。
 - **里程碑闸门。** 每个里程碑末尾有一轮完整真机验收；不通过就不进入下一个里程碑。
 - 每个合并的 PR 升一次补丁版本号，方便你在手机上确认装的是哪一版。
+
+### 无人值守连续执行（你不在时）
+
+你不在的时候没人合并 PR、也没人测真机。Codex 按“本轮队列”一个接一个做，规则如下：
+
+1. **叠加分支**：每个任务从**上一个通过检查的任务分支**拉新分支，PR 的 base 设为那个分支，形成一条链。不合并任何 PR，不推送 `main`，只推送自己任务的分支。前面的分支修改后，把它合并（或 rebase）进后面的分支。
+2. **通过才前进**：当前 PR 的 `npm run check`、`npm test`、`npm run check:ets`、`npm run check:res` 全部通过（或 CI 的两个 Harmony 任务全绿），才能把 PR 从草稿改为可审查，再开始下一个任务。
+3. **卡住就跳过**：一个任务认真尝试 3 次仍无法通过检查，或者遇到必须由你决定、而且会影响后续的问题时，PR 保持草稿，写明“阻塞原因”，然后跳到队列中**不依赖它**的下一个任务，从最后一个通过检查的分支继续拉分支。
+4. **小决定自己做**：不影响后续的小问题，选最接近 Eta 源码的做法，写进 PR 的“待用户确认”一节，继续往下做。
+5. **不冒充真机结果**：真机检查点只列出步骤，标为“待测”。
+6. **PR 不要太大**：生成的资源文件不计，手写代码超过约 2500 行时拆成多个 PR。
+7. **早上的报告**：队列做完或全部阻塞时停下，最后输出一份报告，格式见“本轮队列”末尾。
+
+### 本轮队列（2026-10-30 夜间）
+
+按顺序执行，做到哪算哪：
+
+| 顺序 | 任务 | base 分支 | 说明 |
+| --- | --- | --- | --- |
+| 1 | 修复 PR #9（E01） | `harmony/m0-0.9.1` | 合并 `harmony/m0-0.9.1` 的最新提交；去掉 entry 中重复的 `app_name`，AppScope 改为“随身助手”；四项检查全部通过 |
+| 2 | L1 对话逻辑 | `harmony/e01-resources` | 见 M1 的 L1 任务卡 |
+| 3 | L3 聊天列表与侧栏行为 | L1 的分支 | 见 L3 |
+| 4 | L2 Markdown 解析 | L3 的分支 | 见 L2；最可能卡住，放在后面 |
+| 5 | L4 运行消息投影 | 上一个通过检查的分支 | 见 L4；依赖过多时按规则 3 跳过 |
+| 6 | E02 组件库 | 上一个通过检查的分支 | |
+| 7 | E03 应用骨架与导航 | E02 的分支 | 真机检查点 ① 留给你早上测 |
+| 8 | E04a 首页与输入栏 | E03 的分支 | |
+| 9 | E04b 消息列表与 Markdown 渲染 | E04a 的分支 | 使用 L2、L3 的逻辑；L2 被跳过时，暂用现有 `core/markdown.ts` 并注明 |
+| 10 | E04c 排队、编辑、重新生成 | E04b 的分支 | 使用 L1 的逻辑接入界面 |
+| 11 | E07 会话列表与历史 | E04c 的分支 | 使用 L1 的时间分组和导出 |
+| 后备 | E05 → E06 | 依次叠加 | 前面全部完成后才做 |
+
+**早上的报告**（Codex 最后输出，同时写入最后一个分支的 `harmony-agent/docs/reports/2026-10-31-overnight.md`）：
+
+```
+## 夜间执行报告
+| 顺序 | 任务 | PR | 分支 | 状态（可审查 / 草稿-阻塞 / 未开始） | 检查结果 | 移植的 Eta 单测数 |
+## 阻塞与原因
+## 待用户确认的决定（每条写清选项和默认做法）
+## 需要真机测试的项目（按检查点列出步骤）
+## 建议的合并顺序
+```
 
 ### 给 Codex 的通用提示词
 
@@ -144,6 +187,26 @@
 - **自动验收**：脚本单测通过；PR 中报告生成的文案条数，与 Eta 的条数对比；图标缺失列表为空；`check:ets` 0 错误。
 - **真机**：不需要。
 
+#### L1–L4：逻辑先行（纯 TypeScript，不改界面）
+
+把 Eta 中不依赖界面的逻辑，连同它的单测，先移植到 `core/eta/` 和 `tests/eta/`。**这一步不接入界面**，后面的 E04、E07 直接使用。规则见 ETA_PORT §5：
+
+- 测试用例名保持可对照；
+- 依赖 Android 框架的测试（Robolectric、Compose 测试）只移植逻辑部分，跳过的测试逐条写明原因；
+- 需要的 Eta 数据类型只移植最小子集，放在 `core/eta/model/`。
+
+| 任务 | Eta 源文件（`app/src/main/kotlin/io/github/mangi/eta/ui/`） | Eta 单测（`app/src/test/kotlin/...`） |
+| --- | --- | --- |
+| **L1 对话逻辑** | `app/AgentMessageQueueReducer.kt`、`AgentConversationRevisionReducer.kt`、`AgentRunEventCoalescer.kt`、`AgentRuntimeHistoryReducer.kt`、`AssistantConversationSeed.kt`、`ConversationTimeLabels.kt`、`ConversationMarkdownExporter.kt` | 同名 `*Test.kt`，共 36 项 |
+| **L2 Markdown 解析** | `markdown/` 中的非绘制部分：`StreamingGfmParser`、`MarkdownInline`、`MarkdownDocumentBuilder`、`MarkdownModel`、`TexMathDelimiters`、`StreamingMarkdownState`、`StreamingMarkdownRestoreState`、`StreamingMarkdownStateCache`、`StaticMarkdownDocumentCache`、`SmoothTextReveal` 中的策略和协调部分 | `ui/markdown/*Test.kt`，共 79 项 |
+| **L3 聊天列表与侧栏行为** | `components/` 中的逻辑：`AgentChatScrollPolicy`、`ChatHistoryPaging` / `HistoryScrollDemand`、`ConversationPaneState`、`ConversationPaneMotion`、`AgentChatTimelineEntries`、`AgentWorkSteps`、`AgentChatFinalResult`、`ChatConversationKey`（用 `grep` 找到它们实际所在的文件） | `ui/components/` 中的同名 `*Test.kt`，共约 49 项 |
+| **L4 运行消息投影** | `app/AgentRunMessageProjector.kt`（750 行）、`AgentPendingResultRecovery.kt` | 同名 `*Test.kt`，共 26 项 |
+
+- **L2 的特殊情况**：Eta 的块级解析依赖 JetBrains `intellij-markdown`（GFM）。鸿蒙这边优先用 TypeScript 自己实现所需的部分，以通过 Eta 的 79 项测试为准。确实需要第三方库时，只能用纯 TS / JS、MIT 或 Apache 许可证、没有原生依赖的库，以源码形式放进仓库（附许可证），并在 PR 中说明能否被 ArkTS 构建打包；做不到就按规则 3 跳过。
+- **L4 的特殊情况**：依赖的 Eta 运行时类型如果太多，导致需要移植的代码超过约 2500 行，就按规则 3 跳过，在报告中说明。
+- **自动验收**：移植的单测全部通过；PR 中报告移植数量和跳过数量（附原因）；`check:ets` 和 `check:res` 不受影响。
+- **真机**：不需要。
+
 #### E02 Eta 组件库
 
 - 把 `ui/components/` 中的通用组件移植到 `entry/src/main/ets/ui/eta/components/`：
@@ -171,12 +234,12 @@
   - `AgentHomeScreen.kt`：问候语和四张建议卡，文案照搬，“Eta”按规范替换；
   - `AgentChatInputBar.kt`：“+”附件菜单；Atom 手机操作模式按钮为 B 类；模型按钮带品牌图标；发送 / 停止；
   - `AgentChatModelControls.kt`、`AgentModelPicker.kt`。
-- **E04b 消息列表与 Markdown**：
+- **E04b 消息列表与 Markdown**（使用 L2、L3 已移植的逻辑，这里只做渲染和对接）：
   - 消息列表 `AgentChatBody.kt`：跟随到底部、上滑后暂停跟随、回到底部按钮、`ChatHistoryPaging.kt` 分页加载；
   - 单条消息 `ChatMessageItem.kt`：用户消息、助手消息、思考过程折叠、`AgentWorkSteps.kt`、`AgentWorkProcess.kt`、`AgentToolActivity.kt`、`AgentStatusCard.kt`、复制和长按菜单；
   - 加载状态 `AgentConversationLoading.kt`；
   - Markdown：把 `ui/markdown/`（13 个文件）的解析部分移植到 `core/eta/markdown/`，替换 `core/markdown.ts`，渲染部分移植到 `ui/eta/markdown/`。流式输出时用稳定的 key（原 T05 并入这里）。
-- **E04c 排队、编辑与重新生成**：`AgentChatQueueStrip.kt`，以及 `AgentMessageQueueReducer`、`AgentConversationRevisionReducer`、`AgentRunEventCoalescer`、`AgentRunMessageProjector`，连同它们的 Eta 单测（原 T06 并入这里）。
+- **E04c 排队、编辑与重新生成**：移植 `AgentChatQueueStrip.kt`，并把 L1、L4 已经移植的 `AgentMessageQueueReducer`、`AgentConversationRevisionReducer`、`AgentRunEventCoalescer`、`AgentRunMessageProjector` 接入聊天界面（原 T06 并入这里）。
 - 与现有 `chatRuntime` 对接时，保持“先持久化再发送、停止保留内容、不自动重发”的规则。
 - **真机检查点 ②**：
   - 首页与 `docs/Screenshots/chat_home.jpg` 并排截图对照；
@@ -207,8 +270,8 @@
 #### E07 会话列表与历史
 
 - 侧栏内容照抄 `ConversationPanePanel.kt`：按时间分组（`ConversationTimeLabels`）、搜索、重命名、删除，Eta 有归档的话也照做。
-- 导出 Markdown：`ConversationMarkdownExporter`。
-- 连同 `ConversationTimeLabelsTest`、`ConversationMarkdownExporterTest`、`AgentConversationStoreTest` 等相关单测一起移植。
+- 导出 Markdown：使用 L1 已经移植的 `ConversationMarkdownExporter`。
+- 时间分组使用 L1 的 `ConversationTimeLabels`；`AgentConversationStoreTest` 等其余相关单测在这里移植。
 - **真机**：在 E09 一起测。
 
 #### E08 二级页面（一个页面一个 PR）

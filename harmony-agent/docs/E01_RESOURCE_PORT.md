@@ -21,7 +21,9 @@ npm run port:eta:check    # 只读比对；缺文件、图标缺失或生成结�
 npm run check
 npm test
 bash scripts/fetch-ohos-sdk.sh
-OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets
+export OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets
+npm run check:ets
+npm run check:res
 ```
 
 需要 Node.js、Python 3.9+ 与根目录的 `app/`、`LICENSE`。脚本不联网，不修改输入文件；第一次 `npm ci`、SDK 下载需要网络。生成结果已提交，DevEco 用户无需运行脚本。脚本支持 `--eta-root` 和 `--output-root`，供转换测试使用。基准变化必须另开任务，不能只改输出文件或沿用旧来源注释。
@@ -34,7 +36,7 @@ OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets
 | --- | --- | --- |
 | 根目录 LICENSE、Required Notice | `harmony-agent/LICENSE`；`rawfile/licenses/Eta-PolyForm-Noncommercial-1.0.0.txt` | A，原文完整复制 |
 | `values-b+zh+Hans/*.xml` | `resources/base/element/string.json`、`plural.json` | A，中文默认；原文 1,536 条 string、22 组 plural，补齐 2 项不翻译术语 |
-| `values/*.xml` | `resources/en_US/element/string.json`、`plural.json` | A，1,538 条 Eta string、22 组 plural |
+| `values/*.xml` | `resources/en_US/element/string.json`、`plural.json` | A，1,537 条 entry string + AppScope 的 app_name、22 组 plural |
 | `values-b+zh+Hant/*.xml` | `resources/zh_Hant/element/string.json`、`plural.json` | A，保留上游繁中测试覆盖；原文 1,536 条 string、22 组 plural，补齐同样 2 项术语 |
 | `Icons.*` 引用 | `base/media/ic_<style>_<name>.svg`，来源与每个引用文件见 `eta-icons.json` | A，148 个 Material，缺失 0 |
 | `MiuixIcons.Basic.ArrowRight` | `ic_miuix_basic_arrow_right.svg`，按原始 Bezier 路径生成 | A，1 个 |
@@ -45,7 +47,7 @@ OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets
 | `EtaFonts.kt`、两个 JetBrains Mono 字体 | `rawfile/fonts/` 与 `platform/EtaFonts.ets`，正式和预览入口注册 | A，regular / bold 原文件；正文不换字体 |
 | 关于页来源说明 | 5 条 `eta_port_*` 资源（含未接入摘要） | 资源 A；关于页 E05 才接入 |
 
-每个 locale 最终有 **1,546 条 string**：1,538 条 Eta + 3 条旧鸿蒙资源 + 5 条鸿蒙说明；另有 **22 组 plural**，不计入 string 数。中文缺少的两项是上游 `translatable="false"` 的 `route_skills`（Skills）和 `speech_api_key`（API Key），保留英文。
+每个 locale 的 entry 最终有 **1,545 条 string**：1,537 条 Eta + 3 条旧鸿蒙资源 + 5 条鸿蒙说明；Eta 的 `app_name` 由 AppScope 唯一定义为“随身助手”，生成器跳过 entry 中的重复项；另有 **22 组 plural**，不计入 string 数。中文缺少的两项是上游 `translatable="false"` 的 `route_skills`（Skills）和 `speech_api_key`（API Key），保留英文。
 
 来源和散列清单：
 
@@ -87,6 +89,7 @@ OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets
 | 内嵌 Python 转换测试 | 12 项通过（由上述 Node 测试运行，不重复加入 213 总数） |
 | `npm run port:eta:check` | 通过；图标缺失列表为空 |
 | `OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets` | SDK 26.0.0.38；0 错误、29 警告；沿用既有 1 项 `$$this` 误报忽略，未扩大忽略范围 |
+| `npm run check:res` | toolchains 26.0.0.38；通过，1,833 项资源，0 警告 |
 | HAP | **未生成**；本次没有执行完整 Harmony 构建或签名 |
 | 真机 | **未测试**；E01 任务卡没有真机检查点 |
 
@@ -94,7 +97,7 @@ OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets
 
 ## CI、真机与下一步
 
-PR #8 待 A1、A3、D1、G1 用户确认。现有 Harmony workflow 只对 base 为 `main` 的 PR 触发；E01 base 暂为 M0 时不会运行，不标记为 CI 通过。#8 合并后改 base 到 `main`，确认 `Harmony / TypeScript / Tests` 和 `Harmony / ArkTS (.ets) check` 全绿，由用户合并 E01，再开始 E02。
+PR #8 待 A1、A3、D1、G1 用户确认。2026-10-30 夜间已合入 M0 `2d44742`，新增 restool 资源检查，Harmony CI 也覆盖叠加分支。依用户的无人值守规则，四项检查通过后 PR #9 改为可审查，后续 L1 从 E01 分支继续；不合并 PR、不推 main。
 
 E01 无需单独等待真机，可在后续任务的检查点合并核验。若用户选择提前检查：
 
@@ -102,4 +105,4 @@ E01 无需单独等待真机，可在后续任务的检查点合并核验。若�
 2. 打开侧栏 → 设置；预期版本为 `0.9.2`，现有布局不变。
 3. 回到聊天页，打开模型服务再返回；预期与 M0 行为一致，没有新增灰色/空白页面。
 
-这三步目前均**未测**。字体实际字重、系统语言回退、SVG 与 Eta 画面对照在相应页面接入后按任务卡验证。普通 ArkTS 检查不覆盖资源打包、字体加载、实际渲染或签名，最终能否编译以用户 DevEco 为准。
+这三步目前均**未测**。字体实际字重、系统语言回退、SVG 与 Eta 画面对照在相应页面接入后按任务卡验证。新增 restool 检查覆盖资源打包；字体加载、实际渲染或签名仍不在本地检查范围，最终能否编译以用户 DevEco 为准。
