@@ -28,7 +28,7 @@ export struct SettingsScreen {
   }}
   @Builder private extensions(){Column(){
     EtaSwitchPreference({title:$r('app.string.settings_auto_compaction'),checked:this.state.runtimePreferences.autoCompactionEnabled,isEnabled:!!this.controller?.ports.runtimePreferences,hasLeading:true,startAction:()=>{this.icon($r('app.media.ic_rounded_layers'),$r('app.color.eta_preference_blue'));},onCheckedChange:(value:boolean)=>{void this.controller?.updateRuntimePreferences({autoCompactionEnabled:value});}});EtaPreferenceDivider()
-    this.row($r('app.string.ui_memory_b55ff5'),$r('app.media.ic_rounded_menu_book'),$r('app.color.eta_preference_orange'),false,()=>{});EtaPreferenceDivider()
+    this.row($r('app.string.ui_memory_b55ff5'),$r('app.media.ic_rounded_menu_book'),$r('app.color.eta_preference_orange'),!!this.controller?.memory,()=>this.controller?.openMemory());EtaPreferenceDivider()
     this.row($r('app.string.eta_route_subagents'),$r('app.media.ic_rounded_hub'),$r('app.color.eta_preference_blue'),false,()=>{});EtaPreferenceDivider()
     this.row($r('app.string.route_skills'),$r('app.media.ic_rounded_import_contacts'),$r('app.color.eta_preference_green'),false,()=>{});EtaPreferenceDivider()
     this.row($r('app.string.route_mcp_servers'),$r('app.media.ic_rounded_account_tree'),$r('app.color.eta_preference_blue'),false,()=>{});EtaPreferenceDivider()

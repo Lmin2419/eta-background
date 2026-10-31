@@ -81,7 +81,9 @@
     "eta_gemini_thinking_unknown": "尚未确认该模型的思考档位；仅使用 Default，不发送自定义思考档位。",
     "eta_gemini_thinking_hint": "Gemini 原生连接只发送已确认支持的思考档位。",
     "eta_anthropic_version": "anthropic-version",
-    "eta_provider_gemini_summary": "使用 API Key 连接原生 Interactions API"
+    "eta_provider_gemini_summary": "使用 API Key 连接原生 Interactions API",
+    "eta_extension_saved_not_in_use": "已保存；鸿蒙版对话暂未使用此功能",
+    "eta_memory_file_name": "MEMORY.md"
   },
   "en_US": {
     "eta_port_about_title": "Based on Eta",
@@ -160,7 +162,9 @@
     "eta_provider_type_anthropic": "Anthropic",
     "eta_provider_type_gemini": "Gemini",
     "eta_provider_responses_pending": "Responses API · 鸿蒙版尚未接入",
-    "eta_provider_gemini_summary": "Connect to the native Interactions API with an API key"
+    "eta_provider_gemini_summary": "Connect to the native Interactions API with an API key",
+    "eta_extension_saved_not_in_use": "Saved; Harmony conversations do not use this feature yet",
+    "eta_memory_file_name": "MEMORY.md"
   },
   "zh_Hant": {
     "eta_port_about_title": "基於 Eta 移植",
@@ -239,6 +243,8 @@
     "eta_provider_type_anthropic": "Anthropic",
     "eta_provider_type_gemini": "Gemini",
     "eta_provider_responses_pending": "Responses API · 鸿蒙版尚未接入",
-    "eta_provider_gemini_summary": "使用 API Key 連接原生 Interactions API"
+    "eta_provider_gemini_summary": "使用 API Key 連接原生 Interactions API",
+    "eta_extension_saved_not_in_use": "已儲存；鴻蒙版對話暫未使用此功能",
+    "eta_memory_file_name": "MEMORY.md"
   }
 }

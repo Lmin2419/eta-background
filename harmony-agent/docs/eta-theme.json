@@ -343,6 +343,9 @@
       "Title3": 20.0,
       "Title4": 18.0
     },
+    "EtaMemoryDefaults": {
+      "EditorLineHeight": 22.0
+    },
     "EtaMarkdownFonts": {
       "Fp0": 0.0,
       "Fp3": 3.0,
@@ -392,6 +395,7 @@
       "Dp6": 6.0,
       "Dp7": 7.0,
       "Dp8": 8.0,
+      "Dp9": 9.0,
       "Dp10": 10.0,
       "Dp11": 11.0,
       "Dp12": 12.0,

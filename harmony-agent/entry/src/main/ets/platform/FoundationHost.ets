@@ -1,5 +1,6 @@
 // Harmony adapter for app/src/main/kotlin/io/github/mangi/eta/data/repository/RuntimeConfigRepository.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import {createEtaMemoryRepository} from './EtaMemory';
 import { RuntimePreferencesRepository } from '../core/eta/runtimePreferences';
 import { CommunityCatalogRepository } from '../core/eta/communityCatalog';
 import { EtaCommunityCatalog } from './EtaCommunityCatalog';
@@ -53,6 +54,7 @@ export class FoundationHost {
     this.ledger = new TaskLedger(new DatabaseDocumentStorage(db, 'tasks'), uuid);
     const etaConversations=new EtaConversations(context);
     const dependencies: FoundationDependencies = {
+      memory:createEtaMemoryRepository(db),
       communityCatalog:new CommunityCatalogRepository(new EtaCommunityCatalog(context,db)),
       language:():string=>i18n.System.getAppPreferredLanguage(),
       setLanguage:(language:string):void=>{i18n.System.setAppPreferredLanguage(language);if(language!=='default')context.getApplicationContext().setLanguage(language);},

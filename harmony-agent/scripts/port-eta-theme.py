@@ -195,7 +195,10 @@ def generate(eta_root, output, check=False):
     if len(objects['MiuixFontSizes']) != 14: raise ValueError('Unexpected Miuix text style count')
     source_for['MiuixFontSizes'] = 'compose-miuix-ui/miuix TextStyles.kt @ 39c40f9 (0.9.4), Apache-2.0'
     # Literal dimensions are generated from the same pinned files as the components.
-    size_sources = list(texts.values()) + [markdown_style,markdown_content] + [(upstream / name).read_text() for name in ['Card.kt', 'IconButton.kt', 'SmallTitle.kt', 'TopAppBar.kt', 'Checkbox.kt', 'RadioButton.kt']]
+    memory_screen=(components.parent/'screens/memory/AgentMemoryScreen.kt').read_text()
+    objects['EtaMemoryDefaults']={'EditorLineHeight':float(re.search(r'lineHeight = ([\d.]+)\.sp',memory_screen)[1])}
+    source_for['EtaMemoryDefaults']='app/src/main/kotlin/io/github/mangi/eta/ui/screens/memory/AgentMemoryScreen.kt @ 3b1794d'
+    size_sources = list(texts.values()) + [markdown_style,markdown_content,memory_screen] + [(upstream / name).read_text() for name in ['Card.kt', 'IconButton.kt', 'SmallTitle.kt', 'TopAppBar.kt', 'Checkbox.kt', 'RadioButton.kt']]
     sizes = sorted({float(value) for text in size_sources for value in re.findall(r'(?<![\w.])([\d.]+)\.dp', text)})
     objects['EtaMarkdownFonts'] = {'Fp'+format(float(v),'g').replace('.','_'):float(v) for v in sorted(set(re.findall(r'([\d.]+)\.sp',markdown_style)),key=float)}
     source_for['EtaMarkdownFonts']='app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownStyle.kt @ 3b1794d'

@@ -1301,6 +1301,10 @@
       "value": "Keys, authorization, URL paths and message bodies are omitted. Include reproduction steps."
     },
     {
+      "name": "eta_extension_saved_not_in_use",
+      "value": "Saved; Harmony conversations do not use this feature yet"
+    },
+    {
       "name": "eta_language_english",
       "value": "English"
     },
@@ -1315,6 +1319,10 @@
     {
       "name": "eta_language_restart",
       "value": "Restart the app after selecting the system language"
+    },
+    {
+      "name": "eta_memory_file_name",
+      "value": "MEMORY.md"
     },
     {
       "name": "eta_model_context",
