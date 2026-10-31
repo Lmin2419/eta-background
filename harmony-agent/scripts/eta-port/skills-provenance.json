@@ -1,0 +1,17 @@
+{
+  "commit": "3b1794d70881c3c849b53d7778dd2bfdf0a46cc5",
+  "sources": [
+    {
+      "path": "app/src/main/assets/builtin_skills/self-improving-agent/SKILL.md",
+      "sha256": "d4b39a6fdefea0ee9fe99f93e05ce13f87a08bc7e604f20b1aa6cc8fe19b0b78"
+    },
+    {
+      "path": "app/src/main/assets/builtin_skills/skill-creator/SKILL.md",
+      "sha256": "c95dd0e3c1622e2eb52121da4f2e2dcc80ac9d1fe80e33e189ff71169164a627"
+    },
+    {
+      "path": "app/src/main/assets/builtin_skills/skill-installer/SKILL.md",
+      "sha256": "9f5f629bbfda670a1f4e183504a20a51d4a74f5fc3554fb8d16df212654b965f"
+    }
+  ]
+}

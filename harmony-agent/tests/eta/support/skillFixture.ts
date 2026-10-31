@@ -1,0 +1,33 @@
+// Test platform port for app/src/test/kotlin/io/github/mangi/eta/agent/skill/*Test.kt @ 3b1794d.
+// Required Notice: Copyright © 2026 蛮吉 (Mangi-11). Actual temporary files, rename, symlinks and ZIP data.
+import fs from 'node:fs/promises';import path from 'node:path';import os from 'node:os';import {createHash,randomUUID} from 'node:crypto';import {deflateRawSync,inflateRawSync} from 'node:zlib';import {after} from 'node:test';
+import {SkillFileSystem,SkillFileKind} from '../../../entry/src/main/ets/core/eta/skills/skillFiles';
+import {SkillIndexService} from '../../../entry/src/main/ets/core/eta/skills/skillIndex';
+import {SkillPackageInstaller} from '../../../entry/src/main/ets/core/eta/skills/skillInstaller';
+import {skillCrc32,SkillZipCodec} from '../../../entry/src/main/ets/core/eta/skills/skillZip';
+import {SKILL_LIMITS,SkillPackageLimits,SkillRegistryEntry,SkillRegistry} from '../../../entry/src/main/ets/core/eta/skills/skillTypes';
+import {BUILTIN_SKILLS} from '../../../entry/src/main/ets/core/eta/skills/builtinSkills';
+export class NodeSkillFiles implements SkillFileSystem {
+ constructor(readonly root:string){}
+ absolute(p:string):string{return path.join(this.root,p);}
+ async guard(p:string):Promise<void>{if(p.split('/').some(x=>!x||x==='.'||x==='..')||path.isAbsolute(p))throw new Error('INVALID_PATH');const parts=p.split('/');for(let i=1;i<parts.length;i++){const kind=await this.kind(parts.slice(0,i).join('/'));if(kind!==null&&kind!=='directory')throw new Error('UNSAFE_ANCESTOR');}}
+ async kind(p:string):Promise<SkillFileKind>{await this.guard(p);try{const s=await fs.lstat(this.absolute(p));return s.isSymbolicLink()?'link':s.isDirectory()?'directory':s.isFile()?'file':'other';}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return null;throw e;}}
+ async list(p:string):Promise<string[]>{if(await this.kind(p)!=='directory')throw new Error('NOT_DIRECTORY');return fs.readdir(this.absolute(p));}
+ async mkdir(p:string):Promise<void>{await this.guard(p);const kind=await this.kind(p);if(kind===null)await fs.mkdir(this.absolute(p),{recursive:true});else if(kind!=='directory')throw new Error('NOT_DIRECTORY');}
+ async read(p:string,max:number):Promise<Uint8Array>{if(await this.kind(p)!=='file')throw new Error('NOT_FILE');const file=await fs.open(this.absolute(p),'r');try{const size=(await file.stat()).size;if(size>max)throw new Error('TOO_LARGE');const bytes=Buffer.alloc(size);let offset=0;while(offset<size){const n=(await file.read(bytes,offset,size-offset,offset)).bytesRead;if(!n)throw new Error('SHORT_READ');offset+=n;}return bytes;}finally{await file.close();}}
+ async write(p:string,bytes:Uint8Array):Promise<void>{await this.guard(p);const kind=await this.kind(p);if(kind!==null&&kind!=='file')throw new Error('NOT_FILE');await fs.writeFile(this.absolute(p),bytes);}
+ async atomicWrite(p:string,bytes:Uint8Array):Promise<void>{const temp=p+'.tmp-'+randomUUID();await this.write(temp,bytes);const file=await fs.open(this.absolute(temp),'r+');await file.sync();await file.close();await this.move(temp,p);}
+ async move(a:string,b:string):Promise<void>{await this.guard(a);await this.guard(b);await fs.rename(this.absolute(a),this.absolute(b));}
+ async unlink(p:string):Promise<void>{await this.guard(p);await fs.unlink(this.absolute(p));}
+ async rmdir(p:string):Promise<void>{await this.guard(p);await fs.rmdir(this.absolute(p));}
+ private tail:Promise<void>=Promise.resolve();async lock():Promise<()=>Promise<void>>{const before=this.tail;let release=()=>{};this.tail=new Promise<void>(resolve=>{release=resolve;});await before;return async()=>release();}
+ encode(s:string):Uint8Array{return new TextEncoder().encode(s);}decode(b:Uint8Array):string{return new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(b);}uuid():string{return randomUUID();}
+}
+export class SkillTestRegistry implements SkillRegistry {state:Record<string,SkillRegistryEntry>={};failWrite=false;async read(){return structuredClone(this.state);}async write(s:Record<string,SkillRegistryEntry>){if(this.failWrite)throw new Error('INJECTED_REGISTRY_FAILURE');this.state=structuredClone(s);}}
+export const codec:SkillZipCodec={sha256:async bytes=>createHash('sha256').update(bytes).digest('hex'),inflateRaw:async(bytes,expected)=>{const out=inflateRawSync(bytes,{maxOutputLength:Math.max(1,expected+1)});if(out.length!==expected)throw new Error('SIZE_MISMATCH');return out;}};
+export async function fixture(limits:Partial<SkillPackageLimits>={}){const root=await fs.mkdtemp(path.join(os.tmpdir(),'eta-skills-'));after(()=>fs.rm(root,{recursive:true,force:true}));const files=new NodeSkillFiles(root),registry=new SkillTestRegistry(),index=new SkillIndexService(files,registry,BUILTIN_SKILLS),installer=new SkillPackageInstaller(index,codec,{...SKILL_LIMITS,...limits});await files.mkdir('skills');return {root,fs:files,registry,index,installer};}
+export const skill=(name:string,description:string)=>`---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}`;
+export async function put(f:{fs:NodeSkillFiles},id:string,description:string){await f.fs.mkdir('skills/'+id);await f.fs.write('skills/'+id+'/SKILL.md',f.fs.encode(skill(id,description)));}
+export async function content(f:{fs:NodeSkillFiles},id:string){return f.fs.decode(await f.fs.read('skills/'+id+'/SKILL.md',1024*1024));}
+export function zip(entries:[string,string|Uint8Array][],deflate=true):Uint8Array{const local:Buffer[]=[],central:Buffer[]=[];let offset=0;for(const [name,raw] of entries){const value=typeof raw==='string'?Buffer.from(raw):Buffer.from(raw),bytes=deflate?deflateRawSync(value):value,n=Buffer.from(name),crc=skillCrc32(value),header=Buffer.alloc(30),c=Buffer.alloc(46);header.writeUInt32LE(0x04034b50,0);header.writeUInt16LE(20,4);header.writeUInt16LE(0x800,6);header.writeUInt16LE(deflate?8:0,8);header.writeUInt32LE(crc,14);header.writeUInt32LE(bytes.length,18);header.writeUInt32LE(value.length,22);header.writeUInt16LE(n.length,26);local.push(header,n,bytes);c.writeUInt32LE(0x02014b50,0);c.writeUInt16LE(20,4);c.writeUInt16LE(20,6);c.writeUInt16LE(0x800,8);c.writeUInt16LE(deflate?8:0,10);c.writeUInt32LE(crc,16);c.writeUInt32LE(bytes.length,20);c.writeUInt32LE(value.length,24);c.writeUInt16LE(n.length,28);c.writeUInt32LE(offset,42);central.push(c,n);offset+=header.length+n.length+bytes.length;}
+ const end=Buffer.alloc(22),directory=Buffer.concat(central);end.writeUInt32LE(0x06054b50,0);end.writeUInt16LE(entries.length,8);end.writeUInt16LE(entries.length,10);end.writeUInt32LE(directory.length,12);end.writeUInt32LE(offset,16);return Buffer.concat([...local,directory,end]);}
