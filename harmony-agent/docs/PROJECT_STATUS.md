@@ -4,6 +4,13 @@
 
 第三轮已结束：[完整执行报告](reports/2026-10-31-round3.md)。11 个可审查 PR，1 个阻塞草稿（#35）；最后 PR #36。
 
+## 0.9.34（R4-1：回复文字渐显兜底）
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| 新增 `core/eta/frameFallback.ts`：`start()` 后 100 ms 内没有收到 `postFrameCallback` 时，改用 `setTimeout` 每 16 ms 驱动一次 `tick`，秒数按两次调用的实际时间差计算；真实帧到达后立即停用兜底，`stop()` 或 `tick` 返回 `false` 时清掉定时器。`EtaFrameLoop.ets` 只负责把 `postFrameCallback` 和 `setTimeout` 接到这个类上 | `npm run check` 通过；`tests/eta/frameFallback.test.ts` 5 项通过；ArkTS / 资源 / 界面测试以 PR 的 Harmony CI 为准（本机 Windows 无 Linux 预览器） | **待测**：回复文字应逐渐出现，不再一直透明 |
+| 验收场景 `05-reply-visible` 从 `tests/ui/pending/` 移入 `tests/ui/` | 该场景在预览器中通过（CI 结果见 PR） | 检查点 B |
+
 ## 0.9.33（Claude：无头界面测试，修复顶栏和输入栏不显示）
 
 | 改动 | 自动验证 | 真机 |
