@@ -127,10 +127,13 @@ internal object AgentPromptBuilder {
                     "普通命令调用 terminal，只需 command；单次命令结束后进程会回收，不要用 & 起后台进程；持续 Shell 工作可 action=open 后用 session_id 复用，目录变化用会话内的 cd。" +
                     "希望回复后继续运行的命令使用 terminal_job：start 提交任务，完成时会通知用户；list/read 查看进度，确实依赖结果时再 wait，stop 终止。日志路径可用于分页读取完整输出。跨任务服务使用 terminal_daemon。" +
                     "后台服务仍可能退出、被系统回收或随设备重启结束，以实际状态为准。" +
-                    "environment=android 操作 Android；environment=linux 使用设置中选定的 Linux 发行版。" +
-                    "环境、身份和 cwd 是可选覆盖，不会在失败后自动切换。Linux 的 /workspace 对应哪个宿主目录以执行上下文为准；" +
-                    "共享目录位于 /workspace/mounts，访问用户共享文件时先确认实际挂载。" +
-                    "ready=true 仅表示基础 rootfs 已安装；curl、git、jq、rg、fd、sqlite3、wget、ps 等常用工具是否已装看 common_tools，python、node、ssh、kimi、apk_analysis 等可选组件看 profiles。" +
+                    "environment=android 操作 Android 宿主系统与设备（如 pm/cmd/am/dumpsys/settings/getprop/setprop/svc/appops/wm/input/logcat、查看 Android 进程，或在 Root 下检查 /data/data 应用私有目录），提供系统 Toybox（Root 下优先启用 Magisk/KernelSU/APatch 的 BusyBox ash），但没有 Linux 包管理器与完整开发运行时；" +
+                    "environment=linux 使用设置中选定的完整 Linux 发行版，凡涉及代码开发、git 拉取/提交/diff、编写或运行 Python/Node.js/复杂 Shell 脚本、curl/jq/rg/fd/sqlite3 数据处理、安装依赖包、编译构建、APK 逆向分析或启动开发服务，终端与文件工具均应显式传 environment=\"linux\"。" +
+                    "环境、身份和 cwd 是可选覆盖，不会在失败后自动切换。文件工具（read_file/write_file/edit_file/stat_file/list_directory/glob_files/grep_files）按所选 environment 解析路径：操作 /workspace、/workspace/mounts/<name>、/root 等 Linux 路径时必须传 environment=\"linux\"，操作 Android 宿主路径时传 environment=\"android\"（两边的 revision 按各自环境独立计算，不可混用）。" +
+                    "执行上下文中列出的 Linux 工作区、默认同路径目录和额外共享目录都是已配置的路径映射；只有挂载成功后才对应同一个物理文件夹。不要仅凭配置存在就认定本次一定已挂载或可读写，实际可见性和可用性以终端或文件工具的执行结果为准。" +
+                    "挂载成功后两边读写实时互通，禁止在两个环境之间重复复制或搬运同一份文件；对同一个文件夹操作时，按当前步骤所需能力切换 environment 并使用该环境对应的路径（例如在 linux 下用 git/python/node/apktool 处理该目录中的文件，需要调用 pm/am 等 Android 系统能力时直接切回 android 用对应宿主路径操作同一文件）。" +
+                    "若某个映射路径在实际执行中不可见或不可读写，应报告当前环境、路径和工具返回的实际错误，不要假设映射一定生效或擅自改用另一环境的路径重试。" +
+                    "ready=true 仅表示基础 rootfs 已安装；curl、git、jq、rg、fd、sqlite3、wget、ps 等常用工具是否已装看 common_tools，python、node、ssh、kimi、apk_analysis 等可选组件看 profiles；ready=false 时若任务依赖 Linux 开发环境，提示用户在设置中安装，不要退回 android 硬跑不存在的开发命令。" +
                     "分析 APK 使用 Linux 环境的 APK 分析工具；未安装时提示用户在设置中安装，当前 apktool 不支持回编译。" +
                     "读取图片内容调用 read_image；同一轮最多读取一张，观察返回内容后再读下一张。" +
                     executionContext?.let { "\n" + it.description(rootAvailable) }.orEmpty(),

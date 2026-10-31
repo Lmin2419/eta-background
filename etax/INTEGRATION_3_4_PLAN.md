@@ -1,0 +1,86 @@
+# Eta 后台版与上游 Eta 3.4.0 分阶段整合计划
+
+> 状态：开发中，未发布。本文记录整合目标和进度，不把后续计划写成已经完成的功能。
+> 本轮只完成第 1 轮基础整合；3.4.0 整体升级尚未完成。
+
+## 基线
+
+| 项目 | 基线 |
+| --- | --- |
+| 本仓库 `main` | `37c866725346b186b69230f92bb67cd2a934bbc9` |
+| 当前安装包对应源码 | `4637961bc55fe546da17fda33f2dc274fdc65e20` |
+| 当前安装包版本 | `versionCode 2026103003` / `versionName 3.3.5` / `io.github.mangi.etax` |
+| 当前引擎 | `20261030-e40-takeover` |
+| 上游仓库 | <https://github.com/Mangi-11/Eta> |
+| 上游参考版本 | `v3.4.0` / `e90922a4490389f524a10c6acebbcca336883935` |
+| 本轮分支 | `etax-340-step1-foundation` |
+
+开始本轮时，远端 `main` 与给定基线 `37c866725346b186b69230f92bb67cd2a934bbc9` 一致，没有发现需要额外保留的新提交。若之后远端 `main` 继续前进，以新提交为准另行核对，不对远端做强制重置。
+
+## 五轮目标与状态
+
+| 轮次 | 目标 | 状态 |
+| --- | --- | --- |
+| 1 | 建立集成分支与基线，合入独立的 Android/Linux 双环境说明及共享目录映射提示 | 本轮已实施，待代码验收 |
+| 2 | 统一执行引擎与任务模型：保留一个 VDrive 引擎，最多两个后台任务，同一 App 串行，额外任务排队 | 未开始 |
+| 3 | 将上游统一操作工具接入每个任务独立的屏幕上下文，保持现有前后台路由和权限边界 | 未开始 |
+| 4 | 保留流体云、每任务通知和通知内继续指令，完善三个完成入口、按需画面预览、确认暂停后的手动接管、恢复前重新观察、“等待你”和“部分完成”状态 | 未开始 |
+| 5 | 完成系统 Hook、应用交还和通知兼容收尾；息屏执行另行实验；执行完整 3.4.0 回归与发布验收 | 未开始 |
+
+第 1 轮只改变执行上下文说明、系统提示、工具说明、coder 角色说明和对应测试，不包含上述第 2 至第 5 轮的运行时功能。
+
+## 第 1 轮实际合入的上游提交
+
+| 上游提交 | 主题 | 本轮处理 |
+| --- | --- | --- |
+| `2bc0f2103ac2ea8a5106626d1e41f54111fe7f96` | Android/Linux 双环境分工及共享目录映射提示 | 按语义合入，保留后台版提示与权限边界；补充“配置映射不等于已验证挂载成功”的说明 |
+
+该提交涉及：
+
+- `app/src/main/kotlin/io/github/mangi/eta/agent/terminal/TerminalExecutionContext.kt`
+- `app/src/main/kotlin/io/github/mangi/eta/agent/tool/AgentLocalTools.kt`
+- `app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentPromptBuilder.kt`
+- `app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentTerminalToolCatalog.kt`
+- `app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentFileToolCatalog.kt`
+- `app/src/main/kotlin/io/github/mangi/eta/agent/subagent/SubagentProfile.kt`
+- `app/src/test/kotlin/io/github/mangi/eta/agent/model/AgentPromptBuilderTest.kt`
+- `app/src/test/kotlin/io/github/mangi/eta/agent/terminal/TerminalExecutionContextTest.kt`
+
+本轮没有整文件覆盖后台版文件。实现语义为：
+
+- `TerminalExecutionContext` 展示 Linux 工作区、默认同路径目录和额外共享目录的两端路径映射。
+- 系统提示、终端工具说明、文件工具说明和 coder 角色统一区分 Android 系统/设备操作与 Linux 开发环境。
+- 保留现有 Root 检查、权限检查、失败处理和前后台选择规则。
+- 保留后台能力介绍、应用状态保护、内置搜索修复及其他后台版定制提示。
+- 只增加上下文说明，不增加复制、移动或挂载文件的实际操作。
+- 明确区分“已配置映射”和“已验证挂载成功”：配置存在不证明本次挂载成功，实际可见性、读写能力以终端或文件工具的执行结果为准。
+
+## 保留的后台版能力
+
+本轮不改变以下现有设计和行为：
+
+- 单个 VDrive 引擎及现有部署、认证、版本配对协议。
+- 最多两个后台执行任务；同一 App 串行，额外任务排队。
+- 每任务独立屏幕上下文、节点观察、截图和输入校验。
+- 流体云/系统实时通知、每任务通知和通知内继续指令。
+- 完成卡片的“打开 ETA 会话”“打开 App”“继续指令”三个入口。
+- 前后台选择规则、应用状态保护、内置搜索修复和现有定制提示。
+- 息屏暂停策略；息屏执行仍未启用。
+- 包名、签名、`versionCode`、`versionName`、VDrive 引擎和系统 Hook。
+- `HARMONY.md`、`harmony-agent` 及仓库现有其他内容。
+
+## 后续风险与未决事项
+
+- 坐标与观察协议转换：前台 `observation_id/normalized` 与后台 `frame_id/display/screenshot` 的语义不同，后续接入时必须保持分离。
+- 双任务隔离：需要确认两个任务的屏幕、观察结果、输入状态和清理生命周期不会互相串用。
+- 按需预览不能干扰观察：预览不得改变当前观察帧、坐标基准或任务输入状态。
+- 接管确认：用户确认暂停后，手动接管必须有明确的窗口就绪和旧屏释放确认。
+- 恢复前重新观察：暂停/接管/息屏后恢复时必须重新取得屏幕并观察，不能重放旧输入。
+- 应用交还：窗口就绪检查只能证明窗口状态，不能证明第三方应用内容已完成加载。
+- 系统 Hook 兼容：PowerHooks、AssistantManager 等系统 Hook 的兼容性需要单独验证，不能以本轮提示词改动推断已兼容 3.4.0。
+- 息屏执行仍未启用：本轮继续执行息屏暂停，后续才进行独立实验。
+- 长按电源键触发软重启：目前只有用户报告，完整 `system_server` 崩溃栈尚未提供；本轮未定位、未修复，不能将本轮合并宣传为该问题的修复。
+
+## 验收边界
+
+本轮的自动化验证覆盖上下文描述、提示词一致性、工具说明和 coder 角色说明，不能替代真实设备上的 Android/Linux 挂载成功验证、ColorOS 通知行为、双任务隔离或系统 Hook 兼容性验证。所有测试结论以交付分支的实际构建版本为准。

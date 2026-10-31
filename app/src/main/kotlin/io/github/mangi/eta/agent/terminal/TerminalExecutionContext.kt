@@ -8,6 +8,7 @@ internal data class TerminalExecutionContext(
     val linuxEnvironment: TerminalEnvironment,
     val linuxRootfsPath: String?,
     val userWorkspacePath: String = TerminalRuntime.userWorkspacePath,
+    val sharedMounts: List<SharedFolderMount> = emptyList(),
 ) {
     init {
         require(linuxEnvironment.isLinux)
@@ -69,9 +70,33 @@ internal data class TerminalExecutionContext(
         append(linuxInstalledProfiles.ifEmpty { listOf("none") }.joinToString("/"))
         append("。Linux 工作区 ")
         append(JSONObject.quote(linuxWorkspacePath))
-        append(" 映射宿主目录 ")
+        append(" 配置映射到宿主目录 ")
         append(JSONObject.quote(linuxHostWorkspacePath))
-        append("；只有宿主目录相同时才与默认 Android 工作区共享文件。Linux 路径按 Linux 环境解释。")
+        append("（bind mount 配置；挂载成功后才对应同一物理文件夹，实际是否可用以本次挂载和命令执行结果为准）；")
+        if (linuxHostWorkspacePath == androidWorkspacePath) {
+            append("与默认 Android 工作区配置为同一目录，挂载成功后两边修改直接互通。")
+        } else {
+            append("与默认 Android 工作区不同目录，挂载成功后 Android 侧可通过 ")
+            append(JSONObject.quote(linuxHostWorkspacePath))
+            append(" 访问同一文件夹。")
+        }
+        if (sharedMounts.isEmpty()) {
+            append("当前未配置额外共享目录（/workspace/mounts 仅在配置并成功挂载后可见）；")
+        } else {
+            append("已配置的额外共享目录（Linux 挂载点 <-> Android 源目录；这是配置映射，挂载成功时底层为同一物理文件夹，但不是本次挂载已验证成功的证明；实际可用性以终端或文件操作结果为准）：")
+            append(
+                sharedMounts.joinToString("，") { mount ->
+                    "${JSONObject.quote("${SharedFolderMounts.LINUX_MOUNTS_ROOT}/${mount.name}")} <-> ${JSONObject.quote(mount.sourcePath)}"
+                },
+            )
+            append("；")
+        }
+        if (linuxBackend == LinuxExecutionBackend.CHROOT) {
+            append("chroot 配置将宿主 \"/storage/emulated/0\"（及符号链接 \"/sdcard\"）与 \"/data/local/tmp\" 默认挂载至 Linux 同路径，实际可见性以本次挂载结果为准。")
+        } else {
+            append("PRoot 在已授予所有文件访问权限且源目录可读时，会配置将宿主 \"/storage/emulated/0\" 默认挂载至 Linux 同路径；实际可见性以本次挂载结果为准。")
+        }
+        append("Linux 路径按 Linux 环境解释。")
     }
 
     private companion object {

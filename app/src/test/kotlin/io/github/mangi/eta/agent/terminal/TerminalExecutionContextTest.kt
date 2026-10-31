@@ -89,4 +89,46 @@ class TerminalExecutionContextTest {
                 .contains("ready=true，common_tools=true，profiles=python/apk_analysis"),
         )
     }
+
+    @Test fun descriptionDistinguishesConfiguredMappingsFromVerifiedMounts() {
+        val rootfs = File(temporary.root, "terminal-user/proot/debian/rootfs").apply { mkdirs() }
+        File(rootfs, LinuxEnvironmentPaths.READY_MARKER).writeText("ready")
+        val context = TerminalExecutionContext(
+            linuxEnvironment = TerminalEnvironment.DEBIAN,
+            linuxRootfsPath = rootfs.path.replace('\\', '/'),
+            userWorkspacePath = "/eta/workspace",
+        )
+
+        val withoutExtraMounts = context.description(rootAvailable = false)
+        assertTrue(withoutExtraMounts.contains("当前未配置额外共享目录"))
+        assertTrue(withoutExtraMounts.contains("/workspace/mounts 仅在配置并成功挂载后可见"))
+        assertTrue(withoutExtraMounts.contains("实际是否可用以本次挂载和命令执行结果为准"))
+        assertTrue(withoutExtraMounts.contains("PRoot 在已授予所有文件访问权限且源目录可读时"))
+        assertFalse(withoutExtraMounts.contains("已配置的额外共享目录"))
+
+        val withExtraMounts = context.copy(
+            sharedMounts = listOf(
+                SharedFolderMount(name = "Download", sourcePath = "/sdcard/Download"),
+                SharedFolderMount(name = "repos", sourcePath = "/sdcard/Projects"),
+            ),
+        ).description(rootAvailable = false)
+        assertTrue(withExtraMounts.contains("\"/workspace/mounts/Download\" <-> \"/sdcard/Download\""))
+        assertTrue(withExtraMounts.contains("\"/workspace/mounts/repos\" <-> \"/sdcard/Projects\""))
+        assertTrue(withExtraMounts.contains("这是配置映射"))
+        assertTrue(withExtraMounts.contains("不是本次挂载已验证成功的证明"))
+        assertTrue(withExtraMounts.contains("实际可用性以终端或文件操作结果为准"))
+        assertTrue(withExtraMounts.contains("同一物理文件夹"))
+    }
+
+    @Test fun chrootDescriptionMentionsDefaultSamePathMountsWithoutClaimingSuccess() {
+        val context = TerminalExecutionContext(
+            linuxEnvironment = TerminalEnvironment.ALPINE,
+            linuxRootfsPath = File(temporary.root, "terminal/alpine/rootfs").path,
+            userWorkspacePath = File(temporary.root, "terminal-user/workspace").path,
+        )
+        val description = context.description(rootAvailable = false)
+        assertTrue(description.contains("chroot 配置将宿主 \"/storage/emulated/0\""))
+        assertTrue(description.contains("\"/data/local/tmp\""))
+        assertTrue(description.contains("实际可见性以本次挂载结果为准"))
+    }
 }

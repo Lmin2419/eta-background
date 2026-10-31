@@ -2,6 +2,7 @@ package io.github.mangi.eta.agent.model
 
 import io.github.mangi.eta.agent.terminal.TerminalEnvironment
 import io.github.mangi.eta.agent.terminal.TerminalExecutionContext
+import io.github.mangi.eta.agent.subagent.SubagentProfile
 import io.github.mangi.eta.agent.memory.AgentMemoryContext
 import io.github.mangi.eta.agent.skill.SkillContext
 import io.github.mangi.eta.agent.skill.SkillIndexEntry
@@ -75,8 +76,58 @@ class AgentPromptBuilderTest {
         assertTrue(terminal.contains("profiles"))
         assertTrue(terminal.contains("terminal_job"))
         assertTrue(terminal.contains("terminal_daemon"))
+        assertTrue(terminal.contains("environment=\"linux\""))
+        assertTrue(terminal.contains("同一个物理文件夹"))
+        assertTrue(terminal.contains("禁止在两个环境之间重复复制"))
+        assertTrue(terminal.contains("实际可见性和可用性以终端或文件工具的执行结果为准"))
+        assertFalse(terminal.contains("底层均为 bind mount 的同一个物理文件夹"))
+        assertTrue(messages.systemContents().any { it.contains("后台最多同时操作 2 个不同应用") })
+        assertTrue(messages.systemContents().any { it.contains("息屏会暂停") })
+        assertTrue(messages.systemContents().any { it.contains("只有用户明确要求后台执行") })
         assertFalse(terminal.contains("async=true"))
         assertFalse(terminal.contains("read_async_result"))
+    }
+
+    @Test
+    fun androidLinuxGuidanceIsConsistentAcrossPromptToolSchemasAndCoderProfile() {
+        val messages = AgentPromptBuilder.buildSystemMessages(
+            config = modelConfig("", terminalTools = true, browserTools = false),
+            skillContext = SkillContext.EMPTY,
+            memoryContext = AgentMemoryContext.DISABLED,
+            rootAvailable = true,
+            executionContext = TerminalExecutionContext(TerminalEnvironment.DEBIAN, null, "/eta/workspace"),
+        )
+        val terminalPrompt = messages.systemContents().single { it.contains("Eta 内置文件与终端工具") }
+        assertTrue(terminalPrompt.contains("environment=android 操作 Android 宿主系统与设备"))
+        assertTrue(terminalPrompt.contains("environment=linux 使用设置中选定的完整 Linux 发行版"))
+        assertTrue(terminalPrompt.contains("凡涉及代码开发、git 拉取/提交/diff"))
+        assertTrue(terminalPrompt.contains("APK 逆向分析"))
+        assertTrue(terminalPrompt.contains("两边的 revision 按各自环境独立计算"))
+
+        fun environmentDescriptions(tools: JSONArray): List<String> =
+            (0 until tools.length()).map { index ->
+                tools.getJSONObject(index)
+                    .getJSONObject("function")
+                    .getJSONObject("parameters")
+                    .getJSONObject("properties")
+                    .getJSONObject("environment")
+                    .getString("description")
+            }
+        val descriptions = environmentDescriptions(JSONArray().also(AgentTerminalToolCatalog::appendTo)) +
+            environmentDescriptions(JSONArray().also(AgentFileToolCatalog::appendTo))
+        assertEquals(10, descriptions.size)
+        descriptions.forEach { description ->
+            assertTrue(description.contains("android"))
+            assertTrue(description.contains("linux"))
+            assertTrue(description.contains("配置映射"))
+            assertTrue(description.contains("结果为准"))
+        }
+
+        val coder = SubagentProfile.CODER.roleInstruction
+        assertTrue(coder.contains("environment=\"linux\""))
+        assertTrue(coder.contains("environment=\"android\""))
+        assertTrue(coder.contains("配置映射"))
+        assertTrue(coder.contains("工具结果为准"))
     }
 
     @Test

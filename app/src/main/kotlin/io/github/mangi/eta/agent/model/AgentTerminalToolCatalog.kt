@@ -61,7 +61,7 @@ internal object AgentTerminalToolCatalog {
     }
 
     private fun executionProperties(): JSONObject = JSONObject()
-        .put("environment", text("android 使用 Android 命令环境；linux 使用本次运行选定的 Linux 环境。默认 android。")
+        .put("environment", text("执行环境（默认 android）：操作 Android 系统/应用/设备状态用 android；Git、写代码、运行 Python/Node 脚本、jq/rg/curl、包管理与 APK 分析请显式传 linux。工作区与共享目录是配置映射，实际可见性以命令执行结果为准；按命令性质选择环境并使用对应路径。")
             .put("enum", JSONArray(listOf("android", "linux"))))
         .put("identity", text("可选的宿主执行身份；Android 已确认 Root 授权时默认 root，否则 user。已授权时无需先尝试 user 或重复检测；显式 user 使用 Eta App UID。Linux 内模拟 root 不提供 Android 特权。")
             .put("enum", JSONArray(listOf("user", "root"))))

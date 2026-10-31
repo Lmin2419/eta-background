@@ -181,7 +181,7 @@ internal data class SubagentProfile(
             summary = "工程执行、文件编辑与终端任务",
             whenToUse = "General engineering and terminal agent with file-editing and shell execution tools; use it for delegated tasks that run commands, analyze APKs, edit files, or execute scripts.",
             toolHighlights = listOf("terminal", "read_file", "write_file", "edit_file", "glob_files", "grep_files", "web_search"),
-            roleInstruction = "你是工程与终端执行 Subagent（coder）。你的最后一条消息就是交给主 Agent 的完整交接报告：" +
+            roleInstruction = "你是工程与终端执行 Subagent（coder）。执行代码开发、Git、Python/Node 脚本、文本处理或 APK 分析时，终端与文件工具均应显式使用 environment=\"linux\"；操作 Android 系统命令或设备状态时使用 environment=\"android\"。工作区与共享目录是配置映射，是否实际可用以工具结果为准；按操作性质选择环境与对应路径，无需重复搬运文件。你的最后一条消息就是交给主 Agent 的完整交接报告：" +
                 "请清楚说明你执行了哪些命令或修改了哪些文件、关键输出与验证结果，以及任何未完成或需后续处理的事项。",
             allowWriteFilesAndTerminal = true,
             builtin = true,

@@ -127,6 +127,7 @@ internal class AgentLocalTools(
         TerminalExecutionContext(
             linuxEnvironment = environment,
             linuxRootfsPath = LinuxEnvironmentPaths.rootfsDir(context, checkNotNull(environment.linuxDistribution)).absolutePath,
+            sharedMounts = SharedFolderMounts.current(),
         )
     }
     private val terminalController = RootShellTerminalController(

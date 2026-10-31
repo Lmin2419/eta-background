@@ -47,7 +47,7 @@ internal object AgentFileToolCatalog {
 
     private fun properties(): JSONObject = JSONObject()
         .put("environment", JSONObject().put("type", "string").put("enum", JSONArray(listOf("android", "linux")))
-            .put("description", "文件路径所属环境，默认 android；linux 使用设置中选定的发行版和后端，不能使用宿主 rootfs 路径代替 guest 路径。"))
+            .put("description", "文件路径所属环境（默认 android）：读写或搜索 Linux 环境内的路径（如 /workspace、/workspace/mounts/<name>、/root）时必须显式传 linux；使用 Android 宿主路径时传 android。共享目录是配置映射，实际可访问性以文件操作结果为准。不能使用宿主 rootfs 路径代替 guest 路径。"))
         .put("identity", JSONObject().put("type", "string").put("enum", JSONArray(listOf("user", "root")))
             .put("description", "可选的宿主执行身份；Android 已确认 Root 授权时默认 root，否则 user，与终端一致。Linux 按所选后端解析，PRoot 使用 user，chroot 使用 root。"))
         .put("cwd", text("可选的工作目录；省略时与终端共用当前环境的默认工作区，实际路径见本次执行上下文。", 4096))
