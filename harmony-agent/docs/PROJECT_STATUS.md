@@ -1,6 +1,10 @@
 # 鸿蒙助手当前进度
 
-第二轮报告保存在 [2026-10-31 报告](reports/2026-10-31-report.md)。第三轮从 `harmony/round3-plan` 开始，当前 **0.9.21 / 90021 / harmony/p1a-responses**。用户已选 E07b 方案 A；正式入口仍用 0.9 存储，E07b3 必须等真机检查点 ①–④。
+第二轮报告保存在 [2026-10-31 报告](reports/2026-10-31-report.md)。第三轮从 `harmony/round3-plan` 开始，当前 **0.9.22 / 90022 / harmony/p1b-chat-completions**。用户已选 E07b 方案 A；正式入口仍用 0.9 存储，E07b3 必须等真机检查点 ①–④。
+
+## 0.9.22（P1b：Chat Completions）
+
+正式请求路径改为 Eta 请求/SSE/系统消息投影/工具 ID 配对逻辑，保留 M0 持久化与停止规则。30 项原测试 + 5 集成回归，全量 698 通过；ArkTS 0 error、1,935 资源通过。无新权限或鸿蒙接口，未生成 HAP，真机待测；非流式/JSON 兼容等差异见 [P1b 交付记录](P1B_CHAT_COMPLETIONS_PORT.md)。下一项 E05b。
 
 ## 0.9.21（P1a：Responses 与公共协议部件）
 

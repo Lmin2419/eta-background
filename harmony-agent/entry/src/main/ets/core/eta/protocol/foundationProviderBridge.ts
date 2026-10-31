@@ -4,6 +4,8 @@
 import type { HttpTransport, ModelSettings } from '../../model';
 import { Message, ModelReply, RunControl, ToolCall } from '../../types';
 import { ProviderModelConfig, JsonObject, ProviderUsage, string, ReasoningEffort } from './providerTypes';
+import { completeOpenAiChatCompletions } from './openAiChatCompletionsProvider';
+import { compatibleChatTransport } from './chatTransportCompatibility';
 import { completeOpenAiResponses } from './openAiResponsesProvider';
 import { attachOutputItems, outputItems } from './responsesRequestBuilder';
 import { parseEffort } from '../storage/conversationCodec';
@@ -12,18 +14,21 @@ export function etaModelConfig(settings: ModelSettings, baseUrl: string): Provid
     providerId: settings.providerId, providerSourceType: settings.providerSourceType, openAiEndpointMode: settings.protocol === 'responses' ? 'responses' : 'chat_completions',
     thinkingEnabled: settings.thinkingEnabled, reasoningEffort: settings.reasoningEffort ? parseEffort(settings.reasoningEffort) as ReasoningEffort : null,
     reasoningCapabilities: settings.reasoningCapabilities, customHeaders: Object.entries(settings.extraHeaders || {}).map(([name, value]) => ({ name, value })),
-    extraBodyJson: settings.maxOutputTokens ? JSON.stringify({ max_output_tokens: settings.maxOutputTokens }) : '' };
+    extraBodyJson: settings.maxOutputTokens ? JSON.stringify({ [settings.protocol === 'responses' ? 'max_output_tokens' : 'max_tokens']: settings.maxOutputTokens }) : '' };
 }
 export function etaRequestMessages(messages: Message[]): JsonObject[] {
   return messages.map(m => { const row: JsonObject = { role: m.role, content: m.content, ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}), ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}) };
     if (m.providerProtocol === 'responses' && m.providerParts) attachOutputItems(row, m.providerParts); return row; });
 }
-export async function completeFoundationResponses(settings: ModelSettings, baseUrl: string, transport: HttpTransport, tools: JsonObject[], messages: Message[], control: RunControl, onText?: (text: string) => void, onReasoning?: (text: string) => void): Promise<ModelReply> {
-  if (!transport.stream) throw Error('Responses 需要流式网络传输');
+export async function completeFoundationProvider(settings: ModelSettings, baseUrl: string, transport: HttpTransport, tools: JsonObject[], messages: Message[], control: RunControl, onText?: (text: string) => void, onReasoning?: (text: string) => void): Promise<ModelReply> {
+  const responses = settings.protocol === 'responses';
+  if (responses && !transport.stream) throw Error('Responses 需要流式网络传输');
   const text = new Map<number, string>(), reasoning = new Map<number, string>(); let usage: ProviderUsage | undefined;
   let lastText = '', lastReasoning = '';
   const publish = (kind: string): void => { if (kind === 'TEXT') { const next = [...text.values()].join(''); if (next !== lastText) { lastText = next; onText?.(next); } } else if (kind === 'THINKING') { const next = [...reasoning.values()].join(''); if (next !== lastReasoning) { lastReasoning = next; onReasoning?.(next); } } };
-  const result = await completeOpenAiResponses({ config: etaModelConfig(settings, baseUrl), messages: etaRequestMessages(messages), tools, sessionId: settings.sessionId || '' }, control, { stream: (...args) => transport.stream!(...args) }, event => {
+  const complete = responses ? completeOpenAiResponses : completeOpenAiChatCompletions;
+  const wire = responses ? { stream: (...args: Parameters<NonNullable<HttpTransport['stream']>>) => transport.stream!(...args) } : compatibleChatTransport(transport, settings.streaming, control);
+  const result = await complete({ config: etaModelConfig(settings, baseUrl), messages: etaRequestMessages(messages), tools, sessionId: settings.sessionId || '' }, control, wire, event => {
     control.check();
     if (event.type === 'Usage') usage = event.usage;
     if (event.type === 'BlockDelta' || event.type === 'BlockEnd') {
@@ -39,3 +44,5 @@ export async function completeFoundationResponses(settings: ModelSettings, baseU
     ...(usage ? { usage: { input, output, total: usage.contextTokens ?? input + output } } : {}) };
 }
 export function implementedProtocol(protocol?: string): boolean { return !protocol || protocol === 'chat_completions' || protocol === 'responses'; }
+
+export const completeFoundationResponses = completeFoundationProvider;

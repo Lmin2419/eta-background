@@ -15,14 +15,15 @@ export class NodeProviderTransport implements ProviderStreamingTransport {
     finally { await reader.cancel(); reader.releaseLock(); }
   }
 }
-export async function withSseServer(body: string, block: (baseUrl: string, received: () => string) => Promise<void>, writeBody?: (response: ServerResponse) => Promise<void>): Promise<void> {
+export async function withSseServer(body: string | ((body: JsonObject) => string), block: (baseUrl: string, received: () => string) => Promise<void>, writeBody?: (response: ServerResponse) => Promise<void>, path = '/responses'): Promise<void> {
   let received = ''; const failures: unknown[] = [];
   const server = createServer(async (request, response) => {
     try {
+      received = '';
       for await (const chunk of request) received += String(chunk);
-      if (request.url !== '/responses') { response.writeHead(404); response.end(); return; }
+      if (request.url !== path) { response.writeHead(404); response.end(); return; }
       response.writeHead(200, { 'Content-Type': 'text/event-stream' });
-      if (writeBody) await writeBody(response); else response.write(body); response.end();
+      if (writeBody) await writeBody(response); else response.write(typeof body === 'string' ? body : body(JSON.parse(received) as JsonObject)); response.end();
     } catch (e) { failures.push(e); response.destroy(); }
   });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
