@@ -1,10 +1,10 @@
 {
   "name": "harmony-agent-core",
-  "version": "0.9.33",
+  "version": "0.9.36",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "tsx --test tests/*.test.ts tests/eta/*.test.ts",
+    "test": "tsx --test tests/*.test.ts tests/eta/*.test.ts tests/eta/device/*.test.ts",
     "test:native": "bash scripts/test-native.sh",
     "check": "tsc --noEmit",
     "check:ets": "node scripts/check-ets.cjs",
