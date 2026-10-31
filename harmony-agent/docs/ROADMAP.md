@@ -21,7 +21,8 @@
 | E03（0.9.12 / PR #17） | 新壳层完成、四项检查通过 | 合入 #16 追加；Index 已切 Navigation/NavDestination，所有宽度推移；448 测试、ArkTS 0 error、1,852 资源；原测试 2 完整 / 3 平台待测；[交付记录](E03_NAVIGATION_PORT.md) |
 | E04a（0.9.13） | 首页与输入栏完成、四项检查通过 | `harmony/e04a-home-input` 基于 E03；464 测试、12 原测试完整 / 2 平台定位待测、0 ArkTS error、1,855 资源；[交付记录](E04A_HOME_INPUT_PORT.md) |
 | E04b（0.9.14） | 消息与 Markdown 接入、四项检查通过 | `harmony/e04b-chat-rendering` 基于 E04a；473 测试、0 ArkTS error、1,861 资源；复用 L2/L3 原测试，新增 9 集成测试；[交付记录](E04B_CHAT_RENDERING_PORT.md) |
-| M1 其余（E04c–E09） | 夜间队列已排好 | 见第二节“本轮队列” |
+| E04c（0.9.15） | 排队与消息操作接入、四项检查通过 | `harmony/e04c-chat-actions` 基于 E04b；491 测试、5 原测试 / 0 跳过、13 集成测试、0 ArkTS error、1,863 资源；[交付记录](E04C_CHAT_ACTIONS_PORT.md) |
+| M1 其余（E07、E05、E06、E08–E09） | 夜间队列已排好 | 见第二节“本轮队列” |
 | M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |
 

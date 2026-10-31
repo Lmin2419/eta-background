@@ -69,6 +69,14 @@
       "value": "#FFFFB200"
     },
     {
+      "name": "eta_queue_divider",
+      "value": "#40D9D9D9"
+    },
+    {
+      "name": "eta_queue_outline",
+      "value": "#8CD9D9D9"
+    },
+    {
       "name": "eta_settings_background",
       "value": "#FFF0F1F2"
     },

@@ -124,6 +124,10 @@
       "sha256": "8331efd444aaa62eea4c6cadf08db82fd9d5e8f2417d9cafd7f31de951a091be"
     },
     {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatQueueStrip.kt",
+      "sha256": "61fbf66a47c36e4ed4608eb664377286e6fb1cc3fd89c661362e7a814d6689f0"
+    },
+    {
       "path": "scripts/eta-upstream/miuix-0.9.4/ArrowRight.kt",
       "sha256": "92e10aec73f6f93de2195c45af457c4f4c9684c7d4f994a1aa82e44d86f012dd"
     },
@@ -197,8 +201,8 @@
     }
   ],
   "miuixColorRoles": 53,
-  "lightColorCount": 83,
-  "darkColorCount": 83,
+  "lightColorCount": 85,
+  "darkColorCount": 85,
   "tokens": {
     "EtaPreferenceDefaults": {
       "SidePadding": 16,
@@ -251,6 +255,14 @@
     "EtaContextDefaults": {
       "ErrorThreshold": 0.95,
       "WarningThreshold": 0.8
+    },
+    "EtaQueueDefaults": {
+      "QueueContainerCornerRadius": 16.0,
+      "QueueActionSize": 28.0,
+      "QueueExpandedMaxHeight": 148.0,
+      "ChevronExpandedDegrees": 180.0,
+      "ExpandDurationMs": 180,
+      "StreamUiUpdateMs": 80
     },
     "EtaPaneDefaults": {
       "PaneMaxWidth": 340.0,
@@ -369,6 +381,7 @@
       "Dp88": 88.0,
       "Dp100": 100.0,
       "Dp136": 136.0,
+      "Dp148": 148.0,
       "Dp248": 248.0,
       "Dp250": 250.0,
       "Dp260": 260.0,

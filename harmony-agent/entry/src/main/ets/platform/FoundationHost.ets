@@ -1,6 +1,6 @@
 import { bundleManager, common, Want } from '@kit.AbilityKit';
 import { util } from '@kit.ArkTS';
-import { deviceInfo } from '@kit.BasicServicesKit';
+import { deviceInfo, systemDateTime } from '@kit.BasicServicesKit';
 import { display } from '@kit.ArkUI';
 import { ConversationRepository } from '../core/conversations';
 import { DraftRepository } from '../core/drafts';
@@ -38,6 +38,7 @@ export class FoundationHost {
     this.ledger = new TaskLedger(new DatabaseDocumentStorage(db, 'tasks'), uuid);
     const dependencies: FoundationDependencies = {
       chats, profiles, drafts, uuid, diagnostics,
+      elapsed: ():number => systemDateTime.getUptime(systemDateTime.TimeType.STARTUP),
       transport: (): HttpTransport => new DiagnosticTransport(new HarmonyHttpTransport(), diagnostics),
       load: (): Promise<void> => this.load(chats, profiles, drafts),
       environment: (): Promise<DiagnosticEnvironment> => this.environment()

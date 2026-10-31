@@ -61,6 +61,16 @@ export class EtaContextDefaults {
   static readonly WarningThreshold: number = 0.8;
 }
 
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatQueueStrip.kt; ui/app/AgentRunStore.kt @ 3b1794d
+export class EtaQueueDefaults {
+  static readonly QueueContainerCornerRadius: number = 16.0;
+  static readonly QueueActionSize: number = 28.0;
+  static readonly QueueExpandedMaxHeight: number = 148.0;
+  static readonly ChevronExpandedDegrees: number = 180.0;
+  static readonly ExpandDurationMs: number = 180;
+  static readonly StreamUiUpdateMs: number = 80;
+}
+
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationSidePaneScaffold.kt @ 3b1794d
 export class EtaPaneDefaults {
   static readonly PaneMaxWidth: number = 340.0;
@@ -193,6 +203,7 @@ export class EtaComponentSizes {
   static readonly Dp88: number = 88.0;
   static readonly Dp100: number = 100.0;
   static readonly Dp136: number = 136.0;
+  static readonly Dp148: number = 148.0;
   static readonly Dp248: number = 248.0;
   static readonly Dp250: number = 250.0;
   static readonly Dp260: number = 260.0;
