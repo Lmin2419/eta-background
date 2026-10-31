@@ -117,7 +117,7 @@ export struct AgentChatBody {
     List({scroller:this.scroller}){
       if(this.earlier){ListItem(){Button($r('app.string.conversation_retry_earlier_messages')).height(S.Dp48).width('100%').backgroundColor($r('app.color.eta_transparent')).fontColor($r('app.color.miuix_on_surface_variant_summary')).enabled(!this.chat.active).onClick(()=>this.paging?.requestEarlier(this.viewport()))}}
       LazyForEach(this.source,(item:TimelineItem)=>{ListItem(){TimelineEntryView({item,activeWork:this.activeWork,actionsEnabled:!this.chat.active&&!this.chat.messageEdit,controller:this.controller,store:this.store}).onAreaChange(()=>{if(this.anchored)this.frames?.start();})}},(item:TimelineItem)=>item.data.key)
-      ListItem(){Blank().width('100%').height(S.Dp1)}
+      ListItem(){Row(){}.width('100%').height(S.Dp1)}
     }.width('100%').height('100%').padding({top:S.Dp16,bottom:S.Dp16}).scrollBar(BarState.Auto)
       .onAreaChange((_old,area)=>{this.viewportHeight=Number(area.height);if(this.anchored)this.frames?.start();})
       .onScrollIndex((start:number,end:number)=>{this.firstIndex=start;this.lastIndex=end;this.paging?.maybeLoad(this.viewport());})
