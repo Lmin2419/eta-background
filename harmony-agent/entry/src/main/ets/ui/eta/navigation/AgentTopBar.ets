@@ -48,7 +48,7 @@ export struct AgentTopBar {
   }
   @Builder private bar() {
     AdaptiveTopAppBar({ title: this.diagnostics ? $r('app.string.background_diagnostics_title') : etaRouteTitle(this.route),
-      wide: this.isWide, compact: this.route === AppRouteName.Home && !this.diagnostics, navigationIcon: this.navigationIcon, actions: this.actions })
+      wide: this.isWide, compact: this.route === AppRouteName.Home && !this.diagnostics, navigationIcon: () => { this.navigationIcon(); }, actions: () => { this.actions(); } })
   }
-  build() { TopBarBackdrop({ content: this.bar }) }
+  build() { TopBarBackdrop({ content: () => { this.bar(); } }) }
 }

@@ -37,7 +37,7 @@ struct EtaGallery {
   }
   private openWindow(): void {
     this.windowDialog = new CustomDialogController({
-      builder: EtaWindowDialog({ title: $r('app.string.appearance_title'), content: this.dialogActions }),
+      builder: EtaWindowDialog({ title: $r('app.string.appearance_title'), content: () => { this.dialogActions(); } }),
       customStyle: true, alignment: this.alignment(), maskColor: $r('app.color.miuix_window_dimming'),
       onDidDisappear: () => { this.windowDialog = undefined; }
     });
@@ -45,7 +45,7 @@ struct EtaGallery {
   }
   private openOverlay(): void {
     this.overlayDialog = new CustomDialogController({
-      builder: EtaOverlayDialog({ title: $r('app.string.appearance_title'), summary: $r('app.string.appearance_blur_summary'), content: this.overlayActions }),
+      builder: EtaOverlayDialog({ title: $r('app.string.appearance_title'), summary: $r('app.string.appearance_blur_summary'), content: () => { this.overlayActions(); } }),
       customStyle: true, alignment: this.alignment(), showInSubWindow: false,
       maskColor: $r('app.color.miuix_window_dimming'), onDidDisappear: () => { this.overlayDialog = undefined; }
     });
@@ -74,9 +74,9 @@ struct EtaGallery {
     Text($r('app.string.appearance_blur_summary')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary'))
   }
   @Builder private preferenceRows() {
-    EtaPreference({ title: $r('app.string.appearance_title'), hasLeading: true, startAction: this.icon, onAction: () => { this.openWindow(); } })
+    EtaPreference({ title: $r('app.string.appearance_title'), hasLeading: true, startAction: () => { this.icon(); }, onAction: () => { this.openWindow(); } })
     EtaPreferenceDivider()
-    EtaArrowPreference({ title: $r('app.string.appearance_blur'), summary: $r('app.string.appearance_blur_summary'), hasLeading: true, startAction: this.icon, onAction: () => { this.openDescription(); } })
+    EtaArrowPreference({ title: $r('app.string.appearance_blur'), summary: $r('app.string.appearance_blur_summary'), hasLeading: true, startAction: () => { this.icon(); }, onAction: () => { this.openDescription(); } })
     EtaPreferenceDivider()
     EtaDropdownPreference({ title: $r('app.string.appearance_blur'), items: [new EtaDropdownItem('uniform', $r('app.string.appearance_blur_style_uniform')), new EtaDropdownItem('progressive', $r('app.string.appearance_blur_style_progressive')), new EtaDropdownItem('off', $r('app.string.status_disabled'))], selectedIndex: this.blurStyle, onSelectedIndexChange: (value: number) => { this.blurStyle = value; } })
     EtaPreferenceDivider({ hasLeading: false })
@@ -85,25 +85,25 @@ struct EtaGallery {
     EtaRadioButtonPreference({ title: $r('app.string.appearance_theme_light'), selected: this.selected === 1, onAction: () => { this.selected = 1; } })
     EtaRadioButtonPreference({ title: $r('app.string.appearance_theme_dark'), selected: this.selected === 2, onAction: () => { this.selected = 2; } })
     EtaRadioButtonPreference({ title: $r('app.string.status_disabled'), selected: true, isEnabled: false })
-    EtaCheckboxPreference({ title: $r('app.string.action_confirm'), checked: this.checked, checkboxAtStart: true, hasLeading: true, startAction: this.opticalIcon, onCheckedChange: (value: boolean) => { this.checked = value; } })
+    EtaCheckboxPreference({ title: $r('app.string.action_confirm'), checked: this.checked, checkboxAtStart: true, hasLeading: true, startAction: () => { this.opticalIcon(); }, onCheckedChange: (value: boolean) => { this.checked = value; } })
     EtaCheckboxPreference({ title: $r('app.string.status_disabled'), checked: false, isEnabled: false })
     EtaDropdownPreference({ title: $r('app.string.appearance_title'), items: this.choices, selectedIndex: this.selected, onSelectedIndexChange: (index: number) => { this.selected = index; } })
     EtaDropdownPreference({ title: $r('app.string.status_disabled'), items: [] })
     EtaWindowSpinnerPreference({ title: $r('app.string.appearance_title'), items: this.choices, selectedIndex: this.selected, onSelectedIndexChange: (index: number) => { this.selected = index; } })
     EtaOverlayDropdownPreference({ title: $r('app.string.appearance_title'), items: this.choices, selectedIndex: this.selected, onSelectedIndexChange: (index: number) => { this.selected = index; } })
-    EtaPreferenceRow({ title: $r('app.string.appearance_blur'), hasCustomTitle: true, titleAction: this.longSummary, hasBottom: true, bottomAction: this.bottom })
+    EtaPreferenceRow({ title: $r('app.string.appearance_blur'), hasCustomTitle: true, titleAction: () => { this.longSummary(); }, hasBottom: true, bottomAction: () => { this.bottom(); } })
   }
   @Builder private firstRow() { EtaPreference({ title: $r('app.string.appearance_theme_light') }) }
   @Builder private lastRow() { EtaPreference({ title: $r('app.string.appearance_theme_dark') }) }
   @Builder private emptyAction() { EtaTextButton({ text: $r('app.string.action_confirm'), onAction: () => { this.openOverlay(); } }) }
   @Builder private body() {
     EtaPreferenceGroupTitle({ title: $r('app.string.appearance_group_interface') })
-    EtaPreferenceGroup({ content: this.preferenceRows })
-    EtaPreferenceGroupItem({ first: true, content: this.firstRow })
-    EtaPreferenceGroupItem({ last: true, content: this.lastRow })
+    EtaPreferenceGroup({ content: () => { this.preferenceRows(); } })
+    EtaPreferenceGroupItem({ first: true, content: () => { this.firstRow(); } })
+    EtaPreferenceGroupItem({ last: true, content: () => { this.lastRow(); } })
     SectionHeader({ title: $r('app.string.appearance_group_color') })
     Column({ space: S.Dp12 }) {
-      EtaFeatureCard({ title: $r('app.string.appearance_title'), summary: $r('app.string.appearance_blur_summary'), icon: this.icon, onAction: () => { this.openWindow(); } })
+      EtaFeatureCard({ title: $r('app.string.appearance_title'), summary: $r('app.string.appearance_blur_summary'), icon: () => { this.icon(); }, onAction: () => { this.openWindow(); } })
       Row({ space: S.Dp8 }) {
         EtaChoiceChip({ text: $r('app.string.appearance_theme_light'), selected: this.selected === 1, onAction: () => { this.selected = 1; } })
         EtaChoiceChip({ text: $r('app.string.appearance_theme_dark'), selected: this.selected === 2, onAction: () => { this.selected = 2; } })
@@ -113,17 +113,17 @@ struct EtaGallery {
       EtaSwitch({ checked: this.checked, onCheckedChange: (value: boolean) => { this.checked = value; } })
       EtaTextButton({ text: $r('app.string.action_confirm'), primary: true, onAction: () => { this.openWindow(); } })
       EtaTextButton({ text: $r('app.string.status_disabled'), isEnabled: false })
-      EtaCard({ content: this.bottom })
+      EtaCard({ content: () => { this.bottom(); } })
       MiuixDialogActions({ confirmEnabled: false })
       Text(runStatusLabel(EtaRunStatus.Running)).fontSize(F.Body2).fontColor(runStatusColor(EtaRunStatus.Running))
       Text(permissionStatusLabel(EtaPermissionStatus.Warning)).fontSize(F.Body2).fontColor(permissionStatusColor(EtaPermissionStatus.Warning))
-      EtaDialogContent({ title: $r('app.string.action_confirm'), content: this.dialogActions })
+      EtaDialogContent({ title: $r('app.string.action_confirm'), content: () => { this.dialogActions(); } })
     }.width('100%').padding(S.Dp16)
     ListEmptyState({ title: $r('app.string.memory_empty_title') })
-    ListEmptyState({ title: $r('app.string.mcp_empty_title'), summary: $r('app.string.mcp_empty_summary'), hasIcon: true, icon: this.icon, hasAction: true, action: this.emptyAction })
+    ListEmptyState({ title: $r('app.string.mcp_empty_title'), summary: $r('app.string.mcp_empty_summary'), hasIcon: true, icon: () => { this.icon(); }, hasAction: true, action: () => { this.emptyAction(); } })
   }
   build() {
-    MiuixScaffoldPage({ title: $r('app.string.appearance_title'), blurEnabled: this.blurStyle !== 2, progressiveBlur: this.blurStyle === 1, content: this.body })
+    MiuixScaffoldPage({ title: $r('app.string.appearance_title'), blurEnabled: this.blurStyle !== 2, progressiveBlur: this.blurStyle === 1, content: () => { this.body(); } })
       .onAreaChange((_old, area) => { this.pageWidth = Number(area.width); this.pageHeight = Number(area.height); })
   }
 }

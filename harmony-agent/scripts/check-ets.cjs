@@ -59,6 +59,17 @@ const logger = {
 require(path.join(loader, 'main.js'));
 const checker = require(path.join(loader, 'lib/ets_checker.js'));
 checker.etsStandaloneChecker(entries, logger, config);
+// A bare @Builder passed to @BuilderParam changes receiver at runtime. Type checks
+// accept it, so also enforce explicit owner capture and exercise the real slot expressions.
+const builders = require('./arkui-builder-check.cjs').checkProject(loader, src);
+found.error.push(...builders.errors);
+const builderRegression = require('node:child_process').spawnSync(process.execPath,
+  ['--test', path.join(__dirname, 'tests/arkui-builder-check.test.cjs')],
+  { encoding: 'utf8', env: { ...process.env, OHOS_SDK_ETS: sdk }, timeout: 30000 });
+if (builderRegression.error || builderRegression.status !== 0) {
+  found.error.push('ArkUI builder-context regression failed:\n' + (builderRegression.stdout || '') +
+    (builderRegression.stderr || '') + (builderRegression.error?.message || ''));
+}
 fs.rmSync(cache, { recursive: true, force: true });
 
 const relative = text => text.split(project + path.sep).join('');
@@ -70,4 +81,6 @@ console.log('ArkTS check with OpenHarmony SDK ' + version + ': ' + errors.length
 for (const e of errors) console.log('\n' + e);
 if (showWarnings) for (const w of found.warn) console.log('\n' + relative(w));
 console.log('\nThis checks types and ArkTS rules only. It does not build a HAP; DevEco remains the final compile check.');
+console.log('ArkUI builder owner check: ' + builders.slots + ' slot assignments, ' + builders.errors.length +
+  ' error(s); receiver regression tests: ' + (builderRegression.status === 0 ? 'passed' : 'FAILED') + '.');
 process.exit(errors.length ? 1 : 0);
