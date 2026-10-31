@@ -5,6 +5,7 @@ import { ModelProtocol } from './protocols';
 import { ModelSettings, modelEndpoint } from './model';
 
 export interface ModelProfile {
+  anthropicVersion?:string;
   systemPrompt?:string;isEnabled?:boolean;headersRef?:string;isBuiltIn?:boolean;hasApiKey?:boolean;
   id: string; name: string; baseUrl: string; model: string;
   screenshots: boolean; allowInsecureHttp: boolean; secretRef?: string; models?: string[]; streaming?: boolean; protocol?:ModelProtocol; maxOutputTokens?:number; reasoningEffort?:string;metadata?:ModelMetadata[];extraHeaders?:Record<string,string>;
@@ -34,7 +35,7 @@ export function parseProfileDocument(raw:string):ProfileDocument {
     for (const p of data.profiles) {
       if (!p || typeof p.id !== 'string' || !p.id || ids.has(p.id) || typeof p.name !== 'string' || typeof p.baseUrl !== 'string' || typeof p.model !== 'string' || typeof p.screenshots !== 'boolean' || typeof p.allowInsecureHttp !== 'boolean' || (p.secretRef !== undefined && (typeof p.secretRef !== 'string' || !p.secretRef.startsWith('model-key-')))) throw new Error('模型配置文件无效');
       ids.add(p.id);
-      profiles.push({isBuiltIn:p.isBuiltIn===true&&BUILTIN_PROVIDERS.some(b=>b.id===p.id),hasApiKey:!!p.secretRef,id:p.id,name:p.name,baseUrl:p.baseUrl,model:p.model,screenshots:p.screenshots,allowInsecureHttp:p.allowInsecureHttp,secretRef:p.secretRef,models:modelCatalog(p.models,p.model),streaming:p.streaming!==false,protocol:validProtocol(p.protocol),maxOutputTokens:outputBudget(p.maxOutputTokens),reasoningEffort:reasoningEffort(p.reasoningEffort),metadata:parseMetadata(p.metadata),extraHeaders:safeHeaders(p.extraHeaders),headersRef:headerReference(p.headersRef),systemPrompt:providerPrompt(p.systemPrompt),isEnabled:p.isEnabled!==false});
+      profiles.push({anthropicVersion:anthropicVersion(p.anthropicVersion),isBuiltIn:p.isBuiltIn===true&&BUILTIN_PROVIDERS.some(b=>b.id===p.id),hasApiKey:!!p.secretRef,id:p.id,name:p.name,baseUrl:p.baseUrl,model:p.model,screenshots:p.screenshots,allowInsecureHttp:p.allowInsecureHttp,secretRef:p.secretRef,models:modelCatalog(p.models,p.model),streaming:p.streaming!==false,protocol:validProtocol(p.protocol),maxOutputTokens:outputBudget(p.maxOutputTokens),reasoningEffort:reasoningEffort(p.reasoningEffort),metadata:parseMetadata(p.metadata),extraHeaders:safeHeaders(p.extraHeaders),headersRef:headerReference(p.headersRef),systemPrompt:providerPrompt(p.systemPrompt),isEnabled:p.isEnabled!==false});
     }
     return {officialCatalogRevision:Number.isInteger(data.officialCatalogRevision)&&data.officialCatalogRevision>=0?data.officialCatalogRevision:0,profiles,selectedId:ids.has(data.selectedId) ? data.selectedId : (profiles.find(p=>p.isEnabled!==false)?.id || '')};
 
@@ -90,7 +91,7 @@ export class ProfileRepository {
       const extraHeaders=safeHeaders(profile.extraHeaders);
       if(Object.keys(extraHeaders).length){newHeadersRef='model-headers-'+this.newId();await this.secrets.put(newHeadersRef,JSON.stringify(extraHeaders));}
       // Explicit projection prevents plaintext keys or unrelated caller fields from entering metadata.
-      const saved: ModelProfile = {isBuiltIn:old?.isBuiltIn===true,hasApiKey:!!apiKey.trim(),id:old?.id || this.newId(),name:profile.name.trim().slice(0,80),baseUrl:profile.baseUrl.trim(),model:profile.model.trim(),screenshots:profile.screenshots,allowInsecureHttp:profile.allowInsecureHttp,secretRef:newRef || undefined,models:modelCatalog(profile.models,profile.model.trim()),streaming:profile.streaming!==false,protocol:validProtocol(profile.protocol),maxOutputTokens:outputBudget(profile.maxOutputTokens),reasoningEffort:reasoningEffort(profile.reasoningEffort),metadata:parseMetadata(profile.metadata),extraHeaders,headersRef:newHeadersRef||undefined,systemPrompt:providerPrompt(profile.systemPrompt),isEnabled:profile.isEnabled!==false};
+      const saved: ModelProfile = {anthropicVersion:anthropicVersion(profile.anthropicVersion),isBuiltIn:old?.isBuiltIn===true,hasApiKey:!!apiKey.trim(),id:old?.id || this.newId(),name:profile.name.trim().slice(0,80),baseUrl:profile.baseUrl.trim(),model:profile.model.trim(),screenshots:profile.screenshots,allowInsecureHttp:profile.allowInsecureHttp,secretRef:newRef || undefined,models:modelCatalog(profile.models,profile.model.trim()),streaming:profile.streaming!==false,protocol:validProtocol(profile.protocol),maxOutputTokens:outputBudget(profile.maxOutputTokens),reasoningEffort:reasoningEffort(profile.reasoningEffort),metadata:parseMetadata(profile.metadata),extraHeaders,headersRef:newHeadersRef||undefined,systemPrompt:providerPrompt(profile.systemPrompt),isEnabled:profile.isEnabled!==false};
       const profiles = old ? this.document.profiles.map(p=>p.id===saved.id?saved:p) : this.document.profiles.concat([saved]);
       const next: ProfileDocument = {...this.document,profiles,selectedId:saved.isEnabled!==false?saved.id:this.document.selectedId};
       await this.metadata.write(durableProfiles(next));
@@ -125,3 +126,5 @@ export class ProfileRepository {
     catch (_) { this.warning = '配置已更新，但旧密钥清理失败；卸载应用可清理其安全存储'; }
   }
 }
+
+export function anthropicVersion(value:unknown):string|undefined {if(value===undefined||value==='')return undefined;if(typeof value!=='string'||!/^[-A-Za-z0-9_.]{1,64}$/.test(value))throw Error('anthropic-version 格式无效');return value;}

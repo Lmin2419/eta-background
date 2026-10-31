@@ -1,6 +1,6 @@
 # 随身助手推进方案（0.9.1 → 0.14）
 
-第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮当前 `harmony/e06b-catalog-capabilities` / 0.9.24；E06b 内置服务与模型能力已接入。正式存储仍未切换，E05b 的 3 项跨协议原测试留 P1c。下一项 P1c Anthropic。
+第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮当前 `harmony/p1c-anthropic` / 0.9.25，Anthropic 已接入，E05b 暂缓的 3 项原测试已补齐。正式存储仍未切换。下一项 P1d Gemini。
 
 制定：2026-10-30。基于 `main@aadbf93`。执行规则见 [../AGENTS.md](../AGENTS.md)。
 
@@ -29,9 +29,10 @@
 | P1a（0.9.21） | Responses 接入、四项通过 | 663 测试、ArkTS 0 error、1,935 资源；51 原测试 / 0 跳过，另 10 适配验证；订阅登录仍 C；[交付记录](P1A_RESPONSES_PORT.md) |
 | P1b（0.9.22） | Chat Completions 接入、四项通过 | 698 测试、ArkTS 0 error、1,935 资源；30 原测试 / 0 跳过 + 5 适配验证；[交付记录](P1B_CHAT_COMPLETIONS_PORT.md) |
 | E05（0.9.17） | 设置与外观页面接入、四项通过 | 512 测试、0 ArkTS error、1,879 资源；默认思考/自动压缩等目标仍禁用，[交付记录](E05_SETTINGS_APPEARANCE_PORT.md) |
-| E05b（0.9.23） | 开关/运行时接入、四项通过；3 原测试待 P1c | 741 测试、ArkTS 0 error、1,935 资源；35 原测试 + 8 集成；独立旧库检查点保留原文；[交付记录](E05B_THINKING_COMPACTION_PORT.md) |
+| E05b（0.9.23，P1c 补齐） | 开关/运行时接入、四项通过；原测试已补齐 | 741 测试、ArkTS 0 error、1,935 资源；35 原测试 + P1c 补 3 原测试、8 集成；独立旧库检查点保留原文；[交付记录](E05B_THINKING_COMPACTION_PORT.md) |
 | E06（0.9.18） | 页面与主要路径接入、四项通过；完整对齐未验收 | 540 测试、0 ArkTS error、1,935 资源；12 原测试完整 / 4 平台部分 / 11 C 类排除；内置种子等差异见 [交付记录](E06_PROVIDER_PORT.md) |
 | E06b（0.9.24） | 内置服务/目录/能力编辑完成、四项通过 | 757 测试；9 原测试 / 0 跳过 + 7 适配验证；ArkTS 0 error、资源通过；[交付记录](E06B_CATALOG_CAPABILITIES_PORT.md) |
+| P1c（0.9.25） | Anthropic 接入、四项通过 | 781 测试；15 原测试 + E05b 补 3 / 0 跳过 + 6 适配；ArkTS 0 error、1,940 资源；[交付记录](P1C_ANTHROPIC_PORT.md) |
 | E08–E09 | 未开始 | 按第三轮队列完成前置任务后再继续；M1 仍未验收 |
 | M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |

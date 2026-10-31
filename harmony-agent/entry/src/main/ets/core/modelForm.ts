@@ -18,7 +18,7 @@ export function emptyModelDraft(): ModelDraft {
   return {id:'',name:'我的模型',baseUrl:'',model:'',apiKey:'',rememberKey:false,screenshots:true,allowInsecureHttp:false,models:[],streaming:true,protocol:'chat_completions',isEnabled:true,systemPrompt:''};
 }
 export function profileDraft(profile: ModelProfile, key: string): ModelDraft {
-  return {isBuiltIn:profile.isBuiltIn,id:profile.id,name:profile.name,baseUrl:profile.baseUrl,model:profile.model,apiKey:key,
+  return {anthropicVersion:profile.anthropicVersion,isBuiltIn:profile.isBuiltIn,id:profile.id,name:profile.name,baseUrl:profile.baseUrl,model:profile.model,apiKey:key,
     rememberKey:Boolean(profile.secretRef),screenshots:profile.screenshots,allowInsecureHttp:profile.allowInsecureHttp,models:modelCatalog(profile.models,profile.model),streaming:profile.streaming!==false,protocol:profile.protocol||'chat_completions',maxOutputTokens:profile.maxOutputTokens,reasoningEffort:profile.reasoningEffort,metadata:profile.metadata,extraHeaders:{...profile.extraHeaders},systemPrompt:profile.systemPrompt||'',isEnabled:profile.isEnabled!==false};
 }
 /** UI callbacks may echo the current text on remount/blur. Only a real destination edit invalidates its key. */
@@ -28,7 +28,7 @@ export function editModelAddress(draft: ModelDraft, address: string): ModelDraft
   return {...draft,baseUrl:address,apiKey:'',models:[],metadata:[],extraHeaders:{},headerDrafts:[]};
 }
 export function modelSnapshot(draft: ModelDraft): ModelSettings {
-  return {baseUrl:draft.baseUrl,model:draft.model,apiKey:draft.apiKey,screenshots:draft.screenshots,allowInsecureHttp:draft.allowInsecureHttp,streaming:draft.streaming,protocol:draft.protocol,maxOutputTokens:draft.maxOutputTokens,reasoningEffort:draft.reasoningEffort,reasoningCapabilities:draft.reasoningCapabilities,extraHeaders:{...draft.extraHeaders},systemPrompt:draft.systemPrompt,providerId:draft.id};
+  return {anthropicVersion:draft.anthropicVersion,baseUrl:draft.baseUrl,model:draft.model,apiKey:draft.apiKey,screenshots:draft.screenshots,allowInsecureHttp:draft.allowInsecureHttp,streaming:draft.streaming,protocol:draft.protocol,maxOutputTokens:draft.maxOutputTokens,reasoningEffort:draft.reasoningEffort,reasoningCapabilities:draft.reasoningCapabilities,extraHeaders:{...draft.extraHeaders},systemPrompt:draft.systemPrompt,providerId:draft.id};
 }
 export function sameModelRequest(draft: ModelDraft, request: ModelSettings): boolean {
   return draft.baseUrl===request.baseUrl && draft.apiKey===request.apiKey && draft.model===request.model && draft.allowInsecureHttp===request.allowInsecureHttp && (draft.protocol||'chat_completions')===(request.protocol||'chat_completions') && draft.streaming===request.streaming && JSON.stringify(draft.extraHeaders||{})===JSON.stringify(request.extraHeaders||{});

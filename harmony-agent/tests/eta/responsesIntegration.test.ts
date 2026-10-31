@@ -79,5 +79,5 @@ test('Responses test connection then model catalog retains draft values and save
 });
 test('Responses enters the picker while protocols awaiting implementation remain disabled', async () => {
   const f = await runtimeFixture(() => transport([delta, done]));
-  const all = foundationPickerProviders([f.profile, { ...f.profile, id: 'other', protocol: 'anthropic' }]); assert.equal(all[0].isEnabled, true); assert.equal(all[1].isEnabled, false);
+  const all = foundationPickerProviders([f.profile, { ...f.profile, id: 'anthropic', protocol: 'anthropic' }, { ...f.profile, id: 'gemini', protocol: 'gemini' }]); assert.deepEqual(all.map(p=>p.isEnabled),[true,true,false]);
 });

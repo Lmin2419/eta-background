@@ -26,7 +26,7 @@ export struct ModelProviderDetailScreen {
       Text($r('app.string.ui_leave_blank_to_use_the_default_mobile_agent_prompt_w_21e7c8')).fontSize(F.Footnote2).fontColor($r('app.color.miuix_on_surface_variant_summary')).margin({top:S.Dp8})
     }.padding(S.Dp16)
     EtaPreferenceDivider({hasLeading:false})
-    EtaSwitchPreference({title:$r('app.string.eta_provider_stream'),checked:this.state.editor.draft.protocol==='responses'||this.state.editor.draft.streaming,isEnabled:!this.state.editor.busy&&this.state.editor.draft.protocol!=='responses',onCheckedChange:(v:boolean)=>this.controller?.editor.flag('streaming',v)})
+    EtaSwitchPreference({title:$r('app.string.eta_provider_stream'),checked:this.state.editor.draft.protocol!=='chat_completions'||this.state.editor.draft.streaming,isEnabled:!this.state.editor.busy&&this.state.editor.draft.protocol==='chat_completions',onCheckedChange:(v:boolean)=>this.controller?.editor.flag('streaming',v)})
   }}
   @Builder private status(){
     if(this.state.editor.error){Text(this.state.editor.error).fontSize(F.Footnote1).fontColor($r('app.color.miuix_error')).width('100%').padding(S.Dp16)}

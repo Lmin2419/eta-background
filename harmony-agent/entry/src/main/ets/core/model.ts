@@ -5,7 +5,7 @@ import { completeFoundationProvider } from './eta/protocol/foundationProviderBri
 import { ModelReasoningCapabilities } from './eta/protocol/providerTypes';
 
 export interface HttpTransport { post(url: string, headers: Record<string,string>, body: string): Promise<string>; get?(url: string, headers: Record<string,string>): Promise<string>; stream?(url:string,headers:Record<string,string>,body:string,onChunk:(chunk:string)=>boolean|void,onStatus?:(status:number)=>void):Promise<void>; cancel(): void }
-export interface ModelSettings { contextWindow?:number;autoCompactionEnabled?:boolean;contextCompaction?:import('./eta/context/textContextRunner').TextContextOptions; sessionId?:string;providerId?:string;providerSourceType?:string;thinkingEnabled?:boolean;reasoningCapabilities?:ModelReasoningCapabilities|null;systemPrompt?:string; baseUrl: string; model: string; apiKey: string; screenshots: boolean; allowInsecureHttp?: boolean; streaming?: boolean; protocol?:ModelProtocol; maxOutputTokens?:number; reasoningEffort?:string;extraHeaders?:Record<string,string> }
+export interface ModelSettings { anthropicVersion?:string; contextWindow?:number;autoCompactionEnabled?:boolean;contextCompaction?:import('./eta/context/textContextRunner').TextContextOptions; sessionId?:string;providerId?:string;providerSourceType?:string;thinkingEnabled?:boolean;reasoningCapabilities?:ModelReasoningCapabilities|null;systemPrompt?:string; baseUrl: string; model: string; apiKey: string; screenshots: boolean; allowInsecureHttp?: boolean; streaming?: boolean; protocol?:ModelProtocol; maxOutputTokens?:number; reasoningEffort?:string;extraHeaders?:Record<string,string> }
 export const field = (type: string, description: string): Record<string,unknown> => ({type, description});
 const observation = field('string','最近一次观察返回的 observation.id');
 export function tool(name: string, description: string, properties: Record<string,unknown>, required: string[]): Record<string,unknown> {
@@ -36,14 +36,15 @@ export function modelEndpoint(settings: ModelSettings, kind: 'chat' | 'models' =
   const port = /:([0-9]+)$/.exec(match[2]);
   if (port && (Number(port[1]) < 1 || Number(port[1]) > 65535)) throw new Error('API 端口无效');
   if (match[1] !== 'https' && !settings.allowInsecureHttp) throw new Error('默认仅允许 HTTPS；本地 HTTP 服务需手动开启明文连接');
-  const base = value.replace(/\/(?:chat\/completions|responses|messages)$/, '');
+  let base = value.replace(/\/(?:chat\/completions|responses|messages)$/, '');
+  if(settings.protocol==='anthropic'){base=base.replace(/\/v1$/,'');if(kind==='models')return base+'/v1/models';}
   return base + (kind === 'chat' ? '/chat/completions' : '/models');
 }
 function headers(settings: ModelSettings): Record<string,string> {
   if (/[\r\n\u0000]/.test(settings.apiKey)) throw new Error('API Key 包含无效字符');
   const result: Record<string,string> = {'Content-Type':'application/json'};
   if(settings.apiKey.trim()){if(settings.protocol==='anthropic')result['x-api-key']=settings.apiKey.trim();else if(settings.protocol==='gemini')result['x-goog-api-key']=settings.apiKey.trim();else result.Authorization='Bearer '+settings.apiKey.trim();}
-  if(settings.protocol==='anthropic')result['anthropic-version']='2023-06-01';
+  if(settings.protocol==='anthropic')result['anthropic-version']=settings.anthropicVersion||'2023-06-01';
   return result;
 }
 function parse(raw: string): any {
@@ -98,7 +99,7 @@ export class OpenAIClient implements ModelClient {
     control.check();
     if(this.settings.systemPrompt?.trim())messages=[{role:'system',content:this.settings.systemPrompt.trim()},...messages.filter(m=>m.role!=='system')];
     if (!this.settings.model.trim()) throw new Error('请填写模型名称');
-    if(this.settings.protocol==='responses')return completeFoundationProvider({...this.settings,sessionId:this.settings.sessionId||this.sessionId},modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.transport,this.tools,messages,control,onText,onReasoning);
+    if(this.settings.protocol==='responses'||this.settings.protocol==='anthropic')return completeFoundationProvider({...this.settings,sessionId:this.settings.sessionId||this.sessionId},modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.transport,this.tools,messages,control,onText,onReasoning);
     if(this.settings.protocol&&this.settings.protocol!=='chat_completions')return completeProtocol(this.settings.protocol,modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.settings,this.transport,this.tools,messages,control,onText||(()=>{}),onReasoning||(()=>{}));
     return completeFoundationProvider({...this.settings,sessionId:this.settings.sessionId||this.sessionId},modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.transport,this.tools,messages,control,onText,onReasoning);
   }
