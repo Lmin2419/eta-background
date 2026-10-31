@@ -1,6 +1,6 @@
 # 随身助手推进方案（0.9.1 → 0.14）
 
-本轮连续执行结果：[2026-10-31 报告](reports/2026-10-31-report.md)。累计分支 `harmony/e06-providers` / PR #24 / 0.9.18；E07b #22 草稿阻塞，完整 M1 尚未验收。
+本轮连续执行结果：[2026-10-31 报告](reports/2026-10-31-report.md)。**下一轮见第二节“本轮队列（2026-10-31 第三轮）”。**累计分支 `harmony/e06-providers` / PR #24 / 0.9.18；E07b #22 草稿阻塞，完整 M1 尚未验收。
 
 制定：2026-10-30。基于 `main@aadbf93`。执行规则见 [../AGENTS.md](../AGENTS.md)。
 
@@ -23,7 +23,7 @@
 | E04b（0.9.14） | 消息与 Markdown 接入、四项检查通过 | `harmony/e04b-chat-rendering` 基于 E04a；473 测试、0 ArkTS error、1,861 资源；复用 L2/L3 原测试，新增 9 集成测试；[交付记录](E04B_CHAT_RENDERING_PORT.md) |
 | E04c（0.9.15） | 排队与消息操作接入、四项检查通过 | `harmony/e04c-chat-actions` 基于 E04b；491 测试、5 原测试 / 0 跳过、13 集成测试、0 ArkTS error、1,863 资源；[交付记录](E04C_CHAT_ACTIONS_PORT.md) |
 | E07a（0.9.16） | 侧栏/导出完成，存储对照留 E07b | 503 测试，0 ArkTS error，1,864 资源；9 项原 Store 测试的逻辑适配 + 3 新验证；完整 Room 对照未完成，[交付记录](E07A_CONVERSATION_PANE_PORT.md) |
-| E07b（PR #22） | 草稿—存储决定阻塞 | [迁移决定](https://github.com/Lmin2419/eta-background/pull/22)；17 原 Store 测试未完整移植；E05 从 E07a 继续 |
+| E07b（PR #22） | **用户已确认方案 A**，拆为 E07b1 / E07b2 / E07b3；E07b3 需等真机检查点 ①–④ 通过 | 原草稿结论：草稿—存储决定阻塞 | [迁移决定](https://github.com/Lmin2419/eta-background/pull/22)；17 原 Store 测试未完整移植；E05 从 E07a 继续 |
 | E05（0.9.17） | 设置与外观页面接入、四项通过 | 512 测试、0 ArkTS error、1,879 资源；默认思考/自动压缩等目标仍禁用，[交付记录](E05_SETTINGS_APPEARANCE_PORT.md) |
 | E06（0.9.18） | 页面与主要路径接入、四项通过；完整对齐未验收 | 540 测试、0 ArkTS error、1,935 资源；12 原测试完整 / 4 平台部分 / 11 C 类排除；内置种子等差异见 [交付记录](E06_PROVIDER_PORT.md) |
 | E08–E09 | 未开始 | E07b 阻塞，前面全部完成的条件未满足；M1 仍未验收 |
@@ -37,6 +37,7 @@
 1. **代码领先于真机验证。** 0.9 的框架代码和 193 项测试都过了，但新框架从未在手机上运行过；最近一次真机反馈还是 0.3。最大的风险不是功能少，而是没有稳定的“改代码 → 上真机 → 回传问题”循环。
 2. **仓库源码目前无法在 DevEco 直接编译。** `entry/build-profile.json5` 启用了原生构建，`entry/src/main/cpp/CMakeLists.txt` 在 `vendor/` 缺少预编译 OpenSSL 时会 `FATAL_ERROR`，而 `vendor/` 没有入库，只能在装有 HarmonyOS 命令行工具的 Linux 上生成。0.9 入口其实不加载这个原生库。
 3. **聊天还不能日常使用。** 切到后台会立即停止回复（`EntryAbility.onBackground`）；流式渲染时每帧重建整条消息；没有复制、重新生成、错误重试、深色模式；只支持 OpenAI Chat Completions 协议。
+6. **（2026-10-31）17 个 PR 还没上过真机。** 0.9.1 → 0.9.18 都只有自动检查。当前最大的风险是第一次 DevEco 编译或运行时集中暴露问题，所以真机测试优先于继续叠加界面。
 4. **界面与交互和 Eta 差距大。** 0.9 只借鉴了 Eta 的一部分页面，质量也不够。用户决定改为**照着 Eta 源码 1:1 移植**（M1）。原来计划的消息渲染、消息操作、深色模式三项（T05、T06、T08）并入移植任务。
 5. **手机自动化的路线已有原型。** 方案是应用内 HDC 客户端连接本机无线调试，0.3 已在真机读到 103 个控件。这是本项目区别于普通聊天应用的核心，但在 0.9 中暂时撤下了，需要按步骤接回。
 
@@ -69,6 +70,81 @@
 5. **不冒充真机结果**：真机检查点只列出步骤，标为“待测”。
 6. **PR 不要太大**：生成的资源文件不计，手写代码超过约 2500 行时拆成多个 PR。
 7. **早上的报告**：队列做完或全部阻塞时停下，最后输出一份报告，格式见“本轮队列”末尾。
+
+### 本轮队列（2026-10-31 第三轮，Claude 审阅后安排）
+
+**背景**：0.9.1 → 0.9.18 共 17 个 PR 还没有在手机上编译运行过一次。检查器能拦住类型、ArkTS 规则和资源问题，但拦不住界面编译阶段的语法校验、运行时崩溃和布局问题。所以本轮**优先做纯逻辑、能用 Eta 单测证明正确的任务**，少叠加未经真机验证的界面。用户测完真机后，界面问题优先修。
+
+**base**：本轮第一个任务从 `harmony/round3-plan` 拉分支（它基于 `harmony/e06-providers`，只多了这份规划）。其余规则同“无人值守连续执行”。
+
+| 顺序 | 任务 | 说明 |
+| --- | --- | --- |
+| 0 | 真机反馈修复（插队） | 用户贴来 DevEco 编译报错或真机问题时，**立即中断当前任务**，在出问题的最早那个分支上修复，再依次合并到下游分支 |
+| 1 | E07b1 会话存储逻辑与端口 | 纯 TS，可用内存 DAO 测试 |
+| 2 | E07b2 RDB 适配与旧数据迁移代码 | **只写代码和测试，不切换正式入口** |
+| 3 | P1a OpenAI Responses 协议及公共部件 | 用户使用 OpenAI 模型，优先 |
+| 4 | P1b OpenAI Chat Completions 对齐 Eta | 替换 0.9 的 `core/model.ts` 请求路径 |
+| 5 | E05b 默认启用思考与自动压缩上下文 | 依赖 P1a 的推理参数 |
+| 6 | E06b 内置服务预置与模型能力 | |
+| 7 | P1c Anthropic → P1d Gemini | |
+| 后备 | E08：记忆 → Skills → MCP | 前面全部完成后才做 |
+
+**E07b3（切换到新存储）不在本轮**：必须等用户的真机检查点 ①–④ 通过后再做。
+
+#### 第三轮任务卡
+
+**E07b1 会话存储逻辑与端口**
+- 按 [E07B_STORAGE_DECISION.md](E07B_STORAGE_DECISION.md) 的方案 A（用户已确认），在 `core/eta/` 定义纯 TS 的 ConversationDao 和事务端口，划分会话元数据、消息行、history/journal 检查点、选中项、分块文本。
+- 移植 `AgentConversationStore`、`AgentConversationPersistence`，以及 `AgentConversationStoreTest`（17 项）、`AgentConversationPersistenceTest`、`AgentAppStateConversationLoadingTest`。用内存 DAO 跑通；不缩短 fixture，不截断数据。
+
+**E07b2 RDB 适配与旧数据迁移（不切换）**
+- 用鸿蒙 RDB 实现 E07b1 的事务端口：事务成功后才推进保存基线；失败时不推进基线、不清空内存。
+- 从 0.9 快照迁移：
+  - 旧快照原样保留，迁移用独立的版本标记；
+  - 校验会话数、消息数、正文哈希和选中 ID；
+  - 迁移可重复执行；
+  - 中途失败、旧数据损坏时阻止切换并写诊断记录，**绝不删除旧数据**。
+- 测试：迁移幂等、中途失败、重启恢复、旧数据损坏、长文本完整性。正式入口仍使用 0.9 存储。
+
+**E07b3 切换（本轮不做）**
+- 等真机检查点 ①–④ 通过后，控制器切换到新存储。真机验收步骤：
+  1. 在旧版本写入若干会话；
+  2. 升级；
+  3. 核对历史、模型和导出；
+  4. 注入一次迁移失败，确认旧数据完整。
+
+**P1 模型协议：照抄 Eta 的 `agent/model/`（替代原 T09 的“自己实现”）**
+- 来源：`app/src/main/kotlin/io/github/mangi/eta/agent/model/` 中的 `OpenAiResponsesProvider`、`OpenAiChatCompletionsProvider`、`AnthropicMessagesProvider`、`GeminiInteractions*`，以及公共部件 `ProviderSseReader`、`ProviderReasoning`、`ProviderRequestHeaders`、`ProviderUrls`、`ProviderMessageContent`、`ProviderParameterDiagnostics`、`OpenAiRequestMessages`。
+- 单测：
+
+  | Eta 测试 | 项数 |
+  | --- | --- |
+  | `OpenAiResponsesProviderTest` | 11 |
+  | `CodexResponsesRequestTest` | 5 |
+  | `OpenAiChatCompletionsProviderTest` | 14 |
+  | `OpenAiChatToolCallIdsTest` | 7 |
+  | `AnthropicMessagesProviderTest` | 15 |
+  | `GeminiInteractionsTest` | 21 |
+  | `ProviderReasoningTest` | 23 |
+  | `ProviderSseReaderTest` | 4 |
+  | `ProviderRequestHeadersTest` | 7 |
+  | `ProviderUrlsTest` | 1 |
+
+- 拆分：
+  - **P1a**：Responses 和公共部件；
+  - **P1b**：Chat Completions 对齐，替换 0.9 的 `core/model.ts` 请求路径，保留“先持久化再发送、停止保留内容、不自动重发”的规则和 M0 的诊断记录；
+  - **P1c**：Anthropic；
+  - **P1d**：Gemini。
+- 每个协议完成后，E06“新建服务”中对应的类型从 B 类改为可用。
+- 订阅账号登录（Codex PKCE 等）仍为 C 类，不做。
+- **真机**：用户用自己的 OpenAI API Key，分别以 Responses 和 Chat Completions 各完成一轮测试连接 → 获取目录 → 聊天 → 停止。
+
+**E05b 默认启用思考与自动压缩上下文**
+- 来源：`data/provider/ReasoningCapabilityResolver`（12 项测试）、`agent/runtime/AgentRuntimeRequestConfigResolver`（7 项）、`agent/model/AgentContextCompactor`、`AgentContextCompactionTest`（16 项）、`AgentCompactionProviderTest`（3 项）。
+- 完成后，设置页这两行从禁用改为可用。
+
+**E06b 内置服务预置与模型能力**
+- 来源：`data/provider/BuiltinProviders`（2 项）、`OfficialModelCatalog`（4 项）、`GeminiModelCapabilities`（3 项）、`ProviderConnectionProfile`，以及 E06 交付记录中列出的模型能力编辑缺口。
 
 ### 本轮队列（2026-10-31 继续，用户已确认）
 
@@ -358,7 +434,7 @@ E02 追加（#16，完成） → E03（#17，完成） → E04a → E04b → E04
 - 在字体缩放 1.75 和 2.0 下检查首页卡片、输入区、服务表单，不出现截断或重叠。
 - **真机验收**：系统切换深色模式并把字体调到最大，截图首页、聊天页、服务页各一张。
 
-#### T09 其他模型协议（一个协议一个 PR）
+#### T09 其他模型协议（已改为 P1：照抄 Eta 的 `agent/model/`，见第二节第三轮队列）
 
 - 配置中已经有 `protocol` 字段，目前只实现了 `chat_completions`。用户使用 OpenAI 的模型（ChatGPT 6.0 Astra），顺序为：**OpenAI Responses → Anthropic Messages → Gemini**。
 - 先用现有 Chat Completions 在真机测试用户的模型（G0 闸门中完成）。如果它可用，Responses 主要是为了推理内容和新特性；如果不可用，T09 提前到 M2 的第一项。E06 已经移植了选择协议类型的界面，T09 只需实现协议本身，并把对应类型从 B 类改为可用。
