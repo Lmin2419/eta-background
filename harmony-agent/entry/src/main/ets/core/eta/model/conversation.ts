@@ -53,6 +53,7 @@ export interface AgentChatUiState {
   input: string; isStreaming: boolean; isCompacting: boolean; thinkingEnabled: boolean;
   pendingImages: PendingImageUi[]; pendingFileReferences: PendingFileReferenceUi[]; queuedMessages: QueuedMessageUi[];
   inputSyncVersion: number; appliedRuntimeRunIds: string[]; messageEdit: MessageEditUiState | null;
+  reasoningEffort?: string; conversationCharacterName?: string | null; conversationCharacterAvatarPath?: string | null;
   modelId: string | null; isConversationLoaded: boolean; messageStartIndex: number; hasEarlierMessages: boolean;
 }
 export function emptyChatState(): AgentChatUiState { return { roleplay: null, roleplayMessages: emptyRoleplayMessages(), roleplayOriginalContents: new Map(), messages: [], history: [], journal: [], input: '', isStreaming: false, isCompacting: false, thinkingEnabled: false, pendingImages: [], pendingFileReferences: [], queuedMessages: [], inputSyncVersion: 0, appliedRuntimeRunIds: [], messageEdit: null, modelId: null, isConversationLoaded: true, messageStartIndex: 0, hasEarlierMessages: false }; }
