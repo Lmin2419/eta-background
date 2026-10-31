@@ -1,0 +1,7 @@
+{"name": "02-drawer", "page": "pages/FoundationPreview",
+ "steps": [
+  {"waitFor": {"a11y": "会话历史"}, "timeout": 20},
+  {"tap": {"a11y": "会话历史"}},
+  {"waitFor": {"a11y": "设置"}},
+  {"screenshot": "drawer-open"}
+ ]}

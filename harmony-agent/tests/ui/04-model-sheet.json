@@ -1,0 +1,7 @@
+{"name": "04-model-sheet", "page": "pages/FoundationPreview",
+ "steps": [
+  {"waitFor": {"a11yContains": "切换模型"}, "timeout": 20},
+  {"tap": {"a11yContains": "切换模型"}},
+  {"waitFor": {"contains": "示例推理模型"}},
+  {"screenshot": "model-sheet"}
+ ]}

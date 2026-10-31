@@ -87,3 +87,56 @@ jobs:
       # 用 SDK 的 restool 打包资源，拦截资源命名、格式、重复声明和未定义引用。
       - name: 资源打包检查
         run: OHOS_SDK_ETS="$OHOS_SDK_DIR/ets" node scripts/check-resources.cjs
+
+  ui:
+    name: Harmony / UI preview tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: harmony-agent
+    env:
+      OHOS_SDK_DIR: ${{ github.workspace }}/.ohos-sdk-26-full
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      # 同一个公开 SDK，额外保留 Linux 预览器。
+      - name: 缓存 OpenHarmony SDK（含预览器）
+        id: sdk-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .ohos-sdk-26-full
+          key: ohos-sdk-full-26.0.0.38-${{ hashFiles('harmony-agent/scripts/fetch-ohos-sdk.sh') }}
+
+      - name: 下载并校验 SDK
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: bash scripts/fetch-ohos-sdk.sh --with-previewer "$OHOS_SDK_DIR"
+
+      - name: 安装依赖
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q xvfb
+          npm ci --no-audit --no-fund
+          python3 -m venv "$RUNNER_TEMP/ui-venv"
+          "$RUNNER_TEMP/ui-venv/bin/pip" install -q -r scripts/ui-preview/requirements.txt
+          echo "$RUNNER_TEMP/ui-venv/bin" >> "$GITHUB_PATH"
+
+      - name: 准备预览器运行环境
+        run: OHOS_SDK_ETS="$OHOS_SDK_DIR/ets" bash scripts/ui-preview/setup.sh
+
+      # 预览编译 → 无头预览器 → tests/ui/ 中的场景（点击、输入、断言、截图）。
+      - name: 界面测试
+        run: OHOS_SDK_ETS="$OHOS_SDK_DIR/ets" npm run test:ui
+
+      - name: 上传截图与日志
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ui-report
+          path: harmony-agent/dist/ui-report/
+          if-no-files-found: ignore
+          retention-days: 7

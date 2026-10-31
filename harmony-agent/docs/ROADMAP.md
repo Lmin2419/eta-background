@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | ArkUI 启动白屏修复（0.9.32） | 代码与四项检查通过，真机启动待测 | 用户已安装 0.9.31，但 BuilderParam 使首页 this 指向侧栏。显式闭包修复 99 处同类传递；10 项新增接收者回归，从 #16 同步下游；[修复记录](ARKUI_BUILDER_RECEIVER_FIX.md) |
 | T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，PR #8（分支 `harmony/m0-0.9.1`），三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；ArkTS 检查 0 错误（OpenHarmony SDK 26.0.0.38）；未生成 HAP |
+| 无头界面测试 | 完成（Claude） | `npm run test:ui`：不依赖 hvigor 的预览编译 + OpenHarmony Linux 预览器 + `tests/ui/` 场景；CI 任务 `Harmony / UI preview tests`，上传截图。首次运行即发现 0.9.32 顶栏和输入栏因 `bindMenu/bindPopup($$this)` 运行时报错而不显示，已在同一分支修复（0.9.33）。说明见 `scripts/ui-preview/README.md` |
 | `.ets` 与资源检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets` + `npm run check:res`（restool 资源打包），CI 任务 `Harmony / ArkTS (.ets) and resources check`，也覆盖 base 为 `harmony/**` 的叠加 PR |
 | E01（0.9.2） | PR #9，修复完成、四项检查通过 | 已合入 M0 `2d44742`；app_name 仅由 AppScope 定义。213 项测试通过，ArkTS 0 错误，restool 1,833 项资源通过；按夜间规则进入 L1 |
 | L1（0.9.3） | 代码完成、四项检查通过 | `harmony/l1-conversation` 基于 E01；36 项 Eta 单测，0 跳过；总计 249 项通过，ArkTS 0 错误、restool 通过；未接入页面，真机待测 |
