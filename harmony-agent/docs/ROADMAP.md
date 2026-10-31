@@ -1,8 +1,6 @@
 # 随身助手推进方案（0.9.1 → 0.14）
 
-2026-10-31 真机反馈修复：合入显式 Builder 插槽闭包，防止首页、顶栏与子页面误用子组件接收者；新增 SDK AST 审计和 10 项回归（E02 的首页用例待 E03 引入）。本分支保留历史任务版本，最终交付为 0.9.32；ArkTS 检查通过/未生成 HAP 的结果以本分支最新 CI 为准，真机待测。见 [修复与逐项验收](ARKUI_BUILDER_RECEIVER_FIX.md)。
-
-第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮当前 `harmony/e08b-skills` / 0.9.28；必做队列、记忆及 Skills 安装核心通过四项检查。正式存储未切换。继续 Skills 平台/页面。
+第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮报告：[2026-10-31 第三轮](reports/2026-10-31-round3.md)。当前 `harmony/e08c-mcp` / 0.9.32 / PR #36；必做队列、记忆及 Skills 安装核心通过四项检查。Skills 页面 #35 草稿阻塞，MCP 从 #34 独立推进，MCP 四项检查通过。正式存储未切换。
 
 制定：2026-10-30。基于 `main@aadbf93`。执行规则见 [../AGENTS.md](../AGENTS.md)。
 
@@ -10,6 +8,7 @@
 
 | 任务 | 状态 | 说明 |
 | --- | --- | --- |
+| ArkUI 启动白屏修复（0.9.32） | 代码与四项检查通过，真机启动待测 | 用户已安装 0.9.31，但 BuilderParam 使首页 this 指向侧栏。显式闭包修复 99 处同类传递；10 项新增接收者回归，从 #16 同步下游；[修复记录](ARKUI_BUILDER_RECEIVER_FIX.md) |
 | T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，PR #8（分支 `harmony/m0-0.9.1`），三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；ArkTS 检查 0 错误（OpenHarmony SDK 26.0.0.38）；未生成 HAP |
 | `.ets` 与资源检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets` + `npm run check:res`（restool 资源打包），CI 任务 `Harmony / ArkTS (.ets) and resources check`，也覆盖 base 为 `harmony/**` 的叠加 PR |
 | E01（0.9.2） | PR #9，修复完成、四项检查通过 | 已合入 M0 `2d44742`；app_name 仅由 AppScope 定义。213 项测试通过，ArkTS 0 错误，restool 1,833 项资源通过；按夜间规则进入 L1 |
@@ -23,6 +22,7 @@
 | E03（0.9.12 / PR #17） | 新壳层完成、四项检查通过 | 合入 #16 追加；Index 已切 Navigation/NavDestination，所有宽度推移；448 测试、ArkTS 0 error、1,852 资源；原测试 2 完整 / 3 平台待测；[交付记录](E03_NAVIGATION_PORT.md) |
 | E04a（0.9.13） | 首页与输入栏完成、四项检查通过 | `harmony/e04a-home-input` 基于 E03；464 测试、12 原测试完整 / 2 平台定位待测、0 ArkTS error、1,855 资源；[交付记录](E04A_HOME_INPUT_PORT.md) |
 | E04b（0.9.14） | 消息与 Markdown 接入、四项检查通过 | `harmony/e04b-chat-rendering` 基于 E04a；473 测试、0 ArkTS error、1,861 资源；复用 L2/L3 原测试，新增 9 集成测试；[交付记录](E04B_CHAT_RENDERING_PORT.md) |
+| E04b 修复（0.9.31） | DevEco 10905201 反馈修复，重新编译待用户验证 | ListItem 底部 1vp 锚点改为合法 Row；SDK 父容器校验 + 7 回归；从 #19 同步下游，[修复记录](DEV_ECO_10905201_FIX.md) |
 | E04c（0.9.15） | 排队与消息操作接入、四项检查通过 | `harmony/e04c-chat-actions` 基于 E04b；491 测试、5 原测试 / 0 跳过、13 集成测试、0 ArkTS error、1,863 资源；[交付记录](E04C_CHAT_ACTIONS_PORT.md) |
 | E07a（0.9.16） | 侧栏/导出完成，存储对照留 E07b | 503 测试，0 ArkTS error，1,864 资源；9 项原 Store 测试的逻辑适配 + 3 新验证；完整 Room 对照未完成，[交付记录](E07A_CONVERSATION_PANE_PORT.md) |
 | E07b（PR #22 原分析） | 用户已确认方案 A；E07b3 待真机检查点 ①–④ | [原分析与决定](E07B_STORAGE_DECISION.md)；实施按下面 E07b1 / E07b2 分开交付 |
@@ -38,7 +38,9 @@
 | P1d（0.9.26） | Gemini 接入、四项通过 | 831 测试；42 原测试 / 协议跳过 0 + 8 适配；另 10 完整平台/工具集成待后续；ArkTS 0 error、1,941 资源；[交付记录](P1D_GEMINI_PORT.md) |
 | E08a（0.9.27） | 记忆页面/本地管理完成、四项通过 | 846 测试；9 原测试 / 0 跳过 + 6 适配；ArkTS 0 error、1,943 资源；对话未使用，[交付记录](E08A_MEMORY_PORT.md) |
 | E08b1（0.9.28） | Skills 安装/恢复核心完成、四项通过 | 887 测试；33 原测试 / 1 Loader 相关跳过 + 8 适配；ArkTS 0 error、1,943 资源；平台/页面留 E08b2，[交付记录](E08B1_SKILL_INSTALLER_PORT.md) |
-| E08b2 起 / E09 | 未开始 | 继续 Skills 平台/页面 → MCP；M1 仍未验收 |
+| E08b2（0.9.29 / #35） | 草稿-阻塞，第三次检查仍失败 | 903 测试通过；`EtaSkills.ets:41` 的构造器参数属性不被 ArkTS 接受（1 error）；资源未运行。后续从 #34 分支跳过它 |
+| E08c（0.9.30 / #36） | MCP 代码完成、四项通过 | 919 测试；ArkTS 0 error、1,946 资源；14 原测试 / 2 完整模型 executor 延期 + 18 适配；无模型调用注册；[交付记录](E08C_MCP_PORT.md) |
+| E08 后续 / E09 | 本轮未开始 | 角色、Subagent 等留后续；M1 仍未验收 |
 | M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |
 

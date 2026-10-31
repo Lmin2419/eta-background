@@ -31,7 +31,7 @@ export struct SettingsScreen {
     this.row($r('app.string.ui_memory_b55ff5'),$r('app.media.ic_rounded_menu_book'),$r('app.color.eta_preference_orange'),!!this.controller?.memory,()=>this.controller?.openMemory());EtaPreferenceDivider()
     this.row($r('app.string.eta_route_subagents'),$r('app.media.ic_rounded_hub'),$r('app.color.eta_preference_blue'),false,()=>{});EtaPreferenceDivider()
     this.row($r('app.string.route_skills'),$r('app.media.ic_rounded_import_contacts'),$r('app.color.eta_preference_green'),false,()=>{});EtaPreferenceDivider()
-    this.row($r('app.string.route_mcp_servers'),$r('app.media.ic_rounded_account_tree'),$r('app.color.eta_preference_blue'),false,()=>{});EtaPreferenceDivider()
+    this.row($r('app.string.route_mcp_servers'),$r('app.media.ic_rounded_account_tree'),$r('app.color.eta_preference_blue'),!!this.controller?.mcp,()=>this.controller?.openMcp());EtaPreferenceDivider()
     this.row($r('app.string.eta_route_characters'),$r('app.media.ic_rounded_sports_bar'),$r('app.color.eta_preference_orange'),false,()=>{})
   }}
   @Builder private tools(){Column(){

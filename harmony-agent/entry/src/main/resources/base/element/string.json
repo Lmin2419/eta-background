@@ -1341,6 +1341,18 @@
       "value": "切换为跟随系统后，重新打开应用生效"
     },
     {
+      "name": "eta_mcp_invalid_url",
+      "value": "请输入有效的 HTTP 或 HTTPS 服务器地址"
+    },
+    {
+      "name": "eta_mcp_save_failed",
+      "value": "MCP 设置未能保存或读取，请重试；原配置尚未改动"
+    },
+    {
+      "name": "eta_mcp_token_invalid",
+      "value": "Token 超过 1024 字节或含有无效换行，尚未保存"
+    },
+    {
       "name": "eta_memory_file_name",
       "value": "MEMORY.md"
     },
