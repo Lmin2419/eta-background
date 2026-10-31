@@ -1,6 +1,12 @@
 // Ported from app/src/main/kotlin/io/github/mangi/eta/agent/device/RootShellDeviceController.kt @ 3b1794d (ElementObservation / ElementSource / UiNode only)
 // Copyright © 2026 蛮吉 (Mangi-11). PolyForm Noncommercial 1.0.0.
-import { Rect } from './ScrollGestureContract';
+/** 与 ScrollGestureContract 的 Rect 同形；本文件独立声明，避免跨任务依赖。 */
+export interface Rect {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
 export enum ElementSource {
   ACCESSIBILITY = 'accessibility',
   UIAUTOMATOR = 'uiautomator',
