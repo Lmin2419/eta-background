@@ -1,5 +1,6 @@
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderModelsTab.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import { implementedProtocol } from '../../../../core/eta/protocol/foundationProviderBridge';
 import { window } from '@kit.ArkUI';
 import { common } from '@kit.AbilityKit';
 import { FoundationController, ShellState, emptyShellState } from '../../../../core/foundation/controller';
@@ -52,7 +53,7 @@ export struct ProviderModelsTab {
   private allModelsSelected():boolean{const ids=this.controller?.editor.models().map(m=>m.id)||[];return !!ids.length&&ids.every(id=>this.state.editor.modelSelection.includes(id));}
   private remove():void{const id=this.state.editor.draft.id;this.getUIContext().showAlertDialog({title:$r('app.string.ui_delete_3755f5'),message:this.plural($r('app.plural.provider_delete_models_action'),this.state.editor.modelSelection.length),primaryButton:{value:$r('app.string.action_cancel'),action:()=>{}},secondaryButton:{value:$r('app.string.ui_delete_3755f5'),action:()=>{if(id===this.state.editor.draft.id)this.controller?.editor.deleteSelectedModels();}}});}
   @Builder private actions(){Column(){
-    EtaArrowPreference({title:this.state.editor.busy?$r('app.string.page_retrieving_a880c9'):$r('app.string.page_automatically_pull_from_remote_f883d0'),summary:$r('app.string.provider_models_endpoint_summary',this.state.editor.draft.baseUrl),isEnabled:!this.state.editor.busy&&this.state.editor.draft.protocol==='chat_completions',onAction:()=>{void this.controller?.probeProvider(false);}})
+    EtaArrowPreference({title:this.state.editor.busy?$r('app.string.page_retrieving_a880c9'):$r('app.string.page_automatically_pull_from_remote_f883d0'),summary:$r('app.string.provider_models_endpoint_summary',this.state.editor.draft.baseUrl),isEnabled:!this.state.editor.busy&&implementedProtocol(this.state.editor.draft.protocol),onAction:()=>{void this.controller?.probeProvider(false);}})
     EtaArrowPreference({title:$r('app.string.ui_add_custom_model_a5ddc0'),summary:$r('app.string.ui_manually_fill_in_the_display_name_and_model_id_077a7b'),isEnabled:!this.state.editor.busy,onAction:()=>this.edit()})
   }}
   @Builder private row(model:ProviderModelUi){Column(){Row({space:S.Dp8}){

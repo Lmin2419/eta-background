@@ -2,7 +2,7 @@
 
 2026-10-31 真机反馈修复：合入显式 Builder 插槽闭包，防止首页、顶栏与子页面误用子组件接收者；新增 SDK AST 审计和 10 项回归（E02 的首页用例待 E03 引入）。本分支保留历史任务版本，最终交付为 0.9.32；ArkTS 检查通过/未生成 HAP 的结果以本分支最新 CI 为准，真机待测。见 [修复与逐项验收](ARKUI_BUILDER_RECEIVER_FIX.md)。
 
-第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮当前 `harmony/e07b2-rdb-migration` / 0.9.20，独立 RDB 适配与迁移代码四项检查通过，正式入口未切换。下一项 P1a Responses。
+第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮当前 `harmony/p1a-responses` / 0.9.21，Responses 与公共协议部件四项检查通过并接入 API Key 聊天；正式存储仍未切换。下一项 P1b Chat Completions。
 
 制定：2026-10-30。基于 `main@aadbf93`。执行规则见 [../AGENTS.md](../AGENTS.md)。
 
@@ -28,6 +28,7 @@
 | E07b（PR #22 原分析） | 用户已确认方案 A；E07b3 待真机检查点 ①–④ | [原分析与决定](E07B_STORAGE_DECISION.md)；实施按下面 E07b1 / E07b2 分开交付 |
 | E07b1（0.9.19） | 逻辑与端口完成、四项通过；未切换 | 588 测试、ArkTS 0 error、1,935 资源；44 项原测试逻辑移植 / 0 跳过，另 4 边界测试；[交付记录](E07B1_STORE_PORT.md) |
 | E07b2（0.9.20） | RDB / 迁移代码完成、四项通过；未切换 | 602 测试、ArkTS 0 error、1,935 资源；新增 14 项 SQL / 迁移测试，原测试新增 0 / 跳过 0；[交付记录](E07B2_RDB_MIGRATION.md) |
+| P1a（0.9.21） | Responses 接入、四项通过 | 663 测试、ArkTS 0 error、1,935 资源；51 原测试 / 0 跳过，另 10 适配验证；订阅登录仍 C；[交付记录](P1A_RESPONSES_PORT.md) |
 | E05（0.9.17） | 设置与外观页面接入、四项通过 | 512 测试、0 ArkTS error、1,879 资源；默认思考/自动压缩等目标仍禁用，[交付记录](E05_SETTINGS_APPEARANCE_PORT.md) |
 | E06（0.9.18） | 页面与主要路径接入、四项通过；完整对齐未验收 | 540 测试、0 ArkTS error、1,935 资源；12 原测试完整 / 4 平台部分 / 11 C 类排除；内置种子等差异见 [交付记录](E06_PROVIDER_PORT.md) |
 | E08–E09 | 未开始 | 按第三轮队列完成前置任务后再继续；M1 仍未验收 |
