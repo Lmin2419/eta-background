@@ -52,7 +52,7 @@ export struct MarkdownTextView {
           .decoration({type:span.strike?TextDecorationType.LineThrough:TextDecorationType.None})
           .textBackgroundStyle({color:span.code&&span.visible?$r('app.color.eta_markdown_inline_code'):$r('app.color.eta_transparent'),radius:S.Dp2})
           .onClick(()=>{if(span.visible&&span.url)this.link(span.url);})
-      },(span:RenderSpan)=>span.visible?span.key+'|v':span.key+'|h')
+      },(span:RenderSpan)=>span.key)
     }.fontSize(this.fontSizeValue).lineHeight(this.lineHeightValue).textAlign(this.textAlignment)
       .fontColor(this.muted?$r('app.color.miuix_on_surface_variant_summary'):$r('app.color.miuix_on_surface'))
       .copyOption(CopyOptions.LocalDevice).wordBreak(this.code?WordBreak.NORMAL:WordBreak.BREAK_WORD)
