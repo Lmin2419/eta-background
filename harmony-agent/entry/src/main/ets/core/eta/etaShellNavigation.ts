@@ -3,7 +3,7 @@
 // Compatibility intents for unported 0.9 pages; EtaNavigation owns the only page stack.
 import { EtaNavigation } from './etaNavigation';
 import { AppRoute, AppRouteName, NewProviderType, decodeRoutes, encodeRoutes } from './routes';
-export type Screen = 'chat' | 'providers' | 'provider' | 'settings' | 'diagnostics';
+export type Screen = 'chat' | 'providers' | 'provider' | 'settings' | 'diagnostics' | 'appearance';
 export type Sheet = 'none' | 'models' | 'catalog';
 export class EtaShellNavigation {
   readonly eta = new EtaNavigation();
@@ -20,6 +20,7 @@ export class EtaShellNavigation {
       case AppRouteName.ModelProviderNew:
       case AppRouteName.ModelProviderDetail: return 'provider';
       case AppRouteName.Settings: return 'settings';
+      case AppRouteName.AppearanceSettings: return 'appearance';
       default: return 'chat';
     }
   }
@@ -30,6 +31,7 @@ export class EtaShellNavigation {
     else if (screen === 'settings') this.eta.push(new AppRoute(AppRouteName.Settings));
     else if (screen === 'provider') this.provider('');
   }
+  appearance():void{this.sheet='none';this.diagnostics=false;this.eta.push(new AppRoute(AppRouteName.AppearanceSettings));}
   provider(id: string): void {
     this.sheet = 'none'; this.diagnostics = false;
     this.eta.push(id ? new AppRoute(AppRouteName.ModelProviderDetail,id) : new AppRoute(AppRouteName.ModelProviderNew,null,NewProviderType.OpenAiCompatible));
@@ -45,7 +47,7 @@ export class EtaShellNavigation {
   }
   restore(encoded: string): boolean {
     // Do not resurrect unported pages or an unsaved credential editor after process death.
-    const supported=[AppRouteName.Home,AppRouteName.Settings,AppRouteName.ModelProviders];
+    const supported=[AppRouteName.Home,AppRouteName.Settings,AppRouteName.AppearanceSettings,AppRouteName.ModelProviders];
     try {
       if(!this.eta.restoreStack(encodeRoutes(decodeRoutes(encoded).filter(route=>supported.includes(route.name))))) return false;
     } catch { return false; }

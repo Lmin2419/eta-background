@@ -1,6 +1,8 @@
+import { i18n } from '@kit.LocalizationKit';
 import { PaneDateContext } from '../core/eta/conversationDrawer';
 import { ExportLabels } from '../core/eta/conversationMarkdownExporter';
 import { SystemNoticeCode } from '../core/eta/model/conversation';
+import { EtaAppearance } from './EtaAppearance';
 import { EtaConversations } from './EtaConversations';
 import { bundleManager, common, Want } from '@kit.AbilityKit';
 import { util } from '@kit.ArkTS';
@@ -25,6 +27,7 @@ export class FoundationHost {
     return FoundationHost.instance;
   }
   readonly controller: FoundationController;
+  readonly appearance:EtaAppearance;
   private loaded = false;
   private loading: Promise<void> | undefined;
   private ledger: TaskLedger;
@@ -32,6 +35,7 @@ export class FoundationHost {
   readonly diagnostics: DiagnosticLog;
   constructor(context: common.UIAbilityContext) {
     this.context = context;
+    this.appearance=new EtaAppearance(context,()=>this.controller?.changed());
     const db = new RuntimeDatabase(context);
     const diagnostics = new DiagnosticLog(new DatabaseDocumentStorage(db, 'diagnostics'));
     this.diagnostics = diagnostics;
@@ -42,11 +46,13 @@ export class FoundationHost {
     this.ledger = new TaskLedger(new DatabaseDocumentStorage(db, 'tasks'), uuid);
     const etaConversations=new EtaConversations(context);
     const dependencies: FoundationDependencies = {
+      language:():string=>i18n.System.getAppPreferredLanguage(),
+      setLanguage:(language:string):void=>{i18n.System.setAppPreferredLanguage(language);if(language!=='default')context.getApplicationContext().setLanguage(language);},
       exportName:(title:string):string=>etaConversations.fileName(title),
       paneDate:():PaneDateContext=>etaConversations.dateContext(),exportLabels:():ExportLabels=>etaConversations.labels(),
       noticeSearch:(query:string):SystemNoticeCode[]=>etaConversations.noticeSearch(query),
       exportMarkdown:(name:string,markdown:string):Promise<boolean>=>etaConversations.exportMarkdown(name,markdown),
-      chats, profiles, drafts, uuid, diagnostics,
+      chats, profiles, drafts, uuid, diagnostics,appearance:this.appearance.repository,
       elapsed: ():number => systemDateTime.getUptime(systemDateTime.TimeType.STARTUP),
       transport: (): HttpTransport => new DiagnosticTransport(new HarmonyHttpTransport(), diagnostics),
       load: (): Promise<void> => this.load(chats, profiles, drafts),

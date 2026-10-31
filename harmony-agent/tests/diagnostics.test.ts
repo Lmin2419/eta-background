@@ -105,7 +105,7 @@ test('controller records a chat round, exposes the diagnostics screen and never 
     load: async () => { await chats.load(); await drafts.load(); }
   });
   await controller.initialize();
-  assert.equal(controller.snapshot().appVersion, '0.9.1');
+  assert.equal(controller.snapshot().appVersion, '0.9.1 (90001)');
   controller.draft('PRIVATE-USER-QUESTION'); await controller.send();
   await controller.runtime.idle();
   await until(() => !controller.snapshot().chat.active);
