@@ -2,7 +2,7 @@
 
 2026-10-31 真机反馈修复：合入显式 Builder 插槽闭包，防止首页、顶栏与子页面误用子组件接收者；新增 SDK AST 审计和 10 项回归（E02 的首页用例待 E03 引入）。本分支保留历史任务版本，最终交付为 0.9.32；ArkTS 检查通过/未生成 HAP 的结果以本分支最新 CI 为准，真机待测。见 [修复与逐项验收](ARKUI_BUILDER_RECEIVER_FIX.md)。
 
-第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮当前 `harmony/e05b-thinking-compaction` / 0.9.23，默认思考与自动压缩已接入；35 项原测试通过，3 项跨协议原测试留 P1c。正式存储仍未切换。下一项 E06b。
+第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮当前 `harmony/e06b-catalog-capabilities` / 0.9.24；E06b 内置服务与模型能力已接入。正式存储仍未切换，E05b 的 3 项跨协议原测试留 P1c。下一项 P1c Anthropic。
 
 制定：2026-10-30。基于 `main@aadbf93`。执行规则见 [../AGENTS.md](../AGENTS.md)。
 
@@ -33,6 +33,7 @@
 | E05（0.9.17） | 设置与外观页面接入、四项通过 | 512 测试、0 ArkTS error、1,879 资源；默认思考/自动压缩等目标仍禁用，[交付记录](E05_SETTINGS_APPEARANCE_PORT.md) |
 | E05b（0.9.23） | 开关/运行时接入、四项通过；3 原测试待 P1c | 741 测试、ArkTS 0 error、1,935 资源；35 原测试 + 8 集成；独立旧库检查点保留原文；[交付记录](E05B_THINKING_COMPACTION_PORT.md) |
 | E06（0.9.18） | 页面与主要路径接入、四项通过；完整对齐未验收 | 540 测试、0 ArkTS error、1,935 资源；12 原测试完整 / 4 平台部分 / 11 C 类排除；内置种子等差异见 [交付记录](E06_PROVIDER_PORT.md) |
+| E06b（0.9.24） | 内置服务/目录/能力编辑完成、四项通过 | 757 测试；9 原测试 / 0 跳过 + 7 适配验证；ArkTS 0 error、资源通过；[交付记录](E06B_CATALOG_CAPABILITIES_PORT.md) |
 | E08–E09 | 未开始 | 按第三轮队列完成前置任务后再继续；M1 仍未验收 |
 | M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |

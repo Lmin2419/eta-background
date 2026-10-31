@@ -73,7 +73,7 @@ export class FoundationHost {
     if (!this.loading) this.loading = (async (): Promise<void> => {
       // The diagnostic log never throws; a broken log must not block the chat data.
       await this.diagnostics.load();
-      await this.runtimePreferences.load(); await profiles.load(); await chats.load(); await drafts.load(); await this.ledger.load(); this.loaded = true;
+      await this.runtimePreferences.load(); await profiles.load(); await profiles.ensureBuiltInsMerged(); await chats.load(); await drafts.load(); await this.ledger.load(); this.loaded = true;
     })().catch((error: Error): never => { this.loading = undefined; this.diagnostics.record('storage', '载入数据失败', error.message); throw error; });
     return this.loading;
   }

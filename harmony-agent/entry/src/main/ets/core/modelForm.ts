@@ -5,7 +5,7 @@ import { ModelProfile, modelCatalog } from './profiles';
 
 export interface ModelDraft extends ModelSettings {
   metadata?:ModelMetadata[];
-  systemPrompt?:string;isEnabled?:boolean;headerDrafts?:ProviderHeaderDraft[];
+  systemPrompt?:string;isEnabled?:boolean;isBuiltIn?:boolean;headerDrafts?:ProviderHeaderDraft[];
   id: string;
   name: string;
   rememberKey: boolean;
@@ -13,12 +13,12 @@ export interface ModelDraft extends ModelSettings {
   models: string[];
   streaming: boolean;
 }
-export function copyModelDraft(draft: ModelDraft):ModelDraft { return {...draft,models:draft.models.slice(),metadata:draft.metadata?.map(m=>({...m})),extraHeaders:{...draft.extraHeaders},headerDrafts:draft.headerDrafts?.map(h=>({...h}))}; }
+export function copyModelDraft(draft: ModelDraft):ModelDraft { return {...draft,models:draft.models.slice(),metadata:draft.metadata?JSON.parse(JSON.stringify(draft.metadata)):undefined,extraHeaders:{...draft.extraHeaders},headerDrafts:draft.headerDrafts?.map(h=>({...h}))}; }
 export function emptyModelDraft(): ModelDraft {
   return {id:'',name:'我的模型',baseUrl:'',model:'',apiKey:'',rememberKey:false,screenshots:true,allowInsecureHttp:false,models:[],streaming:true,protocol:'chat_completions',isEnabled:true,systemPrompt:''};
 }
 export function profileDraft(profile: ModelProfile, key: string): ModelDraft {
-  return {id:profile.id,name:profile.name,baseUrl:profile.baseUrl,model:profile.model,apiKey:key,
+  return {isBuiltIn:profile.isBuiltIn,id:profile.id,name:profile.name,baseUrl:profile.baseUrl,model:profile.model,apiKey:key,
     rememberKey:Boolean(profile.secretRef),screenshots:profile.screenshots,allowInsecureHttp:profile.allowInsecureHttp,models:modelCatalog(profile.models,profile.model),streaming:profile.streaming!==false,protocol:profile.protocol||'chat_completions',maxOutputTokens:profile.maxOutputTokens,reasoningEffort:profile.reasoningEffort,metadata:profile.metadata,extraHeaders:{...profile.extraHeaders},systemPrompt:profile.systemPrompt||'',isEnabled:profile.isEnabled!==false};
 }
 /** UI callbacks may echo the current text on remount/blur. Only a real destination edit invalidates its key. */
