@@ -23,7 +23,7 @@ export struct EtaPreferenceTheme {
 export struct EtaPreferenceGroup {
   @BuilderParam content: () => void = EmptyEtaSlot;
   build() {
-    Column() { EtaCard({ content: this.content }) }.width('100%')
+    Column() { EtaCard({ content: () => { this.content(); } }) }.width('100%')
       .padding({ left: P.SidePadding, right: P.SidePadding, bottom: P.GroupSpacing })
   }
 }

@@ -33,14 +33,14 @@ export struct DiagnosticsPage {
     ForEach(this.state.diagnostics.lines,(line:string)=>{Text(line).fontSize(F.Footnote1).fontFamily('monospace').fontColor($r('app.color.miuix_on_surface')).width('100%').copyOption(CopyOptions.LocalDevice)},(line:string,index:number)=>String(index)+line)
   }}
   @Builder private content(){Column({space:S.Dp16}){
-    EtaCard({insidePadding:S.Dp16,content:this.facts})
+    EtaCard({insidePadding:S.Dp16,content:() => { this.facts(); }})
     Row({space:S.Dp8}){
       EtaTextButton({text:$r('app.string.eta_diagnostics_copy'),primary:true,onAction:()=>this.copy()}).layoutWeight(1)
       EtaTextButton({text:$r('app.string.eta_diagnostics_clear'),isEnabled:this.state.diagnostics.total>0,onAction:()=>this.clear()}).layoutWeight(1)
     }.width('100%')
     if(this.notice!==''){Text(this.notice).fontSize(F.Body2).fontColor($r('app.color.eta_settings_primary'))}
     Text($r('app.string.eta_diagnostics_hint')).fontSize(F.Footnote1).fontColor($r('app.color.miuix_on_surface_variant_summary')).width('100%')
-    EtaCard({insidePadding:S.Dp16,content:this.events})
+    EtaCard({insidePadding:S.Dp16,content:() => { this.events(); }})
   }.width('100%').padding({left:S.Dp16,right:S.Dp16})}
-  build(){MiuixScaffoldPage({title:$r('app.string.background_diagnostics_title'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',content:this.content,onBack:()=>this.controller?.back()})}
+  build(){MiuixScaffoldPage({title:$r('app.string.background_diagnostics_title'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',content:() => { this.content(); },onBack:()=>this.controller?.back()})}
 }
