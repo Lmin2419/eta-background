@@ -82,7 +82,7 @@ export struct AgentAppShell {
   build() {
     Navigation(this.pathStack) {
       ConversationSidePaneScaffold({ isOpen: this.state.drawer, isCurrent: this.state.screen === 'chat',
-        pane: this.pane, content: this.homeContent, onOpenChange: (open: boolean) => this.controller?.drawer(open) })
+        pane: () => { this.pane(); }, content: () => { this.homeContent(); }, onOpenChange: (open: boolean) => this.controller?.drawer(open) })
     }.mode(NavigationMode.Stack).hideTitleBar(true).navDestination(this.destination)
       .width('100%').height('100%').backgroundColor($r('app.color.miuix_background'))
       .onAreaChange((_old, area) => { this.widthVp = Number(area.width); })
