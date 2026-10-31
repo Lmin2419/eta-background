@@ -51,3 +51,9 @@ HDC 原始源文件声明 Copyright (C) 2021 Huawei Device Co., Ltd.；securec �
 ## unicode-segmenter 0.14.0（L2b）
 
 仅 vendoring 扩展字素分割模块、依赖的 Unicode 数据与类型声明。来源 https://github.com/cometkim/unicode-segmenter ，MIT；Copyright (c) 2024 Hyeseong Kim。Rust 上游片段同为 MIT，两个许可证及逐文件 SHA-256 放在 `entry/src/main/ets/core/eta/markdown/vendor/unicode-segmenter/`。纯 JS，无原生/网络依赖、不安装全局 polyfill；用于替代 Eta 的 JVM BreakIterator，Markdown 块解析仍为本仓库 TS 实现。
+
+## models.dev 离线目录（E06 / 0.9.18）
+
+来源为 Eta 固定基准 `3b1794d70881c3c849b53d7778dd2bfdf0a46cc5` 的 `app/src/main/assets/catalog/models-dev-api.json.gzip`，Git blob SHA-1 `9d9c322cf19c1c129e70da1947586521e8aa2160`。数据版权 Copyright (c) 2025 models.dev，MIT；原文保存在 [licenses/models-dev-MIT.txt](licenses/models-dev-MIT.txt)，并随资源打包至 `rawfile/licenses/models-dev-MIT.txt`。
+
+`scripts/port-eta-catalog.ts` 验证原 gzip 散列，按移植解析器过滤不支持的候选并删除未使用字段；生成 `rawfile/catalog/models-dev-api.json`，173 个服务、4,932 个模型。生成前后候选集必须完全等值。此快照不包含 API Key，不代表全部模型在本平台或用户账户可用；运行时可从 models.dev 更新。

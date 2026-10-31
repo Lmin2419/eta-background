@@ -86,6 +86,7 @@ def generate(eta_root, output, check=False):
                     'MiuixDialogActions.kt', 'ItemDescriptionDialog.kt', 'MiuixScaffoldPage.kt', 'AdaptiveTopAppBar.kt', 'MiuixBackButton.kt', 'TopBarBackdrop.kt', 'AgentChatBody.kt', 'AgentModelPicker.kt', 'AgentChatModelControls.kt', 'ChatMessageItem.kt', 'AgentWorkProcess.kt', 'AgentToolActivity.kt', 'AgentStatusCard.kt', 'AgentConversationLoading.kt', 'AgentChatQueueStrip.kt', 'ConversationPanePanel.kt']
     texts = {name: (components / name).read_text() for name in source_names}
     texts['AppearanceSettingsScreen.kt']=(components.parent/'AppearanceSettingsScreen.kt').read_text()
+    for page in (components.parent/'pages/providers').glob('*.kt'): texts[page.name]=page.read_text()
     appearance_model=(components.parent.parent/'data/model/AppearanceSettings.kt').read_text()
     markdown_dir=components.parent / 'markdown'
     markdown_style=(markdown_dir/'MarkdownStyle.kt').read_text()
@@ -167,6 +168,9 @@ def generate(eta_root, output, check=False):
     source_for['EtaContextDefaults']='app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatModelControls.kt @ 3b1794d'
     source_for['EtaModelPickerDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentModelPicker.kt @ 3b1794d'
     queue=texts['AgentChatQueueStrip.kt']
+    objects['EtaProviderDefaults']={'SheetHeightFraction':float(re.search(r'\* ([\d.]+)f',texts['RemoteModelImportSheet.kt'])[1]),'DisabledAlpha':float(re.search(r'else ([\d.]+)f',texts['ModelProviderListScreen.kt'])[1]),'ModelDialogHeight':float(re.search(r'modelDialogBodyMaxHeight = ([\d.]+)\.dp',texts['ProviderModelsTab.kt'])[1]),'ModelDialogChrome':float(re.search(r'modelDialogChromeHeight = ([\d.]+)\.dp',texts['ProviderModelsTab.kt'])[1])}
+    objects['EtaProviderDefaults']['HeadersExpandedRotation']=float(re.search(r'if \(expanded\) ([\d.]+)f',texts['ProviderHeadersEditor.kt'])[1])
+    source_for['EtaProviderDefaults']='app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/RemoteModelImportSheet.kt; ModelProviderListScreen.kt; ProviderModelsTab.kt @ 3b1794d'
     objects['EtaAppearanceDefaults']={k:float(v) for k,v in re.findall(r'const val (\w+) = ([\d.]+)f',appearance_model)}
     objects['EtaAppearanceDefaults']['Percent']=100
     source_for['EtaAppearanceDefaults']='app/src/main/kotlin/io/github/mangi/eta/data/model/AppearanceSettings.kt; ui/AppearanceSettingsScreen.kt @ 3b1794d'

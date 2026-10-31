@@ -5,7 +5,7 @@ import { CompletionStream } from './stream';
 import { ModelProtocol, completeProtocol } from './protocols';
 
 export interface HttpTransport { post(url: string, headers: Record<string,string>, body: string): Promise<string>; get?(url: string, headers: Record<string,string>): Promise<string>; stream?(url:string,headers:Record<string,string>,body:string,onChunk:(chunk:string)=>void):Promise<void>; cancel(): void }
-export interface ModelSettings { baseUrl: string; model: string; apiKey: string; screenshots: boolean; allowInsecureHttp?: boolean; streaming?: boolean; protocol?:ModelProtocol; maxOutputTokens?:number; reasoningEffort?:string;extraHeaders?:Record<string,string> }
+export interface ModelSettings { systemPrompt?:string; baseUrl: string; model: string; apiKey: string; screenshots: boolean; allowInsecureHttp?: boolean; streaming?: boolean; protocol?:ModelProtocol; maxOutputTokens?:number; reasoningEffort?:string;extraHeaders?:Record<string,string> }
 export const field = (type: string, description: string): Record<string,unknown> => ({type, description});
 const observation = field('string','最近一次观察返回的 observation.id');
 export function tool(name: string, description: string, properties: Record<string,unknown>, required: string[]): Record<string,unknown> {
@@ -106,6 +106,7 @@ export class OpenAIClient implements ModelClient {
   cancel(): void { this.transport.cancel(); }
   async complete(messages: Message[], control: RunControl, onText?: (text:string)=>void,onReasoning?:(text:string)=>void): Promise<ModelReply> {
     control.check();
+    if(this.settings.systemPrompt?.trim())messages=[{role:'system',content:this.settings.systemPrompt.trim()},...messages.filter(m=>m.role!=='system')];
     if (!this.settings.model.trim()) throw new Error('请填写模型名称');
     if(this.settings.protocol&&this.settings.protocol!=='chat_completions')return completeProtocol(this.settings.protocol,modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.settings,this.transport,this.tools,messages,control,onText||(()=>{}),onReasoning||(()=>{}));
     const streaming=this.settings.streaming!==false&&Boolean(this.transport.stream);

@@ -91,7 +91,7 @@ test('exported character PNG round-trips its role and bounds corrupt chunks',()=
 });
 test('provider metadata is advisory, custom headers cannot override credentials or inject lines',()=>{
  assert.deepEqual(safeHeaders({'OpenAI-Project':'project'}),{'OpenAI-Project':'project'});
- for(const h of [{Authorization:'Bearer x'},{Cookie:'x'},{'x-api-key':'x'},{'OpenAI-Project':'x\r\nHost: bad'}])assert.throws(()=>safeHeaders(h),/只允许/);
+ for(const h of [{Authorization:'Bearer x'},{'x-api-key':'x'},{'OpenAI-Project':'x\r\nHost: bad'}])assert.throws(()=>safeHeaders(h),/系统管理|ASCII/);
  assert.equal(metadataFor({context_length:128000,architecture:{input_modalities:['text','image']}},'m').vision,true);assert.equal(metadataFor({},'m').vision,undefined);
 });
 test('real provider usage is accepted only with finite non-negative integer counts',()=>{

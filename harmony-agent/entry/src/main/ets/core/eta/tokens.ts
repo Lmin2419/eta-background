@@ -61,6 +61,15 @@ export class EtaContextDefaults {
   static readonly WarningThreshold: number = 0.8;
 }
 
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/RemoteModelImportSheet.kt; ModelProviderListScreen.kt; ProviderModelsTab.kt @ 3b1794d
+export class EtaProviderDefaults {
+  static readonly SheetHeightFraction: number = 0.72;
+  static readonly DisabledAlpha: number = 0.6;
+  static readonly ModelDialogHeight: number = 520.0;
+  static readonly ModelDialogChrome: number = 112.0;
+  static readonly HeadersExpandedRotation: number = 180.0;
+}
+
 // Ported from app/src/main/kotlin/io/github/mangi/eta/data/model/AppearanceSettings.kt; ui/AppearanceSettingsScreen.kt @ 3b1794d
 export class EtaAppearanceDefaults {
   static readonly MIN_INTERFACE_SCALE: number = 0.8;
@@ -240,6 +249,8 @@ export class EtaComponentSizes {
   static readonly Dp72: number = 72.0;
   static readonly Dp88: number = 88.0;
   static readonly Dp100: number = 100.0;
+  static readonly Dp112: number = 112.0;
+  static readonly Dp120: number = 120.0;
   static readonly Dp136: number = 136.0;
   static readonly Dp148: number = 148.0;
   static readonly Dp248: number = 248.0;
@@ -249,6 +260,7 @@ export class EtaComponentSizes {
   static readonly Dp320: number = 320.0;
   static readonly Dp340: number = 340.0;
   static readonly Dp360: number = 360.0;
+  static readonly Dp520: number = 520.0;
 }
 
 // Ported from EtaPreferenceRow.kt / EtaChoiceChip.kt @ 3b1794d; Miuix PressFeedback.kt @ 39c40f9
