@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "tsx --test tests/*.test.ts tests/eta/*.test.ts",
+    "test": "tsx --test tests/*.test.ts tests/eta/*.test.ts tests/eta/tool/*.test.ts tests/eta/accessibility/*.test.ts",
     "test:native": "bash scripts/test-native.sh",
     "check": "tsc --noEmit",
     "check:ets": "node scripts/check-ets.cjs",
