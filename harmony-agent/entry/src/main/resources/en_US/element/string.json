@@ -1153,6 +1153,62 @@
       "value": "Working…"
     },
     {
+      "name": "eta_about_details",
+      "value": "Based on Eta\nOriginal author: 蛮吉 (Mangi-11)\nPolyForm Noncommercial 1.0.0. Noncommercial use only.\nRequired Notice: Copyright © 2026 蛮吉 (Mangi-11)."
+    },
+    {
+      "name": "eta_diagnostics_clear",
+      "value": "Clear records"
+    },
+    {
+      "name": "eta_diagnostics_clear_message",
+      "value": "Clear event records. Keep conversations and model services."
+    },
+    {
+      "name": "eta_diagnostics_clear_title",
+      "value": "Clear diagnostics"
+    },
+    {
+      "name": "eta_diagnostics_copied",
+      "value": "Report copied"
+    },
+    {
+      "name": "eta_diagnostics_copy",
+      "value": "Copy report"
+    },
+    {
+      "name": "eta_diagnostics_copy_failed",
+      "value": "Copy failed. Long-press an event to copy."
+    },
+    {
+      "name": "eta_diagnostics_empty",
+      "value": "No records"
+    },
+    {
+      "name": "eta_diagnostics_events",
+      "value": "Recent events · %d"
+    },
+    {
+      "name": "eta_diagnostics_hint",
+      "value": "Keys, authorization, URL paths and message bodies are omitted. Include reproduction steps."
+    },
+    {
+      "name": "eta_language_english",
+      "value": "English"
+    },
+    {
+      "name": "eta_language_hans",
+      "value": "简体中文"
+    },
+    {
+      "name": "eta_language_hant",
+      "value": "繁體中文"
+    },
+    {
+      "name": "eta_language_restart",
+      "value": "Restart the app after selecting the system language"
+    },
+    {
       "name": "eta_port_about_author",
       "value": "Original author: 蛮吉 (Mangi-11)"
     },
@@ -1203,6 +1259,10 @@
     {
       "name": "eta_route_subagents",
       "value": "Subagent"
+    },
+    {
+      "name": "eta_wireless_debugging",
+      "value": "Wireless debugging"
     },
     {
       "name": "execution_channel",

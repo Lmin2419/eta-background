@@ -61,6 +61,14 @@ export class EtaContextDefaults {
   static readonly WarningThreshold: number = 0.8;
 }
 
+// Ported from app/src/main/kotlin/io/github/mangi/eta/data/model/AppearanceSettings.kt; ui/AppearanceSettingsScreen.kt @ 3b1794d
+export class EtaAppearanceDefaults {
+  static readonly MIN_INTERFACE_SCALE: number = 0.8;
+  static readonly MAX_INTERFACE_SCALE: number = 1.1;
+  static readonly DEFAULT_INTERFACE_SCALE: number = 1.0;
+  static readonly Percent: number = 100;
+}
+
 // Ported from Compose FontWeight.SemiBold used by ConversationPanePanel.kt @ 3b1794d (CSS/ArkUI weight 600)
 export class EtaFontWeights {
   static readonly SemiBold: number = 600;

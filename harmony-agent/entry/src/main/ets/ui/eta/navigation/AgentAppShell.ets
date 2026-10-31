@@ -6,8 +6,9 @@ import { AppRouteName, encodeRoute } from '../../../core/eta/routes';
 import { EtaPageDefaults as P, EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
 import { AgentHomeScreen } from '../screens/AgentHomeScreen';
 import { ProviderListPage, ProviderDetailPage, ModelSelectionSheet } from '../../foundation/ProviderPages';
-import { DiagnosticsPage } from '../../foundation/DiagnosticsPage';
-import { LegacySettingsContent } from '../../foundation/LegacyShellContent';
+import { DiagnosticsPage } from '../screens/DiagnosticsPage';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { AppearanceSettingsScreen } from '../screens/AppearanceSettingsScreen';
 import { ConversationSidePaneScaffold } from '../components/ConversationSidePaneScaffold';
 import { AgentTopBar } from './AgentTopBar';
 
@@ -67,14 +68,17 @@ export struct AgentAppShell {
   @Builder private destination(name: string) {
     NavDestination() {
       Column() {
+        if (name !== AppRouteName.Settings && name !== AppRouteName.AppearanceSettings && name !== 'HarmonyDiagnostics') {
         AgentTopBar({ route: name === 'HarmonyDiagnostics' ? AppRouteName.Settings : name as AppRouteName,
           diagnostics: name === 'HarmonyDiagnostics', isWide: this.widthVp >= P.WideScreenMinWidth, onBack: () => this.controller?.back() })
+        }
         this.error()
         Column() {
           if (name === AppRouteName.ModelProviders) { ProviderListPage({ state: this.state, controller: this.controller }) }
           else if (name === AppRouteName.ModelProviderDetail || name === AppRouteName.ModelProviderNew) { ProviderDetailPage({ state: this.state, controller: this.controller }) }
           else if (name === 'HarmonyDiagnostics') { DiagnosticsPage({ state: this.state, controller: this.controller }) }
-          else if (name === AppRouteName.Settings) { LegacySettingsContent({ state: this.state, controller: this.controller }) }
+          else if (name === AppRouteName.Settings) { SettingsScreen({ state: this.state, controller: this.controller }) }
+          else if (name === AppRouteName.AppearanceSettings) { AppearanceSettingsScreen({state:this.state,controller:this.controller}) }
         }.layoutWeight(1).width('100%')
       }.width('100%').height('100%').backgroundColor($r('app.color.miuix_background'))
     }.hideTitleBar(true).onBackPressed(() => { this.controller?.back(); return true; })

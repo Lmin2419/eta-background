@@ -85,6 +85,8 @@ def generate(eta_root, output, check=False):
                     'EtaFeatureCard.kt', 'EtaChoiceChip.kt', 'ToolChip.kt', 'SectionHeader.kt', 'ListEmptyState.kt',
                     'MiuixDialogActions.kt', 'ItemDescriptionDialog.kt', 'MiuixScaffoldPage.kt', 'AdaptiveTopAppBar.kt', 'MiuixBackButton.kt', 'TopBarBackdrop.kt', 'AgentChatBody.kt', 'AgentModelPicker.kt', 'AgentChatModelControls.kt', 'ChatMessageItem.kt', 'AgentWorkProcess.kt', 'AgentToolActivity.kt', 'AgentStatusCard.kt', 'AgentConversationLoading.kt', 'AgentChatQueueStrip.kt', 'ConversationPanePanel.kt']
     texts = {name: (components / name).read_text() for name in source_names}
+    texts['AppearanceSettingsScreen.kt']=(components.parent/'AppearanceSettingsScreen.kt').read_text()
+    appearance_model=(components.parent.parent/'data/model/AppearanceSettings.kt').read_text()
     markdown_dir=components.parent / 'markdown'
     markdown_style=(markdown_dir/'MarkdownStyle.kt').read_text()
     markdown_content=(markdown_dir/'MarkdownContent.kt').read_text()
@@ -165,6 +167,9 @@ def generate(eta_root, output, check=False):
     source_for['EtaContextDefaults']='app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatModelControls.kt @ 3b1794d'
     source_for['EtaModelPickerDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentModelPicker.kt @ 3b1794d'
     queue=texts['AgentChatQueueStrip.kt']
+    objects['EtaAppearanceDefaults']={k:float(v) for k,v in re.findall(r'const val (\w+) = ([\d.]+)f',appearance_model)}
+    objects['EtaAppearanceDefaults']['Percent']=100
+    source_for['EtaAppearanceDefaults']='app/src/main/kotlin/io/github/mangi/eta/data/model/AppearanceSettings.kt; ui/AppearanceSettingsScreen.kt @ 3b1794d'
     objects['EtaFontWeights']={'SemiBold':600}
     source_for['EtaFontWeights']='Compose FontWeight.SemiBold used by ConversationPanePanel.kt @ 3b1794d (CSS/ArkUI weight 600)'
     objects['ConversationPanelMetrics']=defaults(texts['ConversationPanePanel.kt'],'ConversationPanelMetrics')

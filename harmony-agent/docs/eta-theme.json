@@ -260,6 +260,12 @@
       "ErrorThreshold": 0.95,
       "WarningThreshold": 0.8
     },
+    "EtaAppearanceDefaults": {
+      "MIN_INTERFACE_SCALE": 0.8,
+      "MAX_INTERFACE_SCALE": 1.1,
+      "DEFAULT_INTERFACE_SCALE": 1.0,
+      "Percent": 100
+    },
     "EtaFontWeights": {
       "SemiBold": 600
     },

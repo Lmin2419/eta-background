@@ -1,6 +1,6 @@
 // Ported startup/navigation from app/src/main/kotlin/io/github/mangi/eta/ui/app/StartupSplash.kt, AgentAppRoot.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
-import { UIAbility, Want, AbilityConstant, errorManager, ConfigurationConstant } from '@kit.AbilityKit';
+import { UIAbility, Want, AbilityConstant, errorManager, Configuration } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 import { StartupContentHost } from '../core/eta/startupSplash';
 import { FoundationHost } from '../platform/FoundationHost';
@@ -38,21 +38,12 @@ export default class EntryAbility extends UIAbility {
     const controller = FoundationHost.get(this.context).controller;
     controller.foreground(false); void controller.flush();
   }
+  onConfigurationUpdate(_configuration:Configuration):void{void FoundationHost.get(this.context).appearance.refreshSystemBars().catch(()=>{});}
   onWindowStageCreate(stage: window.WindowStage): void { void this.prepare(stage); }
   private async prepare(stage: window.WindowStage): Promise<void> {
     await this.startup.load(async () => {
-      // E05 replaces this explicit bootstrap with persisted appearance settings.
-      this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT);
-      AppStorage.setOrCreate('darkTheme', false);
-      try {
-        const main = await stage.getMainWindow();
-        await main.setWindowLayoutFullScreen(false);
-        const resources = this.context.resourceManager;
-        const surface = '#' + (resources.getColorSync($r('app.color.miuix_background').id) >>> 0).toString(16).padStart(8, '0');
-        const foreground = '#' + (resources.getColorSync($r('app.color.miuix_on_background').id) >>> 0).toString(16).padStart(8, '0');
-        await main.setWindowSystemBarProperties({ statusBarColor: surface, navigationBarColor: surface,
-          statusBarContentColor: foreground, navigationBarContentColor: foreground });
-      } catch (_) {}
-    }, async () => { await stage.loadContent('pages/Index'); });
+      const host=FoundationHost.get(this.context);
+      try { await host.appearance.prepare(stage); } catch(e) { host.diagnostics.record('app','恢复外观失败',(e as Error).message); }
+    }, async () => { await stage.loadContent('pages/Index');try { await FoundationHost.get(this.context).appearance.afterContent(); } catch(e) { FoundationHost.get(this.context).controller.crash((e as Error).message); } });
   }
 }
