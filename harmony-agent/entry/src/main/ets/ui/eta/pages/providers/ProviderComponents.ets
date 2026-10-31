@@ -10,7 +10,7 @@ import { modelBrandResource } from '../../components/ModelBrandResources';
 @Component
 export struct ProviderSection {
   @Prop title:ResourceStr='';@BuilderParam content:()=>void=EmptyEtaSlot;
-  build(){Column(){if(this.title!==''){EtaPreferenceGroupTitle({title:this.title})}EtaPreferenceGroup({content:this.content})}.width('100%')}
+  build(){Column(){if(this.title!==''){EtaPreferenceGroupTitle({title:this.title})}EtaPreferenceGroup({content:() => { this.content(); }})}.width('100%')}
 }
 @Component
 export struct ProviderBrandIcon {
@@ -24,9 +24,9 @@ export struct ProviderPage {
   @BuilderParam content:()=>void=EmptyEtaSlot;@BuilderParam actions:()=>void=EmptyEtaSlot;
   onBack:()=>void=()=>{};@State private widthVp:number=S.Dp0;
   @Builder private back(){MiuixBackButton({onAction:this.onBack})}
-  @Builder private bar(){AdaptiveTopAppBar({title:this.title,wide:this.widthVp>=P.WideScreenMinWidth,navigationIcon:this.back,actions:this.actions})}
+  @Builder private bar(){AdaptiveTopAppBar({title:this.title,wide:this.widthVp>=P.WideScreenMinWidth,navigationIcon:() => { this.back(); },actions:() => { this.actions(); }})}
   build(){Column(){
-    TopBarBackdrop({isEnabled:this.blurEnabled,content:this.bar})
+    TopBarBackdrop({isEnabled:this.blurEnabled,content:() => { this.bar(); }})
     Column(){this.content()}.width('100%').layoutWeight(1).padding({left:Math.max(S.Dp0,(this.widthVp-P.MaxPageContentWidth)/2),right:Math.max(S.Dp0,(this.widthVp-P.MaxPageContentWidth)/2)})
   }.width('100%').height('100%').backgroundColor($r('app.color.eta_settings_background')).onAreaChange((_old,area)=>{this.widthVp=Number(area.width);})}
 }
