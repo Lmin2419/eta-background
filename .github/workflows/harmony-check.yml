@@ -132,6 +132,12 @@ jobs:
       - name: 界面测试
         run: OHOS_SDK_ETS="$OHOS_SDK_DIR/ets" npm run test:ui
 
+      # 把场景结果（失败时含出错的步骤）写到运行页面的摘要里，不下载附件也能看到。
+      - name: 写入运行摘要
+        if: always()
+        run: |
+          if [ -f dist/ui-report/summary.md ]; then cat dist/ui-report/summary.md >> "$GITHUB_STEP_SUMMARY"; fi
+
       - name: 上传截图与日志
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

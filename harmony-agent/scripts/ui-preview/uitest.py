@@ -1,4 +1,4 @@
-"""Drive the OpenHarmony Linux Previewer with scenario files: tap, type, wait, assert, screenshot.
+"""Drive the OpenHarmony Linux Previewer with scenario files: tap, long press, swipe, back, type, wait, assert, screenshot.
 usage: python3 scripts/ui-preview/uitest.py <build out dir> <scenario.json> <report dir>  (normally via run.sh)
 Each step also fails on new ArkTS application errors, JS exceptions or a previewer crash.
 """
@@ -107,7 +107,7 @@ class Preview:
                 rect = [float(v) for v in n.get('$rect', '0,0,0,0').split(',')] if n.get('$rect') else [0, 0, 0, 0]
                 found.append({'type': n.get('$type'), 'id': attrs.get('id', ''), 'text': text if isinstance(text, str) else '',
                               'placeholder': attrs.get('placeholder', ''), 'a11y': attrs.get('accessibilityText', '') or '',
-                              'rect': rect, 'enabled': attrs.get('enabled', True) not in (False, 'false')})
+                              'rect': rect, 'enabled': attrs.get('enabled', True) not in (False, 'false'), 'attrs': attrs})
                 for c in n.get('$children', []): walk(c)
         walk(self.tree or {}); return found
 
@@ -123,12 +123,49 @@ class Preview:
             if 'a11yContains' in target and target['a11yContains'] not in n['a11y']: continue
             if 'type' in target and n['type'] != target['type']: continue
             if 'enabled' in target and n['enabled'] != target['enabled']: continue
+            if 'attrs' in target and any(str(n['attrs'].get(k)) != str(v) for k, v in target['attrs'].items()): continue
             return n
         return None
 
-    async def tap(self, node):
-        # Inspector rects are "x,y,width,height" in pixels.
-        x, y = node['rect'][0] + node['rect'][2] / 2, node['rect'][1] + node['rect'][3] / 2
+    INTERACTIVE = {'Button', 'TextInput', 'TextArea', 'Search', 'Toggle', 'Checkbox', 'Radio', 'Slider', 'Select'}
+    def elements(self):
+        """Visible nodes that a selector can target, one per line: type | id | text | a11y | placeholder | enabled | rect."""
+        lines, seen = [], set()
+        for n in self.nodes():
+            if n['rect'][2] <= 0 or n['rect'][3] <= 0: continue
+            if not (n['id'] or n['text'] or n['a11y'] or n['placeholder'] or n['type'] in self.INTERACTIVE): continue
+            row = ' | '.join([n['type'] or '?', 'id=' + n['id'] if n['id'] else '', repr(n['text'][:40]) if n['text'] else '',
+                              'a11y=' + n['a11y'] if n['a11y'] else '', 'placeholder=' + n['placeholder'] if n['placeholder'] else '',
+                              '' if n['enabled'] else 'disabled', '%d,%d %dx%d' % tuple(n['rect'])])
+            if row not in seen: seen.add(row); lines.append(row)
+        return lines
+
+    def dump(self, name, limit=None):
+        lines = self.elements()
+        (self.report / (name + '-elements.txt')).write_text('\n'.join(lines) + '\n')
+        shown = lines if limit is None else lines[:limit]
+        print('   visible elements (%d%s), also in %s-elements.txt:' % (len(lines), '' if len(shown) == len(lines) else ', first %d' % len(shown), name))
+        for line in shown: print('     ' + line)
+
+    def center(self, node, offset=(0, 0)):
+        return int(node['rect'][0] + node['rect'][2] / 2 + offset[0]), int(node['rect'][1] + node['rect'][3] / 2 + offset[1])
+
+    async def long_press(self, node, hold, offset=(0, 0)):
+        x, y = self.center(node, offset)
+        self.command('MousePress', {'x': x, 'y': y}); await asyncio.sleep(hold)
+        self.command('MouseRelease', {'x': x, 'y': y})
+
+    async def swipe(self, x1, y1, x2, y2, duration=0.3):
+        steps = 12
+        self.command('MousePress', {'x': int(x1), 'y': int(y1)})
+        for i in range(1, steps + 1):
+            await asyncio.sleep(duration / steps)
+            self.command('MouseMove', {'x': int(x1 + (x2 - x1) * i / steps), 'y': int(y1 + (y2 - y1) * i / steps)})
+        self.command('MouseRelease', {'x': int(x2), 'y': int(y2)})
+
+    async def tap(self, node, offset=(0, 0)):
+        # Inspector rects are "x,y,width,height" in pixels; offset moves the point from the center, in pixels.
+        x, y = self.center(node, offset)
         self.command('MousePress', {'x': int(x), 'y': int(y)}); await asyncio.sleep(0.06)
         self.command('MouseRelease', {'x': int(x), 'y': int(y)})
 
@@ -174,13 +211,30 @@ async def run(build, scenario_file, report):
                 elif 'expectMissing' in step:
                     await asyncio.sleep(0.5); await p.inspect()
                     if p.find(step['expectMissing']): raise AssertionError('still visible: %s' % json.dumps(step['expectMissing'], ensure_ascii=False))
-                elif 'tap' in step:
-                    await p.inspect(); node = p.find(step['tap'])
-                    if not node: raise AssertionError('tap target not found: %s' % json.dumps(step['tap'], ensure_ascii=False))
-                    tree_before = json.dumps(p.tree, sort_keys=True)
-                    await p.tap(node); await asyncio.sleep(step.get('settle', 0.8)); await p.inspect()
+                elif 'tap' in step or 'longPress' in step or 'swipe' in step or 'back' in step:
+                    await p.inspect(); tree_before = json.dumps(p.tree, sort_keys=True)
+                    if 'back' in step: p.command('BackClicked')
+                    elif 'swipe' in step:
+                        sw = step['swipe']; w, h = p.width, p.height
+                        if 'on' in sw:
+                            node = p.find(sw['on'])
+                            if not node: raise AssertionError('swipe target not found: %s' % json.dumps(sw['on'], ensure_ascii=False))
+                            x, y = p.center(node); r = node['rect']
+                        else: x, y, r = w / 2, h / 2, [0, 0, w, h]
+                        dx, dy = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}[sw['direction']]
+                        dist = sw.get('distance', 0.6)
+                        await p.swipe(x - dx * r[2] * dist / 2, y - dy * r[3] * dist / 2, x + dx * r[2] * dist / 2, y + dy * r[3] * dist / 2,
+                                      sw.get('duration', 0.3))
+                    else:
+                        target = step.get('tap') or step.get('longPress'); node = p.find(target)
+                        if not node: raise AssertionError('%s target not found: %s' % ('tap' if 'tap' in step else 'longPress', json.dumps(target, ensure_ascii=False)))
+                        offset = tuple(step.get('offset', (0, 0)))
+                        if 'tap' in step: await p.tap(node, offset)
+                        else: await p.long_press(node, step.get('hold', 1.0), offset)
+                    await asyncio.sleep(step.get('settle', 0.8)); await p.inspect()
                     if step.get('expectChange', True) and json.dumps(p.tree, sort_keys=True) == tree_before:
-                        raise AssertionError('tap did not change the page (unresponsive?)')
+                        raise AssertionError('the page did not change after this step (unresponsive?)')
+                elif 'dump' in step: await asyncio.sleep(0.6); await p.inspect(); p.screenshot(step['dump']); p.dump(step['dump'])
                 elif 'type' in step: await p.type(step['type']); await asyncio.sleep(0.5)
                 elif 'screenshot' in step: await asyncio.sleep(0.6); await p.inspect(); p.screenshot(step['screenshot'])
                 if p.crashed: raise AssertionError('previewer crashed')
@@ -190,8 +244,13 @@ async def run(build, scenario_file, report):
                 try: await p.inspect()
                 except Exception: pass
                 p.screenshot('failed-step-%02d' % i)
+                print('FAIL %02d %s  -> %s' % (i, label, error), flush=True)
+                try:
+                    if p.tree is not None: p.dump('failed-step-%02d' % i, limit=60)
+                except Exception: pass
+                if p.errors[before:]: print('   application errors:\n     ' + '\n     '.join(p.errors[before:before + 5]))
             results.append({'step': i, 'action': label, 'ok': error is None, 'error': error})
-            print(('PASS ' if error is None else 'FAIL ') + '%02d %s%s' % (i, label, '' if error is None else '  -> ' + error), flush=True)
+            if error is None: print('PASS %02d %s' % (i, label), flush=True)
             if error and not step.get('continueOnFailure'): break
     finally:
         await p.stop()

@@ -65,7 +65,14 @@ DeviceBackend 接口：observe / tap / longPress / swipe / scroll / input / back
   3. 点“注入一次点击”，看是否生效。
 - 把结果记入 `docs/device-runs/`，包括失败时的现象。
 
-**D0b HDC 通道复活**（原 T10）
+实现细节（扩展的写法、和界面的通信方式、`metadata` 名称）见 ROADMAP 第四轮的 D0a 任务卡。
+
+**D0b HDC 通道复活**（原 T10）。拆成三步：
+- D0b1 连接状态机（执行者）；
+- D0b2 原生库交叉编译（Claude）；
+- D0b3 连接页（执行者）。
+
+各部分要求：
 - 原生库：用公开 OpenHarmony SDK 的 native 组件（和我们已在用的 SDK 是同一个下载包，`native-linux-x64-26.0.0.38`）在 Linux 上交叉编译 arm64 的 `libagent_hdc.so`。编好的库入库到 `entry/libs/arm64-v8a/`，记录 SHA-256 和构建脚本，用户的 DevEco 不需要编 C++。
 - 连接页：“设置 → 手机操作”。引导开启无线调试 → 填写地址端口 → 授权 → 显示 shell 身份和 uitest 可用性 → “测试读屏”显示控件数。
 - 连接状态机放在 `core`，带单测：未配置、连接中、待授权、已连接、断开原因。

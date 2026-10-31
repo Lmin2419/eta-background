@@ -2,6 +2,7 @@
 # Headless UI tests on the OpenHarmony Linux Previewer.
 #   npm run test:ui                      # all scenarios in tests/ui/
 #   npm run test:ui -- tests/ui/02-drawer.json
+#   npm run test:ui -- tests/ui/pending/05-reply-visible.json     # a scenario that is not in the suite yet
 # Report (screenshots, inspector trees, previewer log, summary.md): dist/ui-report/
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -41,7 +42,17 @@ for scenario in "${scenarios[@]}"; do
   name="$(basename "$scenario" .json)"
   echo "== $name"
   if timeout 300 python3 "$HERE/uitest.py" "$OUT" "$scenario" "$REPORT"; then echo "| $name | pass |" >> "$REPORT/summary.md"
-  else echo "| $name | **FAIL** |" >> "$REPORT/summary.md"; failed=1; fi
+  else
+    # Name the failing step and its error, so the summary alone tells what broke.
+    why="$(python3 - "$REPORT/$name/result.json" <<'PY' 2>/dev/null || echo 'no result.json: the previewer did not start or the run timed out; see previewer.log'
+import json, sys
+r = json.load(open(sys.argv[1]))
+bad = [s for s in r['steps'] if not s['ok']]
+print(('step %02d %s: %s' % (bad[0]['step'], bad[0]['action'], bad[0]['error'])).replace('|', '/')[:300] if bad else 'failed before the first step')
+PY
+)"
+    echo "| $name | **FAIL** $why |" >> "$REPORT/summary.md"; failed=1
+  fi
 done
 echo; cat "$REPORT/summary.md"
 echo "Screenshots and logs: $REPORT"

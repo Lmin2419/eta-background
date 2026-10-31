@@ -42,19 +42,29 @@ npm run test:ui -- tests/ui/02-drawer.json            # 单个场景
 | --- | --- |
 | `waitFor` / `expect` | 在超时内等到匹配的可见元素 |
 | `expectMissing` | 元素不应可见 |
-| `tap` | 点击元素中心；默认要求点击后界面发生变化，否则判定"无响应"（`"expectChange": false` 关闭） |
+| `tap` | 点击元素中心；默认要求点击后界面发生变化，否则判定"无响应"（`"expectChange": false` 关闭）。`"offset": [dx, dy]` 从中心偏移若干像素 |
+| `longPress` | 长按，`"hold": 1.0` 秒；也支持 `offset`（例如按在气泡边缘而不是文字上，文字上长按会触发系统的文字选择） |
+| `swipe` | `{"swipe": {"direction": "right"}}`，方向 `up` / `down` / `left` / `right`；`"on": {选择器}` 在某个元素上滑，`"distance": 0.6` 为距离占比 |
+| `back` | `{"back": true}`，系统返回键 |
+| `dump` | 保存截图并打印当前所有可见元素（类型、id、文字、无障碍文字、占位文字、是否可用、位置），写场景时用来找选择器 |
 | `type` | 输入文字，**只支持 a–z、0–9 和空格**（预览器的输入法通道无法把文字送进输入框，改用实体按键事件） |
 | `wait` | 等待秒数 |
 | `screenshot` | 保存截图和控件树 |
 
-选择器（可以组合，全部满足才算匹配；零尺寸的不可见节点会跳过）：`text`、`contains`、`id`（组件 `.id()`）、`a11y` / `a11yContains`（`accessibilityText`）、`placeholder`、`type`、`enabled`。
+选择器（可以组合，全部满足才算匹配；零尺寸的不可见节点会跳过）：`text`、`contains`、`id`（组件 `.id()`）、`a11y` / `a11yContains`（`accessibilityText`）、`placeholder`、`type`、`enabled`，以及 `attrs`（按控件树原始属性全等比较，例如 `{"type": "Span", "attrs": {"fontColor": "#00000000"}}` 匹配透明文字）。
+
+场景顶层可以写 `"screen": {"color": "dark", "width": 1080, "height": 2340}` 切换深色模式和屏幕尺寸。尚未通过的验收场景放在 `tests/ui/pending/`，不在默认套件里，用 `npm run test:ui -- tests/ui/pending/<文件>` 单独运行。
 
 **每一步还会自动检查**：预览器日志中出现新的 `FIX THIS APPLICATION ERROR`、`TypeError`、`ReferenceError` 等应用错误，或预览器崩溃，该步骤就判为失败。
+
+**失败时**：终端打印失败原因、前 60 个可见元素和新出现的应用错误；`summary.md` 写明失败的步骤和错误；`failed-step-NN.jpg` / `-elements.txt` / `-tree.json` 保存当时的画面。CI 会把 `summary.md` 写进运行页面的 Summary。
 
 ## 局限
 
 - 预览器中的系统接口（数据库、ASSET、网络、窗口等）大多是模拟实现，所以场景使用 `FoundationPreview`（内存数据 + 假模型流式回复），**不测试**真实存储、网络、签名、安装和性能。
 - 不能输入中文。
 - 依赖 `postFrameCallback` 的逐帧动画（例如回复文字的渐显）在预览器里不一定推进；涉及这类效果的场景要以真机为准。
+- `bindPopup` 的气泡背景和阴影不绘制，只显示内容（加 `backgroundBlurStyle: BlurStyle.NONE` 也一样）；弹层外观只能在真机上看。
+- 菜单（`bindMenu` / `bindContextMenu`）的内容会出现在控件树里，可以断言和点击。
 - 运行时要求 abc 所在目录以 `/data/storage/el1/bundle/` 开头、目录名以 `.abc` 结尾（与真机沙箱路径一致），所以需要写入 `/data` 的权限。
 - 兼容层针对 SDK 26.0.0.38 验证；升级 SDK 后先跑一遍 `npm run test:ui` 确认。

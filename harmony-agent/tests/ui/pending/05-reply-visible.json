@@ -1,0 +1,11 @@
+{"name": "05-reply-visible", "page": "pages/FoundationPreview",
+ "steps": [
+  {"waitFor": {"id": "eta-composer"}, "timeout": 20},
+  {"tap": {"id": "eta-composer"}, "expectChange": false},
+  {"type": "hello"},
+  {"tap": {"a11y": "发送", "enabled": true}},
+  {"waitFor": {"contains": "这是预览数据"}, "timeout": 15},
+  {"wait": 3},
+  {"expectMissing": {"type": "Span", "contains": "这是预览数据", "attrs": {"fontColor": "#00000000"}}},
+  {"screenshot": "reply-visible"}
+ ]}

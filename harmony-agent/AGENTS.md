@@ -1,6 +1,10 @@
 # AGENTS.md：随身助手（Harmony Agent）开发规则
 
-本文件给在此目录工作的编码代理（Codex、Claude 等）阅读。任务清单见 [docs/ROADMAP.md](docs/ROADMAP.md)，当前状态见 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)。
+本文件给在此目录工作的编码代理（当前执行者 dsh，以及 Claude 等）阅读。
+
+- 任务清单：[docs/ROADMAP.md](docs/ROADMAP.md)；
+- 当前状态：[docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)；
+- **执行流程、预览器自测和交付要求：[docs/EXECUTOR_GUIDE.md](docs/EXECUTOR_GUIDE.md)，开工前必读。**
 
 ## 项目是什么
 
@@ -37,6 +41,8 @@ export OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets
 npm run check:ets   # .ets 类型和 ArkTS 规则，必须 0 error
 npm run check:res   # 用 SDK 的 restool 打包资源，必须 passed（任何 restool 警告都算失败）
 npm run test:ui     # 无头预览器中打开应用，按 tests/ui/ 的场景点击、输入、断言、截图，必须全部 pass
+
+npm run verify      # 交付前一次跑完以上五项，汇总写到 dist/verify/summary.md，原样贴进 PR
 ```
 
 - **`npm run test:ui`（界面测试）**：在 Linux 预览器里真正渲染应用（入口 `pages/FoundationPreview`：正式的 Eta 界面 + 内存数据 + 假模型），逐步执行 `tests/ui/*.json`。每一步都会检查日志中有没有新的应用错误（`FIX THIS APPLICATION ERROR`、`TypeError` 等）和崩溃；点击后界面没有变化也算失败。截图和日志在 `dist/ui-report/`，CI 会上传为 `ui-report`。说明见 [scripts/ui-preview/README.md](scripts/ui-preview/README.md)。
@@ -88,13 +94,13 @@ npm run test:ui     # 无头预览器中打开应用，按 tests/ui/ 的场景�
 
 ## 分支与 PR
 
-- 用户不在时（例如夜间），按 `docs/ROADMAP.md` 第二节的“无人值守连续执行”规则和“本轮队列”连续工作：叠加分支、通过检查才前进、卡住就跳过、最后输出报告。
-
-- 每个 ROADMAP 任务一个分支 `harmony/<任务编号>-<短名>`，一个 PR 到 `main`。不要直接推送 `main`。
+- 用户不在时（例如夜间），按 `docs/ROADMAP.md` 第二节的“无人值守连续执行”规则和“本轮队列”连续工作：通过检查才前进、卡住就跳过、最后输出报告。
+- 每个 ROADMAP 任务一个分支 `harmony/<任务编号>-<短名>`，一个 PR。base 按 EXECUTOR_GUIDE 第 2 节：互不依赖的任务各自从 base 拉，不要叠加。不要直接推送 `main`，不要合并 PR。
+- 不要为了让检查通过而删除、跳过或放宽测试，不要修改检查脚本、误报列表或 `scripts/ui-preview/`（任务卡要求的除外）。认为检查有错时在 PR 中说明。
 - 界面文字、文档和 PR 描述使用简体中文。
 - PR 描述包含：
   1. 改了什么（对应任务卡）；
-  2. 自动验证：`npm run check`、`npm test` 的结果（测试数量 / 失败数）；是否执行了 HAP 编译；
+  2. 自动验证：贴 `npm run verify` 生成的 `dist/verify/summary.md`（五项检查的结果、测试数量 / 失败数）；是否执行了 HAP 编译；界面改动列出截图文件名；
   3. 新增权限（没有就写“无”）；
   4. **真机验证步骤**：用户在手机上逐步操作的清单和预期结果；
   5. 已知限制和未完成项；
