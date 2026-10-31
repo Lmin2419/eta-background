@@ -1,7 +1,7 @@
 {
   "modelVersion": "6.0.0",
   "name": "harmony-agent",
-  "version": "0.9.24",
+  "version": "0.9.25",
   "description": "On-device HarmonyOS agent prototype",
   "dependencies": {},
   "devDependencies": {}

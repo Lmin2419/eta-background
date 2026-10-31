@@ -28,3 +28,12 @@ export function completeInterrupted(messages: ConversationMessage[]): Conversati
   const close = (): void => { for (const id of open) recovered.push({ ...conversationMessage('tool', JSON.stringify({ ok: false, code: 'TOOL_INTERRUPTED', message: '工具批次已中断，未取得该调用的完整结果；执行状态未知，请先核实，不要自动重放。' })), toolCallId: id }); open.clear(); };
   for (const message of messages) { if (message.role !== 'tool') close(); recovered.push(message); if (message.toolCallsJson) for (const call of array(JSON.parse(message.toolCallsJson))) open.add(string(object(call)?.id)); if (message.role === 'tool') open.delete(message.toolCallId); } close(); return recovered;
 }
+
+/** Request-only assistant projection; opaque state is dropped by fromWire/durable encoding. */
+export function assistantHistoryMessage(source:JsonObject):JsonObject {
+ const result:JsonObject={role:'assistant',content:source.content??null};
+ if(array(source.tool_calls).length)result.tool_calls=copy(source.tool_calls);
+ if(source.reasoning_content!==null&&source.reasoning_content!==undefined)result.reasoning_content=string(source.reasoning_content);
+ for(const key of ['_eta_responses_output_items','_eta_anthropic_content_blocks','_eta_gemini_steps'])if(Array.isArray(source[key]))result[key]=copy(source[key]);
+ return result;
+}

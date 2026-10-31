@@ -79,7 +79,8 @@
     "eta_gemini_thinking_default": "思考档位使用 Default",
     "eta_gemini_thinking_mandatory": "该模型必须思考，不支持 Off；Default 使用模型默认档位。",
     "eta_gemini_thinking_unknown": "尚未确认该模型的思考档位；仅使用 Default，不发送自定义思考档位。",
-    "eta_gemini_thinking_hint": "Gemini 原生连接只发送已确认支持的思考档位。"
+    "eta_gemini_thinking_hint": "Gemini 原生连接只发送已确认支持的思考档位。",
+    "eta_anthropic_version": "anthropic-version"
   },
   "en_US": {
     "eta_port_about_title": "Based on Eta",

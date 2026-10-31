@@ -16,7 +16,7 @@ export interface ProviderEditorState {
   draft: ModelDraft; busy: boolean; working: string; error: string; message: string;
   headersExpanded:boolean;modelQuery:string;selectionMode:boolean;modelSelection:string[];connection: string; catalog: string[]; selected: string[]; query: string; tab: 'config' | 'models';
 }
-export type ProviderText = 'name' | 'baseUrl' | 'apiKey' | 'model' | 'systemPrompt';
+export type ProviderText = 'name' | 'baseUrl' | 'apiKey' | 'model' | 'systemPrompt' | 'anthropicVersion';
 export type ProviderFlag = 'rememberKey' | 'streaming' | 'allowInsecureHttp' | 'isEnabled';
 function fresh(): ProviderEditorState { return {headersExpanded:false,modelQuery:'',selectionMode:false,modelSelection:[], draft: emptyModelDraft(), busy: false, working: '', error: '', message: '', connection: '', catalog: [], selected: [], query: '', tab: 'config' }; }
 
@@ -41,14 +41,14 @@ export class ProviderEditor {
     this.epoch++; this.control?.stop(); this.io?.cancel(); this.io = undefined; this.control = undefined;
     this.state.busy = false; this.state.working = '';
   }
-  async open(id = ''): Promise<void> {
+  async open(id = '',newProtocol?:ModelProtocol): Promise<void> {
     this.cancelRequest(); const epoch = this.epoch;
     this.state = fresh(); this.state.busy = true; this.state.working = '载入'; this.publish();
     try {
       const profile = this.profiles.document.profiles.find(p => p.id === id);
       if (id && !profile) throw new Error('服务已删除，请重新选择');
       const cached = this.drafts.provider(id);
-      let draft = cached || (profile ? profileDraft(profile, '') : {...emptyModelDraft(),name:''});
+      let draft = (newProtocol&&cached?.protocol!==newProtocol?undefined:cached) || (profile ? profileDraft(profile, '') : {...emptyModelDraft(),name:'',protocol:newProtocol||'chat_completions',baseUrl:newProtocol==='anthropic'?'https://api.anthropic.com':'',anthropicVersion:newProtocol==='anthropic'?'2023-06-01':undefined});
       if (profile && !draft.apiKey && !this.drafts.hasProviderKey(id) && draft.baseUrl === profile.baseUrl) {
         const key = await this.profiles.key(profile);
         draft = { ...draft, apiKey: key };

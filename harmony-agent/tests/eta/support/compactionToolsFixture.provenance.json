@@ -1,0 +1,24 @@
+{
+  "sourceCommit": "3b1794d70881c3c849b53d7778dd2bfdf0a46cc5",
+  "requiredNotice": "Copyright © 2026 蛮吉 (Mangi-11).",
+  "sources": {
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentToolCatalog.kt": "f1ff2df25cb107b3ec690e8b47f1016436196e17a8d80da59e1ee6bb02b65f8b",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentToolSchema.kt": "eb1c66811f5c423825f94d8f5047e1f42814797f9d90b693694678139eecb754",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentScreenObservationContract.kt": "690e63f467cf777f688185c13dceebe772b14c826d4ebd7549ed703b44fc1dd2",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentContextAppToolCatalog.kt": "4a57f9edf53b6f8d704a7fa04f18313a925eb3a33d3dcca279fd28371b99a77f",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentGestureToolCatalog.kt": "b7251b18a3ba3f7b9a89f5de7cbf5c8b576428d3108453e8b3cad72ba09eb631",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentTextSystemToolCatalog.kt": "f631cbfb9b3dd2d2426b88a519e504bbd31b0f30923a45cbf962add04dcbd467",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentBackgroundToolCatalog.kt": "815fe28a784396ff6e840488a30f14e74cb55cea81bc32497b4f2b6137cdbc5d",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentDeviceToolCatalog.kt": "d9ab9d1275fe1436cad35d82794b4f3ae5fb3ab79b3b5f342933b16b1598dc78",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentPhoneToolCatalog.kt": "702a4ceecb34abced45bf375dfcdfeb7689d08562945472c355ee80d60c33db7",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentPersonalSearchToolCatalog.kt": "da8c773b1b6c7dbd20ea2eee6910d2474fb17e5541d1dac3ff90316a37f0d384",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentSkillToolCatalog.kt": "e5d075b266397cc13573f35d4fffe7128f5fcbdab4c92719d7f71ffb4ca2564d",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/tool/AgentToolRequirements.kt": "499ff6d9b47d24c3f1659360114acf04afdb7b701bdf67d60aab7fcca9db43de",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/context/PersonalSearchTools.kt": "04860e94a7304ca2dad020c51c8612ba8fe676b53bd8943f4294ce722db45925",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/tool/AgentToolCapabilities.kt": "2c24e0078a77822aec9718601dc2ff6ae202a5e52658edfabf80950d0d1e7749",
+    "app/src/main/kotlin/io/github/mangi/eta/agent/tool/SystemStateControls.kt": "c4bb3590a350daab35a2610b34e396d6750367a78188df6f7640b1d647f6665b",
+    "app/src/main/java/com/eta/shadow/ShadowSchema.java": "307a47b63887723e938b58ad8e119b5e381ad7eba020ba61ffddb5a72d76a892"
+  },
+  "toolCount": 57,
+  "sha256": "cae3b67f02ec85059a6a30734f95d46d998bc9b41a97557b9000e1406cf15087"
+}

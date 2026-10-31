@@ -366,9 +366,9 @@ export class FoundationController {
   }
   stop(): void { const id=this.ports.chats.selectedId;this.queueState(id,Queue.clearInterruptFlags(this.etaState(id)));this.runtime.stop(id); }
   reuse(text: string): void { this.draft(text); this.inputVersion++; this.changed(); }
-  async openProvider(id = ''): Promise<void> {
+  async openProvider(id = '',protocol?:import('../protocols').ModelProtocol): Promise<void> {
     if (this.busy) return;
-    this.navigation.provider(id); await this.editor.open(id); this.changed();
+    this.navigation.provider(id); await this.editor.open(id,protocol); this.changed();
   }
   openCommunity():void{this.editor.close();this.navigation.community();void this.community?.openCatalog();this.changed();}
   chooseCommunity(id:string):void{this.community?.choose(id);this.navigation.community(id);this.changed();}

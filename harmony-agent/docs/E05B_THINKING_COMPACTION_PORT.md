@@ -54,3 +54,7 @@ Eta 固定来源 `3b1794d`；保留 Required Notice。设置中两行现已接�
 4. 关闭自动压缩重复同样请求，不新增摘要 HTTP；生成过程中改开关，只影响下一次运行。
 5. 整理期间断网、停止或制造存储失败：原历史保留，不自动重发；已完整回答在普通摘要失败后仍标成功。
 6. 整理后修订较早轮次，确认不再使用包含被修订内容的旧检查点；记录 DevEco 编译结果及截图。
+
+## P1c 补充（0.9.25）
+
+此前延期的 AgentCompactionProviderTest 3 项已在 `tests/eta/agentCompactionProvider.test.ts` 完成并通过，覆盖两种目的 × Chat/Responses/Anthropic 以及三种角色深度投影。使用原源码生成的完整 57 工具 fixture，未缩减目录。E05b 原测试累计 38 项，无剩余跨协议跳过项；平台真机状态仍为待测。详见 [P1c](P1C_ANTHROPIC_PORT.md)。

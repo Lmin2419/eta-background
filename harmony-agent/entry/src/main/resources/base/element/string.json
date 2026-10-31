@@ -1157,6 +1157,10 @@
       "value": "基于 Eta 移植\n原作者：蛮吉 (Mangi-11)\nPolyForm Noncommercial 1.0.0，仅限非商业用途\nRequired Notice: Copyright © 2026 蛮吉 (Mangi-11)."
     },
     {
+      "name": "eta_anthropic_version",
+      "value": "anthropic-version"
+    },
+    {
       "name": "eta_catalog_add",
       "value": "从目录添加"
     },
