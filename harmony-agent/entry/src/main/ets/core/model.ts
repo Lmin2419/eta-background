@@ -1,7 +1,8 @@
 import { ModelMetadata, metadataFor, safeHeaders } from './modelMetadata';
 import { Message, ModelClient, ModelReply, RunControl } from './types';
-import { ModelProtocol, completeProtocol } from './protocols';
+import { ModelProtocol } from './protocols';
 import { completeFoundationProvider } from './eta/protocol/foundationProviderBridge';
+import {fetchGeminiCatalog} from './eta/geminiModelCatalog';
 import { ModelReasoningCapabilities } from './eta/protocol/providerTypes';
 
 export interface HttpTransport { post(url: string, headers: Record<string,string>, body: string): Promise<string>; get?(url: string, headers: Record<string,string>): Promise<string>; stream?(url:string,headers:Record<string,string>,body:string,onChunk:(chunk:string)=>boolean|void,onStatus?:(status:number)=>void):Promise<void>; cancel(): void }
@@ -36,7 +37,7 @@ export function modelEndpoint(settings: ModelSettings, kind: 'chat' | 'models' =
   const port = /:([0-9]+)$/.exec(match[2]);
   if (port && (Number(port[1]) < 1 || Number(port[1]) > 65535)) throw new Error('API 端口无效');
   if (match[1] !== 'https' && !settings.allowInsecureHttp) throw new Error('默认仅允许 HTTPS；本地 HTTP 服务需手动开启明文连接');
-  let base = value.replace(/\/(?:chat\/completions|responses|messages)$/, '');
+  let base = value.replace(/\/(?:chat\/completions|responses|messages|interactions)$/, '');
   if(settings.protocol==='anthropic'){base=base.replace(/\/v1$/,'');if(kind==='models')return base+'/v1/models';}
   return base + (kind === 'chat' ? '/chat/completions' : '/models');
 }
@@ -55,11 +56,11 @@ export interface ModelList { ids: string[]; partial: boolean;metadata?:ModelMeta
 export async function fetchModels(settings: ModelSettings, transport: HttpTransport): Promise<ModelList> {
   if (!transport.get) throw new Error('当前传输不支持模型列表，请手动输入模型 ID');
   const base=modelEndpoint(settings,'models');
+  if(settings.protocol==='gemini'){const metadata=await fetchGeminiCatalog({...settings,id:settings.providerId,baseUrl:base.replace(/\/models$/,'')},new RunControl(),(url,h)=>transport.get!(url,h));if(!metadata.length)throw Error('没有可选模型，请手动输入模型 ID');return {ids:metadata.map(m=>m.id),metadata,partial:false};}
   const metadata:ModelMetadata[]=[];const ids: string[] = [];const seen=new Set<string>();const cursors=new Set<string>();
   let url=base,partial=false;
   for(let page=0;page<50;page++) {
     const data=parse(await transport.get(url,{...headers(settings),...safeHeaders(settings.extraHeaders)}));
-    if(settings.protocol==='gemini'){data.data=data.models?.map((m:{name:string;displayName?:string;inputTokenLimit?:number})=>({id:m.name?.replace(/^models\//,''),name:m.displayName,inputTokenLimit:m.inputTokenLimit}));data.has_more=Boolean(data.nextPageToken);data.last_id=data.nextPageToken;}
     if(!Array.isArray(data?.data))throw new Error('服务未提供标准模型列表，请手动输入模型 ID');
     for(const row of data.data) {
       if(typeof row?.id==='string'&&row.id.trim()&&row.id.length<=256&&!seen.has(row.id)) {
@@ -73,7 +74,7 @@ export async function fetchModels(settings: ModelSettings, transport: HttpTransp
     if(typeof cursor!=='string'||!cursor||cursor.length>256||cursors.has(cursor)||page===49){partial=true;break;}
     cursors.add(cursor);
     // Never follow a server-supplied URL with the user's bearer token.
-    url=base+(settings.protocol==='gemini'?'?pageToken=':'?after=')+encodeURIComponent(cursor)+(settings.protocol==='gemini'?'&pageSize=100':'&limit=100');
+    url=base+'?after='+encodeURIComponent(cursor)+'&limit=100';
   }
   if (!ids.length) throw new Error('没有可选模型，请手动输入模型 ID');
   return {ids,partial,metadata};
@@ -99,8 +100,6 @@ export class OpenAIClient implements ModelClient {
     control.check();
     if(this.settings.systemPrompt?.trim())messages=[{role:'system',content:this.settings.systemPrompt.trim()},...messages.filter(m=>m.role!=='system')];
     if (!this.settings.model.trim()) throw new Error('请填写模型名称');
-    if(this.settings.protocol==='responses'||this.settings.protocol==='anthropic')return completeFoundationProvider({...this.settings,sessionId:this.settings.sessionId||this.sessionId},modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.transport,this.tools,messages,control,onText,onReasoning);
-    if(this.settings.protocol&&this.settings.protocol!=='chat_completions')return completeProtocol(this.settings.protocol,modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.settings,this.transport,this.tools,messages,control,onText||(()=>{}),onReasoning||(()=>{}));
     return completeFoundationProvider({...this.settings,sessionId:this.settings.sessionId||this.sessionId},modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.transport,this.tools,messages,control,onText,onReasoning);
   }
 }

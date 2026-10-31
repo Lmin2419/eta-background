@@ -11,7 +11,7 @@ export function foundationReasoningConfig(profile: ModelProfile, model: string, 
   const metadata = profile.metadata?.find(m => m.id === model), source = resolveProviderSource(profile.id, profile.baseUrl, profile.protocol), infer = source === 'custom' && profile.protocol === 'responses';
   const capabilities = profile.protocol === 'gemini' ? geminiReasoningCapabilities(model) || { supportedEfforts: [] } : resolveReasoningCapabilities(infer ? 'openai' : source, { modelId: model, ...metadata }, infer);
   const selected = profile.reasoningEffort ? parseEffort(profile.reasoningEffort) as ReasoningEffort : 'default';
-  const effort = !preferences.thinkingEnabled ? 'off' : capabilities ? normalizeEffort(capabilities, selected) : 'off';
+  const effort = profile.protocol==='gemini' ? normalizeEffort(capabilities!,preferences.thinkingEnabled?selected:'off') : !preferences.thinkingEnabled ? 'off' : capabilities ? normalizeEffort(capabilities, selected) : 'off';
   return { providerSourceType: source, reasoningCapabilities: capabilities, thinkingEnabled: effort !== 'off', reasoningEffort: effort,
     contextWindow: metadata?.contextWindow, autoCompactionEnabled: preferences.autoCompactionEnabled };
 }
