@@ -23,7 +23,8 @@
 | E04b（0.9.14） | 消息与 Markdown 接入、四项检查通过 | `harmony/e04b-chat-rendering` 基于 E04a；473 测试、0 ArkTS error、1,861 资源；复用 L2/L3 原测试，新增 9 集成测试；[交付记录](E04B_CHAT_RENDERING_PORT.md) |
 | E04c（0.9.15） | 排队与消息操作接入、四项检查通过 | `harmony/e04c-chat-actions` 基于 E04b；491 测试、5 原测试 / 0 跳过、13 集成测试、0 ArkTS error、1,863 资源；[交付记录](E04C_CHAT_ACTIONS_PORT.md) |
 | E07a（0.9.16） | 侧栏/导出完成，存储对照留 E07b | 503 测试，0 ArkTS error，1,864 资源；9 项原 Store 测试的逻辑适配 + 3 新验证；完整 Room 对照未完成，[交付记录](E07A_CONVERSATION_PANE_PORT.md) |
-| M1 其余（E07b、E05、E06、E08–E09） | 夜间队列已排好 | 见第二节“本轮队列” |
+| E07b | 草稿-阻塞：存储模型迁移待决定 | 17 项原 Store 测试尚未完整迁移；[具体差异与 A/B 方案](E07B_STORAGE_DECISION.md)。E05/E06 从 E07a 继续，E08 需要新模型的部分受此阻塞 |
+| M1 其余（E05、E06、E08–E09） | 夜间队列已排好 | 见第二节“本轮队列” |
 | M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |
 
