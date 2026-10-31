@@ -38,7 +38,7 @@ export struct McpServersScreen {
  @Builder private emptyIcon(){this.icon($r('app.media.ic_rounded_hub'))}
  @Builder private refreshIcon(){this.icon($r('app.media.ic_rounded_refresh'))}
  @Builder private list(){Column(){
-  if(this.state.mcp.servers.length===0){ListEmptyState({title:$r('app.string.mcp_empty_title'),summary:$r('app.string.mcp_empty_summary'),hasIcon:true,icon:this.emptyIcon,hasAction:true,action:this.addButton})}
+  if(this.state.mcp.servers.length===0){ListEmptyState({title:$r('app.string.mcp_empty_title'),summary:$r('app.string.mcp_empty_summary'),hasIcon:true,icon:() => { this.emptyIcon(); },hasAction:true,action:() => { this.addButton(); }})}
   else{ForEach(this.state.mcp.servers,(server:McpServer,index:number)=>{if(index>0){EtaPreferenceDivider({hasLeading:false})}EtaArrowPreference({title:server.name,summary:$r('app.string.mcp_server_row_summary',activeMcpTools(server).length,server.tools.length),onAction:()=>this.controller?.openMcp(server.id)})},(server:McpServer)=>server.id)}
  }.width('100%')}
  @Builder private serverSettings(server:McpServer){Column(){
@@ -48,21 +48,21 @@ export struct McpServersScreen {
  }}
  private toolSummary(tool:McpTool):ResourceStr{return tool.description.trim()?tool.description:tool.readOnlyHint===true?$r('app.string.mcp_read_only_tool'):$r('app.string.mcp_may_modify_data');}
  @Builder private tools(server:McpServer){Column(){
-  if(server.tools.length===0){ListEmptyState({title:$r('app.string.mcp_no_tools'),summary:$r('app.string.mcp_refresh_tools_hint'),hasIcon:true,icon:this.refreshIcon})}
+  if(server.tools.length===0){ListEmptyState({title:$r('app.string.mcp_no_tools'),summary:$r('app.string.mcp_refresh_tools_hint'),hasIcon:true,icon:() => { this.refreshIcon(); }})}
   else{ForEach(server.tools,(tool:McpTool,index:number)=>{if(index>0){EtaPreferenceDivider({hasLeading:false})}EtaSwitchPreference({title:tool.title.trim()?tool.title:tool.name,summary:this.toolSummary(tool),checked:server.enabledToolNames.includes(tool.name),isEnabled:!this.state.mcp.working,onCheckedChange:(value:boolean)=>{void this.controller?.mcp?.setTool(tool.name,value);}})},(tool:McpTool,index:number)=>String(index)+':'+tool.name)}
  }}
  @Builder private deleteTitle(){Column(){Text($r('app.string.mcp_delete_server')).fontSize(F.Body1).fontWeight(FontWeight.Medium).fontColor($r('app.color.miuix_error'));Text($r('app.string.mcp_delete_server_summary')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary'))}.alignItems(HorizontalAlign.Start).width('100%')}
- @Builder private deleteRow(){EtaPreferenceRow({hasCustomTitle:true,titleAction:this.deleteTitle,isEnabled:!this.state.mcp.working,onAction:()=>this.controller?.mcp?.show('delete')})}
+ @Builder private deleteRow(){EtaPreferenceRow({hasCustomTitle:true,titleAction:() => { this.deleteTitle(); },isEnabled:!this.state.mcp.working,onAction:()=>this.controller?.mcp?.show('delete')})}
  @Builder private detail(server:McpServer){Column(){
   EtaPreferenceGroupTitle({title:$r('app.string.mcp_server_settings')});EtaPreferenceGroup({content:()=>{this.serverSettings(server);}})
   EtaPreferenceGroupTitle({title:$r('app.string.mcp_tools_count',server.tools.length)});EtaPreferenceGroup({content:()=>{this.tools(server);}})
-  EtaPreferenceGroup({content:this.deleteRow}).margin({top:S.Dp8})
+  EtaPreferenceGroup({content:() => { this.deleteRow(); }}).margin({top:S.Dp8})
  }.width('100%')}
  @Builder private body(){Column(){
   Text($r('app.string.eta_extension_saved_not_in_use')).fontSize(F.Footnote1).fontColor($r('app.color.miuix_on_surface_variant_summary')).width('100%').padding(S.Dp16)
   if(this.state.mcp.loading){LoadingProgress().width(S.Dp24).height(S.Dp24).color($r('app.color.miuix_primary'))}
   else if(this.isDetail){if(this.server()){this.detail(this.server()!)}else{ListEmptyState({title:$r('app.string.mcp_server_missing')})}}
-  else{EtaPreferenceGroupTitle({title:$r('app.string.mcp_configured_servers',this.state.mcp.servers.length)});EtaPreferenceGroup({content:this.list})}
+  else{EtaPreferenceGroupTitle({title:$r('app.string.mcp_configured_servers',this.state.mcp.servers.length)});EtaPreferenceGroup({content:() => { this.list(); }})}
  }.width('100%')}
- build(){MiuixScaffoldPage({title:this.isDetail?(this.server()?.name||$r('app.string.route_mcp_server_detail')):$r('app.string.route_mcp_servers'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',actions:this.actions,content:this.body,onBack:()=>this.controller?.back()})}
+ build(){MiuixScaffoldPage({title:this.isDetail?(this.server()?.name||$r('app.string.route_mcp_server_detail')):$r('app.string.route_mcp_servers'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',actions:() => { this.actions(); },content:() => { this.body(); },onBack:()=>this.controller?.back()})}
 }

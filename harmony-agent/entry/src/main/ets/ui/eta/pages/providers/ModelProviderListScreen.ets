@@ -20,7 +20,7 @@ export struct ModelProviderListScreen {
   @Builder private logo(source:string){ProviderBrandIcon({source})}
   @Builder private catalogIcon(){EtaPreferenceIcon({icon:$r('app.media.ic_rounded_storefront'),color:$r('app.color.eta_preference_blue')})}
   @Builder private create(){Column(){
-    EtaArrowPreference({title:$r('app.string.eta_catalog_add'),summary:$r('app.string.eta_catalog_add_summary'),hasLeading:true,startAction:this.catalogIcon,onAction:()=>this.controller?.openCommunity()});EtaPreferenceDivider()
+    EtaArrowPreference({title:$r('app.string.eta_catalog_add'),summary:$r('app.string.eta_catalog_add_summary'),hasLeading:true,startAction:() => { this.catalogIcon(); },onAction:()=>this.controller?.openCommunity()});EtaPreferenceDivider()
     EtaArrowPreference({title:$r('app.string.ui_added_openai_compatible_6bd471'),summary:$r('app.string.ui_support_chatgpt_deepseek_kimi_glm_qwen_etc_b31d02'),hasLeading:true,startAction:()=>{this.logo('openai');},onAction:()=>{void this.controller?.openProvider();}});EtaPreferenceDivider()
     EtaArrowPreference({title:$r('app.string.ui_new_anthropic_db6098'),summary:$r('app.string.ui_support_anthropic_claude_official_or_compatible_api_de3f80'),hasLeading:true,startAction:()=>{this.logo('anthropic');},onAction:()=>{void this.controller?.openProvider('','anthropic');}});EtaPreferenceDivider()
     EtaArrowPreference({title:$r('app.string.eta_provider_gemini'),summary:$r('app.string.eta_provider_gemini_summary'),hasLeading:true,startAction:()=>{this.logo('gemini');},onAction:()=>{void this.controller?.openProvider('','gemini');}})
@@ -43,8 +43,8 @@ export struct ModelProviderListScreen {
   }}
   @Builder private content(){Column(){
     TextInput({text:this.state.providerSearch,placeholder:$r('app.string.ui_search_provider_74e049')}).fontSize(F.Body1).fontColor($r('app.color.miuix_on_surface')).backgroundColor($r('app.color.miuix_secondary')).margin({left:S.Dp16,right:S.Dp16,top:S.Dp12,bottom:S.Dp8}).onChange((value:string)=>this.controller?.searchProviders(value))
-    ProviderSection({title:$r('app.string.ui_add_new_provider_74df54'),content:this.create})
-    ProviderSection({title:this.count($r('app.plural.provider_configured_count'),this.state.providers.length),content:this.list})
+    ProviderSection({title:$r('app.string.ui_add_new_provider_74df54'),content:() => { this.create(); }})
+    ProviderSection({title:this.count($r('app.plural.provider_configured_count'),this.state.providers.length),content:() => { this.list(); }})
   }}
-  build(){MiuixScaffoldPage({title:$r('app.string.ui_model_provider_e8c7f5'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',content:this.content,onBack:()=>this.controller?.back()})}
+  build(){MiuixScaffoldPage({title:$r('app.string.ui_model_provider_e8c7f5'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',content:() => { this.content(); },onBack:()=>this.controller?.back()})}
 }

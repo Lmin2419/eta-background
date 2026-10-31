@@ -50,5 +50,5 @@ export struct McpFormDialog {
   Scroll(){this.fields()}.constraintSize({maxHeight:S.Dp520-C.ButtonMinHeight-S.Dp16}).scrollBar(BarState.Auto).width('100%')
   MiuixDialogActions({confirmText:this.confirmText(),confirmEnabled:!this.view.working,destructive:this.target==='risk'||this.target==='delete',onCancel:()=>{this.owner?.mcp?.dismiss();this.controller?.close();},onConfirm:()=>this.confirm()}).margin({top:this.target==='add'?S.Dp16:this.target==='token'?S.Dp12:S.Dp0})
  }.width('100%').constraintSize({maxHeight:S.Dp520})}
- build(){EtaDialogContent({title:this.title(),summary:this.summary(),content:this.body}).margin({left:C.DialogOutsideMargin.width,right:C.DialogOutsideMargin.width,bottom:C.DialogOutsideMargin.height})}
+ build(){EtaDialogContent({title:this.title(),summary:this.summary(),content:() => { this.body(); }}).margin({left:C.DialogOutsideMargin.width,right:C.DialogOutsideMargin.width,bottom:C.DialogOutsideMargin.height})}
 }

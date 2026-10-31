@@ -1,6 +1,6 @@
 # 随身助手推进方案（0.9.1 → 0.14）
 
-第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮报告：[2026-10-31 第三轮](reports/2026-10-31-round3.md)。当前 `harmony/e08c-mcp` / 0.9.31 / PR #36；必做队列、记忆及 Skills 安装核心通过四项检查。Skills 页面 #35 草稿阻塞，MCP 从 #34 独立推进，MCP 四项检查通过。正式存储未切换。
+第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮报告：[2026-10-31 第三轮](reports/2026-10-31-round3.md)。当前 `harmony/e08c-mcp` / 0.9.32 / PR #36；必做队列、记忆及 Skills 安装核心通过四项检查。Skills 页面 #35 草稿阻塞，MCP 从 #34 独立推进，MCP 四项检查通过。正式存储未切换。
 
 制定：2026-10-30。基于 `main@aadbf93`。执行规则见 [../AGENTS.md](../AGENTS.md)。
 
@@ -8,6 +8,7 @@
 
 | 任务 | 状态 | 说明 |
 | --- | --- | --- |
+| ArkUI 启动白屏修复（0.9.32） | 代码与四项检查通过，真机启动待测 | 用户已安装 0.9.31，但 BuilderParam 使首页 this 指向侧栏。显式闭包修复 99 处同类传递；10 项新增接收者回归，从 #16 同步下游；[修复记录](ARKUI_BUILDER_RECEIVER_FIX.md) |
 | T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，PR #8（分支 `harmony/m0-0.9.1`），三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；ArkTS 检查 0 错误（OpenHarmony SDK 26.0.0.38）；未生成 HAP |
 | `.ets` 与资源检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets` + `npm run check:res`（restool 资源打包），CI 任务 `Harmony / ArkTS (.ets) and resources check`，也覆盖 base 为 `harmony/**` 的叠加 PR |
 | E01（0.9.2） | PR #9，修复完成、四项检查通过 | 已合入 M0 `2d44742`；app_name 仅由 AppScope 定义。213 项测试通过，ArkTS 0 错误，restool 1,833 项资源通过；按夜间规则进入 L1 |

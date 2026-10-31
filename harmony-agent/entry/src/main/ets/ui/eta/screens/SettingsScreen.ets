@@ -60,12 +60,12 @@ export struct SettingsScreen {
     this.row($r('app.string.ui_about_github_star_title'),$r('app.media.ic_rounded_code'),$r('app.color.eta_preference_blue'),true,()=>this.link('https://github.com/Lmin2419/eta-background'),$r('app.string.ui_about_github_star_hint'))
   }}
   @Builder private content(){Column(){
-    EtaPreferenceGroupTitle({title:$r('app.string.settings_llm_providers')});EtaPreferenceGroup({content:this.agent})
-    EtaPreferenceGroupTitle({title:$r('app.string.settings_context_extensions')});EtaPreferenceGroup({content:this.extensions})
-    EtaPreferenceGroupTitle({title:$r('app.string.ui_tool_a72ef1')});EtaPreferenceGroup({content:this.tools})
-    EtaPreferenceGroupTitle({title:$r('app.string.settings_general')});EtaPreferenceGroup({content:this.general})
-    EtaPreferenceGroupTitle({title:$r('app.string.ui_permissions_560165')});EtaPreferenceGroup({content:this.permissions})
-    EtaPreferenceGroupTitle({title:$r('app.string.ui_about_bed172')});EtaPreferenceGroup({content:this.aboutGroup})
+    EtaPreferenceGroupTitle({title:$r('app.string.settings_llm_providers')});EtaPreferenceGroup({content:() => { this.agent(); }})
+    EtaPreferenceGroupTitle({title:$r('app.string.settings_context_extensions')});EtaPreferenceGroup({content:() => { this.extensions(); }})
+    EtaPreferenceGroupTitle({title:$r('app.string.ui_tool_a72ef1')});EtaPreferenceGroup({content:() => { this.tools(); }})
+    EtaPreferenceGroupTitle({title:$r('app.string.settings_general')});EtaPreferenceGroup({content:() => { this.general(); }})
+    EtaPreferenceGroupTitle({title:$r('app.string.ui_permissions_560165')});EtaPreferenceGroup({content:() => { this.permissions(); }})
+    EtaPreferenceGroupTitle({title:$r('app.string.ui_about_bed172')});EtaPreferenceGroup({content:() => { this.aboutGroup(); }})
   }}
-  build(){MiuixScaffoldPage({title:$r('app.string.ui_set_up_7debf9'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',content:this.content,onBack:()=>this.controller?.back()})}
+  build(){MiuixScaffoldPage({title:$r('app.string.ui_set_up_7debf9'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',content:() => { this.content(); },onBack:()=>this.controller?.back()})}
 }
