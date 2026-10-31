@@ -1,6 +1,7 @@
 import { ConversationRepository } from '../conversations';
 import { DraftRepository } from '../drafts';
 import { ProfileRepository } from '../profiles';
+import { AppearanceSettingsRepository, defaultAppearance } from '../eta/appearanceSettings';
 import { FoundationController } from './controller';
 import { HttpTransport } from '../model';
 
@@ -24,6 +25,7 @@ export function previewController(): FoundationController {
       }
     };
   };
-  controller = new FoundationController({ chats, profiles, drafts, transport, uuid: () => 'r' + ++counter, load: async () => { await profiles.load(); await chats.load(); await drafts.load(); } });
+  const appearance = new AppearanceSettingsRepository(memory(JSON.stringify(defaultAppearance())), { apply: async () => {} }, () => controller?.changed());
+  controller = new FoundationController({ chats, profiles, drafts, transport, appearance, uuid: () => 'r' + ++counter, load: async () => { await profiles.load(); await chats.load(); await drafts.load(); await appearance.load(); } });
   return controller;
 }
