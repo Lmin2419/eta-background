@@ -56,6 +56,7 @@ export class FrameFallback {
   }
 
   private fire(): void {
+    console.info('EtaFrameLoop fallback');
     if (!this.active) return;
     const now = this.timers.now();
     const elapsedSeconds = Math.max(0, (now - this.lastTickAt) / 1000);
