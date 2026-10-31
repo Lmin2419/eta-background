@@ -36,7 +36,7 @@ export struct EtaWindowDialog {
   @Prop summary: ResourceStr = '';
   @BuilderParam content: () => void = EmptyEtaSlot;
   build() {
-    EtaDialogContent({ title: this.title, summary: this.summary, content: this.content })
+    EtaDialogContent({ title: this.title, summary: this.summary, content: () => { this.content(); } })
       .margin({ left: C.DialogOutsideMargin.width, right: C.DialogOutsideMargin.width, bottom: C.DialogOutsideMargin.height })
   }
 }
@@ -47,7 +47,7 @@ export struct EtaOverlayDialog {
   @Prop summary: ResourceStr = '';
   @BuilderParam content: () => void = EmptyEtaSlot;
   build() {
-    EtaDialogContent({ title: this.title, summary: this.summary, content: this.content })
+    EtaDialogContent({ title: this.title, summary: this.summary, content: () => { this.content(); } })
       .margin({ left: C.DialogOutsideMargin.width, right: C.DialogOutsideMargin.width, bottom: C.DialogOutsideMargin.height })
   }
 }
@@ -85,7 +85,7 @@ export struct ItemDescriptionDialog {
     }.constraintSize({ maxHeight: S.Dp360 }).width('100%')
   }
   build() {
-    EtaDialogContent({ title: this.title, content: this.body })
+    EtaDialogContent({ title: this.title, content: () => { this.body(); } })
       .margin({ left: C.DialogOutsideMargin.width, right: C.DialogOutsideMargin.width, bottom: C.DialogOutsideMargin.height })
   }
 }

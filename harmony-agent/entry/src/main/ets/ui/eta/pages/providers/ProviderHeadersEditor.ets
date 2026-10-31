@@ -11,7 +11,7 @@ export struct ProviderHeadersEditor {
   @Prop state:ShellState=emptyShellState();controller:FoundationController|undefined=undefined;
   @Builder private chevron(){Image($r('app.media.ic_rounded_expand_more')).width(S.Dp24).height(S.Dp24).rotate({angle:this.state.editor.headersExpanded?P.HeadersExpandedRotation:0}).fillColor($r('app.color.miuix_on_surface_variant_actions'))}
   @Builder private content(){Column(){
-    EtaPreferenceRow({title:this.state.editor.draft.headerDrafts?.length?$r('app.string.eta_provider_headers_count',this.state.editor.draft.headerDrafts.length):$r('app.string.eta_provider_headers_none'),summary:$r('app.string.eta_provider_headers_summary'),hasActions:true,endActions:this.chevron,onAction:()=>this.controller?.editor.toggleHeaders()})
+    EtaPreferenceRow({title:this.state.editor.draft.headerDrafts?.length?$r('app.string.eta_provider_headers_count',this.state.editor.draft.headerDrafts.length):$r('app.string.eta_provider_headers_none'),summary:$r('app.string.eta_provider_headers_summary'),hasActions:true,endActions:() => { this.chevron(); },onAction:()=>this.controller?.editor.toggleHeaders()})
     if(this.state.editor.headersExpanded){
       ForEach(this.state.editor.draft.headerDrafts||[],(h:ProviderHeaderDraft)=>{EtaPreferenceDivider({hasLeading:false})
         Row({space:S.Dp8}){Column({space:S.Dp8}){
@@ -25,5 +25,5 @@ export struct ProviderHeadersEditor {
       EtaPreferenceRow({title:$r('app.string.eta_provider_header_add'),isEnabled:!this.state.editor.busy,onAction:()=>this.controller?.editor.addHeader()})
     }
   }}
-  build(){ProviderSection({title:$r('app.string.eta_provider_headers'),content:this.content})}
+  build(){ProviderSection({title:$r('app.string.eta_provider_headers'),content:() => { this.content(); }})}
 }
