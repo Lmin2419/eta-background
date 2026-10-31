@@ -23,7 +23,7 @@
 | E04b（0.9.14） | 消息与 Markdown 接入、四项检查通过 | `harmony/e04b-chat-rendering` 基于 E04a；473 测试、0 ArkTS error、1,861 资源；复用 L2/L3 原测试，新增 9 集成测试；[交付记录](E04B_CHAT_RENDERING_PORT.md) |
 | E04c（0.9.15） | 排队与消息操作接入、四项检查通过 | `harmony/e04c-chat-actions` 基于 E04b；491 测试、5 原测试 / 0 跳过、13 集成测试、0 ArkTS error、1,863 资源；[交付记录](E04C_CHAT_ACTIONS_PORT.md) |
 | E07a（0.9.16） | 侧栏/导出完成，存储对照留 E07b | 503 测试，0 ArkTS error，1,864 资源；9 项原 Store 测试的逻辑适配 + 3 新验证；完整 Room 对照未完成，[交付记录](E07A_CONVERSATION_PANE_PORT.md) |
-| E07b（PR #22） | **用户已确认方案 A**，拆为 E07b1 / E07b2 / E07b3；E07b3 需等真机检查点 ①–④ 通过 | 原草稿结论：草稿—存储决定阻塞 | [迁移决定](https://github.com/Lmin2419/eta-background/pull/22)；17 原 Store 测试未完整移植；E05 从 E07a 继续 |
+| E07b（PR #22） | **采用方案 A**（Claude 建议，用户转发本轮指令即视为确认），拆为 E07b1 / E07b2 / E07b3；E07b3 需等真机检查点 ①–④ 通过 | 原草稿结论：草稿—存储决定阻塞 | [迁移决定](https://github.com/Lmin2419/eta-background/pull/22)；17 原 Store 测试未完整移植；E05 从 E07a 继续 |
 | E05（0.9.17） | 设置与外观页面接入、四项通过 | 512 测试、0 ArkTS error、1,879 资源；默认思考/自动压缩等目标仍禁用，[交付记录](E05_SETTINGS_APPEARANCE_PORT.md) |
 | E06（0.9.18） | 页面与主要路径接入、四项通过；完整对齐未验收 | 540 测试、0 ArkTS error、1,935 资源；12 原测试完整 / 4 平台部分 / 11 C 类排除；内置种子等差异见 [交付记录](E06_PROVIDER_PORT.md) |
 | E08–E09 | 未开始 | E07b 阻塞，前面全部完成的条件未满足；M1 仍未验收 |
@@ -94,7 +94,7 @@
 #### 第三轮任务卡
 
 **E07b1 会话存储逻辑与端口**
-- 按 [E07B_STORAGE_DECISION.md](E07B_STORAGE_DECISION.md) 的方案 A（用户已确认），在 `core/eta/` 定义纯 TS 的 ConversationDao 和事务端口，划分会话元数据、消息行、history/journal 检查点、选中项、分块文本。
+- 按 [E07B_STORAGE_DECISION.md](E07B_STORAGE_DECISION.md) 的方案 A（Claude 建议，用户转发本轮指令即视为确认），在 `core/eta/` 定义纯 TS 的 ConversationDao 和事务端口，划分会话元数据、消息行、history/journal 检查点、选中项、分块文本。
 - 移植 `AgentConversationStore`、`AgentConversationPersistence`，以及 `AgentConversationStoreTest`（17 项）、`AgentConversationPersistenceTest`、`AgentAppStateConversationLoadingTest`。用内存 DAO 跑通；不缩短 fixture，不截断数据。
 
 **E07b2 RDB 适配与旧数据迁移（不切换）**
