@@ -59,6 +59,8 @@ export class MiuixButtonDefaults {
 export class MiuixDialogDefaults {
   static readonly MaxWidth: number = 420.0;
   static readonly CornerRadius: number = 32.0;
+  static readonly LargeWidth: number = 840.0;
+  static readonly LargeHeight: number = 480.0;
 }
 
 // Ported from compose-miuix-ui/miuix TextStyles.kt @ 39c40f9 (0.9.4), Apache-2.0
@@ -77,4 +79,91 @@ export class MiuixFontSizes {
   static readonly Title2: number = 24.0;
   static readonly Title3: number = 20.0;
   static readonly Title4: number = 18.0;
+}
+
+// Ported from Eta E02 components @ 3b1794d; Miuix 0.9.4 pinned sources (see docs/eta-theme.json)
+export class EtaComponentSizes {
+  static readonly Dp0: number = 0.0;
+  static readonly Dp0_33: number = 0.33;
+  static readonly Dp0_5: number = 0.5;
+  static readonly Dp1: number = 1.0;
+  static readonly Dp2: number = 2.0;
+  static readonly Dp4: number = 4.0;
+  static readonly Dp6: number = 6.0;
+  static readonly Dp7: number = 7.0;
+  static readonly Dp8: number = 8.0;
+  static readonly Dp10: number = 10.0;
+  static readonly Dp11: number = 11.0;
+  static readonly Dp12: number = 12.0;
+  static readonly Dp14: number = 14.0;
+  static readonly Dp15: number = 15.0;
+  static readonly Dp16: number = 16.0;
+  static readonly Dp17: number = 17.0;
+  static readonly Dp18: number = 18.0;
+  static readonly Dp20: number = 20.0;
+  static readonly Dp21: number = 21.0;
+  static readonly Dp22: number = 22.0;
+  static readonly Dp24: number = 24.0;
+  static readonly Dp26: number = 26.0;
+  static readonly Dp28: number = 28.0;
+  static readonly Dp32: number = 32.0;
+  static readonly Dp38: number = 38.0;
+  static readonly Dp40: number = 40.0;
+  static readonly Dp42: number = 42.0;
+  static readonly Dp44: number = 44.0;
+  static readonly Dp48: number = 48.0;
+  static readonly Dp50: number = 50.0;
+  static readonly Dp52: number = 52.0;
+  static readonly Dp60: number = 60.0;
+  static readonly Dp136: number = 136.0;
+  static readonly Dp250: number = 250.0;
+  static readonly Dp280: number = 280.0;
+  static readonly Dp340: number = 340.0;
+  static readonly Dp360: number = 360.0;
+}
+
+// Ported from EtaPreferenceRow.kt / EtaChoiceChip.kt @ 3b1794d; Miuix PressFeedback.kt @ 39c40f9
+export class EtaComponentBehavior {
+  static readonly ActionWidthFraction: number = 0.45;
+  static readonly SinkScale: number = 0.94;
+  static readonly SinkDamping: number = 0.8;
+  static readonly SinkStiffness: number = 600.0;
+  static readonly ChoiceDuration: number = 160;
+}
+
+// Ported from compose-miuix-ui/miuix IconButton.kt @ 39c40f9, Apache-2.0
+export class MiuixIconButtonDefaults {
+  static readonly MinWidth: number = 40;
+  static readonly MinHeight: number = 40;
+  static readonly CornerRadius: number = 40;
+}
+
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/layout/AdaptivePageLayout.kt @ 3b1794d
+export class EtaPageDefaults {
+  static readonly WideScreenMinWidth: number = 600.0;
+  static readonly MaxPageContentWidth: number = 800.0;
+}
+
+// Ported from compose-miuix-ui/miuix TopAppBar.kt @ 39c40f9, Apache-2.0
+export class MiuixTopBarDefaults {
+  static readonly TitlePadding: number = 26.0;
+  static readonly NavigationIconPadding: number = 16.0;
+  static readonly ActionIconPadding: number = 16.0;
+  static readonly CollapsedHeight: number = 52.0;
+  static readonly SmallTopAppBarCenterHeight: number = 50.0;
+  static readonly LargeTitleBottomPadding: number = 4.0;
+  static readonly TitleFadeMultiplier: number = 3.0;
+  static readonly SmallTitleTranslation: number = 20.0;
+  static readonly TitleShowResponse: number = 0.3;
+  static readonly TitleHideResponse: number = 0.15;
+  static readonly TitleDamping: number = 1.0;
+}
+
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/TopBarBackdrop.kt @ 3b1794d
+export class EtaBlurDefaults {
+  static readonly TopBarBlurRadius: number = 25.0;
+  static readonly TopBarSurfaceAlpha: number = 0.8;
+  static readonly ProgressiveTopBarBlurRadius: number = 10.0;
+  static readonly ProgressiveTopBarSurfaceAlpha: number = 0.3;
+  static readonly ProgressiveCurve: number = 2.2;
 }

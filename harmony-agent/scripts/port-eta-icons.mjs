@@ -21,8 +21,8 @@ export function scanIcons(etaRoot) {
   }
   return [...found].sort(([a], [b]) => a.localeCompare(b, 'en')).map(([source, uses]) => ({ source, uses: [...uses] }));
 }
-export function miuixArrowSvg(source) {
-  const builder = source.match(/ImageVector.Builder\("ArrowRight",\s*([\d.]+)\.dp,\s*([\d.]+)\.dp,\s*([\d.]+)f,\s*([\d.]+)f\)/);
+export function miuixArrowSvg(source, name = 'ArrowRight') {
+  const builder = source.match(/ImageVector.Builder\("(?:ArrowRight|ArrowUpDown)",\s*([\d.]+)\.dp,\s*([\d.]+)\.dp,\s*([\d.]+)f,\s*([\d.]+)f\)/);
   if (!builder) throw new Error('Unrecognized Miuix ArrowRight viewport');
   const body = source.split('pathFillType = PathFillType.EvenOdd,')[1]?.match(/\)\s*\{([\s\S]*?)\n\s*\}/)?.[1];
   if (!body) throw new Error('Unrecognized Miuix ArrowRight path');
@@ -35,7 +35,7 @@ export function miuixArrowSvg(source) {
     if (args.length !== commands[m[1]][1] || args.some(x => !/^-?\d+(?:\.\d+)?$/.test(x))) throw new Error('Invalid Miuix path arguments');
     d += commands[m[1]][0] + args.join(' ') + ' ';
   }
-  return '<!-- Ported from compose-miuix-ui/miuix ArrowRight.kt @ 39c40f9 (0.9.4); Copyright 2025, compose-miuix-ui contributors; Apache-2.0. -->\n' +
+  return `<!-- Ported from compose-miuix-ui/miuix ${name}.kt @ 39c40f9 (0.9.4); Copyright 2025, compose-miuix-ui contributors; Apache-2.0. -->\n` +
     `<svg xmlns="http://www.w3.org/2000/svg" width="${builder[1]}" height="${builder[2]}" viewBox="0 0 ${builder[3]} ${builder[4]}"><path fill="#000000" fill-rule="evenodd" d="${d.trim()}"/></svg>\n`;
 }
 export function generateIcons(etaRoot, outputRoot, check = false) {
@@ -72,7 +72,25 @@ export function generateIcons(etaRoot, outputRoot, check = false) {
     const source = `app/src/main/res/drawable-xxxhdpi/${name}.webp`; const data = fs.readFileSync(path.join(etaRoot, source));
     const dest = `entry/src/main/resources/base/media/${name}.webp`; outputs.set(dest, data); brands.push({ source, output: dest, sha256: sha(data) });
   }
-  const report = { etaCommit: ref, materialVersion: '0.14.15', miuixVersion: '0.9.4',
+  // Generate the Miuix selection glyphs directly from the pinned drawWithCache coordinates.
+  const controls = [];
+  for (const [file, resource] of [['RadioButton', 'ic_miuix_radio_check'], ['Checkbox', 'ic_miuix_checkbox_check']]) {
+    const origin = `scripts/eta-upstream/miuix-0.9.4/${file}.kt`;
+    const source = fs.readFileSync(path.join(project, origin), 'utf8');
+    const viewport = Number(source.match(/val viewportSize = ([\d.]+)f/)[1]);
+    const coords = [...source.matchAll(/\(\(([\d.]+)f - viewportCenter[XY]?\) \/ viewportSize \* size\.(?:width|height)\)/g)].map(m => Number(m[1]));
+    if (coords.length !== 6) throw new Error('Unexpected Miuix check path: ' + file);
+    const stroke = file === 'RadioButton' ? Number(source.match(/val strokeWidth = ([\d.]+)f \/ viewportSize/)[1]) : viewport * Number(source.match(/val strokeWidth = size.width \* ([\d.]+)f/)[1]);
+    const data = `<!-- Generated from ${origin} @ 39c40f9; Copyright 2025, compose-miuix-ui contributors; Apache-2.0. -->\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewport} ${viewport}"><path d="M${coords[0]} ${coords[1]} L${coords[2]} ${coords[3]} L${coords[4]} ${coords[5]}" fill="none" stroke="#000000" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"/></svg>\n`;
+    const dest = `entry/src/main/resources/base/media/${resource}.svg`;
+    outputs.set(dest, data); controls.push({ origin, resource, output: dest, sha256: sha(data) });
+  }
+  const arrowOrigin = 'scripts/eta-upstream/miuix-0.9.4/ArrowUpDown.kt';
+  const arrowData = miuixArrowSvg(fs.readFileSync(path.join(project, arrowOrigin), 'utf8'), 'ArrowUpDown');
+  const arrowOutput = 'entry/src/main/resources/base/media/ic_miuix_basic_arrow_up_down.svg';
+  outputs.set(arrowOutput, arrowData);
+  controls.push({ origin: arrowOrigin, resource: 'ic_miuix_basic_arrow_up_down', output: arrowOutput, sha256: sha(arrowData) });
+  const report = { controls, etaCommit: ref, materialVersion: '0.14.15', miuixVersion: '0.9.4',
     materialCount: rows.filter(r => r.source.startsWith('Icons.')).length, miuixCount: rows.filter(r => r.source.startsWith('MiuixIcons.')).length,
     drawableCount: vectors.length, brandCount: brands.length, missing, icons: rows, drawables: vectors, brands };
   outputs.set('docs/eta-icons.json', JSON.stringify(report, null, 2) + '\n');

@@ -39,7 +39,7 @@ test('all 148 Material, 1 Miuix and 11 drawables have exact checked files', () =
   const r = json('docs/eta-icons.json');
   assert.equal(r.materialCount, 148); assert.equal(r.miuixCount, 1); assert.equal(r.drawableCount, 11);
   assert.equal(r.brandCount, 22); assert.deepEqual(r.missing, []);
-  const rows = [...r.icons, ...r.drawables, ...r.brands] as { output: string; sha256: string }[];
+  const rows = [...r.icons, ...r.drawables, ...r.brands, ...r.controls] as { output: string; sha256: string }[];
   assert.equal(new Set(rows.map(x => x.output)).size, rows.length);
   for (const row of rows) assert.equal(sha(row.output), row.sha256, row.output);
 });
@@ -80,7 +80,7 @@ test('tokens preserve source dimensions, content alignment and fractional divide
 });
 test('light and dark resources preserve Miuix roles, Eta overrides and alpha', () => {
   const palette = (locale: string): Map<string, string> => new Map(json(`entry/src/main/resources/${locale}/element/color.json`).color.map((c: { name: string; value: string }) => [c.name, c.value]));
-  const light = palette('base'), dark = palette('dark'); assert.equal(light.size, 66); assert.equal(dark.size, 66);
+  const light = palette('base'), dark = palette('dark'); assert.equal(light.size, 73); assert.equal(dark.size, 73);
   assert.deepEqual([...light.keys()], [...dark.keys()]);
   assert.equal(light.get('miuix_primary'), '#FF3482FF'); assert.equal(dark.get('miuix_primary'), '#FF277AF7');
   assert.equal(light.get('eta_settings_primary'), '#FF0080FF'); assert.equal(light.get('eta_settings_background'), '#FFF0F1F2');

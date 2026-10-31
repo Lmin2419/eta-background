@@ -23,7 +23,7 @@ with zipfile.ZipFile(dist / f'{prefix}-unsigned.hap') as hap:
     check(module['app']['versionName'] == version and module['app']['versionCode'] == app['versionCode'], 'HAP version matches source')
     check(module['app']['bundleName'] == 'com.example.harmonyagent', 'expected bundle')
     check(len(hap.read('ets/modules.abc')) > 100, 'compiled ArkTS included')
-    check([p['name'] for p in module['module']['requestPermissions']] == ['ohos.permission.INTERNET'], 'framework requests only network permission')
+    check([p['name'] for p in module['module']['requestPermissions']] == ['ohos.permission.INTERNET', 'ohos.permission.VIBRATE'], 'framework requests only network and approved touch feedback permissions')
     check(all(not a.get('backgroundModes') for a in module['module']['abilities']), 'no legacy background mode')
     libraries = {n: hap.read(n) for n in hap.namelist() if n.startswith('libs/arm64-v8a/') and n.endswith('.so')}
     for name, binary in libraries.items():
