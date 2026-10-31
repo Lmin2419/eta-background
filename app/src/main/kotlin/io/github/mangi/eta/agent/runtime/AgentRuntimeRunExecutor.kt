@@ -243,10 +243,24 @@ internal class AgentRuntimeRunExecutor(
                 runAvailableSkillIds = skillContext.installedSkills.mapTo(mutableSetOf()) { it.id },
                 pendingSkillConflict = pendingSkillConflict,
             )
+            val backgroundScreen = BackgroundScreenTools(
+                request.runId,
+                runController,
+                onBackgroundScreenPhase,
+                onBackgroundAppOpened,
+            )
+            val taskScreen = TaskScreenSession(
+                runId = request.runId,
+                controller = runController,
+                backend = backgroundScreen,
+                readScreenshot = executor::readBackgroundScreenshot,
+                rootAvailable = executor::isRootAvailable,
+            )
             val routingExecutor = RoutingToolExecutor(
                 local = executor,
                 mcp = McpToolExecutor(mcpSnapshot),
-                shadow = BackgroundScreenTools(request.runId, runController, onBackgroundScreenPhase, onBackgroundAppOpened),
+                shadow = backgroundScreen,
+                taskScreen = taskScreen,
             )
             toolExecutor = routingExecutor
             toolsBinding = runController.register(routingExecutor::close)

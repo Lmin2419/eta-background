@@ -175,6 +175,7 @@ public final class ShadowTools {
         switch (n) {
             case "screen_open": case "screen_finish": case "screen_shot":
             case "screen_tap": case "screen_swipe": case "screen_press": case "screen_drag":
+            case "screen_key":
                 return true;
             default: return false;
         }
@@ -229,6 +230,7 @@ public final class ShadowTools {
             case "screen_swipe": return eng("swipe", a);
             case "screen_press": return eng("press", a);
             case "screen_drag": return eng("drag", a);
+            case "screen_key": return eng("key", a);
             case "screen_shot": return eng("shot", a);
             case "screen_text": return obs("settext", a);
             case "screen_click": return obs("click2", a);

@@ -8,7 +8,7 @@ internal object AgentBackgroundToolCatalog {
     fun appendTo(tools: JSONArray) = ShadowSchema.append(tools)
 
     fun guidance(rootAvailable: Boolean): String =
-        "Eta 后台版内置前台操作和后台虚拟屏操作两种能力。用户询问能力时，结合本轮公开工具说明这两种方式及其条件，不能把后台操作说成需要另装的插件。" +
+        "Eta 后台版内置前台操作和后台虚拟屏操作两种能力。新任务要用后台能力时，优先调用原生 GUI 工具并显式传 execution_location=\"background\"；成功后本任务后续观察和操作沿用后台位置。旧会话仍可使用 screen_* 兼容入口。用户询问能力时，结合本轮公开工具说明这两种方式及其条件，不能把后台操作说成需要另装的插件。" +
             (if (rootAvailable) "后台操作需要 Root、引擎及观察服务可用；Root 已授权不等于引擎或应用当前可操作，实际状态以 screen_state 和操作结果为准。"
              else "当前未确认 Root 授权，后台操作暂不可用；可以说明其存在及所需条件，不能声称现在能够执行。") +
             "后台最多同时操作 ${ShadowSchema.MAX_CONCURRENT_APPS} 个不同应用；同一应用串行，额外任务等待。息屏会暂停，不能承诺息屏持续执行。" +
@@ -16,6 +16,7 @@ internal object AgentBackgroundToolCatalog {
             "用 screen_dump/screen_list 读节点；游戏、画布或节点不足时用 screen_shot 并通过 read_image 查看。" +
             "若 read_image 未公开，说明图片读取工具未开启，不能声称已看过截图。" +
             "后台节点坐标用 coordinate_space=display；截图坐标用 screenshot 并携带本次 frame_id，不使用前台的 normalized/screen 或 observation_id。" +
+            "新原生后台入口使用后台 observe_screen 返回的 observation_id；screen_* 兼容入口不接收前台 observation_id。" +
             "screen_scroll 存在多个候选时按 view_id、候选 index 或显示屏 x/y 选择真正的目标列表，不能把外层容器滚动当作聊天记录翻页。" +
             "ok/accepted 仅表示动作被接受；outcome=CHANGED 只证明观察范围发生变化，不证明用户目标完成。" +
             "after.nodes 是有限预览；复制完整消息或激活码时使用完整节点或应用的复制功能，不能把 previewOnly 的截短文字当作原文。" +

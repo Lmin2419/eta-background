@@ -44,5 +44,5 @@ internal object AgentToolCatalog {
                 AgentTerminalToolCatalog.appendTo(tools)
                 AgentFileToolCatalog.appendTo(tools)
             }
-        })
+        }).also(AgentUnifiedOperationCatalog::decorate)
 }

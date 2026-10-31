@@ -284,11 +284,18 @@ internal class RoutingToolExecutor(
     private val local: AgentModelClient.ToolExecutor,
     private val mcp: McpToolExecutor,
     private val shadow: io.github.mangi.eta.agent.runtime.BackgroundScreenTools? = null,
+    private val taskScreen: io.github.mangi.eta.agent.runtime.TaskScreenSession? = null,
 ) : AgentModelClient.ToolExecutor, AutoCloseable {
     override fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult {
+        // Native foreground tools first decide whether this task is explicitly on its
+        // per-run background screen. A null result keeps the old foreground path byte-for-byte.
+        taskScreen?.execute(toolCall)?.let { return it }
         // etax: screen_* 后台虚拟屏工具，以及 terminal 里的界面类 shell 命令拦截
         shadow?.execute(toolCall.name, toolCall.argumentsJson)
-            ?.let { return backgroundToolResult(toolCall.name, it) }
+            ?.let { raw ->
+                taskScreen?.observeLegacyResult(toolCall.name, raw)
+                return backgroundToolResult(toolCall.name, raw)
+            }
         return if (mcp.contains(toolCall.name)) mcp.execute(toolCall) else local.execute(toolCall)
     }
 

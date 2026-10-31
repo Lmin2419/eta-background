@@ -27,6 +27,7 @@ class AgentPromptBuilderTest {
             assertTrue(contents.contains("后台最多同时操作 2 个不同应用"))
             assertTrue(contents.contains("息屏会暂停"))
             assertTrue(contents.contains("仅适用于前台 GUI 工具，不适用于后台 screen_*"))
+            assertTrue(contents.contains("execution_location="))
             assertTrue(contents.contains("不使用前台的 normalized/screen 或 observation_id"))
             assertTrue(contents.contains("NO_PROGRESS"))
             assertTrue(contents.contains("未翻到历史、文字被裁切或复制失败不能推断消息被删除"))

@@ -15,6 +15,11 @@ internal interface ScreenToolConnection {
     fun setTakeoverListener(listener: () -> Unit) = Unit
 }
 
+/** One run's existing background-screen executor; never a process-wide current screen. */
+internal interface ScreenToolBackend {
+    fun execute(name: String, arguments: String): String?
+}
+
 private class ShadowScreenConnection(id: String) : ScreenToolConnection {
     private val tools = ShadowTools(id)
     override fun execute(name: String, arguments: String) = tools.intercept(name, arguments)
@@ -68,7 +73,7 @@ internal class BackgroundScreenTools(
     private val registry: ScreenLeaseRegistry = sharedLeases,
     private val connectionFactory: (String) -> ScreenToolConnection = ::ShadowScreenConnection,
     private val retryDelayMs: Long = 150,
-) : AutoCloseable {
+) : AutoCloseable, ScreenToolBackend {
     private class Binding(val id: String, val app: String, val tools: ScreenToolConnection) {
         val closing = java.util.concurrent.atomic.AtomicBoolean()
         val takenOver = java.util.concurrent.atomic.AtomicBoolean()
@@ -102,7 +107,7 @@ internal class BackgroundScreenTools(
         onPhase(next)
     }
 
-    @Synchronized fun execute(name: String, arguments: String): String? {
+    @Synchronized override fun execute(name: String, arguments: String): String? {
         return try { executeInternal(name, arguments) } finally { phase(null) }
     }
 
@@ -229,7 +234,7 @@ internal class BackgroundScreenTools(
 
     companion object {
         private val LOST_SESSION_CODES = setOf("NO_SESSION", "SESSION_CLOSED", "STALE_SCREEN", "SYSTEM_RESTARTED")
-        private val MUTATING_TOOLS = setOf("screen_tap", "screen_click", "screen_press", "screen_swipe", "screen_drag", "screen_scroll", "screen_text")
+        private val MUTATING_TOOLS = setOf("screen_tap", "screen_click", "screen_press", "screen_swipe", "screen_drag", "screen_scroll", "screen_text", "screen_key")
         private val OBSERVATION_TOOLS = setOf("screen_dump", "screen_list", "screen_shot")
         private val sharedLeases = ScreenLeaseRegistry()
         private val maintenance = java.util.concurrent.Executors.newScheduledThreadPool(3) { runnable ->

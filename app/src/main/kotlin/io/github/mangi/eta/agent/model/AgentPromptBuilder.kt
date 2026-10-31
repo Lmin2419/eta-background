@@ -94,10 +94,11 @@ internal object AgentPromptBuilder {
                     "前后台操作由用户意图决定，与引擎是否就绪、是否从电源键唤醒无关。" +
                     "用户说当前页面、这个页面、已登录、这里、当着我的面，或要求接着眼前的场景操作时，必须使用前台 GUI 工具，" +
                     "先 observe_screen 重新观察当前页面，再 tap_element/type_text 等操作；不要 screen_open 搬走应用，也不要重新 launch_app 丢失当前页面。" +
-                    "只有用户明确要求后台执行，或明确续接已有后台任务时才使用 screen_* 虚拟屏工具；未指定时默认前台。" +
+                    "只有用户明确要求后台执行，或明确续接已有后台任务时才使用后台入口：新任务优先用原生工具并显式传 execution_location=\"background\"，旧会话仍可使用 screen_* 虚拟屏工具；未指定时默认前台。" +
                     "后台任务需要前台接管时先说明情况；前台不可用时不能擅自改走后台。不要通过 Shell 绕过工具的界面校验与操作权管理。" +
                     AgentBackgroundToolCatalog.guidance(rootAvailable) +
                     "以下观察、坐标、输入、after 与操作权规则仅适用于前台 GUI 工具，不适用于后台 screen_*。" +
+                    "原生后台入口使用后台 observe_screen 返回的 observation_id 和 display/screenshot 合同；旧 screen_* 兼容入口继续按其原有规则执行。" +
                     "需要重新看屏幕时先按默认参数调用 observe_screen，只读取 UI 树，不附截图；" +
                     "节点为空、目标无法唯一识别、界面以 Canvas、地图、图片或二维码等视觉内容为主，或任务依赖颜色、图像、空间布局时，" +
                     "再显式设置 include_screenshot=true；补截图时保持 include_ui_tree=true，让截图、节点与新的 observation_id 来自同一次观察，" +

@@ -167,6 +167,12 @@ internal class AgentLocalTools(
         guiControl?.close()
     }
 
+    /** Existing image staging/delivery path reused by the background screen adapter. */
+    internal fun readBackgroundScreenshot(path: String): AgentModelClient.ToolResult =
+        imageTools.readImage(JSONObject().put("path", path))
+
+    internal fun isRootAvailable(): Boolean = rootAvailable()
+
     override fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult {
         if (closed.get()) throw AgentRunCancelledException()
         val control = guiControl
@@ -740,7 +746,7 @@ internal class AgentLocalTools(
                 y = (y.toLong() * (height - 1) / NORMALIZED_MAX).toInt(),
             )
         }
-        if (requestedSpace == "screen") {
+        if (requestedSpace == "screen" || requestedSpace == "display") {
             val (width, height) = space?.let { it.screenWidth to it.screenHeight }
                 ?: deviceController.screenDimensions()
             if (x !in 0 until width || y !in 0 until height) {
@@ -751,7 +757,7 @@ internal class AgentLocalTools(
             return ScreenPoint(x, y)
         }
         if (requestedSpace != "screenshot") {
-            throw InvalidToolArgumentException("coordinate_space 只能是 normalized、screen 或 screenshot")
+            throw InvalidToolArgumentException("coordinate_space 只能是 normalized、screen、display 或 screenshot")
         }
         if (space == null) {
             throw InvalidToolArgumentException(
