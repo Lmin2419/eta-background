@@ -29,7 +29,7 @@ export struct EtaFeatureCard {
     }.width('100%').constraintSize({ minHeight: S.Dp136 - S.Dp16 - S.Dp16 }).alignItems(HorizontalAlign.Start)
   }
   build() {
-    EtaCard({ content: this.body, insidePadding: S.Dp16, isEnabled: this.isEnabled, clickable: this.clickable, sinkFeedback: true, showIndication: true, onAction: this.onAction })
+    EtaCard({ content: () => { this.body(); }, insidePadding: S.Dp16, isEnabled: this.isEnabled, clickable: this.clickable, sinkFeedback: true, showIndication: true, onAction: this.onAction })
   }
 }
 @Component
