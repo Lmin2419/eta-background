@@ -25,7 +25,6 @@ export class EtaFrameLoop extends FrameCallback {
   stop():void {this.active=false;this.last=0;this.fallback.stop();}
   onFrame(nanos:number):void {
     this.pending=false;if(!this.active)return;
-    console.info('EtaFrameLoop frame');
     this.fallback.onFrame();
     const elapsed=this.last===0?0:(nanos-this.last)/1e9;this.last=nanos;
     if(this.tick(elapsed))this.start();else this.stop();

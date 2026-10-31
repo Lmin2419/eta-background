@@ -134,10 +134,6 @@ export class SmoothTextRevealCoordinator {
       (sum, record) => sum + Math.max(0, record.targetCount - record.progress),
       0,
     );
-    if (records.length > 0)
-      console.info(
-        `RevealDebug n=${records.length} backlog=${backlog} node=${records[0].node !== null} layout=${records[0].layout !== null} p=${records[0].progress} t=${records[0].targetCount} drained=${this.drained}`,
-      );
     let remaining = advanceSmoothReveal(
       0,
       backlog,
