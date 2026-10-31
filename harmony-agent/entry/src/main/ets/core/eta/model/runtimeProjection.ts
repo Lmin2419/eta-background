@@ -10,6 +10,8 @@ export interface RoleplayBinding {
   characterId: string;
   characterJson: string;
   name: string;
+  cardSnapshotJson?: string; characterName?: string; avatarPath?: string | null;
+  userName?: string; userDescription?: string;
 }
 export interface RoleplayMessageLink {
   transcriptMessageId: string;
