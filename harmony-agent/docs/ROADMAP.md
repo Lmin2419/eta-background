@@ -20,7 +20,8 @@
 | E02（0.9.11） | 组件代码完成、四项检查通过 | `harmony/e02-components` 基于 L4b；430 项测试；追加已批准的 VIBRATE 与内容层渐进模糊尝试，含 2 项原渲染测试的测量逻辑；原平台验证 2 项待测。Gallery 已纳入 ArkTS；正式入口未切换，未生成 HAP |
 | E03（0.9.12 / PR #17） | 新壳层完成、四项检查通过 | 合入 #16 追加；Index 已切 Navigation/NavDestination，所有宽度推移；448 测试、ArkTS 0 error、1,852 资源；原测试 2 完整 / 3 平台待测；[交付记录](E03_NAVIGATION_PORT.md) |
 | E04a（0.9.13） | 首页与输入栏完成、四项检查通过 | `harmony/e04a-home-input` 基于 E03；464 测试、12 原测试完整 / 2 平台定位待测、0 ArkTS error、1,855 资源；[交付记录](E04A_HOME_INPUT_PORT.md) |
-| M1 其余（E04b–E09） | 夜间队列已排好 | 见第二节“本轮队列” |
+| E04b（0.9.14） | 消息与 Markdown 接入、四项检查通过 | `harmony/e04b-chat-rendering` 基于 E04a；473 测试、0 ArkTS error、1,861 资源；复用 L2/L3 原测试，新增 9 集成测试；[交付记录](E04B_CHAT_RENDERING_PORT.md) |
+| M1 其余（E04c–E09） | 夜间队列已排好 | 见第二节“本轮队列” |
 | M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |
 

@@ -118,6 +118,7 @@ export class StreamingMarkdownState {
   parseUpdates(
     cancellation = new MarkdownParseCancellation(),
     parse?: (target: StreamingMarkdownTarget) => Promise<StreamingGfmSnapshot>,
+    published?: () => void,
   ): Promise<void> {
     return consumeStreamingMarkdownTargets(
       this.parseTargets,
@@ -126,6 +127,7 @@ export class StreamingMarkdownState {
           this.parser.parse(target.content, !target.isStreaming, target.style)),
       (snapshot) => {
         this.snapshot = snapshot;
+        published?.();
       },
       cancellation,
     );

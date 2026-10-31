@@ -2,7 +2,8 @@
 /*
  * ArkTS (.ets) type and rule check without DevEco, using the official ets-loader checker from the
  * public OpenHarmony SDK (API 26). It runs the same TypeScript program and ArkTS linter that the
- * build runs, starting from the app entries, but it does not produce a HAP.
+ * build runs, starting from the app entries, plus an SDK AST check for native UI parent rules.
+ * It does not run the complete ArkUI transform or produce a HAP.
  *
  *   bash scripts/fetch-ohos-sdk.sh
  *   OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets            # errors only
@@ -56,7 +57,10 @@ const logger = {
   info: () => {}, debug: () => {}, printError: e => found.error.push(clean(JSON.stringify(e)))
 };
 
-require(path.join(loader, 'main.js'));
+const loaderMain = require(path.join(loader, 'main.js'));
+// SinceWarningSuppressor also reads this path list from projectConfig. The normal
+// Hvigor build supplies it; use the loader's discovered SDK paths for standalone checks.
+config.globalModulePaths = loaderMain.globalModulePaths;
 const checker = require(path.join(loader, 'lib/ets_checker.js'));
 checker.etsStandaloneChecker(entries, logger, config);
 // A bare @Builder passed to @BuilderParam changes receiver at runtime. Type checks
@@ -70,6 +74,17 @@ if (builderRegression.error || builderRegression.status !== 0) {
   found.error.push('ArkUI builder-context regression failed:\n' + (builderRegression.stdout || '') +
     (builderRegression.stderr || '') + (builderRegression.error?.message || ''));
 }
+// Native component-parent rules are checked during the full UI transform, not by the
+// standalone type checker. Catch reported 10905201 without pretending to build a HAP.
+const nesting = require('./arkui-parent-check.cjs').checkProject(loader, src);
+found.error.push(...nesting.errors);
+const regression = require('node:child_process').spawnSync(process.execPath,
+  ['--test', path.join(__dirname, 'tests/arkui-parent-check.test.cjs')],
+  { encoding: 'utf8', env: { ...process.env, OHOS_SDK_ETS: sdk }, timeout: 30000 });
+if (regression.error || regression.status !== 0) {
+  found.error.push('ArkUI parent-check regression failed:\n' + (regression.stdout || '') +
+    (regression.stderr || '') + (regression.error?.message || ''));
+}
 fs.rmSync(cache, { recursive: true, force: true });
 
 const relative = text => text.split(project + path.sep).join('');
@@ -80,7 +95,9 @@ console.log('ArkTS check with OpenHarmony SDK ' + version + ': ' + errors.length
   + (found.error.length - errors.length) + ' known false positive(s) ignored.');
 for (const e of errors) console.log('\n' + e);
 if (showWarnings) for (const w of found.warn) console.log('\n' + relative(w));
-console.log('\nThis checks types and ArkTS rules only. It does not build a HAP; DevEco remains the final compile check.');
+console.log('ArkUI parent check: ' + nesting.files + ' source files, ' + nesting.errors.length +
+  ' error(s); SDK regression tests: ' + (regression.status === 0 ? '7 passed' : 'FAILED') + '.');
+console.log('\nThis checks types, ArkTS rules and native UI parent constraints. It does not build a HAP; DevEco remains the final compile check.');
 console.log('ArkUI builder owner check: ' + builders.slots + ' slot assignments, ' + builders.errors.length +
   ' error(s); receiver regression tests: ' + (builderRegression.status === 0 ? 'passed' : 'FAILED') + '.');
 process.exit(errors.length ? 1 : 0);

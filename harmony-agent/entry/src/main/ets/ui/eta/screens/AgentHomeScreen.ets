@@ -4,7 +4,8 @@
 import { FoundationController, ShellState, emptyShellState } from '../../../core/foundation/controller';
 import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
 import { AgentChatInputBar } from '../components/AgentChatInputBar';
-import { ChatPage } from '../../foundation/ChatPage';
+import { AgentChatBody } from '../components/AgentChatBody';
+import { AgentConversationLoading } from '../components/AgentConversationLoading';
 @Component
 export struct AgentHomeScreen {
   @Prop state: ShellState = emptyShellState();
@@ -40,11 +41,12 @@ export struct AgentHomeScreen {
   build() {
     Column() {
       Column() {
-        if(this.state.chat.rows.length===0){this.empty()}
-        else {ChatPage({chat:this.state.chat,busy:this.state.busy,controller:this.controller,showComposer:false})}
+        if(!this.state.ready){AgentConversationLoading({failed:!!this.state.error,onRetry:()=>{void this.controller?.initialize();}})}
+        else if(this.state.chat.rows.length===0){this.empty()}
+        else {AgentChatBody({chat:this.state.chat,controller:this.controller})}
       }.width('100%').layoutWeight(1)
-      Column(){AgentChatInputBar({state:this.state,controller:this.controller})}.width('100%')
-        .padding({left:S.Dp16,right:S.Dp16,bottom:S.Dp12}).backgroundColor($r('app.color.miuix_surface'))
+      if(this.state.ready){Column(){AgentChatInputBar({state:this.state,controller:this.controller})}.width('100%')
+        .padding({left:S.Dp16,right:S.Dp16,bottom:S.Dp12}).backgroundColor($r('app.color.miuix_surface'))}
     }.width('100%').height('100%').backgroundColor($r('app.color.miuix_surface'))
   }
 }
