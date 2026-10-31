@@ -2,8 +2,8 @@
   "app": {
     "bundleName": "com.example.harmonyagent",
     "vendor": "Independent prototype",
-    "versionCode": 90019,
-    "versionName": "0.9.19",
+    "versionCode": 90020,
+    "versionName": "0.9.20",
     "icon": "$media:app_icon",
     "label": "$string:app_name"
   }
