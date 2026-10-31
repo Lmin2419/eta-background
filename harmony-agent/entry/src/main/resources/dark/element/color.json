@@ -5,6 +5,14 @@
       "value": "#1F277AF7"
     },
     {
+      "name": "eta_input_outline",
+      "value": "#8C404040"
+    },
+    {
+      "name": "eta_input_shadow",
+      "value": "#14000000"
+    },
+    {
       "name": "eta_pane_scrim",
       "value": "#29000000"
     },
@@ -67,6 +75,10 @@
     {
       "name": "eta_status_warning",
       "value": "#FFFFB200"
+    },
+    {
+      "name": "eta_suggestion_outline",
+      "value": "#80404040"
     },
     {
       "name": "eta_top_bar_progressive_surface",

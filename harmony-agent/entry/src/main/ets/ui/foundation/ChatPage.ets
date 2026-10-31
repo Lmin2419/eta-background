@@ -96,6 +96,7 @@ struct ChatComposer {
 
 @Component
 export struct ChatPage {
+  @Prop showComposer: boolean = true;
   @Prop @Watch('update') chat: ChatView = emptyShellState().chat;
   @Prop busy: boolean = false;
   controller: FoundationController | undefined = undefined;
@@ -168,8 +169,8 @@ export struct ChatPage {
       if (!this.following) {
         Button('↓ 回到最新消息').height(30).fontSize(12).fontColor('#397AF6').backgroundColor('#E9EDFA').onClick(() => { this.following = true; this.scroller.scrollEdge(Edge.Bottom); })
       }
-      Column() { ChatComposer({ chat: this.chat, busy: this.busy, controller: this.controller }) }
-        .width('100%').constraintSize({ maxWidth: 840 }).padding({ left: 14, right: 14, bottom: 10 })
+      if (this.showComposer) { Column() { ChatComposer({ chat: this.chat, busy: this.busy, controller: this.controller }) }
+        .width('100%').constraintSize({ maxWidth: 840 }).padding({ left: 14, right: 14, bottom: 10 }) }
     }.width('100%').height('100%')
   }
 }

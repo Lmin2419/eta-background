@@ -3,7 +3,7 @@
 import { FoundationController, ShellState, emptyShellState } from '../../../core/foundation/controller';
 import { AppRouteName, encodeRoute } from '../../../core/eta/routes';
 import { EtaPageDefaults as P, EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
-import { ChatPage } from '../../foundation/ChatPage';
+import { AgentHomeScreen } from '../screens/AgentHomeScreen';
 import { ProviderListPage, ProviderDetailPage, ModelSelectionSheet } from '../../foundation/ProviderPages';
 import { DiagnosticsPage } from '../../foundation/DiagnosticsPage';
 import { LegacyConversationPane, LegacySettingsContent } from '../../foundation/LegacyShellContent';
@@ -14,6 +14,7 @@ import { AgentTopBar } from './AgentTopBar';
 export struct AgentAppShell {
   @Prop @Watch('sync') state: ShellState = emptyShellState();
   controller: FoundationController | undefined = undefined;
+  @Prop keyboardVisible: boolean = false;
   private pathStack: NavPathStack = new NavPathStack();
   private pathKey: string = '';
   private syncing: boolean = false;
@@ -21,7 +22,7 @@ export struct AgentAppShell {
   @State private sheetVisible: boolean = false;
   aboutToAppear(): void { this.sync(); }
   private sync(): void {
-    this.sheetVisible = this.state.sheet !== 'none';
+    this.sheetVisible = this.state.sheet === 'catalog';
     const routes = this.state.routes.slice(1);
     const key = routes.map(encodeRoute).join('\n') + (this.state.screen === 'diagnostics' ? '\nHarmonyDiagnostics' : '');
     if (key === this.pathKey) return;
@@ -57,7 +58,7 @@ export struct AgentAppShell {
         onOpenPane: () => this.controller?.drawer(true), onNewConversation: () => { void this.controller?.newConversation(); } })
       this.error()
       Column() {
-        if (this.state.ready) { ChatPage({ chat: this.state.chat, busy: this.state.busy, controller: this.controller }) }
+        if (this.state.ready) { AgentHomeScreen({ state: this.state, keyboardVisible: this.keyboardVisible, controller: this.controller }) }
         else {
           Column({ space: S.Dp16 }) {
             if (this.state.busy) { LoadingProgress().width(S.Dp32).height(S.Dp32).color($r('app.color.miuix_primary')); Text($r('app.string.conversation_loading')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')) }
@@ -92,6 +93,6 @@ export struct AgentAppShell {
       .width('100%').height('100%').backgroundColor($r('app.color.miuix_background'))
       .onAreaChange((_old, area) => { this.widthVp = Number(area.width); })
       .bindSheet($$this.sheetVisible, this.modelSheet, { height: SheetSize.LARGE, showClose: false,
-        backgroundColor: $r('app.color.miuix_surface'), onDisappear: () => { if(this.state.sheet !== 'none') this.controller?.back(); } })
+        backgroundColor: $r('app.color.miuix_surface'), onDisappear: () => { if(this.state.sheet === 'catalog') this.controller?.back(); } })
   }
 }
