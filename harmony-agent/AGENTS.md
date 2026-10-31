@@ -1,6 +1,6 @@
 # AGENTS.md：随身助手（Harmony Agent）开发规则
 
-本文件给在此目录工作的编码代理（Codex / A 总、Claude 等）阅读。任务清单见 [docs/ROADMAP.md](docs/ROADMAP.md)，当前状态见 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)。
+本文件给在此目录工作的编码代理（Codex、Claude 等）阅读。任务清单见 [docs/ROADMAP.md](docs/ROADMAP.md)，当前状态见 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)。
 
 ## 项目是什么
 

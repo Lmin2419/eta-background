@@ -1,6 +1,6 @@
 # 本地开发与真机测试（Windows + DevEco Studio）
 
-从 0.9.1 起，仓库源码可以直接用 DevEco 打开并编译，不再需要升级 ZIP，也不需要编译 C++ 或 OpenSSL。以后每次 Codex（A 总）或 Claude 提交了新代码，你只需要拉取更新、点 Run、在手机上测试。
+从 0.9.1 起，仓库源码可以直接用 DevEco 打开并编译，不再需要升级 ZIP，也不需要编译 C++ 或 OpenSSL。以后每次 Codex或 Claude 提交了新代码，你只需要拉取更新、点 Run、在手机上测试。
 
 ## 一次性准备
 
@@ -42,7 +42,7 @@
 2. 点 Run（绿色三角）。
 3. 打开应用 → 右上角菜单 → 设置，确认显示的版本号（例如 `0.9.1 · 交互框架预览`）。
 
-编译报错时，把 DevEco 底部 Build 窗口的**完整错误文字**复制下来发给 A 总或 Claude。ArkTS 页面只有在 DevEco 中才能编译，开发环境里看不到这类错误。
+编译报错时，把 DevEco 底部 Build 窗口的**完整错误文字**复制下来发给 Codex 或 Claude。ArkTS 页面只有在 DevEco 中才能编译，开发环境里看不到这类错误。
 
 ## 更新代码
 
@@ -83,7 +83,7 @@ git update-index --skip-worktree harmony-agent/build-profile.json5
 
 1. 按 PR 中的“真机验证步骤”或 [docs/device-runs/TEMPLATE.md](device-runs/TEMPLATE.md) 逐项操作。
 2. 出现问题时：设置 → 诊断 → **复制报告**。报告已经自动去掉了 Key、网址路径和消息内容。
-3. 把下面三样一起发给 A 总（或贴到 PR 评论里）：
+3. 把下面三样一起发给 Codex（或贴到 PR 评论里）：
    - 你做了什么（第几步、点了哪里）；
    - 看到了什么（可以附截图）；
    - 诊断报告。
