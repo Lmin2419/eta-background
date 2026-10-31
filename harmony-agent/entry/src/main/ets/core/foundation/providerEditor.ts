@@ -48,7 +48,7 @@ export class ProviderEditor {
       const profile = this.profiles.document.profiles.find(p => p.id === id);
       if (id && !profile) throw new Error('服务已删除，请重新选择');
       const cached = this.drafts.provider(id);
-      let draft = (newProtocol&&cached?.protocol!==newProtocol?undefined:cached) || (profile ? profileDraft(profile, '') : {...emptyModelDraft(),name:'',protocol:newProtocol||'chat_completions',baseUrl:newProtocol==='anthropic'?'https://api.anthropic.com':'',anthropicVersion:newProtocol==='anthropic'?'2023-06-01':undefined});
+      let draft = (newProtocol&&cached?.protocol!==newProtocol?undefined:cached) || (profile ? profileDraft(profile, '') : {...emptyModelDraft(),name:'',protocol:newProtocol||'chat_completions',baseUrl:newProtocol==='anthropic'?'https://api.anthropic.com':newProtocol==='gemini'?'https://generativelanguage.googleapis.com/v1beta':'',anthropicVersion:newProtocol==='anthropic'?'2023-06-01':undefined});
       if (profile && !draft.apiKey && !this.drafts.hasProviderKey(id) && draft.baseUrl === profile.baseUrl) {
         const key = await this.profiles.key(profile);
         draft = { ...draft, apiKey: key };

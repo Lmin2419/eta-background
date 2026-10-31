@@ -1,6 +1,6 @@
 // Ported from app/src/main/kotlin/io/github/mangi/eta/agent/runtime/SearchSuggestionsPayload.kt @ 3b1794d
 // Copyright © 2026 蛮吉 (Mangi-11). PolyForm Noncommercial 1.0.0.
-function utf8Size(text: string): number {
+export function utf8Size(text: string): number {
   let size = 0;
   for (const char of text) {
     const point = char.codePointAt(0)!;

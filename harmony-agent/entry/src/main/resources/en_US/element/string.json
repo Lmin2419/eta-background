@@ -1381,6 +1381,10 @@
       "value": "新增 Gemini"
     },
     {
+      "name": "eta_provider_gemini_summary",
+      "value": "Connect to the native Interactions API with an API key"
+    },
+    {
       "name": "eta_provider_header_add",
       "value": "添加请求头"
     },

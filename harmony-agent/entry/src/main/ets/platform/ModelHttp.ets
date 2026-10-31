@@ -59,7 +59,7 @@ export class HarmonyHttpTransport implements HttpTransport {
       const response = await request.request(url, {
         method: method, header: headers, extraData: body,
         expectDataType: http.HttpDataType.STRING, connectTimeout: 15000, readTimeout: 60000,
-        usingCache: false, maxRedirects: 0, maxLimit: 2_000_000
+        usingCache: false, maxRedirects: 0, maxLimit: method===http.RequestMethod.GET?4*1024*1024:2_000_000
       });
       if (response.responseCode < 200 || response.responseCode >= 300) {
         throw new Error('模型服务返回 HTTP ' + response.responseCode + '，请检查 API 地址、密钥和额度');

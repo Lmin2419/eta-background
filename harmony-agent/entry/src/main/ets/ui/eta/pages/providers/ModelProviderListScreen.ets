@@ -23,7 +23,7 @@ export struct ModelProviderListScreen {
     EtaArrowPreference({title:$r('app.string.eta_catalog_add'),summary:$r('app.string.eta_catalog_add_summary'),hasLeading:true,startAction:() => { this.catalogIcon(); },onAction:()=>this.controller?.openCommunity()});EtaPreferenceDivider()
     EtaArrowPreference({title:$r('app.string.ui_added_openai_compatible_6bd471'),summary:$r('app.string.ui_support_chatgpt_deepseek_kimi_glm_qwen_etc_b31d02'),hasLeading:true,startAction:()=>{this.logo('openai');},onAction:()=>{void this.controller?.openProvider();}});EtaPreferenceDivider()
     EtaArrowPreference({title:$r('app.string.ui_new_anthropic_db6098'),summary:$r('app.string.ui_support_anthropic_claude_official_or_compatible_api_de3f80'),hasLeading:true,startAction:()=>{this.logo('anthropic');},onAction:()=>{void this.controller?.openProvider('','anthropic');}});EtaPreferenceDivider()
-    EtaArrowPreference({title:$r('app.string.eta_provider_gemini'),summary:$r('app.string.eta_port_unavailable'),isEnabled:false,hasLeading:true,startAction:()=>{this.logo('gemini');}})
+    EtaArrowPreference({title:$r('app.string.eta_provider_gemini'),summary:$r('app.string.eta_provider_gemini_summary'),hasLeading:true,startAction:()=>{this.logo('gemini');},onAction:()=>{void this.controller?.openProvider('','gemini');}})
   }}
   @Builder private title(p:ModelProfile){Column(){
     Text(p.name).fontSize(F.Headline1).fontColor($r('app.color.miuix_on_surface')).maxLines(1).textOverflow({overflow:TextOverflow.Ellipsis})

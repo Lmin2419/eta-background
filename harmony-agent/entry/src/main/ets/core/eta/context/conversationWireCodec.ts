@@ -34,6 +34,6 @@ export function assistantHistoryMessage(source:JsonObject):JsonObject {
  const result:JsonObject={role:'assistant',content:source.content??null};
  if(array(source.tool_calls).length)result.tool_calls=copy(source.tool_calls);
  if(source.reasoning_content!==null&&source.reasoning_content!==undefined)result.reasoning_content=string(source.reasoning_content);
- for(const key of ['_eta_responses_output_items','_eta_anthropic_content_blocks','_eta_gemini_steps'])if(Array.isArray(source[key]))result[key]=copy(source[key]);
+ for(const key of ['_eta_responses_output_items','_eta_anthropic_content_blocks','_eta_gemini_steps','_eta_gemini_pending_suggestions'])if(Array.isArray(source[key]))result[key]=copy(source[key]);
  return result;
 }

@@ -77,7 +77,7 @@ test('Responses test connection then model catalog retains draft values and save
   await editor.open(f.profile.id); editor.text('name', 'unsaved'); const before = editor.snapshot().draft;
   assert.equal(await editor.probe(true), true); assert.equal(editor.state.connection, '文本连接成功'); assert.equal(editor.state.draft.apiKey, before.apiKey); assert.equal(editor.state.draft.name, 'unsaved'); assert.equal(editor.state.draft.id, before.id); assert.deepEqual(editor.state.draft.models, ['gpt-test']); assert.deepEqual(editor.state.catalog, ['new-model']); assert.equal(requests.length, 1); assert.equal(f.profiles.document.profiles[0].name, 'Responses'); editor.close();
 });
-test('Responses enters the picker while protocols awaiting implementation remain disabled', async () => {
+test('All implemented native protocols enter the picker after their protocol gate passes', async () => {
   const f = await runtimeFixture(() => transport([delta, done]));
-  const all = foundationPickerProviders([f.profile, { ...f.profile, id: 'anthropic', protocol: 'anthropic' }, { ...f.profile, id: 'gemini', protocol: 'gemini' }]); assert.deepEqual(all.map(p=>p.isEnabled),[true,true,false]);
+  const all = foundationPickerProviders([f.profile, { ...f.profile, id: 'anthropic', protocol: 'anthropic' }, { ...f.profile, id: 'gemini', protocol: 'gemini' }]); assert.deepEqual(all.map(p=>p.isEnabled),[true,true,true]);
 });
