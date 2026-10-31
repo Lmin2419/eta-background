@@ -38,7 +38,7 @@ export struct ModelProviderListScreen {
   @Builder private list(){Column(){
     if(!this.state.providers.length){Text(this.state.providerSearch?$r('app.string.provider_no_matches'):$r('app.string.provider_empty')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')).padding({top:S.Dp24,bottom:S.Dp24})}
     ForEach(this.state.providers,(p:ModelProfile,index:number)=>{if(index>0){EtaPreferenceDivider()}
-      EtaPreferenceRow({hasLeading:true,hasCustomTitle:true,hasActions:true,startAction:()=>{ProviderBrandIcon({source:resolveProviderSource(p.id,p.baseUrl,p.protocol)});},titleAction:()=>{this.title(p);},endActions:()=>{this.selected(p);},onAction:()=>{void this.controller?.openProvider(p.id);},onLongClick:()=>this.remove(p)}).opacity(p.isEnabled===false?P.DisabledAlpha:1)
+      EtaPreferenceRow({hasLeading:true,hasCustomTitle:true,hasActions:true,startAction:()=>{this.logo(resolveProviderSource(p.id,p.baseUrl,p.protocol));},titleAction:()=>{this.title(p);},endActions:()=>{this.selected(p);},onAction:()=>{void this.controller?.openProvider(p.id);},onLongClick:()=>this.remove(p)}).opacity(p.isEnabled===false?P.DisabledAlpha:1)
     },(p:ModelProfile)=>p.id)
   }}
   @Builder private content(){Column(){
