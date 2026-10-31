@@ -165,8 +165,8 @@
     }
   ],
   "miuixColorRoles": 53,
-  "lightColorCount": 73,
-  "darkColorCount": 73,
+  "lightColorCount": 74,
+  "darkColorCount": 74,
   "tokens": {
     "EtaPreferenceDefaults": {
       "SidePadding": 16,
@@ -207,7 +207,13 @@
       "InputCornerRadius": 20.0
     },
     "EtaPaneDefaults": {
-      "PaneMaxWidth": 340.0
+      "PaneMaxWidth": 340.0,
+      "PaneWidthFraction": 0.84,
+      "ChatScrimAlpha": 0.16,
+      "SettleDampingRatio": 1.0,
+      "SettleStiffness": 146.0,
+      "SettleVisibilityThresholdPx": 0.5,
+      "SettlePositionThresholdFraction": 0.5
     },
     "MiuixButtonDefaults": {
       "MinWidth": 58.0,

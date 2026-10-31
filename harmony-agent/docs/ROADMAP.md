@@ -18,6 +18,7 @@
 | L4a（0.9.7） | 消息投影完成、四项检查通过 | `harmony/l4-runtime-projection` 基于 L2b；18 项 Eta 原测试、0 跳过，总测试 401 项。L4b 继续结果恢复及角色修订依赖，未接入运行时 |
 | L4b（0.9.8） | 结果恢复完成、四项检查通过 | `harmony/l4b-result-recovery` 基于 L4a；8 项任务原测试 + 14 项依赖原测试、0 跳过，总测试 423 项。L4 合计 26 项任务测试全部移植；未接运行时 |
 | E02（0.9.11） | 组件代码完成、四项检查通过 | `harmony/e02-components` 基于 L4b；430 项测试；追加已批准的 VIBRATE 与内容层渐进模糊尝试，含 2 项原渲染测试的测量逻辑；原平台验证 2 项待测。Gallery 已纳入 ArkTS；正式入口未切换，未生成 HAP |
+| E03（0.9.12 / PR #17） | 新壳层完成、四项检查通过 | 合入 #16 追加；Index 已切 Navigation/NavDestination，所有宽度推移；448 测试、ArkTS 0 error、1,852 资源；原测试 2 完整 / 3 平台待测；[交付记录](E03_NAVIGATION_PORT.md) |
 | M1 其余（E03–E09） | 夜间队列已排好 | 见第二节“本轮队列” |
 | M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |
@@ -61,6 +62,10 @@
 5. **不冒充真机结果**：真机检查点只列出步骤，标为“待测”。
 6. **PR 不要太大**：生成的资源文件不计，手写代码超过约 2500 行时拆成多个 PR。
 7. **早上的报告**：队列做完或全部阻塞时停下，最后输出一份报告，格式见“本轮队列”末尾。
+
+### 本轮队列（2026-10-31 继续，用户已确认）
+
+E02 追加（#16，完成） → E03（#17，完成） → E04a → E04b → E04c → E07 → E05 → E06；全部完成后可继续 E08 记忆 → Skills → MCP。继续遵守无人值守叠加 PR 规则；结束报告写 `docs/reports/2026-10-31-report.md`。决定见 ETA_PORT 末尾。
 
 ### 本轮队列（2026-10-30 夜间）
 
@@ -233,7 +238,7 @@
 
 - `core/eta/routes.ts`：完整对应 Eta 的 `AppRoute`，C 类路由标记为隐藏；页面栈由 core 持有（替换 `ShellNavigation`），配单测（push、pop、回到首页、通知深链）。
 - ArkUI 用 `Navigation` + `NavDestination` 渲染；系统返回和侧滑返回转发给 core。
-- 移植 `AgentAppShell.kt` 的顶栏（`AgentTopBar`、`TopBarOverflowMenu`、`titleForRoute`）、`ConversationSidePaneScaffold.kt` 和 `ConversationPaneMotion.kt`：窄屏是抽屉，宽屏常驻，动效照抄。启动页移植 `StartupSplash.kt`，连同它的单测。
+- 移植 `AgentAppShell.kt` 的顶栏（`AgentTopBar`、`TopBarOverflowMenu`、`titleForRoute`）、`ConversationSidePaneScaffold.kt` 和 `ConversationPaneMotion.kt`：所有宽度均为推移式侧栏，照抄 ConversationSidePaneScaffold.kt。启动页移植 `StartupSplash.kt`，连同它的单测。
 - `Index.ets` 改用新骨架。还没移植的页面暂时显示 0.9 的旧页面，保证每个 PR 都能正常使用。
 - **真机检查点 ①**：侧栏开合、横竖屏和展开屏下的布局、返回手势逐级返回。
 

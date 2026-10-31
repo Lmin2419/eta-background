@@ -46,6 +46,12 @@ export class EtaChatDefaults {
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationSidePaneScaffold.kt @ 3b1794d
 export class EtaPaneDefaults {
   static readonly PaneMaxWidth: number = 340.0;
+  static readonly PaneWidthFraction: number = 0.84;
+  static readonly ChatScrimAlpha: number = 0.16;
+  static readonly SettleDampingRatio: number = 1.0;
+  static readonly SettleStiffness: number = 146.0;
+  static readonly SettleVisibilityThresholdPx: number = 0.5;
+  static readonly SettlePositionThresholdFraction: number = 0.5;
 }
 
 // Ported from compose-miuix-ui/miuix Button.kt @ 39c40f9 (0.9.4), Apache-2.0

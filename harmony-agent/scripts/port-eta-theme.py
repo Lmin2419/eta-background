@@ -108,6 +108,7 @@ def generate(eta_root, output, check=False):
         def blend(role, alpha):
             return '#' + f'{math.floor(alpha * 255 + 0.5):02X}' + colors[role][3:]
         row = texts['EtaPreferenceRow.kt']; chip = texts['EtaChoiceChip.kt']
+        result['eta_pane_scrim'] = parse_color('Color.Black.copy(alpha = ' + re.search(r'ChatScrimAlpha = ([\d.]+)f', texts['ConversationSidePaneScaffold.kt'])[1] + 'f)')
         result['eta_transparent'] = parse_color('Color.Transparent')
         result['eta_preference_arrow'] = blend('onBackground', float(re.search(r'onBackground.copy\(alpha = ([\d.]+)f\)', row)[1]))
         # The first occurrence is the arrow (0.3); the row's held overlay is 0.06.
@@ -132,6 +133,7 @@ def generate(eta_root, output, check=False):
     objects['EtaChatDefaults']['InputCornerRadius'] = float(re.search(r'InputContainerShape = RoundedCornerShape\(([\d.]+)\.dp\)', texts['AgentChatInputBar.kt'])[1])
     source_for['EtaChatDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatInputBar.kt, AgentChatFileAttachments.kt @ 3b1794d'
     objects['EtaPaneDefaults'] = {'PaneMaxWidth': float(re.search(r'val PaneMaxWidth = ([\d.]+)\.dp', texts['ConversationSidePaneScaffold.kt'])[1])}
+    objects['EtaPaneDefaults'].update({k: float(v) for k, v in re.findall(r'(?:const )?val (\w+) = ([\d.]+)f', texts['ConversationSidePaneScaffold.kt'])})
     source_for['EtaPaneDefaults'] = 'app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationSidePaneScaffold.kt @ 3b1794d'
     for name, file, fields in [('MiuixButtonDefaults', 'Button.kt', ['MinWidth', 'MinHeight', 'CornerRadius']),
                               ('MiuixDialogDefaults', 'DialogContentLayout.kt', ['MaxWidth', 'CornerRadius'])]:
