@@ -1,9 +1,7 @@
-import { usageOf } from './usage';
 import { ModelMetadata, metadataFor, safeHeaders } from './modelMetadata';
 import { Message, ModelClient, ModelReply, RunControl } from './types';
-import { CompletionStream } from './stream';
 import { ModelProtocol, completeProtocol } from './protocols';
-import { completeFoundationResponses } from './eta/protocol/foundationProviderBridge';
+import { completeFoundationProvider } from './eta/protocol/foundationProviderBridge';
 import { ModelReasoningCapabilities } from './eta/protocol/providerTypes';
 
 export interface HttpTransport { post(url: string, headers: Record<string,string>, body: string): Promise<string>; get?(url: string, headers: Record<string,string>): Promise<string>; stream?(url:string,headers:Record<string,string>,body:string,onChunk:(chunk:string)=>boolean|void,onStatus?:(status:number)=>void):Promise<void>; cancel(): void }
@@ -51,17 +49,6 @@ function headers(settings: ModelSettings): Record<string,string> {
 function parse(raw: string): any {
   if (raw.length > 2_000_000) throw new Error('模型响应超过大小限制');
   try { return JSON.parse(raw); } catch (_) { throw new Error('服务返回的内容不是有效 JSON，请检查接口地址'); }
-}
-function reply(raw: string): ModelReply {
-  const data=parse(raw);const choice = data?.choices?.[0];
-  const message = choice?.message;
-  if (!message || message.role !== 'assistant' || (message.content != null && typeof message.content !== 'string')) throw new Error('模型没有返回有效的 assistant 消息');
-  if (message.tool_calls != null && !Array.isArray(message.tool_calls)) throw new Error('无效工具调用格式');
-  for (const c of message.tool_calls || []) {
-    if (!c || typeof c.id !== 'string' || !c.id || c.type !== 'function' || typeof c.function?.name !== 'string' || !c.function.name || typeof c.function?.arguments !== 'string') throw new Error('无效工具调用格式');
-  }
-  if (!message.content && !message.tool_calls?.length) throw new Error('模型返回空消息');
-  return {message: {role:'assistant',content:message.content ?? null, ...(message.tool_calls ? {tool_calls:message.tool_calls} : {})},finishReason:choice.finish_reason,usage:usageOf(data.usage),reasoning:typeof message.reasoning_content==='string'?message.reasoning_content.slice(0,32000):undefined};
 }
 export interface ModelList { ids: string[]; partial: boolean;metadata?:ModelMetadata[] }
 export async function fetchModels(settings: ModelSettings, transport: HttpTransport): Promise<ModelList> {
@@ -111,17 +98,8 @@ export class OpenAIClient implements ModelClient {
     control.check();
     if(this.settings.systemPrompt?.trim())messages=[{role:'system',content:this.settings.systemPrompt.trim()},...messages.filter(m=>m.role!=='system')];
     if (!this.settings.model.trim()) throw new Error('请填写模型名称');
-    if(this.settings.protocol==='responses')return completeFoundationResponses({...this.settings,sessionId:this.settings.sessionId||this.sessionId},modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.transport,this.tools,messages,control,onText,onReasoning);
+    if(this.settings.protocol==='responses')return completeFoundationProvider({...this.settings,sessionId:this.settings.sessionId||this.sessionId},modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.transport,this.tools,messages,control,onText,onReasoning);
     if(this.settings.protocol&&this.settings.protocol!=='chat_completions')return completeProtocol(this.settings.protocol,modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.settings,this.transport,this.tools,messages,control,onText||(()=>{}),onReasoning||(()=>{}));
-    const streaming=this.settings.streaming!==false&&Boolean(this.transport.stream);
-    const body=JSON.stringify({model:this.settings.model.trim(),messages,...(this.settings.maxOutputTokens?{max_tokens:this.settings.maxOutputTokens}:{}),...(this.settings.reasoningEffort?{reasoning_effort:this.settings.reasoningEffort}:{}),...(this.tools.length?{tools:this.tools}:{}),stream:streaming});
-    if(streaming) {
-      const parser=new CompletionStream(text=>{control.check();onText?.(text);},text=>{control.check();onReasoning?.(text);});
-      await this.transport.stream!(modelEndpoint(this.settings),{...headers(this.settings),...safeHeaders(this.settings.extraHeaders)},body,chunk=>{control.check();parser.feed(chunk);});
-      control.check();return parser.finish(reply);
-    }
-    const raw = await this.transport.post(modelEndpoint(this.settings), {...headers(this.settings),...safeHeaders(this.settings.extraHeaders)},body);
-    control.check();
-    const result=reply(raw);if(typeof result.message.content==='string')onText?.(result.message.content);if(result.reasoning)onReasoning?.(result.reasoning);return result;
+    return completeFoundationProvider({...this.settings,sessionId:this.settings.sessionId||this.sessionId},modelEndpoint(this.settings).replace(/\/chat\/completions$/,''),this.transport,this.tools,messages,control,onText,onReasoning);
   }
 }

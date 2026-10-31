@@ -2,7 +2,11 @@
 
 2026-10-31 真机反馈修复：合入显式 Builder 插槽闭包，防止首页、顶栏与子页面误用子组件接收者；新增 SDK AST 审计和 10 项回归（E02 的首页用例待 E03 引入）。本分支保留历史任务版本，最终交付为 0.9.32；ArkTS 检查通过/未生成 HAP 的结果以本分支最新 CI 为准，真机待测。见 [修复与逐项验收](ARKUI_BUILDER_RECEIVER_FIX.md)。
 
-第二轮报告保存在 [2026-10-31 报告](reports/2026-10-31-report.md)。第三轮从 `harmony/round3-plan` 开始，当前 **0.9.21 / 90021 / harmony/p1a-responses**。用户已选 E07b 方案 A；正式入口仍用 0.9 存储，E07b3 必须等真机检查点 ①–④。
+第二轮报告保存在 [2026-10-31 报告](reports/2026-10-31-report.md)。第三轮从 `harmony/round3-plan` 开始，当前 **0.9.22 / 90022 / harmony/p1b-chat-completions**。用户已选 E07b 方案 A；正式入口仍用 0.9 存储，E07b3 必须等真机检查点 ①–④。
+
+## 0.9.22（P1b：Chat Completions）
+
+正式请求路径改为 Eta 请求/SSE/系统消息投影/工具 ID 配对逻辑，保留 M0 持久化与停止规则。30 项原测试 + 5 集成回归，全量 698 通过；ArkTS 0 error、1,935 资源通过。无新权限或鸿蒙接口，未生成 HAP，真机待测；非流式/JSON 兼容等差异见 [P1b 交付记录](P1B_CHAT_COMPLETIONS_PORT.md)。下一项 E05b。
 
 ## 0.9.21（P1a：Responses 与公共协议部件）
 
