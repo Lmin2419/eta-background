@@ -22,7 +22,7 @@ struct RenameConversationDialog {
     if(this.error){Text(this.error).fontSize(F.Body2).fontColor($r('app.color.miuix_error'))}
     MiuixDialogActions({confirmText:$r('app.string.action_save'),cancelEnabled:!this.saving,confirmEnabled:!this.saving&&this.text.trim().length>0,onCancel:()=>{this.owner?.dismissPaneMutation();this.controller?.close();},onConfirm:()=>{this.saving=true;void this.owner?.confirmPaneMutation().then(()=>{this.saving=false;if(!this.owner?.snapshot().paneMutation)this.controller?.close();else this.error=this.owner.snapshot().error;});}})
   }}
-  build(){EtaDialogContent({title:$r('app.string.conversation_rename_title'),content:this.body})}
+  build(){EtaDialogContent({title:$r('app.string.conversation_rename_title'),content:() => { this.body(); }})}
 }
 @Component
 export struct ConversationPanePanel {

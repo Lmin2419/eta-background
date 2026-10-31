@@ -15,5 +15,5 @@ export struct AgentStatusCard {
     Text(this.currentStep).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')).margin({top:S.Dp8}).width('100%')
     Row(){Text(this.elapsedLabel).fontSize(F.Footnote1).fontColor($r('app.color.miuix_on_surface_variant_actions')).layoutWeight(1);if(this.status==='Running'){Button($r('app.string.ui_stop_a17f70')).backgroundColor($r('app.color.eta_transparent')).fontColor($r('app.color.miuix_primary')).onClick(this.onStop)}}.width('100%').margin({top:S.Dp12})
   }.width('100%').padding(S.Dp16)}
-  build(){Column(){EtaCard({content:this.body,clickable:true,onAction:this.onOpen})}.width('100%').padding({left:S.Dp12,right:S.Dp12,top:S.Dp6,bottom:S.Dp6})}
+  build(){Column(){EtaCard({content:() => { this.body(); },clickable:true,onAction:this.onOpen})}.width('100%').padding({left:S.Dp12,right:S.Dp12,top:S.Dp6,bottom:S.Dp6})}
 }

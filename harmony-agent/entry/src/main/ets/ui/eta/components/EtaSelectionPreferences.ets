@@ -42,7 +42,7 @@ export struct EtaSwitchPreference {
   build() {
     EtaPreferenceRow({ title: this.title, summary: this.summary, isEnabled: this.isEnabled,
       hasLeading: this.hasLeading, hasBottom: this.hasBottom, hasActions: true,
-      startAction: this.startAction, bottomAction: this.bottomAction, endActions: this.trailing,
+      startAction: () => { this.startAction(); }, bottomAction: () => { this.bottomAction(); }, endActions: () => { this.trailing(); },
       onAction: () => { this.onCheckedChange(!this.checked); } })
       .accessibilityRole(AccessibilityRoleType.SWITCH).accessibilityChecked(this.checked)
   }
@@ -62,7 +62,7 @@ export struct EtaRadioButtonPreference {
   build() {
     EtaPreferenceRow({ title: this.title, summary: this.summary, isEnabled: this.isEnabled,
       hasLeading: this.hasLeading, hasBottom: this.hasBottom, hasActions: true,
-      startAction: this.startAction, bottomAction: this.bottomAction, endActions: this.trailing, onAction: this.onAction })
+      startAction: () => { this.startAction(); }, bottomAction: () => { this.bottomAction(); }, endActions: () => { this.trailing(); }, onAction: this.onAction })
       .accessibilityRole(AccessibilityRoleType.RADIO).accessibilitySelected(this.selected)
   }
 }
@@ -88,7 +88,7 @@ export struct EtaCheckboxPreference {
   build() {
     EtaPreferenceRow({ title: this.title, summary: this.summary, isEnabled: this.isEnabled,
       hasLeading: this.checkboxAtStart || this.hasLeading, hasBottom: this.hasBottom, hasActions: !this.checkboxAtStart,
-      startAction: this.leading, bottomAction: this.bottomAction, endActions: this.checkbox,
+      startAction: () => { this.leading(); }, bottomAction: () => { this.bottomAction(); }, endActions: () => { this.checkbox(); },
       onAction: () => { this.onCheckedChange?.(!this.checked); } })
       .accessibilityRole(AccessibilityRoleType.CHECKBOX).accessibilityChecked(this.checked)
   }
