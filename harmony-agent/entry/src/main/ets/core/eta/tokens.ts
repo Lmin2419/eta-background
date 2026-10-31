@@ -162,6 +162,11 @@ export class MiuixFontSizes {
   static readonly Title4: number = 18.0;
 }
 
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/screens/memory/AgentMemoryScreen.kt @ 3b1794d
+export class EtaMemoryDefaults {
+  static readonly EditorLineHeight: number = 22.0;
+}
+
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/markdown/MarkdownStyle.kt @ 3b1794d
 export class EtaMarkdownFonts {
   static readonly Fp0: number = 0.0;
@@ -218,6 +223,7 @@ export class EtaComponentSizes {
   static readonly Dp6: number = 6.0;
   static readonly Dp7: number = 7.0;
   static readonly Dp8: number = 8.0;
+  static readonly Dp9: number = 9.0;
   static readonly Dp10: number = 10.0;
   static readonly Dp11: number = 11.0;
   static readonly Dp12: number = 12.0;

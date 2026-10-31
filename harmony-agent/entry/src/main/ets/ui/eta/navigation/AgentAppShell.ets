@@ -10,6 +10,7 @@ import { ModelProviderDetailScreen } from '../pages/providers/ModelProviderDetai
 import { RemoteModelImportSheet } from '../pages/providers/RemoteModelImportSheet';
 import { CommunityCatalogScreen, CommunityCatalogProviderScreen } from '../pages/providers/CommunityCatalogScreens';
 import { DiagnosticsPage } from '../screens/DiagnosticsPage';
+import {AgentMemoryScreen} from '../screens/AgentMemoryScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { AppearanceSettingsScreen } from '../screens/AppearanceSettingsScreen';
 import { ConversationSidePaneScaffold } from '../components/ConversationSidePaneScaffold';
@@ -79,6 +80,7 @@ export struct AgentAppShell {
           else if (name === AppRouteName.CommunityCatalogProvider) { CommunityCatalogProviderScreen({state:this.state,controller:this.controller}) }
           else if (name === 'HarmonyDiagnostics') { DiagnosticsPage({ state: this.state, controller: this.controller }) }
           else if (name === AppRouteName.Settings) { SettingsScreen({ state: this.state, controller: this.controller }) }
+          else if (name === AppRouteName.Memory) { AgentMemoryScreen({state:this.state,controller:this.controller,keyboardVisible:this.keyboardVisible}) }
           else if (name === AppRouteName.AppearanceSettings) { AppearanceSettingsScreen({state:this.state,controller:this.controller}) }
         }.layoutWeight(1).width('100%')
       }.width('100%').height('100%').backgroundColor($r('app.color.miuix_background'))

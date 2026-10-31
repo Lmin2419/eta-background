@@ -1305,6 +1305,10 @@
       "value": "报告隐去 API Key、授权信息、网址路径和消息正文。请附上复现步骤。"
     },
     {
+      "name": "eta_extension_saved_not_in_use",
+      "value": "已保存；鸿蒙版对话暂未使用此功能"
+    },
+    {
       "name": "eta_gemini_thinking_default",
       "value": "思考档位使用 Default"
     },
@@ -1335,6 +1339,10 @@
     {
       "name": "eta_language_restart",
       "value": "切换为跟随系统后，重新打开应用生效"
+    },
+    {
+      "name": "eta_memory_file_name",
+      "value": "MEMORY.md"
     },
     {
       "name": "eta_model_context",
