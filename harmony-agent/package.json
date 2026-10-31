@@ -1,14 +1,16 @@
 {
   "name": "harmony-agent-core",
-  "version": "0.9.32",
+  "version": "0.9.33",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "tsx --test tests/*.test.ts tests/eta/*.test.ts",
+    "test": "node scripts/run-tests.cjs",
     "test:native": "bash scripts/test-native.sh",
     "check": "tsc --noEmit",
     "check:ets": "node scripts/check-ets.cjs",
     "check:res": "node scripts/check-resources.cjs",
+    "test:ui": "bash scripts/ui-preview/run.sh",
+    "verify": "bash scripts/verify.sh",
     "build:harmony": "bash scripts/build.sh",
     "test:foundation": "tsx --test tests/foundation.test.ts",
     "build:preview": "python3 scripts/build-preview.py",
@@ -19,7 +21,9 @@
   },
   "devDependencies": {
     "@material-design-icons/svg": "0.14.15",
+    "@rollup/plugin-node-resolve": "15.3.1",
     "@types/node": "^22.0.0",
+    "rollup": "3.29.5",
     "tsx": "^4.20.0",
     "typescript": "~5.8.3"
   }

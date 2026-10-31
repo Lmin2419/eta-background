@@ -43,7 +43,7 @@ export struct AgentTopBar {
       }.width(I.MinWidth).height(I.MinHeight).padding(S.Dp0).borderRadius(I.CornerRadius)
         .backgroundColor($r('app.color.eta_transparent')).accessibilityText($r('app.string.action_more'))
         .enabled(this.isEnabled).onClick(() => { this.menuOpen = true; })
-        .bindMenu($$this.menuOpen, this.menu, { onDisappear: () => { this.menuOpen = false; } })
+        .bindMenu(this.menuOpen, this.menu, { onDisappear: () => { this.menuOpen = false; } })
     }
   }
   @Builder private bar() {

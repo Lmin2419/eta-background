@@ -63,7 +63,7 @@ export struct EtaDropdownPreference {
       isEnabled: this.isEnabled && this.items.length > 0, holding: this.expanded,
       hasLeading: this.hasLeading, startAction: () => { this.startAction(); }, hasActions: true, hasBottom: this.hasBottom, bottomAction: () => { this.bottomAction(); },
       endActions: () => { this.selectedLabel(); }, onAction: () => { this.expanded = !this.expanded; if (this.expanded) EtaHaptics.perform(EtaHaptic.ContextClick); } })
-      .bindMenu($$this.expanded, this.choices, { onDisappear: () => { this.expanded = false; } })
+      .bindMenu(this.expanded, this.choices, { onDisappear: () => { this.expanded = false; } })
   }
 }
 

@@ -103,8 +103,8 @@ export struct AgentChatInputBar {
       .backgroundColor($r('app.color.miuix_surface_container')).border({width:S.Dp0_5,color:$r('app.color.eta_input_outline')}).borderRadius(C.InputCornerRadius)
       .shadow({radius:S.Dp8,color:$r('app.color.eta_input_shadow')})
       .onAreaChange((_old,area)=>{this.inputTop=Number(area.globalPosition.y);})
-      .bindMenu($$this.attachmentVisible,this.attachments,{placement:Placement.TopLeft,onDisappear:()=>{this.attachmentVisible=false;}})
-      .bindPopup($$this.quickVisible,{builder:this.quickModels,placement:Placement.TopRight,enableArrow:false,
+      .bindMenu(this.attachmentVisible,this.attachments,{placement:Placement.TopLeft,onDisappear:()=>{this.attachmentVisible=false;}})
+      .bindPopup(this.quickVisible,{builder:this.quickModels,placement:Placement.TopRight,enableArrow:false,
         popupColor:$r('app.color.miuix_surface'),onStateChange:(event)=>{if(!event.isVisible)this.dismissPicker();}})
       .bindSheet($$this.modelSheetVisible,this.sheetModels,{height:(M.SheetHeightFraction*100)+'%',showClose:false,
         title:{title:$r('app.string.model_picker_title')},backgroundColor:$r('app.color.miuix_surface'),onDisappear:()=>this.dismissPicker()})

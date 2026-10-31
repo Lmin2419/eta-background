@@ -1,6 +1,10 @@
 # AGENTS.md：随身助手（Harmony Agent）开发规则
 
-本文件给在此目录工作的编码代理（Codex / A 总、Claude 等）阅读。任务清单见 [docs/ROADMAP.md](docs/ROADMAP.md)，当前状态见 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)。
+本文件给在此目录工作的编码代理（当前执行者 dsh，以及 Claude 等）阅读。
+
+- 任务清单：[docs/ROADMAP.md](docs/ROADMAP.md)；
+- 当前状态：[docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)；
+- **执行流程、预览器自测和交付要求：[docs/EXECUTOR_GUIDE.md](docs/EXECUTOR_GUIDE.md)，开工前必读。**
 
 ## 项目是什么
 
@@ -30,17 +34,30 @@ npm ci
 npm run check   # tsc，只覆盖 core/**/*.ts 和 tests/**/*.ts
 npm test        # 全部单测，必须 0 失败
 
-# 首次下载公开的 OpenHarmony 7.0 SDK（API 26，免登录，约 3.4 GB，只保留 ArkTS 和 toolchains 两部分）
-bash scripts/fetch-ohos-sdk.sh                      # 默认放到 ~/.cache/ohos-sdk-26
+# 首次下载公开的 OpenHarmony 7.0 SDK（API 26，免登录，约 3.4 GB，只保留 ArkTS、toolchains 和预览器）
+bash scripts/fetch-ohos-sdk.sh --with-previewer     # 默认放到 ~/.cache/ohos-sdk-26
+pip install -r scripts/ui-preview/requirements.txt
 export OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets
 npm run check:ets   # .ets 类型和 ArkTS 规则，必须 0 error
 npm run check:res   # 用 SDK 的 restool 打包资源，必须 passed（任何 restool 警告都算失败）
+npm run test:ui     # 无头预览器中打开应用，按 tests/ui/ 的场景点击、输入、断言、截图，必须全部 pass
+
+npm run verify      # 交付前一次跑完以上五项，汇总写到 dist/verify/summary.md，原样贴进 PR
 ```
 
-- `npm run check` 只覆盖 `core/**/*.ts` 和 `tests/**/*.ts`。`.ets` 用 `npm run check:ets` 检查：它调用 SDK 自带的官方检查器，做类型检查和 ArkTS 规则检查（例如 `arkts-no-any-unknown`），**但不生成 HAP**。
+- **`npm run test:ui`（界面测试）**：在 Linux 预览器里真正渲染应用（入口 `pages/FoundationPreview`：正式的 Eta 界面 + 内存数据 + 假模型），逐步执行 `tests/ui/*.json`。每一步都会检查日志中有没有新的应用错误（`FIX THIS APPLICATION ERROR`、`TypeError` 等）和崩溃；点击后界面没有变化也算失败。截图和日志在 `dist/ui-report/`，CI 会上传为 `ui-report`。说明见 [scripts/ui-preview/README.md](scripts/ui-preview/README.md)。
+- **改动界面或交互的 PR**：必须让 `npm run test:ui` 全部通过；新增页面或交互时，同时在 `tests/ui/` 加场景（至少：页面能打开、主要按钮点了有反应、无应用错误），并在 PR 中附上关键截图。它不能代替真机（存储、网络、签名、安装、性能都不在范围内），但交给用户前必须先过这一关。
+
+- `npm run check` 只覆盖 `core/**/*.ts` 和 `tests/**/*.ts`。`.ets` 用 `npm run check:ets` 检查：它调用 SDK 自带的官方检查器，做类型检查和 ArkTS 规则检查（例如 `arkts-no-any-unknown`），**但不生成 HAP**。检查范围是页面、`EntryAbility`、`module.json5` 中所有 `srcEntry`（例如无障碍扩展），以及它们引用的文件。
 - `npm run check:res` 用 SDK 的 restool 编译 AppScope 和 entry 的资源，能拦住资源命名、JSON 格式、未定义引用和重复声明（例如 AppScope 与 entry 都声明 `app_name`）。它不渲染 SVG 和字体。
 - 如果你的环境访问不了 `mirrors.huaweicloud.com`，PR 上的 CI 任务 `Harmony / ArkTS (.ets) and resources check` 会执行同样的两项检查，以它的结果为准。CI 也会在 base 为 `harmony/**` 的叠加 PR 上运行。
-- 已知误报只有 `Cannot find name '$$this'`（双向绑定语法，正式构建会预处理），脚本已经自动忽略。不要往误报列表里加别的东西来掩盖真实错误。
+- `$$this` 双向绑定**只允许用在 `.bindSheet($$this.x, …)`**，检查器只对这种写法放行。`bindMenu` / `bindPopup` 里写 `$$this` 不会被编译器转换，运行时报 `$$this is not defined`，整个组件失效（0.9.32 顶栏和输入栏不显示就是这个原因）。这两处请用 `this.x`，并在 `onDisappear` / `onStateChange` 中复位。不要往误报列表里加别的东西来掩盖真实错误。
+- **`ForEach` / `LazyForEach` 的 key 不变时，子项不会重建，也收不到新数据**（Compose 会自动重组，ArkUI 不会）。0.9.33 回复看不见、段落停在第一段就是这个原因。所以列表项内容会变时，二选一：
+  - 无状态的行（文字片段、只读列表行）：key 用 `renderKey(id, 行数据)`，内容一变 key 就变，整行重建；
+  - 有自己状态的行（渐显进度、展开、输入框焦点）：用 `@Observed` 槽位 + `@ObjectLink`，用 `syncSlots` 原地替换内容，key 保持 id。
+
+  两个工具在 `core/eta/renderKey.ts`。只用 id 或下标作 key、而行内容来自 item 的写法视为缺陷。
+- 不要在 `onAreaChange` 等布局回调里无条件写会影响布局的 `@State`，否则会出现“渲染过程中修改状态”的错误，甚至反复重绘；至少先比较新旧值，只在变化时写。
 - 生成 HAP 需要 HarmonyOS 命令行工具（`HARMONY_CLT_HOME`，`npm run build:harmony`），通常没有。所以：逻辑仍然写在 `core/**/*.ts` 并写单测，`.ets` 保持薄；PR 中写明“ArkTS 检查通过 / 未生成 HAP”，最终以用户的 DevEco 编译为准。
 
 ## 架构规则（违反即视为缺陷）
@@ -82,13 +99,13 @@ npm run check:res   # 用 SDK 的 restool 打包资源，必须 passed（任何 
 
 ## 分支与 PR
 
-- 用户不在时（例如夜间），按 `docs/ROADMAP.md` 第二节的“无人值守连续执行”规则和“本轮队列”连续工作：叠加分支、通过检查才前进、卡住就跳过、最后输出报告。
-
-- 每个 ROADMAP 任务一个分支 `harmony/<任务编号>-<短名>`，一个 PR 到 `main`。不要直接推送 `main`。
+- 用户不在时（例如夜间），按 `docs/ROADMAP.md` 第二节的“无人值守连续执行”规则和“本轮队列”连续工作：通过检查才前进、卡住就跳过、最后输出报告。
+- 每个 ROADMAP 任务一个分支 `harmony/<任务编号>-<短名>`，一个 PR。base 按 EXECUTOR_GUIDE 第 2 节：互不依赖的任务各自从 base 拉，不要叠加。不要直接推送 `main`，不要合并 PR。
+- 不要为了让检查通过而删除、跳过或放宽测试，不要修改检查脚本、误报列表或 `scripts/ui-preview/`（任务卡要求的除外）。认为检查有错时在 PR 中说明。
 - 界面文字、文档和 PR 描述使用简体中文。
 - PR 描述包含：
   1. 改了什么（对应任务卡）；
-  2. 自动验证：`npm run check`、`npm test` 的结果（测试数量 / 失败数）；是否执行了 HAP 编译；
+  2. 自动验证：贴 `npm run verify` 生成的 `dist/verify/summary.md`（五项检查的结果、测试数量 / 失败数）；是否执行了 HAP 编译；界面改动列出截图文件名；
   3. 新增权限（没有就写“无”）；
   4. **真机验证步骤**：用户在手机上逐步操作的清单和预期结果；
   5. 已知限制和未完成项；

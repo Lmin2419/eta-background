@@ -4,6 +4,18 @@
 
 第三轮已结束：[完整执行报告](reports/2026-10-31-round3.md)。11 个可审查 PR，1 个阻塞草稿（#35）；最后 PR #36。
 
+## 0.9.33（Claude：无头界面测试，修复顶栏和输入栏不显示）
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| 新增 `npm run test:ui`：预览编译（不依赖 hvigor）+ OpenHarmony Linux 预览器 + 场景驱动；CI 任务 `Harmony / UI preview tests` | 4 个场景通过：首页元素齐全、打开侧栏、输入并发送后收到流式回复、打开模型选择 | 不适用 |
+| 修复：`AgentTopBar`、`AgentChatInputBar`、`AgentChatModelControls`、`EtaDropdownPreference` 中 `bindMenu/bindPopup($$this.x)` 改为 `this.x`。修复前预览器日志报 `$$this is not defined`，顶栏和输入栏整块不渲染，首页没有可点击的元素 | 修复前后各跑一次界面测试，对照截图；ArkTS 检查现在会拦截这种写法 | **待测**：很可能就是用户反馈的“整个页面不能动” |
+| `FoundationPreview` 改为渲染正式的 `AgentAppShell`（内存数据 + 假模型），供 DevEco 预览和界面测试使用 | 同上 | 不适用 |
+| ArkTS 检查只对 `.bindSheet($$this.` 放行 `$$this` 报错 | 撤掉修复时精确报出 5 处错误 | 不适用 |
+| 执行者换为 dsh 后的配套（不改应用、不升版本）：界面测试新增长按、滑动、返回、`dump` 列出可见元素、`attrs` 属性断言；失败时打印可见元素，`summary.md` 和 CI 运行摘要写明失败步骤；`npm run verify` 一次跑完五项检查并生成 PR 摘要；新增 [执行手册](EXECUTOR_GUIDE.md) | 新步骤在预览器中逐一验证；4 个场景仍全部通过 | 不适用 |
+
+待真机确认：回复文字的渐显依赖 `postFrameCallback`，在预览器里文字一直是透明的。如果真机上也看不到回复，原因在这里。验收场景 `tests/ui/pending/05-reply-visible.json` 目前失败，由任务 R4-1 修复。
+
 ## 0.9.32（真机反馈优先：修复安装后启动白屏）
 
 用户确认 0.9.31 已能安装，但打开崩溃，FaultLog 为 `Cannot read property busy of undefined`。原因是 BuilderParam 改变裸构建函数的接收者，侧栏执行首页时读不到 ShellState。统一用闭包保留原页面，覆盖首页、顶栏、设置/模型页和弹窗；不改变唯一状态源，不吞掉错误。SDK AST 审计 113 处插槽，修正 99 处裸成员传递（24 个 ETS 文件），新增 10 项接收者回归；从 E02/#16 组件库起逐层同步。[修复、对照与验收](ARKUI_BUILDER_RECEIVER_FIX.md)。

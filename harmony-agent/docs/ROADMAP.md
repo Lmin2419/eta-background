@@ -1,6 +1,15 @@
 # 随身助手推进方案（0.9.1 → 0.14）
 
-第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮报告：[2026-10-31 第三轮](reports/2026-10-31-round3.md)。当前 `harmony/e08c-mcp` / 0.9.32 / PR #36；必做队列、记忆及 Skills 安装核心通过四项检查。Skills 页面 #35 草稿阻塞，MCP 从 #34 独立推进，MCP 四项检查通过。正式存储未切换。
+**2026-10-31 起执行者换为 dsh。** 流程见 [EXECUTOR_GUIDE.md](EXECUTOR_GUIDE.md)：
+- Claude 写任务卡并验收；
+- dsh 实现，并在预览器里自测；
+- 用户合并 PR，只在真机检查点测试。
+
+本轮任务见第二节“第五轮”；第四轮的验收结果在它前面。
+
+当前分支 `harmony/ui-preview-tests`（0.9.33，PR #37），之前的 PR 链都叠在它下面。下一步：用户真机测 0.9.33，然后把整条链一次合并进 `main`。
+
+历史报告：[第二轮](reports/2026-10-31-report.md)、[第三轮](reports/2026-10-31-round3.md)。
 
 制定：2026-10-30。基于 `main@aadbf93`。执行规则见 [../AGENTS.md](../AGENTS.md)。
 
@@ -10,6 +19,7 @@
 | --- | --- | --- |
 | ArkUI 启动白屏修复（0.9.32） | 代码与四项检查通过，真机启动待测 | 用户已安装 0.9.31，但 BuilderParam 使首页 this 指向侧栏。显式闭包修复 99 处同类传递；10 项新增接收者回归，从 #16 同步下游；[修复记录](ARKUI_BUILDER_RECEIVER_FIX.md) |
 | T01–T03（M0 / 0.9.1） | **代码完成，待真机** | Claude 完成，PR #8（分支 `harmony/m0-0.9.1`），三个任务合在一个 PR 里，方便一次真机测完。200 项测试通过；ArkTS 检查 0 错误（OpenHarmony SDK 26.0.0.38）；未生成 HAP |
+| 无头界面测试 | 完成（Claude） | `npm run test:ui`：不依赖 hvigor 的预览编译 + OpenHarmony Linux 预览器 + `tests/ui/` 场景；CI 任务 `Harmony / UI preview tests`，上传截图。首次运行即发现 0.9.32 顶栏和输入栏因 `bindMenu/bindPopup($$this)` 运行时报错而不显示，已在同一分支修复（0.9.33）。说明见 `scripts/ui-preview/README.md` |
 | `.ets` 与资源检查工具 | 完成 | `scripts/fetch-ohos-sdk.sh` + `npm run check:ets` + `npm run check:res`（restool 资源打包），CI 任务 `Harmony / ArkTS (.ets) and resources check`，也覆盖 base 为 `harmony/**` 的叠加 PR |
 | E01（0.9.2） | PR #9，修复完成、四项检查通过 | 已合入 M0 `2d44742`；app_name 仅由 AppScope 定义。213 项测试通过，ArkTS 0 错误，restool 1,833 项资源通过；按夜间规则进入 L1 |
 | L1（0.9.3） | 代码完成、四项检查通过 | `harmony/l1-conversation` 基于 E01；36 项 Eta 单测，0 跳过；总计 249 项通过，ArkTS 0 错误、restool 通过；未接入页面，真机待测 |
@@ -41,7 +51,7 @@
 | E08b2（0.9.29 / #35） | 草稿-阻塞，第三次检查仍失败 | 903 测试通过；`EtaSkills.ets:41` 的构造器参数属性不被 ArkTS 接受（1 error）；资源未运行。后续从 #34 分支跳过它 |
 | E08c（0.9.30 / #36） | MCP 代码完成、四项通过 | 919 测试；ArkTS 0 error、1,946 资源；14 原测试 / 2 完整模型 executor 延期 + 18 适配；无模型调用注册；[交付记录](E08C_MCP_PORT.md) |
 | E08 后续 / E09 | 本轮未开始 | 角色、Subagent 等留后续；M1 仍未验收 |
-| M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由 Codex（A 总）按顺序执行，开工条件见 M1 |
+| M1：E01–E09（Eta 界面与交互 1:1 移植） | **进行中** | 规范见 [ETA_PORT.md](ETA_PORT.md)。由执行者按顺序执行，开工条件见 M1 |
 | T04 起（M2–M5） | 未开始 | 在 M1 完成后执行 |
 
 每完成一个任务，执行者更新本表。
@@ -59,12 +69,13 @@
 
 | 谁 | 做什么 |
 | --- | --- |
-| Codex（A 总） | 按任务卡写代码、单测、文档，每个任务一个 PR；跑 `npm run check`、`npm test` |
-| 你 | 拉取 PR 分支，用 DevEco 编译并安装到 Pura X Max，按 PR 里的“真机验证步骤”操作，把结果和诊断报告贴回 PR 或给 Codex |
-| Claude（可选） | 审 PR、根据真机结果调整下一步 |
+| Claude | 写任务卡；验收 PR（重跑界面测试、看截图、审代码）；处理工具链和难点 |
+| 执行者（dsh，之前是 Codex） | 按任务卡写代码、单测、界面场景；`npm run verify` 全过才开 PR；按验收意见修改 |
+| 你 | 合并验收通过的 PR；到真机检查点时用 DevEco 编译安装，按清单测试，把结果和诊断报告贴回 |
 
 ```
-任务卡 → Codex 开 PR → CI 通过 → 你真机测试 → 通过就合并 / 失败就把诊断报告交给 Codex 修
+任务卡 → dsh 实现并在预览器自测 → 开 PR → Claude 验收 → 你合并
+真机：只在检查点集中测一次，问题先由 dsh 在预览器复现再修
 ```
 
 规则：
@@ -75,15 +86,369 @@
 
 ### 无人值守连续执行（你不在时）
 
-你不在的时候没人合并 PR、也没人测真机。Codex 按“本轮队列”一个接一个做，规则如下：
+你不在的时候没人合并 PR、也没人测真机。执行者按“本轮队列”一个接一个做，规则如下（第四轮起）：
 
-1. **叠加分支**：每个任务从**上一个通过检查的任务分支**拉新分支，PR 的 base 设为那个分支，形成一条链。不合并任何 PR，不推送 `main`，只推送自己任务的分支。前面的分支修改后，把它合并（或 rebase）进后面的分支。
-2. **通过才前进**：当前 PR 的 `npm run check`、`npm test`、`npm run check:ets`、`npm run check:res` 全部通过（或 CI 的两个 Harmony 任务全绿），才能把 PR 从草稿改为可审查，再开始下一个任务。
-3. **卡住就跳过**：一个任务认真尝试 3 次仍无法通过检查，或者遇到必须由你决定、而且会影响后续的问题时，PR 保持草稿，写明“阻塞原因”，然后跳到队列中**不依赖它**的下一个任务，从最后一个通过检查的分支继续拉分支。
+1. **分支**：
+   - 互不依赖的任务，各自从 base 拉分支（见本轮队列），PR 的 base 也设为它；
+   - 依赖一个还没合并的任务时，从那个任务的分支拉，PR 的 base 设为那个分支；
+   - 不合并任何 PR，不推送 `main` 和 base 分支，只推送自己任务的分支。
+2. **通过才前进**：`npm run verify` 全部通过（或者本地跑不了预览器时 `--no-ui` 通过，并且 CI 的三个 Harmony 任务全绿），才能把 PR 从草稿改为可审查，再开始下一个任务。
+3. **卡住就跳过**：
+   - 一个任务认真尝试 3 次仍无法通过检查，或者遇到必须由你决定、而且会影响后续的问题时，PR 保持草稿，写明“阻塞原因”；
+   - 然后跳到队列中**不依赖它**的下一个任务。
 4. **小决定自己做**：不影响后续的小问题，选最接近 Eta 源码的做法，写进 PR 的“待用户确认”一节，继续往下做。
 5. **不冒充真机结果**：真机检查点只列出步骤，标为“待测”。
-6. **PR 不要太大**：生成的资源文件不计，手写代码超过约 2500 行时拆成多个 PR。
-7. **早上的报告**：队列做完或全部阻塞时停下，最后输出一份报告，格式见“本轮队列”末尾。
+6. **PR 不要太大**：生成的资源文件不计，手写代码超过约 1500 行时拆成多个 PR。
+7. **结束时的报告**：队列做完或全部阻塞时停下，输出一份报告，格式见下面“2026-10-30 夜间”队列末尾的“早上的报告”。
+
+### 第四轮验收结果（Claude，2026-10-31）
+
+| PR | 任务 | 结论 | 说明 |
+| --- | --- | --- | --- |
+| #38 | R4-1 | **通过**（Claude 接手完成） | dsh 的帧时钟兜底保留。根因是 `ForEach` 复用：`Span` 和 Markdown 块按偏移作 key，内容变了子项也不更新，所以回复看不见、段落停在第一段。另外预览器没有 `taskpool`。修复见 PROJECT_STATUS 0.9.34 |
+| #39 | R4-2 | **通过** | 作为场景基线，和 #40 一起合并 |
+| #40 | R4-3 | **小改后通过** | 两处修复正确（模型页 `@Builder logo`、预览外观端口）。三个 pending 场景失败的原因不是应用问题，见下面 R5-1 |
+| #41 | D1a | **通过** | 20 项原测试逐条对应 |
+| #42 | D1b | **通过** | 18 项原测试逐条对应；`Rect` 重复定义在两者合并后清理（R5-4） |
+| #43 | D0a | **退回** | 扩展文件有 9 处编译错误。旧的 `check:ets` 没有检查 `srcEntry`，现已补上。另有一处会造成假阳性的实验逻辑错误。见 R5-2 |
+| #44 | D0b1 | **小改后通过** | 文件头不应写 Eta 的版权（这是原创代码，不是移植）。见 R5-3 |
+
+**本轮发现的工具问题（Claude 已在 `harmony/ui-preview-tests` 修复）**：
+- `check:ets` 现在也检查 `module.json5` 中所有 `srcEntry`；
+- `npm test` 改为 `scripts/run-tests.cjs`，自动收集 `tests/` 下所有 `*.test.ts`，以后不用再改测试脚本；
+- 选择器只在最上层页面里找：被压住的页面（例如侧栏、上一级列表）不再参与匹配；
+- 新增 `tapAt`，用于点系统对话框（它们不在控件树里）；
+- 预览器原生崩溃（无应用错误）时自动重跑一次；
+- `run.sh` 按场景的 `name` 找报告目录。
+
+### 本轮队列（第五轮，dsh）
+
+**所有分支先合并 `harmony/ui-preview-tests` 的最新提交。** 冲突处理：
+- `package.json` 的 `test` 脚本取 base 的 `node scripts/run-tests.cjs`；
+- 版本号取较大的那个。
+
+| 顺序 | 任务 | PR | 版本 |
+| --- | --- | --- | --- |
+| 1 | R5-1 R4-3 补改 | #40 | 不变（0.9.35） |
+| 2 | R5-2 D0a 返工 | #43 | 不变（0.9.36） |
+| 3 | R5-3 D0b1 小改 | #44 | 不升 |
+| 4 | R4-4 列表 key 审计 | 新 PR，从 R4-1 分支拉（需要 `renderKey.ts`） | 0.9.38（0.9.37 留给 D0b3） |
+| 5 | R5-4 `Rect` 去重 | D1a、D1b 合并之后，新 PR | 不升 |
+| 停 | 等 Claude 的 D0b2，然后做 D0b3；全部完成后用户测检查点 B | | |
+
+#### R5-1 R4-3 补改（#40）
+
+先合并 base，然后按下面修改三个 pending 场景。全部通过后移到 `tests/ui/`。
+
+1. **`13-sidebar`**：
+   - 最后一步错了：已经有对话时，首页不会再显示“有什么可以帮你”。改为断言 `hello` 可见。
+   - 补上任务卡要求的两步：清空搜索后列表恢复；长按会话出现菜单，`back` 关闭。
+2. **`14-message-actions`**：
+   - “删除”按钮要等回复完成才出现，先 `{"waitFor": {"a11y": "删除"}, "timeout": 15}`；
+   - 确认对话框是系统对话框，不在控件树里：去掉 `waitFor 删除消息？`，改为 `screenshot` 后 `{"tapAt": [0.65, 0.54]}` 点“删除”（坐标已在预览器中验证），再 `expectMissing`；
+   - 补上长按用户气泡边缘（`"offset": [-52, 0]`）→ 点“编辑” → 输入框进入编辑状态。
+3. **`09-provider-edit`**：
+   - 详情页默认就在“配置”页，点“配置”当然没有变化。去掉这一步，直接改“名称”输入框（输入英文）→ 返回 → 列表显示新名称。
+   - 如果列表不显示新名称，这是 R4-4 要修的列表 key 问题。场景留在 `pending/`，在 R4-4 里修。
+4. `08-providers` 偶发失败是预览器原生崩溃（`TextFieldPattern::GetInspectorId`），合并 base 后会自动重跑，不用改。
+
+#### R5-2 D0a 返工（#43）
+
+先合并 base，此时 `npm run check:ets` 会报出扩展文件的 9 处错误。逐条按 SDK 的接口修：
+
+1. **前台包名**：`AccessibilityEvent` 没有 `bundleName`。改为 `await root.attributeValue('bundleName')`，`root` 来自 `getWindowRootElement()`。
+2. **子节点**：`AccessibilityElement` 没有 `children` 属性。改为 `await node.attributeValue('children')`。计数改成 `async`，仍然最多数 500 个。
+3. **本应用包名**：`AccessibilityExtensionContext` 没有 `abilityInfo`。改为 `this.context.applicationInfo.name`。
+4. **找按钮**：`findElement('content', …)` 返回的是**数组**。取第一个，数组为空时结果写 `not-found`。
+5. **位置**：`target.rect` 不存在。改为 `await target.attributeValue('rect')`。返回的 `Rect` 是 `{left, top, width, height}`，中心点是 `left + width / 2`、`top + height / 2`。
+6. **手势**：`GesturePath` 没有 `addPoint`。改为 `path.points.push(point)`。
+7. **类型**：去掉所有 `any` / `unknown`，给每个 `then` / `catch` 的参数写明类型。
+8. **实验逻辑错误（重要）**：
+   - `DiagnosticsPage.refreshProbe` 在扩展报告 `ok` 时也给点击次数加一。这样即使注入没有真正点到按钮，计数也会增加，实验结论会是假阳性。
+   - 点击次数**只能**由测试按钮的 `onClick` 增加。“注入结果”单独显示。
+9. **文案**：诊断区的文字全部改为 `$r('app.string.*')`。测试按钮的文字和扩展里查找用的文字放在 `core/eta/device/accessibilityProbe.ts` 的同一个常量里，避免两边不一致。
+10. **检查点文件**：`docs/CHECKPOINT-B.md` 移到 `docs/device-runs/CHECKPOINT-B.md`。
+11. **文件头**：`AgentAccessibility.ets` 是原创代码，不要写 Eta 的版权行。
+
+**验收**：
+- `npm run check:ets` 为 0 error（现在包含扩展文件）；
+- `19-a11y-probe` 场景断言：点测试按钮后次数加一；点“请求注入点击”后次数**不变**（预览器里没有扩展）。
+
+#### R5-3 D0b1 小改（#44）
+
+- `hdcConnection.ts` 和测试文件是原创代码，去掉 `Copyright © 2026 蛮吉 (Mangi-11)` 那一行，改为一句说明“随身助手原创代码”。
+- 合并 base。
+
+#### R4-4 列表 key 审计（0.9.38）
+
+**背景**：
+- ArkUI 的 `ForEach` / `LazyForEach` 遇到 key 不变的子项会直接复用，不再执行子项构建函数；
+- 所以只用 id 作 key、而行内容来自 item 的列表，内容变了界面不会变；
+- 规则见 AGENTS.md，工具是 `core/eta/renderKey.ts` 的 `renderKey` 和 `syncSlots`。
+
+**要逐个处理的位置**（行号以当前代码为准）：
+
+| 文件 | 现在的 key | 处理 |
+| --- | --- | --- |
+| `ConversationPanePanel.ets` | `group.id`、`item.id` | `renderKey(group.id, group)`、`renderKey(item.id, item)` |
+| `AgentWorkProcess.ets` | `tool.id`、`step.key` | 行有展开状态：`@Observed` 槽位 + `@ObjectLink` + `syncSlots`，参照 `MarkdownContent.ets` 的 `MarkdownBlockSlot` |
+| `AgentChatQueueStrip.ets` | `item.id` | `renderKey` |
+| `ModelProviderListScreen.ets` | `p.id` | `renderKey` |
+| `ProviderModelsTab.ets` | `model.id` | `renderKey` |
+| `ProviderHeadersEditor.ets` | `h.id` | 行里有输入框，**不能**用 `renderKey`（每输入一个字就重建，会丢焦点）。用槽位 + `syncSlots` |
+| `McpServersScreen.ets` | `server.id`、下标 | `renderKey` |
+| `AgentModelPicker.ets` | `group.providerId`、`entry.key` | `renderKey` |
+| `CommunityCatalogScreens.ets` | `p.id`、`model.modelId` | `renderKey` |
+| `DiagnosticsPage.ets` | 下标 | `renderKey(index, line)` |
+
+另外用 `grep -n "ForEach(" -r entry/src/main/ets/ui` 把清单补全。key 只是一个基本类型值（字符串、数字本身就是行内容）的，不用改。
+
+**验收场景**（每个都断言“改了之后界面显示的是新内容”）：
+- 切换模型后再打开模型弹层，选中标记在新模型上；
+- 侧栏长按会话 → 重命名（英文）→ 列表显示新名称；
+- `09-provider-edit` 通过：改名后列表显示新名称；
+- 请求头编辑：连续输入一段英文，输入框内容完整，焦点没丢；
+- 已有场景全部通过。
+
+#### R5-4 `Rect` 去重（D1a、D1b 都合并之后）
+
+`core/eta/device/observation.ts` 删除自己的 `Rect`，改为从 `ScrollGestureContract` 导入。测试数量不变。
+
+### 本轮队列（第四轮，执行者 dsh，2026-10-31 Claude 修订）
+
+**先读** [EXECUTOR_GUIDE.md](EXECUTOR_GUIDE.md)。每个任务按它的流程做：
+- 先在预览器里自测，`npm run verify` 全过才开 PR；
+- 由 Claude 验收，用户合并；
+- 真机只在下表“真机”一栏写了检查点的地方测。
+
+**base**：整条 PR 链合并进 `main` 之后，所有任务从 `main` 拉分支；合并之前，从 `harmony/ui-preview-tests` 拉。互不依赖的任务**各自从 base 拉，不要叠加**。
+
+**版本号**：只有改变手机上安装内容的任务才升版本，按下表的编号，不要自己挑。合并时与 `main` 冲突（通常就是版本号），由 dsh 合并 `main` 解决，取较大的版本号。
+
+| 顺序 | 任务 | 谁 | 依赖 | 版本 | 真机 |
+| --- | --- | --- | --- | --- | --- |
+| 0 | 真机反馈修复 | dsh | 插队 | 下一个空号 | 先按手册 4.1 在预览器复现 |
+| 1 | R4-1 回复文字渐显兜底 | dsh | 无 | 0.9.34 | 检查点 B |
+| 2 | R4-2 界面场景补齐（只写场景，不修问题） | dsh | 无 | 不升 | 无 |
+| 3 | R4-3 修复 R4-2 发现的问题 | dsh | R4-2 | 0.9.35 | 检查点 B |
+| 4 | D1a 设备契约移植（`agent/device`） | dsh | 无 | 不升 | 无 |
+| 5 | D1b 工具与无障碍逻辑移植 | dsh | 无 | 不升 | 无 |
+| 6 | D0a 无障碍扩展实验 | dsh | 无 | 0.9.36 | 检查点 B（⑥） |
+| 7 | D0b1 HDC 连接状态机（纯逻辑） | dsh | 无 | 不升 | 无 |
+| — | D0b2 HDC 原生库：arm64 交叉编译并入库 | **Claude** | 无 | — | — |
+| 8 | D0b3 手机操作连接页 | dsh | D0b1、D0b2 | 0.9.37 | 检查点 B（⑦） |
+| 停 | 用户一次测完检查点 B | 用户 | 以上全部 | — | 然后按闸门 G-D0 决定 D2 的主通道 |
+
+**检查点 B**（一次测完，dsh 汇总成 `docs/device-runs/CHECKPOINT-B.md`）：
+- 回复文字逐渐出现；
+- 模型弹层和菜单有背景、阴影；
+- R4-3 修过的问题；
+- 无障碍实验 ⑥；
+- HDC 连接 ⑦。
+
+在这之前，用户先单独测一次 0.9.33（PR #37），确认“整个页面不能动”已经解决。
+
+#### R4-1 回复文字渐显兜底（0.9.34）
+
+- **现象**：预览器里回复完成后，正文一直是透明的（`Span` 的 `fontColor` 为 `#00000000`），只看得到复制、重新生成、删除三个图标。验收场景 `tests/ui/pending/05-reply-visible.json` 现在失败。
+- **怀疑的原因**：逐帧推进靠 `platform/EtaFrameLoop.ets` 的 `UIContext.postFrameCallback`，预览器里可能不回调。真机上是否正常还不知道。
+- **步骤**：
+  1. 运行验收场景，确认它失败。
+  2. 在 `EtaFrameLoop.onFrame` 里临时加 `console.info('EtaFrameLoop frame')`，重新运行场景，在 `previewer.log` 里查有没有这行。把结论写进 PR，然后删掉这行。
+  3. **如果帧回调没来**：把“兜底”逻辑写成纯 TS 的 `core/eta/frameFallback.ts`，计时函数通过参数注入，方便单测：
+     - `start()` 之后，如果 100 ms 内没有收到帧回调，就改用 `setTimeout` 每 16 ms 驱动一次 `tick`；传给 `tick` 的秒数用两次调用之间的实际时间差计算；
+     - 收到真正的帧回调后，立即停用兜底；
+     - `tick` 返回 `false` 或调用 `stop()` 时，清掉定时器。
+
+     `EtaFrameLoop.ets` 只负责把 `postFrameCallback` 和 `setTimeout` 接到这个类上。
+  4. **如果帧回调来了、文字仍然透明**：问题在渐显协调器（`revealCoordinator`，`core/eta/` 中）。先写单测复现，再修。
+- **单测**（`tests/eta/frameFallback.test.ts`，至少 5 项）：
+  - 帧回调正常时不启用兜底；
+  - 100 ms 没有帧时启用兜底，`tick` 收到的秒数大于 0；
+  - `tick` 返回 `false` 后不再调度；
+  - `stop()` 清掉定时器；
+  - `stop()` 之后迟到的帧回调或定时器都不再调用 `tick`。
+- **只改**：`platform/EtaFrameLoop.ets`、新增的 `core/eta/frameFallback.ts` 和测试；走第 4 步时可以改渐显协调器及其测试。不改 Markdown 的渲染结构。
+- **验收**：
+  - 场景移到 `tests/ui/05-reply-visible.json` 并通过；
+  - 其他场景不受影响；
+  - `npm run verify` 全过。
+
+#### R4-2 界面场景补齐（不升版本）
+
+- **目标**：每个已经移植的页面至少一个场景，覆盖主要交互。**这个任务只写场景，不修问题。**
+- **只改**：
+  - `tests/ui/*.json`；
+  - `.ets` 中补 `.id('eta-…')` 或 `.accessibilityText(...)`；
+  - `core/foundation/previewFixture.ts` 中补演示数据。
+- **场景**（每个一个文件，编号接着往后排；不知道页面上有什么时，先用 `dump` 步骤看）：
+
+  | 场景 | 要断言的内容 |
+  | --- | --- |
+  | 设置首页 | 侧栏 → 设置 → 看到设置页 → `back` 回到首页 |
+  | 外观 | 设置 → 外观 → 切换一项，断言选中状态变了 → 返回 |
+  | 模型服务 | 侧栏 → 模型 → 列表有“示例模型服务” → 进详情 → 模型页显示“示例模型” |
+  | 编辑服务 | 详情中改名称（英文）→ 保存或返回 → 列表显示新名称（Eta 有这个交互才写） |
+  | 记忆 | 设置 → 记忆 → 页面打开；“新增”打开对话框，能取消（入口为灰色时见下文） |
+  | MCP | 设置 → MCP → 添加服务器的对话框能打开、能取消（入口为灰色时见下文） |
+  | 诊断 | 设置 → 诊断 → 点“复制报告”有反应 |
+  | 会话侧栏 | 发送一条消息 → 打开侧栏，列表出现这个会话 → 搜索框输入 `zzz` 后列表为空 → 清空后恢复 → 长按会话出现菜单 → `back` 关闭 |
+  | 消息操作 | 回复完成后点“删除”，确认后回复消失；长按用户气泡边缘（`offset`）出现“复制 / 编辑 / 删除”，点“编辑”后输入框进入编辑状态 |
+  | 停止 | 发送后立即点停止 → 出现“已停止”提示，已收到的文字保留 |
+  | 新对话 | 有消息时新建对话 → 回到空的首页 |
+  | 深色模式 | `"screen": {"color": "dark"}`：首页、侧栏、设置各截一张图 |
+  | 窄屏 | `"screen": {"width": 1080, "height": 2340}`：首页、侧栏、模型选择各截一张图 |
+
+- **入口是灰色时**：设置里显示“鸿蒙版尚未接入”的行（目前记忆、Skills、MCP 等都是灰色），场景只断言两件事：
+  - 它是灰色的；
+  - 点了不跳转：用 `"expectChange": false`，之后 `expect` 仍在设置页。
+
+  不要去接入。在 PR 中列一张“已移植但入口仍为灰色”的清单（例如 E08a 记忆、E08c MCP 已有页面），由 Claude 判断是漏接还是有意为之。
+- **发现问题时**（例如点了没反应、应用错误、断言失败）：
+  - 把这个场景放进 `tests/ui/pending/`，`tests/ui/` 里只留通过的场景；
+  - 在 PR 的“发现的问题”中逐条写：场景名、失败的步骤、错误原文、截图文件名。
+- **验收**：
+  - `tests/ui/` 全部通过；
+  - 上表每一行都有场景，或在 `pending/` 里有对应的失败场景；
+  - Claude 看过全部截图。
+
+#### R4-3 修复 R4-2 发现的问题（0.9.35）
+
+- `tests/ui/pending/` 中每个失败场景对应一个问题，**一个问题一个提交**。修好后把场景移到 `tests/ui/`。
+- 修复必须对照 Eta 源码：先在 PR 里写“Eta 是怎么做的”，再改。
+- 某个问题尝试 3 次仍未修好：场景留在 `pending/`，写进阻塞说明，继续修下一个。
+- R4-1 已经修好的渐显问题不在这里重复修。
+
+#### D1a 设备契约移植（`agent/device`，不升版本）
+
+- **来源**：`app/src/main/kotlin/io/github/mangi/eta/agent/device/` 下 7 个文件，对应单测在 `app/src/test/…/agent/device/`：
+
+  | Eta 文件 | Eta 单测项数 |
+  | --- | --- |
+  | `ScrollEvidenceContract` | 2 |
+  | `ScrollGestureContract` | 9 |
+  | `ScrollAxisContract` | 4 |
+  | `GestureFallbackPolicy` | 1 |
+  | `ScreenshotOutcomePolicy` | 2 |
+  | `ShellActionOutcomePolicy` | 2 |
+  | `DeviceToolContract` | 无单测 |
+
+- **目标位置**：`entry/src/main/ets/core/eta/device/<同名>.ts`、`tests/eta/device/<同名>.test.ts`。在 `package.json` 的 `test` 脚本里加上 `tests/eta/device/*.test.ts`。
+- **翻译规则**：
+  - 名字不改；Kotlin `data class` → TS `interface` 或 `class`；`sealed class` → 带 `kind` 字段的联合类型；
+  - `android.graphics.Rect` 换成 `{left, top, right, bottom}`；
+  - `DeviceToolContract` 中依赖 Android `Context` 的部分改为参数传入；
+  - 每个测试用例的名字和 Kotlin 测试方法名一致，方便对照；
+  - 文件头写来源注释。
+- **不接入**任何页面或运行时。
+- **验收**：`npm test` 的数量正好多 20 项、0 失败；`npm run verify` 全过；PR 中附对照表（Eta 文件 → TS 文件 → 移植的测试数）。
+
+#### D1b 工具与无障碍逻辑移植（不升版本）
+
+- **来源与单测**：
+
+  | Eta 文件 | Eta 单测项数 |
+  | --- | --- |
+  | `agent/tool/ToolArguments` | 无 |
+  | `agent/tool/ToolExecutionDecision` | 无 |
+  | `agent/tool/ObservationReferencePolicy` | 2 |
+  | `agent/tool/AgentAfterActionSummary` | 3 |
+  | `agent/accessibility/TextEditPlanner` | 7 |
+  | `agent/accessibility/AccessibilityNodeIdentity` | 6 |
+
+- **目标位置**：`core/eta/tool/`、`core/eta/device/`，测试在 `tests/eta/`，规则同 D1a。
+- **依赖**：`AgentAfterActionSummary` 用到 `RootShellDeviceController.ElementObservation` 和 `UiNode`，**只移植这两个数据类型**，放到 `core/eta/device/observation.ts`。如果还要拉进超过约 300 行别的代码，停下来报告。
+- **验收**：测试正好多 18 项、0 失败；`npm run verify` 全过。
+
+#### D0a 无障碍扩展实验（0.9.36）
+
+目的是在真机上回答三个问题：
+1. 普通应用的无障碍扩展能不能在系统设置里开启；
+2. 能不能读到其他应用的控件；
+3. 能不能注入手势。
+
+背景见 [PHONE_OPS_PLAN.md](PHONE_OPS_PLAN.md) 的 D0a。
+
+- **新增文件**：
+  - `entry/src/main/ets/accessibility/AgentAccessibility.ets`：继承 `@kit.AccessibilityKit` 的 `AccessibilityExtensionAbility`，实现 `onConnect`、`onDisconnect`、`onAccessibilityEvent`；
+  - `entry/src/main/resources/base/profile/accessibility_config.json`：
+
+    ```json
+    {"accessibilityCapabilities": ["retrieve", "gesture"]}
+    ```
+
+    再补一个说明字段 `accessibilityCapabilityRationale`，写清用途；
+  - `core/eta/device/accessibilityProbe.ts`：探针记录的类型、序列化、校验，带单测。
+- **`module.json5` 的 `extensionAbilities`** 加一项：
+
+  ```json5
+  {
+    "name": "AgentAccessibility",
+    "srcEntry": "./ets/accessibility/AgentAccessibility.ets",
+    "type": "accessibility",
+    "exported": true,
+    "metadata": [{ "name": "ohos.accessibleability", "resource": "$profile:accessibility_config" }]
+  }
+  ```
+
+  `metadata` 的 `name` 按 OpenHarmony 文档写 `ohos.accessibleability`。云开写的是 `accessibility_config`，如果真机设置里找不到服务，再试它，并记录结果。
+- **不新增权限**。DevEco 编译或安装时如果提示需要权限或签名能力，停下来，把报错原文贴回。
+- **扩展做的事**：
+
+  扩展和界面不在同一个进程，通过 `context.filesDir` 下的两个小 JSON 文件通信。
+
+  1. `onConnect` / `onDisconnect` 时写入 `a11y-probe.json`，内容：
+
+     ```
+     connected, connectedAt, lastEventAt, foregroundBundle, nodeCount, gesture: {requestedAt, result, at}
+     ```
+
+  2. 收到事件时，最多每秒一次：
+     - 用 `this.context.getWindowRootElement()` 取前台窗口的根节点，读 `bundleName`；
+     - 递归读 `children`，统计节点数，最多数到 500。
+
+     **只记录包名和数量，不读取、不记录任何文字。**
+  3. 收到事件时，如果存在界面写入的 `a11y-gesture-request.json`，并且前台是本应用：
+     - 用 `findElement('content', '<测试按钮文字>')` 找到测试按钮，读它的 `rect`；
+     - 用 `GesturePath(100)` 加一个 `GesturePoint(中心点)`，调用 `this.context.injectGestureSync(...)`；
+     - 把结果写回探针文件，删除请求文件；
+     - 结果取值：`ok`、`not-found` 或 `error:<错误码>`。
+- **界面**：“设置 → 诊断”新增“无障碍实验”区，内容：
+  - 显示连接状态、前台包名、控件数、最近事件时间、注入结果；
+  - “刷新”按钮；
+  - “请求注入点击”按钮；
+  - 测试按钮：显示点击次数。点它次数加一；注入成功时次数也会加一。
+- **预览器**：显示“未连接”状态；在诊断场景里断言这一区可见、“刷新”有反应。
+- **真机检查点 ⑥**：写进 `CHECKPOINT-B.md`，步骤见 PHONE_OPS_PLAN 的 D0a。需要记录：
+  - 设置里叫什么名字、能不能打开；
+  - 切到“设置”应用再回来，看到的包名和控件数；
+  - 注入后计数有没有加一；
+  - 任何系统弹窗的原文。
+
+#### D0b1 HDC 连接状态机（纯逻辑，不升版本）
+
+- `core/eta/device/hdcConnection.ts`：
+  - 状态：未配置、连接中、待授权、已连接、已断开（带原因）；
+  - 输入：用户的配置和操作，以及传输层事件；
+  - 每次连接带递增的尝试编号，**旧尝试迟到的事件一律忽略**。
+- 传输层只通过注入的接口访问（`connect`、`close`、事件回调），不直接 import 原生模块。接口形状参考现有的 `core/device.ts` 和 `entry/src/main/cpp/bridge.cpp` 的导出函数。
+- **单测**：
+  - 每个合法转换；
+  - 非法事件被忽略；
+  - 迟到事件被忽略；
+  - 每种断开原因映射到对应的文案键。
+- **验收**：`npm run verify` 全过。
+
+#### D0b2 HDC 原生库（Claude 负责）
+
+用公开 SDK 的 native 组件，交叉编译 arm64 的 `libagent_hdc.so`，连同 SHA-256 和构建脚本一起入库到 `entry/libs/arm64-v8a/`。完成后在这里更新状态，D0b3 才能开始。
+
+#### D0b3 手机操作连接页（0.9.37）
+
+D0b2 完成后，Claude 补充本卡的细节再开工。范围：
+- “设置 → 手机操作”页，按 PHONE_OPS_PLAN 的 D0b；
+- 预览器使用假传输层，写场景覆盖每个状态的显示；
+- 真机检查点 ⑦ 写进 `CHECKPOINT-B.md`。
 
 ### 本轮队列（2026-10-31 第三轮，Claude 审阅后安排）
 
@@ -194,14 +559,14 @@ E02 追加（#16，完成） → E03（#17，完成） → E04a → E04b → E04
 ## 建议的合并顺序
 ```
 
-### 给 Codex 的通用提示词
+### 给执行者的通用提示词
 
 ```
 你在仓库 Lmin2419/eta-background 的 harmony-agent/ 目录工作。
-先读 harmony-agent/AGENTS.md 和 harmony-agent/docs/ROADMAP.md；E 开头的任务还要读 harmony-agent/docs/ETA_PORT.md。
-执行 ROADMAP 中的任务 <编号>，严格按任务卡的范围，不要顺手做其他任务。
-新建分支 harmony/<编号>-<短名>，完成后开 PR 到 main，PR 描述按 AGENTS.md 的格式写，
-其中“真机验证步骤”要具体到每一步点哪里、预期看到什么。
+先读 harmony-agent/AGENTS.md、harmony-agent/docs/EXECUTOR_GUIDE.md，以及 harmony-agent/docs/ROADMAP.md 中任务 <编号> 的任务卡。
+E、D 开头的任务还要读 docs/ETA_PORT.md 或 docs/PHONE_OPS_PLAN.md。
+严格按任务卡的范围，不要顺手做其他事。
+按 EXECUTOR_GUIDE 拉分支；npm run verify 全部通过后开 PR，PR 描述按 EXECUTOR_GUIDE 第 7 节写。
 ```
 
 修复真机问题时：
@@ -209,7 +574,15 @@ E02 追加（#16，完成） → E03（#17，完成） → E04a → E04b → E04
 ```
 任务 <编号> 的真机测试失败。以下是我的操作、看到的现象和诊断报告：
 <粘贴>
-请在同一分支修复，并更新 PR 的真机验证步骤。
+请按 EXECUTOR_GUIDE 4.1：先在预览器里写复现场景并确认失败，再在同一分支修复，场景通过后移到 tests/ui/。
+预览器复现不了时，说明原因，再给我最少的真机步骤。
+```
+
+转交 Claude 的验收意见时：
+
+```
+这是 Claude 对 PR #<编号> 的验收意见，请按编号逐条修改，并在 PR 评论中逐条回复：
+<粘贴>
 ```
 
 ## 三、里程碑总览
@@ -219,9 +592,7 @@ E02 追加（#16，完成） → E03（#17，完成） → E04a → E04b → E04
 | M0 | 0.9.1 | 能直接编译上真机，能回传问题 | T01–T03 |
 | M1 | 0.10 | **Eta 界面与交互 1:1 移植** | E01–E09 |
 | M2 | 0.11 | 聊天能力补齐：后台不中断、错误与重试、多协议 | T04、T07、T09（T05、T06、T08 已并入 M1） |
-| M3 | 0.12 | 手机操作：连接与读屏（只读） | T10–T12 |
-| M4 | 0.13 | 手机操作：点击、输入、打开应用 | T13–T15 |
-| M5 | 0.14 | 后台长任务与通知 | T16–T17 |
+| M3–M5 | 0.12–0.14 | **手机操作（2026-10-31 修订）**：一套 Eta 工具，两个后端（无障碍扩展 / 本机 HDC），先做真机可行性实验再定主通道 | D0–D6，见 [PHONE_OPS_PLAN.md](PHONE_OPS_PLAN.md)；原 T10–T17 作废，T04 并入 D4 |
 | 之后 | — | 扩展能力，按顺序逐个做 | 见第五节 |
 
 ---
@@ -462,6 +833,8 @@ E02 追加（#16，完成） → E03（#17，完成） → E04a → E04b → E04
 ---
 
 ### M3 · 0.12「手机操作：连接与读屏」
+
+> **已被 [PHONE_OPS_PLAN.md](PHONE_OPS_PLAN.md) 取代（2026-10-31）**，以下 T10–T17 只作历史参考，不再执行。
 
 前提：G2 已通过。从这一阶段起，原生 HDC 库重新进入构建。
 

@@ -1,0 +1,11 @@
+{"name": "03-compose-send", "page": "pages/FoundationPreview",
+ "steps": [
+  {"waitFor": {"id": "eta-composer"}, "timeout": 20},
+  {"tap": {"id": "eta-composer"}, "expectChange": false},
+  {"type": "hello"},
+  {"waitFor": {"a11y": "发送", "enabled": true}},
+  {"screenshot": "typed"},
+  {"tap": {"a11y": "发送", "enabled": true}},
+  {"waitFor": {"contains": "这是预览数据"}, "timeout": 15},
+  {"screenshot": "reply"}
+ ]}

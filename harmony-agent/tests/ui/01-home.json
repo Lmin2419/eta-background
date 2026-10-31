@@ -1,0 +1,9 @@
+{"name": "01-home", "page": "pages/FoundationPreview",
+ "steps": [
+  {"waitFor": {"contains": "有什么可以帮你"}, "timeout": 20},
+  {"expect": {"a11y": "会话历史"}},
+  {"expect": {"a11y": "更多选项"}},
+  {"expect": {"id": "eta-composer"}},
+  {"expect": {"a11y": "发送", "enabled": false}},
+  {"screenshot": "home"}
+ ]}

@@ -2,10 +2,10 @@
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 import { previewController } from '../core/foundation/previewFixture';
 import { ShellState, emptyShellState } from '../core/foundation/controller';
-import { AssistantShell } from '../ui/foundation/AssistantShell';
+import { AgentAppShell } from '../ui/eta/navigation/AgentAppShell';
 import { registerEtaFonts } from '../platform/EtaFonts';
 
-/** DevEco PreviewBuild only; not listed in the production main_pages.json. */
+/** DevEco preview and headless UI tests (tests/ui): the production Eta shell with in-memory data and a fake model. Not in main_pages.json. */
 @Entry
 @Component
 struct FoundationPreview {
@@ -19,5 +19,5 @@ struct FoundationPreview {
     void this.controller.initialize();
   }
   aboutToDisappear(): void { this.unsubscribe?.(); }
-  build() { Column() { AssistantShell({ state: this.state, controller: this.controller }) }.width('100%').height('100%') }
+  build() { Column() { AgentAppShell({ state: this.state, keyboardVisible: false, controller: this.controller }) }.width('100%').height('100%') }
 }

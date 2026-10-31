@@ -32,6 +32,6 @@ export struct AgentContextUsageButton {
         .backgroundColor($r('app.color.miuix_secondary_container'))
     }.width(C.ActionSize).height(C.ActionSize).padding(S.Dp0).backgroundColor($r('app.color.eta_transparent'))
       .accessibilityText($r('app.string.context_usage_description',this.summary())).onClick(()=>{this.visible=true;})
-      .bindPopup($$this.visible,{builder:this.detail,placement:Placement.Top,enableArrow:false,popupColor:$r('app.color.miuix_surface')})
+      .bindPopup(this.visible,{builder:this.detail,placement:Placement.Top,enableArrow:false,popupColor:$r('app.color.miuix_surface')})
   }
 }
