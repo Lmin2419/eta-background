@@ -61,8 +61,8 @@ export struct EtaDropdownPreference {
   build() {
     EtaPreferenceRow({ title: this.title, summary: this.summary,
       isEnabled: this.isEnabled && this.items.length > 0, holding: this.expanded,
-      hasLeading: this.hasLeading, startAction: this.startAction, hasActions: true, hasBottom: this.hasBottom, bottomAction: this.bottomAction,
-      endActions: this.selectedLabel, onAction: () => { this.expanded = !this.expanded; if (this.expanded) EtaHaptics.perform(EtaHaptic.ContextClick); } })
+      hasLeading: this.hasLeading, startAction: () => { this.startAction(); }, hasActions: true, hasBottom: this.hasBottom, bottomAction: () => { this.bottomAction(); },
+      endActions: () => { this.selectedLabel(); }, onAction: () => { this.expanded = !this.expanded; if (this.expanded) EtaHaptics.perform(EtaHaptic.ContextClick); } })
       .bindMenu($$this.expanded, this.choices, { onDisappear: () => { this.expanded = false; } })
   }
 }
@@ -79,7 +79,7 @@ export struct EtaWindowSpinnerPreference {
   onSelectedIndexChange: (index: number) => void = () => {};
   build() {
     EtaDropdownPreference({ title: this.title, summary: this.summary, isEnabled: this.isEnabled, items: this.items,
-      selectedIndex: this.selectedIndex, hasLeading: this.hasLeading, startAction: this.startAction,
+      selectedIndex: this.selectedIndex, hasLeading: this.hasLeading, startAction: () => { this.startAction(); },
       useWindow: true, onSelectedIndexChange: this.onSelectedIndexChange })
   }
 }
@@ -96,7 +96,7 @@ export struct EtaOverlayDropdownPreference {
   onSelectedIndexChange: (index: number) => void = () => {};
   build() {
     EtaDropdownPreference({ title: this.title, summary: this.summary, isEnabled: this.isEnabled, items: this.items,
-      selectedIndex: this.selectedIndex, hasLeading: this.hasLeading, startAction: this.startAction,
+      selectedIndex: this.selectedIndex, hasLeading: this.hasLeading, startAction: () => { this.startAction(); },
       useWindow: false, onSelectedIndexChange: this.onSelectedIndexChange })
   }
 }

@@ -78,7 +78,7 @@ export struct EtaPreference {
   build() {
     EtaPreferenceRow({ title: this.title, summary: this.summary, isEnabled: this.isEnabled,
       hasLeading: this.hasLeading, hasBottom: this.hasBottom,
-      startAction: this.startAction, bottomAction: this.bottomAction,
+      startAction: () => { this.startAction(); }, bottomAction: () => { this.bottomAction(); },
       onAction: this.onAction, onLongClick: this.onLongClick })
   }
 }
@@ -106,6 +106,6 @@ export struct EtaArrowPreference {
   build() {
     EtaPreferenceRow({ title: this.title, summary: this.summary, isEnabled: this.isEnabled, holding: this.holding,
       hasLeading: this.hasLeading, hasBottom: this.hasBottom, hasActions: true,
-      startAction: this.startAction, bottomAction: this.bottomAction, endActions: this.trailing, onAction: this.onAction })
+      startAction: () => { this.startAction(); }, bottomAction: () => { this.bottomAction(); }, endActions: () => { this.trailing(); }, onAction: this.onAction })
   }
 }
