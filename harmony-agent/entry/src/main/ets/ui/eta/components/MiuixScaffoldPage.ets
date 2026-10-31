@@ -48,7 +48,7 @@ export struct MiuixScaffoldPage {
     Column() {
       Blank().height(this.topInset)
       AdaptiveTopAppBar({ title: this.title, wide: this.widthVp >= P.WideScreenMinWidth,
-        compact: this.compactTitle, scrollOffset: this.scrollOffset, navigationIcon: this.back, actions: this.actions })
+        compact: this.compactTitle, scrollOffset: this.scrollOffset, navigationIcon: () => { this.back(); }, actions: () => { this.actions(); } })
     }.width('100%').onAreaChange((_old, area) => { this.barHeight = Number(area.height); })
   }
   build() {
@@ -66,7 +66,7 @@ export struct MiuixScaffoldPage {
           this.scrollOffset = Math.max(S.Dp0, this.scroller.currentOffset().yOffset);
           if (this.edgeHaptic.update(y, this.scrollOffset, this.scroller.isAtEnd(), state === ScrollState.Fling)) EtaHaptics.perform(EtaHaptic.TextHandleMove);
         })
-      TopBarBackdrop({ isEnabled: this.blurEnabled, progressive: this.progressiveBlur, progressiveContentReady: this.barHeight > S.Dp0 && this.viewportHeight > S.Dp0, content: this.topBar })
+      TopBarBackdrop({ isEnabled: this.blurEnabled, progressive: this.progressiveBlur, progressiveContentReady: this.barHeight > S.Dp0 && this.viewportHeight > S.Dp0, content: () => { this.topBar(); } })
       this.overlayContent()
     }.width('100%').height('100%').backgroundColor($r('app.color.eta_settings_background'))
       .onAreaChange((_old, area) => { this.widthVp = Number(area.width); this.viewportHeight = Number(area.height); })
