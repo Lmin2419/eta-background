@@ -33,9 +33,9 @@ export struct ModelProviderDetailScreen {
     if(this.state.editor.message){Text(this.state.editor.message).fontSize(F.Footnote1).fontColor($r('app.color.eta_status_success')).width('100%').padding(S.Dp16)}
   }
   @Builder private config(){Scroll(){Column(){
-    ProviderSection({title:$r('app.string.ui_connection_configuration_7d057b'),content:this.connection})
+    ProviderSection({title:$r('app.string.ui_connection_configuration_7d057b'),content:() => { this.connection(); }})
     ProviderHeadersEditor({state:this.state,controller:this.controller})
-    ProviderSection({title:$r('app.string.ui_preferences_and_strategies_2abd3c'),content:this.preferences})
+    ProviderSection({title:$r('app.string.ui_preferences_and_strategies_2abd3c'),content:() => { this.preferences(); }})
     EtaTextButton({text:this.state.editor.busy?$r('app.string.page_saving_d70d42'):this.state.editor.draft.id?$r('app.string.page_save_configuration_817af1'):$r('app.string.page_create_fcbd09'),primary:true,isEnabled:!this.state.editor.busy,onAction:()=>{void this.controller?.saveProvider();}}).width('100%').padding({left:S.Dp16,right:S.Dp16,top:S.Dp12})
     this.status()
     if(this.state.editor.draft.isBuiltIn){EtaTextButton({text:$r('app.string.page_reset_built_in_configuration_35b6ec'),isEnabled:!this.state.editor.busy,onAction:()=>{void this.controller?.editor.resetBuiltIn();}}).width('100%').padding({left:S.Dp16,right:S.Dp16,top:S.Dp12})}
@@ -49,5 +49,5 @@ export struct ModelProviderDetailScreen {
     }.width('100%').padding({left:S.Dp16,right:S.Dp16,top:S.Dp8,bottom:S.Dp8})}
     Column(){if(this.state.editor.tab==='models'&&this.state.editor.draft.id){ProviderModelsTab({state:this.state,controller:this.controller})}else{this.config()}}.width('100%').layoutWeight(1)
   }.width('100%').height('100%')}
-  build(){ProviderPage({title:this.state.editor.draft.id?this.state.editor.draft.name:$r('app.string.page_create_new_provider_36cab9'),blurEnabled:this.state.appearance.blurEnabled,content:this.body,onBack:()=>this.controller?.back()})}
+  build(){ProviderPage({title:this.state.editor.draft.id?this.state.editor.draft.name:$r('app.string.page_create_new_provider_36cab9'),blurEnabled:this.state.appearance.blurEnabled,content:() => { this.body(); },onBack:()=>this.controller?.back()})}
 }

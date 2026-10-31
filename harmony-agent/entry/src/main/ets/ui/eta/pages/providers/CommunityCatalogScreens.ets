@@ -32,13 +32,13 @@ export struct CommunityCatalogScreen {
   }.width('100%').alignItems(HorizontalAlign.Start)}
   @Builder private body(){List(){
     ListItem(){TextInput({text:this.state.catalog.query,placeholder:$r('app.string.ui_search_provider_74e049')}).fontSize(F.Body1).fontColor($r('app.color.miuix_on_surface')).backgroundColor($r('app.color.miuix_secondary')).margin({left:S.Dp16,right:S.Dp16,top:S.Dp8,bottom:S.Dp8}).onChange((v:string)=>this.controller?.community?.search(v))}
-    ListItem(){ProviderSection({title:$r('app.string.eta_catalog_status'),content:this.status})}
+    ListItem(){ProviderSection({title:$r('app.string.eta_catalog_status'),content:() => { this.status(); }})}
     ListItem(){EtaPreferenceGroupTitle({title:$r('app.string.eta_catalog_provider_count',this.source.totalCount())})}
     if(this.state.catalog.loading){ListItem(){LoadingProgress().width(S.Dp28).height(S.Dp28).margin(S.Dp40)}}
     if(!this.source.totalCount()&&!this.state.catalog.loading){ListItem(){Text($r('app.string.eta_catalog_empty')).fontSize(F.Body1).fontColor($r('app.color.miuix_on_surface_variant_summary')).width('100%').padding(S.Dp24)}}
     LazyForEach(this.source,(p:CommunityCatalogProvider)=>{ListItem(){EtaCard({insidePadding:S.Dp16,clickable:true,sinkFeedback:true,content:()=>{this.provider(p);},onAction:()=>this.controller?.chooseCommunity(p.id)}).margin({left:S.Dp16,right:S.Dp16,top:S.Dp6,bottom:S.Dp6})}},(p:CommunityCatalogProvider)=>p.id)
   }.width('100%').height('100%').scrollBar(BarState.Auto).edgeEffect(EdgeEffect.Spring)}
-  build(){ProviderPage({title:$r('app.string.eta_catalog_add'),blurEnabled:this.state.appearance.blurEnabled,actions:this.refreshButton,content:this.body,onBack:()=>this.controller?.back()})}
+  build(){ProviderPage({title:$r('app.string.eta_catalog_add'),blurEnabled:this.state.appearance.blurEnabled,actions:() => { this.refreshButton(); },content:() => { this.body(); },onBack:()=>this.controller?.back()})}
 }
 @Component
 export struct CommunityCatalogProviderScreen {
@@ -52,7 +52,7 @@ export struct CommunityCatalogProviderScreen {
     EtaPreferenceRow({title:$r('app.string.eta_provider_base_url'),summary:this.state.catalog.selection?.baseUrl||''})
   }}
   @Builder private body(){List(){
-    ListItem(){ProviderSection({title:$r('app.string.eta_catalog_provider'),content:this.providerInfo})}
+    ListItem(){ProviderSection({title:$r('app.string.eta_catalog_provider'),content:() => { this.providerInfo(); }})}
     ListItem(){Column({space:S.Dp4}){
       Text($r('app.string.eta_catalog_selected',this.state.catalog.selectedIds.length,this.state.catalog.selection?.models.length||0)).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary'))
       Text($r('app.string.eta_catalog_import_hint')).fontSize(F.Footnote1).fontColor($r('app.color.miuix_on_surface_variant_summary'))
@@ -64,5 +64,5 @@ export struct CommunityCatalogProviderScreen {
     if(!this.source.totalCount()){ListItem(){Text($r('app.string.page_no_matching_model_found_ae7e96')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')).padding(S.Dp24)}}
     LazyForEach(this.source,(model:CommunityCatalogModel)=>{ListItem(){EtaCheckboxPreference({title:model.displayName,summary:model.modelId+' · '+String(model.contextWindow)+' tokens'+(model.releaseDate?' · '+model.releaseDate:''),checked:this.state.catalog.selectedIds.includes(model.modelId),isEnabled:!this.state.catalog.importing,onCheckedChange:()=>this.controller?.community?.toggle(model.modelId)})}.margin({left:S.Dp16,right:S.Dp16}).backgroundColor($r('app.color.miuix_surface_container'))},(model:CommunityCatalogModel)=>model.modelId)
   }.width('100%').height('100%').scrollBar(BarState.Auto).edgeEffect(EdgeEffect.Spring)}
-  build(){ProviderPage({title:this.state.catalog.selection?.name||$r('app.string.eta_catalog_pick'),blurEnabled:this.state.appearance.blurEnabled,actions:this.importButton,content:this.body,onBack:()=>this.controller?.back()})}
+  build(){ProviderPage({title:this.state.catalog.selection?.name||$r('app.string.eta_catalog_pick'),blurEnabled:this.state.appearance.blurEnabled,actions:() => { this.importButton(); },content:() => { this.body(); },onBack:()=>this.controller?.back()})}
 }
