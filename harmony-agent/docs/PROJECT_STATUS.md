@@ -4,6 +4,14 @@
 
 第三轮已结束：[完整执行报告](reports/2026-10-31-round3.md)。11 个可审查 PR，1 个阻塞草稿（#35）；最后 PR #36。
 
+## 0.9.35（R4-3：修复 R4-2 发现的问题，PR #40）
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| 问题 1：模型提供商页点某一项时 `EtaPreferenceRow` 报 `class constructor cannot called without 'new'`。原因是 `startAction` 里以普通箭头函数调用 struct 组件 `ProviderBrandIcon`，更新阶段被当成构造函数；改为调用本文件已有的 `@Builder logo()` | CI：08-providers、18-narrow 通过 | 检查点 B（模型页可正常进入） |
+| 问题 2：外观页切换主题时代码抛“外观服务尚未初始化”。预览入口补内存版 `AppearanceSettingsRepository`，主题模式/模糊等设置可在预览器里生效 | CI：07-appearance 通过 | 不适用（预览数据） |
+| 13-sidebar、14-message-actions、09-provider-edit 仍未通过，留在 `tests/ui/pending/`，详见 PR 的阻塞说明 | — | — |
+
 ## R4-2：界面场景补齐（不升版本，PR #39）
 
 | 改动 | 自动验证 | 真机 |
