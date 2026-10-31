@@ -38,7 +38,8 @@ export struct ModelProviderDetailScreen {
     ProviderSection({title:$r('app.string.ui_preferences_and_strategies_2abd3c'),content:this.preferences})
     EtaTextButton({text:this.state.editor.busy?$r('app.string.page_saving_d70d42'):this.state.editor.draft.id?$r('app.string.page_save_configuration_817af1'):$r('app.string.page_create_fcbd09'),primary:true,isEnabled:!this.state.editor.busy,onAction:()=>{void this.controller?.saveProvider();}}).width('100%').padding({left:S.Dp16,right:S.Dp16,top:S.Dp12})
     this.status()
-    if(this.state.editor.draft.id){EtaTextButton({text:$r('app.string.page_remove_provider_9f848f'),destructive:true,isEnabled:!this.state.editor.busy,onAction:()=>this.remove()}).width('100%').padding({left:S.Dp16,right:S.Dp16,top:S.Dp12})}
+    if(this.state.editor.draft.isBuiltIn){EtaTextButton({text:$r('app.string.page_reset_built_in_configuration_35b6ec'),isEnabled:!this.state.editor.busy,onAction:()=>{void this.controller?.editor.resetBuiltIn();}}).width('100%').padding({left:S.Dp16,right:S.Dp16,top:S.Dp12})}
+    else if(this.state.editor.draft.id){EtaTextButton({text:$r('app.string.page_remove_provider_9f848f'),destructive:true,isEnabled:!this.state.editor.busy,onAction:()=>this.remove()}).width('100%').padding({left:S.Dp16,right:S.Dp16,top:S.Dp12})}
     Blank().height(S.Dp24)
   }.width('100%')}.height('100%').width('100%').scrollBar(BarState.Auto).edgeEffect(EdgeEffect.Spring)}
   @Builder private body(){Column(){

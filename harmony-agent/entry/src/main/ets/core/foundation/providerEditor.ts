@@ -6,6 +6,9 @@ import { ModelDraft, copyModelDraft, emptyModelDraft, editModelAddress, modelSna
 import { fetchModels, HttpTransport, OpenAIClient } from '../model';
 import { ProfileRepository, ModelProfile } from '../profiles';
 import { ModelProtocol } from '../protocols';
+import { enrichOfficialModels } from '../eta/officialModelCatalog';
+import { ModelCapabilityEdit } from '../eta/modelCapabilityEditor';
+import { foundationReasoningConfig } from '../eta/foundationReasoningConfig';
 import { RunControl } from '../types';
 import { redactSecrets } from '../conversations';
 
@@ -73,19 +76,19 @@ export class ProviderEditor {
   removeHeader(id:string):void{if(this.state.busy)return;this.state.draft.headerDrafts=(this.state.draft.headerDrafts||[]).filter(h=>h.id!==id);this.cache();this.publish();}
   private prepareHeaders():boolean{try{this.state.draft.extraHeaders=headersRecord(this.state.draft.headerDrafts||[]);return true;}catch(e){this.state.error=(e as Error).message;this.publish();return false;}}
   modelSearch(query:string):void{this.state.modelQuery=query;this.publish();}
-  models():ProviderModelUi[]{return filterProviderModels(this.state.draft.models.map((id,index)=>{const m=this.state.draft.metadata?.find(x=>x.id===id);return{id,modelId:id,displayName:m?.name||id,sortOrder:index,enabled:m?.enabled!==false,contextWindow:m?.contextWindow,vision:m?.vision};}),this.state.modelQuery);}
+  models():ProviderModelUi[]{return filterProviderModels(this.state.draft.models.map((id,index)=>{const m=this.state.draft.metadata?.find(x=>x.id===id);return{id,modelId:id,displayName:m?.name||id,sortOrder:index,enabled:m?.enabled!==false,contextWindow:m?.contextWindow,vision:m?.vision,metadata:m};}),this.state.modelQuery);}
   beginModelSelection(id:string):void{if(this.state.busy)return;this.state.selectionMode=true;this.state.modelSelection=[id];this.publish();}
   endModelSelection():void{this.state.selectionMode=false;this.publish();}
   toggleModelSelection(id:string):void{if(this.state.busy)return;this.state.modelSelection=this.state.modelSelection.includes(id)?this.state.modelSelection.filter(x=>x!==id):this.state.modelSelection.concat(id);this.publish();}
   toggleAllModels():void{const ids=this.models().map(m=>m.id);const all=ids.length>0&&ids.every(id=>this.state.modelSelection.includes(id));this.state.modelSelection=all?this.state.modelSelection.filter(id=>!ids.includes(id)):[...new Set([...this.state.modelSelection,...ids])];this.publish();}
   deleteSelectedModels():void{if(this.state.busy)return;for(const id of this.state.modelSelection)this.removeModel(id);this.state.selectionMode=false;this.publish();}
-  editModel(previous:string,id:string,name:string,context:string,vision:boolean):boolean{
+  editModel(previous:string,id:string,name:string,context:string,vision:boolean,capabilities?:ModelCapabilityEdit):boolean{
     if(this.state.busy)return false;id=id.trim();if(!id||id.length>256){this.state.error='模型 ID 无效';this.publish();return false;}
     if(contextWindowInputError(context)){this.state.error='上下文窗口必须是正整数';this.publish();return false;}
     if(id!==previous&&this.state.draft.models.includes(id)){this.state.error='模型 ID 已存在';this.publish();return false;}
     const prior=this.state.draft.metadata?.find(m=>m.id===previous);this.state.draft.models=this.state.draft.models.map(m=>m===previous?id:m);
     if(!previous)this.addModel(id);if(this.state.draft.model===previous)this.state.draft.model=id;
-    this.state.draft.metadata=(this.state.draft.metadata||[]).filter(m=>m.id!==previous&&m.id!==id).concat([{...prior,id,name:name.trim()||id,contextWindow:Number(context.trim()),vision,source:'custom'}]);this.cache();this.publish();return true;
+    this.state.draft.metadata=(this.state.draft.metadata||[]).filter(m=>m.id!==previous&&m.id!==id).concat([{...prior,...capabilities,id,name:name.trim()||id,contextWindow:Number(context.trim()),vision,source:prior?.source||'custom'}]);this.cache();this.publish();return true;
   }
   enableModel(id:string,enabled:boolean):void{if(this.state.busy)return;const prior=this.state.draft.metadata?.find(m=>m.id===id);this.state.draft.metadata=(this.state.draft.metadata||[]).filter(m=>m.id!==id).concat([{...prior,id,name:prior?.name||id,source:prior?.source||'custom',enabled}]);this.cache();this.publish();}
   flag(field: ProviderFlag, value: boolean): void {
@@ -129,7 +132,7 @@ export class ProviderEditor {
   }
   async probe(testFirst: boolean): Promise<boolean> {
     if (this.state.busy||!this.prepareHeaders()) return false;
-    this.cancelRequest(); const epoch = this.epoch, snapshot = modelSnapshot(this.state.draft), io = this.transport(), control = new RunControl();
+    this.cancelRequest(); const epoch = this.epoch, snapshot = {...modelSnapshot(this.state.draft),...foundationReasoningConfig(this.state.draft,this.state.draft.model,{thinkingEnabled:true,autoCompactionEnabled:false})}, io = this.transport(), control = new RunControl();
     this.io = io; this.control = control; this.state.busy = true; this.state.working = '连接'; this.state.error = ''; this.state.message = ''; this.state.connection = ''; this.publish();
     try {
       if (testFirst && snapshot.model.trim()) {
@@ -140,7 +143,7 @@ export class ProviderEditor {
       }
       const result = await fetchModels(snapshot, io);
       if (epoch !== this.epoch) return false;
-      const previous=this.state.draft.metadata||[];this.state.draft.metadata=[...previous,...(result.metadata||[]).filter(m=>!previous.some(p=>p.id===m.id))];
+      const previous=this.state.draft.metadata||[];this.state.draft.metadata=[...previous,...enrichOfficialModels(this.state.draft,result.metadata||[]).filter(m=>!previous.some(p=>p.id===m.id))];
       this.state.catalog = result.ids.filter(id => !this.state.draft.models.includes(id)); this.state.selected = []; this.state.query = '';
       this.state.message = '已获取 ' + result.ids.length + ' 个模型' + (result.partial ? '（部分目录）' : '') + (this.state.catalog.length ? '，请选择要添加的模型' : '，均已添加');
       if (!this.state.connection) this.state.connection = '模型目录连接成功';
@@ -166,6 +169,13 @@ export class ProviderEditor {
       this.state.message = this.profiles.warning || '服务已保存'; return true;
     } catch (e) { if (epoch === this.epoch) this.state.error = redactSecrets((e as Error).message, [draft.apiKey,...Object.values(draft.extraHeaders||{})]); return false; }
     finally { if (epoch === this.epoch) { this.state.busy = false; this.state.working = ''; this.publish(); } }
+  }
+  async resetBuiltIn():Promise<void>{
+    if(this.state.busy||!this.state.draft.isBuiltIn)return;
+    this.cancelRequest();const id=this.state.draft.id;this.state.busy=true;this.state.working='保存';this.publish();
+    try{await this.profiles.resetBuiltIn(id);this.drafts.removeProvider(id);await this.flush();await this.open(id);this.state.message='已重置';}
+    catch(e){this.state.error=(e as Error).message;}
+    finally{this.state.busy=false;this.state.working='';this.publish();}
   }
   async remove(): Promise<boolean> {
     if (this.state.busy || !this.state.draft.id) return false;

@@ -1,6 +1,7 @@
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/pages/providers/ProviderConfigDraft.kt,
 // ProviderModelsTab.kt and agent/model/CustomHeaderFilter.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import type { ModelMetadata } from '../modelMetadata';
 import { ModelSearchQuery } from './modelPicker';
 export interface ProviderHeaderDraft {id:string;name:string;value:string}
 export interface ProviderConfigDraft {
@@ -27,5 +28,5 @@ export function contextWindowInputError(value:string,errorMessage='Context windo
  const v=value.trim();return /^\+?\d+$/.test(v)&&Number(v)>0&&Number(v)<=2147483647?null:errorMessage;
 }
 export const contextWindowPresets=[128000,200000,256000,1000000];
-export interface ProviderModelUi {id:string;modelId:string;displayName:string;sortOrder:number;enabled:boolean;contextWindow?:number;vision?:boolean}
+export interface ProviderModelUi {id:string;modelId:string;displayName:string;sortOrder:number;enabled:boolean;metadata?:ModelMetadata;contextWindow?:number;vision?:boolean}
 export function filterProviderModels(models:ProviderModelUi[],query:string):ProviderModelUi[]{const search=new ModelSearchQuery(query);return models.slice().sort((a,b)=>a.sortOrder-b.sortOrder).filter(m=>search.matches([m.displayName,m.modelId]));}

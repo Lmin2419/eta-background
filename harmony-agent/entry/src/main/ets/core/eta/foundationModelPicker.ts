@@ -17,7 +17,7 @@ export function foundationPickerProviders(
       authMode: "api_key",
       // 0.9 allows anonymous OpenAI-compatible endpoints. A saved profile is explicitly
       // configured; never read or copy ASSET keys into UI projections to decide visibility.
-      hasApiKey: true,
+      hasApiKey: p.isBuiltIn ? p.hasApiKey===true : true,
       models: modelCatalog(p.models, p.model).map((model, order) => ({
         id: p.id + ":" + model,
         modelId: model,
