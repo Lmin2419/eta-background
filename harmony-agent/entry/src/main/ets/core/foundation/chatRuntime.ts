@@ -4,7 +4,7 @@ import { FoundationRunProjection } from '../eta/foundationRunProjection';
 import { AgentChatMessageUi } from '../eta/model/conversation';
 import { ConversationRepository, redactSecrets } from '../conversations';
 import { ConversationRun } from '../conversationRun';
-import { ProfileRepository } from '../profiles';
+import { ProfileRepository, modelCatalog } from '../profiles';
 import { HttpTransport, OpenAIClient } from '../model';
 import { AgentLoop } from '../loop';
 import { ChatDevice, RunEvent } from '../types';
@@ -37,7 +37,8 @@ export class FoundationChatRuntime {
     if (!this.chats.get(conversationId)) throw new Error('会话不存在');
     if (!text.trim() || text.length > 8000) throw new Error('请输入消息，最多 8000 字符');
     const profile = this.profiles.document.profiles.find(p => p.id === profileId);
-    if (!profile || !model.trim()) throw new Error('请先添加服务并选择模型');
+    if (!profile || profile.isEnabled===false || profile.metadata?.find(m=>m.id===model)?.enabled===false || !model.trim() || !modelCatalog(profile.models,profile.model).includes(model)) throw new Error('请先添加服务并选择模型');
+    if(profile.protocol&&profile.protocol!=='chat_completions')throw Error('鸿蒙版尚未接入此协议');
     const snapshot = { ...profile, model, extraHeaders: { ...profile.extraHeaders } };
     const secrets: string[] = [];
     const activity: ChatActivity = { id: this.uuid(), conversationId, text, model, reply: '', reasoning: '', phase: '正在准备', error: '', active: true };
@@ -53,9 +54,9 @@ export class FoundationChatRuntime {
       stop: () => { stopped = true; loop?.stop(); },
       run: async () => {
         // The user turn is durable before even the secret lookup or a network request begins.
-        const apiKey = await this.profiles.key(snapshot); secrets.push(apiKey);
+        const apiKey = await this.profiles.key(snapshot); secrets.push(apiKey,...Object.values(snapshot.extraHeaders||{}));
         if (stopped) throw new Error('CANCELLED');
-        loop = new AgentLoop(new OpenAIClient({ ...snapshot, apiKey, screenshots: false }, this.transport(), []),
+        loop = new AgentLoop(new OpenAIClient({ ...snapshot, apiKey, screenshots: false, systemPrompt:snapshot.systemPrompt }, this.transport(), []),
           new ChatDevice(), (event: RunEvent) => {
             if (stopped) return;
             const clean = redactSecrets(event.text, secrets);

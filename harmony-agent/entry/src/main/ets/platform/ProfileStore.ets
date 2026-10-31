@@ -28,7 +28,7 @@ export class AssetSecretStorage implements SecretStorage {
   }
   async put(alias: string, value: string): Promise<void> {
     const bytes = this.encoder.encodeInto(value);
-    if (bytes.length > 1024) throw new Error('安全存储的 API Key 不能超过 1024 字节，可关闭保存密钥');
+    if (bytes.length > 1024) throw new Error(alias.startsWith('model-headers-')?'自定义请求头合计超过安全存储 1024 字节上限，请精简后保存':'安全存储的 API Key 不能超过 1024 字节，可关闭保存密钥');
     const map = this.query(alias);
     map.set(asset.Tag.SECRET,bytes);
     map.set(asset.Tag.ACCESSIBILITY,asset.Accessibility.DEVICE_FIRST_UNLOCKED);

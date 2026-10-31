@@ -24,7 +24,7 @@ test('all Eta string keys and 22 plural keys are present in each locale', () => 
   assert.deepEqual(report.locales.base.fallbackKeys, ['route_skills', 'speech_api_key']);
   for (const locale of ['base', 'en_US', 'zh_Hant']) {
     const values = json(`entry/src/main/resources/${locale}/element/string.json`).string as { name: string; value: string }[];
-    assert.equal(values.length, 1568); assert.equal(new Set(values.map(v => v.name)).size, values.length);
+    assert.equal(values.length, 1624); assert.equal(new Set(values.map(v => v.name)).size, values.length);
     assert.equal(json(`entry/src/main/resources/${locale}/element/plural.json`).plural.length, 22);
     assert.equal(values.find(v => v.name === 'app_name'), undefined, 'app_name belongs to AppScope only');
     assert.equal(report.locales[locale].portedStrings, 1537);

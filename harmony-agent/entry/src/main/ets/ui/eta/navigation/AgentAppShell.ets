@@ -3,9 +3,12 @@
 import { ConversationPanePanel } from '../components/ConversationPanePanel';
 import { FoundationController, ShellState, emptyShellState } from '../../../core/foundation/controller';
 import { AppRouteName, encodeRoute } from '../../../core/eta/routes';
-import { EtaPageDefaults as P, EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
+import { EtaPageDefaults as P, EtaProviderDefaults as ProviderMetrics, EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
 import { AgentHomeScreen } from '../screens/AgentHomeScreen';
-import { ProviderListPage, ProviderDetailPage, ModelSelectionSheet } from '../../foundation/ProviderPages';
+import { ModelProviderListScreen } from '../pages/providers/ModelProviderListScreen';
+import { ModelProviderDetailScreen } from '../pages/providers/ModelProviderDetailScreen';
+import { RemoteModelImportSheet } from '../pages/providers/RemoteModelImportSheet';
+import { CommunityCatalogScreen, CommunityCatalogProviderScreen } from '../pages/providers/CommunityCatalogScreens';
 import { DiagnosticsPage } from '../screens/DiagnosticsPage';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { AppearanceSettingsScreen } from '../screens/AppearanceSettingsScreen';
@@ -68,14 +71,12 @@ export struct AgentAppShell {
   @Builder private destination(name: string) {
     NavDestination() {
       Column() {
-        if (name !== AppRouteName.Settings && name !== AppRouteName.AppearanceSettings && name !== 'HarmonyDiagnostics') {
-        AgentTopBar({ route: name === 'HarmonyDiagnostics' ? AppRouteName.Settings : name as AppRouteName,
-          diagnostics: name === 'HarmonyDiagnostics', isWide: this.widthVp >= P.WideScreenMinWidth, onBack: () => this.controller?.back() })
-        }
         this.error()
         Column() {
-          if (name === AppRouteName.ModelProviders) { ProviderListPage({ state: this.state, controller: this.controller }) }
-          else if (name === AppRouteName.ModelProviderDetail || name === AppRouteName.ModelProviderNew) { ProviderDetailPage({ state: this.state, controller: this.controller }) }
+          if (name === AppRouteName.ModelProviders) { ModelProviderListScreen({ state: this.state, controller: this.controller }) }
+          else if (name === AppRouteName.ModelProviderDetail || name === AppRouteName.ModelProviderNew) { ModelProviderDetailScreen({ state: this.state, controller: this.controller }) }
+          else if (name === AppRouteName.CommunityCatalog) { CommunityCatalogScreen({state:this.state,controller:this.controller}) }
+          else if (name === AppRouteName.CommunityCatalogProvider) { CommunityCatalogProviderScreen({state:this.state,controller:this.controller}) }
           else if (name === 'HarmonyDiagnostics') { DiagnosticsPage({ state: this.state, controller: this.controller }) }
           else if (name === AppRouteName.Settings) { SettingsScreen({ state: this.state, controller: this.controller }) }
           else if (name === AppRouteName.AppearanceSettings) { AppearanceSettingsScreen({state:this.state,controller:this.controller}) }
@@ -83,7 +84,7 @@ export struct AgentAppShell {
       }.width('100%').height('100%').backgroundColor($r('app.color.miuix_background'))
     }.hideTitleBar(true).onBackPressed(() => { this.controller?.back(); return true; })
   }
-  @Builder private modelSheet() { ModelSelectionSheet({ state: this.state, controller: this.controller }) }
+  @Builder private modelSheet() { RemoteModelImportSheet({ state: this.state, controller: this.controller }) }
   build() {
     Navigation(this.pathStack) {
       ConversationSidePaneScaffold({ isOpen: this.state.drawer, isCurrent: this.state.screen === 'chat',
@@ -91,7 +92,7 @@ export struct AgentAppShell {
     }.mode(NavigationMode.Stack).hideTitleBar(true).navDestination(this.destination)
       .width('100%').height('100%').backgroundColor($r('app.color.miuix_background'))
       .onAreaChange((_old, area) => { this.widthVp = Number(area.width); })
-      .bindSheet($$this.sheetVisible, this.modelSheet, { height: SheetSize.LARGE, showClose: false,
+      .bindSheet($$this.sheetVisible, this.modelSheet, { height: (ProviderMetrics.SheetHeightFraction*100)+'%', showClose: false,
         backgroundColor: $r('app.color.miuix_surface'), onDisappear: () => { if(this.state.sheet === 'catalog') this.controller?.back(); } })
   }
 }

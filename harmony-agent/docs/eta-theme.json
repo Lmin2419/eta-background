@@ -260,6 +260,13 @@
       "ErrorThreshold": 0.95,
       "WarningThreshold": 0.8
     },
+    "EtaProviderDefaults": {
+      "SheetHeightFraction": 0.72,
+      "DisabledAlpha": 0.6,
+      "ModelDialogHeight": 520.0,
+      "ModelDialogChrome": 112.0,
+      "HeadersExpandedRotation": 180.0
+    },
     "EtaAppearanceDefaults": {
       "MIN_INTERFACE_SCALE": 0.8,
       "MAX_INTERFACE_SCALE": 1.1,
@@ -416,6 +423,8 @@
       "Dp72": 72.0,
       "Dp88": 88.0,
       "Dp100": 100.0,
+      "Dp112": 112.0,
+      "Dp120": 120.0,
       "Dp136": 136.0,
       "Dp148": 148.0,
       "Dp248": 248.0,
@@ -424,7 +433,8 @@
       "Dp280": 280.0,
       "Dp320": 320.0,
       "Dp340": 340.0,
-      "Dp360": 360.0
+      "Dp360": 360.0,
+      "Dp520": 520.0
     },
     "EtaComponentBehavior": {
       "ActionWidthFraction": 0.45,

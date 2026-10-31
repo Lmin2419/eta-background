@@ -1,3 +1,5 @@
+import { CommunityCatalogRepository } from '../core/eta/communityCatalog';
+import { EtaCommunityCatalog } from './EtaCommunityCatalog';
 import { i18n } from '@kit.LocalizationKit';
 import { PaneDateContext } from '../core/eta/conversationDrawer';
 import { ExportLabels } from '../core/eta/conversationMarkdownExporter';
@@ -46,6 +48,7 @@ export class FoundationHost {
     this.ledger = new TaskLedger(new DatabaseDocumentStorage(db, 'tasks'), uuid);
     const etaConversations=new EtaConversations(context);
     const dependencies: FoundationDependencies = {
+      communityCatalog:new CommunityCatalogRepository(new EtaCommunityCatalog(context,db)),
       language:():string=>i18n.System.getAppPreferredLanguage(),
       setLanguage:(language:string):void=>{i18n.System.setAppPreferredLanguage(language);if(language!=='default')context.getApplicationContext().setLanguage(language);},
       exportName:(title:string):string=>etaConversations.fileName(title),

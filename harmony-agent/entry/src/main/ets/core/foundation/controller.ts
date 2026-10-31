@@ -1,5 +1,6 @@
 // Ported interaction adapter from app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppState.kt, AgentAppRoot.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import { CommunityCatalogRepository, CommunityCatalogStore, CommunityCatalogState, emptyCatalogState } from '../eta/communityCatalog';
 import { AppearanceSettings, AppearanceSettingsRepository, defaultAppearance } from '../eta/appearanceSettings';
 import { ConversationSummaryUi, ConversationDrawerGroup, PaneDateContext, groupForDrawer, conversationTimeLabel, conversationCaseFold, messageMatchesQuery } from '../eta/conversationDrawer';
 import { ConversationMarkdownExporter, ExportLabels } from '../eta/conversationMarkdownExporter';
@@ -14,7 +15,7 @@ import { HttpTransport } from '../model';
 import { FoundationChatRuntime } from './chatRuntime';
 import { ProviderEditor, ProviderEditorState } from './providerEditor';
 import { EtaShellNavigation, Screen, Sheet } from '../eta/etaShellNavigation';
-import { AppRoute } from '../eta/routes';
+import { AppRoute, AppRouteName } from '../eta/routes';
 import { AgentModelPickerUiState, AgentModelProviderGroupUi, AgentModelOptionUi, AgentContextUsageUi, ModelPickerSession, projectModelPicker, filterModelGroups, modelCount } from '../eta/modelPicker';
 import { foundationPickerProviders } from '../eta/foundationModelPicker';
 import { DiagnosticArea, DiagnosticEnvironment, DiagnosticFact, DiagnosticLog, diagnosticReport, emptyEnvironment, environmentFacts, formatEvent } from '../diagnostics';
@@ -31,7 +32,7 @@ export interface ChatView {
 }
 export interface DiagnosticView { facts: DiagnosticFact[]; lines: string[]; total: number }
 export interface ShellState {
-  language:string; appearance:AppearanceSettings; paneMutation:PaneMutation|null; paneGroups:ConversationDrawerGroup[]; mutation:MessageMutation|null; routes: AppRoute[]; ready: boolean; busy: boolean; error: string; screen: Screen; drawer: boolean; sheet: Sheet;
+  catalog:CommunityCatalogState;selectedProviderId:string;language:string; appearance:AppearanceSettings; paneMutation:PaneMutation|null; paneGroups:ConversationDrawerGroup[]; mutation:MessageMutation|null; routes: AppRoute[]; ready: boolean; busy: boolean; error: string; screen: Screen; drawer: boolean; sheet: Sheet;
   conversations: ConversationSummary[]; search: string; providers: ModelProfile[]; providerSearch: string;
   chat: ChatView; editor: ProviderEditorState; choices: ModelChoice[]; modelQuery: string;
   picker: AgentModelPickerUiState; pickerGroups: AgentModelProviderGroupUi[]; pickerFilter: string | null; pickerPending: string | null; contextUsage: AgentContextUsageUi;
@@ -41,20 +42,21 @@ export interface FoundationDependencies {
   chats: ConversationRepository; profiles: ProfileRepository; drafts: DraftRepository;
   load(): Promise<void>; transport(): HttpTransport; uuid(): string;
   /** Optional so tests and the preview can run without a persistent log. */
-  language?:()=>string; setLanguage?:(language:string)=>void; appearance?:AppearanceSettingsRepository;
+  communityCatalog?:CommunityCatalogRepository;language?:()=>string; setLanguage?:(language:string)=>void; appearance?:AppearanceSettingsRepository;
   paneDate?:()=>PaneDateContext; exportLabels?:()=>ExportLabels; exportName?:(title:string)=>string; exportMarkdown?:(fileName:string,markdown:string)=>Promise<boolean>; noticeSearch?:(query:string)=>import('../eta/model/conversation').SystemNoticeCode[];
   elapsed?:()=>number; diagnostics?: DiagnosticLog; environment?: () => Promise<DiagnosticEnvironment>;
 }
 export function emptyShellState(): ShellState {
-  return {language:'default',appearance:defaultAppearance(),paneMutation:null,paneGroups:[], mutation:null,routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', picker: {providerGroups: [],selectedModel:null,isChanging:false},pickerGroups:[],pickerFilter:null,pickerPending:null,contextUsage:{contextTokens:null,contextWindow:null},appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
+  return {catalog:emptyCatalogState(),selectedProviderId:'',language:'default',appearance:defaultAppearance(),paneMutation:null,paneGroups:[], mutation:null,routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', picker: {providerGroups: [],selectedModel:null,isChanging:false},pickerGroups:[],pickerFilter:null,pickerPending:null,contextUsage:{contextTokens:null,contextWindow:null},appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
     chat: { queuedMessages:[],messageEdit:null,id: '', title: '新对话', input: '', inputVersion: 0, rows: [], messages: [], model: '', provider: '', profileId: '', active: false, phase: '', error: '', followBottom: true, scroll: 0 },
-    editor: { draft: { id: '', name: '我的模型', baseUrl: '', apiKey: '', model: '', models: [], rememberKey: false, screenshots: false, allowInsecureHttp: false, streaming: true, protocol: 'chat_completions' }, busy: false, working: '', error: '', message: '', connection: '', catalog: [], selected: [], query: '', tab: 'config' } };
+    editor: { headersExpanded:false,modelQuery:'',selectionMode:false,modelSelection:[],draft: { id: '', name: '我的模型', baseUrl: '', apiKey: '', model: '', models: [], rememberKey: false, screenshots: false, allowInsecureHttp: false, streaming: true, protocol: 'chat_completions' }, busy: false, working: '', error: '', message: '', connection: '', catalog: [], selected: [], query: '', tab: 'config' } };
 }
 
 /** All user actions cross this boundary. ArkUI only renders snapshots and sends intents. */
 export class FoundationController {
   readonly navigation = new EtaShellNavigation();
   readonly editor: ProviderEditor;
+  readonly community:CommunityCatalogStore|undefined;
   readonly runtime: FoundationChatRuntime;
   private ready = false;
   private busy = false;
@@ -76,6 +78,7 @@ export class FoundationController {
   constructor(readonly ports: FoundationDependencies) {
     ports.chats.useEtaEmptyConversationPolicy();
     this.editor = new ProviderEditor(ports.profiles, ports.drafts, () => ports.transport(), () => this.changed());
+    this.community=ports.communityCatalog?new CommunityCatalogStore(ports.communityCatalog,async draft=>(await ports.profiles.save(draft,'',false)).id,()=>this.changed()):undefined;
     this.runtime = new FoundationChatRuntime(ports.chats, ports.profiles, () => ports.transport(), () => ports.uuid(), () => this.changed(), ports.diagnostics,ports.elapsed, (id,stopped,saved)=>this.runSettled(id,stopped,saved));
   }
   subscribe(listener: () => void): () => void { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; }
@@ -104,7 +107,7 @@ export class FoundationController {
     this.messageCache.set(id,messages);
     for(const key of this.messageCache.keys()) if(key!==id&&!chats.get(key))this.messageCache.delete(key);
     const choices: ModelChoice[] = [];
-    for (const p of this.ports.profiles.document.profiles) for (const model of modelCatalog(p.models, p.model)) {
+    for (const p of this.ports.profiles.document.profiles.filter(p=>p.isEnabled!==false)) for (const model of modelCatalog(p.models, p.model)) {
       if ((p.name + ' ' + model).toLowerCase().includes(this.modelQuery.trim().toLowerCase())) choices.push({ key: p.id + ':' + model, profileId: p.id, provider: p.name, model });
     }
     const picker = projectModelPicker(foundationPickerProviders(this.ports.profiles.document.profiles),choice?.profileId??null,choice?.key??null);
@@ -114,7 +117,7 @@ export class FoundationController {
     return {
       picker,pickerGroups:filterModelGroups(picker,this.modelQuery,this.pickerSession.provider),pickerFilter:this.pickerSession.provider,pickerPending:this.pickerSession.pendingId,
       contextUsage:{contextTokens,contextWindow:picker.selectedModel?.contextWindow??null},
-      language:this.ports.language?.()||'default',appearance:this.ports.appearance?.snapshot()||defaultAppearance(),paneMutation:this.paneMutation,paneGroups:this.paneGroups(),mutation:this.mutation,routes: this.navigation.routes, ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
+      catalog:this.community?.snapshot()||emptyCatalogState(),selectedProviderId:this.ports.profiles.document.selectedId,language:this.ports.language?.()||'default',appearance:this.ports.appearance?.snapshot()||defaultAppearance(),paneMutation:this.paneMutation,paneGroups:this.paneGroups(),mutation:this.mutation,routes: this.navigation.routes, ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
       conversations: this.ready ? this.searchedConversations() : [], search: this.search,
       providers: this.ports.profiles.document.profiles.filter(p => (p.name + ' ' + p.baseUrl).toLowerCase().includes(this.providerSearch.trim().toLowerCase())), providerSearch: this.providerSearch,
       chat: { queuedMessages:this.queueStates.get(id)||[],messageEdit,id, title: selected?.title || '新对话', input: draft.text, inputVersion: this.inputVersion, rows, messages:Revision.visibleMessagesForEdit(messages,messageEdit?.targetMessageId||null), model: choice?.model || '', provider: choice?.provider || '', profileId: choice?.profileId || '',
@@ -184,6 +187,7 @@ export class FoundationController {
   back(): boolean {
     if (this.busy || this.editor.state.working === '保存' || this.editor.state.working === '删除') return true;
     if (this.navigation.sheet === 'models') this.pickerSession.cancel();
+    if(this.navigation.screen==='provider'&&this.navigation.sheet==='none'&&this.editor.state.selectionMode){this.editor.endModelSelection();return true;}
     if (this.navigation.sheet === 'catalog') this.editor.dismissCatalog();
     if (this.navigation.sheet === 'none' && this.navigation.screen === 'provider') this.editor.close();
     const handled = this.navigation.back(); this.changed(); return handled;
@@ -257,6 +261,8 @@ export class FoundationController {
   async useModel(choice: ModelChoice): Promise<void> {
     const saved = await this.action(async () => {
       const id = this.ports.chats.selectedId;
+      const profile=this.ports.profiles.document.profiles.find(p=>p.id===choice.profileId);
+      if(!profile||profile.isEnabled===false||profile.metadata?.find(m=>m.id===choice.model)?.enabled===false||!modelCatalog(profile.models,profile.model).includes(choice.model))throw Error('模型已移除或未启用，请重新选择');
       if (this.runtime.active(id)) throw new Error('生成结束后再切换当前会话模型');
       await this.ports.chats.preferences(id, choice.profileId, 'chat', choice.model);
       this.navigation.sheet = 'none'; this.pickerSession.cancel();
@@ -359,6 +365,12 @@ export class FoundationController {
     if (this.busy) return;
     this.navigation.provider(id); await this.editor.open(id); this.changed();
   }
+  openCommunity():void{this.editor.close();this.navigation.community();void this.community?.openCatalog();this.changed();}
+  chooseCommunity(id:string):void{this.community?.choose(id);this.navigation.community(id);this.changed();}
+  async importCommunity():Promise<void>{const expected=this.navigation.routes[this.navigation.routes.length-1];const id=await this.community?.importProvider();if(id&&expected?.name===AppRouteName.CommunityCatalogProvider&&this.navigation.routes[this.navigation.routes.length-1]===expected){this.navigation.eta.replace(new AppRoute(AppRouteName.ModelProviderDetail,id));await this.editor.open(id);}this.changed();}
+  async selectDefaultProvider(id:string):Promise<void>{await this.action(async()=>{await this.ports.profiles.select(id);});}
+  async removeProviderFromList(id:string):Promise<void>{await this.action(async()=>{await this.ports.profiles.remove(id);this.ports.drafts.removeProvider(id);await this.ports.drafts.flush();});}
+  async saveProvider():Promise<void>{const wasNew=!this.editor.state.draft.id;if(await this.editor.save()&&wasNew)this.navigation.eta.replace(new AppRoute(AppRouteName.ModelProviderDetail,this.editor.state.draft.id));this.changed();}
   async probeProvider(testFirst: boolean): Promise<void> {
     const available = await this.editor.probe(testFirst);
     if (available && this.navigation.screen === 'provider' && this.editor.state.catalog.length) this.navigation.sheet = 'catalog';

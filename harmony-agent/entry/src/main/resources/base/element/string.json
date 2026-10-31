@@ -1157,6 +1157,114 @@
       "value": "基于 Eta 移植\n原作者：蛮吉 (Mangi-11)\nPolyForm Noncommercial 1.0.0，仅限非商业用途\nRequired Notice: Copyright © 2026 蛮吉 (Mangi-11)."
     },
     {
+      "name": "eta_catalog_add",
+      "value": "从目录添加"
+    },
+    {
+      "name": "eta_catalog_add_summary",
+      "value": "浏览可用提供商并选择模型"
+    },
+    {
+      "name": "eta_catalog_cache",
+      "value": "本地缓存目录"
+    },
+    {
+      "name": "eta_catalog_candidates",
+      "value": "模型是社区候选条目"
+    },
+    {
+      "name": "eta_catalog_candidates_hint",
+      "value": "能否调用以服务商账号权限和实际接口为准"
+    },
+    {
+      "name": "eta_catalog_clear",
+      "value": "清空已选"
+    },
+    {
+      "name": "eta_catalog_empty",
+      "value": "没有找到匹配的提供商"
+    },
+    {
+      "name": "eta_catalog_empty_hint",
+      "value": "试试其他名称或地址"
+    },
+    {
+      "name": "eta_catalog_import",
+      "value": "导入（%d）"
+    },
+    {
+      "name": "eta_catalog_import_hint",
+      "value": "导入后需填写 API Key 并启用；模型请求将发送到上方 Base URL"
+    },
+    {
+      "name": "eta_catalog_key_hint",
+      "value": "读取目录不会上传随身助手的 API Key"
+    },
+    {
+      "name": "eta_catalog_loading",
+      "value": "正在读取本地目录"
+    },
+    {
+      "name": "eta_catalog_missing",
+      "value": "目录暂不可用"
+    },
+    {
+      "name": "eta_catalog_models_count",
+      "value": "%d 个可导入模型"
+    },
+    {
+      "name": "eta_catalog_models_title",
+      "value": "模型（%d）"
+    },
+    {
+      "name": "eta_catalog_online",
+      "value": "在线目录"
+    },
+    {
+      "name": "eta_catalog_pick",
+      "value": "选择模型"
+    },
+    {
+      "name": "eta_catalog_provider",
+      "value": "提供商"
+    },
+    {
+      "name": "eta_catalog_provider_count",
+      "value": "可导入提供商（%d）"
+    },
+    {
+      "name": "eta_catalog_refresh",
+      "value": "刷新模型目录"
+    },
+    {
+      "name": "eta_catalog_refreshing",
+      "value": "正在更新在线目录"
+    },
+    {
+      "name": "eta_catalog_search_models",
+      "value": "搜索模型名称或 ID"
+    },
+    {
+      "name": "eta_catalog_select_visible",
+      "value": "全选当前结果"
+    },
+    {
+      "name": "eta_catalog_selected",
+      "value": "已选 %d / %d 个模型"
+    },
+    {
+      "name": "eta_catalog_snapshot",
+      "value": "内置目录快照"
+    },
+    {
+      "name": "eta_catalog_status",
+      "value": "目录状态"
+    },
+    {
+      "name": "eta_catalog_title",
+      "value": "models.dev 社区目录"
+    },
+    {
       "name": "eta_diagnostics_clear",
       "value": "清空记录"
     },
@@ -1209,6 +1317,30 @@
       "value": "切换为跟随系统后，重新打开应用生效"
     },
     {
+      "name": "eta_model_context",
+      "value": "上下文窗口"
+    },
+    {
+      "name": "eta_model_context_hint",
+      "value": "上下文窗口必须是正整数"
+    },
+    {
+      "name": "eta_model_display",
+      "value": "显示名称"
+    },
+    {
+      "name": "eta_model_edit",
+      "value": "编辑模型"
+    },
+    {
+      "name": "eta_model_identifier",
+      "value": "模型 ID"
+    },
+    {
+      "name": "eta_model_vision",
+      "value": "图片输入"
+    },
+    {
       "name": "eta_port_about_author",
       "value": "原作者：蛮吉 (Mangi-11)"
     },
@@ -1227,6 +1359,98 @@
     {
       "name": "eta_port_unavailable",
       "value": "鸿蒙版尚未接入"
+    },
+    {
+      "name": "eta_provider_api_key",
+      "value": "API Key"
+    },
+    {
+      "name": "eta_provider_base_url",
+      "value": "Base URL"
+    },
+    {
+      "name": "eta_provider_chat_api",
+      "value": "Chat Completions API"
+    },
+    {
+      "name": "eta_provider_draft_models",
+      "value": "模型变更暂存于当前草稿，保存配置后生效"
+    },
+    {
+      "name": "eta_provider_gemini",
+      "value": "新增 Gemini"
+    },
+    {
+      "name": "eta_provider_header_add",
+      "value": "添加请求头"
+    },
+    {
+      "name": "eta_provider_header_expand",
+      "value": "展开"
+    },
+    {
+      "name": "eta_provider_header_fold",
+      "value": "收起"
+    },
+    {
+      "name": "eta_provider_header_name",
+      "value": "名称"
+    },
+    {
+      "name": "eta_provider_header_value",
+      "value": "值"
+    },
+    {
+      "name": "eta_provider_headers",
+      "value": "自定义请求头"
+    },
+    {
+      "name": "eta_provider_headers_count",
+      "value": "已设置 %d 项"
+    },
+    {
+      "name": "eta_provider_headers_none",
+      "value": "未设置"
+    },
+    {
+      "name": "eta_provider_headers_summary",
+      "value": "可覆盖 User-Agent；认证与传输请求头由系统管理。"
+    },
+    {
+      "name": "eta_provider_http",
+      "value": "允许 HTTP 服务"
+    },
+    {
+      "name": "eta_provider_responses_api",
+      "value": "Responses API"
+    },
+    {
+      "name": "eta_provider_responses_pending",
+      "value": "Responses API · 鸿蒙版尚未接入"
+    },
+    {
+      "name": "eta_provider_secure_key",
+      "value": "在本机安全保存 Key"
+    },
+    {
+      "name": "eta_provider_secure_key_summary",
+      "value": "仅将 Key 保存到系统安全存储；关闭时仅在本次会话中使用"
+    },
+    {
+      "name": "eta_provider_stream",
+      "value": "流式输出"
+    },
+    {
+      "name": "eta_provider_type_anthropic",
+      "value": "Anthropic"
+    },
+    {
+      "name": "eta_provider_type_gemini",
+      "value": "Gemini"
+    },
+    {
+      "name": "eta_provider_type_openai",
+      "value": "OpenAI Compatible"
     },
     {
       "name": "eta_route_character_detail",
