@@ -24,10 +24,10 @@ export struct SettingsScreen {
   @Builder private agent(){Column(){
     this.row($r('app.string.ui_model_provider_e8c7f5'),$r('app.media.ic_rounded_cloud'),$r('app.color.eta_preference_blue'),true,()=>this.controller?.navigate('providers'),this.state.chat.provider?this.state.chat.provider+' / '+(this.state.chat.model||''):$r('app.string.settings_not_configured'))
     EtaPreferenceDivider()
-    this.pendingSwitch($r('app.string.ui_deep_thinking_enabled_by_default_c032d6'),$r('app.media.ic_rounded_psychology'),$r('app.color.eta_preference_blue'))
+    EtaSwitchPreference({title:$r('app.string.ui_deep_thinking_enabled_by_default_c032d6'),checked:this.state.runtimePreferences.thinkingEnabled,isEnabled:!!this.controller?.ports.runtimePreferences,hasLeading:true,startAction:()=>{this.icon($r('app.media.ic_rounded_psychology'),$r('app.color.eta_preference_blue'));},onCheckedChange:(value:boolean)=>{void this.controller?.updateRuntimePreferences({thinkingEnabled:value});}})
   }}
   @Builder private extensions(){Column(){
-    this.pendingSwitch($r('app.string.settings_auto_compaction'),$r('app.media.ic_rounded_layers'),$r('app.color.eta_preference_blue'));EtaPreferenceDivider()
+    EtaSwitchPreference({title:$r('app.string.settings_auto_compaction'),checked:this.state.runtimePreferences.autoCompactionEnabled,isEnabled:!!this.controller?.ports.runtimePreferences,hasLeading:true,startAction:()=>{this.icon($r('app.media.ic_rounded_layers'),$r('app.color.eta_preference_blue'));},onCheckedChange:(value:boolean)=>{void this.controller?.updateRuntimePreferences({autoCompactionEnabled:value});}});EtaPreferenceDivider()
     this.row($r('app.string.ui_memory_b55ff5'),$r('app.media.ic_rounded_menu_book'),$r('app.color.eta_preference_orange'),false,()=>{});EtaPreferenceDivider()
     this.row($r('app.string.eta_route_subagents'),$r('app.media.ic_rounded_hub'),$r('app.color.eta_preference_blue'),false,()=>{});EtaPreferenceDivider()
     this.row($r('app.string.route_skills'),$r('app.media.ic_rounded_import_contacts'),$r('app.color.eta_preference_green'),false,()=>{});EtaPreferenceDivider()

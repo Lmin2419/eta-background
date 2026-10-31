@@ -1,6 +1,10 @@
 # 鸿蒙助手当前进度
 
-第二轮报告保存在 [2026-10-31 报告](reports/2026-10-31-report.md)。第三轮从 `harmony/round3-plan` 开始，当前 **0.9.22 / 90022 / harmony/p1b-chat-completions**。用户已选 E07b 方案 A；正式入口仍用 0.9 存储，E07b3 必须等真机检查点 ①–④。
+第二轮报告保存在 [2026-10-31 报告](reports/2026-10-31-report.md)。第三轮从 `harmony/round3-plan` 开始，当前 **0.9.23 / 90023 / harmony/e05b-thinking-compaction**。用户已选 E07b 方案 A；正式入口仍用 0.9 存储，E07b3 必须等真机检查点 ①–④。
+
+## 0.9.23（E05b：思考与上下文）
+
+设置两行启用并持久化，按所选模型能力构造思考参数；真实用量达到已知窗口 85% 时做有界摘要，先保存独立检查点再换上下文，原轮次不删除。35 项 Eta 原测试 + 8 集成验证，741 项全通过；3 项跨协议原测试延期至 P1c。ArkTS 0 error、1,935 资源；无新权限/API，未生成 HAP，真机待测。[差异与步骤](E05B_THINKING_COMPACTION_PORT.md)。下一项 E06b。
 
 ## 0.9.22（P1b：Chat Completions）
 

@@ -44,7 +44,7 @@ export class AgentLoop {
     const control = new RunControl(); this.control = control;if(this.initiallyPaused)control.pause();
     // Cross-turn context contains text only. Never replay archived tools or stale images.
     const prior = (this.options.history || []).filter(m => (m.role==='user'||m.role==='assistant') && typeof m.content==='string')
-      .map(m => ({role:m.role,content:m.content as string}));
+      .map(m => ({role:m.role,content:m.content as string,...(m._eta_context_summary?{_eta_context_summary:true,_eta_compacted_users:m._eta_compacted_users,_eta_summary_through_user:m._eta_summary_through_user}:{})}));
     const prompt = (this.options.allowDevice===false?CHAT_PROMPT:SYSTEM_PROMPT) +
       '\n历史仅用于理解上下文，已结束或中断的任务不得自动补执行。本轮以用户新消息为准；再次操作手机前必须重新观察。' +
       (this.options.omittedTurns ? `\n较早的 ${this.options.omittedTurns} 轮未放入本次上下文；不知道的历史不能猜测。` : '');
