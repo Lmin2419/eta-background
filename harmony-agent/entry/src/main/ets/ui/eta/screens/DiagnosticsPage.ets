@@ -20,12 +20,12 @@ export struct DiagnosticsPage {
   @State private probeClicks:number=0;
   @State private probeNotice:ResourceStr='';
   private lastGestureAt:number=0;
-  aboutToAppear():void{this.refreshProbe();}
+  aboutToAppear():void{this.refreshProbe(false);}
   private filesDir():string{const context=this.getUIContext().getHostContext();return context!==undefined&&context!==null?(context as common.UIAbilityContext).filesDir:'';}
-  private refreshProbe():void{const dir=this.filesDir();if(dir===''){this.probe=emptyAccessibilityProbe();this.probeNotice='已刷新';return;}
+  private refreshProbe(notify:boolean):void{const dir=this.filesDir();if(dir===''){this.probe=emptyAccessibilityProbe();if(notify)this.probeNotice='已刷新';return;}
     this.probe=readAccessibilityProbe(dir);
     if(this.probe.gesture.result==='ok'&&this.probe.gesture.at>this.lastGestureAt){this.lastGestureAt=this.probe.gesture.at;this.probeClicks+=1;}
-    this.probeNotice='已刷新';}
+    if(notify)this.probeNotice='已刷新';}
   private requestInjection():void{const dir=this.filesDir();if(dir===''||!requestAccessibilityGesture(dir)){this.probeNotice='未连接';return;}
     this.probeNotice='已请求注入，等待扩展处理';}
   private probeTime(value:number):string{return value<=0?'-':new Date(value).toISOString().slice(11,19);}
@@ -60,7 +60,7 @@ export struct DiagnosticsPage {
     this.probeRow('最近事件',this.probeTime(this.probe.lastEventAt))
     this.probeRow('注入结果',this.probe.gesture.result)
     Row({space:S.Dp8}){
-      EtaTextButton({text:'刷新',onAction:()=>this.refreshProbe()}).layoutWeight(1)
+      EtaTextButton({text:'刷新',onAction:()=>this.refreshProbe(true)}).layoutWeight(1)
       EtaTextButton({text:'请求注入点击',primary:true,onAction:()=>this.requestInjection()}).layoutWeight(1)
     }.width('100%')
     Button('无障碍注入测试按钮').id('eta-a11y-test').fontSize(F.Body2).height(S.Dp40)
