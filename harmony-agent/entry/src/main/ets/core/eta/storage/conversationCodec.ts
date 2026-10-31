@@ -38,10 +38,15 @@ function sanitizeContent(raw: string): string {
     return v && typeof v === 'object' ? JSON.stringify(clean(v as Record<string, unknown>)) : '';
   } catch (_) { return ''; }
 }
-export function encodeTranscript(messages: ConversationMessage[]): string { return JSON.stringify(messages.map(m => ({ ...m, contentJson: sanitizeContent(m.contentJson) }))); }
+function durableMessage(m: ConversationMessage): ConversationMessage {
+  // Kotlin serialization only knows these fields. Do not persist protocol-only opaque output items.
+  return { role: m.role, content: m.content, contentJson: m.contentJson, toolCallId: m.toolCallId, reasoningContent: m.reasoningContent,
+    toolCallsJson: m.toolCallsJson, contextSummary: m.contextSummary, compactedUserTurns: m.compactedUserTurns, summaryThroughUserTurn: m.summaryThroughUserTurn, messageId: m.messageId };
+}
+export function encodeTranscript(messages: ConversationMessage[]): string { return JSON.stringify(messages.map(m => ({ ...durableMessage(m), contentJson: sanitizeContent(m.contentJson) }))); }
 export function decodeTranscript(raw: string): ConversationMessage[] {
   if (!raw.trim()) return []; const v: unknown = JSON.parse(raw); if (!Array.isArray(v)) throw Error('Invalid conversation checkpoint');
-  return v.map(m => { if (!m || typeof m.role !== 'string') throw Error('Invalid conversation message'); return { ...conversationMessage(m.role), ...m }; });
+  return v.map(m => { if (!m || typeof m.role !== 'string') throw Error('Invalid conversation message'); return durableMessage({ ...conversationMessage(m.role), ...m }); });
 }
 export function toMessageRow(message: AgentChatMessageUi, id: string, sortIndex: number): MessageRow | null {
   const r = messageRow(message.id, id, sortIndex, message.kind, '');

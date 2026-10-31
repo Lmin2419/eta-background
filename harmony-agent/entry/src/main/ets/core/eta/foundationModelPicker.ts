@@ -3,6 +3,7 @@
 import { ModelProfile, modelCatalog } from "../profiles";
 import { resolveProviderSource } from "./providerSourceRegistry";
 import { PickerProvider } from "./modelPicker";
+import { implementedProtocol } from './protocol/foundationProviderBridge';
 export function foundationPickerProviders(
   profiles: ModelProfile[],
 ): PickerProvider[] {
@@ -11,7 +12,7 @@ export function foundationPickerProviders(
       id: p.id,
       name: p.name,
       sourceType: resolveProviderSource(p.id,p.baseUrl,p.protocol),
-      isEnabled: p.isEnabled!==false && (!p.protocol||p.protocol==="chat_completions"),
+      isEnabled: p.isEnabled!==false && implementedProtocol(p.protocol),
       sortOrder: index,
       authMode: "api_key",
       // 0.9 allows anonymous OpenAI-compatible endpoints. A saved profile is explicitly

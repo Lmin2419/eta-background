@@ -9,6 +9,7 @@ import { HttpTransport, OpenAIClient } from '../model';
 import { AgentLoop } from '../loop';
 import { ChatDevice, RunEvent } from '../types';
 import { DiagnosticLog } from '../diagnostics';
+import { implementedProtocol } from '../eta/protocol/foundationProviderBridge';
 
 export interface ChatActivity {
   id: string; conversationId: string; text: string; model: string;
@@ -38,7 +39,7 @@ export class FoundationChatRuntime {
     if (!text.trim() || text.length > 8000) throw new Error('请输入消息，最多 8000 字符');
     const profile = this.profiles.document.profiles.find(p => p.id === profileId);
     if (!profile || profile.isEnabled===false || profile.metadata?.find(m=>m.id===model)?.enabled===false || !model.trim() || !modelCatalog(profile.models,profile.model).includes(model)) throw new Error('请先添加服务并选择模型');
-    if(profile.protocol&&profile.protocol!=='chat_completions')throw Error('鸿蒙版尚未接入此协议');
+    if(!implementedProtocol(profile.protocol))throw Error('鸿蒙版尚未接入此协议');
     const snapshot = { ...profile, model, extraHeaders: { ...profile.extraHeaders } };
     const secrets: string[] = [];
     const activity: ChatActivity = { id: this.uuid(), conversationId, text, model, reply: '', reasoning: '', phase: '正在准备', error: '', active: true };
@@ -56,7 +57,7 @@ export class FoundationChatRuntime {
         // The user turn is durable before even the secret lookup or a network request begins.
         const apiKey = await this.profiles.key(snapshot); secrets.push(apiKey,...Object.values(snapshot.extraHeaders||{}));
         if (stopped) throw new Error('CANCELLED');
-        loop = new AgentLoop(new OpenAIClient({ ...snapshot, apiKey, screenshots: false, systemPrompt:snapshot.systemPrompt }, this.transport(), []),
+        loop = new AgentLoop(new OpenAIClient({ ...snapshot, apiKey, screenshots: false, systemPrompt:snapshot.systemPrompt,sessionId:conversationId,providerId:profileId }, this.transport(), []),
           new ChatDevice(), (event: RunEvent) => {
             if (stopped) return;
             const clean = redactSecrets(event.text, secrets);

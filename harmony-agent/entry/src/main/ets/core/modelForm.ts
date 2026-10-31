@@ -28,7 +28,7 @@ export function editModelAddress(draft: ModelDraft, address: string): ModelDraft
   return {...draft,baseUrl:address,apiKey:'',models:[],metadata:[],extraHeaders:{},headerDrafts:[]};
 }
 export function modelSnapshot(draft: ModelDraft): ModelSettings {
-  return {baseUrl:draft.baseUrl,model:draft.model,apiKey:draft.apiKey,screenshots:draft.screenshots,allowInsecureHttp:draft.allowInsecureHttp,streaming:draft.streaming,protocol:draft.protocol,maxOutputTokens:draft.maxOutputTokens,reasoningEffort:draft.reasoningEffort,extraHeaders:draft.extraHeaders};
+  return {baseUrl:draft.baseUrl,model:draft.model,apiKey:draft.apiKey,screenshots:draft.screenshots,allowInsecureHttp:draft.allowInsecureHttp,streaming:draft.streaming,protocol:draft.protocol,maxOutputTokens:draft.maxOutputTokens,reasoningEffort:draft.reasoningEffort,reasoningCapabilities:draft.reasoningCapabilities,extraHeaders:{...draft.extraHeaders},systemPrompt:draft.systemPrompt,providerId:draft.id};
 }
 export function sameModelRequest(draft: ModelDraft, request: ModelSettings): boolean {
   return draft.baseUrl===request.baseUrl && draft.apiKey===request.apiKey && draft.model===request.model && draft.allowInsecureHttp===request.allowInsecureHttp && (draft.protocol||'chat_completions')===(request.protocol||'chat_completions') && draft.streaming===request.streaming && JSON.stringify(draft.extraHeaders||{})===JSON.stringify(request.extraHeaders||{});

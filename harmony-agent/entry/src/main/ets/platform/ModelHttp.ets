@@ -10,7 +10,7 @@ export class HarmonyHttpTransport implements HttpTransport {
   private request: http.HttpRequest | undefined;
   private abortStream: (()=>void) | undefined;
   cancel(): void { this.abortStream?.(); this.request?.destroy(); this.request = undefined; }
-  async stream(url:string, headers:Record<string,string>, body:string, onChunk:(chunk:string)=>void):Promise<void> {
+  async stream(url:string, headers:Record<string,string>, body:string, onChunk:(chunk:string)=>boolean|void,onStatus?:((status:number)=>void)):Promise<void> {
     if(deviceInfo.sdkApiVersion<23)throw new Error('模型网络连接需要 API 23 及以上系统');
     const request=http.createHttp();this.request=request;
     const decoder=util.TextDecoder.create('utf-8',{fatal:true});
@@ -23,10 +23,11 @@ export class HarmonyHttpTransport implements HttpTransport {
         const idle=():void=>{clearTimeout(timer);timer=setTimeout(()=>fail(new Error('模型流等待新数据超时')),300000);};
         this.abortStream=():void=>fail(new Error('CANCELLED'));
         request.on('dataReceive',(data:ArrayBuffer):void=>{
-          if(settled)return;
+          if(settled||ended)return;
           try {
             bytes+=data.byteLength;if(bytes>2_000_000)throw new Error('模型响应超过大小限制');
-            onChunk(decoder.decodeToString(new Uint8Array(data),{stream:true}));idle();
+            if(onChunk(decoder.decodeToString(new Uint8Array(data),{stream:true}))===false){ended=true;finish();}
+            if(!settled)idle();
           }catch(e){fail(e as Error);}
         });
         request.on('dataEnd',():void=>{
@@ -38,6 +39,7 @@ export class HarmonyHttpTransport implements HttpTransport {
         request.requestInStream(url,{method:http.RequestMethod.POST,header:headers,extraData:body,
           connectTimeout:15000,readTimeout:300000,usingCache:false,maxRedirects:0,maxLimit:2_000_000})
           .then((code:number):void=>{
+            onStatus?.(code);
             if(code<200||code>=300)fail(new Error('模型服务返回 HTTP '+code+'，请检查地址、密钥、额度或流式支持'));
             else {accepted=true;finish();}
           }).catch((e:BusinessError)=>fail(new Error('模型流连接中断'+errorCode(e)+'，请检查网络和接口；不会自动重复请求')));

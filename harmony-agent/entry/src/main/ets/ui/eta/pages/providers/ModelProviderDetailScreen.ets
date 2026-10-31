@@ -10,13 +10,14 @@ import { EtaPreferenceRow } from '../../components/EtaPreferenceRow';
 import { EtaPreferenceDivider } from '../../components/EtaPreferenceStyle';
 import { EtaSwitchPreference } from '../../components/EtaSelectionPreferences';
 import { EtaTextButton } from '../../components/EtaControls';
+import { implementedProtocol } from '../../../../core/eta/protocol/foundationProviderBridge';
 @Component
 export struct ModelProviderDetailScreen {
   @Prop state:ShellState=emptyShellState();controller:FoundationController|undefined=undefined;
   private remove():void{const id=this.state.editor.draft.id;this.getUIContext().showAlertDialog({title:$r('app.string.ui_remove_provider_9f848f'),message:$r('app.string.provider_delete_summary',this.state.editor.draft.name),primaryButton:{value:$r('app.string.action_cancel'),action:()=>{}},secondaryButton:{value:$r('app.string.ui_delete_3755f5'),action:()=>{if(id===this.state.editor.draft.id)void this.controller?.deleteProvider();}}});}
   @Builder private connection(){Column(){
     ProviderConnectionFields({state:this.state,controller:this.controller});EtaPreferenceDivider({hasLeading:false})
-    EtaPreferenceRow({title:$r('app.string.ui_test_connection_10b7d8'),summary:this.state.editor.connection,isEnabled:!this.state.editor.busy&&this.state.editor.draft.protocol==='chat_completions',onAction:()=>{void this.controller?.probeProvider(false);}})
+    EtaPreferenceRow({title:$r('app.string.ui_test_connection_10b7d8'),summary:this.state.editor.connection,isEnabled:!this.state.editor.busy&&implementedProtocol(this.state.editor.draft.protocol),onAction:()=>{void this.controller?.probeProvider(true);}})
   }}
   @Builder private preferences(){Column(){
     EtaSwitchPreference({title:$r('app.string.ui_enable_this_provider_683a76'),checked:this.state.editor.draft.isEnabled!==false,isEnabled:!this.state.editor.busy,onCheckedChange:(v:boolean)=>this.controller?.editor.flag('isEnabled',v)});EtaPreferenceDivider({hasLeading:false})
@@ -25,7 +26,7 @@ export struct ModelProviderDetailScreen {
       Text($r('app.string.ui_leave_blank_to_use_the_default_mobile_agent_prompt_w_21e7c8')).fontSize(F.Footnote2).fontColor($r('app.color.miuix_on_surface_variant_summary')).margin({top:S.Dp8})
     }.padding(S.Dp16)
     EtaPreferenceDivider({hasLeading:false})
-    EtaSwitchPreference({title:$r('app.string.eta_provider_stream'),checked:this.state.editor.draft.streaming,isEnabled:!this.state.editor.busy,onCheckedChange:(v:boolean)=>this.controller?.editor.flag('streaming',v)})
+    EtaSwitchPreference({title:$r('app.string.eta_provider_stream'),checked:this.state.editor.draft.protocol==='responses'||this.state.editor.draft.streaming,isEnabled:!this.state.editor.busy&&this.state.editor.draft.protocol!=='responses',onCheckedChange:(v:boolean)=>this.controller?.editor.flag('streaming',v)})
   }}
   @Builder private status(){
     if(this.state.editor.error){Text(this.state.editor.error).fontSize(F.Footnote1).fontColor($r('app.color.miuix_error')).width('100%').padding(S.Dp16)}
