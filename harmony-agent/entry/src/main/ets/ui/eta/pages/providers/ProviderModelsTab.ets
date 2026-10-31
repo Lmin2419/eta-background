@@ -37,7 +37,7 @@ struct ModelEditDialog {
     }.width('100%')}.constraintSize({maxHeight:this.bodyHeight}).width('100%').scrollBar(BarState.Auto)
     MiuixDialogActions({confirmEnabled:!!this.modelIdText.trim()&&!contextWindowInputError(this.contextWindow),onCancel:():void=>{this.controller?.close();},onConfirm:()=>{if(this.onSubmit(this.model.id,this.modelIdText,this.name,this.contextWindow,!!this.model.vision))this.controller?.close();else this.error=this.getUIContext().getHostContext()!.resourceManager.getStringSync($r('app.string.provider_save_failed').id);}}).margin({top:S.Dp16})
   }}
-  build(){EtaDialogContent({title:this.model.id?$r('app.string.page_edit_model_29e31e'):$r('app.string.page_add_model_532a64'),content:this.body}).margin(S.Dp24)}
+  build(){EtaDialogContent({title:this.model.id?$r('app.string.page_edit_model_29e31e'):$r('app.string.page_add_model_532a64'),content:() => { this.body(); }}).margin(S.Dp24)}
 }
 @Component
 export struct ProviderModelsTab {
@@ -74,7 +74,7 @@ export struct ProviderModelsTab {
       EtaTextButton({text:this.allModelsSelected()?$r('app.string.page_select_none_ba20eb'):$r('app.string.page_select_all_3e44b2'),onAction:()=>this.controller?.editor.toggleAllModels()})
     }.width('100%').padding({left:S.Dp24,right:S.Dp24})}
     List(){
-      if(!this.state.editor.selectionMode){ListItem(){ProviderSection({title:$r('app.string.ui_model_management_183414'),content:this.actions})}}
+      if(!this.state.editor.selectionMode){ListItem(){ProviderSection({title:$r('app.string.ui_model_management_183414'),content:() => { this.actions(); }})}}
       ListItem(){TextInput({text:this.state.editor.modelQuery,placeholder:$r('app.string.ui_search_model_df5586')}).fontSize(F.Body1).fontColor($r('app.color.miuix_on_surface')).backgroundColor($r('app.color.miuix_secondary')).margin({left:S.Dp16,right:S.Dp16,top:S.Dp4,bottom:S.Dp8}).onChange((v:string)=>this.controller?.editor.modelSearch(v))}
       if(this.state.editor.message||this.state.editor.error){ListItem(){Text(this.state.editor.error||this.state.editor.message).fontSize(F.Body2).fontColor(this.state.editor.error?$r('app.color.miuix_error'):$r('app.color.miuix_on_surface_variant_summary')).padding(S.Dp16)}}
       LazyForEach(this.source,(model:ProviderModelUi)=>{ListItem(){this.row(model)}.padding({left:S.Dp16,right:S.Dp16})},(model:ProviderModelUi)=>model.id)

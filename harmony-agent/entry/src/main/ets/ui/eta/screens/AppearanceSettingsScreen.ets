@@ -26,7 +26,7 @@ struct InterfaceScaleDialog {
       .onChange((value:string)=>{this.input=value.replace(/\D/g,'').slice(0,3);})
     MiuixDialogActions({confirmEnabled:this.valid(),onCancel:():void=>{this.controller?.close();},onConfirm:()=>{if(this.valid()){this.onConfirm(Number(this.input));this.controller?.close();}}})
   }}
-  build(){EtaDialogContent({title:$r('app.string.appearance_interface_scale_dialog_title'),summary:$r('app.string.appearance_interface_scale_dialog_summary'),content:this.body}).margin(S.Dp24)}
+  build(){EtaDialogContent({title:$r('app.string.appearance_interface_scale_dialog_title'),summary:$r('app.string.appearance_interface_scale_dialog_summary'),content:() => { this.body(); }}).margin(S.Dp24)}
 }
 @Component
 export struct AppearanceSettingsScreen {
@@ -69,11 +69,11 @@ export struct AppearanceSettingsScreen {
     EtaPreferenceDivider({hasLeading:false});this.pending($r('app.string.appearance_swipe_dismiss'))
     EtaPreferenceDivider({hasLeading:false});this.pending($r('app.string.appearance_predictive_back'))
     EtaPreferenceDivider({hasLeading:false})
-    EtaArrowPreference({title:$r('app.string.appearance_interface_scale'),summary:$r('app.string.appearance_interface_scale_summary'),hasBottom:true,endActions:this.scaleLabel,bottomAction:this.slider,onAction:()=>this.showScale()})
+    EtaArrowPreference({title:$r('app.string.appearance_interface_scale'),summary:$r('app.string.appearance_interface_scale_summary'),hasBottom:true,endActions:() => { this.scaleLabel(); },bottomAction:() => { this.slider(); },onAction:()=>this.showScale()})
   }}
   @Builder private content(){Column(){
-    EtaPreferenceGroupTitle({title:$r('app.string.appearance_group_color')});EtaPreferenceGroup({content:this.colorGroup})
-    EtaPreferenceGroupTitle({title:$r('app.string.appearance_group_interface')});EtaPreferenceGroup({content:this.interfaceGroup})
+    EtaPreferenceGroupTitle({title:$r('app.string.appearance_group_color')});EtaPreferenceGroup({content:() => { this.colorGroup(); }})
+    EtaPreferenceGroupTitle({title:$r('app.string.appearance_group_interface')});EtaPreferenceGroup({content:() => { this.interfaceGroup(); }})
   }}
-  build(){MiuixScaffoldPage({title:$r('app.string.appearance_title'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',content:this.content,onBack:()=>this.controller?.back()})}
+  build(){MiuixScaffoldPage({title:$r('app.string.appearance_title'),blurEnabled:this.state.appearance.blurEnabled,progressiveBlur:this.state.appearance.topBarBlurStyle==='progressive',content:() => { this.content(); },onBack:()=>this.controller?.back()})}
 }
