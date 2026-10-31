@@ -1321,6 +1321,18 @@
       "value": "Restart the app after selecting the system language"
     },
     {
+      "name": "eta_mcp_invalid_url",
+      "value": "Enter a valid HTTP or HTTPS server URL"
+    },
+    {
+      "name": "eta_mcp_save_failed",
+      "value": "Could not save or read MCP settings. Please retry; the existing configuration is unchanged."
+    },
+    {
+      "name": "eta_mcp_token_invalid",
+      "value": "Token exceeds 1024 bytes or contains a line break; not saved"
+    },
+    {
       "name": "eta_memory_file_name",
       "value": "MEMORY.md"
     },

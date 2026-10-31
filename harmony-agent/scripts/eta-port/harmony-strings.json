@@ -83,7 +83,10 @@
     "eta_anthropic_version": "anthropic-version",
     "eta_provider_gemini_summary": "使用 API Key 连接原生 Interactions API",
     "eta_extension_saved_not_in_use": "已保存；鸿蒙版对话暂未使用此功能",
-    "eta_memory_file_name": "MEMORY.md"
+    "eta_memory_file_name": "MEMORY.md",
+    "eta_mcp_invalid_url": "请输入有效的 HTTP 或 HTTPS 服务器地址",
+    "eta_mcp_token_invalid": "Token 超过 1024 字节或含有无效换行，尚未保存",
+    "eta_mcp_save_failed": "MCP 设置未能保存或读取，请重试；原配置尚未改动"
   },
   "en_US": {
     "eta_port_about_title": "Based on Eta",
@@ -164,7 +167,10 @@
     "eta_provider_responses_pending": "Responses API · 鸿蒙版尚未接入",
     "eta_provider_gemini_summary": "Connect to the native Interactions API with an API key",
     "eta_extension_saved_not_in_use": "Saved; Harmony conversations do not use this feature yet",
-    "eta_memory_file_name": "MEMORY.md"
+    "eta_memory_file_name": "MEMORY.md",
+    "eta_mcp_invalid_url": "Enter a valid HTTP or HTTPS server URL",
+    "eta_mcp_token_invalid": "Token exceeds 1024 bytes or contains a line break; not saved",
+    "eta_mcp_save_failed": "Could not save or read MCP settings. Please retry; the existing configuration is unchanged."
   },
   "zh_Hant": {
     "eta_port_about_title": "基於 Eta 移植",
@@ -245,6 +251,9 @@
     "eta_provider_responses_pending": "Responses API · 鸿蒙版尚未接入",
     "eta_provider_gemini_summary": "使用 API Key 連接原生 Interactions API",
     "eta_extension_saved_not_in_use": "已儲存；鴻蒙版對話暫未使用此功能",
-    "eta_memory_file_name": "MEMORY.md"
+    "eta_memory_file_name": "MEMORY.md",
+    "eta_mcp_invalid_url": "請輸入有效的 HTTP 或 HTTPS 伺服器位址",
+    "eta_mcp_token_invalid": "Token 超過 1024 位元組或含有無效換行，尚未儲存",
+    "eta_mcp_save_failed": "MCP 設定未能儲存或讀取，請重試；原設定尚未改動"
   }
 }
