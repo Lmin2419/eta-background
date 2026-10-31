@@ -10,6 +10,7 @@ import { ModelProviderDetailScreen } from '../pages/providers/ModelProviderDetai
 import { RemoteModelImportSheet } from '../pages/providers/RemoteModelImportSheet';
 import { CommunityCatalogScreen, CommunityCatalogProviderScreen } from '../pages/providers/CommunityCatalogScreens';
 import { DiagnosticsPage } from '../screens/DiagnosticsPage';
+import {AgentSkillsScreen} from '../screens/AgentSkillsScreen';
 import {AgentMemoryScreen} from '../screens/AgentMemoryScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { AppearanceSettingsScreen } from '../screens/AppearanceSettingsScreen';
@@ -80,6 +81,7 @@ export struct AgentAppShell {
           else if (name === AppRouteName.CommunityCatalogProvider) { CommunityCatalogProviderScreen({state:this.state,controller:this.controller}) }
           else if (name === 'HarmonyDiagnostics') { DiagnosticsPage({ state: this.state, controller: this.controller }) }
           else if (name === AppRouteName.Settings) { SettingsScreen({ state: this.state, controller: this.controller }) }
+          else if (name === AppRouteName.Skills) { AgentSkillsScreen({state:this.state,controller:this.controller}) }
           else if (name === AppRouteName.Memory) { AgentMemoryScreen({state:this.state,controller:this.controller,keyboardVisible:this.keyboardVisible}) }
           else if (name === AppRouteName.AppearanceSettings) { AppearanceSettingsScreen({state:this.state,controller:this.controller}) }
         }.layoutWeight(1).width('100%')

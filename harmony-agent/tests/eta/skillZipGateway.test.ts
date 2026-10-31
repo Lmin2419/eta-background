@@ -1,0 +1,11 @@
+// Ported from app/src/test/kotlin/io/github/mangi/eta/ui/app/SkillZipImportGatewayTest.kt, ui/model/SkillDeletionPolicyTest.kt @ 3b1794d.
+// Required Notice: Copyright © 2026 蛮吉 (Mangi-11). 5 original tests, 0 skipped.
+import test from 'node:test';import assert from 'node:assert/strict';
+import {toSkillZipOutcome} from '../../entry/src/main/ets/core/eta/skills/skillZipGateway';
+import {canDeleteUserSkill,SkillItemUi} from '../../entry/src/main/ets/core/eta/skills/agentSkillsStore';
+import {SkillErrorCode} from '../../entry/src/main/ets/core/eta/skills/skillTypes';
+test('success keeps display metadata only',()=>{const r=toSkillZipOutcome({kind:'success',installed:[{id:'example',name:'Example',description:'description'}]});assert.equal(r.kind,'success');if(r.kind==='success')assert.deepEqual(r.skills,[{id:'example',name:'Example'}]);});
+test('conflict preserves replacement policy',()=>{const r=toSkillZipOutcome({kind:'conflict',conflicts:[{id:'builtin',name:'Builtin',existingSource:'builtin',replaceAllowed:false}],archiveSha256:'a'.repeat(64)});assert.equal(r.kind,'conflict');if(r.kind==='conflict'){assert.equal(r.skills[0].source,'builtin');assert.equal(r.skills[0].replaceAllowed,false);assert.equal(r.archiveSha256,'a'.repeat(64));}});
+test('core errors map to bounded user facing categories',()=>{const cases:[SkillErrorCode,string][]=[['EXTRACTED_CONTENT_TOO_LARGE','ARCHIVE_LIMIT_EXCEEDED'],['UNSAFE_ENTRY_PATH','UNSAFE_ARCHIVE'],['TARGET_NOT_REPLACEABLE','TARGET_NOT_REPLACEABLE'],['INVALID_SELECTION','PACKAGE_CHANGED']];for(const [code,expected] of cases)assert.deepEqual(toSkillZipOutcome({kind:'failure',code,recoveryRequired:false}),{kind:'failure',code:expected});});
+test('incomplete rollback maps to recovery required',()=>assert.deepEqual(toSkillZipOutcome({kind:'failure',code:'COMMIT_FAILED',recoveryRequired:true}),{kind:'failure',code:'RECOVERY_REQUIRED'}));
+test('onlyInstalledUserSkillsCanBeDeleted',()=>{const skill=(source:string,installed:boolean):SkillItemUi=>({id:'test-skill',name:'Test Skill',description:'Test deletion policy.',source,installed,enabled:true,capabilities:[]});assert.equal(canDeleteUserSkill(skill('user',true)),true);assert.equal(canDeleteUserSkill(skill('builtin',true)),false);assert.equal(canDeleteUserSkill(skill('user',false)),false);assert.equal(canDeleteUserSkill(skill('unknown',true)),false);});
