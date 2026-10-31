@@ -25,9 +25,18 @@ if (!fs.existsSync(path.join(loader, 'main.js'))) {
   process.exit(2);
 }
 
-// The build preprocesses two-way binding ($$this.x) before type checking; the standalone checker does
-// not. This exact message is therefore not a real error. Anything else is reported.
-const FALSE_POSITIVES = [/^Cannot find name '\$\$this'\.$/];
+// The build rewrites two-way binding ($$this.x) only where the SDK supports it. bindSheet($$this.x)
+// is rewritten (verified at runtime in tests/ui); bindMenu/bindPopup($$this.x) are NOT, and fail at
+// runtime with "$$this is not defined". So the checker's "Cannot find name '$$this'" is ignored only
+// when the reported source line is a bindSheet call. Anything else is reported.
+const TWO_WAY_BINDING_OK = /\.bindSheet\(\s*\$\$this\./;
+function isFalsePositive(text) {
+  if (text.split('\n').slice(1).join('\n').trim() !== "Cannot find name '$$this'.") return false;
+  const at = /File: (.+):(\d+):\d+/.exec(text.split('\n')[0]);
+  if (!at) return false;
+  const line = fs.readFileSync(at[1], 'utf8').split('\n')[Number(at[2]) - 1] || '';
+  return TWO_WAY_BINDING_OK.test(line);
+}
 
 const src = path.join(project, 'entry/src/main/ets');
 const pages = JSON.parse(fs.readFileSync(path.join(project, 'entry/src/main/resources/base/profile/main_pages.json'), 'utf8')).src;
@@ -90,7 +99,6 @@ if (regression.error || regression.status !== 0) {
 fs.rmSync(cache, { recursive: true, force: true });
 
 const relative = text => text.split(project + path.sep).join('');
-const isFalsePositive = text => FALSE_POSITIVES.some(re => re.test(text.split('\n').slice(1).join('\n').trim()));
 const errors = found.error.filter(e => !isFalsePositive(e)).map(relative);
 const version = JSON.parse(fs.readFileSync(path.join(sdk, 'oh-uni-package.json'), 'utf8')).version;
 console.log('ArkTS check with OpenHarmony SDK ' + version + ': ' + errors.length + ' error(s), ' + found.warn.length + ' warning(s), '
