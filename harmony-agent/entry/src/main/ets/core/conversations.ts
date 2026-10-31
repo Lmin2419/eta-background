@@ -1,3 +1,7 @@
+// Harmony adapter for app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentContextSession.kt @ 3b1794d.
+// Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import { LegacyContextCheckpoint, checkpointFor, parseLegacyCheckpoint, restoredCheckpointContext } from './eta/context/legacyContextCheckpoint';
+import { AgentContextSnapshot } from './eta/model/conversation';
 import { DataGate } from './dataGate';
 import { TokenUsage, usageOf, sumUsage } from './usage';
 import { Message, RunEvent } from './types';
@@ -11,6 +15,7 @@ export interface ChatTurn {
   modelLabel: string; startedAt: number; endedAt?: number; steps: ChatStep[]; notice: string; reasoning?:string;revisionOf?:string;attachments?:string[];contextNote?:string;usage?:TokenUsage;
 }
 export interface Conversation {
+  modelCheckpoint?:LegacyContextCheckpoint;
   id: string; title: string; createdAt: number; updatedAt: number;
   profileId: string; mode: ConversationMode; turns: ChatTurn[]; preferredModel?:string;
 }
@@ -70,7 +75,7 @@ export function parseConversationDocument(raw:string):ConversationDocument {
       turns.push({id:uniqueId(t.id,turnIds),request:string(t.request,CHAT_LIMITS.request),reply:string(t.reply,CHAT_LIMITS.reply),status:t.status as TurnStatus,
         mode:mode(t.mode),modelLabel:string(t.modelLabel,256),startedAt:time(t.startedAt),endedAt:t.endedAt===undefined?undefined:time(t.endedAt),steps,notice:string(t.notice,1000),reasoning:t.reasoning===undefined?'':string(t.reasoning,32000),revisionOf:t.revisionOf===undefined?'':string(t.revisionOf,128),usage:usageOf(t.usage),contextNote:t.contextNote===undefined?'':string(t.contextNote,4000),attachments:Array.isArray(t.attachments)?t.attachments.map(n=>string(n,128)).slice(0,5):[]});
     }
-    conversations.push({id:uniqueId(c.id,ids),title:string(c.title,80),createdAt:time(c.createdAt),updatedAt:time(c.updatedAt),profileId:string(c.profileId,128),mode:mode(c.mode),turns,preferredModel:c.preferredModel===undefined?'':string(c.preferredModel,256)});
+    conversations.push({...(c.modelCheckpoint!==undefined?{modelCheckpoint:parseLegacyCheckpoint(c.modelCheckpoint)}:{}),id:uniqueId(c.id,ids),title:string(c.title,80),createdAt:time(c.createdAt),updatedAt:time(c.updatedAt),profileId:string(c.profileId,128),mode:mode(c.mode),turns,preferredModel:c.preferredModel===undefined?'':string(c.preferredModel,256)});
   }
   const selected=string(value.selectedId,128);
   return {version:1,selectedId:ids.has(selected)?selected:(conversations[0]?.id||''),conversations};
@@ -78,6 +83,7 @@ export function parseConversationDocument(raw:string):ConversationDocument {
 
 /** Replay only human/assistant text. Persisted tool calls, page snapshots and images are never model inputs. */
 export function conversationContext(conversation:Conversation):ConversationContext {
+  const restored=restoredCheckpointContext(conversation);if(restored)return restored;
   const completed=conversation.turns.filter(t=>t.status!=='running');
   const pairs:Message[][]=[];let size=0;
   for (let i=completed.length-1;i>=0;i--) {
@@ -198,6 +204,7 @@ export class ConversationRepository {
       c.updatedAt=this.now();await this.commit(next);
     });
   }
+  async saveModelCheckpoint(id:string,runId:string,snapshot:AgentContextSnapshot,check:()=>void):Promise<void>{return this.queue(async()=>{check();const next=clone(this.state),c=this.find(next,id);c.modelCheckpoint=checkpointFor(c,runId,snapshot);await this.commit(next);});}
   async progress(id:string,turnId:string,reply:string,reasoning?:string):Promise<void> {
     return this.queue(async()=>{
       this.requireLoaded();const next=clone(this.state),c=this.find(next,id),t=c.turns.find(t=>t.id===turnId);

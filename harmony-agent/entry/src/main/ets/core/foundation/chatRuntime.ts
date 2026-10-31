@@ -1,3 +1,7 @@
+// Harmony adapter for app/src/main/kotlin/io/github/mangi/eta/agent/model/AgentLoop.kt @ 3b1794d.
+// Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import { RuntimePreferences, defaultRuntimePreferences } from '../eta/runtimePreferences';
+import { foundationReasoningConfig } from '../eta/foundationReasoningConfig';
 // Ported runtime bridge from app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentRunStore.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 import { FoundationRunProjection } from '../eta/foundationRunProjection';
@@ -24,7 +28,7 @@ export class FoundationChatRuntime {
   constructor(private chats: ConversationRepository, private profiles: ProfileRepository,
     private transport: () => HttpTransport, private uuid: () => string, private changed: () => void,
     private diagnostics?: DiagnosticLog, private clock:()=>number=()=>0,
-    private settled:(id:string,stoppedByUser:boolean,saved:boolean)=>Promise<void>=async()=>{}) {}
+    private settled:(id:string,stoppedByUser:boolean,saved:boolean)=>Promise<void>=async()=>{},private preferences:()=>RuntimePreferences=defaultRuntimePreferences) {}
   activity(id: string): ChatActivity | undefined {
     const a = this.executions.get(id)?.activity; return a ? { ...a } : undefined;
   }
@@ -40,7 +44,7 @@ export class FoundationChatRuntime {
     const profile = this.profiles.document.profiles.find(p => p.id === profileId);
     if (!profile || profile.isEnabled===false || profile.metadata?.find(m=>m.id===model)?.enabled===false || !model.trim() || !modelCatalog(profile.models,profile.model).includes(model)) throw new Error('请先添加服务并选择模型');
     if(!implementedProtocol(profile.protocol))throw Error('鸿蒙版尚未接入此协议');
-    const snapshot = { ...profile, model, extraHeaders: { ...profile.extraHeaders } };
+    const snapshot = { ...profile, ...foundationReasoningConfig(profile,model,this.preferences()), model, extraHeaders: { ...profile.extraHeaders } };
     const secrets: string[] = [];
     const activity: ChatActivity = { id: this.uuid(), conversationId, text, model, reply: '', reasoning: '', phase: '正在准备', error: '', active: true };
     let loop: AgentLoop | undefined, stopped = false, admitted = false;
@@ -57,7 +61,7 @@ export class FoundationChatRuntime {
         // The user turn is durable before even the secret lookup or a network request begins.
         const apiKey = await this.profiles.key(snapshot); secrets.push(apiKey,...Object.values(snapshot.extraHeaders||{}));
         if (stopped) throw new Error('CANCELLED');
-        loop = new AgentLoop(new OpenAIClient({ ...snapshot, apiKey, screenshots: false, systemPrompt:snapshot.systemPrompt,sessionId:conversationId,providerId:profileId }, this.transport(), []),
+        loop = new AgentLoop(new OpenAIClient({ ...snapshot, apiKey, screenshots: false, systemPrompt:snapshot.systemPrompt,sessionId:conversationId,providerId:profileId,contextCompaction:{operationId:activity.id,onSnapshot:async checkpoint=>{if(stopped)throw Error('CANCELLED');const cleanCheckpoint={...checkpoint,messages:checkpoint.messages.map(m=>({...m,content:redactSecrets(m.content,secrets)}))};await this.chats.saveModelCheckpoint(conversationId,activity.id,cleanCheckpoint,()=>{if(stopped)throw Error('CANCELLED');});},onCompaction:event=>{if(stopped)return;activity.phase=event.phase==='started'?'正在整理上下文':event.phase==='completed'?'上下文已整理':'上下文整理失败，保留原历史';this.diagnostics?.record('chat',activity.phase,event.reasonCode||'');this.changed();}} }, this.transport(), []),
           new ChatDevice(), (event: RunEvent) => {
             if (stopped) return;
             const clean = redactSecrets(event.text, secrets);

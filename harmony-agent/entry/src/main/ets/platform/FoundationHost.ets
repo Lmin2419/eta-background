@@ -1,3 +1,6 @@
+// Harmony adapter for app/src/main/kotlin/io/github/mangi/eta/data/repository/RuntimeConfigRepository.kt @ 3b1794d.
+// Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import { RuntimePreferencesRepository } from '../core/eta/runtimePreferences';
 import { CommunityCatalogRepository } from '../core/eta/communityCatalog';
 import { EtaCommunityCatalog } from './EtaCommunityCatalog';
 import { i18n } from '@kit.LocalizationKit';
@@ -33,6 +36,7 @@ export class FoundationHost {
   private loaded = false;
   private loading: Promise<void> | undefined;
   private ledger: TaskLedger;
+  private runtimePreferences:RuntimePreferencesRepository;
   private context: common.UIAbilityContext;
   readonly diagnostics: DiagnosticLog;
   constructor(context: common.UIAbilityContext) {
@@ -44,6 +48,7 @@ export class FoundationHost {
     const uuid = (): string => util.generateRandomUUID();
     const chats = new ConversationRepository(new DatabaseConversationStorage(db, context.filesDir), uuid, Date.now, (): void => { this.controller?.changed(); }, 2);
     const profiles = new ProfileRepository(new DatabaseProfileStorage(db, context.filesDir), new AssetSecretStorage(), uuid);
+    this.runtimePreferences=new RuntimePreferencesRepository(new DatabaseDocumentStorage(db,'eta_runtime_preferences'),()=>this.controller?.changed());
     const drafts = new DraftRepository(new DatabaseDocumentStorage(db, 'drafts'));
     this.ledger = new TaskLedger(new DatabaseDocumentStorage(db, 'tasks'), uuid);
     const etaConversations=new EtaConversations(context);
@@ -55,7 +60,7 @@ export class FoundationHost {
       paneDate:():PaneDateContext=>etaConversations.dateContext(),exportLabels:():ExportLabels=>etaConversations.labels(),
       noticeSearch:(query:string):SystemNoticeCode[]=>etaConversations.noticeSearch(query),
       exportMarkdown:(name:string,markdown:string):Promise<boolean>=>etaConversations.exportMarkdown(name,markdown),
-      chats, profiles, drafts, uuid, diagnostics,appearance:this.appearance.repository,
+      chats, profiles, drafts, uuid, diagnostics,runtimePreferences:this.runtimePreferences,appearance:this.appearance.repository,
       elapsed: ():number => systemDateTime.getUptime(systemDateTime.TimeType.STARTUP),
       transport: (): HttpTransport => new DiagnosticTransport(new HarmonyHttpTransport(), diagnostics),
       load: (): Promise<void> => this.load(chats, profiles, drafts),
@@ -68,7 +73,7 @@ export class FoundationHost {
     if (!this.loading) this.loading = (async (): Promise<void> => {
       // The diagnostic log never throws; a broken log must not block the chat data.
       await this.diagnostics.load();
-      await profiles.load(); await chats.load(); await drafts.load(); await this.ledger.load(); this.loaded = true;
+      await this.runtimePreferences.load(); await profiles.load(); await chats.load(); await drafts.load(); await this.ledger.load(); this.loaded = true;
     })().catch((error: Error): never => { this.loading = undefined; this.diagnostics.record('storage', '载入数据失败', error.message); throw error; });
     return this.loading;
   }

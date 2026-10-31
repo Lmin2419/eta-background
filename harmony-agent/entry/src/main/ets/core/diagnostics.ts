@@ -116,17 +116,17 @@ export function diagnosticReport(env: DiagnosticEnvironment, events: DiagnosticE
 /** Records timing and outcome of each model request. Bodies, headers and replies are never logged. */
 export class DiagnosticTransport implements HttpTransport {
   get?: (url: string, headers: Record<string, string>) => Promise<string>;
-  stream?: (url: string, headers: Record<string, string>, body: string, onChunk: (chunk: string) => void) => Promise<void>;
+  stream?: HttpTransport['stream'];
   constructor(private inner: HttpTransport, private log: DiagnosticLog, private now: () => number = Date.now) {
     const get = inner.get, stream = inner.stream;
     if (get) this.get = (url, headers) => this.measure('GET', url, () => get.call(inner, url, headers));
-    if (stream) this.stream = async (url, headers, body, onChunk) => {
+    if (stream) this.stream = async (url, headers, body, onChunk, onStatus) => {
       const started = this.now(); let first = -1, chunks = 0, chars = 0;
       try {
         await stream.call(inner, url, headers, body, (chunk: string) => {
           if (first < 0) first = this.now() - started;
-          chunks++; chars += chunk.length; onChunk(chunk);
-        });
+          chunks++; chars += chunk.length; return onChunk(chunk);
+        }, onStatus);
         this.log.record('http', '流式 ' + hostOf(url), '成功 · 首包 ' + (first < 0 ? '无' : first + 'ms') + ' · 总计 ' + (this.now() - started) + 'ms · ' + chunks + ' 段 · ' + chars + ' 字符');
       } catch (e) {
         this.failed('流式', url, started, e, '已收到 ' + chunks + ' 段');

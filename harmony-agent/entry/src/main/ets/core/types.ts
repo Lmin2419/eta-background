@@ -4,6 +4,7 @@ export interface Observation { id: string; capturedAt: number; width: number; he
 export interface ToolCall { id: string; type: string; function: { name: string; arguments: string } }
 export interface ContentPart { type: string; text?: string; image_url?: { url: string } }
 export interface Message {
+  _eta_context_summary?:boolean;_eta_compacted_users?:number;_eta_summary_through_user?:number;
   currentGoal?:boolean; role: string; content: string | ContentPart[] | null; tool_calls?: ToolCall[]; tool_call_id?: string; providerParts?:Record<string,unknown>[]; providerProtocol?:string }
 export interface ModelReply { message: Message; finishReason: string; reasoning?:string;usage?:import('./usage').TokenUsage }
 export interface ModelClient { complete(messages: Message[], control: RunControl, onText?: (text:string)=>void, onReasoning?: (text:string)=>void): Promise<ModelReply>; cancel(): void }

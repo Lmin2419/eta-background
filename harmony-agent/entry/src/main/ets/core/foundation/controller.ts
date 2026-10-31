@@ -1,3 +1,6 @@
+// Harmony adapter for app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppState.kt @ 3b1794d.
+// Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import { RuntimePreferences, RuntimePreferencesRepository, defaultRuntimePreferences } from '../eta/runtimePreferences';
 // Ported interaction adapter from app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppState.kt, AgentAppRoot.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 import { CommunityCatalogRepository, CommunityCatalogStore, CommunityCatalogState, emptyCatalogState } from '../eta/communityCatalog';
@@ -32,6 +35,7 @@ export interface ChatView {
 }
 export interface DiagnosticView { facts: DiagnosticFact[]; lines: string[]; total: number }
 export interface ShellState {
+  runtimePreferences:RuntimePreferences;
   catalog:CommunityCatalogState;selectedProviderId:string;language:string; appearance:AppearanceSettings; paneMutation:PaneMutation|null; paneGroups:ConversationDrawerGroup[]; mutation:MessageMutation|null; routes: AppRoute[]; ready: boolean; busy: boolean; error: string; screen: Screen; drawer: boolean; sheet: Sheet;
   conversations: ConversationSummary[]; search: string; providers: ModelProfile[]; providerSearch: string;
   chat: ChatView; editor: ProviderEditorState; choices: ModelChoice[]; modelQuery: string;
@@ -42,12 +46,12 @@ export interface FoundationDependencies {
   chats: ConversationRepository; profiles: ProfileRepository; drafts: DraftRepository;
   load(): Promise<void>; transport(): HttpTransport; uuid(): string;
   /** Optional so tests and the preview can run without a persistent log. */
-  communityCatalog?:CommunityCatalogRepository;language?:()=>string; setLanguage?:(language:string)=>void; appearance?:AppearanceSettingsRepository;
+  runtimePreferences?:RuntimePreferencesRepository;communityCatalog?:CommunityCatalogRepository;language?:()=>string; setLanguage?:(language:string)=>void; appearance?:AppearanceSettingsRepository;
   paneDate?:()=>PaneDateContext; exportLabels?:()=>ExportLabels; exportName?:(title:string)=>string; exportMarkdown?:(fileName:string,markdown:string)=>Promise<boolean>; noticeSearch?:(query:string)=>import('../eta/model/conversation').SystemNoticeCode[];
   elapsed?:()=>number; diagnostics?: DiagnosticLog; environment?: () => Promise<DiagnosticEnvironment>;
 }
 export function emptyShellState(): ShellState {
-  return {catalog:emptyCatalogState(),selectedProviderId:'',language:'default',appearance:defaultAppearance(),paneMutation:null,paneGroups:[], mutation:null,routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', picker: {providerGroups: [],selectedModel:null,isChanging:false},pickerGroups:[],pickerFilter:null,pickerPending:null,contextUsage:{contextTokens:null,contextWindow:null},appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
+  return {runtimePreferences:defaultRuntimePreferences(),catalog:emptyCatalogState(),selectedProviderId:'',language:'default',appearance:defaultAppearance(),paneMutation:null,paneGroups:[], mutation:null,routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', picker: {providerGroups: [],selectedModel:null,isChanging:false},pickerGroups:[],pickerFilter:null,pickerPending:null,contextUsage:{contextTokens:null,contextWindow:null},appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
     chat: { queuedMessages:[],messageEdit:null,id: '', title: '新对话', input: '', inputVersion: 0, rows: [], messages: [], model: '', provider: '', profileId: '', active: false, phase: '', error: '', followBottom: true, scroll: 0 },
     editor: { headersExpanded:false,modelQuery:'',selectionMode:false,modelSelection:[],draft: { id: '', name: '我的模型', baseUrl: '', apiKey: '', model: '', models: [], rememberKey: false, screenshots: false, allowInsecureHttp: false, streaming: true, protocol: 'chat_completions' }, busy: false, working: '', error: '', message: '', connection: '', catalog: [], selected: [], query: '', tab: 'config' } };
 }
@@ -79,7 +83,7 @@ export class FoundationController {
     ports.chats.useEtaEmptyConversationPolicy();
     this.editor = new ProviderEditor(ports.profiles, ports.drafts, () => ports.transport(), () => this.changed());
     this.community=ports.communityCatalog?new CommunityCatalogStore(ports.communityCatalog,async draft=>(await ports.profiles.save(draft,'',false)).id,()=>this.changed()):undefined;
-    this.runtime = new FoundationChatRuntime(ports.chats, ports.profiles, () => ports.transport(), () => ports.uuid(), () => this.changed(), ports.diagnostics,ports.elapsed, (id,stopped,saved)=>this.runSettled(id,stopped,saved));
+    this.runtime = new FoundationChatRuntime(ports.chats, ports.profiles, () => ports.transport(), () => ports.uuid(), () => this.changed(), ports.diagnostics,ports.elapsed, (id,stopped,saved)=>this.runSettled(id,stopped,saved),()=>ports.runtimePreferences?.snapshot()||defaultRuntimePreferences());
   }
   subscribe(listener: () => void): () => void { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; }
   changed(): void { for (const listener of this.listeners) listener(); }
@@ -117,7 +121,7 @@ export class FoundationController {
     return {
       picker,pickerGroups:filterModelGroups(picker,this.modelQuery,this.pickerSession.provider),pickerFilter:this.pickerSession.provider,pickerPending:this.pickerSession.pendingId,
       contextUsage:{contextTokens,contextWindow:picker.selectedModel?.contextWindow??null},
-      catalog:this.community?.snapshot()||emptyCatalogState(),selectedProviderId:this.ports.profiles.document.selectedId,language:this.ports.language?.()||'default',appearance:this.ports.appearance?.snapshot()||defaultAppearance(),paneMutation:this.paneMutation,paneGroups:this.paneGroups(),mutation:this.mutation,routes: this.navigation.routes, ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
+      runtimePreferences:this.ports.runtimePreferences?.snapshot()||defaultRuntimePreferences(),catalog:this.community?.snapshot()||emptyCatalogState(),selectedProviderId:this.ports.profiles.document.selectedId,language:this.ports.language?.()||'default',appearance:this.ports.appearance?.snapshot()||defaultAppearance(),paneMutation:this.paneMutation,paneGroups:this.paneGroups(),mutation:this.mutation,routes: this.navigation.routes, ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
       conversations: this.ready ? this.searchedConversations() : [], search: this.search,
       providers: this.ports.profiles.document.profiles.filter(p => (p.name + ' ' + p.baseUrl).toLowerCase().includes(this.providerSearch.trim().toLowerCase())), providerSearch: this.providerSearch,
       chat: { queuedMessages:this.queueStates.get(id)||[],messageEdit,id, title: selected?.title || '新对话', input: draft.text, inputVersion: this.inputVersion, rows, messages:Revision.visibleMessagesForEdit(messages,messageEdit?.targetMessageId||null), model: choice?.model || '', provider: choice?.provider || '', profileId: choice?.profileId || '',
@@ -193,6 +197,7 @@ export class FoundationController {
     const handled = this.navigation.back(); this.changed(); return handled;
   }
   async setLanguage(language:string):Promise<void>{await this.action(async()=>{if(!this.ports.setLanguage)throw new Error('语言服务尚未初始化');this.ports.setLanguage(language);});}
+  async updateRuntimePreferences(patch:Partial<RuntimePreferences>):Promise<void>{await this.action(async()=>{if(!this.ports.runtimePreferences)throw Error('运行偏好尚未初始化');await this.ports.runtimePreferences.update(patch);});}
   async updateAppearance(patch:Partial<AppearanceSettings>):Promise<void>{await this.action(async()=>{if(!this.ports.appearance)throw new Error('外观服务尚未初始化');await this.ports.appearance.update(patch);});}
   openAppearance():void{if(this.busy)return;this.navigation.appearance();this.changed();}
   dismissError(): void { this.error = ''; this.changed(); }

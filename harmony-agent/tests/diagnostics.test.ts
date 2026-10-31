@@ -63,7 +63,7 @@ test('diagnostic transport logs timing and size but never request bodies, header
   const headers = { Authorization: 'Bearer sk-abcdefghijklmnopqrstuvwxyz' };
   await transport.post('https://api.example.com/v1/chat/completions', headers, '{"messages":[{"content":"PRIVATE-QUESTION"}]}');
   const chunks: string[] = [];
-  await transport.stream!('https://api.example.com/v1/chat/completions', headers, 'PRIVATE-QUESTION', c => chunks.push(c));
+  await transport.stream!('https://api.example.com/v1/chat/completions', headers, 'PRIVATE-QUESTION', c => { chunks.push(c); });
   assert.deepEqual(chunks, ['hello ', 'world']);
   const text = JSON.stringify(log.events());
   for (const leaked of ['PRIVATE-QUESTION', 'REPLY-CONTENT', 'sk-abcdefghijklmnop', '/v1/chat']) assert.equal(text.includes(leaked), false, leaked);
