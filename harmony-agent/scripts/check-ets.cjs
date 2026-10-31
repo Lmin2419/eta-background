@@ -38,6 +38,8 @@ entries.etaGallery = path.join(src, 'pages/EtaGallery.ets');
 // Keep direct core entries as additional checks; Index and EntryAbility now use these ports.
 entries.etaNavigationCore = path.join(src, 'core/eta/etaNavigation.ts');
 entries.etaStartupCore = path.join(src, 'core/eta/startupSplash.ts');
+// E07b2 is deliberately not wired to the production entry, but its RDB adapter must still be checked.
+entries.etaConversationDatabase = path.join(src, 'platform/EtaConversationDatabase.ets');
 
 const cache = fs.mkdtempSync(path.join(os.tmpdir(), 'ets-check-'));
 const config = {
