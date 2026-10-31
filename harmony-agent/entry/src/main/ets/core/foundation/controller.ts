@@ -1,5 +1,7 @@
 // Ported interaction adapter from app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppState.kt, AgentAppRoot.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import { ConversationSummaryUi, ConversationDrawerGroup, PaneDateContext, groupForDrawer, conversationTimeLabel, conversationCaseFold, messageMatchesQuery } from '../eta/conversationDrawer';
+import { ConversationMarkdownExporter, ExportLabels } from '../eta/conversationMarkdownExporter';
 import { AgentMessageQueueReducer as Queue } from '../eta/agentMessageQueueReducer';
 import { AgentConversationRevisionReducer as Revision } from '../eta/agentConversationRevisionReducer';
 import { foundationChatMessages } from '../eta/foundationChatMessages';
@@ -18,6 +20,7 @@ import { DiagnosticArea, DiagnosticEnvironment, DiagnosticFact, DiagnosticLog, d
 
 export interface MessageRow { id: string; request: string; reply: string; reasoning: string; model: string; status: string; notice: string; active: boolean; resultStatus?: TurnStatus }
 export interface ModelChoice { key: string; profileId: string; provider: string; model: string }
+export interface PaneMutation {id:string;kind:'rename'|'delete';title:string;input:string;active:boolean;}
 export interface MessageMutation { conversationId:string; messageId:string; turnId:string; laterTurns:number; kind:'delete'|'regenerate' }
 export interface ChatView {
   queuedMessages:QueuedMessageUi[]; messageEdit:MessageEditUiState|null;
@@ -27,7 +30,7 @@ export interface ChatView {
 }
 export interface DiagnosticView { facts: DiagnosticFact[]; lines: string[]; total: number }
 export interface ShellState {
-  mutation:MessageMutation|null; routes: AppRoute[]; ready: boolean; busy: boolean; error: string; screen: Screen; drawer: boolean; sheet: Sheet;
+  paneMutation:PaneMutation|null; paneGroups:ConversationDrawerGroup[]; mutation:MessageMutation|null; routes: AppRoute[]; ready: boolean; busy: boolean; error: string; screen: Screen; drawer: boolean; sheet: Sheet;
   conversations: ConversationSummary[]; search: string; providers: ModelProfile[]; providerSearch: string;
   chat: ChatView; editor: ProviderEditorState; choices: ModelChoice[]; modelQuery: string;
   picker: AgentModelPickerUiState; pickerGroups: AgentModelProviderGroupUi[]; pickerFilter: string | null; pickerPending: string | null; contextUsage: AgentContextUsageUi;
@@ -37,10 +40,11 @@ export interface FoundationDependencies {
   chats: ConversationRepository; profiles: ProfileRepository; drafts: DraftRepository;
   load(): Promise<void>; transport(): HttpTransport; uuid(): string;
   /** Optional so tests and the preview can run without a persistent log. */
+  paneDate?:()=>PaneDateContext; exportLabels?:()=>ExportLabels; exportName?:(title:string)=>string; exportMarkdown?:(fileName:string,markdown:string)=>Promise<boolean>; noticeSearch?:(query:string)=>import('../eta/model/conversation').SystemNoticeCode[];
   elapsed?:()=>number; diagnostics?: DiagnosticLog; environment?: () => Promise<DiagnosticEnvironment>;
 }
 export function emptyShellState(): ShellState {
-  return { mutation:null,routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', picker: {providerGroups: [],selectedModel:null,isChanging:false},pickerGroups:[],pickerFilter:null,pickerPending:null,contextUsage:{contextTokens:null,contextWindow:null},appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
+  return {paneMutation:null,paneGroups:[], mutation:null,routes: [], ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', picker: {providerGroups: [],selectedModel:null,isChanging:false},pickerGroups:[],pickerFilter:null,pickerPending:null,contextUsage:{contextTokens:null,contextWindow:null},appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
     chat: { queuedMessages:[],messageEdit:null,id: '', title: '新对话', input: '', inputVersion: 0, rows: [], messages: [], model: '', provider: '', profileId: '', active: false, phase: '', error: '', followBottom: true, scroll: 0 },
     editor: { draft: { id: '', name: '我的模型', baseUrl: '', apiKey: '', model: '', models: [], rememberKey: false, screenshots: false, allowInsecureHttp: false, streaming: true, protocol: 'chat_completions' }, busy: false, working: '', error: '', message: '', connection: '', catalog: [], selected: [], query: '', tab: 'config' } };
 }
@@ -61,12 +65,14 @@ export class FoundationController {
   private queueStates=new Map<string,QueuedMessageUi[]>();
   private edits=new Map<string,MessageEditUiState>();
   private mutation:MessageMutation|null=null;
+  private paneMutation:PaneMutation|null=null;
   private isForeground=true;
   private messageCache = new Map<string,AgentChatMessageUi[]>();
   private listeners = new Set<() => void>();
   private draftTimer: ReturnType<typeof setTimeout> | undefined;
   private environment: DiagnosticEnvironment = emptyEnvironment();
   constructor(readonly ports: FoundationDependencies) {
+    ports.chats.useEtaEmptyConversationPolicy();
     this.editor = new ProviderEditor(ports.profiles, ports.drafts, () => ports.transport(), () => this.changed());
     this.runtime = new FoundationChatRuntime(ports.chats, ports.profiles, () => ports.transport(), () => ports.uuid(), () => this.changed(), ports.diagnostics,ports.elapsed, (id,stopped,saved)=>this.runSettled(id,stopped,saved));
   }
@@ -106,14 +112,50 @@ export class FoundationController {
     return {
       picker,pickerGroups:filterModelGroups(picker,this.modelQuery,this.pickerSession.provider),pickerFilter:this.pickerSession.provider,pickerPending:this.pickerSession.pendingId,
       contextUsage:{contextTokens,contextWindow:picker.selectedModel?.contextWindow??null},
-      mutation:this.mutation,routes: this.navigation.routes, ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
-      conversations: this.ready ? chats.list(this.search) : [], search: this.search,
+      paneMutation:this.paneMutation,paneGroups:this.paneGroups(),mutation:this.mutation,routes: this.navigation.routes, ready: this.ready, busy: this.busy, error: this.error, screen: this.navigation.screen, drawer: this.navigation.drawer, sheet: this.navigation.sheet,
+      conversations: this.ready ? this.searchedConversations() : [], search: this.search,
       providers: this.ports.profiles.document.profiles.filter(p => (p.name + ' ' + p.baseUrl).toLowerCase().includes(this.providerSearch.trim().toLowerCase())), providerSearch: this.providerSearch,
       chat: { queuedMessages:this.queueStates.get(id)||[],messageEdit,id, title: selected?.title || '新对话', input: draft.text, inputVersion: this.inputVersion, rows, messages:Revision.visibleMessagesForEdit(messages,messageEdit?.targetMessageId||null), model: choice?.model || '', provider: choice?.provider || '', profileId: choice?.profileId || '',
         active: Boolean(activity?.active), phase: activity?.phase || '', error: activity?.error || '', followBottom: draft.followBottom !== false, scroll: draft.scroll },
       editor: this.editor.snapshot(), choices, modelQuery: this.modelQuery,
       appVersion: this.environment.appVersion, diagnostics: this.diagnosticView()
     };
+  }
+  private searchedConversations():ConversationSummary[]{
+    const query=this.search.trim(),folded=conversationCaseFold(query),notices=this.ports.noticeSearch?.(query)||[];
+    return this.ports.chats.list().filter(c=>!query||conversationCaseFold(c.title).includes(folded)||this.etaState(c.id).messages.some(m=>messageMatchesQuery(m,query,notices)));
+  }
+  private paneGroups():ConversationDrawerGroup[]{
+    if(!this.ready||!this.ports.paneDate)return [];const context=this.ports.paneDate();
+    const values:ConversationSummaryUi[]=this.searchedConversations().map(c=>({id:c.id,title:c.title,preview:c.preview,updatedAtMillis:c.updatedAt,timeLabel:conversationTimeLabel(c.updatedAt,context),isActiveRun:this.runtime.active(c.id),runStatus:this.runtime.active(c.id)?this.runtime.activity(c.id)?.phase||null:null,isPinned:false}));
+    return groupForDrawer(values,context);
+  }
+  requestPaneMutation(id:string,kind:'rename'|'delete'):void{if(this.busy)return;const c=this.ports.chats.get(id);if(!c)return;this.paneMutation={id,kind,title:c.title,input:c.title,active:this.runtime.active(id)};this.changed();}
+  paneRenameInput(value:string):void{if(this.paneMutation?.kind==='rename')this.paneMutation={...this.paneMutation,input:value};}
+  dismissPaneMutation():void{this.paneMutation=null;this.changed();}
+  async confirmPaneMutation():Promise<void>{
+    const target=this.paneMutation;if(!target)return;
+    await this.action(async()=>{
+      if(!this.ports.chats.get(target.id))throw new Error('会话不存在');
+      if(target.kind==='rename')await this.ports.chats.rename(target.id,this.paneMutation?.input||'');
+      else{
+        this.queueStates.delete(target.id);this.edits.delete(target.id);
+        if(this.runtime.active(target.id)){this.runtime.stop(target.id);await this.runtime.idleConversation(target.id);}
+        await this.ports.chats.remove(target.id);this.runtime.forget(target.id);
+        if(!this.ports.chats.selectedId)await this.ports.chats.create(this.ports.profiles.document.selectedId,'chat');this.inputVersion++;
+      }
+      this.paneMutation=null;
+    });
+  }
+  async exportConversation(id:string):Promise<void>{
+    await this.action(async()=>{
+      const c=this.ports.chats.get(id);if(!c)throw new Error('会话不存在');
+      if(!this.ports.exportMarkdown||!this.ports.exportLabels)throw new Error('导出服务尚未初始化');
+      // Snapshot before the picker; later selection or streaming cannot export a different conversation.
+      const labels=this.ports.exportLabels(),markdown=ConversationMarkdownExporter.export(c.title,this.etaState(id).messages,labels);
+      const name=this.ports.exportName?.(c.title)||ConversationMarkdownExporter.defaultFileName(c.title,'conversation');
+      await this.ports.exportMarkdown(name,markdown);
+    });
   }
   private async action(work: () => Promise<void>): Promise<boolean> {
     if (this.busy) return false;
@@ -181,7 +223,10 @@ export class FoundationController {
   restoreNavigation(encoded: string): void { this.navigation.restore(encoded); this.changed(); }
   async newConversation(): Promise<void> {
     await this.action(async () => {
-      const choice = this.selection(), conversation = await this.ports.chats.create(choice?.profileId || '', 'chat');
+      const choice = this.selection();
+      const existing=this.ports.chats.get(this.ports.chats.selectedId);
+      if(existing?.turns.length===0&&!this.ports.drafts.message(existing.id).text){this.navigation.push('chat');this.changed();return;}
+      const conversation = await this.ports.chats.create(choice?.profileId || '', 'chat');
       if (choice) await this.ports.chats.preferences(conversation, choice.profileId, 'chat', choice.model);
       this.inputVersion++; this.navigation.push('chat');
     });

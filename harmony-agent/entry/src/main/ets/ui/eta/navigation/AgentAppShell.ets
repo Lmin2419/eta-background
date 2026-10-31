@@ -1,12 +1,13 @@
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/app/AgentAppShell.kt, AgentAppRoot.kt @ 3b1794d.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+import { ConversationPanePanel } from '../components/ConversationPanePanel';
 import { FoundationController, ShellState, emptyShellState } from '../../../core/foundation/controller';
 import { AppRouteName, encodeRoute } from '../../../core/eta/routes';
 import { EtaPageDefaults as P, EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
 import { AgentHomeScreen } from '../screens/AgentHomeScreen';
 import { ProviderListPage, ProviderDetailPage, ModelSelectionSheet } from '../../foundation/ProviderPages';
 import { DiagnosticsPage } from '../../foundation/DiagnosticsPage';
-import { LegacyConversationPane, LegacySettingsContent } from '../../foundation/LegacyShellContent';
+import { LegacySettingsContent } from '../../foundation/LegacyShellContent';
 import { ConversationSidePaneScaffold } from '../components/ConversationSidePaneScaffold';
 import { AgentTopBar } from './AgentTopBar';
 
@@ -62,7 +63,7 @@ export struct AgentAppShell {
       }.width('100%').layoutWeight(1)
     }.width('100%').height('100%').backgroundColor($r('app.color.miuix_background'))
   }
-  @Builder private pane() { LegacyConversationPane({ state: this.state, controller: this.controller }) }
+  @Builder private pane() { ConversationPanePanel({ state: this.state, controller: this.controller }) }
   @Builder private destination(name: string) {
     NavDestination() {
       Column() {

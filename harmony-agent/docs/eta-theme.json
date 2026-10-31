@@ -128,6 +128,10 @@
       "sha256": "61fbf66a47c36e4ed4608eb664377286e6fb1cc3fd89c661362e7a814d6689f0"
     },
     {
+      "path": "app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt",
+      "sha256": "6f59325d95598f0ba772c906d63566140e3d298cbfc2f14d1b5b21925f335b32"
+    },
+    {
       "path": "scripts/eta-upstream/miuix-0.9.4/ArrowRight.kt",
       "sha256": "92e10aec73f6f93de2195c45af457c4f4c9684c7d4f994a1aa82e44d86f012dd"
     },
@@ -201,8 +205,8 @@
     }
   ],
   "miuixColorRoles": 53,
-  "lightColorCount": 85,
-  "darkColorCount": 85,
+  "lightColorCount": 86,
+  "darkColorCount": 86,
   "tokens": {
     "EtaPreferenceDefaults": {
       "SidePadding": 16,
@@ -255,6 +259,32 @@
     "EtaContextDefaults": {
       "ErrorThreshold": 0.95,
       "WarningThreshold": 0.8
+    },
+    "EtaFontWeights": {
+      "SemiBold": 600
+    },
+    "ConversationPanelMetrics": {
+      "PaneHorizontalPadding": 16,
+      "TopInset": 6,
+      "AfterActionBar": 8,
+      "BottomInset": 2,
+      "ActionIconSize": 20,
+      "SectionTopPadding": 8,
+      "SectionBottomPadding": 10,
+      "SectionIconSize": 14,
+      "SectionIconGap": 8,
+      "SectionCountGap": 12,
+      "RowMinHeight": 48,
+      "RowGap": 4,
+      "RowCornerRadius": 12,
+      "RowHorizontalPadding": 12,
+      "RowVerticalPadding": 12,
+      "ActiveDotSize": 6,
+      "ActiveDotGap": 10,
+      "EmptyVerticalPadding": 28,
+      "DockTopGap": 2,
+      "DockEntryCornerRadius": 12,
+      "DockEntryIconSize": 20
     },
     "EtaQueueDefaults": {
       "QueueContainerCornerRadius": 16.0,

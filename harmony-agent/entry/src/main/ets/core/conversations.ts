@@ -95,6 +95,8 @@ export class ConversationRepository {
   private state:ConversationDocument={version:1,selectedId:'',conversations:[]};
   private tail:Promise<void>=Promise.resolve();
   private loaded=false;
+  private skipEmpty=false;
+  useEtaEmptyConversationPolicy():void{this.skipEmpty=true;}
   constructor(private storage:ConversationStorage,private id:()=>string,private now:()=>number=Date.now,private changed:()=>void=()=>{},private concurrentLimit=1,private gate?:DataGate) {}
   snapshot():ConversationDocument{return clone(this.state);}
   acceptCommitted(raw:string):void{if(this.state.conversations.some(c=>c.turns.some(t=>t.status==='running')))throw new Error('请先停止任务');this.state=parseConversationDocument(raw);this.loaded=true;this.changed();}
@@ -103,7 +105,7 @@ export class ConversationRepository {
   get(id:string):Conversation|undefined {const c=this.state.conversations.find(c=>c.id===id);return c?clone(c):undefined;}
   list(query=''):ConversationSummary[] {
     const q=query.trim().toLocaleLowerCase();
-    return this.state.conversations.filter(c=>!q || c.title.toLocaleLowerCase().includes(q) || c.turns.some(t=>(t.request+'\n'+t.reply).toLocaleLowerCase().includes(q)))
+    return this.state.conversations.filter(c=>!this.skipEmpty||c.turns.length>0).filter(c=>!q || c.title.toLocaleLowerCase().includes(q) || c.turns.some(t=>(t.request+'\n'+t.reply).toLocaleLowerCase().includes(q)))
       .map(c=>({id:c.id,title:c.title,updatedAt:c.updatedAt,count:c.turns.length,preview:(c.turns[c.turns.length-1]?.request||'还没有消息').slice(0,100)}))
       .sort((a,b)=>b.updatedAt-a.updatedAt);
   }
@@ -112,7 +114,9 @@ export class ConversationRepository {
     const result=this.tail.then(fn);this.tail=result.then(()=>{},()=>{});return result.finally(()=>release?.());
   }
   private async commit(next:ConversationDocument):Promise<void> {
-    const raw=JSON.stringify(next);
+    const durable=this.skipEmpty?{...next,conversations:next.conversations.filter(c=>c.turns.length>0)}:next;
+    if(this.skipEmpty&&!durable.conversations.some(c=>c.id===durable.selectedId))durable.selectedId=durable.conversations[0]?.id||'';
+    const raw=JSON.stringify(durable);
     if (raw.length>CHAT_LIMITS.document) throw new Error('会话存储已满，请导出并删除不需要的会话后重试');
     await this.storage.write(raw);this.state=next;
     try {this.changed();} catch (_) { /* View errors cannot roll back durable state. */ }
@@ -145,7 +149,7 @@ export class ConversationRepository {
   }
   async select(id:string):Promise<void> {return this.queue(async()=>{this.requireLoaded();const next=clone(this.state);this.find(next,id);next.selectedId=id;await this.commit(next);});}
   async rename(id:string,title:string):Promise<void> {
-    return this.queue(async()=>{this.requireLoaded();if(!title.trim()) throw new Error('会话名称不能为空');const next=clone(this.state),c=this.find(next,id);this.idle(c);c.title=title.trim().slice(0,80);await this.commit(next);});
+    return this.queue(async()=>{this.requireLoaded();if(!title.trim()) throw new Error('会话名称不能为空');const next=clone(this.state),c=this.find(next,id);if(!this.skipEmpty)this.idle(c);c.title=title.trim().slice(0,80);await this.commit(next);});
   }
   async remove(id:string):Promise<void> {
     return this.queue(async()=>{this.requireLoaded();const next=clone(this.state);this.idle(this.find(next,id));next.conversations=next.conversations.filter(c=>c.id!==id);if(next.selectedId===id) next.selectedId=next.conversations[0]?.id||'';await this.commit(next);});

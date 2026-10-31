@@ -100,6 +100,7 @@ export class FoundationChatRuntime {
   }
   async admitted(id:string):Promise<void>{const e=this.executions.get(id);if(!e)throw new Error('运行不存在');await e.admitted;}
   projection(id:string):AgentChatMessageUi[]{return this.executions.get(id)?.projection.messages()||[];}
+  async idleConversation(id:string):Promise<void>{await this.executions.get(id)?.done;}
   async idle(): Promise<void> {
     let previous:Promise<void>[]=[];
     while(true){const pending=[...this.executions.values()].map(e=>e.done);if(pending.length===previous.length&&pending.every((p,i)=>p===previous[i]))return;previous=pending;await Promise.all(pending);}

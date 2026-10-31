@@ -61,6 +61,36 @@ export class EtaContextDefaults {
   static readonly WarningThreshold: number = 0.8;
 }
 
+// Ported from Compose FontWeight.SemiBold used by ConversationPanePanel.kt @ 3b1794d (CSS/ArkUI weight 600)
+export class EtaFontWeights {
+  static readonly SemiBold: number = 600;
+}
+
+// Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/ConversationPanePanel.kt @ 3b1794d
+export class ConversationPanelMetrics {
+  static readonly PaneHorizontalPadding: number = 16;
+  static readonly TopInset: number = 6;
+  static readonly AfterActionBar: number = 8;
+  static readonly BottomInset: number = 2;
+  static readonly ActionIconSize: number = 20;
+  static readonly SectionTopPadding: number = 8;
+  static readonly SectionBottomPadding: number = 10;
+  static readonly SectionIconSize: number = 14;
+  static readonly SectionIconGap: number = 8;
+  static readonly SectionCountGap: number = 12;
+  static readonly RowMinHeight: number = 48;
+  static readonly RowGap: number = 4;
+  static readonly RowCornerRadius: number = 12;
+  static readonly RowHorizontalPadding: number = 12;
+  static readonly RowVerticalPadding: number = 12;
+  static readonly ActiveDotSize: number = 6;
+  static readonly ActiveDotGap: number = 10;
+  static readonly EmptyVerticalPadding: number = 28;
+  static readonly DockTopGap: number = 2;
+  static readonly DockEntryCornerRadius: number = 12;
+  static readonly DockEntryIconSize: number = 20;
+}
+
 // Ported from app/src/main/kotlin/io/github/mangi/eta/ui/components/AgentChatQueueStrip.kt; ui/app/AgentRunStore.kt @ 3b1794d
 export class EtaQueueDefaults {
   static readonly QueueContainerCornerRadius: number = 16.0;
