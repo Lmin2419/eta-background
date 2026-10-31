@@ -91,8 +91,11 @@ internal data class TerminalExecutionContext(
             )
             append("；")
         }
+        val sdcardLink = "/" + "sdcard"
         if (linuxBackend == LinuxExecutionBackend.CHROOT) {
-            append("chroot 配置将宿主 \"/storage/emulated/0\"（及符号链接 \"/sdcard\"）与 \"/data/local/tmp\" 默认挂载至 Linux 同路径，实际可见性以本次挂载结果为准。")
+            append("chroot 配置将宿主 \"/storage/emulated/0\"（及符号链接 ")
+            append(JSONObject.quote(sdcardLink))
+            append("）与 \"/data/local/tmp\" 默认挂载至 Linux 同路径，实际可见性以本次挂载结果为准。")
         } else {
             append("PRoot 在已授予所有文件访问权限且源目录可读时，会配置将宿主 \"/storage/emulated/0\" 默认挂载至 Linux 同路径；实际可见性以本次挂载结果为准。")
         }
