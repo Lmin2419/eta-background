@@ -1,6 +1,6 @@
 # 随身助手推进方案（0.9.1 → 0.14）
 
-第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮报告：[2026-10-31 第三轮](reports/2026-10-31-round3.md)。当前 `harmony/e08c-mcp` / 0.9.30 / PR #36；必做队列、记忆及 Skills 安装核心通过四项检查。Skills 页面 #35 草稿阻塞，MCP 从 #34 独立推进，MCP 四项检查通过。正式存储未切换。
+第二轮结果：[报告](reports/2026-10-31-report.md)。第三轮报告：[2026-10-31 第三轮](reports/2026-10-31-round3.md)。当前 `harmony/e08c-mcp` / 0.9.31 / PR #36；必做队列、记忆及 Skills 安装核心通过四项检查。Skills 页面 #35 草稿阻塞，MCP 从 #34 独立推进，MCP 四项检查通过。正式存储未切换。
 
 制定：2026-10-30。基于 `main@aadbf93`。执行规则见 [../AGENTS.md](../AGENTS.md)。
 
@@ -21,6 +21,7 @@
 | E03（0.9.12 / PR #17） | 新壳层完成、四项检查通过 | 合入 #16 追加；Index 已切 Navigation/NavDestination，所有宽度推移；448 测试、ArkTS 0 error、1,852 资源；原测试 2 完整 / 3 平台待测；[交付记录](E03_NAVIGATION_PORT.md) |
 | E04a（0.9.13） | 首页与输入栏完成、四项检查通过 | `harmony/e04a-home-input` 基于 E03；464 测试、12 原测试完整 / 2 平台定位待测、0 ArkTS error、1,855 资源；[交付记录](E04A_HOME_INPUT_PORT.md) |
 | E04b（0.9.14） | 消息与 Markdown 接入、四项检查通过 | `harmony/e04b-chat-rendering` 基于 E04a；473 测试、0 ArkTS error、1,861 资源；复用 L2/L3 原测试，新增 9 集成测试；[交付记录](E04B_CHAT_RENDERING_PORT.md) |
+| E04b 修复（0.9.31） | DevEco 10905201 反馈修复，重新编译待用户验证 | ListItem 底部 1vp 锚点改为合法 Row；SDK 父容器校验 + 7 回归；从 #19 同步下游，[修复记录](DEV_ECO_10905201_FIX.md) |
 | E04c（0.9.15） | 排队与消息操作接入、四项检查通过 | `harmony/e04c-chat-actions` 基于 E04b；491 测试、5 原测试 / 0 跳过、13 集成测试、0 ArkTS error、1,863 资源；[交付记录](E04C_CHAT_ACTIONS_PORT.md) |
 | E07a（0.9.16） | 侧栏/导出完成，存储对照留 E07b | 503 测试，0 ArkTS error，1,864 资源；9 项原 Store 测试的逻辑适配 + 3 新验证；完整 Room 对照未完成，[交付记录](E07A_CONVERSATION_PANE_PORT.md) |
 | E07b（PR #22 原分析） | 用户已确认方案 A；E07b3 待真机检查点 ①–④ | [原分析与决定](E07B_STORAGE_DECISION.md)；实施按下面 E07b1 / E07b2 分开交付 |
