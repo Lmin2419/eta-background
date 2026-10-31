@@ -22,10 +22,10 @@ export struct DiagnosticsPage {
   private lastGestureAt:number=0;
   aboutToAppear():void{this.refreshProbe();}
   private filesDir():string{const context=this.getUIContext().getHostContext();return context!==undefined&&context!==null?(context as common.UIAbilityContext).filesDir:'';}
-  private refreshProbe():void{const dir=this.filesDir();if(dir===''){this.probeNotice='未连接';return;}
+  private refreshProbe():void{const dir=this.filesDir();if(dir===''){this.probe=emptyAccessibilityProbe();this.probeNotice='已刷新';return;}
     this.probe=readAccessibilityProbe(dir);
     if(this.probe.gesture.result==='ok'&&this.probe.gesture.at>this.lastGestureAt){this.lastGestureAt=this.probe.gesture.at;this.probeClicks+=1;}
-    this.probeNotice='';}
+    this.probeNotice='已刷新';}
   private requestInjection():void{const dir=this.filesDir();if(dir===''||!requestAccessibilityGesture(dir)){this.probeNotice='未连接';return;}
     this.probeNotice='已请求注入，等待扩展处理';}
   private probeTime(value:number):string{return value<=0?'-':new Date(value).toISOString().slice(11,19);}
@@ -54,6 +54,7 @@ export struct DiagnosticsPage {
   }.width('100%')}
   @Builder private a11yProbe(){Column({space:S.Dp12}){
     Text('无障碍实验').fontSize(F.Body1).fontWeight(FontWeight.Medium).fontColor($r('app.color.miuix_on_surface')).width('100%')
+    this.probeRow('连接状态',this.probe.connected?'已连接':'未连接')
     this.probeRow('前台包名',this.probe.foregroundBundle!==''?this.probe.foregroundBundle:'-')
     this.probeRow('控件数',String(this.probe.nodeCount))
     this.probeRow('最近事件',this.probeTime(this.probe.lastEventAt))
