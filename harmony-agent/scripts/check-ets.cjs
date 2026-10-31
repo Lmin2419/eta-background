@@ -63,6 +63,17 @@ const loaderMain = require(path.join(loader, 'main.js'));
 config.globalModulePaths = loaderMain.globalModulePaths;
 const checker = require(path.join(loader, 'lib/ets_checker.js'));
 checker.etsStandaloneChecker(entries, logger, config);
+// A bare @Builder passed to @BuilderParam changes receiver at runtime. Type checks
+// accept it, so also enforce explicit owner capture and exercise the real slot expressions.
+const builders = require('./arkui-builder-check.cjs').checkProject(loader, src);
+found.error.push(...builders.errors);
+const builderRegression = require('node:child_process').spawnSync(process.execPath,
+  ['--test', path.join(__dirname, 'tests/arkui-builder-check.test.cjs')],
+  { encoding: 'utf8', env: { ...process.env, OHOS_SDK_ETS: sdk }, timeout: 30000 });
+if (builderRegression.error || builderRegression.status !== 0) {
+  found.error.push('ArkUI builder-context regression failed:\n' + (builderRegression.stdout || '') +
+    (builderRegression.stderr || '') + (builderRegression.error?.message || ''));
+}
 // Native component-parent rules are checked during the full UI transform, not by the
 // standalone type checker. Catch reported 10905201 without pretending to build a HAP.
 const nesting = require('./arkui-parent-check.cjs').checkProject(loader, src);
@@ -87,4 +98,6 @@ if (showWarnings) for (const w of found.warn) console.log('\n' + relative(w));
 console.log('ArkUI parent check: ' + nesting.files + ' source files, ' + nesting.errors.length +
   ' error(s); SDK regression tests: ' + (regression.status === 0 ? '7 passed' : 'FAILED') + '.');
 console.log('\nThis checks types, ArkTS rules and native UI parent constraints. It does not build a HAP; DevEco remains the final compile check.');
+console.log('ArkUI builder owner check: ' + builders.slots + ' slot assignments, ' + builders.errors.length +
+  ' error(s); receiver regression tests: ' + (builderRegression.status === 0 ? 'passed' : 'FAILED') + '.');
 process.exit(errors.length ? 1 : 0);
