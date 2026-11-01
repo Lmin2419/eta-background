@@ -140,12 +140,14 @@ CI 不绿，不能标为可审查。
 | 滑动 | `{"swipe": {"direction": "right"}}` | 方向为 `up`、`down`、`left`、`right`。`"on": {选择器}` 在某个元素上滑；`"distance": 0.6` 是滑动距离占比 |
 | 返回 | `{"back": true}` | 系统返回键 |
 | 点系统对话框 | `{"tapAt": [0.65, 0.54]}` | 屏幕比例坐标。**只用于 `showAlertDialog` 弹出的系统对话框**，它们不在控件树里。先 `screenshot` 看清按钮位置，点完断言效果 |
-| 输入 | `{"type": "hello 123"}` | 只支持 a–z、0–9 和空格 |
+| 输入 | `{"type": "127.0.0.1:5555"}` | 只支持 a–z、0–9、空格、`. , - / ; = : _` 和 `\b`（退格，例如清空搜索框：`"\b\b\b"`），不能输入中文 |
 | 等待 | `{"wait": 2}` | 秒 |
 | 截图 | `{"screenshot": "名字"}` | 同时保存控件树 |
 | 列出元素 | `{"dump": "名字"}` | 见 4.2 |
 
-**选择器**：`text`（全等）、`contains`、`id`、`a11y`、`a11yContains`、`placeholder`、`type`、`enabled`、`attrs`。可以组合，全部满足才算匹配。
+**选择器**：`text`（全等）、`contains`、`id`、`a11y`、`a11yContains`、`placeholder`、`type`、`enabled`、`attrs`、`within`。可以组合，全部满足才算匹配。
+
+同样的文字出现在两处时（例如侧栏的会话名和聊天里的消息），用 `within` 限定范围：`{"text": "hello", "within": {"id": "eta-conversation-list"}}`。没有合适的 id 就给容器加一个 `.id('eta-…')`。
 
 `attrs` 按控件树的原始属性全等比较，例如“回复文字是透明的”：
 

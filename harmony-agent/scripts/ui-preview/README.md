@@ -48,11 +48,11 @@ npm run test:ui -- tests/ui/02-drawer.json            # 单个场景
 | `back` | `{"back": true}`，系统返回键 |
 | `tapAt` | `{"tapAt": [0.65, 0.54]}`，按屏幕比例点击。**只用于系统对话框**（`showAlertDialog`）：它们在单独的子窗口里，控件树看不到。点完要在后面的步骤断言效果（例如消息消失） |
 | `dump` | 保存截图并打印当前所有可见元素（类型、id、文字、无障碍文字、占位文字、是否可用、位置），写场景时用来找选择器 |
-| `type` | 输入文字，**只支持 a–z、0–9 和空格**（预览器的输入法通道无法把文字送进输入框，改用实体按键事件） |
+| `type` | 输入文字，**只支持 a–z、0–9、空格、`. , - / ; = : _` 和 `\b`（退格）**（预览器的输入法通道无法把文字送进输入框，改用实体按键事件；`:`、`_` 用 Shift 组合键） |
 | `wait` | 等待秒数 |
 | `screenshot` | 保存截图和控件树 |
 
-选择器（可以组合，全部满足才算匹配；零尺寸的不可见节点会跳过）：`text`、`contains`、`id`（组件 `.id()`）、`a11y` / `a11yContains`（`accessibilityText`）、`placeholder`、`type`、`enabled`，以及 `attrs`（按控件树原始属性全等比较，例如 `{"type": "Span", "attrs": {"fontColor": "#00000000"}}` 匹配透明文字）。
+选择器（可以组合，全部满足才算匹配；零尺寸的不可见节点会跳过）：`text`、`contains`、`id`（组件 `.id()`）、`a11y` / `a11yContains`（`accessibilityText`）、`placeholder`、`type`、`enabled`，`within`（只在某个元素的范围内找，例如 `{"text": "hello", "within": {"id": "eta-conversation-list"}}`，用来区分同名文字），以及 `attrs`（按控件树原始属性全等比较，例如 `{"type": "Span", "attrs": {"fontColor": "#00000000"}}` 匹配透明文字）。
 
 场景顶层可以写 `"screen": {"color": "dark", "width": 1080, "height": 2340}` 切换深色模式和屏幕尺寸。尚未通过的验收场景放在 `tests/ui/pending/`，不在默认套件里，用 `npm run test:ui -- tests/ui/pending/<文件>` 单独运行。
 
