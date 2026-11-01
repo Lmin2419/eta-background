@@ -26,6 +26,6 @@ export function previewController(): FoundationController {
     };
   };
   const appearance = new AppearanceSettingsRepository(memory(JSON.stringify(defaultAppearance())), { apply: async () => {} }, () => controller?.changed());
-  controller = new FoundationController({ chats, profiles, drafts, transport, appearance, uuid: () => 'r' + ++counter, load: async () => { await profiles.load(); await chats.load(); await drafts.load(); await appearance.load(); } });
+  controller = new FoundationController({ chats, profiles, drafts, transport, appearance, paneDate: () => Date.now(), uuid: () => 'r' + ++counter, load: async () => { await profiles.load(); await chats.load(); await drafts.load(); await appearance.load(); } });
   return controller;
 }
