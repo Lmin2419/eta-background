@@ -3,18 +3,20 @@
 // Compatibility intents for unported 0.9 pages; EtaNavigation owns the only page stack.
 import { EtaNavigation } from './etaNavigation';
 import { AppRoute, AppRouteName, NewProviderType, decodeRoutes, encodeRoutes } from './routes';
-export type Screen = 'chat' | 'providers' | 'provider' | 'settings' | 'diagnostics' | 'appearance' | 'community' | 'communityProvider' | 'memory' | 'mcp' | 'mcpDetail';
+export type Screen = 'chat' | 'providers' | 'provider' | 'settings' | 'diagnostics' | 'appearance' | 'community' | 'communityProvider' | 'memory' | 'mcp' | 'mcpDetail' | 'phoneOps';
 export type Sheet = 'none' | 'models' | 'catalog';
 export class EtaShellNavigation {
   readonly eta = new EtaNavigation();
   sheet: Sheet = 'none';
   // The Harmony diagnostic view is a platform destination, not a fabricated Eta route.
   private diagnostics = false;
+  private phoneOps = false;
   get drawer(): boolean { return this.eta.snapshot().conversationPaneOpen; }
   set drawer(value: boolean) { this.eta.setConversationPaneOpen(value); }
   get routes(): AppRoute[] { return this.eta.snapshot().routes; }
   get screen(): Screen {
     if (this.diagnostics) return 'diagnostics';
+    if (this.phoneOps) return 'phoneOps';
     switch (this.eta.snapshot().current?.name) {
       case AppRouteName.ModelProviders: return 'providers';
       case AppRouteName.ModelProviderNew:
@@ -30,7 +32,7 @@ export class EtaShellNavigation {
     }
   }
   push(screen: Screen): void {
-    this.sheet = 'none'; this.diagnostics = screen === 'diagnostics';
+    this.sheet = 'none'; this.diagnostics = screen === 'diagnostics'; this.phoneOps = screen === 'phoneOps';
     if (screen === 'chat') this.eta.home();
     else if (screen === 'providers') this.eta.push(new AppRoute(AppRouteName.ModelProviders));
     else if (screen === 'settings') this.eta.push(new AppRoute(AppRouteName.Settings));
@@ -39,7 +41,8 @@ export class EtaShellNavigation {
   community(id=''):void{this.sheet='none';this.diagnostics=false;this.eta.push(new AppRoute(id?AppRouteName.CommunityCatalogProvider:AppRouteName.CommunityCatalog,id||null));}
   mcp(id=''):void{this.sheet='none';this.diagnostics=false;this.eta.push(new AppRoute(id?AppRouteName.McpServerDetail:AppRouteName.McpServers,id||null));}
   memory():void{this.sheet='none';this.diagnostics=false;this.eta.push(new AppRoute(AppRouteName.Memory));}
-  appearance():void{this.sheet='none';this.diagnostics=false;this.eta.push(new AppRoute(AppRouteName.AppearanceSettings));}
+  appearance():void{this.sheet='none';this.diagnostics=false;this.phoneOps=false;this.eta.push(new AppRoute(AppRouteName.AppearanceSettings));}
+  phoneOps():void{this.sheet='none';this.diagnostics=false;this.phoneOps=true;}
   provider(id: string): void {
     this.sheet = 'none'; this.diagnostics = false;
     this.eta.push(id ? new AppRoute(AppRouteName.ModelProviderDetail,id) : new AppRoute(AppRouteName.ModelProviderNew,null,NewProviderType.OpenAiCompatible));
@@ -47,6 +50,7 @@ export class EtaShellNavigation {
   back(): boolean {
     if(this.sheet !== 'none') { this.sheet = 'none'; return true; }
     if(this.diagnostics) { this.diagnostics = false; return true; }
+    if(this.phoneOps) { this.phoneOps = false; return true; }
     return this.eta.back();
   }
   providersAfterDelete(): void {

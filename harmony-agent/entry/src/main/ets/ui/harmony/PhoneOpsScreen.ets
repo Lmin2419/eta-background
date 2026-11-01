@@ -1,4 +1,4 @@
-// 随身助手原创代码（D0b3）：设置 → 手机操作。
+// 随身助手原创代码（D0b3）：设置 → 手机操作（鸿蒙版独有页面）。
 import { common } from '@kit.AbilityKit';
 import { parseLayout } from '../../../core/device';
 import { HdcConnectionTransport, nativeHdcAvailable } from '../../../platform/HdcConnectionTransport';
@@ -6,10 +6,10 @@ import { FakePhoneOpsTransport, PhoneOpsController, PhoneOpsTransport } from '..
 import { PhoneOpsSnapshot, nativeMissingSnapshot } from '../../../core/eta/device/phoneOps';
 import { validateHdcTarget } from '../../../core/eta/device/hdcConnection';
 import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
-import { MiuixScaffoldPage } from '../components/MiuixScaffoldPage';
-import { EtaCard } from '../components/EtaCard';
-import { EtaTextButton } from '../components/EtaControls';
-import { EtaPreferenceRow } from '../components/EtaPreferenceRow';
+import { MiuixScaffoldPage } from '../eta/components/MiuixScaffoldPage';
+import { EtaCard } from '../eta/components/EtaCard';
+import { EtaTextButton } from '../eta/components/EtaControls';
+import { EtaPreferenceRow } from '../eta/components/EtaPreferenceRow';
 
 const SCREEN_WIDTH = 1080;
 const SCREEN_HEIGHT = 1920;

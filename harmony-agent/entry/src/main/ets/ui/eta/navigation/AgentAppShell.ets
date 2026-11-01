@@ -14,6 +14,7 @@ import {McpServersScreen} from '../screens/McpServersScreen';
 import {AgentMemoryScreen} from '../screens/AgentMemoryScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { AppearanceSettingsScreen } from '../screens/AppearanceSettingsScreen';
+import { PhoneOpsScreen } from '../../harmony/PhoneOpsScreen';
 import { ConversationSidePaneScaffold } from '../components/ConversationSidePaneScaffold';
 import { AgentTopBar } from './AgentTopBar';
 
@@ -31,7 +32,7 @@ export struct AgentAppShell {
   private sync(): void {
     this.sheetVisible = this.state.sheet === 'catalog';
     const routes = this.state.routes.slice(1);
-    const key = routes.map(encodeRoute).join('\n') + (this.state.screen === 'diagnostics' ? '\nHarmonyDiagnostics' : '');
+    const key = routes.map(encodeRoute).join('\n') + (this.state.screen === 'diagnostics' ? '\nHarmonyDiagnostics' : '') + (this.state.screen === 'phoneOps' ? '\nHarmonyPhoneOps' : '');
     if (key === this.pathKey) return;
     this.pathKey = key;
     this.syncing = true;
@@ -42,6 +43,7 @@ export struct AgentAppShell {
       return retained || new NavPathInfo(route.name, identity, () => { this.nativePop(identity); });
     });
     if (this.state.screen === 'diagnostics') paths.push(new NavPathInfo('HarmonyDiagnostics', '', () => { this.nativePop('HarmonyDiagnostics'); }));
+    if (this.state.screen === 'phoneOps') paths.push(new NavPathInfo('HarmonyPhoneOps', '', () => { this.nativePop('HarmonyPhoneOps'); }));
     this.pathStack.setPathStack(paths);
     this.syncing = false;
   }
@@ -49,7 +51,7 @@ export struct AgentAppShell {
     if (this.syncing) return;
     this.pathKey = '';
     const route = this.state.routes[this.state.routes.length - 1];
-    if (identity === 'HarmonyDiagnostics' ? this.state.screen === 'diagnostics' : route !== undefined && encodeRoute(route) === identity) this.controller?.back();
+    if (identity === 'HarmonyPhoneOps' ? this.state.screen === 'phoneOps' : identity === 'HarmonyDiagnostics' ? this.state.screen === 'diagnostics' : route !== undefined && encodeRoute(route) === identity) this.controller?.back();
   }
   @Builder private error() {
     if (this.state.error) {
@@ -80,6 +82,7 @@ export struct AgentAppShell {
           else if (name === AppRouteName.CommunityCatalog) { CommunityCatalogScreen({state:this.state,controller:this.controller}) }
           else if (name === AppRouteName.CommunityCatalogProvider) { CommunityCatalogProviderScreen({state:this.state,controller:this.controller}) }
           else if (name === 'HarmonyDiagnostics') { DiagnosticsPage({ state: this.state, controller: this.controller }) }
+          else if (name === 'HarmonyPhoneOps') { PhoneOpsScreen() }
           else if (name === AppRouteName.Settings) { SettingsScreen({ state: this.state, controller: this.controller }) }
           else if (name === AppRouteName.McpServers || name === AppRouteName.McpServerDetail) { McpServersScreen({state:this.state,controller:this.controller,isDetail:name===AppRouteName.McpServerDetail}) }
           else if (name === AppRouteName.Memory) { AgentMemoryScreen({state:this.state,controller:this.controller,keyboardVisible:this.keyboardVisible}) }

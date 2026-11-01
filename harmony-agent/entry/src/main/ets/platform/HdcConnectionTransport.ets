@@ -2,7 +2,7 @@
 // 原生库加载失败时绝不抛出：所有调用前检查模块与方法是否存在。
 import { common } from '@kit.AbilityKit';
 import nativeHdc from 'libagent_hdc.so';
-import { HdcConnectOutcome, HdcTransport, HdcTransportEvent } from '../core/eta/device/hdcConnection';
+import { HdcConnectionSnapshot, HdcConnectOutcome, HdcTransport, HdcTransportEvent, validateHdcTarget } from '../core/eta/device/hdcConnection';
 
 interface NativeHdcModule {
   start(path: string): Promise<void>;
@@ -11,6 +11,7 @@ interface NativeHdcModule {
 }
 
 const nativeModule = nativeHdc as NativeHdcModule | undefined;
+let startPromise: Promise<void> | undefined = undefined;
 
 export function nativeHdcAvailable(): boolean {
   return (
@@ -25,64 +26,106 @@ export function nativeHdcAvailable(): boolean {
 const CONNECT_TIMEOUT_MS = 20000;
 const SHELL_TIMEOUT_MS = 15000;
 
+/** 连接结果分类：HDC 的错误是以文本返回的，不抛异常。 */
+export function classifyHdcFailure(output: string): HdcConnectOutcome {
+  const line = (output.split('\n')[0] ?? '').trim().slice(0, 120);
+  const lower = line.toLowerCase();
+  console.error('[phoneOps] hdc status: ' + line);
+  if (lower.includes('unauthorized')) return 'authorizing';
+  if (lower.includes('refused') || lower.includes('connect failed') || lower.includes('not found')) return 'refused';
+  if (lower.includes('timeout')) return 'timeout';
+  return 'unknown';
+}
+
 export class HdcConnectionTransport implements HdcTransport {
   identity = '';
   uitestReady = false;
+  target = '';
   private listener: ((event: HdcTransportEvent) => void) | null = null;
+  private shellSequence = 0;
 
   constructor(private readonly context: common.UIAbilityContext) {}
 
   async connect(target: string, attempt: number): Promise<HdcConnectOutcome> {
     if (!nativeHdcAvailable()) {
-      this.diagnose('native module unavailable');
+      console.error('[phoneOps] native module unavailable');
       return 'protocol';
     }
     try {
-      await nativeModule.start(this.context.filesDir + '/hdc');
-      await nativeModule.command('tconn ' + target, '', CONNECT_TIMEOUT_MS);
-      this.identity = await nativeModule.command('shell id', target, SHELL_TIMEOUT_MS);
-      if (!/uid=\d+/.test(this.identity)) {
-        this.emit({ attempt: attempt, kind: 'authorizing' });
-        return 'authorizing';
+      await this.ensureStarted();
+      const valid = validateHdcTarget(target);
+      if (valid === null) return 'refused';
+      const connected = await nativeModule.command('tconn ' + valid, '', CONNECT_TIMEOUT_MS);
+      const first = (connected.split('\n')[0] ?? '').toLowerCase();
+      if (!first.includes('connected')) {
+        return classifyHdcFailure(connected);
       }
-      const help = await nativeModule.command('shell uitest help', target, SHELL_TIMEOUT_MS);
+      this.target = valid;
+      this.identity = await this.shell('id');
+      if (!/uid=\d+/.test(this.identity)) return classifyHdcFailure(this.identity);
+      const help = await this.shell('uitest help');
       this.uitestReady = help.includes('dumpLayout') && help.includes('uiInput');
+      if (!this.uitestReady) return 'protocol';
       this.emit({ attempt: attempt, kind: 'connected' });
       return 'connected';
     } catch (error) {
-      this.diagnose(error);
+      console.error('[phoneOps] hdc error: ' + String(error));
       return 'unknown';
     }
   }
 
   async close(): Promise<void> {
+    this.target = '';
     if (!nativeHdcAvailable()) return;
     try {
       nativeModule.cancel();
     } catch (error) {
-      this.diagnose(error);
+      console.error('[phoneOps] close error: ' + String(error));
     }
   }
 
   onEvent(listener: (event: HdcTransportEvent) => void): () => void {
     this.listener = listener;
-    return () => {
-      this.listener = null;
-    };
+    return () => { this.listener = null; };
   }
 
-  /** 只读取控件数量：调用 uitest dumpLayout，原文不落到界面。 */
+  snapshotProbe(): HdcConnectionSnapshot {
+    return { state: 'connected', reason: null, attempt: 0, target: this.target };
+  }
+
+  /** 与 HarmonyDevice.shell 相同的写法：sh -c 包一层并带退出码标记。 */
+  private async shell(command: string, timeoutMs: number = SHELL_TIMEOUT_MS): Promise<string> {
+    if (this.target === '') throw new Error('not connected');
+    const marker = '__HARMONY_AGENT_EXIT_' + String(++this.shellSequence) + '__';
+    const wrapped = '(\n' + command + '\n)\nagent_rc=$?\nprintf "\\n' + marker + '%s\\n" "$agent_rc"';
+    const output = await nativeModule.command('shell sh -c ' + quote(wrapped), this.target, timeoutMs);
+    const at = output.lastIndexOf(marker);
+    if (at < 0) return output;
+    const code = Number(output.slice(at + marker.length).trim());
+    if (code !== 0) throw new Error('shell exit ' + String(code));
+    return output.slice(0, at);
+  }
+
+  /** 只读取控件数量：dumpLayout 写到设备文件，再 cat 回来，原文不落到界面。 */
   async dumpLayout(): Promise<string> {
-    if (!nativeHdcAvailable()) throw new Error('native module unavailable');
-    return nativeModule.command('shell uitest dumpLayout', '', SHELL_TIMEOUT_MS);
+    const path = '/data/local/tmp/agent_phone_ops_layout.json';
+    return this.shell('uitest dumpLayout -p ' + path + ' >/dev/null && cat ' + path + '; rm -f ' + path, 20000);
   }
 
-  private emit(event: HdcTransportEvent): void {
-    this.listener?.(event);
+  private ensureStarted(): Promise<void> {
+    if (startPromise === undefined) {
+      startPromise = nativeModule.start(this.context.filesDir + '/hdc').catch((error: Object) => {
+        startPromise = undefined;
+        console.error('[phoneOps] start error: ' + String(error));
+        throw error as Error;
+      });
+    }
+    return startPromise;
   }
 
-  /** 原生库报错原文只写进诊断日志，不显示给用户。 */
-  private diagnose(error: Object): void {
-    console.error('[phoneOps] hdc error: ' + String(error));
-  }
+  private emit(event: HdcTransportEvent): void { this.listener?.(event); }
+}
+
+function quote(value: string): string {
+  return "'" + value.replace(/'/g, "'\\''") + "'";
 }
