@@ -67,6 +67,12 @@ class Preview:
                 await asyncio.sleep(0.1)
         else: raise RuntimeError('previewer image socket did not open')
         self.frame_task = asyncio.create_task(self.frames_loop())
+        # Querying the inspector before the first layout finishes crashes the previewer natively
+        # (Inspector::GetInspector, seen on slower CI runners). Wait for a rendered frame and let it settle.
+        for _ in range(300):
+            if self.frames > 0 or self.crashed or self.proc.poll() is not None: break
+            await asyncio.sleep(0.1)
+        await asyncio.sleep(1.0)
 
     def pump(self):
         size = 0
