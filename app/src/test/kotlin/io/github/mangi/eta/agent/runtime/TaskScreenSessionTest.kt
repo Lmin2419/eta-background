@@ -445,7 +445,19 @@ class TaskScreenSessionTest {
         ))!!
         assertTrue(JSONObject(tapped.content).getBoolean("ok"))
         assertTrue(backend.calls.any { it.name == "screen_tap" })
-        assertFalse(backend.calls.any { it.name == "screen_dump" })
+    }
+
+    @Test
+    fun nodeAndScreenshotGeometryMismatchIsRejected() {
+        val backend = FakeBackend().apply {
+            dumpResult = dumpJson(rotation = 2)
+            shotResult = shotJson(rotation = 0)
+        }
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!
+        assertEquals("BACKGROUND_OBSERVATION_CHANGED", JSONObject(observed.content).getString("code"))
+        assertFalse(backend.calls.any { it.name == "screen_tap" })
     }
 
     @Test
@@ -457,7 +469,7 @@ class TaskScreenSessionTest {
             tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
         )
         val id = observed.getString("observation_id")
-        backend.shotResult = shotJson(rotation = 2)
+        backend.dumpResult = dumpJson(rotation = 2)
         val result = tools.execute(call(
             "tap",
             """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
@@ -475,7 +487,7 @@ class TaskScreenSessionTest {
             tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
         )
         val id = observed.getString("observation_id")
-        backend.shotResult = shotJson(displayId = 8)
+        backend.dumpResult = dumpJson(displayId = 8)
         val result = tools.execute(call(
             "tap",
             """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
@@ -510,10 +522,11 @@ class TaskScreenSessionTest {
         AgentModelClient.ToolCall(id = name, name = name, argumentsJson = arguments)
 
     private companion object {
-        fun dumpJson(text: String = "same"): String = """
+        fun dumpJson(text: String = "same", rotation: Int = 0, displayId: Int = 7): String = """
             {
               "ok": true,
-              "displayId": 7,
+              "displayId": $displayId,
+              "geometry": {"displayId": $displayId, "width": 1080, "height": 2400, "rotation": $rotation, "density": 420},
               "count": 2,
               "nodes": [
                 {"cls": "android.widget.Button", "pkg": "app.one", "text": "$text", "desc": "", "vid": "",

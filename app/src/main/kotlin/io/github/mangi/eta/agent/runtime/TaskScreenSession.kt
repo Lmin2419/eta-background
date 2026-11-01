@@ -107,6 +107,7 @@ internal class TaskScreenSession(
         val generation: Long,
         val nodes: List<Node>,
         val treeRead: Boolean,
+        val screenshotRead: Boolean,
         val fingerprint: String,
         val limit: Int,
         val truncated: Boolean,
@@ -115,11 +116,12 @@ internal class TaskScreenSession(
         val displayWidth: Int?,
         val displayHeight: Int?,
         val rotation: Int?,
-        var screenshotWidth: Int?,
-        var screenshotHeight: Int?,
-        var frameId: String?,
-        var scaleToDisplayX: Double?,
-        var scaleToDisplayY: Double?,
+        val screenshotGeometry: Geometry?,
+        val screenshotWidth: Int?,
+        val screenshotHeight: Int?,
+        val frameId: String?,
+        val scaleToDisplayX: Double?,
+        val scaleToDisplayY: Double?,
     )
 
     private val lock = Any()
@@ -262,88 +264,101 @@ internal class TaskScreenSession(
             AgentScreenObservationContract.MAX_MAX_NODES,
         )
 
-        // Boot.dump() has no geometry. The engine's shot response is the authoritative
-        // display geometry (displayId/width/height/rotation) and the only source of the
-        // screenshot pixel dimensions. It is captured even for tree-only observations.
-        val shot = backendResult("screen_shot", JSONObject().put("scale", 0.5))
-        if (!shot.optBoolean("ok", false)) {
-            invalidateObservation()
-            return error(
-                "BACKGROUND_GEOMETRY_UNAVAILABLE",
-                "无法取得后台屏权威几何（${shot.optString("code", "SCREENSHOT_FAILED")}）；本次没有生成观察，也未猜测尺寸",
-                "observe_screen",
-            )
-        }
-        val shotGeometry = geometryOf(shot) ?: run {
-            invalidateObservation()
-            return error(
-                "BACKGROUND_GEOMETRY_UNAVAILABLE",
-                "后台截图缺少 displayId/width/height/rotation 权威几何；本次没有生成观察",
-                "observe_screen",
-            )
-        }
-        val screenshotWidth = screenshotWidth(shot) ?: run {
-            invalidateObservation()
-            return error("BACKGROUND_GEOMETRY_UNAVAILABLE", "后台截图缺少实际图片宽度；本次没有生成观察", "observe_screen")
-        }
-        val screenshotHeight = screenshotHeight(shot) ?: run {
-            invalidateObservation()
-            return error("BACKGROUND_GEOMETRY_UNAVAILABLE", "后台截图缺少实际图片高度；本次没有生成观察", "observe_screen")
-        }
-
+        // Boot.handle() adds the authoritative geometry to the dump response. A normal
+        // tree observation must use that geometry and must not capture an image.
         var dump: JSONObject? = null
+        var displayGeometry: Geometry? = null
         if (options.includeUiTree) {
             dump = backendResult("screen_dump", JSONObject().put("limit", maxNodes))
             if (!dump.optBoolean("ok", false)) {
                 invalidateObservation()
                 return resultWithLocation(requireNotNull(dump), "observe_screen")
             }
-            val dumpGeometry = geometryOf(dump)
-            if (dumpGeometry != null && !sameGeometry(shotGeometry, dumpGeometry)) {
+            displayGeometry = geometryOf(dump) ?: run {
                 invalidateObservation()
                 return error(
-                    "BACKGROUND_OBSERVATION_CHANGED",
-                    "截图与节点来自不同的后台屏几何（displayId/width/height/rotation 不一致）；请重新 observe_screen",
+                    "BACKGROUND_GEOMETRY_UNAVAILABLE",
+                    "节点响应缺少 displayId/width/height/rotation 权威几何；本次没有生成观察",
                     "observe_screen",
                 )
             }
             val dumpDisplayId = dump.optInt("displayId", -1).takeIf { it >= 0 }
-            if (dumpDisplayId != null && dumpDisplayId != shotGeometry.displayId) {
+            if (dumpDisplayId != null && dumpDisplayId != displayGeometry.displayId) {
                 invalidateObservation()
-                return error(
-                    "BACKGROUND_OBSERVATION_CHANGED",
-                    "截图与节点来自不同的后台屏（displayId 不一致）；请重新 observe_screen",
-                    "observe_screen",
-                )
+                return error("BACKGROUND_OBSERVATION_CHANGED", "节点响应 displayId 与几何不一致；本次没有生成观察", "observe_screen")
             }
         }
 
+        var shot: JSONObject? = null
+        var screenshotGeometry: Geometry? = null
+        var screenshotError: String? = null
+        if (options.includeScreenshot) {
+            shot = backendResult("screen_shot", JSONObject().put("scale", 0.5))
+            if (!shot.optBoolean("ok", false)) {
+                screenshotError = shot.optString("error").ifBlank { shot.optString("code", "SCREENSHOT_FAILED") }
+                shot = null
+                if (!options.includeUiTree) {
+                    invalidateObservation()
+                    return error(
+                        "BACKGROUND_GEOMETRY_UNAVAILABLE",
+                        "仅截图观察无法取得权威几何（$screenshotError）；本次没有生成观察",
+                        "observe_screen",
+                    )
+                }
+            } else {
+                screenshotGeometry = geometryOf(shot) ?: run {
+                    invalidateObservation()
+                    return error("BACKGROUND_GEOMETRY_UNAVAILABLE", "截图缺少权威几何；本次没有生成观察", "observe_screen")
+                }
+                if (displayGeometry != null && !sameGeometry(displayGeometry, screenshotGeometry)) {
+                    invalidateObservation()
+                    return error(
+                        "BACKGROUND_OBSERVATION_CHANGED",
+                        "节点与截图来自不同的后台屏几何（displayId/width/height/rotation 不一致）；请重新 observe_screen",
+                        "observe_screen",
+                    )
+                }
+            }
+        }
+
+        val geometry = displayGeometry ?: screenshotGeometry ?: run {
+            invalidateObservation()
+            return error("BACKGROUND_GEOMETRY_UNAVAILABLE", "观察必须包含节点树或截图；本次没有生成观察", "observe_screen")
+        }
         val nodes = dump?.let(::parseNodes).orEmpty()
-        val packageName = packageOf(dump ?: shot)
-        val frameId = shot.optString("frameId").orEmpty().ifBlank { null }
-        val scaleToDisplayX = shot.optDouble("scaleToDisplayX")
-            .takeIf { it.isFinite() && it > 0 }
-            ?: (shotGeometry.width.toDouble() / screenshotWidth)
-        val scaleToDisplayY = shot.optDouble("scaleToDisplayY")
-            .takeIf { it.isFinite() && it > 0 }
-            ?: (shotGeometry.height.toDouble() / screenshotHeight)
-        val fingerprint = fingerprint(nodes, shotGeometry, packageName)
+        val packageName = packageOf(dump ?: JSONObject())
+        val screenshotWidth = shot?.let(::screenshotWidth)
+        val screenshotHeight = shot?.let(::screenshotHeight)
+        if (shot != null && (screenshotWidth == null || screenshotHeight == null)) {
+            invalidateObservation()
+            return error("BACKGROUND_GEOMETRY_UNAVAILABLE", "截图缺少实际图片宽高；本次没有生成观察", "observe_screen")
+        }
+        val frameId = shot?.optString("frameId").orEmpty().ifBlank { null }
+        val scaleToDisplayX = shot?.optDouble("scaleToDisplayX")
+            ?.takeIf { it.isFinite() && it > 0 }
+            ?: screenshotWidth?.let { geometry.width.toDouble() / it }
+        val scaleToDisplayY = shot?.optDouble("scaleToDisplayY")
+            ?.takeIf { it.isFinite() && it > 0 }
+            ?: screenshotHeight?.let { geometry.height.toDouble() / it }
+        val fingerprint = fingerprint(nodes, geometry, packageName)
         val id = "bg-$runId-${observationSequence.incrementAndGet()}"
         val snapshot = Observation(
             id = id,
             generation = controller.resumeGeneration,
             nodes = nodes,
             treeRead = options.includeUiTree,
+            screenshotRead = options.includeScreenshot && shot != null,
             fingerprint = fingerprint,
             limit = maxNodes,
             truncated = dump?.optBoolean("truncated", false) == true ||
                 dump?.optBoolean("scanLimited", false) == true ||
                 nodes.size >= maxNodes,
             packageName = packageName,
-            displayId = shotGeometry.displayId,
-            displayWidth = shotGeometry.width,
-            displayHeight = shotGeometry.height,
-            rotation = shotGeometry.rotation,
+            displayId = geometry.displayId,
+            displayWidth = geometry.width,
+            displayHeight = geometry.height,
+            rotation = geometry.rotation,
+            screenshotGeometry = screenshotGeometry,
             screenshotWidth = screenshotWidth,
             screenshotHeight = screenshotHeight,
             frameId = frameId,
@@ -353,8 +368,7 @@ internal class TaskScreenSession(
         synchronized(lock) { observation = snapshot }
 
         var screenshotAttachment: AgentModelClient.ToolResult? = null
-        var screenshotError: String? = null
-        if (options.includeScreenshot) {
+        if (shot != null && options.includeScreenshot) {
             shot.optString("path").takeIf { it.isNotBlank() }?.let { path ->
                 screenshotAttachment = runCatching { readScreenshot(path) }.getOrElse { throwable ->
                     screenshotError = throwable.javaClass.simpleName
@@ -368,9 +382,9 @@ internal class TaskScreenSession(
             .put("tool", "observe_screen")
             .put("execution_location", TaskExecutionLocation.BACKGROUND.wireValue)
             .put("screen", JSONObject()
-                .put("width", shotGeometry.width)
-                .put("height", shotGeometry.height)
-                .put("rotation", shotGeometry.rotation))
+                .put("width", geometry.width)
+                .put("height", geometry.height)
+                .put("rotation", geometry.rotation))
             .put("display_id", snapshot.displayId ?: JSONObject.NULL)
             .put("focus", JSONObject().put("package", packageName))
             .put("observation_id", id)
@@ -720,57 +734,32 @@ internal class TaskScreenSession(
     }
 
     private fun validateLiveSnapshot(snapshot: Observation, toolName: String): Boolean {
-        // A tree-only observation must still validate its geometry. A screenshot-only
-        // observation must not be treated as an empty tree.
-        val current = if (snapshot.treeRead) {
-            backendResult("screen_dump", JSONObject().put("limit", snapshot.limit)).also { dump ->
-                if (!dump.optBoolean("ok", false)) {
-                    invalidateObservation()
-                    return false
-                }
-            }
-        } else {
-            null
-        }
-        val shot = backendResult("screen_shot", JSONObject().put("scale", 0.5))
-        if (!shot.optBoolean("ok", false)) {
+        // Boot.handle adds geometry to the dump response. Use it as the node-side
+        // authority; never capture/replace a published screenshot frame during validation.
+        val current = backendResult("screen_dump", JSONObject().put("limit", snapshot.limit))
+        if (!current.optBoolean("ok", false)) {
             invalidateObservation()
             return false
         }
-        val geometry = geometryOf(shot) ?: run {
+        val currentGeometry = geometryOf(current) ?: run {
             invalidateObservation()
             return false
         }
         val saved = Geometry(snapshot.displayId, snapshot.displayWidth ?: 0, snapshot.displayHeight ?: 0, snapshot.rotation ?: -1)
-        if (saved.width <= 0 || saved.height <= 0 || saved.rotation !in 0..3 || !sameGeometry(saved, geometry)) {
+        if (saved.width <= 0 || saved.height <= 0 || saved.rotation !in 0..3 || !sameGeometry(saved, currentGeometry)) {
             invalidateObservation()
             return false
         }
-        if (current != null) {
-            val dumpDisplayId = current.optInt("displayId", -1)
-            if (dumpDisplayId >= 0 && snapshot.displayId != null && dumpDisplayId != snapshot.displayId) {
-                invalidateObservation()
-                return false
-            }
-            val nodes = parseNodes(current)
-            if (fingerprint(nodes, geometry, packageOf(current)) != snapshot.fingerprint) {
-                invalidateObservation()
-                return false
-            }
+        if (snapshot.screenshotGeometry != null && !sameGeometry(snapshot.screenshotGeometry, currentGeometry)) {
+            invalidateObservation()
+            return false
         }
-        val nextFrame = shot.optString("frameId").orEmpty().ifBlank { snapshot.frameId }
-        val nextWidth = screenshotWidth(shot) ?: snapshot.screenshotWidth
-        val nextHeight = screenshotHeight(shot) ?: snapshot.screenshotHeight
-        synchronized(lock) {
-            // Only an unchanged authoritative geometry may refresh the frame. The old
-            // observation is never re-qualified from a refreshed engine geometry cache.
-            snapshot.frameId = nextFrame
-            snapshot.screenshotWidth = nextWidth
-            snapshot.screenshotHeight = nextHeight
-            snapshot.scaleToDisplayX = shot.optDouble("scaleToDisplayX")
-                .takeIf { it.isFinite() && it > 0 } ?: snapshot.scaleToDisplayX
-            snapshot.scaleToDisplayY = shot.optDouble("scaleToDisplayY")
-                .takeIf { it.isFinite() && it > 0 } ?: snapshot.scaleToDisplayY
+        if (snapshot.treeRead) {
+            val nodes = parseNodes(current)
+            if (fingerprint(nodes, currentGeometry, packageOf(current)) != snapshot.fingerprint) {
+                invalidateObservation()
+                return false
+            }
         }
         return true
     }
@@ -830,11 +819,9 @@ internal class TaskScreenSession(
         }
         if (space == "screen" || space == "display") {
             val width = snapshot.displayWidth
-                ?: snapshot.nodes.mapNotNull { it.bounds?.right }.maxOrNull()
-                ?: throw IllegalArgumentException("本次后台观察没有屏幕尺寸，请先重新观察")
+                ?: throw IllegalArgumentException("本次后台观察没有显示宽度，不能使用 display；请重新观察")
             val height = snapshot.displayHeight
-                ?: snapshot.nodes.mapNotNull { it.bounds?.bottom }.maxOrNull()
-                ?: throw IllegalArgumentException("本次后台观察没有屏幕尺寸，请先重新观察")
+                ?: throw IllegalArgumentException("本次后台观察没有显示高度，不能使用 display；请重新观察")
             require(x in 0 until width && y in 0 until height) {
                 "display 坐标超出范围：($x,$y) not in ${width}x$height"
             }
@@ -854,8 +841,10 @@ internal class TaskScreenSession(
         require(x in 0 until width && y in 0 until height) {
             "截图坐标超出范围：($x,$y) not in ${width}x$height"
         }
-        val scaleX = snapshot.scaleToDisplayX ?: (snapshot.displayWidth?.toDouble()?.div(width) ?: 1.0)
-        val scaleY = snapshot.scaleToDisplayY ?: (snapshot.displayHeight?.toDouble()?.div(height) ?: 1.0)
+        val scaleX = snapshot.scaleToDisplayX
+            ?: throw IllegalArgumentException("本次观察没有截图横向缩放比例，不能使用 screenshot 坐标")
+        val scaleY = snapshot.scaleToDisplayY
+            ?: throw IllegalArgumentException("本次观察没有截图纵向缩放比例，不能使用 screenshot 坐标")
         return Pair((x * scaleX).roundToInt(), (y * scaleY).roundToInt())
     }
 
