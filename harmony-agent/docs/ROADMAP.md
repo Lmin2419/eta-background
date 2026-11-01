@@ -238,6 +238,25 @@
 - 请求头编辑：连续输入一段英文，输入框内容完整，焦点没丢；
 - 已有场景全部通过。
 
+#### R4-5 `@Builder` 按位置参数审计（0.9.39）
+
+**背景**：
+- `@Builder` 用按位置参数调用时，参数值只取第一次的，状态变了界面不变；
+- 规则见 AGENTS.md。0.9.37 的“手机操作”页状态行、D0a 的诊断探针行都是这个问题，Claude 已修。
+
+**要做的**：
+1. 列出所有带按位置参数的 `@Builder`：`grep -rn "@Builder" entry/src/main/ets/ui`。
+2. 逐个检查调用处：
+   - 只传固定文案、图标、常量的，不改；
+   - 任何参数取自状态（`this.state…`、`@State`、`@Prop`、控制器快照），就改成一个对象字面量参数，或者改成带 `@Prop` 的子组件。
+3. 已知要看的位置：
+   - `SettingsScreen` 的 `row`、`pendingSwitch`：摘要、开关状态是否取自状态；
+   - `McpDialogs` 的 `field`：`value`；
+   - `AgentMemoryScreen` 的 `modeButton`：选中态。
+4. 每改一处，写一个场景：改变状态 → 断言界面上的文字或选中态跟着变。例如在模型提供商里切换模型后，设置页“模型提供商”一行的摘要变成新模型。
+
+**验收**：`npm run verify` 全过；PR 中列出逐个检查的清单（位置 → 改或不改 → 理由）。
+
 #### R5-4 `Rect` 去重（D1a、D1b 都合并之后）
 
 `core/eta/device/observation.ts` 删除自己的 `Rect`，改为从 `ScrollGestureContract` 导入。测试数量不变。
