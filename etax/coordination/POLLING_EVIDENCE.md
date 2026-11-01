@@ -8,6 +8,8 @@
 - 频率：`every_seconds=3600`；状态 `active`
 - 下一次（记录时）：`2026-11-01T14:02:03.314Z`
 
+> 时点说明：C002 revision 2 的 `revised_at` 是 `2026-11-01T13:21:50Z`，晚于 13:02 的本次自然触发；所以 13:02 的 Session 不可能读取 revision 2，只能看到当时的 C002 早期文件。C002 revision 2 由 dsh 当前手动会话在 13:26Z 执行；不能把 13:02 运行说成已执行 revision 2。
+
 ## 1. 21:02 自然触发
 
 `schedule/catalog` 的 `lastDelivery`：
