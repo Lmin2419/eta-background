@@ -33,7 +33,8 @@ class TaskScreenSessionLeaseTest {
             calls += name
             return when (name) {
                 "screen_open" -> """{"ok":true,"mode":"hidden","displayId":1,"display":1,"package":"$app"}"""
-                "screen_dump" -> """{"ok":true,"package":"$app","displayId":1,"geometry":{"width":1080,"height":2400},"nodes":[{"id":"btn","cls":"android.widget.Button","text":"ok","bounds":[0,0,100,100]}]}"""
+                "screen_dump" -> """{"ok":true,"displayId":1,"nodes":[{"cls":"android.widget.Button","pkg":"$app","text":"ok","vid":"","edit":false,"click":true,"scrollable":false,"actions":[16],"enabled":true,"bounds":[0,0,100,100]}]}"""
+                "screen_shot" -> """{"ok":true,"path":"/tmp/lease-shot.png","frameId":"lease-frame","displayId":1,"width":540,"height":1200,"dims":"540x1200","geometry":{"width":1080,"height":2400,"rotation":0,"displayId":1,"coordinateSpace":"display"},"scaleToDisplayX":2.0,"scaleToDisplayY":2.0}"""
                 "screen_tap" -> {
                     tapEntered?.countDown()
                     tapRelease?.await(2, TimeUnit.SECONDS)

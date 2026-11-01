@@ -56,6 +56,7 @@ internal class TaskScreenSession(
         val enabled: Boolean,
         val checked: Boolean?,
         val selected: Boolean,
+        val actions: List<Int> = emptyList(),
     ) {
         fun canonical(): String = buildString {
             append(index).append('|')
@@ -90,13 +91,22 @@ internal class TaskScreenSession(
             .put("password", password)
             .put("enabled", enabled)
             .put("selected", selected)
+            .put("actions", JSONArray(actions))
             .apply { checked?.let { put("checked", it) } }
     }
+
+    private data class Geometry(
+        val displayId: Int?,
+        val width: Int,
+        val height: Int,
+        val rotation: Int,
+    )
 
     private data class Observation(
         val id: String,
         val generation: Long,
         val nodes: List<Node>,
+        val treeRead: Boolean,
         val fingerprint: String,
         val limit: Int,
         val truncated: Boolean,
@@ -104,11 +114,12 @@ internal class TaskScreenSession(
         val displayId: Int?,
         val displayWidth: Int?,
         val displayHeight: Int?,
-        val screenshotWidth: Int?,
-        val screenshotHeight: Int?,
-        val frameId: String?,
-        val scaleToDisplayX: Double?,
-        val scaleToDisplayY: Double?,
+        val rotation: Int?,
+        var screenshotWidth: Int?,
+        var screenshotHeight: Int?,
+        var frameId: String?,
+        var scaleToDisplayX: Double?,
+        var scaleToDisplayY: Double?,
     )
 
     private val lock = Any()
@@ -250,83 +261,121 @@ internal class TaskScreenSession(
             AgentScreenObservationContract.MIN_MAX_NODES,
             AgentScreenObservationContract.MAX_MAX_NODES,
         )
+
+        // Boot.dump() has no geometry. The engine's shot response is the authoritative
+        // display geometry (displayId/width/height/rotation) and the only source of the
+        // screenshot pixel dimensions. It is captured even for tree-only observations.
+        val shot = backendResult("screen_shot", JSONObject().put("scale", 0.5))
+        if (!shot.optBoolean("ok", false)) {
+            invalidateObservation()
+            return error(
+                "BACKGROUND_GEOMETRY_UNAVAILABLE",
+                "无法取得后台屏权威几何（${shot.optString("code", "SCREENSHOT_FAILED")}）；本次没有生成观察，也未猜测尺寸",
+                "observe_screen",
+            )
+        }
+        val shotGeometry = geometryOf(shot) ?: run {
+            invalidateObservation()
+            return error(
+                "BACKGROUND_GEOMETRY_UNAVAILABLE",
+                "后台截图缺少 displayId/width/height/rotation 权威几何；本次没有生成观察",
+                "observe_screen",
+            )
+        }
+        val screenshotWidth = screenshotWidth(shot) ?: run {
+            invalidateObservation()
+            return error("BACKGROUND_GEOMETRY_UNAVAILABLE", "后台截图缺少实际图片宽度；本次没有生成观察", "observe_screen")
+        }
+        val screenshotHeight = screenshotHeight(shot) ?: run {
+            invalidateObservation()
+            return error("BACKGROUND_GEOMETRY_UNAVAILABLE", "后台截图缺少实际图片高度；本次没有生成观察", "observe_screen")
+        }
+
         var dump: JSONObject? = null
         if (options.includeUiTree) {
             dump = backendResult("screen_dump", JSONObject().put("limit", maxNodes))
             if (!dump.optBoolean("ok", false)) {
                 invalidateObservation()
-                return resultWithLocation(dump, "observe_screen")
+                return resultWithLocation(requireNotNull(dump), "observe_screen")
+            }
+            val dumpGeometry = geometryOf(dump)
+            if (dumpGeometry != null && !sameGeometry(shotGeometry, dumpGeometry)) {
+                invalidateObservation()
+                return error(
+                    "BACKGROUND_OBSERVATION_CHANGED",
+                    "截图与节点来自不同的后台屏几何（displayId/width/height/rotation 不一致）；请重新 observe_screen",
+                    "observe_screen",
+                )
+            }
+            val dumpDisplayId = dump.optInt("displayId", -1).takeIf { it >= 0 }
+            if (dumpDisplayId != null && dumpDisplayId != shotGeometry.displayId) {
+                invalidateObservation()
+                return error(
+                    "BACKGROUND_OBSERVATION_CHANGED",
+                    "截图与节点来自不同的后台屏（displayId 不一致）；请重新 observe_screen",
+                    "observe_screen",
+                )
             }
         }
-        var shot: JSONObject? = null
-        var screenshotAttachment: AgentModelClient.ToolResult? = null
-        var screenshotError: String? = null
-        if (options.includeScreenshot) {
-            shot = backendResult("screen_shot", JSONObject().put("scale", 0.5))
-            if (!shot.optBoolean("ok", false)) {
-                screenshotError = shot.optString("error").ifBlank { shot.optString("code", "SCREENSHOT_FAILED") }
-                shot = null
-            } else {
-                shot.optString("path").takeIf { it.isNotBlank() }?.let { path ->
-                    screenshotAttachment = runCatching { readScreenshot(path) }.getOrElse { throwable ->
-                        screenshotError = throwable.javaClass.simpleName
-                        null
-                    }
-                }
-            }
-        }
+
         val nodes = dump?.let(::parseNodes).orEmpty()
-        val dumpGeometry = dump?.let(::geometryOf)
-        val shotGeometry = shot?.let(::geometryOf)
-        if (dumpGeometry != null && shotGeometry != null && dumpGeometry != shotGeometry) {
-            invalidateObservation()
-            return error(
-                "BACKGROUND_OBSERVATION_CHANGED",
-                "截图与节点来自不同的后台屏几何（可能刚旋转）；请重新 observe_screen",
-                "observe_screen",
-            )
-        }
-        val display = dumpGeometry ?: shotGeometry ?: displayGeometry(dump, shot, nodes)
-        val packageName = dump?.optString("package").orEmpty()
-            .ifBlank { nodes.firstOrNull()?.packageName.orEmpty() }
-        val screenshotWidth = shot?.let { geometryInt(it, "width") ?: dims(it)?.first }
-        val screenshotHeight = shot?.let { geometryInt(it, "height") ?: dims(it)?.second }
-        val frameId = shot?.optString("frameId").orEmpty().ifBlank { null }
-        val fingerprint = fingerprint(nodes, display, packageName)
+        val packageName = packageOf(dump ?: shot)
+        val frameId = shot.optString("frameId").orEmpty().ifBlank { null }
+        val scaleToDisplayX = shot.optDouble("scaleToDisplayX")
+            .takeIf { it.isFinite() && it > 0 }
+            ?: (shotGeometry.width.toDouble() / screenshotWidth)
+        val scaleToDisplayY = shot.optDouble("scaleToDisplayY")
+            .takeIf { it.isFinite() && it > 0 }
+            ?: (shotGeometry.height.toDouble() / screenshotHeight)
+        val fingerprint = fingerprint(nodes, shotGeometry, packageName)
         val id = "bg-$runId-${observationSequence.incrementAndGet()}"
         val snapshot = Observation(
             id = id,
             generation = controller.resumeGeneration,
             nodes = nodes,
+            treeRead = options.includeUiTree,
             fingerprint = fingerprint,
             limit = maxNodes,
             truncated = dump?.optBoolean("truncated", false) == true ||
                 dump?.optBoolean("scanLimited", false) == true ||
                 nodes.size >= maxNodes,
             packageName = packageName,
-            displayId = (shot?.optInt("displayId", -1) ?: dump?.optInt("displayId", -1))
-                ?.takeIf { it >= 0 },
-            displayWidth = display?.first,
-            displayHeight = display?.second,
+            displayId = shotGeometry.displayId,
+            displayWidth = shotGeometry.width,
+            displayHeight = shotGeometry.height,
+            rotation = shotGeometry.rotation,
             screenshotWidth = screenshotWidth,
             screenshotHeight = screenshotHeight,
             frameId = frameId,
-            scaleToDisplayX = shot?.optDouble("scaleToDisplayX")?.takeIf { it.isFinite() && it > 0 },
-            scaleToDisplayY = shot?.optDouble("scaleToDisplayY")?.takeIf { it.isFinite() && it > 0 },
+            scaleToDisplayX = scaleToDisplayX,
+            scaleToDisplayY = scaleToDisplayY,
         )
         synchronized(lock) { observation = snapshot }
+
+        var screenshotAttachment: AgentModelClient.ToolResult? = null
+        var screenshotError: String? = null
+        if (options.includeScreenshot) {
+            shot.optString("path").takeIf { it.isNotBlank() }?.let { path ->
+                screenshotAttachment = runCatching { readScreenshot(path) }.getOrElse { throwable ->
+                    screenshotError = throwable.javaClass.simpleName
+                    null
+                }
+            }
+        }
 
         val response = JSONObject()
             .put("ok", true)
             .put("tool", "observe_screen")
             .put("execution_location", TaskExecutionLocation.BACKGROUND.wireValue)
             .put("screen", JSONObject()
-                .put("width", display?.first ?: 0)
-                .put("height", display?.second ?: 0))
+                .put("width", shotGeometry.width)
+                .put("height", shotGeometry.height)
+                .put("rotation", shotGeometry.rotation))
             .put("display_id", snapshot.displayId ?: JSONObject.NULL)
             .put("focus", JSONObject().put("package", packageName))
             .put("observation_id", id)
             .put("observation_source", "background")
+            .put("ui_tree_read", snapshot.treeRead)
             .put("node_limit", maxNodes)
             .put("ui_tree_truncated", snapshot.truncated)
             .put("ui_nodes", JSONArray().also { array -> nodes.forEach { array.put(it.toJson()) } })
@@ -671,16 +720,57 @@ internal class TaskScreenSession(
     }
 
     private fun validateLiveSnapshot(snapshot: Observation, toolName: String): Boolean {
-        val current = backendResult("screen_dump", JSONObject().put("limit", snapshot.limit))
-        if (!current.optBoolean("ok", false)) {
+        // A tree-only observation must still validate its geometry. A screenshot-only
+        // observation must not be treated as an empty tree.
+        val current = if (snapshot.treeRead) {
+            backendResult("screen_dump", JSONObject().put("limit", snapshot.limit)).also { dump ->
+                if (!dump.optBoolean("ok", false)) {
+                    invalidateObservation()
+                    return false
+                }
+            }
+        } else {
+            null
+        }
+        val shot = backendResult("screen_shot", JSONObject().put("scale", 0.5))
+        if (!shot.optBoolean("ok", false)) {
             invalidateObservation()
             return false
         }
-        val nodes = parseNodes(current)
-        val geometry = displayGeometry(current, null, nodes)
-        if (fingerprint(nodes, geometry, current.optString("package")) != snapshot.fingerprint) {
+        val geometry = geometryOf(shot) ?: run {
             invalidateObservation()
             return false
+        }
+        val saved = Geometry(snapshot.displayId, snapshot.displayWidth ?: 0, snapshot.displayHeight ?: 0, snapshot.rotation ?: -1)
+        if (saved.width <= 0 || saved.height <= 0 || saved.rotation !in 0..3 || !sameGeometry(saved, geometry)) {
+            invalidateObservation()
+            return false
+        }
+        if (current != null) {
+            val dumpDisplayId = current.optInt("displayId", -1)
+            if (dumpDisplayId >= 0 && snapshot.displayId != null && dumpDisplayId != snapshot.displayId) {
+                invalidateObservation()
+                return false
+            }
+            val nodes = parseNodes(current)
+            if (fingerprint(nodes, geometry, packageOf(current)) != snapshot.fingerprint) {
+                invalidateObservation()
+                return false
+            }
+        }
+        val nextFrame = shot.optString("frameId").orEmpty().ifBlank { snapshot.frameId }
+        val nextWidth = screenshotWidth(shot) ?: snapshot.screenshotWidth
+        val nextHeight = screenshotHeight(shot) ?: snapshot.screenshotHeight
+        synchronized(lock) {
+            // Only an unchanged authoritative geometry may refresh the frame. The old
+            // observation is never re-qualified from a refreshed engine geometry cache.
+            snapshot.frameId = nextFrame
+            snapshot.screenshotWidth = nextWidth
+            snapshot.screenshotHeight = nextHeight
+            snapshot.scaleToDisplayX = shot.optDouble("scaleToDisplayX")
+                .takeIf { it.isFinite() && it > 0 } ?: snapshot.scaleToDisplayX
+            snapshot.scaleToDisplayY = shot.optDouble("scaleToDisplayY")
+                .takeIf { it.isFinite() && it > 0 } ?: snapshot.scaleToDisplayY
         }
         return true
     }
@@ -694,7 +784,7 @@ internal class TaskScreenSession(
         val result = backendResult(backendName, backendArgs)
         val code = result.optString("code")
         val ok = result.optBoolean("ok", false)
-        if (ok || code in setOf("TIMEOUT", "ACTION_OUTCOME_UNKNOWN", "UNKNOWN", "APP_TAKEN_OVER") ||
+        if (ok || result.optBoolean("operationMayHaveRun", false) || code in setOf("TIMEOUT", "ACTION_OUTCOME_UNKNOWN", "UNKNOWN", "APP_TAKEN_OVER") ||
             code in LOST_SESSION_CODES) {
             invalidateObservation()
         }
@@ -803,7 +893,9 @@ internal class TaskScreenSession(
         .put("recommended_coordinate_space", "display")
         .put("display", JSONObject()
             .put("width", snapshot.displayWidth ?: 0)
-            .put("height", snapshot.displayHeight ?: 0))
+            .put("height", snapshot.displayHeight ?: 0)
+            .put("rotation", snapshot.rotation ?: JSONObject.NULL)
+            .put("display_id", snapshot.displayId ?: JSONObject.NULL))
         .apply {
             if (snapshot.screenshotWidth != null && snapshot.screenshotHeight != null) {
                 put("screenshot", JSONObject()
@@ -814,32 +906,27 @@ internal class TaskScreenSession(
         }
         .put("note", "display 使用后台屏像素；screenshot 必须携带本次观察返回的 frame_id；normalized 仅在知道屏幕尺寸时可用")
 
-    private fun displayGeometry(
-        dump: JSONObject?,
-        shot: JSONObject?,
-        nodes: List<Node>,
-    ): Pair<Int, Int>? {
-        val width = dump?.let { geometryInt(it, "width") }
-            ?: shot?.let { geometryInt(it, "width") }
-            ?: dump?.optInt("displayWidth", 0)?.takeIf { it > 0 }
-            ?: nodes.mapNotNull { it.bounds?.right }.maxOrNull()
-        val height = dump?.let { geometryInt(it, "height") }
-            ?: shot?.let { geometryInt(it, "height") }
-            ?: dump?.optInt("displayHeight", 0)?.takeIf { it > 0 }
-            ?: nodes.mapNotNull { it.bounds?.bottom }.maxOrNull()
-        return if (width != null && height != null && width > 0 && height > 0) width to height else null
+    private fun geometryOf(json: JSONObject): Geometry? {
+        val geometry = json.optJSONObject("geometry")
+        val width = geometry?.optInt("width", 0)?.takeIf { it > 0 }
+            ?: json.optInt("displayWidth", 0).takeIf { it > 0 }
+            ?: return null
+        val height = geometry?.optInt("height", 0)?.takeIf { it > 0 }
+            ?: json.optInt("displayHeight", 0).takeIf { it > 0 }
+            ?: return null
+        val rotation = geometry?.optInt("rotation", -1)?.takeIf { it in 0..3 }
+            ?: json.optInt("rotation", -1).takeIf { it in 0..3 }
+            ?: return null
+        val displayId = geometry?.optInt("displayId", -1)?.takeIf { it >= 0 }
+            ?: json.optInt("displayId", -1).takeIf { it >= 0 }
+        return Geometry(displayId, width, height, rotation)
     }
 
-    private fun geometryOf(json: JSONObject): Pair<Int, Int>? {
-        val width = geometryInt(json, "width") ?: return null
-        val height = geometryInt(json, "height") ?: return null
-        return width to height
-    }
-
-    private fun geometryInt(json: JSONObject, key: String): Int? {
-        val geometry = json.optJSONObject("geometry") ?: return null
-        return geometry.optInt(key, 0).takeIf { it > 0 }
-    }
+    private fun sameGeometry(first: Geometry, second: Geometry): Boolean =
+        first.width == second.width &&
+            first.height == second.height &&
+            first.rotation == second.rotation &&
+            first.displayId == second.displayId
 
     private fun dims(json: JSONObject): Pair<Int, Int>? {
         val dims = json.optString("dims").trim()
@@ -849,9 +936,16 @@ internal class TaskScreenSession(
         }
     }
 
-    private fun screenshotWidth(json: JSONObject): Int? = geometryInt(json, "width") ?: dims(json)?.first
+    private fun screenshotWidth(json: JSONObject): Int? =
+        json.optInt("width", 0).takeIf { it > 0 } ?: dims(json)?.first
 
-    private fun screenshotHeight(json: JSONObject): Int? = geometryInt(json, "height") ?: dims(json)?.second
+    private fun screenshotHeight(json: JSONObject): Int? =
+        json.optInt("height", 0).takeIf { it > 0 } ?: dims(json)?.second
+
+    private fun packageOf(json: JSONObject): String =
+        json.optString("package").ifBlank {
+            parseNodes(json).firstOrNull()?.packageName.orEmpty()
+        }
 
     private fun parseNodes(json: JSONObject): List<Node> {
         val array = json.optJSONArray("nodes") ?: json.optJSONArray("ui_nodes") ?: return emptyList()
@@ -859,23 +953,35 @@ internal class TaskScreenSession(
         for (index in 0 until array.length()) {
             val item = array.optJSONObject(index) ?: continue
             val bounds = parseBounds(item.opt("bounds"))
+            val actions = item.optJSONArray("actions").let { array ->
+                if (array == null) emptyList() else (0 until array.length()).mapNotNull { i -> array.optInt(i).takeIf { it >= 0 } }
+            }
             result += Node(
                 index = index,
                 text = item.optString("text"),
                 description = item.optString("desc").ifBlank { item.optString("description") },
-                className = item.optString("class").ifBlank { item.optString("cls") },
-                packageName = item.optString("package").ifBlank { json.optString("package") },
-                viewId = item.optString("view_id").ifBlank { item.optString("id") },
+                className = firstNonBlank(item.optString("cls"), item.optString("class")),
+                packageName = firstNonBlank(
+                    item.optString("pkg"),
+                    item.optString("package"),
+                    json.optString("package"),
+                ),
+                viewId = firstNonBlank(
+                    item.optString("vid"),
+                    item.optString("view_id"),
+                    item.optString("id"),
+                ),
                 bounds = bounds,
-                clickable = item.optBoolean("clickable", false),
-                longClickable = item.optBoolean("long_clickable", false),
+                clickable = item.optBoolean("clickable", item.optBoolean("click", false)),
+                longClickable = item.optBoolean("long_clickable", actions.contains(32)),
                 scrollable = item.optBoolean("scrollable", false),
                 focused = item.optBoolean("focused", false),
-                editable = item.optBoolean("editable", false),
+                editable = item.optBoolean("editable", item.optBoolean("edit", false)),
                 password = item.optBoolean("password", false),
-                enabled = item.optBoolean("enabled", true),
+                enabled = if (item.has("enabled")) item.optBoolean("enabled") else true,
                 checked = if (item.has("checked")) item.optBoolean("checked") else null,
                 selected = item.optBoolean("selected", false),
+                actions = actions,
             )
         }
         return result
@@ -910,12 +1016,14 @@ internal class TaskScreenSession(
 
     private fun fingerprint(
         nodes: List<Node>,
-        display: Pair<Int, Int>?,
+        geometry: Geometry?,
         packageName: String? = null,
     ): String {
         val source = buildString {
             append(packageName.orEmpty()).append('|')
-            append(display?.first ?: 0).append('x').append(display?.second ?: 0)
+            append(geometry?.displayId ?: -1).append('|')
+            append(geometry?.width ?: 0).append('x').append(geometry?.height ?: 0)
+            append('@').append(geometry?.rotation ?: -1)
             nodes.forEach { append('\n').append(it.canonical()) }
         }
         return MessageDigest.getInstance("SHA-256")
@@ -927,6 +1035,9 @@ internal class TaskScreenSession(
         if (raw.isNullOrBlank()) return null
         return runCatching { JSONObject(raw) }.getOrNull()
     }
+
+    private fun firstNonBlank(vararg values: String?): String =
+        values.firstOrNull { !it.isNullOrBlank() }.orEmpty()
 
     private fun error(code: String, message: String, toolName: String): AgentModelClient.ToolResult =
         AgentModelClient.ToolResult(

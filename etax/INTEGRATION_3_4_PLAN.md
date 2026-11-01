@@ -58,7 +58,7 @@
 ## 第 2 轮实际实现：每个任务独立的原生操作入口
 
 - 新增 `TaskScreenSession`，每个 run 保存自己的执行位置、观察帧、观察代次和后台屏幕绑定；不存在全局“当前屏幕”。
-- 原生工具新增可选 `execution_location=foreground|background`。省略时沿用该任务当前位置；默认仍为前台。
+- 原生工具新增可选 `execution_location=foreground|background`。新任务初始默认前台；进入后台后省略 location 会沿用本任务当前后台位置，不回到主屏。
 - 前台请求继续交给现有 `AgentLocalTools` 和 `GuiControlCoordinator`，不改变 GUI 操作权、权限和生成号检查。
 - 后台请求复用现有 `BackgroundScreenTools`、每任务 `Binding`、`ScreenLeaseRegistry` 和旧 `screen_*` 执行路径；没有第二个虚拟显示引擎。
 - 后台观察生成任务自己的 `observation_id`，同时保留 `frame_id`、`display`、`screenshot` 坐标和几何信息；节点与截图来自同一任务屏幕。
@@ -66,6 +66,14 @@
 - 后台截图复用现有 `AgentImageTools` 图片投递路径；仅返回文件路径不算模型已看到图片。
 - 旧 `screen_*` 工具和 `screen_*` 默认兼容路径保留；新入口通过显式参数进入。
 - `PASTE`、`NOTIFICATIONS`、`QUICK_SETTINGS`、URI 打开和系统面板在后台没有可靠实现，返回明确错误；`BACK`、`HOME`、`ENTER`、`RECENTS` 复用现有引擎按键注入。
+
+### 第 2 轮返修（自动化通过，真机未验证）
+
+- 节点解析按 `Boot.dump()` 的真实字段 `cls/pkg/vid/edit/click/scrollable/actions/enabled/bounds` 转换到原生观察字段，保留输入框 `view_id`。
+- 观察和输入前校验共用同一套包名解析：优先顶层 `package`，真实 dump 没有顶层字段时取节点 `pkg`，避免观察生成与校验规则不一致。
+- 观察绑定 `displayId`、显示宽高、`rotation`、任务恢复代次和 frame；截图尺寸单独取 `VDriveWorker.shot()` 的实际 `width/height`，不再用显示几何冒充截图尺寸。
+- 观察始终取得后台截图的权威 `ScreenGeometry`；仅截图观察不再被当成空节点树；节点树读取与截图读取分别标记来源。
+- 输入前重新取得权威几何并比较 `displayId/width/height/rotation`；不一致立即失效，不把旧观察重新认证。
 
 ## 保留的后台版能力
 

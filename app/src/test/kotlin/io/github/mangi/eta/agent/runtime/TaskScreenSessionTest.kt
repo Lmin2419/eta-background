@@ -19,7 +19,7 @@ class TaskScreenSessionTest {
         val calls = CopyOnWriteArrayList<Call>()
         @Volatile var openResult = """{"ok":true,"mode":"hidden","displayId":7,"display":7}"""
         @Volatile var dumpResult = dumpJson()
-        @Volatile var shotResult = """{"ok":true,"path":"/tmp/bg-shot.png","frameId":"frame-1","displayId":7,"dims":"540x1200","geometry":{"width":1080,"height":2400},"scaleToDisplayX":2.0,"scaleToDisplayY":2.0}"""
+        @Volatile var shotResult = shotJson()
         @Volatile var tapResult = """{"ok":true,"accepted":true,"outcome":"CHANGED"}"""
         @Volatile var pressResult = """{"ok":true,"accepted":true}"""
         @Volatile var textResult = """{"ok":true,"accepted":true}"""
@@ -282,9 +282,9 @@ class TaskScreenSessionTest {
     }
 
     @Test
-    fun screenshotAndNodesFromDifferentGeometryAreRejected() {
+    fun screenshotAndNodesFromDifferentDisplayAreRejected() {
         val backend = FakeBackend().apply {
-            shotResult = """{"ok":true,"path":"/tmp/bg-shot.png","frameId":"frame-1","displayId":7,"dims":"540x1200","geometry":{"width":1200,"height":2400},"scaleToDisplayX":2.0,"scaleToDisplayY":2.0}"""
+            dumpResult = dumpJson().replace("\"displayId\": 7", "\"displayId\": 8")
         }
         val tools = session(backend)
         tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
@@ -343,6 +343,169 @@ class TaskScreenSessionTest {
         assertNotNull(second.execute(call("launch_app", """{"package_name":"app.two","execution_location":"background"}""")))
     }
 
+    @Test
+    fun realDumpFieldsSurviveTheNativeObservationConversion() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(
+            tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
+        )
+        val nodes = observed.getJSONArray("ui_nodes")
+        val button = nodes.getJSONObject(0)
+        val edit = nodes.getJSONObject(1)
+        assertEquals("android.widget.Button", button.getString("class"))
+        assertEquals("app.one", button.getString("package"))
+        assertTrue(button.getBoolean("clickable"))
+        assertEquals("android.widget.EditText", edit.getString("class"))
+        assertEquals("app.one", edit.getString("package"))
+        assertEquals("app.one:id/input", edit.getString("view_id"))
+        assertTrue(edit.getBoolean("editable"))
+        assertTrue(edit.getBoolean("enabled"))
+        assertEquals(16, edit.getJSONArray("actions").getInt(0))
+    }
+
+    @Test
+    fun realEditableIndexTargetsTheInputByViewId() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(
+            tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
+        )
+        val id = observed.getString("observation_id")
+        val result = tools.execute(call(
+            "type_text",
+            """{"index":1,"text":"hello","observation_id":"$id"}""",
+        ))!!
+        assertTrue(JSONObject(result.content).getBoolean("ok"))
+        val textCall = backend.calls.last { it.name == "screen_text" }
+        assertEquals("app.one:id/input", textCall.arguments.getString("view_id"))
+        assertFalse(textCall.arguments.has("index"))
+    }
+
+    @Test
+    fun screenshotContractUsesScreenshotPixelsNotDisplayPixels() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(
+            tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
+        )
+        val screenshot = observed.getJSONObject("coordinate_contract").getJSONObject("screenshot")
+        assertEquals(540, screenshot.getInt("width"))
+        assertEquals(1200, screenshot.getInt("height"))
+        assertEquals(540, observed.getJSONObject("screenshot").getInt("width"))
+        assertEquals(1200, observed.getJSONObject("screenshot").getInt("height"))
+    }
+
+    @Test
+    fun screenshotCoordinatesAreCheckedAndScaledBeforeTheBackend() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(
+            tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
+        )
+        val id = observed.getString("observation_id")
+        val outside = tools.execute(call(
+            "tap",
+            """{"x":600,"y":10,"coordinate_space":"screenshot","frame_id":"frame-1","observation_id":"$id"}""",
+        ))!!
+        assertEquals("INVALID_COORDINATE", JSONObject(outside.content).getString("code"))
+        assertFalse(backend.calls.any { it.name == "screen_tap" })
+
+        val legal = tools.execute(call(
+            "tap",
+            """{"x":500,"y":1000,"coordinate_space":"screenshot","frame_id":"frame-1","observation_id":"$id"}""",
+        ))!!
+        assertTrue(JSONObject(legal.content).getBoolean("ok"))
+        val tapCall = backend.calls.last { it.name == "screen_tap" }
+        assertEquals(1000, tapCall.arguments.getInt("x"))
+        assertEquals(2000, tapCall.arguments.getInt("y"))
+    }
+
+    @Test
+    fun screenshotOnlyObservationRemainsUsableOnAnUnchangedScreen() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(
+            tools.execute(call(
+                "observe_screen",
+                """{"include_ui_tree":false,"include_screenshot":true}""",
+            ))!!.content,
+        )
+        assertTrue(observed.getBoolean("ok"))
+        assertFalse(observed.getBoolean("ui_tree_read"))
+        val id = observed.getString("observation_id")
+        val tapped = tools.execute(call(
+            "tap",
+            """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
+        ))!!
+        assertTrue(JSONObject(tapped.content).getBoolean("ok"))
+        assertTrue(backend.calls.any { it.name == "screen_tap" })
+        assertFalse(backend.calls.any { it.name == "screen_dump" })
+    }
+
+    @Test
+    fun rotationChangeInvalidatesTheOldObservationEvenWhenWidthAndHeightMatch() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(
+            tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
+        )
+        val id = observed.getString("observation_id")
+        backend.shotResult = shotJson(rotation = 2)
+        val result = tools.execute(call(
+            "tap",
+            """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
+        ))!!
+        assertEquals("OBSERVATION_STALE", JSONObject(result.content).getString("code"))
+        assertFalse(backend.calls.any { it.name == "screen_tap" })
+    }
+
+    @Test
+    fun displayIdChangeInvalidatesTheOldObservation() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(
+            tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
+        )
+        val id = observed.getString("observation_id")
+        backend.shotResult = shotJson(displayId = 8)
+        val result = tools.execute(call(
+            "tap",
+            """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
+        ))!!
+        assertEquals("OBSERVATION_STALE", JSONObject(result.content).getString("code"))
+        assertFalse(backend.calls.any { it.name == "screen_tap" })
+    }
+
+    @Test
+    fun uncertainOperationMayHaveRunAlwaysInvalidatesTheObservation() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(
+            tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
+        )
+        val id = observed.getString("observation_id")
+        backend.tapResult = """{"ok":false,"code":"GEOMETRY_CHANGED_DURING_OPERATION","operationMayHaveRun":true}"""
+        tools.execute(call(
+            "tap",
+            """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
+        ))
+        val retry = tools.execute(call(
+            "tap",
+            """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
+        ))!!
+        assertEquals("BACKGROUND_OBSERVATION_REQUIRED", JSONObject(retry.content).getString("code"))
+        assertEquals(1, backend.calls.count { it.name == "screen_tap" })
+    }
+
     private fun call(name: String, arguments: String): AgentModelClient.ToolCall =
         AgentModelClient.ToolCall(id = name, name = name, argumentsJson = arguments)
 
@@ -350,15 +513,23 @@ class TaskScreenSessionTest {
         fun dumpJson(text: String = "same"): String = """
             {
               "ok": true,
-              "package": "app.one",
               "displayId": 7,
-              "geometry": {"width": 1080, "height": 2400},
               "count": 2,
               "nodes": [
-                {"id": "btn", "cls": "android.widget.Button", "text": "$text", "desc": "", "bounds": [0,0,100,100], "clickable": true, "enabled": true},
-                {"id": "edit", "cls": "android.widget.EditText", "text": "", "desc": "input", "bounds": [0,200,500,300], "editable": true, "enabled": true}
+                {"cls": "android.widget.Button", "pkg": "app.one", "text": "$text", "desc": "", "vid": "",
+                 "edit": false, "click": true, "scrollable": false, "actions": [16], "enabled": true, "bounds": [0,0,100,100]},
+                {"cls": "android.widget.EditText", "pkg": "app.one", "text": "", "desc": "input",
+                 "vid": "app.one:id/input", "edit": true, "click": true, "scrollable": false, "actions": [16],
+                 "enabled": true, "bounds": [0,200,500,300]}
               ]
             }
+        """.trimIndent()
+
+        fun shotJson(rotation: Int = 0, displayId: Int = 7): String = """
+            {"ok":true,"path":"/tmp/bg-shot.png","frameId":"frame-1","displayId":$displayId,
+             "width":540,"height":1200,"dims":"540x1200",
+             "geometry":{"width":1080,"height":2400,"rotation":$rotation,"displayId":$displayId,
+             "coordinateSpace":"display"},"scaleToDisplayX":2.0,"scaleToDisplayY":2.0}
         """.trimIndent()
     }
 }

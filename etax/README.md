@@ -31,7 +31,7 @@
 
 当前分支 `etax-340-step1-foundation` 基于 `main` 的 `37c866725346b186b69230f92bb67cd2a934bbc9`，参考上游 `v3.4.0`（`e90922a4490389f524a10c6acebbcca336883935`）。第 1 轮按语义合入上游 `2bc0f2103ac2ea8a5106626d1e41f54111fe7f96` 的 Android/Linux 双环境说明：补充执行上下文、系统提示、终端与文件工具说明、coder 角色中的环境分工和共享目录路径映射，并明确“已配置映射”不等于“已验证挂载成功”。
 
-第 2 轮增加每个任务独立的原生前后台操作入口：原生 GUI 工具可用显式 `execution_location=background` 复用现有后台屏幕和旧 `screen_*` 执行路径；前台仍走现有 GUI 控制权管理。后台观察、截图、节点、坐标、`observation_id`/`frame_id` 和恢复/接管失效规则均由任务自己的会话维护，不存在全局当前屏幕，也没有第二个虚拟显示引擎。`PASTE`、`NOTIFICATIONS`、`QUICK_SETTINGS`、URI 和系统面板等后台不可靠操作返回明确错误，不会改走主屏。
+第 2 轮增加每个任务独立的原生前后台操作入口：原生 GUI 工具可用显式 `execution_location=background` 复用现有后台屏幕和旧 `screen_*` 执行路径；前台仍走现有 GUI 控制权管理。后台观察、截图、节点、坐标、`observation_id`/`frame_id` 和恢复/接管失效规则均由任务自己的会话维护，不存在全局当前屏幕，也没有第二个虚拟显示引擎。第 2 轮返修按 `Boot.dump()` 真实字段 `cls/pkg/vid/edit/click/scrollable/actions/enabled/bounds` 转换节点，使用 `VDriveWorker.shot()` 的实际截图尺寸和权威几何，并在输入前比较 `displayId/width/height/rotation`。`PASTE`、`NOTIFICATIONS`、`QUICK_SETTINGS`、URI 和系统面板等后台不可靠操作返回明确错误，不会改走主屏。
 
 以上两轮都没有修改 VDrive 引擎、部署脚本、认证、版本配对、通知、助手浮窗、虚拟屏交还、任务调度或息屏策略，也没有更改包名、签名、`versionCode` 或 `versionName`。这不是 3.4.0 的完整升级，尚未发布，当前正式下载链接和 `2026103003` 安装包保持不变。五轮目标、边界、风险和未决事项见 [3.4.0 分阶段整合计划](INTEGRATION_3_4_PLAN.md)。
 

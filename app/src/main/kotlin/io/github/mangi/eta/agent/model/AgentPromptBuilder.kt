@@ -94,7 +94,7 @@ internal object AgentPromptBuilder {
                     "前后台操作由用户意图决定，与引擎是否就绪、是否从电源键唤醒无关。" +
                     "用户说当前页面、这个页面、已登录、这里、当着我的面，或要求接着眼前的场景操作时，必须使用前台 GUI 工具，" +
                     "先 observe_screen 重新观察当前页面，再 tap_element/type_text 等操作；不要 screen_open 搬走应用，也不要重新 launch_app 丢失当前页面。" +
-                    "只有用户明确要求后台执行，或明确续接已有后台任务时才使用后台入口：新任务优先用原生工具并显式传 execution_location=\"background\"，旧会话仍可使用 screen_* 虚拟屏工具；未指定时默认前台。" +
+                    "只有用户明确要求后台执行，或明确续接已有后台任务时才使用后台入口：新任务优先用原生工具并显式传 execution_location=\"background\"，旧会话仍可使用 screen_* 虚拟屏工具；新任务初始默认前台，进入后台后省略 location 会沿用本任务当前后台位置。" +
                     "后台任务需要前台接管时先说明情况；前台不可用时不能擅自改走后台。不要通过 Shell 绕过工具的界面校验与操作权管理。" +
                     AgentBackgroundToolCatalog.guidance(rootAvailable) +
                     "以下观察、坐标、输入、after 与操作权规则仅适用于前台 GUI 工具，不适用于后台 screen_*。" +
