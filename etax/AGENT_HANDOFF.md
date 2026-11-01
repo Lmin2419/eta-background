@@ -62,11 +62,12 @@
 ## 当前指令（ChatGPT 维护）
 
 - instruction_id: C004
-- instruction_revision: 2
+- instruction_revision: 3
 - issued_at: 2026-11-01T15:28:29Z
-- revised_at: 2026-11-01T15:30:34Z
+- revised_at: 2026-11-01T15:36:23Z
 - status: READY
 - target: ChatGPT
+- current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)；后续在同一文件修订，不再生成重复方案
 - mode: 用户已要求由 ChatGPT 重新接手；手动推进，不恢复每小时自动检查
 - candidate_head: 9204329cffd78e392bf45d73104866701f131a1c
 - follows: C003 revision 5；U001–U003 继续有效
@@ -116,6 +117,8 @@
 参考：[Android Live Updates](https://developer.android.com/develop/ui/views/notifications/live-update)、[自定义通知](https://developer.android.com/develop/ui/views/notifications/custom-notification)、[展开通知](https://developer.android.com/develop/ui/views/notifications/expanded)。本条是交互要求与可行性核对，不是已实现记录。
 
 ### 具体整合顺序与完成标准
+
+用户已确认修改方案并继续。完整可执行范围、组件接线、通知能力验证、接管状态和交付标准见 [INTEGRATION_PLAN_CURRENT.md](coordination/INTEGRATION_PLAN_CURRENT.md)，以下为摘要。原业务分支计划保留基线；第三至第五轮的最新要求以该方案及用户后续指令为准。当前只更新文档，既有阶段门槛不伪造通过。
 
 1. 收尾第 2 轮尚未覆盖的技术核验；U001–U003 已确认的手机场景不重复。保留原验收门槛，不把功能取舍更新写成技术验收通过。
 2. 第 3 轮复用 AgentRuntimeSession.complete/cancel 的结果权威，统一会话、通知及后续预览的只读状态；不新建第二套终态库，不新增设计报告循环。
@@ -189,7 +192,14 @@
 - evidence: 最新清单、设计、POLLING_EVIDENCE.md 已实际读取；写工具测试提交及删除已核实；前次问题见 [C001 评审](coordination/C001_REVIEW_F002.md)
 - device_gate: 部分手机可见功能已获用户实测通过（U001/U002/U003）；通知内继续、双任务通知同时运行、停止一个不影响另一个均已确认；已确认场景不重复测试，完整第 2 轮验收仍未完成
 - next_phase_permission: 第 3 轮设计方向通过；业务实现待第 2 轮真机验收，不再要求额外设计报告
-- issued_next_instruction: C004 revision 2（通知三级预览需求；ChatGPT 手动接手；dsh 不新增实施）
+- issued_next_instruction: C004 revision 3（当前实施方案已整理；ChatGPT 手动接手；dsh 不新增实施）
+
+### 当前实施方案整理完成 — 2026-11-01T15:36:23Z
+
+- 用户确认通知三级交互方向并要求修改方案、继续推进；已将第三至第五轮整理为 [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)。
+- 明确统一状态的接线位置、通知原生承载验证、预览/手动控制/移到主屏三者区别、结束后保留页面的所有权、帧缓存与模型观察隔离、息屏适配及电源键排查的验收标准。
+- 应用分身专项已移出范围；旧版已有能力只列保留基线。U001–U003 不重测；缺少的技术证据不因接受方案而填通过。
+- PR head 仍为 9204329；方案只写协作分支，无新增业务实现、合并、发布或设备操作。下一步按该方案 A→B→C→D→E 推进，不再要求重写第三轮设计报告。
 
 ### 通知预览交互细化 — 2026-11-01T15:30:34Z
 
