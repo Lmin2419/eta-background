@@ -4,6 +4,13 @@
 
 第三轮已结束：[完整执行报告](reports/2026-10-31-round3.md)。11 个可审查 PR，1 个阻塞草稿（#35）；最后 PR #36。
 
+## D0b2（Claude：HDC 原生库入库，不升版本）
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| `entry/libs/arm64-v8a/libagent_hdc.so`：应用内置的 HDC 客户端，用公开 OpenHarmony SDK 的 native 工具链交叉编译，构建脚本 `scripts/build-native-ohos.sh`。DevEco 直接打包，不需要编译 C++。页面接线在 D0b3 | AArch64；运行时只依赖手机自带的 4 个系统库，C++ 运行库静态链接；372 个外部符号全部能解析；两次构建 SHA-256 相同 | **待测**（检查点 ⑦）：还没有在真机上加载过 |
+| `fetch-native.py`：网络屏蔽 GitHub 压缩包时改用 git 获取，再用 `git archive` 重建压缩包，必须与原来固定的 SHA-256 一致（四个都一致）。`fetch-ohos-sdk.sh --with-native` 取 native 工具链 | 同上 | 不适用 |
+
 ## 0.9.36（D0a：无障碍扩展实验）
 
 | 改动 | 自动验证 | 真机 |

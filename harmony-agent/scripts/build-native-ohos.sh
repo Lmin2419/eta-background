@@ -37,7 +37,7 @@ if [ ! -f "$SSL/libssl.a" ] || [ ! -f "$SSL/libcrypto.a" ]; then
 fi
 
 echo "Building libagent_hdc.so…"
-rm -rf "${BUILD:?}"
+rm -rf "${BUILD:?}"; mkdir -p "$(dirname "$BUILD")"
 cmake -S entry/src/main/cpp -B "$BUILD" -G "Unix Makefiles" \
   -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" -DOHOS_ARCH=arm64-v8a -DOHOS_STL=c++_static \
   -DCMAKE_BUILD_TYPE=Release > "$BUILD.cmake.log" 2>&1 || { cat "$BUILD.cmake.log" >&2; exit 1; }

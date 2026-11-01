@@ -76,7 +76,7 @@ DeviceBackend 接口：observe / tap / longPress / swipe / scroll / input / back
 
 **D0b HDC 通道复活**（原 T10）。拆成三步：
 - D0b1 连接状态机（执行者）；
-- D0b2 原生库交叉编译（Claude）；
+- D0b2 原生库交叉编译（Claude）：**已完成**，见 ROADMAP 的 D0b2；
 - D0b3 连接页（执行者）。
 
 各部分要求：

@@ -467,13 +467,30 @@
   - 每种断开原因映射到对应的文案键。
 - **验收**：`npm run verify` 全过。
 
-#### D0b2 HDC 原生库（Claude 负责）
+#### D0b2 HDC 原生库（Claude 负责）—— 已完成
 
-用公开 SDK 的 native 组件，交叉编译 arm64 的 `libagent_hdc.so`，连同 SHA-256 和构建脚本一起入库到 `entry/libs/arm64-v8a/`。完成后在这里更新状态，D0b3 才能开始。
+`entry/libs/arm64-v8a/libagent_hdc.so` 已入库，构建信息见同目录的 `BUILD-INFO.md` 和 `libagent_hdc.so.sha256`。
+
+| 项目 | 结果 |
+| --- | --- |
+| 构建方式 | `scripts/build-native-ohos.sh`，使用公开 OpenHarmony SDK 26.0.0.38 的 native 工具链；用户的 DevEco 不需要编译 C++ |
+| 架构 | AArch64 |
+| 运行时依赖 | 只有手机自带的 `libc.so`、`libuv.so`、`libace_napi.z.so`、`libhilog_ndk.z.so`；C++ 运行库静态链接 |
+| 符号检查 | 372 个外部符号全部能在这四个系统库中找到（3 个是可选的弱符号） |
+| 可复现 | 两次构建 SHA-256 相同 |
+| 源码 | 与 0.3 相同的 HDC、OpenSSL、lz4、securec 固定版本，全部按 SHA-256 校验 |
+
+还没有在真机上加载过，结论以检查点 ⑦ 为准。
 
 #### D0b3 手机操作连接页（0.9.37）
 
 **前提**：D0b2 已入库 `entry/libs/arm64-v8a/libagent_hdc.so`（见 `BUILD-INFO.md`）。不要改这个库；需要改原生代码时停下来，交给 Claude。
+
+**原生库加载失败时不能让应用崩溃**：
+- 原生库从未在这台手机上加载过。如果加载失败，`import nativeHdc from 'libagent_hdc.so'` 得到的值可能是 `undefined`；
+- 所以所有调用前先检查 `nativeHdc` 和它的方法是否存在。不存在时，页面状态显示“原生库未加载”，并写一条诊断记录；
+- 其他页面照常使用；
+- 预览器里同样走这条路径（预览器是 x86，不能加载这个 arm64 库），写一个场景断言提示文字。
 
 **原理**：
 - 应用内置一个 HDC 客户端，连到**本机**的“无线调试”端口。
@@ -511,6 +528,7 @@
    - 场景 `20-phone-ops.json`：进入页面 → 点地址输入框 → `{"type": "127.0.0.1:5555"}`（`type` 已支持 `.` 和 `:`）→ 连接 → 断言状态文字 → 测试读屏 → 断言控件数 → 断开；
    - 另写一个“非法地址”的场景，断言出现提示、不会去连接。
 6. **真机检查点 ⑦**：步骤写进 `docs/device-runs/CHECKPOINT-B.md`：
+   0. 打开“设置 → 手机操作”，页面不能显示“原生库未加载”（否则说明 HAP 没有带上这个库，把 DevEco 构建输出中 `libs` 相关的内容贴回）；
    1. 断开电脑；
    2. 开启无线调试；
    3. 在应用里填写地址并连接；
