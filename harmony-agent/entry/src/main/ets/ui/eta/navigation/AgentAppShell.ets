@@ -82,7 +82,7 @@ export struct AgentAppShell {
           else if (name === AppRouteName.CommunityCatalog) { CommunityCatalogScreen({state:this.state,controller:this.controller}) }
           else if (name === AppRouteName.CommunityCatalogProvider) { CommunityCatalogProviderScreen({state:this.state,controller:this.controller}) }
           else if (name === 'HarmonyDiagnostics') { DiagnosticsPage({ state: this.state, controller: this.controller }) }
-          else if (name === 'HarmonyPhoneOps') { PhoneOpsScreen() }
+          else if (name === 'HarmonyPhoneOps') { PhoneOpsScreen({ shell: this.controller }) }
           else if (name === AppRouteName.Settings) { SettingsScreen({ state: this.state, controller: this.controller }) }
           else if (name === AppRouteName.McpServers || name === AppRouteName.McpServerDetail) { McpServersScreen({state:this.state,controller:this.controller,isDetail:name===AppRouteName.McpServerDetail}) }
           else if (name === AppRouteName.Memory) { AgentMemoryScreen({state:this.state,controller:this.controller,keyboardVisible:this.keyboardVisible}) }

@@ -4,9 +4,13 @@ import { ProfileRepository } from '../profiles';
 import { AppearanceSettingsRepository, defaultAppearance } from '../eta/appearanceSettings';
 import { FoundationController } from './controller';
 import { HttpTransport } from '../model';
+import { FakePhoneOpsTransport } from '../eta/device/phoneOpsController';
+import { setPhoneOpsPreviewTransport } from '../eta/device/phoneOpsPreview';
 
 /** Preview-only data and transport. The production entry does not import this module. */
 export function previewController(): FoundationController {
+  // The phone-operation page uses a fake transport in the preview only (x86 cannot load the arm64 HDC library).
+  setPhoneOpsPreviewTransport(() => new FakePhoneOpsTransport());
   let counter = 0;
   const memory = (initial = '') => { let raw = initial; return { read: async () => raw, write: async (value: string) => { raw = value; } }; };
   const profiles = new ProfileRepository(memory(JSON.stringify({ selectedId: 'preview', profiles: [{ id: 'preview', name: '示例模型服务', baseUrl: 'https://preview.example/v1', model: '示例模型', models: ['示例模型', '示例推理模型'], streaming: true, screenshots: false, allowInsecureHttp: false }] })), { put: async () => {}, get: async () => '', remove: async () => {} }, () => 'p' + ++counter);
