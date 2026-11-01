@@ -67,6 +67,13 @@ DeviceBackend 接口：observe / tap / longPress / swipe / scroll / input / back
 
 实现细节（扩展的写法、和界面的通信方式、`metadata` 名称）见 ROADMAP 第四轮的 D0a 任务卡。
 
+> **2026-11-01 补充**：公开 SDK（API 26）中，第三方无障碍扩展的全部接口自 API 12 起都标为弃用，而且没有公开的替代接口，包括：
+> - 生命周期回调 `onConnect` / `onAccessibilityEvent`；
+> - 读屏 `getWindowRootElement` / `attributeValue` / `findElement`；
+> - 手势注入 `injectGestureSync`。
+>
+> 新接口很可能只对系统应用开放。D0a 实验仍然做，但预期它不可用，HDC 通道很可能是唯一通道。
+
 **D0b HDC 通道复活**（原 T10）。拆成三步：
 - D0b1 连接状态机（执行者）；
 - D0b2 原生库交叉编译（Claude）；
