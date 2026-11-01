@@ -1,11 +1,11 @@
 // 随身助手原创代码（D0b3）：设置 → 手机操作（鸿蒙版独有页面）。
 import { common } from '@kit.AbilityKit';
-import { parseLayout } from '../../../core/device';
-import { HdcConnectionTransport, nativeHdcAvailable } from '../../../platform/HdcConnectionTransport';
-import { FakePhoneOpsTransport, PhoneOpsController, PhoneOpsTransport } from '../../../core/eta/device/phoneOpsController';
-import { PhoneOpsSnapshot, nativeMissingSnapshot } from '../../../core/eta/device/phoneOps';
-import { validateHdcTarget } from '../../../core/eta/device/hdcConnection';
-import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
+import { parseLayout } from '../../core/device';
+import { HdcConnectionTransport, nativeHdcAvailable } from '../../platform/HdcConnectionTransport';
+import { FakePhoneOpsTransport, PhoneOpsController, PhoneOpsTransport } from '../../core/eta/device/phoneOpsController';
+import { PhoneOpsSnapshot, nativeMissingSnapshot } from '../../core/eta/device/phoneOps';
+import { validateHdcTarget } from '../../core/eta/device/hdcConnection';
+import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../core/eta/tokens';
 import { MiuixScaffoldPage } from '../eta/components/MiuixScaffoldPage';
 import { EtaCard } from '../eta/components/EtaCard';
 import { EtaTextButton } from '../eta/components/EtaControls';
