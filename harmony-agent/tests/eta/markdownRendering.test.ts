@@ -18,11 +18,35 @@ test('reveal paints whole graphemes while retaining identical full text for layo
   assert.equal(spans.filter(s=>s.visible).map(s=>s.text).join(''),value.text.slice(0,boundary));
  }
 });
+test('a span key never stays the same while what the span paints changes (ForEach reuses equal keys)',()=>{
+ // Streaming growth plus every reveal boundary: any two spans sharing a key must be identical.
+ const seen=new Map<string,string>();
+ const full='你好，世界。code 和链接继续。';
+ for(let length=1;length<=full.length;length++){
+  const text=full.slice(0,length);
+  const value={text,spans:text.length>5?[{start:3,end:5,kind:'bold' as const},{start:6,end:Math.min(10,text.length),kind:'code' as const}]:[]};
+  for(let boundary=0;boundary<=text.length;boundary++){
+   for(const span of renderSpans(value,boundary)){
+    const {key,...painted}=span,before=seen.get(key),now=JSON.stringify(painted);
+    if(before!==undefined)assert.equal(now,before,'key '+key+' was reused for different content');
+    seen.set(key,now);
+   }
+  }
+ }
+});
+test('span keys are stable for identical input and unique within one render',()=>{
+ const value=plainText('stable text');
+ assert.deepEqual(renderSpans(value,4).map(s=>s.key),renderSpans(value,4).map(s=>s.key));
+ assert.notEqual(renderSpans(value,4)[0].key,renderSpans(value,6)[0].key);
+ const spans=renderSpans({text:'aaaa',spans:[{start:1,end:2,kind:'bold'}]},3);
+ assert.equal(new Set(spans.map(s=>s.key)).size,spans.length);
+});
 test('overlapping emphasis, inline code and links survive a reveal boundary',()=>{
  const spans=renderSpans({text:'abcdef',spans:[{start:0,end:6,kind:'bold'},{start:1,end:4,kind:'italic'},{start:2,end:5,kind:'code'},{start:2,end:5,kind:'link',url:'https://example.com'}]},3);
  assert.equal(spans.map(s=>s.text).join(''),'abcdef');assert.ok(spans.every(s=>s.bold));
- assert.deepEqual(spans.find(s=>s.text==='c'),{key:'2',text:'c',bold:true,italic:true,strike:false,code:true,url:'https://example.com',visible:true});
- assert.equal(spans.find(s=>s.key==='3')?.visible,false);
+ const {key:_key,...c}=spans.find(s=>s.text==='c')!;
+ assert.deepEqual(c,{text:'c',bold:true,italic:true,strike:false,code:true,url:'https://example.com',visible:true});
+ assert.equal(spans.find(s=>s.text==='d')?.visible,false);
 });
 test('table clamps intrinsic columns and apportions free width without losing rounding remainder',()=>{
  assert.deepEqual(tableColumnWidths([10,500],100),[72,260]);

@@ -1,0 +1,16 @@
+{"name": "05-reply-visible", "page": "pages/FoundationPreview",
+ "steps": [
+  {"waitFor": {"id": "eta-composer"}, "timeout": 20},
+  {"tap": {"id": "eta-composer"}, "expectChange": false},
+  {"type": "hello"},
+  {"tap": {"a11y": "发送", "enabled": true}},
+  {"waitFor": {"contains": "这是预览数据"}, "timeout": 15},
+  {"screenshot": "streaming"},
+  {"waitFor": {"a11y": "复制"}, "timeout": 15},
+  {"wait": 2},
+  {"expect": {"type": "Span", "text": "回复会逐段显示，也可以点击停止。"}},
+  {"expect": {"type": "Span", "text": "可以继续切换会话、编辑模型或查看侧栏。"}},
+  {"expect": {"contains": "列表第二项"}},
+  {"expectMissing": {"type": "Span", "attrs": {"fontColor": "#00000000"}}},
+  {"screenshot": "reply-visible"}
+ ]}

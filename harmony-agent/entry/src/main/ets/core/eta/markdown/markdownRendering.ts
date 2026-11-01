@@ -6,6 +6,14 @@ import { StreamingMarkdownState, MarkdownParseCancellation, markdownTarget, Stre
 import { StreamingGfmSnapshot } from './streamingGfmParser';
 import { EtaMarkdownDefaults } from '../tokens';
 export interface RenderSpan { key:string; text:string; bold:boolean; italic:boolean; strike:boolean; code:boolean; url:string; visible:boolean; }
+/**
+ * ForEach identity for a span. ArkUI reuses the child whose key is unchanged and does not rebuild it,
+ * so the key must change whenever anything the Span draws changes (text, visibility, style, link).
+ * Keying by start offset alone left the first Span with its initial text and transparent color.
+ */
+function spanKey(span:Omit<RenderSpan,'key'>,start:number):string {
+  return [start,span.visible?1:0,span.bold?1:0,span.italic?1:0,span.strike?1:0,span.code?1:0,span.url,span.text].join('|');
+}
 /** Keep the complete text in layout, changing only paint at grapheme boundaries. */
 export function renderSpans(value:MarkdownText,visible=value.text.length):RenderSpan[] {
   const edges=new Set([0,value.text.length,Math.max(0,Math.min(visible,value.text.length))]);
@@ -14,7 +22,8 @@ export function renderSpans(value:MarkdownText,visible=value.text.length):Render
   for(let i=1;i<points.length;i++){
     const start=points[i-1],end=points[i];if(start===end)continue;
     const active=value.spans.filter(s=>s.start<=start&&s.end>=end);
-    result.push({key:String(start),text:value.text.slice(start,end),bold:active.some(s=>s.kind==='bold'),italic:active.some(s=>s.kind==='italic'),strike:active.some(s=>s.kind==='strike'),code:active.some(s=>s.kind==='code'),url:active.find(s=>s.kind==='link')?.url||'',visible:start<visible});
+    const span={text:value.text.slice(start,end),bold:active.some(s=>s.kind==='bold'),italic:active.some(s=>s.kind==='italic'),strike:active.some(s=>s.kind==='strike'),code:active.some(s=>s.kind==='code'),url:active.find(s=>s.kind==='link')?.url||'',visible:start<visible};
+    result.push({key:spanKey(span,start),...span});
   }
   return result;
 }
