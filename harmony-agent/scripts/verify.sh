@@ -26,7 +26,7 @@ check() {
     test) detail="$(awk '/^# tests /{t=$3} /^# pass /{p=$3} /^# fail /{f=$3} /^# skipped /{s=$3} END{printf "%s 项，通过 %s，失败 %s，跳过 %s", t, p, f, s}' "$log")" ;;
     check:ets) detail="$(grep -m1 '^ArkTS check' "$log" | sed 's/^ArkTS check with //')" ;;
     check:res) detail="$(grep -m1 '^Resource check' "$log" | sed 's/^Resource check with //')" ;;
-    test:ui) detail="$(awk '/\| pass \|/{p++} /\*\*FAIL\*\*/{f++} END{printf "%d 个场景通过，%d 个失败", p, f}' "$PROJECT/dist/ui-report/summary.md" 2>/dev/null)" ;;
+    test:ui) detail="$(awk '/\| pass/{p++} /\*\*FAIL\*\*/{f++} END{printf "%d 个场景通过，%d 个失败", p, f}' "$PROJECT/dist/ui-report/summary.md" 2>/dev/null)" ;;
     *) detail="$(grep -c 'error TS' "$log") 个类型错误" ;;
   esac
   echo "   $status  $detail"

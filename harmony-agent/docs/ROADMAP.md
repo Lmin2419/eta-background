@@ -5,7 +5,7 @@
 - dsh 实现，并在预览器里自测；
 - 用户合并 PR，只在真机检查点测试。
 
-本轮任务见第二节“第四轮”。
+本轮任务见第二节“第五轮”；第四轮的验收结果在它前面。
 
 当前分支 `harmony/ui-preview-tests`（0.9.33，PR #37），之前的 PR 链都叠在它下面。下一步：用户真机测 0.9.33，然后把整条链一次合并进 `main`。
 
@@ -100,6 +100,119 @@
 5. **不冒充真机结果**：真机检查点只列出步骤，标为“待测”。
 6. **PR 不要太大**：生成的资源文件不计，手写代码超过约 1500 行时拆成多个 PR。
 7. **结束时的报告**：队列做完或全部阻塞时停下，输出一份报告，格式见下面“2026-10-30 夜间”队列末尾的“早上的报告”。
+
+### 第四轮验收结果（Claude，2026-10-31）
+
+| PR | 任务 | 结论 | 说明 |
+| --- | --- | --- | --- |
+| #38 | R4-1 | **通过**（Claude 接手完成） | dsh 的帧时钟兜底保留。根因是 `ForEach` 复用：`Span` 和 Markdown 块按偏移作 key，内容变了子项也不更新，所以回复看不见、段落停在第一段。另外预览器没有 `taskpool`。修复见 PROJECT_STATUS 0.9.34 |
+| #39 | R4-2 | **通过** | 作为场景基线，和 #40 一起合并 |
+| #40 | R4-3 | **小改后通过** | 两处修复正确（模型页 `@Builder logo`、预览外观端口）。三个 pending 场景失败的原因不是应用问题，见下面 R5-1 |
+| #41 | D1a | **通过** | 20 项原测试逐条对应 |
+| #42 | D1b | **通过** | 18 项原测试逐条对应；`Rect` 重复定义在两者合并后清理（R5-4） |
+| #43 | D0a | **退回** | 扩展文件有 9 处编译错误。旧的 `check:ets` 没有检查 `srcEntry`，现已补上。另有一处会造成假阳性的实验逻辑错误。见 R5-2 |
+| #44 | D0b1 | **小改后通过** | 文件头不应写 Eta 的版权（这是原创代码，不是移植）。见 R5-3 |
+
+**本轮发现的工具问题（Claude 已在 `harmony/ui-preview-tests` 修复）**：
+- `check:ets` 现在也检查 `module.json5` 中所有 `srcEntry`；
+- `npm test` 改为 `scripts/run-tests.cjs`，自动收集 `tests/` 下所有 `*.test.ts`，以后不用再改测试脚本；
+- 选择器只在最上层页面里找：被压住的页面（例如侧栏、上一级列表）不再参与匹配；
+- 新增 `tapAt`，用于点系统对话框（它们不在控件树里）；
+- 预览器原生崩溃（无应用错误）时自动重跑一次；
+- `run.sh` 按场景的 `name` 找报告目录。
+
+### 本轮队列（第五轮，dsh）
+
+**所有分支先合并 `harmony/ui-preview-tests` 的最新提交。** 冲突处理：
+- `package.json` 的 `test` 脚本取 base 的 `node scripts/run-tests.cjs`；
+- 版本号取较大的那个。
+
+| 顺序 | 任务 | PR | 版本 |
+| --- | --- | --- | --- |
+| 1 | R5-1 R4-3 补改 | #40 | 不变（0.9.35） |
+| 2 | R5-2 D0a 返工 | #43 | 不变（0.9.36） |
+| 3 | R5-3 D0b1 小改 | #44 | 不升 |
+| 4 | R4-4 列表 key 审计 | 新 PR，从 R4-1 分支拉（需要 `renderKey.ts`） | 0.9.38（0.9.37 留给 D0b3） |
+| 5 | R5-4 `Rect` 去重 | D1a、D1b 合并之后，新 PR | 不升 |
+| 停 | 等 Claude 的 D0b2，然后做 D0b3；全部完成后用户测检查点 B | | |
+
+#### R5-1 R4-3 补改（#40）
+
+先合并 base，然后按下面修改三个 pending 场景。全部通过后移到 `tests/ui/`。
+
+1. **`13-sidebar`**：
+   - 最后一步错了：已经有对话时，首页不会再显示“有什么可以帮你”。改为断言 `hello` 可见。
+   - 补上任务卡要求的两步：清空搜索后列表恢复；长按会话出现菜单，`back` 关闭。
+2. **`14-message-actions`**：
+   - “删除”按钮要等回复完成才出现，先 `{"waitFor": {"a11y": "删除"}, "timeout": 15}`；
+   - 确认对话框是系统对话框，不在控件树里：去掉 `waitFor 删除消息？`，改为 `screenshot` 后 `{"tapAt": [0.65, 0.54]}` 点“删除”（坐标已在预览器中验证），再 `expectMissing`；
+   - 补上长按用户气泡边缘（`"offset": [-52, 0]`）→ 点“编辑” → 输入框进入编辑状态。
+3. **`09-provider-edit`**：
+   - 详情页默认就在“配置”页，点“配置”当然没有变化。去掉这一步，直接改“名称”输入框（输入英文）→ 返回 → 列表显示新名称。
+   - 如果列表不显示新名称，这是 R4-4 要修的列表 key 问题。场景留在 `pending/`，在 R4-4 里修。
+4. `08-providers` 偶发失败是预览器原生崩溃（`TextFieldPattern::GetInspectorId`），合并 base 后会自动重跑，不用改。
+
+#### R5-2 D0a 返工（#43）
+
+先合并 base，此时 `npm run check:ets` 会报出扩展文件的 9 处错误。逐条按 SDK 的接口修：
+
+1. **前台包名**：`AccessibilityEvent` 没有 `bundleName`。改为 `await root.attributeValue('bundleName')`，`root` 来自 `getWindowRootElement()`。
+2. **子节点**：`AccessibilityElement` 没有 `children` 属性。改为 `await node.attributeValue('children')`。计数改成 `async`，仍然最多数 500 个。
+3. **本应用包名**：`AccessibilityExtensionContext` 没有 `abilityInfo`。改为 `this.context.applicationInfo.name`。
+4. **找按钮**：`findElement('content', …)` 返回的是**数组**。取第一个，数组为空时结果写 `not-found`。
+5. **位置**：`target.rect` 不存在。改为 `await target.attributeValue('rect')`。返回的 `Rect` 是 `{left, top, width, height}`，中心点是 `left + width / 2`、`top + height / 2`。
+6. **手势**：`GesturePath` 没有 `addPoint`。改为 `path.points.push(point)`。
+7. **类型**：去掉所有 `any` / `unknown`，给每个 `then` / `catch` 的参数写明类型。
+8. **实验逻辑错误（重要）**：
+   - `DiagnosticsPage.refreshProbe` 在扩展报告 `ok` 时也给点击次数加一。这样即使注入没有真正点到按钮，计数也会增加，实验结论会是假阳性。
+   - 点击次数**只能**由测试按钮的 `onClick` 增加。“注入结果”单独显示。
+9. **文案**：诊断区的文字全部改为 `$r('app.string.*')`。测试按钮的文字和扩展里查找用的文字放在 `core/eta/device/accessibilityProbe.ts` 的同一个常量里，避免两边不一致。
+10. **检查点文件**：`docs/CHECKPOINT-B.md` 移到 `docs/device-runs/CHECKPOINT-B.md`。
+11. **文件头**：`AgentAccessibility.ets` 是原创代码，不要写 Eta 的版权行。
+
+**验收**：
+- `npm run check:ets` 为 0 error（现在包含扩展文件）；
+- `19-a11y-probe` 场景断言：点测试按钮后次数加一；点“请求注入点击”后次数**不变**（预览器里没有扩展）。
+
+#### R5-3 D0b1 小改（#44）
+
+- `hdcConnection.ts` 和测试文件是原创代码，去掉 `Copyright © 2026 蛮吉 (Mangi-11)` 那一行，改为一句说明“随身助手原创代码”。
+- 合并 base。
+
+#### R4-4 列表 key 审计（0.9.38）
+
+**背景**：
+- ArkUI 的 `ForEach` / `LazyForEach` 遇到 key 不变的子项会直接复用，不再执行子项构建函数；
+- 所以只用 id 作 key、而行内容来自 item 的列表，内容变了界面不会变；
+- 规则见 AGENTS.md，工具是 `core/eta/renderKey.ts` 的 `renderKey` 和 `syncSlots`。
+
+**要逐个处理的位置**（行号以当前代码为准）：
+
+| 文件 | 现在的 key | 处理 |
+| --- | --- | --- |
+| `ConversationPanePanel.ets` | `group.id`、`item.id` | `renderKey(group.id, group)`、`renderKey(item.id, item)` |
+| `AgentWorkProcess.ets` | `tool.id`、`step.key` | 行有展开状态：`@Observed` 槽位 + `@ObjectLink` + `syncSlots`，参照 `MarkdownContent.ets` 的 `MarkdownBlockSlot` |
+| `AgentChatQueueStrip.ets` | `item.id` | `renderKey` |
+| `ModelProviderListScreen.ets` | `p.id` | `renderKey` |
+| `ProviderModelsTab.ets` | `model.id` | `renderKey` |
+| `ProviderHeadersEditor.ets` | `h.id` | 行里有输入框，**不能**用 `renderKey`（每输入一个字就重建，会丢焦点）。用槽位 + `syncSlots` |
+| `McpServersScreen.ets` | `server.id`、下标 | `renderKey` |
+| `AgentModelPicker.ets` | `group.providerId`、`entry.key` | `renderKey` |
+| `CommunityCatalogScreens.ets` | `p.id`、`model.modelId` | `renderKey` |
+| `DiagnosticsPage.ets` | 下标 | `renderKey(index, line)` |
+
+另外用 `grep -n "ForEach(" -r entry/src/main/ets/ui` 把清单补全。key 只是一个基本类型值（字符串、数字本身就是行内容）的，不用改。
+
+**验收场景**（每个都断言“改了之后界面显示的是新内容”）：
+- 切换模型后再打开模型弹层，选中标记在新模型上；
+- 侧栏长按会话 → 重命名（英文）→ 列表显示新名称；
+- `09-provider-edit` 通过：改名后列表显示新名称；
+- 请求头编辑：连续输入一段英文，输入框内容完整，焦点没丢；
+- 已有场景全部通过。
+
+#### R5-4 `Rect` 去重（D1a、D1b 都合并之后）
+
+`core/eta/device/observation.ts` 删除自己的 `Rect`，改为从 `ScrollGestureContract` 导入。测试数量不变。
 
 ### 本轮队列（第四轮，执行者 dsh，2026-10-31 Claude 修订）
 
