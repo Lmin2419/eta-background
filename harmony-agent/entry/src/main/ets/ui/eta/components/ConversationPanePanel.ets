@@ -73,7 +73,7 @@ export struct ConversationPanePanel {
         ListItem(){this.section(group)}
         ForEach(group.items,(item:ConversationSummaryUi)=>{ListItem(){this.row(item)}},(item:ConversationSummaryUi)=>renderKey(item.id,item))
       },(group:ConversationDrawerGroup)=>renderKey(group.id,group))
-    }.layoutWeight(1).width('100%').padding({left:M.PaneHorizontalPadding,right:M.PaneHorizontalPadding,top:S.Dp4,bottom:S.Dp4}).clip(true).scrollBar(BarState.Off)
+    }.layoutWeight(1).width('100%').padding({left:M.PaneHorizontalPadding,right:M.PaneHorizontalPadding,top:S.Dp4,bottom:S.Dp4}).clip(true).scrollBar(BarState.Off).id('eta-conversation-list')
     Row(){
       this.dock($r('app.media.ic_rounded_settings'),$r('app.string.action_settings'),true,()=>this.controller?.navigate('settings'))
       this.dock($r('app.media.ic_rounded_cloud'),$r('app.string.conversation_dock_models'),true,()=>this.controller?.navigate('providers'))

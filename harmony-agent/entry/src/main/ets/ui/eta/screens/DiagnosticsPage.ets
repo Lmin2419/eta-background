@@ -11,7 +11,6 @@ import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/t
 import { MiuixScaffoldPage } from '../components/MiuixScaffoldPage';
 import { EtaCard } from '../components/EtaCard';
 import { EtaTextButton } from '../components/EtaControls';
-import { renderKey } from '../../../core/eta/renderKey';
 @Component
 export struct DiagnosticsPage {
   @Prop state:ShellState=emptyShellState();
@@ -45,7 +44,7 @@ export struct DiagnosticsPage {
   @Builder private events(){Column({space:S.Dp8}){
     Text($r('app.string.eta_diagnostics_events',this.state.diagnostics.total)).fontSize(F.Body1).fontColor($r('app.color.miuix_on_surface')).width('100%')
     if(!this.state.diagnostics.lines.length){Text($r('app.string.eta_diagnostics_empty')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary'))}
-    ForEach(this.state.diagnostics.lines,(line:string)=>{Text(line).fontSize(F.Footnote1).fontFamily('monospace').fontColor($r('app.color.miuix_on_surface')).width('100%').copyOption(CopyOptions.LocalDevice)},(line:string,index:number)=>renderKey(index,line)
+    ForEach(this.state.diagnostics.lines,(line:string)=>{Text(line).fontSize(F.Footnote1).fontFamily('monospace').fontColor($r('app.color.miuix_on_surface')).width('100%').copyOption(CopyOptions.LocalDevice)},(line:string,index:number)=>String(index)+line)
   }}
   @Builder private probeRow(label:ResourceStr,value:ResourceStr){Row({space:S.Dp16}){
     Text(label).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')).layoutWeight(1)
