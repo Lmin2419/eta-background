@@ -1,6 +1,6 @@
 # Eta 后台版与上游整合：当前实施方案
 
-更新：2026-11-01T18:34:07Z。负责人：ChatGPT。依据：用户最新的四项开发指令及预览兼容选项。**四项代码已进入候选，真机尚未验收，未发布。**
+更新：2026-11-01T18:43:59Z。负责人：ChatGPT。依据：用户最新的四项开发指令及预览兼容选项。**四项代码已进入候选，真机尚未验收，未发布。**
 
 ## 1. 当前候选与证据归属
 
@@ -67,7 +67,7 @@ Android Live Updates 不支持任意自定义通知画布。本候选按用户�
 
 ## 4. 验证与交付
 
-本地全量单测 2,175 项（0 失败、0 错误、1 跳过）、Lint（0 错误、389 Warning、1 Hint）、Debug 构建、12 项接线和 8 项部署测试通过；最终旋转补充另作定向验证通过。远端 PR Check 41335810776 与 Etax Build 41335805841 正在执行，尚未将云端结果填为成功，签名候选尚待生成。
+对应 head 的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41335810776) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41335805841) 均成功。签名构建日志记录全量 2,175 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建均通过。已下载实际 CI 工件，独立复核包名、版本、签名、SHA-256 及内嵌引擎/脚本与源码完全一致。真机仍未执行。
 
 详见 [候选证据](CANDIDATE_3c74066.md) 与 [TASK_PREVIEW.md（固定代码）](https://github.com/Lmin2419/eta-background/blob/3c74066e58ccff2409b305ff3527ab454a3c238b/etax/TASK_PREVIEW.md)。README、后台版更新说明和源码中的整合计划已同步。
 

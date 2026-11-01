@@ -1,6 +1,6 @@
 # 3c74066 候选包与验证证据
 
-记录时间：2026-11-01T18:34:07Z。本页属于协作分支，只记录对应 SHA 的事实，不作为发布公告或真机验收通过证明。
+记录时间：2026-11-01T18:43:59Z。本页属于协作分支，只记录对应 SHA 的事实，不作为发布公告或真机验收通过证明。
 
 ## 代码与范围
 
@@ -16,7 +16,7 @@
 
 ## CI 与本地检查
 
-本地全量单测 2,175 项（0 失败、0 错误、1 跳过）、Lint（0 错误、389 Warning、1 Hint）、Debug 构建、12 项接线和 8 项部署测试通过；最终旋转补充另作定向验证通过。远端 PR Check 41335810776 与 Etax Build 41335805841 正在执行，尚未将云端结果填为成功，签名候选尚待生成。
+对应 head 的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41335810776) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41335805841) 均成功。签名构建日志记录全量 2,175 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建均通过。已下载实际 CI 工件，独立复核包名、版本、签名、SHA-256 及内嵌引擎/脚本与源码完全一致。真机仍未执行。
 
 | 检查 | 证据 |
 | --- | --- |
@@ -30,9 +30,26 @@
 | 引擎编译 | e41 编译成功，内嵌版本与源码对应 |
 | 代码审查 | 模型与预览帧分离、按 run 绑定、操作排空、旧几何失效、关闭资源释放、终态竞争、权限/通知兼容均已检查 |
 
-## 安装包状态
+## 实际签名安装包
 
-签名工件尚未生成。请勿把此前 2ada136 或本地 Debug 包当作本轮四项功能候选；完成后在本页补充实际工件、大小、SHA-256、包名/版本和签名证书。当前构建：[Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41335805841)。
+| 项目 | 已核验值 |
+| --- | --- |
+| 下载 | [Etax-v3.3.5+etax.3c74066.apk](https://github.com/Lmin2419/eta-background/actions/runs/41335805841/artifacts/13095599204)；GitHub 下载需登录 |
+| artifact | 13095599204；未过期，expires_at=2026-12-01T18:42:35Z |
+| 实际字节数 | 6,731,643 |
+| APK SHA-256 | d22c575e0d2418a13dece074c9772e9bb46ac153e8b664c44c57bf99f8240c2b |
+| 包名 | io.github.mangi.etax |
+| 版本 | 3.3.5+etax.3c74066；versionCode 2026103003 |
+| SDK | minSdk 33，targetSdk 37 |
+| 签名主体 | CN=ETAX Self Signed, O=Personal, C=CN |
+| 证书 SHA-256 | dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5 |
+| 内嵌引擎 | 20261101-e41-preview |
+| 引擎 dex SHA-256 | 44614340086b946b4c99a7159b749a9f6fbdc1d22d7ffd8cc970f5d8e6432b5d |
+
+核验方法：已实际下载工件，计算 APK 哈希并与 CI sha256sum / GitHub artifact digest 比较；使用 aapt2 读取包名/版本/SDK，apksigner 验证签名与上述证书；逐字节比较 APK 中 vdrive.dex、vd.sh、install_vdrive.sh、check_pair.sh 与固定源码/构建产物，确认不包含 engine.token。全部一致。签名与此前 4637961/2ada136 测试包记录一致；未读取用户手机上实际 APK，不保证任意其他来源或其他签名安装包可覆盖。
+
+GitHub upload-artifact 使用 archive:false，此下载内容本身就是 APK ZIP 结构（含 AndroidManifest.xml），不是需要再找一层 APK 的打包目录。工具下载临时扩展名为 .zip 时已核验真实内容后按 .apk 整理；没有修改 APK 字节或重新签名。
+
 
 ## 证据限制与设备测试
 

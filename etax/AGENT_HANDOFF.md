@@ -65,14 +65,16 @@
 - instruction_revision: 1
 - issued_at: 2026-11-01T18:34:07Z
 - status: REVIEW_READY
+- evidence_updated_at: 2026-11-01T18:43:59Z
 - target: ChatGPT
 - current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)
 - candidate_head: 3c74066e58ccff2409b305ff3527ab454a3c238b
 - parent_head: 2ada1360dd56a72de46cd57dc627e149c37efd9a
 - engine_build: 20261101-e41-preview
 - installed_version_report: 4637961；旧版 U001–U003 不移记给本候选
-- latest_validation: 本地全量单测 2,175 项（0 失败、0 错误、1 跳过）、Lint（0 错误、389 Warning、1 Hint）、Debug 构建、12 项接线和 8 项部署测试通过；最终旋转补充另作定向验证通过。远端 PR Check 41335810776 与 Etax Build 41335805841 正在执行，尚未将云端结果填为成功，签名候选尚待生成。
+- latest_validation: 对应 head 的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41335810776) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41335805841) 均成功。签名构建日志记录全量 2,175 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建均通过。已下载实际 CI 工件，独立复核包名、版本、签名、SHA-256 及内嵌引擎/脚本与源码完全一致。真机仍未执行。
 - candidate_evidence: [候选包、签名、检查及未验证项](coordination/CANDIDATE_3c74066.md)
+- candidate_apk: [Etax-v3.3.5+etax.3c74066.apk](https://github.com/Lmin2419/eta-background/actions/runs/41335805841/artifacts/13095599204)；artifact 13095599204；原证书签名已独立核验
 - device_status: 本候选真机未执行；用户可独立安装，不要求连接电脑
 - mode: ChatGPT 手动接手；每小时自动检查保持停用，dsh 不新增实施、不重建定时任务
 
@@ -147,13 +149,21 @@
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
 - last_reviewed_code_head: 3c74066e58ccff2409b305ff3527ab454a3c238b
-- last_reviewed_coordination_head: 380f7e0fa04bf31894f768e56890b44c9bedf4bc
-- reviewed_at: 2026-11-01T18:34:07Z
-- decision: 用户授权的四项功能已实现为候选；本地验证通过，远端两项 CI 仍在执行；本候选未作真机验收，不继承旧 APK 实测
+- last_reviewed_coordination_head: ffcc8d0196833aa6ee37460d519bc86712484da8
+- reviewed_at: 2026-11-01T18:43:59Z
+- decision: 用户授权的四项功能已实现为候选；两项远端 CI 均成功，实际签名 APK 已下载并独立核验；本候选未作真机验收，不继承旧 APK 实测
 - evidence: [3c74066 候选证据](coordination/CANDIDATE_3c74066.md)、[实际功能与手机验证](https://github.com/Lmin2419/eta-background/blob/3c74066e58ccff2409b305ff3527ab454a3c238b/etax/TASK_PREVIEW.md)
 - device_gate: U001–U003 仅为 4637961 旧版体验；本次直接开发授权没有把第 2 轮技术门槛标为通过。新候选手机验证仍未执行
 - next_phase_permission: 四项实现由用户最新消息直接授权；部分完成/等待用户语义仍待后续，风险 Hook 问题未解决；不合并/发布
 - issued_next_instruction: C005 revision 1（ChatGPT 交付四项候选；dsh 不继续旧工作；自动检查停用）
+
+### 候选签名构建完成 — 2026-11-01T18:43:59Z
+
+- 对应 head 的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41335810776) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41335805841) 均成功。签名构建日志记录全量 2,175 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建均通过。已下载实际 CI 工件，独立复核包名、版本、签名、SHA-256 及内嵌引擎/脚本与源码完全一致。真机仍未执行。
+- [下载工件 13095599204](https://github.com/Lmin2419/eta-background/actions/runs/41335805841/artifacts/13095599204)：6,731,643 bytes；APK SHA-256 d22c575e0d2418a13dece074c9772e9bb46ac153e8b664c44c57bf99f8240c2b，与 CI 和工件 digest 一致。
+- 包名 io.github.mangi.etax；版本 3.3.5+etax.3c74066 / 2026103003。apksigner 确认沿用 CN=ETAX Self Signed 证书，证书 SHA-256 dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5。
+- APK 内 e41 dex、部署/配对脚本与源码/生成产物逐字节匹配，没有打包 engine.token。详见[候选证据](coordination/CANDIDATE_3c74066.md)。
+- PR #45 仍 Draft/open、未合并，业务 head 未变化。此条只补充构建证据，没有新业务提交，没有远程安装、发布、标签或正式下载变更。
 
 ### 四项功能候选 — 2026-11-01T18:34:07Z
 
