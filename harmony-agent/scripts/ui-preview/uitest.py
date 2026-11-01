@@ -178,15 +178,22 @@ class Preview:
 
     # The previewer's input-method path does not reach text fields, so letters are sent as hardware
     # key presses (KEYCODE_A = 2017 ... KEYCODE_Z, KEYCODE_0 = 2000 ..., SPACE = 2050). ASCII only.
-    KEYCODES = dict([(chr(ord('a') + i), 2017 + i) for i in range(26)] + [(str(i), 2000 + i) for i in range(10)] + [(' ', 2050)])
+    KEYCODES = dict([(chr(ord('a') + i), 2017 + i) for i in range(26)] + [(str(i), 2000 + i) for i in range(10)]
+                    + [(' ', 2050), ('.', 2044), (',', 2043), ('-', 2057), ('/', 2064), (';', 2062), ('=', 2058)])
+    SHIFTED = {':': 2062, '_': 2057}  # typed as Shift + the base key
+    SHIFT = 2047
     async def type(self, text):
         for ch in text.lower():
-            code = self.KEYCODES.get(ch)
-            if code is None: raise AssertionError('type supports a-z, 0-9 and space only: %r' % ch)
+            code, shift = self.KEYCODES.get(ch), False
+            if code is None and ch in self.SHIFTED: code, shift = self.SHIFTED[ch], True
+            if code is None: raise AssertionError('type supports a-z, 0-9, space and . , - / ; = : _ only: %r' % ch)
+            pressed = [self.SHIFT, code] if shift else [code]
+            if shift: self.command('KeyPress', {'isInputMethod': False, 'keyCode': self.SHIFT, 'keyAction': 0, 'keyString': '', 'pressedCodes': [self.SHIFT]})
             for action in (0, 1):
                 self.command('KeyPress', {'isInputMethod': False, 'keyCode': code, 'keyAction': action,
-                                          'keyString': ch, 'pressedCodes': [code]})
+                                          'keyString': ch, 'pressedCodes': pressed})
                 await asyncio.sleep(0.02)
+            if shift: self.command('KeyPress', {'isInputMethod': False, 'keyCode': self.SHIFT, 'keyAction': 1, 'keyString': '', 'pressedCodes': [self.SHIFT]})
 
     def screenshot(self, name):
         if self.frame: (self.report / (name + '.jpg')).write_bytes(self.frame)
