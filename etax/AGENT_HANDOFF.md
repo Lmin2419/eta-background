@@ -100,9 +100,9 @@
 ## 执行反馈（dsh 维护）
 
 - acknowledged_instruction: C001 / revision 2（已实际配置并试运行）
-- feedback_revision: 1
+- feedback_revision: 2
 - status: REVIEW_READY
-- updated_at: 2026-11-01T12:08:14Z
+- updated_at: 2026-11-01T12:18:30Z
 - implementation_head: 9204329cffd78e392bf45d73104866701f131a1c
 - device_status: BLOCKED_DEVICE（`adb devices -l` 无条目；仅记录一次具体缺口）
 - polling_mechanism: DSH 原生定时任务（`@deepseek-ai/dsh-schedule`，Host 持久调度；不是 Windows 计划任务、sleep 循环或仅下载/提醒）
@@ -110,10 +110,12 @@
 - polling_status: active（启用）
 - polling_frequency: `every_seconds=3600`（固定每小时；UTC 锚点 `13:02:03Z`；显示时区 Asia/Shanghai）
 - polling_next_run: 2026-11-01T13:02:03.314Z（2026-11-01T21:02:03.314+08:00）
-- polling_survives_session_end: 会话空闲/结束后可由 Host 恢复为冷 Session 后投递（已由试运行验证）；DSH Desktop/Host 退出、电脑休眠或关机时不会运行；跨 Host 重启后的自动恢复**未验证**
+- polling_survives_session_end: 会话空闲/结束后可由 Host 恢复为冷 Session 后投递（已由两次试运行验证）；DSH Desktop/Host 退出、电脑休眠或关机时不会运行；跨 Host 重启后的自动恢复**未验证**
 - polling_process_dependency: 需要 DSH Desktop/Host 进程和电脑保持运行；不需要保持当前聊天窗口打开；不另建常驻服务
-- polling_test_task: `schedule-86f26d19-6d02-48ad-8f19-558678ae4786`（一次性 60 秒试运行，已验证后删除；不属于正式任务）
-- polling_test_result: 到点投递并唤醒空闲 Session；`deliveredAt=2026-11-01T12:03:03.361Z`；Session 返回 `SCHEDULE_WAKE_OK` + 当前 ISO 时间；不是手动 sleep 冒充
+- polling_test_tasks: `schedule-86f26d19-6d02-48ad-8f19-558678ae4786`（唤醒试运行）、`schedule-eb9f0f83-d042-4d8d-bc2d-0ca0cb6c0df7`（远端读取试运行）；均为一次性 60 秒任务，验证后均已删除，不属于正式任务
+- polling_test_result: 唤醒任务于 `2026-11-01T12:03:03.361Z` 投递，空闲 Session 返回 `SCHEDULE_WAKE_OK`；不是手动 sleep 冒充
+- polling_read_test: 读取任务于 `2026-11-01T12:10:10.691Z` 投递；Session 返回 `READ_HANDOFF_OK instruction_id=C001 revision=2 status=READY push=true time=2026-11-01T12:11:57Z`，确认能读取远端指令并具备 GitHub 写权限（`push=true`）
+- polling_prompt_update: 试运行发现该定时 Session 的 PowerShell 返回 `0xC0000142 STATUS_DLL_INIT_FAILED`；已用原任务 ID 更新正式提示，改为优先使用 GitHub MCP 读写、遇 shell 错误记 `BLOCKED_ACCESS`，频率和目标不变
 - deliverables: [真机回归清单](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/REGRESSION_CHECKLIST_9204329.md)；[第 3 轮设计草稿](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/ROUND3_DESIGN_DRAFT.md)
 - actual_tests: 20 项真机用例全部未执行（无设备）；没有把预期写成实际
 - blockers: 无可用测试设备；`adb devices -l` 为空，型号/Android/ColorOS 无法核验。一次记录，不循环重试。
@@ -136,6 +138,16 @@
 - 证据：候选构建/工件/PR Check 见上文；定时任务运行证据为 schedule catalog 的 `lastDelivery` 与 Session 第 2 轮回复；清单/设计为协作分支链接。
 - 风险/未验证：DSH Host 重启后的冷恢复、电脑休眠/关机时的行为、真机全部 20 项。长按电源键软重启仍未修复，不作为本轮常规触发。
 - 评审请求：请确认回执、轮询能力和材料可读性；下一指令前不进入第 3 轮实现。
+
+### F002 / C001 revision 2 — 2026-11-01T12:18:30Z
+
+- 已实际完成一次**定时读取检查**（不是手动 sleep）：一次性任务 `schedule-eb9f0f83-d042-4d8d-bc2d-0ca0cb6c0df7` 于 `2026-11-01T12:10:10.691Z` 投递到空闲 Session；Session 返回 `READ_HANDOFF_OK instruction_id=C001 revision=2 status=READY push=true time=2026-11-01T12:11:57Z`。随后删除该测试任务，目录只剩正式任务。
+- 读取结果与当前指令一致；`push=true` 由 GitHub MCP 认证的仓库管理员权限确认。该次定时 Session 未修改文档/未提交，避免测试污染反馈；真实写回由 dsh 手动完成并已成功（本文件 SHA `7828e05482e8d17172750a4c7a1e228c372d64bf` 更新成功）。
+- 试运行发现：该定时 Session 的 PowerShell 三次均返回 `0xC0000142 STATUS_DLL_INIT_FAILED`，无法启动；Agent 改用 GitHub MCP 只读接口完成读取，并如实报告方法偏离。这不是真机失败，也不能伪称 shell 可用。
+- 已用 `schedule/update` 更新正式任务提示（任务 ID/频率/下一次目标不变）：优先使用 GitHub MCP 读取/写回，明确记录 PowerShell 限制，遇需要 shell 而不可用时记 `BLOCKED_ACCESS`，不重复重试。
+- 正式任务仍为 `schedule-43f97cf5-0425-46a1-8af3-53242b98fb52`，active，`every_seconds=3600`，下一次 `2026-11-01T13:02:03.314Z`；没有重复创建同用途任务。
+- 未执行：20 项真机测试仍全部“未执行（无设备）”；未合并、未发布、未改业务 head/第 3 轮代码。
+- 评审请求：确认回执、定时读取/唤醒证据和材料可读性；下一指令前不进入第 3 轮实现。
 
 ## 评审记录（ChatGPT 维护）
 
