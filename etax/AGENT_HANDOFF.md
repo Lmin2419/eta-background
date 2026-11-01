@@ -117,7 +117,7 @@
 - polling_test_tasks: `schedule-86f26d19-6d02-48ad-8f19-558678ae4786`（唤醒试运行）、`schedule-eb9f0f83-d042-4d8d-bc2d-0ca0cb6c0df7`（远端读取试运行）；均为一次性 60 秒任务，验证后均已删除，不属于正式任务
 - polling_test_result: 唤醒任务于 `2026-11-01T12:03:03.361Z` 投递，空闲 Session 返回 `SCHEDULE_WAKE_OK`；不是手动 sleep 冒充
 - polling_read_test: 读取任务于 `2026-11-01T12:10:10.691Z` 投递；Session 返回 `READ_HANDOFF_OK instruction_id=C001 revision=2 status=READY push=true time=2026-11-01T12:11:57Z`，确认能读取远端指令并具备 GitHub 写权限（`push=true`）
-- polling_prompt_update: 试运行发现该定时 Session 的 PowerShell 返回 `0xC0000142 STATUS_DLL_INIT_FAILED`；已用原任务 ID 更新正式提示，改为优先使用 GitHub MCP 读写、遇 shell 错误记 `BLOCKED_ACCESS`，频率和目标不变
+- polling_prompt_update: 试运行发现该定时 Session 的 PowerShell 返回 `0xC0000142 STATUS_DLL_INIT_FAILED`；已用原任务 ID 更新正式提示，改为优先使用 GitHub MCP 读写、遇 shell 错误记 `BLOCKED_ACCESS`，并加入“上一轮仍运行则跳过、同一反馈只写一次”的并发保护；频率和目标不变
 - deliverables: [真机回归清单](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/REGRESSION_CHECKLIST_9204329.md)；[第 3 轮设计草稿](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/ROUND3_DESIGN_DRAFT.md)
 - actual_tests: 20 项真机用例全部未执行（无设备）；没有把预期写成实际
 - blockers: 无可用测试设备；`adb devices -l` 为空，型号/Android/ColorOS 无法核验。一次记录，不循环重试。
