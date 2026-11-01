@@ -7,6 +7,7 @@ import { MarkdownRenderStore } from '../../../core/eta/markdown/markdownRenderin
 import { EtaComponentSizes as S, MiuixFontSizes as F, EtaMessageDefaults as C } from '../../../core/eta/tokens';
 import { toolLabel,toolIcon } from './ToolResources';
 import { MarkdownCopyButton } from '../markdown/MarkdownContent';
+import { renderKey } from '../../../core/eta/renderKey';
 import { EtaFontFamilies } from '../../../platform/EtaFonts';
 import { ThinkingRow } from './ChatMessageItem';
 @Component
@@ -31,7 +32,7 @@ struct ToolGroupRow {
   }.layoutWeight(1).alignItems(HorizontalAlign.Start)
     Image($r('app.media.ic_rounded_chevron_right')).width(S.Dp14).height(S.Dp14).rotate({angle:this.expanded?C.ChevronExpandedDegrees:S.Dp0}).fillColor($r('app.color.eta_message_chevron'))
   }.width('100%').constraintSize({minHeight:C.WorkRowHeight}).padding({top:S.Dp6,bottom:S.Dp6}).onClick(()=>{this.expanded=!this.expanded;})
-    if(this.expanded){Column(){ForEach(this.group.calls,(tool:ToolActivityMessageUi)=>{Row(){Circle().width(S.Dp5).height(S.Dp5).fill(tool.status==='Failed'?$r('app.color.miuix_error'):$r('app.color.miuix_primary')).margin({top:S.Dp13,right:S.Dp8});ToolActivityRow({tool}).layoutWeight(1)}.alignItems(VerticalAlign.Top)},(tool:ToolActivityMessageUi)=>tool.id)}.padding({bottom:S.Dp4})}
+    if(this.expanded){Column(){ForEach(this.group.calls,(tool:ToolActivityMessageUi)=>{Row(){Circle().width(S.Dp5).height(S.Dp5).fill(tool.status==='Failed'?$r('app.color.miuix_error'):$r('app.color.miuix_primary')).margin({top:S.Dp13,right:S.Dp8});ToolActivityRow({tool}).layoutWeight(1)}.alignItems(VerticalAlign.Top)},(tool:ToolActivityMessageUi)=>renderKey(tool.id,tool))}.padding({bottom:S.Dp4})}
   }.width('100%')}
 }
 @Component
@@ -68,6 +69,6 @@ export struct AgentWorkProcess {
       }.width(C.WorkGutterWidth).alignSelf(ItemAlign.Stretch).margin({right:C.WorkGutterGap})
       Column(){this.content(step)}.layoutWeight(1)
       }.width('100%').alignItems(VerticalAlign.Top)
-    },(step:AgentWorkStep)=>step.key)}.padding({bottom:S.Dp6})}
+    },(step:AgentWorkStep,index:number)=>renderKey(step.key,{step:step,index:index}))}.padding({bottom:S.Dp6})}
   }.width('100%').padding({left:S.Dp16,right:S.Dp16,top:S.Dp2,bottom:S.Dp2})}
 }
