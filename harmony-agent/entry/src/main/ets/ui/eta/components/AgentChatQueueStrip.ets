@@ -2,6 +2,7 @@
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 import { QueuedMessageUi } from '../../../core/eta/model/conversation';
 import { EtaComponentSizes as S, EtaQueueDefaults as Q, MiuixFontSizes as F } from '../../../core/eta/tokens';
+import { renderKey } from '../../../core/eta/renderKey';
 @Component
 export struct AgentChatQueueStrip {
   @Prop @Watch('reset') items:QueuedMessageUi[]=[];
@@ -34,6 +35,6 @@ export struct AgentChatQueueStrip {
       Divider().strokeWidth(S.Dp0_5).color($r('app.color.eta_queue_divider')).margin({left:S.Dp12,right:S.Dp12})
       Row({space:S.Dp8}){Text(String(index+1)).fontSize(F.Footnote2).fontWeight(FontWeight.Medium).fontColor($r('app.color.miuix_on_surface_variant_summary'));this.preview(item);this.actions(item)}
         .padding({left:S.Dp14,right:S.Dp6,top:S.Dp3,bottom:S.Dp3}).width('100%')
-    }},(item:QueuedMessageUi)=>item.id)}.width('100%')}.width('100%').constraintSize({maxHeight:Q.QueueExpandedMaxHeight}).scrollBar(BarState.Auto).padding({bottom:S.Dp4})}
+    }},(item:QueuedMessageUi)=>renderKey(item.id,item)}.width('100%')}.width('100%').constraintSize({maxHeight:Q.QueueExpandedMaxHeight}).scrollBar(BarState.Auto).padding({bottom:S.Dp4})}
   }.width('100%').backgroundColor($r('app.color.miuix_surface_container')).border({width:S.Dp0_5,color:$r('app.color.eta_queue_outline')}).borderRadius(Q.QueueContainerCornerRadius).clip(true)}}
 }

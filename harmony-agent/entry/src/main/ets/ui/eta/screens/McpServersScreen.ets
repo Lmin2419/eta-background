@@ -11,6 +11,7 @@ import {EtaSwitchPreference} from '../components/EtaSelectionPreferences';
 import {EtaTextButton} from '../components/EtaControls';
 import {ListEmptyState} from '../components/EtaSmallComponents';
 import {McpFormDialog,mcpNotice} from './McpDialogs';
+import { renderKey } from '../../../../core/eta/renderKey';
 @Component
 export struct McpServersScreen {
  @Prop @Watch('sync') state:ShellState=emptyShellState();
@@ -39,7 +40,7 @@ export struct McpServersScreen {
  @Builder private refreshIcon(){this.icon($r('app.media.ic_rounded_refresh'))}
  @Builder private list(){Column(){
   if(this.state.mcp.servers.length===0){ListEmptyState({title:$r('app.string.mcp_empty_title'),summary:$r('app.string.mcp_empty_summary'),hasIcon:true,icon:() => { this.emptyIcon(); },hasAction:true,action:() => { this.addButton(); }})}
-  else{ForEach(this.state.mcp.servers,(server:McpServer,index:number)=>{if(index>0){EtaPreferenceDivider({hasLeading:false})}EtaArrowPreference({title:server.name,summary:$r('app.string.mcp_server_row_summary',activeMcpTools(server).length,server.tools.length),onAction:()=>this.controller?.openMcp(server.id)})},(server:McpServer)=>server.id)}
+  else{ForEach(this.state.mcp.servers,(server:McpServer,index:number)=>{if(index>0){EtaPreferenceDivider({hasLeading:false})}EtaArrowPreference({title:server.name,summary:$r('app.string.mcp_server_row_summary',activeMcpTools(server).length,server.tools.length),onAction:()=>this.controller?.openMcp(server.id)})},(server:McpServer)=>renderKey(server.id,server)}
  }.width('100%')}
  @Builder private serverSettings(server:McpServer){Column(){
   EtaSwitchPreference({title:$r('app.string.mcp_enable_server'),summary:server.url,checked:server.enabled,isEnabled:!this.state.mcp.working,onCheckedChange:(value:boolean)=>{void this.controller?.mcp?.setEnabled(value);}})
@@ -49,7 +50,7 @@ export struct McpServersScreen {
  private toolSummary(tool:McpTool):ResourceStr{return tool.description.trim()?tool.description:tool.readOnlyHint===true?$r('app.string.mcp_read_only_tool'):$r('app.string.mcp_may_modify_data');}
  @Builder private tools(server:McpServer){Column(){
   if(server.tools.length===0){ListEmptyState({title:$r('app.string.mcp_no_tools'),summary:$r('app.string.mcp_refresh_tools_hint'),hasIcon:true,icon:() => { this.refreshIcon(); }})}
-  else{ForEach(server.tools,(tool:McpTool,index:number)=>{if(index>0){EtaPreferenceDivider({hasLeading:false})}EtaSwitchPreference({title:tool.title.trim()?tool.title:tool.name,summary:this.toolSummary(tool),checked:server.enabledToolNames.includes(tool.name),isEnabled:!this.state.mcp.working,onCheckedChange:(value:boolean)=>{void this.controller?.mcp?.setTool(tool.name,value);}})},(tool:McpTool,index:number)=>String(index)+':'+tool.name)}
+  else{ForEach(server.tools,(tool:McpTool,index:number)=>{if(index>0){EtaPreferenceDivider({hasLeading:false})}EtaSwitchPreference({title:tool.title.trim()?tool.title:tool.name,summary:this.toolSummary(tool),checked:server.enabledToolNames.includes(tool.name),isEnabled:!this.state.mcp.working,onCheckedChange:(value:boolean)=>{void this.controller?.mcp?.setTool(tool.name,value);}})},(tool:McpTool,index:number)=>renderKey(String(index)+':'+tool.name,tool)}
  }}
  @Builder private deleteTitle(){Column(){Text($r('app.string.mcp_delete_server')).fontSize(F.Body1).fontWeight(FontWeight.Medium).fontColor($r('app.color.miuix_error'));Text($r('app.string.mcp_delete_server_summary')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary'))}.alignItems(HorizontalAlign.Start).width('100%')}
  @Builder private deleteRow(){EtaPreferenceRow({hasCustomTitle:true,titleAction:() => { this.deleteTitle(); },isEnabled:!this.state.mcp.working,onAction:()=>this.controller?.mcp?.show('delete')})}

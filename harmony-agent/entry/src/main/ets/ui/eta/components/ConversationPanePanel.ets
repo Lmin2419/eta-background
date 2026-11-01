@@ -8,6 +8,7 @@ import { EtaHaptics } from '../../../platform/EtaHaptics';
 import { EtaHaptic } from '../../../core/eta/hapticFeedback';
 import { EtaDialogContent, MiuixDialogActions } from './EtaDialogs';
 import { EmptyEtaSlot } from './EtaCard';
+import { renderKey } from '../../../core/eta/renderKey';
 @CustomDialog
 struct RenameConversationDialog {
   controller?:CustomDialogController;
@@ -70,8 +71,8 @@ export struct ConversationPanePanel {
       if(this.state.paneGroups.length===0){ListItem(){Text(this.state.search.trim()?$r('app.string.conversation_no_results'):$r('app.string.conversation_empty')).fontSize(F.Body2).fontWeight(FontWeight.Medium).fontColor($r('app.color.miuix_on_surface_variant_summary')).padding({left:M.RowHorizontalPadding,right:M.RowHorizontalPadding,top:M.EmptyVerticalPadding,bottom:M.EmptyVerticalPadding})}}
       ForEach(this.state.paneGroups,(group:ConversationDrawerGroup)=>{
         ListItem(){this.section(group)}
-        ForEach(group.items,(item:ConversationSummaryUi)=>{ListItem(){this.row(item)}},(item:ConversationSummaryUi)=>item.id)
-      },(group:ConversationDrawerGroup)=>group.id)
+        ForEach(group.items,(item:ConversationSummaryUi)=>{ListItem(){this.row(item)}},(item:ConversationSummaryUi)=>renderKey(item.id,item))
+      },(group:ConversationDrawerGroup)=>renderKey(group.id,group))
     }.layoutWeight(1).width('100%').padding({left:M.PaneHorizontalPadding,right:M.PaneHorizontalPadding,top:S.Dp4,bottom:S.Dp4}).clip(true).scrollBar(BarState.Off)
     Row(){
       this.dock($r('app.media.ic_rounded_settings'),$r('app.string.action_settings'),true,()=>this.controller?.navigate('settings'))
