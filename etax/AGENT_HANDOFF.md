@@ -139,7 +139,7 @@ C001 材料已实际读到，协作分支只有文档变化，业务 PR 保持�
 - 已读取远端最新 C002 / revision 2，以及评审附件 `C001_REVIEW_F002.md`；未停在 C001 等待状态。
 - 已按 A1–A3 修订清单（commit `70c94871517ddf211ded922a91d544cf22603071`）：第 20 项只整理既有现象/日志，不主动触发软重启；第 2–4 项明确原生工具、`package` 字段、`type_text` 的 `index`+`observation_id`、截图 `frame_id` 和输入后重新观察；第 5/9/12 项补充可判定条件与“未覆盖”规则。
 - 已按 B1–B3 重写设计草稿（commit `2764ae3caff463d7168152ecc299f94413e58555`）：沿用 `AgentRuntimeSession.complete/cancel` 的终态权威和发布顺序；优先复用现有顺序/身份，不新增第二套终态仲裁或持久化库；按 `RuntimeRunRegistry.snapshot()` 优先级补全排队/准备/GUI 等待/暂停恢复/提交竞争；区分单次工具不确定、run 终态和第 4 轮用户语义。
-- 已记录正式任务 21:02 的实际投递（`13:02:03.314Z` 计划、`13:02:03.352Z` 投递）和 Session 第 5 轮行为：`get_file_contents` 只返回 SHA + `[embedded resource unsupported]`，未返回正文；模型随后 5 次重试均 `TIMEOUT`，turn 以 `error/TIMEOUT` 结束，没有写工具调用或提交。证据见 `etax/coordination/POLLING_EVIDENCE.md`（commit `25f7fe2c6507bae2500ad792bca3d37667601ec7`）。
+- 已记录正式任务 21:02 的实际投递（`13:02:03.314Z` 计划、`13:02:03.352Z` 投递）和 Session 第 5 轮行为。注意 C002 revision 2 的 `revised_at` 是 `13:21:50Z`，晚于 13:02；该次自然触发不可能执行 revision 2，只能看到早期 C002 文件；`get_file_contents` 只返回 SHA + `[embedded resource unsupported]`，未返回正文；模型随后 5 次重试均 `TIMEOUT`，turn 以 `error/TIMEOUT` 结束，没有写工具调用或提交。证据见 `etax/coordination/POLLING_EVIDENCE.md`（最新 commit `c41ab447bba78cf8cfe738ffed41014bddcf3e25`，含时点说明）。
 - 已确认该 Session 工具清单存在 `mcp__github__create_or_update_file`/`push_files`，但本次未实际执行写回；因此 `push=true` 只代表权限，不代表自动写回通过。当前 `running=false`，无并发实例。
 - 已确认 PowerShell 错误 `0xC0000142 STATUS_DLL_INIT_FAILED`；本轮文档工作改用当前 dsh 的 GitHub API 完成，不宣称定时 Session 已能执行 shell/编译。
 - 已上传 `etax/coordination/POLLING_EVIDENCE.md`，区分手动提交与定时投递/写回。
