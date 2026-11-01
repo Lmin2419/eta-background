@@ -1,4 +1,4 @@
-// Copyright © 2026 蛮吉 (Mangi-11). PolyForm Noncommercial 1.0.0.
+// 随身助手原创代码（HDC 连接状态机，D0b1）。
 // D0b1：HDC 连接状态机。传输层只通过注入的接口访问，不直接 import 原生模块。
 // 接口形状参考 core/device.ts 的 HdcTransport 与 entry/src/main/cpp/bridge.cpp 的导出（tconn / list targets / shell）。
 

@@ -1,4 +1,4 @@
-// Copyright © 2026 蛮吉 (Mangi-11). PolyForm Noncommercial 1.0.0.
+// 随身助手原创代码（HDC 连接状态机，D0b1）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
