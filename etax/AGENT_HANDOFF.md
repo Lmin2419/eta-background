@@ -62,15 +62,17 @@
 ## 当前指令（ChatGPT 维护）
 
 - instruction_id: C004
-- instruction_revision: 3
+- instruction_revision: 4
 - issued_at: 2026-11-01T15:28:29Z
-- revised_at: 2026-11-01T15:36:23Z
-- status: READY
+- revised_at: 2026-11-01T16:22:21Z
+- status: REVIEW_READY
 - target: ChatGPT
 - current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)；后续在同一文件修订，不再生成重复方案
 - mode: 用户已要求由 ChatGPT 重新接手；手动推进，不恢复每小时自动检查
-- candidate_head: 9204329cffd78e392bf45d73104866701f131a1c
-- follows: C003 revision 5；U001–U003 继续有效
+- candidate_head: 2ada1360dd56a72de46cd57dc627e149c37efd9a
+- previous_candidate: 9204329cffd78e392bf45d73104866701f131a1c；U001–U003 只按原测试上下文保留，不自动算作新 APK 全项通过
+- follows: C004 revision 3；U001–U003 保留原测试上下文
+- known_device_results: 手机独立测试可用，U001–U003 可见场景已确认；文档上方“已确认基线”的无设备状态属于早期历史，最新结果见修订清单与本节。
 - scope: 按用户最新取舍调整上游整合：统一任务状态、小窗预览和接管、参考上游息屏策略及电源键入口；保留当前引擎和输入隔离
 - executor_handoff: dsh 后续读到本文时，不再执行已被本条取代的 C003 工作或修复定时链路，不新建业务提交；保留既有反馈与证据。ChatGPT 未直接访问或停止 dsh Host，不能宣称其定时器已关闭。
 
@@ -85,7 +87,7 @@
 
 ### 已核实的上游与本分支差异
 
-上游最新公开版本/当前 main 为 v3.4.0 / e90922a4490389f524a10c6acebbcca336883935；业务 PR #45 仍为 Draft/open，head 未变。
+上游源码对比基线为 v3.4.0 / e90922a4490389f524a10c6acebbcca336883935；下面列出的对比基于原候选 9204329。当前业务候选见本节 candidate_head。
 
 - 上游 VirtualDisplayStageCard.kt 已有微缩画面、展开视窗、点按/长按/滑动及全屏入口；VirtualDisplayController 维护单个活动显示屏和预览快照。
 - 上游预览 UI 更新按展开约 30ms、收起约 160ms 节流；onFrameAvailable 仍执行 Bitmap 解码/复制，不能仅据发布说明称其整条链路零拷贝。只借鉴交互与按可见性调节刷新，按本引擎能力设计帧传输。
@@ -118,7 +120,7 @@
 
 ### 具体整合顺序与完成标准
 
-用户已确认修改方案并继续。完整可执行范围、组件接线、通知能力验证、接管状态和交付标准见 [INTEGRATION_PLAN_CURRENT.md](coordination/INTEGRATION_PLAN_CURRENT.md)，以下为摘要。原业务分支计划保留基线；第三至第五轮的最新要求以该方案及用户后续指令为准。当前只更新文档，既有阶段门槛不伪造通过。
+用户已确认修改方案并继续。完整可执行范围、组件接线、通知能力验证、接管状态和交付标准见 [INTEGRATION_PLAN_CURRENT.md](coordination/INTEGRATION_PLAN_CURRENT.md)，以下为摘要。原业务分支计划保留基线；第三至第五轮的最新要求以该方案及用户后续指令为准。用户已发出“开工”指令，已实施下方第 2 轮衔接返修；既有阶段门槛不伪造通过。
 
 1. 收尾第 2 轮尚未覆盖的技术核验；U001–U003 已确认的手机场景不重复。保留原验收门槛，不把功能取舍更新写成技术验收通过。
 2. 第 3 轮复用 AgentRuntimeSession.complete/cancel 的结果权威，统一会话、通知及后续预览的只读状态；不新建第二套终态库，不新增设计报告循环。
@@ -132,9 +134,21 @@
 4. 息屏执行单独适配上游差异，复用现有 Runtime/VDrive，不再另造常驻保活系统。分开验证息屏后虚拟屏能否观察/输入、模型请求能否联网、两任务是否隔离、取消与亮屏恢复是否正常；网络或显示不可用时保留明确状态，不盲目重放不确定操作，不通过点亮主屏或循环请求冒充成功。
 5. 电源键排查集中在入口接线、包名/组件识别、相关差异和实际崩溃证据；已相同的 PowerHooks/AssistantManager 保留，不把上游虚拟屏权限 Hook 整套引入来试错。
 
+### 开工后的第 2 轮衔接返修 — 2026-11-01T16:22:21Z
+
+- 用户发出“开工”后，实际检出 PR head 9204329，发现并修复混用新旧工具时的观察生命周期缺口；[提交 2ada136](https://github.com/Lmin2419/eta-background/commit/2ada1360dd56a72de46cd57dc627e149c37efd9a)，6 个文件，+208/−10。
+- 旧 screen_* 输入、重新打开或结束屏幕之前先失效本任务的原生观察，覆盖操作成功、结果不确定、非 JSON 及抛异常路径；只读查询不改已发布 frame_id。screen_state 等返回丢屏/系统重启/接管或不确定结果时也统一失效。
+- 后台节点和截图观察要求明确、非主屏且外层/几何一致的 displayId；拒绝缺失、主屏 0 和矛盾身份，不放宽坐标或观察保护。
+- 新增 8 项测试。修复前 9 项路由测试中 6 项失败；修复后定向 48 项全部通过。Linux 全量 2,159 项：0 失败、0 错误、1 跳过。12 项接线与 8 项真实 shell 引擎部署回归通过。Lint 和 Debug 构建通过；Lint 为 0 错误、386 Warning、1 Hint。
+- 初次引擎测试因当前命令 PATH 不含已有 JDK/mksh/BusyBox/Toybox 而失败；配置已有工具后 8 项通过，没有跳过用例或修改测试以掩盖环境错误。
+- [原候选手机清单](coordination/REGRESSION_CHECKLIST_9204329.md)已同步 U001–U003，取消 USB/ADB 前置要求，纠正用 BACK 验证静态帧的错误步骤；没有把未取得的内部证据填通过。用户已确认场景不重复测试。
+- 本次没有设备操作或新 APK 真机结果。剩余设备门槛主要为新/旧工具路径及观察合同、同 App 串行、旋转/恢复/接管、输入结果不确定等；已询问完整安装版本用于关联既有结果，未获得独立核验。
+- 仅修复第 2 轮基础入口；第 3 轮统一状态、第 4 轮通知预览和接管、第五轮息屏适配仍待推进。依据当前方案保留阶段门槛，不合并、不发布、不改包名/签名/版本号、不恢复定时，也不要求 dsh 继续实施。
+- 该 head 的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41325658764) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41325654694) 已触发，2026-11-01T16:22Z 查询仍在运行；上述通过结论为本地 Linux 实际结果，不代填 CI 结论。
+
 ### 当前边界
 
-本次仅更新需求与源码对比记录，业务 head 未变；第 3–4 轮、小窗和息屏适配尚未实现。第 2 轮剩余验收未通过前不直接实施第 3 轮；不合并 main、不发布、不换下载、不改包名/签名、不远程安装或操作手机。软重启及整机冷启动白屏均不能宣称已修复。
+本次业务 head 已更新为 2ada136，第 2 轮衔接返修已实施。第 3–4 轮、小窗和息屏适配尚未实现。第 2 轮剩余验收未通过前不直接实施第 3 轮；不合并 main、不发布、不换下载、不改包名/签名、不远程安装或操作手机。软重启及整机冷启动白屏均不能宣称已修复。
 
 ## 执行反馈（dsh 维护）
 
@@ -185,14 +199,20 @@
 - last_reviewed_feedback_revision: 3
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
-- last_reviewed_code_head: 9204329cffd78e392bf45d73104866701f131a1c
-- last_reviewed_coordination_head: 8cd4469c8df63d22023b18472fdb2876cc734a1f
-- reviewed_at: 2026-11-01T13:56:39Z
-- decision: C002 主体修订与阻塞说明接受；第 3 轮设计方向通过；清单第 5 项按 C003 纠正；真机与自动交接分开推进
-- evidence: 最新清单、设计、POLLING_EVIDENCE.md 已实际读取；写工具测试提交及删除已核实；前次问题见 [C001 评审](coordination/C001_REVIEW_F002.md)
+- last_reviewed_code_head: 2ada1360dd56a72de46cd57dc627e149c37efd9a
+- last_reviewed_coordination_head: 88758f7f353e43be174964f1afa4ff7e9c32104c
+- reviewed_at: 2026-11-01T16:22:21Z
+- decision: 第 2 轮衔接返修 2ada136 已提交并通过本地全量测试、Lint 与构建；CI 运行中；真机门槛仍未全部通过，第 3 轮未实施
+- evidence: 已实际读取原业务源码、对照返回结构，执行修复前/后回归并核对远端 2ada136 的 6 个文件 diff；详细验证与 CI 链接见当前指令。历史 C001/C002 证据保留如下。
 - device_gate: 部分手机可见功能已获用户实测通过（U001/U002/U003）；通知内继续、双任务通知同时运行、停止一个不影响另一个均已确认；已确认场景不重复测试，完整第 2 轮验收仍未完成
 - next_phase_permission: 第 3 轮设计方向通过；业务实现待第 2 轮真机验收，不再要求额外设计报告
-- issued_next_instruction: C004 revision 3（当前实施方案已整理；ChatGPT 手动接手；dsh 不新增实施）
+- issued_next_instruction: C004 revision 4（第 2 轮衔接返修已提交；ChatGPT 手动接手；dsh 不新增实施）
+
+### 开工与基础返修交付 — 2026-11-01T16:22:21Z
+
+- 第 2 轮新增 2ada136，修复旧工具输入后的原生观察失效和后台 displayId 校验；源码、更新说明、定向及全量验证已完成，详见当前指令。
+- 本轮不重新验收全部 20 项，也不继承旧 APK 的全部实测；已经取得的 U001–U003 结果一次同步到清单，去掉 ADB 前置并改正第 5 项。
+- 当前实施方案已标记实际进度；第 3–5 轮功能未实施、未合并、未发布。下一步只补剩余技术证据和改动路径验证，不重写设计报告、不恢复定时。
 
 ### 当前实施方案整理完成 — 2026-11-01T15:36:23Z
 
