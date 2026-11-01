@@ -16,7 +16,7 @@ export function previewController(): FoundationController {
     return { cancel: () => { cancelled = true; }, post: async () => JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'OK' }, finish_reason: 'stop' }] }),
       get: async () => JSON.stringify({ data: ['示例模型', '示例推理模型', '新增模型 A', '新增模型 B', '新增模型 C'].map(id => ({ id })) }),
       stream: async (_url, _headers, _body, chunk) => {
-        for (const text of ['这是预览数据。', '\n\n', '回复会逐段显示，', '也可以点击停止。', '\n\n**可以继续切换会话、编辑模型或查看侧栏。**']) {
+        for (const text of ['这是预览数据。', '\n\n', '回复会逐段显示，', '也可以点击停止。', '\n\n**可以继续切换会话、编辑模型或查看侧栏。**', '\n\n1. 列表第一项\n', '2. 列表第二项']) {
           await new Promise(resolve => setTimeout(resolve, 300)); if (cancelled) throw new Error('CANCELLED');
           chunk('data: ' + JSON.stringify({ choices: [{ delta: { content: text }, finish_reason: null }] }) + '\n\n');
         }

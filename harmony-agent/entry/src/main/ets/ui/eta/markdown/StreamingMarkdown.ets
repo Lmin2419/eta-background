@@ -21,9 +21,10 @@ export struct StreamingMarkdown {
   aboutToAppear():void {
     this.mounted=true;this.session?.attach();
     this.frames=new EtaFrameLoop(this.getUIContext(),(seconds:number)=>{const coordinator=this.session?.state.revealCoordinator;coordinator?.advanceFrame(seconds);const keys=Array.from(coordinator?.started||new Set<number>());if(keys.join()!==this.startedKeys.join())this.startedKeys=keys;this.onRevealComplete(!!coordinator&&coordinator.drained&&!this.streaming&&!!this.session?.state.snapshot?.isComplete);return !!coordinator&&!coordinator.drained;});
+    if(this.session)this.session.state.revealCoordinator.onPending=()=>{if(this.mounted)this.frames?.start();};
     this.unsubscribe=this.session?.subscribe(()=>this.publish());this.updateTarget();this.publish();
   }
-  aboutToDisappear():void {this.mounted=false;this.unsubscribe?.();this.frames?.stop();this.session?.detach();}
+  aboutToDisappear():void {this.mounted=false;if(this.session)this.session.state.revealCoordinator.onPending=null;this.unsubscribe?.();this.frames?.stop();this.session?.detach();}
   private updateTarget():void {if(this.mounted)this.session?.update(this.content,this.streaming);}
   private publish():void {
     if(!this.mounted||!this.session)return;
