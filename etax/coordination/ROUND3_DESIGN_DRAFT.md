@@ -1,118 +1,125 @@
-# 第 3 轮设计草稿：统一任务状态
+# 第 3 轮设计草稿：统一任务状态（C002 修订）
 
 > 状态：仅设计，未实施；不修改业务代码、业务 head 或 PR #45。  
-> 依据：`9204329cffd78e392bf45d73104866701f131a1c` 的第 1–2 轮代码与既有回归。  
-> 目的：为第 3 轮“会话、通知和后续预览读取同一份运行状态”列出候选方案，不提前实现。
+> 依据：`9204329cffd78e392bf45d73104866701f131a1c` 的第 1–2 轮代码与 `C001_REVIEW_F002.md`。  
+> 本轮目标：**复用既有 `AgentRuntimeSession.complete/cancel` 终态权威与有序发布**，把会话、通知和完成入口统一到同一份只读投影；不新增第二套终态仲裁、不新增持久化库。
 
-## 1. 现有状态来源
+## 1. 现有事实与权威
 
-| 来源 | 当前内容 | 问题/责任 |
+| 事实 | 现有实现 | 在新方案中的角色 |
 | --- | --- | --- |
-| `AgentRuntimeWire.RunPhase` | `Queued`、`Preparing`、`Running`、`WaitingForGui`，以及快照中的 `Paused`/`Committing` 分支 | 只描述当前运行阶段，不包含终态结果语义 |
-| `RuntimeRunRegistry.Run.snapshot()` | 由 `queued`、`preparing`、`controller.isPaused`、`guiStatus`、`session.isCommitting` 推导阶段 | 状态由多处字段推导，读侧容易各自解释 |
-| `AgentRunController` | `paused`、`pausedForAppTakeover`、`resumeGeneration`、`cancelled`、`cancelReason` | 暂停/取消的真实执行状态；没有统一的展示状态 |
-| `AgentRuntimeRunExecutor` / `AgentRuntimeSession` | 发出 `RunStarted`、`RunFinished`、`RunFailed` 等事件；返回 `AgentRuntimeWire.RunResult(ok, content, error)` | 终态事实来自运行器与会话日志，但通知/卡片还会另行推导 |
-| `AgentOverlayState` / `AgentOverlayStatus` | UI 展示状态（`Queued`、`Paused`、`ResultReady`、`RunFailed`、`Stopped`、`RunningTool` 等） | 面向浮层的投影，不是跨表面唯一状态 |
-| `TaskNotificationState` + `AgentExecutionService` | `runId`、`conversationId`、`status`、`streamPreview`、`paused`、`completed`、`targetPackage`；维护 `cards`、`completedRuns` | 通知/完成卡片独立保存 `completed`/`paused`，可能与运行器终态或会话状态短暂不一致 |
-| `TaskScreenSession` | `location`（前台/后台）、`observation`、后台阶段回调 | 只负责屏幕位置与观察，不应成为任务完成状态来源 |
-| `AgentRunArchiveStore` / `AgentRuntimeResultStore` / `AgentResultMailbox` | 归档运行、完成结果、跨进程结果 | 持久化/投递事实，不是统一状态机 |
-| `CompletedAppActivity`、通知操作、`NotificationReplyRequest` | 完成页、继续指令、打开会话/App 的入口 | 各入口目前按通知/结果状态自行判断可用性 |
+| run 终态 | `AgentRuntimeSession.complete()` / `cancel()`：锁内原子竞争 `RUNNING → COMMITTING/TERMINAL`，普通 `RunFinished`/`RunFailed` 只是事件 | **唯一终态权威**；先成功提交/取消的结果决定最终结果，不能被先到的事件替代 |
+| 结果发布顺序 | `complete()` 在 `beforePublish` 后置 `TERMINAL`，先调用 `beforeTerminalPublish(result)`，再通过订阅者 `resultSink` 发布，再清理 replay/subscribers；`cancel()` 同序 | 通知/会话/完成页只在收到已发布结果后显示终态，不能提前把进度当结果 |
+| 终态竞争 | `complete()` 仅在 `RUNNING` 成功，`cancel()` 也仅在 `RUNNING` 成功；晚到者返回 false | 迟到终态/取消幂等丢弃；不新增“先到先赢”的 Store |
+| 运行阶段 | `AgentRuntimeWire.RunPhase` 已含 `Queued/Preparing/Running/WaitingForGui/Paused/Committing`；`RuntimeRunRegistry.snapshot()` 优先级为 Committing、Paused、Queued、Preparing、WaitingForGui、Running | 作为**投影输入**，不是第二套终态 |
+| 结果/归档 | `RunResult`、`AgentRunArchiveStore`、`AgentRuntimeResultStore`、结果投递 | 现有结果事实；投影只读，不复制出新的持久化状态库 |
+| 通知/卡片 | `TaskNotificationState` 的 `completed/paused/status`，`AgentExecutionService.cards` | 改为读取投影；通知可见性/划掉状态留在展示侧 |
+| 屏幕位置 | `TaskScreenSession.location`、观察/接管状态 | 只描述操作位置与观察有效性，不定义 run 成功/失败 |
 
-结论：当前“运行阶段”“浮层文案”“通知完成布尔值”“持久化结果”是多个事实来源；它们都能描述任务，但没有一个**带版本的单写者**。
+**结论：** 原草稿“现有系统没有单写者、需要新建 TaskRunStateStore 并另发序列”的表述过宽且方向错误。第 3 轮只增加一个**从现有权威事实派生的只读投影**；`AgentRuntimeSession` 继续拥有终态裁定权。
 
-## 2. 拟引入的统一领域模型（只设计）
+## 2. 最小方案：只读 TaskRunProjection
 
-建议新增内部 `TaskRunStateStore`（名称暂定，不创建文件）和不可变快照：
+建议新增内部只读投影（名称暂定，不创建文件）：
 
 ```text
-TaskRunState(
+TaskRunProjection(
   runId, conversationId, operation,
-  phase: QUEUED | PREPARING | RUNNING | PAUSED | COMMITTING | TERMINAL,
-  location: FOREGROUND | BACKGROUND,
-  terminal: COMPLETED | PARTIAL | FAILED | STOPPED | UNCERTAIN | null,
-  pauseReason: SCREEN_OFF | APP_TAKEOVER | USER | null,
-  visibility: NONE | NOTIFICATION | CARD | BOTH,
-  sequence, updatedAt,
-  reason: String?  // 稳定错误码，不直接存展示文案
+  phase,                 // 直接映射现有 RunPhase
+  pauseReason,           // SCREEN_OFF / APP_TAKEOVER / USER；来自 controller
+  terminal,              // 仅在已发布 RunResult 后出现
+  reasonCode,            // 稳定错误码/原因，不保存展示文案
+  visibility             // 展示侧使用，不参与终态
 )
 ```
 
-- **唯一写者**：`TaskRunStateStore` 只接受既有接缝发出的事件；`AgentRuntimeRunExecutor` 不直接改通知，`AgentExecutionService` 不自行推断 `completed`。
-- **单一序列号**：每个 run 的状态快照带单调递增 `sequence`；迟到回调的 `sequence` 小于当前值则丢弃。终态不可被后续事件改写（只允许相同终态的幂等重放）。
-- **展示层只投影**：通知、会话页、完成页、浮层、任务卡片都把同一快照映射为本地化文案、图标、按钮和进度；不各自维护 `completed`/`paused` 布尔值。
-- **持久化**：终态和必要的可见性写入现有运行归档/结果存储；服务重启先恢复终态，不把未知恢复成“正在运行”。活动状态在进程死亡后不能假装成功。
+- 输入只有既有事实：`RuntimeRunRegistry.Run.snapshot()`、`AgentRuntimeSession` 的已发布结果、`TaskScreenSession` 的位置/观察状态。
+- 不新增终态集合、不新增独立持久化、不在投影层重新判断 `ok/error`。
+- 通知、会话状态、完成卡片、完成页、浮层从投影读取同一 `phase/terminal/reasonCode`；各视图只做本地化和按钮可用性映射。
+- 展示侧可以缓存“已展示/已划掉”的状态，但**不能**写回或改变 run 终态。
 
-## 3. 事件接缝
+### 终态发布与消费顺序
 
-| 事件 | 现有来源 | 状态效果 |
-| --- | --- | --- |
-| Admission accepted/duplicate/rejected | `RuntimeRunRegistry.admit` | `QUEUED`；被拒绝不创建状态 |
-| Preparing/Ready | `Run.prepared`、`claimNext` | `PREPARING` / `RUNNING` |
-| GUI wait | 现有 `guiStatus` / `GuiControlCoordinator` | `RUNNING` 的等待子阶段；不改终态 |
-| Pause/resume | `AgentRunController.pause/resume` | `PAUSED` 且记录原因；恢复回到 `RUNNING` |
-| Background screen phase | `TaskScreenSession` 回调 | `location=BACKGROUND`；只影响操作位置，不伪装完成 |
-| Tool progress | `AgentEvent.ToolStarted/ToolFinished` | 进度/详情字段；不改变主阶段 |
-| Terminal | `RunFinished`、`RunFailed`、取消原因、`RunResult` | 原子写入终态；后续事件只做同值幂等 |
-| Notification action | 现有暂停/恢复/停止/继续 | 转为领域命令，再由唯一写者更新；通知不自行改 `completed` |
-| Archive/restore | 结果存储、`CompletedAppActivity` | 读终态；没有终态时标为未知/可恢复，不猜成功 |
+1. `AgentRuntimeSession.complete(result)` 在锁内把 `RUNNING` 变为 `COMMITTING`；失败者（包括取消竞争）返回 false。
+2. 完成 `beforePublish`（checkpoint/归档等非致命副作用）后置 `TERMINAL`。
+3. 先执行 `beforeTerminalPublish(result)`（释放会话占用等），再向结果订阅者发布 `RunResult`。
+4. 投影看到 `RunResult` 后发布 `terminal`；通知/卡片/完成页只能在此之后显示完成/失败。
+5. `cancel(reason)` 在锁内竞争成功时生成失败结果并走同一发布顺序；`COMMITTING` 之后的取消不能覆盖已提交结果。
 
-## 4. 状态迁移
+因此，**`RunFinished`、`RunFailed`、GUI 状态、工具结果都只是进度/候选信息**；不得用“先收到的 RunFinished”替代 `complete/cancel` 的终态。
+
+## 3. 序列、去重与重连
+
+优先**不引入第二套序号**：
+
+- 进程内顺序由既有 `AgentRuntimeSession` 锁、订阅者发布顺序和 Session 事件顺序保证；调度/通知消费者在收到 `RunResult` 后只处理一次。
+- 去重键使用既有身份：`runId` + `conversationId`；同一 run 的迟到 `RunResult` 直接丢弃，不覆盖已发布终态。
+- 若投影展示需要版本号，只在**权威发布边界**生成：`AgentRuntimeSession` 锁内、终态提交时递增；同时携带 runId 与 Host/Session 实例代次（现有 `runId` 已能区分新旧运行；进程重启使用现有持久化结果/归档，不强称活动状态存活）。
+- 消费者按 `(runId, instanceEpoch, seq)` 去重；`instanceEpoch` 只用于区分进程/服务重启前后的旧回调，不能由投影 Store 自己递增后当作源头顺序。
+- 重连：`AgentRuntimeSession.attach` 只在非 TERMINAL 时重放并追加订阅；已 TERMINAL 时返回 false，客户端从结果存储读取终态。通知/卡片重连不能把旧实例的“运行中”恢复成成功。
+
+## 4. 状态迁移（按现有行为）
+
+`RuntimeRunRegistry.snapshot()` 的优先级必须保留；不能强制所有读者观察 `QUEUED → PREPARING → RUNNING`，后台准备完成时仍可能显示 Queued。
 
 ```text
-QUEUED -> PREPARING -> RUNNING -> TERMINAL(COMPLETED|PARTIAL|FAILED|STOPPED|UNCERTAIN)
-  ^          |            |
-  |          v            v
-  +--- rejected      PAUSED (SCREEN_OFF|APP_TAKEOVER|USER)
-                         |
-                         +--> RUNNING (resume)
-                         +--> TERMINAL(STOPPED) (cancel while paused)
-COMMITTING -> TERMINAL
+admission rejected/duplicate -> 不产生已接纳 run 的 QUEUED 状态
+QUEUED -> PREPARING -> RUNNING
+                    -> WAITING_FOR_GUI (仍属 RUNNING 的等待子阶段)
+RUNNING/WAITING_FOR_GUI/PREPARING -> PAUSED(SCREEN_OFF|APP_TAKEOVER|USER)
+PAUSED -> 原来的未终结阶段（RUNNING 或 WAITING_FOR_GUI），恢复不一律强制 RUNNING
+RUNNING/PAUSED/WAITING_FOR_GUI -> TERMINAL(COMPLETED|FAILED|STOPPED)
+COMMITTING -> TERMINAL(已发布 RunResult)
 ```
 
-- `QUEUED -> RUNNING` 不可跳过 `PREPARING`（除非已有准备完成的等价证据）。
-- `PAUSED` 必须带原因；无原因不进入 `PAUSED`。
-- `TERMINAL` 后禁止回退；重复终态只允许同值幂等。
-- `UNCERTAIN` 只用于结果无法确认的超时/取消，不得显示“完成”。
-- `PARTIAL` 用于用户可见的部分完成；不得由单个工具成功自动推断。
+补充规则：
 
-## 5. 拟改文件（第 3 轮实施时再定）
+- **排队/准备中取消**：只有已接纳 run 且既有取消路径实际生效时才进入 `STOPPED`；未进入 run 的 admission 拒绝不伪造 `QUEUED`，也不产生结果。
+- **GUI 等待**：是 RUNNING 的子阶段；取消可进入 `STOPPED`，恢复后仍在等待或回到 RUNNING，取决于现有 `guiStatus`。
+- **暂停前阶段**：记录暂停发生在 Queued/Preparing/Running/WaitingForGui 的哪一阶段；恢复回到该阶段可恢复的状态，不一律 RUNNING。
+- **提交与取消竞争**：`COMMITTING` 后取消不能覆盖已提交结果；`complete/cancel` 只有一方成功。通知收到已发布结果后才终止。
+- **Paused/Committing**：二者已经是 `RunPhase` 枚举；投影只读取，不另造枚举。
+- **用户决定**：单次工具 `TIMEOUT`/`operationMayHaveRun` 是**工具层不确定**；整个 run 是否终结由 `complete/cancel` 决定；需要用户确认是产品层语义，留到第 4 轮。模型正常返回也不等于用户目标完全完成，但本轮不新增“部分完成”终态。
 
-| 文件 | 计划 |
+## 5. 拟改文件（实施时再定，不新增独立终态库）
+
+| 文件 | 最小改动 |
 | --- | --- |
-| `AgentRuntimeWire.kt` | 增加稳定的运行快照/终态字段映射；不改变 wire 兼容必填字段 |
-| `RuntimeRunRegistry.kt` | 把 `snapshot()` 的阶段推导收敛到统一状态接缝 |
-| `AgentRunController.kt` | 暂停/恢复/取消事件增加稳定原因与序列 |
-| `AgentRuntimeRunExecutor.kt` | 终态只发一次领域事件；避免通知侧重复推导 |
-| `AgentExecutionService.kt` | 通知/卡片改为读取统一快照；移除独立 `completed`/`paused` 真值 |
-| `AgentOverlayText.kt` / `AgentOverlayState.kt` | 保留为展示投影；状态类型不直接暴露给通知 |
-| `TaskScreenSession.kt` | 只上报位置/观察失效，不定义任务终态 |
-| 新增 `TaskRunStateStore.kt`（暂定） | 唯一写者、序列号、幂等、终态持久化 |
-| 新增/调整测试 | 状态机、跨表面一致性、恢复和竞态 |
+| `RuntimeRunRegistry.kt` | 保留 `snapshot()` 优先级；暴露只读投影所需的现有字段 |
+| `AgentRuntimeSession.kt` | 保持 complete/cancel 权威；如需投影版本，只在锁内终态提交处提供；不改变发布顺序 |
+| `AgentRuntimeWire.kt` | 复用现有 `RunPhase`/`RunResult`；不新增第二套终态枚举 |
+| `AgentRuntimeRunExecutor.kt` | 终态仍交给 `session.complete`；进度事件不直接写终态 |
+| `AgentExecutionService.kt` | 通知/卡片读取投影；移除独立 `completed`/`paused` 作为任务真值 |
+| `AgentOverlayState.kt` / `AgentOverlayText.kt` | 保留为展示投影；不参与终态裁定 |
+| `TaskScreenSession.kt` | 只上报位置/观察失效；不定义任务终态 |
+| 新增只读投影（名称暂定） | 优先无状态计算；若需缓存，只缓存权威事实的派生值，不新增持久化库 |
+| 测试 | 终态竞争、发布顺序、重连、阶段投影和跨表面一致性 |
 
-## 6. 兼容风险
+**不新增：** 第二套独立 `TerminalArbiter`、独立 SQLite/文件状态库、由通知层维护的 `completed` 真值。
 
-- 现有 `AgentOverlayStatus` 被浮层、通知、完成卡片和本地化文案共用；先保留类型，用适配器从新快照投影，避免一次改完所有 UI。
-- 通知 ID、前台通知和完成卡片的保留/清理规则不能因统一状态而改变；用户已看到的完成卡片不能被晚到状态覆盖。
-- `TaskNotificationDismissReceiver` 的“划掉后不再弹”语义必须保留。
-- 暂停期间的通知操作、继续指令、恢复前重新观察、两任务限制和息屏暂停策略不能被状态机绕过。
-- 进程死亡/服务重启后，活动运行不能凭旧通知恢复为成功；必须有结果/归档证据才显示完成。
+## 6. 兼容风险与边界
+
+- 现有 `AgentOverlayStatus` 被多个 UI 使用；保留类型，用投影适配，避免一次改完。
+- 通知 ID、前台通知、完成卡片保留/划掉语义、`TaskNotificationDismissReceiver` 必须保持。
+- 暂停/恢复、继续指令、两任务限制、同 App 串行、息屏暂停不能被投影绕过；投影不是新的控制通道。
+- 进程/服务重启后，活动 run 不能凭旧通知恢复为成功；必须有已发布 `RunResult`/归档证据。
+- 第 3 轮只统一现有事实与各界面投影；第 4 轮才允许新增“等待你/部分完成”等业务语义，本设计只保留扩展点。
 - 不改变 VDrive 引擎、部署认证、系统 Hook、任务调度、包名、签名和版本号。
 
 ## 7. 有意义的测试
 
-1. 纯状态机：合法迁移全覆盖，非法迁移拒绝；终态不可回退；重复终态幂等。
-2. 迟到/乱序事件：旧序列被丢弃；终态后到达的 `RunFinished`/`RunFailed` 不覆盖。
-3. 跨表面一致性：同一 run 的通知、会话状态、完成卡片、完成页读取相同终态与原因。
-4. 暂停/恢复/接管：暂停原因、恢复后仍 RUNNING、暂停中取消进入 STOPPED、旧观察不能输入。
-5. 队列与并发：QUEUED 不显示完成；两个任务互不覆盖；取消 A 不影响 B。
-6. 进程/服务恢复：活动状态不伪装成功；有终态证据时可恢复；通知不重复。
-7. 超时/不确定：`UNCERTAIN` 不显示完成，通知提供明确原因。
-8. 通知入口：继续指令、打开会话、打开 App 只在快照允许时可用；划掉完成通知的语义不变。
-9. 前台/后台切换：位置变化不改变终态；后台 `NO_FRAME`/几何缺失仍按第 2 轮规则返回明确错误。
-10. 属性/随机测试：随机事件序列下终态唯一、序列单调、没有“完成后又运行”的状态。
+1. `complete/cancel` 竞争：只有一方成功；晚到 `RunFinished`/`RunFailed` 不覆盖已发布终态。
+2. 发布顺序：`beforeTerminalPublish` → resultSink → 投影 terminal；通知/卡片不早于结果。
+3. 快照优先级：Committing/Paused/Queued/Preparing/WaitingForGui/Running 的既有优先级不变；后台准备完成仍可 Queued。
+4. 阶段迁移：Queued/Preparing/Running/WaitingForGui 暂停与恢复、排队/准备取消、提交竞争。
+5. 单次工具 `TIMEOUT/operationMayHaveRun`：不自动结束 run；run 终态仍由 `complete/cancel` 决定。
+6. 重连/重启：attach 对 TERMINAL 返回 false；旧实例回调不覆盖新结果；活动状态不伪装成功。
+7. 跨表面一致：同一 run 的通知、会话、完成卡片、完成页读取同一 terminal/reason。
+8. 展示侧隔离：划掉通知/完成卡片不会改变 run 终态；恢复后不重复完成通知。
+9. 第 4 轮扩展点：只验证可插入“等待你/部分完成”的位置，不在本轮实现或提前下放业务语义。
 
 ## 8. 验收门槛
 
 - 设计评审通过前不进入第 3 轮业务实现。
-- 第 2 轮 20 项真机结果未验收前，不把第 3 轮设计当成真机结论。
+- 第 2 轮 20 项真机结果未验收前，不把本设计当成真机结论。
 - 任何实施必须另开评审指令和业务 head；本文件不改变 `9204329...`。
