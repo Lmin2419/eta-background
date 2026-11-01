@@ -16,7 +16,9 @@ dsh 实现帧时钟兜底并定位到渲染层后阻塞；Claude 接手完成根
 
 | 改动 | 自动验证 | 真机 |
 | --- | --- | --- |
-| `renderSpans` 的 key 包含文字、可见性和样式；Markdown 块改为每个偏移一个 `@Observed` 槽位，原地更新内容（保留渐显进度）；列表项、表格行和单元格的 key 包含内容指纹。新增 `core/eta/renderKey.ts`（`renderKey`、`syncSlots`） | 新增 6 项单测，其中 2 项在旧 key 下失败；`05-reply-visible` 断言三段文字、加粗、列表全部可见且没有透明文字 | **待测**：回复逐段出现、逐字渐显，最后完整显示 |
+| `renderSpans` 的 key 包含文字、可见性和样式；Markdown 块改为每个偏移一个 `@Observed` 槽位，原地更新内容（保留渐显进度）；表格行和单元格的 key 包含内容指纹。新增 `core/eta/renderKey.ts`（`renderKey`、`syncSlots`） | 新增 6 项单测，其中 2 项在旧 key 下失败；`05-reply-visible` 断言三段文字、加粗、列表全部可见且没有透明文字 | **待测**：回复逐段出现、逐字渐显，最后完整显示 |
+| 列表项同样改为 `@Observed` 槽位原地更新（`MarkdownListView` / `MarkdownListItemView`），不再按内容重建 | 同上 | 同上 |
+| 渐显协调器从“已完成”变为“有待显示文字”时通知 `StreamingMarkdown` 重新启动帧循环（`onPending`）。原来最后一块文字可能在帧循环停止后才登记，一直透明（预览器中约一半概率出现在最后一个列表项） | 新增 2 项单测，去掉唤醒时失败；`05-reply-visible` 连续 6 次通过 | 同上 |
 | `parseEtaMarkdown`：`taskpool` 返回的不是字符串时，在当前线程解析，不再退化为纯文本 | 预览器中加粗和有序列表正常显示 | 真机走 `taskpool`，行为不变 |
 | 预览假模型的回复末尾增加两项有序列表，用来覆盖流式列表 | 同上 | 不适用 |
 | 新增 `core/eta/frameFallback.ts`：`start()` 后 100 ms 内没有收到 `postFrameCallback` 时，改用 `setTimeout` 每 16 ms 驱动一次 `tick`，秒数按两次调用的实际时间差计算；真实帧到达后立即停用兜底，`stop()` 或 `tick` 返回 `false` 时清掉定时器。`EtaFrameLoop.ets` 只负责把 `postFrameCallback` 和 `setTimeout` 接到这个类上 | `npm run check` 通过；`tests/eta/frameFallback.test.ts` 5 项通过；ArkTS / 资源 / 界面测试以 PR 的 Harmony CI 为准（本机 Windows 无 Linux 预览器） | **待测**：回复文字应逐渐出现，不再一直透明 |

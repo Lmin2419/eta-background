@@ -42,6 +42,48 @@ export struct MarkdownBlocks {
     MarkdownBlockView({slot,tone:this.tone,muted:this.muted,depth:this.depth,startedKeys:this.startedKeys,reveal:this.reveal}).margin({top:this.gap(index)})
   },(slot:MarkdownBlockSlot)=>String(slot.value.offset))}.width('100%').alignItems(HorizontalAlign.Start)}
 }
+// List items keep their views across streamed updates, like blocks: recreating an item view after the
+// last update could leave its text transparent (the old view's detach drained the reveal first).
+@Observed
+class MarkdownListItemSlot {
+  value:MarkdownListItem;
+  constructor(value:MarkdownListItem){this.value=value;}
+}
+@Component
+struct MarkdownListView {
+  @Prop @Watch('sync') list:MarkdownList={kind:'list',offset:0,ordered:false,loose:false,items:[]};
+  @State private slots:MarkdownListItemSlot[]=[];
+  @Prop tone:MarkdownTone='Answer';
+  @Prop muted:boolean=false;
+  @Prop depth:number=0;
+  @Prop startedKeys:number[]=[];
+  reveal:SmoothTextRevealCoordinator|undefined=undefined;
+  aboutToAppear():void {this.sync();}
+  private sync():void {this.slots=syncSlots<MarkdownListItem,MarkdownListItemSlot>(this.slots,this.list.items,(item:MarkdownListItem)=>String(item.offset),(item:MarkdownListItem)=>new MarkdownListItemSlot(item));}
+  private markerWidth():number {return this.list.ordered?String(this.list.items[this.list.items.length-1]?.number??1).length*M.ListMarkerDigitWidth+S.Dp8:S.Dp14;}
+  private listGap():number {return this.list.loose?(this.tone==='Answer'?S.Dp10:S.Dp8):(this.tone==='Answer'?S.Dp4:S.Dp2);}
+  build(){Column({space:this.listGap()}){ForEach(this.slots,(slot:MarkdownListItemSlot)=>{
+    MarkdownListItemView({slot,markerWidth:this.markerWidth(),compact:!this.list.loose,tone:this.tone,muted:this.muted,depth:this.depth,startedKeys:this.startedKeys,reveal:this.reveal})
+  },(slot:MarkdownListItemSlot)=>String(slot.value.offset))}.width('100%')}
+}
+@Component
+struct MarkdownListItemView {
+  @ObjectLink slot:MarkdownListItemSlot;
+  @Prop markerWidth:number=0;
+  @Prop compact:boolean=true;
+  @Prop tone:MarkdownTone='Answer';
+  @Prop muted:boolean=false;
+  @Prop depth:number=0;
+  @Prop startedKeys:number[]=[];
+  reveal:SmoothTextRevealCoordinator|undefined=undefined;
+  private marker():string {return this.slot.value.number!==null?this.slot.value.number+'.':['•','◦','▪'][this.depth%3];}
+  private markerShown():boolean {return listMarkerVisible(!!this.reveal,this.slot.value.markerRevealKey,new Set(this.startedKeys));}
+  build(){Row(){
+    if(this.slot.value.checked!==null){Image(this.slot.value.checked?$r('app.media.ic_rounded_check_box'):$r('app.media.ic_rounded_check_box_outline_blank')).width(S.Dp18).height(S.Dp18).fillColor(this.slot.value.checked?$r('app.color.miuix_primary'):$r('app.color.eta_markdown_marker')).margin({right:S.Dp8}).opacity(this.markerShown()?1:0)}
+    else {Text(this.marker()).fontSize(this.tone==='Answer'?F.Fp16:F.Fp14).lineHeight(this.tone==='Answer'?M.ANSWER_LINE_HEIGHT_SP:M.THINKING_LINE_HEIGHT_SP).fontColor($r('app.color.eta_markdown_marker')).textAlign(TextAlign.End).constraintSize({minWidth:this.markerWidth}).margin({right:S.Dp8}).opacity(this.markerShown()?1:0)}
+    MarkdownBlocks({blocks:this.slot.value.blocks,tone:this.tone,muted:this.muted,compact:this.compact,depth:this.depth+1,startedKeys:this.startedKeys,reveal:this.reveal}).layoutWeight(1)
+  }.width('100%').alignItems(VerticalAlign.Top)}
+}
 @Component
 struct MarkdownTableView {
   @Prop @Watch('measureColumns') table:MarkdownTable={kind:'table',offset:0,alignments:[],header:[],rows:[]};
@@ -79,9 +121,6 @@ struct MarkdownBlockView {
   private lineHeight():number {if(this.tone==='Thinking')return M.THINKING_LINE_HEIGHT_SP;const level=this.slot.value.kind==='heading'?this.slot.value.level:0;return level===1?F.Fp28:level===2?F.Fp26:level===3?F.Fp25:M.ANSWER_LINE_HEIGHT_SP;}
   private nested():MarkdownBlock[]{return this.slot.value.kind==='quote'||this.slot.value.kind==='alert'?this.slot.value.blocks:[];}
   private list():MarkdownList {return this.slot.value as MarkdownList;}
-  private marker(item:MarkdownListItem):string {return item.number!==null?item.number+'.':['•','◦','▪'][this.depth%3];}
-  private markerWidth():number {const list=this.list();return list.ordered?String(list.items[list.items.length-1]?.number??1).length*M.ListMarkerDigitWidth+S.Dp8:S.Dp14;}
-  private listGap():number {return this.list().loose?(this.tone==='Answer'?S.Dp10:S.Dp8):(this.tone==='Answer'?S.Dp4:S.Dp2);}
   private alertIcon():Resource {const kind=(this.slot.value as MarkdownAlert).alertKind;return kind==='Tip'?$r('app.media.ic_rounded_lightbulb'):kind==='Important'?$r('app.media.ic_rounded_feedback'):kind==='Warning'?$r('app.media.ic_rounded_warning'):kind==='Caution'?$r('app.media.ic_rounded_report'):$r('app.media.ic_rounded_info');}
   private alertLabel():Resource {const kind=(this.slot.value as MarkdownAlert).alertKind;return kind==='Tip'?$r('app.string.markdown_alert_tip'):kind==='Important'?$r('app.string.markdown_alert_important'):kind==='Warning'?$r('app.string.markdown_alert_warning'):kind==='Caution'?$r('app.string.markdown_alert_caution'):$r('app.string.markdown_alert_note');}
   private alertColor():Resource {const kind=(this.slot.value as MarkdownAlert).alertKind;return kind==='Tip'?$r('app.color.eta_status_success'):kind==='Important'?$r('app.color.eta_markdown_important'):kind==='Warning'?$r('app.color.eta_status_warning'):kind==='Caution'?$r('app.color.miuix_error'):$r('app.color.miuix_primary');}
@@ -97,13 +136,7 @@ struct MarkdownBlockView {
     }else if(this.slot.value.kind==='alert'){
       Column({space:S.Dp6}){Row({space:S.Dp8}){Image(this.alertIcon()).width(S.Dp18).height(S.Dp18).fillColor(this.alertColor());Text(this.alertLabel()).fontSize(MF.Body2).fontWeight(FontWeight.Medium).fontColor(this.alertColor())}.width('100%');MarkdownBlocks({blocks:this.nested(),tone:this.tone,depth:this.depth,startedKeys:this.startedKeys,reveal:this.reveal})}.width('100%').alignItems(HorizontalAlign.Start).padding({left:S.Dp12}).border({width:{left:S.Dp3},color:this.alertColor()})
     }else if(this.slot.value.kind==='list'){
-      Column({space:this.listGap()}){ForEach(this.list().items,(item:MarkdownListItem)=>{
-        Row(){
-          if(item.checked!==null){Image(item.checked?$r('app.media.ic_rounded_check_box'):$r('app.media.ic_rounded_check_box_outline_blank')).width(S.Dp18).height(S.Dp18).fillColor(item.checked?$r('app.color.miuix_primary'):$r('app.color.eta_markdown_marker')).margin({right:S.Dp8}).opacity(listMarkerVisible(!!this.reveal,item.markerRevealKey,new Set(this.startedKeys))?1:0)}
-          else {Text(this.marker(item)).fontSize(this.tone==='Answer'?F.Fp16:F.Fp14).lineHeight(this.tone==='Answer'?M.ANSWER_LINE_HEIGHT_SP:M.THINKING_LINE_HEIGHT_SP).fontColor($r('app.color.eta_markdown_marker')).textAlign(TextAlign.End).constraintSize({minWidth:this.markerWidth()}).margin({right:S.Dp8}).opacity(listMarkerVisible(!!this.reveal,item.markerRevealKey,new Set(this.startedKeys))?1:0)}
-          MarkdownBlocks({blocks:item.blocks,tone:this.tone,muted:this.muted,compact:!this.list().loose,depth:this.depth+1,startedKeys:this.startedKeys,reveal:this.reveal}).layoutWeight(1)
-        }.width('100%').alignItems(VerticalAlign.Top)
-      },(item:MarkdownListItem)=>renderKey(item.offset,item))}.width('100%')
+      MarkdownListView({list:this.list(),tone:this.tone,muted:this.muted,depth:this.depth,startedKeys:this.startedKeys,reveal:this.reveal})
     }else if(this.slot.value.kind==='table'){MarkdownTableView({table:this.slot.value as MarkdownTable,tone:this.tone,reveal:this.reveal})}
     else {Divider().strokeWidth(S.Dp0_5).color($r('app.color.eta_markdown_divider')).margin({top:S.Dp4,bottom:S.Dp4})}
   }.width('100%').alignItems(HorizontalAlign.Start)}
