@@ -1,6 +1,6 @@
 {
   "name": "harmony-agent-core",
-  "version": "0.9.36",
+  "version": "0.9.37",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,6 @@
     "check:res": "node scripts/check-resources.cjs",
     "test:ui": "bash scripts/ui-preview/run.sh",
     "verify": "bash scripts/verify.sh",
-    "wait:review": "node scripts/wait-for-review.cjs",
     "build:harmony": "bash scripts/build.sh",
     "test:foundation": "tsx --test tests/foundation.test.ts",
     "build:preview": "python3 scripts/build-preview.py",

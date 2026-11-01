@@ -1,0 +1,116 @@
+{
+  "string": [
+    {
+      "name": "phone_ops_title",
+      "value": "手机操作"
+    },
+    {
+      "name": "phone_ops_summary",
+      "value": "通过无线调试连接本机，读取屏幕并执行操作"
+    },
+    {
+      "name": "phone_ops_intro",
+      "value": "打开“设置 → 系统 → 开发者选项 → 无线调试”，记下页面上的 IP 地址和端口。"
+    },
+    {
+      "name": "phone_ops_address_hint",
+      "value": "IP:端口，例如 192.168.1.5:5555"
+    },
+    {
+      "name": "phone_ops_invalid",
+      "value": "请输入无线调试页面显示的 IP:端口"
+    },
+    {
+      "name": "phone_ops_status",
+      "value": "连接状态"
+    },
+    {
+      "name": "phone_ops_reason",
+      "value": "断开原因"
+    },
+    {
+      "name": "phone_ops_identity",
+      "value": "Shell 身份"
+    },
+    {
+      "name": "phone_ops_uitest",
+      "value": "UITest 可用"
+    },
+    {
+      "name": "phone_ops_yes",
+      "value": "可用"
+    },
+    {
+      "name": "phone_ops_no",
+      "value": "不可用"
+    },
+    {
+      "name": "phone_ops_node_count",
+      "value": "最近读屏控件数"
+    },
+    {
+      "name": "phone_ops_connect",
+      "value": "连接"
+    },
+    {
+      "name": "phone_ops_dump",
+      "value": "测试读屏"
+    },
+    {
+      "name": "phone_ops_disconnect",
+      "value": "断开"
+    },
+    {
+      "name": "phone_ops_status_unconfigured",
+      "value": "未配置"
+    },
+    {
+      "name": "phone_ops_status_connecting",
+      "value": "连接中"
+    },
+    {
+      "name": "phone_ops_status_authorizing",
+      "value": "待授权：请在手机弹窗中允许调试"
+    },
+    {
+      "name": "phone_ops_status_connected",
+      "value": "已连接"
+    },
+    {
+      "name": "phone_ops_status_disconnected",
+      "value": "已断开"
+    },
+    {
+      "name": "phone_ops_status_native_missing",
+      "value": "原生库未加载"
+    },
+    {
+      "name": "hdc_disconnected_user",
+      "value": "已主动断开"
+    },
+    {
+      "name": "hdc_disconnected_timeout",
+      "value": "连接超时"
+    },
+    {
+      "name": "hdc_disconnected_refused",
+      "value": "连接被拒绝"
+    },
+    {
+      "name": "hdc_disconnected_unauthorized",
+      "value": "未授权调试"
+    },
+    {
+      "name": "hdc_disconnected_lost",
+      "value": "连接已丢失"
+    },
+    {
+      "name": "hdc_disconnected_protocol",
+      "value": "协议错误"
+    },
+    {
+      "name": "hdc_disconnected_unknown",
+      "value": "未知原因"
+    }
+  ]
+}
