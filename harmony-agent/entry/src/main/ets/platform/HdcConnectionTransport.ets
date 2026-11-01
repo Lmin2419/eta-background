@@ -3,6 +3,7 @@
 import { common } from '@kit.AbilityKit';
 import nativeHdc from 'libagent_hdc.so';
 import { HdcConnectionSnapshot, HdcConnectOutcome, HdcTransport, HdcTransportEvent, validateHdcTarget } from '../core/eta/device/hdcConnection';
+import { PhoneOpsTransport } from '../core/eta/device/phoneOpsController';
 
 interface NativeHdcModule {
   start(path: string): Promise<void>;
@@ -23,8 +24,9 @@ export function nativeHdcAvailable(): boolean {
   );
 }
 
-function requireNative(): NativeHdcModule {
-  if (nativeModule === undefined) throw new Error('native module unavailable');
+/** The loaded native module; callers check nativeHdcAvailable() first, and errors are caught by the caller. */
+function native(): NativeHdcModule {
+  if (!nativeHdcAvailable() || nativeModule === undefined) throw new Error('native module unavailable');
   return nativeModule;
 }
 
@@ -42,8 +44,8 @@ export function classifyHdcFailure(output: string): HdcConnectOutcome {
   return 'unknown';
 }
 
-export class HdcConnectionTransport implements HdcTransport {
-  readonly nativeAvailable = true;
+export class HdcConnectionTransport implements PhoneOpsTransport {
+  readonly nativeAvailable: boolean = nativeHdcAvailable();
   identity = '';
   uitestReady = false;
   target = '';
@@ -51,7 +53,10 @@ export class HdcConnectionTransport implements HdcTransport {
   private shellSequence = 0;
 
   private readonly context: common.UIAbilityContext;
-  constructor(context: common.UIAbilityContext) { this.context = context; }
+
+  constructor(context: common.UIAbilityContext) {
+    this.context = context;
+  }
 
   async connect(target: string, attempt: number): Promise<HdcConnectOutcome> {
     if (!nativeHdcAvailable()) {
@@ -62,7 +67,7 @@ export class HdcConnectionTransport implements HdcTransport {
       await this.ensureStarted();
       const valid = validateHdcTarget(target);
       if (valid === null) return 'refused';
-      const connected = await requireNative().command('tconn ' + valid, '', CONNECT_TIMEOUT_MS);
+      const connected = await native().command('tconn ' + valid, '', CONNECT_TIMEOUT_MS);
       const first = (connected.split('\n')[0] ?? '').toLowerCase();
       if (!first.includes('connected')) {
         return classifyHdcFailure(connected);
@@ -85,7 +90,7 @@ export class HdcConnectionTransport implements HdcTransport {
     this.target = '';
     if (!nativeHdcAvailable()) return;
     try {
-      requireNative().cancel();
+      native().cancel();
     } catch (error) {
       console.error('[phoneOps] close error: ' + String(error));
     }
@@ -105,7 +110,7 @@ export class HdcConnectionTransport implements HdcTransport {
     if (this.target === '') throw new Error('not connected');
     const marker = '__HARMONY_AGENT_EXIT_' + String(++this.shellSequence) + '__';
     const wrapped = '(\n' + command + '\n)\nagent_rc=$?\nprintf "\\n' + marker + '%s\\n" "$agent_rc"';
-    const output = await requireNative().command('shell sh -c ' + quote(wrapped), this.target, timeoutMs);
+    const output = await native().command('shell sh -c ' + quote(wrapped), this.target, timeoutMs);
     const at = output.lastIndexOf(marker);
     if (at < 0) return output;
     const code = Number(output.slice(at + marker.length).trim());
@@ -121,7 +126,7 @@ export class HdcConnectionTransport implements HdcTransport {
 
   private ensureStarted(): Promise<void> {
     if (startPromise === undefined) {
-      startPromise = requireNative().start(this.context.filesDir + '/hdc').catch((error: Object) => {
+      startPromise = native().start(this.context.filesDir + '/hdc').catch((error: Object) => {
         startPromise = undefined;
         console.error('[phoneOps] start error: ' + String(error));
         throw error as Error;
