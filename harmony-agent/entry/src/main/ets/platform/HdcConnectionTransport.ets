@@ -23,6 +23,11 @@ export function nativeHdcAvailable(): boolean {
   );
 }
 
+function requireNative(): NativeHdcModule {
+  if (nativeModule === undefined) throw new Error('native module unavailable');
+  return nativeModule;
+}
+
 const CONNECT_TIMEOUT_MS = 20000;
 const SHELL_TIMEOUT_MS = 15000;
 
@@ -45,7 +50,8 @@ export class HdcConnectionTransport implements HdcTransport {
   private listener: ((event: HdcTransportEvent) => void) | null = null;
   private shellSequence = 0;
 
-  constructor(private readonly context: common.UIAbilityContext) {}
+  private readonly context: common.UIAbilityContext;
+  constructor(context: common.UIAbilityContext) { this.context = context; }
 
   async connect(target: string, attempt: number): Promise<HdcConnectOutcome> {
     if (!nativeHdcAvailable()) {
@@ -56,7 +62,7 @@ export class HdcConnectionTransport implements HdcTransport {
       await this.ensureStarted();
       const valid = validateHdcTarget(target);
       if (valid === null) return 'refused';
-      const connected = await nativeModule.command('tconn ' + valid, '', CONNECT_TIMEOUT_MS);
+      const connected = await requireNative().command('tconn ' + valid, '', CONNECT_TIMEOUT_MS);
       const first = (connected.split('\n')[0] ?? '').toLowerCase();
       if (!first.includes('connected')) {
         return classifyHdcFailure(connected);
@@ -79,7 +85,7 @@ export class HdcConnectionTransport implements HdcTransport {
     this.target = '';
     if (!nativeHdcAvailable()) return;
     try {
-      nativeModule.cancel();
+      requireNative().cancel();
     } catch (error) {
       console.error('[phoneOps] close error: ' + String(error));
     }
@@ -99,7 +105,7 @@ export class HdcConnectionTransport implements HdcTransport {
     if (this.target === '') throw new Error('not connected');
     const marker = '__HARMONY_AGENT_EXIT_' + String(++this.shellSequence) + '__';
     const wrapped = '(\n' + command + '\n)\nagent_rc=$?\nprintf "\\n' + marker + '%s\\n" "$agent_rc"';
-    const output = await nativeModule.command('shell sh -c ' + quote(wrapped), this.target, timeoutMs);
+    const output = await requireNative().command('shell sh -c ' + quote(wrapped), this.target, timeoutMs);
     const at = output.lastIndexOf(marker);
     if (at < 0) return output;
     const code = Number(output.slice(at + marker.length).trim());
@@ -115,7 +121,7 @@ export class HdcConnectionTransport implements HdcTransport {
 
   private ensureStarted(): Promise<void> {
     if (startPromise === undefined) {
-      startPromise = nativeModule.start(this.context.filesDir + '/hdc').catch((error: Object) => {
+      startPromise = requireNative().start(this.context.filesDir + '/hdc').catch((error: Object) => {
         startPromise = undefined;
         console.error('[phoneOps] start error: ' + String(error));
         throw error as Error;
