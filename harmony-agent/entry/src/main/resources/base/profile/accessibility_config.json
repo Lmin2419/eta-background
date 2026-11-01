@@ -1,0 +1,4 @@
+{
+  "accessibilityCapabilities": ["retrieve", "gesture"],
+  "accessibilityCapabilityRationale": "用于在用户主动请求时读取前台应用的包名与控件数量，并向本应用界面上的测试按钮注入一次点击，验证跨应用操作能力；不读取、不记录任何文字内容。"
+}
