@@ -35,13 +35,27 @@ if [ -z "${DISPLAY:-}" ]; then
   export DISPLAY=:97; sleep 1
 fi
 
+# A native signal in the previewer with no JavaScript error message is a previewer fault, not an app error.
+native_crash() {
+  [ -f "$1" ] && grep -aq 'Error: signal :' "$1" && ! grep -aqE 'Error message:|FIX THIS APPLICATION ERROR|TypeError:|ReferenceError:' "$1"
+}
+
 if [ "$#" -gt 0 ]; then scenarios=("$@"); else scenarios=("$PROJECT"/tests/ui/*.json); fi
 failed=0
 { echo "# UI preview test report"; echo; echo "| Scenario | Result |"; echo "| --- | --- |"; } > "$REPORT/summary.md"
 for scenario in "${scenarios[@]}"; do
-  name="$(basename "$scenario" .json)"
+  # The report folder is named after the scenario's "name" field (uitest.py writes there).
+  name="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["name"])' "$scenario" 2>/dev/null || basename "$scenario" .json)"
   echo "== $name"
-  if timeout 300 python3 "$HERE/uitest.py" "$OUT" "$scenario" "$REPORT"; then echo "| $name | pass |" >> "$REPORT/summary.md"
+  retried=""
+  if ! timeout 300 python3 "$HERE/uitest.py" "$OUT" "$scenario" "$REPORT" && native_crash "$REPORT/$name/previewer.log"; then
+    # The previewer itself sometimes segfaults (for example in TextFieldPattern::GetInspectorId) with no
+    # application error. Run such a scenario once more; a crash that repeats, or any JS error, still fails.
+    echo "   previewer crashed natively without an application error; running $name once more"
+    rm -rf "${REPORT:?}/$name-attempt1"; mv "$REPORT/$name" "$REPORT/$name-attempt1"; retried="（第一次预览器原生崩溃，已重跑；首轮日志在 $name-attempt1）"
+  fi
+  if [ -n "$retried" ] && timeout 300 python3 "$HERE/uitest.py" "$OUT" "$scenario" "$REPORT"; then echo "| $name | pass$retried |" >> "$REPORT/summary.md"
+  elif [ -z "$retried" ] && [ -f "$REPORT/$name/result.json" ] && python3 -c "import json,sys; sys.exit(0 if json.load(open(sys.argv[1]))['ok'] else 1)" "$REPORT/$name/result.json"; then echo "| $name | pass |" >> "$REPORT/summary.md"
   else
     # Name the failing step and its error, so the summary alone tells what broke.
     why="$(python3 - "$REPORT/$name/result.json" <<'PY' 2>/dev/null || echo 'no result.json: the previewer did not start or the run timed out; see previewer.log'
