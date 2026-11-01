@@ -30,20 +30,20 @@ export struct McpFormDialog {
  private summary():ResourceStr{const server=this.view.servers.find(s=>s.id===this.view.selectedId);switch(this.target){case 'token':return $r('app.string.mcp_update_token_summary');case 'risk':return $r('app.string.mcp_enable_risky_tool_summary',this.view.riskyToolName,server?.name||'');case 'delete':return $r('app.string.mcp_delete_confirm',server?.name||'');default:return '';}}
  private confirmText():Resource{switch(this.target){case 'add':return this.view.working?$r('app.string.mcp_connecting'):$r('app.string.mcp_add_server');case 'token':return $r('app.string.action_save');case 'risk':return $r('app.string.mcp_enable_tool');default:return $r('app.string.ui_delete_3755f5');}}
  private confirm():void{switch(this.target){case 'add':void this.owner?.mcp?.add();break;case 'token':void this.owner?.mcp?.saveToken();break;case 'risk':void this.owner?.mcp?.confirmRisk();break;case 'delete':void this.owner?.deleteMcp();break;}this.sync();}
- @Builder private field(label:Resource,value:string,kind:'name'|'url'|'token'){
+ @Builder private field(label:Resource,kind:'name'|'url'|'token'){
   Column({space:S.Dp4}){
    Text(label).fontSize(F.Footnote1).fontColor($r('app.color.miuix_on_surface_variant_summary')).width('100%')
-   TextInput({text:value}).fontSize(F.Body1).fontColor($r('app.color.miuix_on_surface')).backgroundColor($r('app.color.miuix_surface_container_high'))
+   TextInput({text:kind==='name'?this.view.draft.name:kind==='url'?this.view.draft.url:this.view.draft.token}).fontSize(F.Body1).fontColor($r('app.color.miuix_on_surface')).backgroundColor($r('app.color.miuix_surface_container_high'))
     .type(kind==='token'?InputType.Password:kind==='url'?InputType.URL:InputType.Normal).enabled(!this.view.working).showPasswordIcon(false)
     .onChange((text:string)=>{this.owner?.mcp?.draft(kind,text);this.sync();})
   }.width('100%')
  }
  @Builder private fields(){Column({space:S.Dp12}){
   if(this.target==='add'){
-   this.field($r('app.string.mcp_server_name'),this.view.draft.name,'name')
-   this.field($r('app.string.mcp_server_url'),this.view.draft.url,'url')
-   this.field($r('app.string.mcp_bearer_optional'),this.view.draft.token,'token')
-  }else if(this.target==='token'){this.field($r('app.string.mcp_bearer_token'),this.view.draft.token,'token')}
+   this.field($r('app.string.mcp_server_name'),'name')
+   this.field($r('app.string.mcp_server_url'),'url')
+   this.field($r('app.string.mcp_bearer_optional'),'token')
+  }else if(this.target==='token'){this.field($r('app.string.mcp_bearer_token'),'token')}
   if(this.view.notice){Text(mcpNotice(this.view.notice,this.view.noticeCount)).fontSize(F.Body2).fontColor($r('app.color.miuix_error')).width('100%')}
  }.width('100%')}
  @Builder private body(){Column(){
