@@ -11,6 +11,9 @@ import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/t
 import { MiuixScaffoldPage } from '../components/MiuixScaffoldPage';
 import { EtaCard } from '../components/EtaCard';
 import { EtaTextButton } from '../components/EtaControls';
+// One object-literal parameter: ArkUI re-evaluates it when the probe state changes (positional @Builder
+// parameters keep their first values, so the rows would not update after "刷新").
+interface ProbeRowParams { label: ResourceStr; value: ResourceStr; }
 @Component
 export struct DiagnosticsPage {
   @Prop state:ShellState=emptyShellState();
@@ -46,18 +49,18 @@ export struct DiagnosticsPage {
     if(!this.state.diagnostics.lines.length){Text($r('app.string.eta_diagnostics_empty')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary'))}
     ForEach(this.state.diagnostics.lines,(line:string)=>{Text(line).fontSize(F.Footnote1).fontFamily('monospace').fontColor($r('app.color.miuix_on_surface')).width('100%').copyOption(CopyOptions.LocalDevice)},(line:string,index:number)=>String(index)+line)
   }}
-  @Builder private probeRow(label:ResourceStr,value:ResourceStr){Row({space:S.Dp16}){
-    Text(label).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')).layoutWeight(1)
-    Text(value).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface')).textAlign(TextAlign.End).layoutWeight(2)
+  @Builder private probeRow(row:ProbeRowParams){Row({space:S.Dp16}){
+    Text(row.label).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')).layoutWeight(1)
+    Text(row.value).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface')).textAlign(TextAlign.End).layoutWeight(2)
   }.width('100%')}
   @Builder private a11yProbe(){Column({space:S.Dp12}){
     Text($r('app.string.a11y_probe_title')).fontSize(F.Body1).fontWeight(FontWeight.Medium).fontColor($r('app.color.miuix_on_surface')).width('100%')
-    this.probeRow($r('app.string.a11y_probe_state'),this.probe.connected?$r('app.string.a11y_probe_connected'):$r('app.string.a11y_probe_disconnected'))
-    this.probeRow($r('app.string.a11y_probe_bundle'),this.probe.foregroundBundle!==''?this.probe.foregroundBundle:'-')
-    this.probeRow($r('app.string.a11y_probe_nodes'),String(this.probe.nodeCount))
-    this.probeRow($r('app.string.a11y_probe_last_event'),this.probeTime(this.probe.lastEventAt))
-    this.probeRow($r('app.string.a11y_probe_gesture'),this.probe.gesture.result)
-    if(this.probe.readError!==''){this.probeRow($r('app.string.a11y_probe_read_error'),this.probe.readError)}
+    this.probeRow({label:$r('app.string.a11y_probe_state'),value:this.probe.connected?$r('app.string.a11y_probe_connected'):$r('app.string.a11y_probe_disconnected')})
+    this.probeRow({label:$r('app.string.a11y_probe_bundle'),value:this.probe.foregroundBundle!==''?this.probe.foregroundBundle:'-'})
+    this.probeRow({label:$r('app.string.a11y_probe_nodes'),value:String(this.probe.nodeCount)})
+    this.probeRow({label:$r('app.string.a11y_probe_last_event'),value:this.probeTime(this.probe.lastEventAt)})
+    this.probeRow({label:$r('app.string.a11y_probe_gesture'),value:this.probe.gesture.result})
+    if(this.probe.readError!==''){this.probeRow({label:$r('app.string.a11y_probe_read_error'),value:this.probe.readError})}
     Row({space:S.Dp8}){
       EtaTextButton({text:$r('app.string.a11y_probe_refresh'),onAction:()=>this.refreshProbe(true)}).layoutWeight(1)
       EtaTextButton({text:$r('app.string.a11y_probe_request'),primary:true,onAction:()=>this.requestInjection()}).layoutWeight(1)
