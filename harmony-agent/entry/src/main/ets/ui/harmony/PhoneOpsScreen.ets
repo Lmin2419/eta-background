@@ -6,6 +6,7 @@ import { FakePhoneOpsTransport, PhoneOpsController, PhoneOpsTransport } from '..
 import { PhoneOpsSnapshot, nativeMissingSnapshot } from '../../core/eta/device/phoneOps';
 import { validateHdcTarget } from '../../core/eta/device/hdcConnection';
 import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../core/eta/tokens';
+import { ShellState, FoundationController, emptyShellState } from '../../core/foundation/controller';
 import { MiuixScaffoldPage } from '../eta/components/MiuixScaffoldPage';
 import { EtaCard } from '../eta/components/EtaCard';
 import { EtaTextButton } from '../eta/components/EtaControls';
@@ -15,6 +16,8 @@ const SCREEN_HEIGHT = 1920;
 
 @Component
 export struct PhoneOpsScreen {
+  @Prop state: ShellState = emptyShellState();
+  controller: FoundationController | undefined = undefined;
   @State private snapshot: PhoneOpsSnapshot = nativeMissingSnapshot('');
   @State private address: string = '';
   @State private invalid: boolean = false;
