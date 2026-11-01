@@ -1,6 +1,7 @@
 import { ConversationRepository } from '../conversations';
 import { DraftRepository } from '../drafts';
 import { ProfileRepository } from '../profiles';
+import { AppearanceSettingsRepository, defaultAppearance } from '../eta/appearanceSettings';
 import { FoundationController } from './controller';
 import { HttpTransport } from '../model';
 
@@ -24,6 +25,7 @@ export function previewController(): FoundationController {
       }
     };
   };
-  controller = new FoundationController({ chats, profiles, drafts, transport, uuid: () => 'r' + ++counter, load: async () => { await profiles.load(); await chats.load(); await drafts.load(); } });
+  const appearance = new AppearanceSettingsRepository(memory(JSON.stringify(defaultAppearance())), { apply: async () => {} }, () => controller?.changed());
+  controller = new FoundationController({ chats, profiles, drafts, transport, appearance, paneDate: () => ({ now: Date.now(), locale: 'zh', timeZone: 'UTC', use24HourClock: true, yesterdayLabel: '昨天', recentLabel: '最近', formatter: { calendarDate: (ms:number) => { const d=new Date(ms); return { year: d.getUTCFullYear(), month: d.getUTCMonth()+1, day: d.getUTCDate() }; }, format: (ms:number) => new Date(ms).toISOString().slice(11,16), mediumDate: (ms:number) => new Date(ms).toISOString().slice(0,10) } }), uuid: () => 'r' + ++counter, load: async () => { await profiles.load(); await chats.load(); await drafts.load(); await appearance.load(); } });
   return controller;
 }
