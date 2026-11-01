@@ -48,6 +48,7 @@ internal data class TaskNotificationState(
     val paused: Boolean = false,
     val completed: Boolean = false,
     val targetPackage: String? = null,
+    val runtimeAuthoritative: Boolean = false,
 )
 
 /** One execution service; each task owns one card, including its final state. */
@@ -329,7 +330,7 @@ internal class AgentExecutionService : Service() {
 
         @JvmStatic fun publishRunCompletion(context: Context, runId: String, conversationId: String, status: String, text: String) = onMain {
             val previous = cards[runId] ?: return@onMain
-            if (previous.completed) return@onMain // Runtime's terminal event already updated the original card.
+            if (previous.completed || previous.runtimeAuthoritative) return@onMain // Only the session terminal commit completes runtime cards.
             completeTask(context, previous.copy(conversationId = conversationId,
                 status = if (status == "已完成") AgentOverlayStatus.ResultReady else AgentOverlayStatus.RunFailed,
                 streamPreview = text.takeLast(240)))
@@ -385,6 +386,8 @@ internal class AgentExecutionService : Service() {
             return conversationIntent(context, task?.conversationId)
         }
 
+        internal fun task(runId: String): TaskNotificationState? = cards[runId]
+
         private fun notification(context: Context, task: TaskNotificationState?, id: Int, alert: Boolean = false): Notification {
             val status = task?.status
             val completed = task?.completed == true
@@ -402,10 +405,13 @@ internal class AgentExecutionService : Service() {
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(task?.title?.take(60)?.takeIf(String::isNotBlank) ?: context.getString(R.string.execution_title))
                 .setContentText(label + task?.streamPreview?.takeIf(String::isNotBlank)?.let { " · $it" }.orEmpty())
-                .setContentIntent(destination(context, task, id))
+                .setContentIntent(if (task?.targetPackage.isNullOrBlank()) destination(context, task, id)
+                    else TaskPreviewActivity.pendingIntent(context, task, id))
                 // Keep the continue action available, including after an unsuccessful App handoff.
                 .setOngoing(!completed).setAutoCancel(completed && task.targetPackage.isNullOrBlank()).setOnlyAlertOnce(!alert)
                 .setVisibility(Notification.VISIBILITY_PRIVATE)
+            if (!task?.targetPackage.isNullOrBlank()) builder.setLargeIcon(
+                Icon.createWithResource(context, R.drawable.ic_task_phone))
             completionLabel?.let(builder::setSubText)
             if (completed) {
                 val dismissed = Intent(context, TaskNotificationDismissReceiver::class.java).setAction(ACTION_DISMISS_COMPLETED)

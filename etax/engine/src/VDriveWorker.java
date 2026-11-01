@@ -89,6 +89,18 @@ class VDriveWorker implements VDrive.Worker {
 
     final java.util.HashMap<Integer, Frame> frames = new java.util.HashMap<>();
     JSONObject lastScreenshot;
+    long previewUntil;
+    private boolean previewExpiryScheduled;
+    private final Runnable previewExpiry = new Runnable() {
+        public void run() {
+            long delay = previewUntil - SystemClock.elapsedRealtime();
+            if (delay > 0) { work.postDelayed(this, delay); return; }
+            previewExpiryScheduled = false;
+            if (current != null && current.orphanAt > 0) {
+                try { stopCapture(current); } catch (Throwable error) { log("preview cleanup: " + error.getClass().getSimpleName()); }
+            }
+        }
+    };
     DisplayGeometry lastDisplayGeometry;
     final DisplayManager.DisplayListener geometryListener = new DisplayManager.DisplayListener() {
         public void onDisplayAdded(int did) { }
@@ -886,6 +898,7 @@ class VDriveWorker implements VDrive.Worker {
 
     JSONObject handle(JSONObject req) throws Exception {
         String cmd0 = req.optString("cmd", "");
+        if (cmd0.startsWith("preview_")) return preview(req);
         if (!isPassive(cmd0) && !"finish".equals(cmd0) && !"destroy".equals(cmd0)
                 && !"quit".equals(cmd0) && !"present".equals(cmd0)) {
             JSONObject moved = foregroundGuard();
@@ -1280,7 +1293,7 @@ class VDriveWorker implements VDrive.Worker {
         final ImageReader capture = ImageReader.newInstance(W, H, PixelFormat.RGBA_8888, 3);
         try {
             capture.setOnImageAvailableListener(r -> {
-                if (reader != r || orphanAt > 0 || retired) return;
+                if (reader != r || orphanAt > 0 && previewUntil <= SystemClock.elapsedRealtime() || retired) return;
                 Image img = null;
                 try {
                     img = r.acquireLatestImage();
@@ -1392,11 +1405,11 @@ class VDriveWorker implements VDrive.Worker {
         DPI = req.has("density") && req.optInt("density", 0) > 0
                 ? req.optInt("density") : mainDensity();
         final Frame fr = createCapture();
-        // Isolate focus from the user's display. Screen-off execution is disabled.
+        // Same screen-off display policy as upstream; keep our isolated focus/IME routing.
         int flags = flag("PRIVATE") | flag("OWN_CONTENT_ONLY") | flag("SUPPORTS_TOUCH")
                 | flag("TRUSTED") | flag("OWN_DISPLAY_GROUP") | flag("OWN_FOCUS")
                 | flag("STEAL_TOP_FOCUS_DISABLED") | flag("ROTATES_WITH_CONTENT")
-                | flag("DESTROY_CONTENT_ON_REMOVAL");
+                | flag("DESTROY_CONTENT_ON_REMOVAL") | flag("ALWAYS_UNLOCKED");
         long t = SystemClock.elapsedRealtime();
         try {
             vd = dm.createVirtualDisplay("eta-bg", W, H, DPI, reader.getSurface(), flags, null, work);
@@ -2140,6 +2153,83 @@ class VDriveWorker implements VDrive.Worker {
                 .put("inputHint", "截图坐标请传 coordinate_space=screenshot 与本次 frame_id；节点 bounds 使用 display 坐标。旋转后重新观察。")
                 // ready-to-copy next call: models kept dropping the required path argument
                 .put("read_with", readHint(path));
+    }
+
+    /** UI frames stay in memory and never publish/replace the model's screenshot contract. */
+    JSONObject preview(JSONObject req) throws Exception {
+        String command = req.getString("cmd");
+        if (current == null || displayId <= 0 || retired) return fail("PREVIEW_UNAVAILABLE", "后台页面已释放");
+        if (command.equals("preview_release")) {
+            previewUntil = 0;
+            if (current.orphanAt > 0) stopCapture(current);
+            return new JSONObject().put("ok", true);
+        }
+        JSONObject moved = foregroundGuard();
+        if (moved != null) return moved;
+        if (command.equals("preview_input")) {
+            JSONObject geometry = geometry(displayId).json();
+            if (!ScreenGeometry.valid(req.optJSONObject("expectedGeometry")))
+                return fail("STALE_OBSERVATION", "请先等待预览画面");
+            JSONObject invalid = ScreenGeometry.check(req.optJSONObject("expectedGeometry"), geometry);
+            if (invalid != null) return invalid;
+            String action = req.optString("action");
+            if (!java.util.Arrays.asList("tap", "press", "swipe", "key").contains(action))
+                return fail("BAD_ARGUMENT", "不支持此接管操作");
+            if (action.equals("key") && req.optInt("code") != KeyEvent.KEYCODE_BACK)
+                return fail("BAD_ARGUMENT", "接管仅支持目标屏返回键");
+            JSONObject ready = awaitInputReady(displayId, "", req, 1200);
+            if (!ready.optBoolean("ready")) return fail("INPUT_NOT_READY", "目标窗口未就绪").put("operationMayHaveRun", false);
+            req.put("displayId", displayId).put("coordinateSpace", "display");
+            // Invalidate AI input contracts; resume must obtain a new model observation.
+            lastScreenshot = null;
+            observationRequired = true;
+            JSONObject result = dispatch(action, req);
+            result.put("operationMayHaveRun", true);
+            if (!ScreenGeometry.same(geometry, geometry(displayId).json()))
+                return fail("GEOMETRY_CHANGED_DURING_OPERATION", "画面方向已改变，请重新查看").put("operationMayHaveRun", true);
+            return result;
+        }
+        if (!command.equals("preview_frame")) return fail("BAD_ARGUMENT", "未知预览操作");
+        previewUntil = SystemClock.elapsedRealtime() + 10000;
+        if (!previewExpiryScheduled) { previewExpiryScheduled = true; work.postDelayed(previewExpiry, 10000); }
+        if (reader == null) resumeCapture(current);
+        Frame fr = frames.get(displayId);
+        if (fr == null || fr.image == null) return fail("NO_FRAME", "等待首帧");
+        DisplayGeometry geometry = geometry(displayId);
+        if (fr.geometry == null || !geometry.matches(fr.geometry.json())) {
+            fr.close();
+            return fail("FRAME_GEOMETRY_CHANGED", "等待方向更新后的画面");
+        }
+        int edge = Math.max(160, Math.min(720, req.optInt("edge", 480)));
+        String previewKey = displayId + ":" + fr.receivedAt + ":" + frameOk + ":" + edge;
+        if (previewKey.equals(req.optString("since")))
+            return new JSONObject().put("ok", true).put("unchanged", true).put("geometry", geometry.json());
+        Image.Plane plane = fr.image.getPlanes()[0];
+        int fw = fr.image.getWidth(), fh = fr.image.getHeight(), stride = plane.getRowStride() / 4;
+        if (fr.bmp == null || fr.bmp.getWidth() != stride || fr.bmp.getHeight() != fh) {
+            if (fr.bmp != null) fr.bmp.recycle();
+            fr.bmp = Bitmap.createBitmap(stride, fh, Bitmap.Config.ARGB_8888);
+        }
+        fr.bmp.copyPixelsFromBuffer(CapturePixels.prepare(plane.getBuffer(), fw, fh,
+                plane.getRowStride(), plane.getPixelStride()));
+        Bitmap crop = stride == fw ? fr.bmp : Bitmap.createBitmap(fr.bmp, 0, 0, fw, fh);
+        Bitmap logical = null, scaled = null;
+        try {
+            logical = geometry.logicalBitmap(crop);
+            double scale = Math.min(1, (double) edge / Math.max(geometry.width, geometry.height));
+            scaled = Bitmap.createScaledBitmap(logical, Math.max(1, (int) (geometry.width * scale)),
+                    Math.max(1, (int) (geometry.height * scale)), true);
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            scaled.compress(Bitmap.CompressFormat.JPEG, 65, bytes);
+            if (bytes.size() > 400000) return fail("PREVIEW_TOO_LARGE", "预览超过内存传输限制");
+            return new JSONObject().put("ok", true).put("geometry", geometry.json()).put("previewKey", previewKey)
+                    .put("width", scaled.getWidth()).put("height", scaled.getHeight())
+                    .put("image", android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP));
+        } finally {
+            if (scaled != null && scaled != logical && scaled != crop && scaled != fr.bmp) scaled.recycle();
+            if (logical != null && logical != crop && logical != fr.bmp) logical.recycle();
+            if (crop != fr.bmp) crop.recycle();
+        }
     }
 
     boolean ensureShotDir() {

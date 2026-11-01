@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Root transport. Mutable display/input/capture state lives in independent workers. */
 public final class VDrive {
-    static final String BUILD = "20261030-e40-takeover";
+    static final String BUILD = "20261101-e41-preview";
     static java.util.function.BooleanSupplier health = () -> true;
     static volatile boolean systemInvalid;
     private static final String INSTANCE = UUID.randomUUID().toString();
@@ -73,6 +73,12 @@ public final class VDrive {
         final String pkg;
         volatile boolean closing, parked;
         int inFlight;
+        String manualOwner = "";
+        long manualUntil;
+        boolean manuallyHeld() {
+            if (now() >= manualUntil) manualOwner = "";
+            return !manualOwner.isEmpty();
+        }
         volatile long touched = now();
         Slot(Worker worker, String pkg) { this.worker = worker; this.pkg = pkg; }
     }
@@ -215,6 +221,7 @@ public final class VDrive {
             if (!healthy() && !cmd.equals("release_session"))
                 return error("SYSTEM_RESTARTED", "Android 系统服务连接已失效；请等待引擎恢复后重新 screen_open");
             if (cmd.equals("present_completed")) return presentCompleted(req);
+            if (cmd.startsWith("preview_")) return preview(req);
             if (cmd.equals("release_session")) {
                 if (req.optBoolean("keep", false)) {
                     synchronized (workers) {
@@ -262,7 +269,7 @@ public final class VDrive {
                     if (old == null) for (Map.Entry<String, Slot> entry : workers.entrySet()) {
                         Slot candidate = entry.getValue();
                         if (candidate.pkg.equals(pkg) && candidate.parked && !candidate.closing && !candidate.worker.isHandingOver()
-                                && candidate.inFlight == 0 && retired.contains(entry.getKey()) && candidate.worker.claimParked()) {
+                                && !candidate.manuallyHeld() && candidate.inFlight == 0 && retired.contains(entry.getKey()) && candidate.worker.claimParked()) {
                             adopt = entry.getKey(); break;
                         }
                     }
@@ -272,7 +279,7 @@ public final class VDrive {
                         candidate.touched = now();
                         workers.put(id, candidate);
                     } else for (Map.Entry<String, Slot> entry : workers.entrySet()) {
-                        if (entry.getValue().parked && entry.getValue().inFlight == 0 && entry.getValue().worker.isParked()
+                        if (entry.getValue().parked && !entry.getValue().manuallyHeld() && entry.getValue().inFlight == 0 && entry.getValue().worker.isParked()
                                 && !entry.getValue().worker.isHandingOver()
                                 && (entry.getValue().pkg.equals(pkg) || workers.size() >= LIMIT)) {
                             reclaim = entry.getKey(); break;
@@ -308,6 +315,8 @@ public final class VDrive {
                 slot.touched = now();
                 if (slot.worker != null && slot.worker.isTakenOver() && !cmd.equals("finish") && !cmd.equals("cancel")) return takeoverError();
                 if (slot.closing && !cmd.equals("cancel")) return error("SESSION_CLOSED", "屏幕正在释放");
+                if (slot.manuallyHeld() && !cmd.equals("keepalive") && !cmd.equals("cancel"))
+                    return error("MANUAL_CONTROL", "用户正在接管，请等待用户恢复任务");
             }
             // Reserve capacity above, but never hold the session monitor across system calls.
             if (initialize) {
@@ -357,6 +366,7 @@ public final class VDrive {
             }
             synchronized (workers) {
                 if ((!id.equals("legacy-mcp") && (workers.get(id) != slot || retired.contains(id))) || slot.closing) return error("SESSION_CLOSED", "屏幕已释放");
+                if (slot.manuallyHeld() && !cmd.equals("cancel")) return error("MANUAL_CONTROL", "用户正在接管");
                 slot.inFlight++;
             }
             try { return slot.worker.processLine(req.toString()); }
@@ -387,7 +397,7 @@ public final class VDrive {
                 Slot slot = entry.getValue();
                 if (!slot.pkg.equals(pkg)) continue;
                 if (!entry.getKey().startsWith(run + ":") || entry.getKey().lastIndexOf(':') != run.length()
-                        || !slot.parked || slot.closing || slot.inFlight != 0
+                        || !slot.parked || slot.closing || slot.manuallyHeld() || slot.inFlight != 0
                         || !slot.worker.claimParked()) return error("APP_BUSY", "应用正在被其他操作使用，请先查看聊天");
                 target = slot;
                 target.inFlight++;
@@ -398,6 +408,48 @@ public final class VDrive {
         try {
             return target.worker.processLine(new JSONObject().put("cmd", "present").put("package", pkg).toString());
         } finally { synchronized (workers) { target.inFlight--; } }
+    }
+
+    /** UI-only RPC: exact run + package, never a global current display or package fallback. */
+    private static JSONObject preview(JSONObject request) throws Exception {
+        String run = request.optString("runId"), pkg = request.optString("package");
+        String cmd = request.optString("cmd"), owner = request.optString("owner");
+        if (run.isEmpty() || pkg.isEmpty() || owner.length() < 16 || owner.length() > 80)
+            return error("BAD_ARGUMENT", "缺少预览任务身份");
+        Slot target = null;
+        synchronized (workers) {
+            for (Map.Entry<String, Slot> e : workers.entrySet()) {
+                if (e.getValue().pkg.equals(pkg) && e.getKey().startsWith(run + ":")
+                        && e.getKey().lastIndexOf(':') == run.length()) { target = e.getValue(); break; }
+            }
+            if (target == null || target.worker == null || target.closing || target.worker.isTakenOver())
+                return error("PREVIEW_UNAVAILABLE", "此任务已无保留页面，或应用已交还/被其他任务使用");
+            boolean held = target.manuallyHeld();
+            if (cmd.equals("preview_acquire")) {
+                if (request.optBoolean("requireParked") && !target.parked)
+                    return error("TASK_NOT_SETTLED", "任务仍在收尾，请稍后接管");
+                if ((held && !owner.equals(target.manualOwner)) || target.inFlight != 0
+                        || !"idle".equals(target.worker.commandState()))
+                    return error("INPUT_DRAIN_PENDING", "正在等待旧操作结束，尚未允许手动输入");
+                target.manualOwner = owner;
+                target.manualUntil = now() + 10000;
+                return ok();
+            }
+            if (cmd.equals("preview_release")) {
+                if (target.inFlight != 0 || !"idle".equals(target.worker.commandState()))
+                    return error("INPUT_DRAIN_PENDING", "旧操作尚未结束，暂不交还控制权");
+                if (owner.equals(target.manualOwner)) target.manualOwner = "";
+            } else if (cmd.equals("preview_input")) {
+                if (!held || !owner.equals(target.manualOwner)) return error("MANUAL_LEASE_EXPIRED", "请重新接管");
+                if (target.inFlight != 0 || !"idle".equals(target.worker.commandState()))
+                    return error("INPUT_DRAIN_PENDING", "上一操作尚未结束，不能重复输入");
+                target.manualUntil = now() + 10000;
+            } else if (!cmd.equals("preview_frame")) return error("BAD_ARGUMENT", "未知预览操作");
+            if (owner.equals(target.manualOwner)) target.manualUntil = now() + 10000;
+            target.inFlight++;
+        }
+        try { return target.worker.processLine(request.toString()); }
+        finally { synchronized (workers) { target.inFlight--; } }
     }
 
     private static void workerReleased(Slot released) {

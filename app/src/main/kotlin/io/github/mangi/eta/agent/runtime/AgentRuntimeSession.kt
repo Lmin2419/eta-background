@@ -18,6 +18,7 @@ internal class AgentRuntimeSession(
     eventSink: ((AgentEvent) -> Unit)? = null,
     resultSink: ((AgentRuntimeWire.RunResult) -> Unit)? = null,
     private val operation: String = AgentRuntimeWire.OP_CHAT,
+    private val onCommitting: () -> Unit = {},
     private val beforeTerminalPublish: (AgentRuntimeWire.RunResult) -> Unit = {},
 ) {
     private enum class State {
@@ -43,6 +44,9 @@ internal class AgentRuntimeSession(
         if (state == State.RUNNING) latestContext = snapshot
     }
     private var state = State.RUNNING
+    private var terminalResult: AgentRuntimeWire.RunResult? = null
+    val result: AgentRuntimeWire.RunResult?
+        get() = lock.withLock { terminalResult }
     private val replayEvents = mutableListOf<AgentEvent>()
     private val searchSuggestionsBudget = SearchSuggestionsBudget()
     private val subscribers = mutableListOf<Subscriber>()
@@ -160,8 +164,10 @@ internal class AgentRuntimeSession(
             require(result.runId == runId) { "Result runId does not match the active session" }
             state = State.COMMITTING
         }
+        runCatching(onCommitting)
         val commitFailure = runCatching(beforePublish).exceptionOrNull()
         lock.withLock {
+            terminalResult = result
             state = State.TERMINAL
         }
         // 客户端收到结果即可续发；释放会话占用不能晚于结果，也不能持锁回调宿主。
@@ -188,7 +194,7 @@ internal class AgentRuntimeSession(
                 contextSnapshot = latestContext,
                 transcript = AgentToolBatchRecovery.completeInterrupted(latestTranscript),
                 operation = operation,
-            )
+            ).also { terminalResult = it }
         }
         controller.cancel()
         beforeTerminalPublish(result)

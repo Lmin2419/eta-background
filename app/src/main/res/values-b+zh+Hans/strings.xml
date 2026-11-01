@@ -1452,7 +1452,7 @@
     <string name="appearance_runtime_glow_summary">显示助手唤醒及任务执行时的屏幕边缘光效，修改后立即生效。</string>
   <string name="tools_background_group">后台应用操作</string>
   <string name="tool_background_open">打开后台应用</string>
-  <string name="tool_background_open_description">明确要求后台执行时使用虚拟屏。需要 Root 和无障碍服务；最多两个不同应用并行，其他任务排队，息屏暂停。</string>
+  <string name="tool_background_open_description">明确要求后台执行时使用虚拟屏。需要 Root 和无障碍服务；最多两个不同应用并行，其他任务排队。后台可在息屏后继续，锁屏时不执行前台操作；联网仍受系统省电策略影响。</string>
   <string name="tool_background_state">查看后台状态</string>
   <string name="tool_background_state_description">检查引擎和会话状态。窗口诊断报告可见性与焦点，不发送试探性手势。</string>
   <string name="tool_background_read">读取后台界面</string>

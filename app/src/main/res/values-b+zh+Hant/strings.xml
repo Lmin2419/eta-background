@@ -1382,7 +1382,7 @@
     <string name="appearance_runtime_glow_summary">顯示助手喚醒及任務執行時的螢幕邊緣光效，修改後立即生效。</string>
   <string name="tools_background_group">背景應用程式操作</string>
   <string name="tool_background_open">開啟背景應用程式</string>
-  <string name="tool_background_open_description">明確要求背景執行時使用虛擬螢幕。需要 Root 和無障礙服務；最多兩個不同應用程式並行，其他工作排隊，螢幕關閉時暫停。</string>
+  <string name="tool_background_open_description">明確要求背景執行時使用虛擬螢幕。需要 Root 和無障礙服務；最多兩個不同應用程式並行，其他工作排隊。背景可在螢幕關閉後繼續；鎖屏不操作前臺，網路仍受省電策略影響。</string>
   <string name="tool_background_state">查看背景狀態</string>
   <string name="tool_background_state_description">檢查引擎和工作階段狀態。視窗診斷回報可見性與焦點，不傳送試探性手勢。</string>
   <string name="tool_background_read">讀取背景畫面</string>

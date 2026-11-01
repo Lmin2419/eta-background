@@ -206,7 +206,13 @@ internal class AgentRuntimeRunExecutor(
                 screenshotExcludedPackages = {
                     entrySurfaceGuard?.consumeScreenshotExcludedPackages().orEmpty()
                 },
-                beforeToolExecution = { toolName ->
+                beforeToolExecution = before@{ toolName ->
+                    if ((AgentToolRequirements.requiresGuiControl(toolName) ||
+                            AgentOverlayVisibilityPolicy.requiresEntrySurfaceDismissal(toolName)) &&
+                        !TaskPreviewRegistry.mainDisplayAvailable(appContext)) {
+                        return@before ToolExecutionDecision.Reject("SCREEN_LOCKED",
+                            "主屏已关闭或锁定；前台操作未执行。后台虚拟屏可继续，不能唤醒主屏或重放输入。")
+                    }
                     val requiresAccessibility =
                         AgentToolRequirements.requiresAccessibility(toolName)
                     if (
@@ -256,11 +262,13 @@ internal class AgentRuntimeRunExecutor(
                 readScreenshot = executor::readBackgroundScreenshot,
                 rootAvailable = executor::isRootAvailable,
             )
+            TaskPreviewRegistry.register(request.runId, runController, taskScreen)
             val routingExecutor = RoutingToolExecutor(
                 local = executor,
                 mcp = McpToolExecutor(mcpSnapshot),
                 shadow = backgroundScreen,
                 taskScreen = taskScreen,
+                controller = runController,
             )
             toolExecutor = routingExecutor
             toolsBinding = runController.register(routingExecutor::close)
@@ -433,6 +441,7 @@ internal class AgentRuntimeRunExecutor(
                 rewriteTargetMessageId = request.rewriteTargetMessageId,
             )
         } finally {
+            TaskPreviewRegistry.unregister(request.runId)
             runCatching { toolsBinding?.close() }
             runCatching { toolExecutor?.close() }
             runCatching { guiRun?.close() }

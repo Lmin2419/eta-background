@@ -190,6 +190,7 @@ internal object AgentRuntimeWire {
         Running("running"),
         WaitingForGui("waiting_for_gui"),
         Paused("paused"),
+        Stopping("stopping"),
         Committing("committing");
 
         companion object {

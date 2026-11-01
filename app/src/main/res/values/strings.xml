@@ -258,7 +258,7 @@
   <string name="overlay_stopped">Stopped</string>
   <string name="tools_background_group">Background app operation</string>
   <string name="tool_background_open">Open a background app</string>
-  <string name="tool_background_open_description">Use a virtual display when background work is requested. Requires Root and accessibility; up to two different apps, with extra tasks queued. Pauses when the screen turns off.</string>
+  <string name="tool_background_open_description">Use a virtual display when background work is requested. Requires Root and accessibility; up to two different apps, with extra tasks queued. Background work may continue with the main screen off. Foreground input is blocked while locked; network remains subject to system power policy.</string>
   <string name="tool_background_state">Check background status</string>
   <string name="tool_background_state_description">Inspect engine and session status. Window diagnostics report visibility and focus without sending test gestures.</string>
   <string name="tool_background_read">Read the background page</string>
@@ -1486,4 +1486,7 @@
   <string name="chat_queue_files_only">[%1$d 个文件]</string>
     <string name="appearance_runtime_glow">Runtime edge glow</string>
     <string name="appearance_runtime_glow_summary">Show screen edge lighting during assistant wake and task execution. Changes take effect immediately.</string>
+    <string name="background_task_preparing">Preparing task</string>
+    <string name="background_task_waiting_gui">Waiting for foreground control</string>
+    <string name="background_preview_paused">Paused for manual control</string>
 </resources>

@@ -285,6 +285,7 @@ internal class RoutingToolExecutor(
     private val mcp: McpToolExecutor,
     private val shadow: io.github.mangi.eta.agent.runtime.BackgroundScreenTools? = null,
     private val taskScreen: io.github.mangi.eta.agent.runtime.TaskScreenSession? = null,
+    private val controller: io.github.mangi.eta.agent.runtime.AgentRunController? = null,
 ) : AgentModelClient.ToolExecutor, AutoCloseable {
     override fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult {
         // Native foreground tools first decide whether this task is explicitly on its
@@ -297,7 +298,11 @@ internal class RoutingToolExecutor(
                 taskScreen?.observeLegacyResult(toolCall.name, raw)
                 return backgroundToolResult(toolCall.name, raw)
             }
-        return if (mcp.contains(toolCall.name)) mcp.execute(toolCall) else local.execute(toolCall)
+        if (mcp.contains(toolCall.name)) return mcp.execute(toolCall)
+        val foreground = io.github.mangi.eta.agent.tool.AgentToolRequirements.requiresGuiControl(toolCall.name) ||
+            io.github.mangi.eta.agent.tool.AgentToolRequirements.hasForegroundIntentFallback(toolCall.name)
+        return if (foreground && controller != null) controller.withScreenOperation { local.execute(toolCall) }
+            else local.execute(toolCall)
     }
 
     override fun close() {

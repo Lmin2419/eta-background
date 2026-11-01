@@ -8,6 +8,9 @@ import io.github.mangi.eta.R
 
 /** 浮窗只保存语义状态，文案在渲染时根据当前系统语言解析。 */
 internal sealed interface AgentOverlayStatus {
+    data object Preparing : AgentOverlayStatus
+    data object WaitingForGui : AgentOverlayStatus
+    data object PreviewPaused : AgentOverlayStatus
     data object Queued : AgentOverlayStatus
     data object ScreenOffPaused : AgentOverlayStatus
     data object AppTakeoverPaused : AgentOverlayStatus
@@ -33,6 +36,9 @@ internal fun AgentOverlayStatus.localizedText(): String = localizedText(LocalRes
 
 /** 通知等非 Compose 表面与浮层共用同一套状态文案。 */
 internal fun AgentOverlayStatus.localizedText(resources: Resources): String = when (this) {
+    AgentOverlayStatus.Preparing -> resources.getString(R.string.background_task_preparing)
+    AgentOverlayStatus.WaitingForGui -> resources.getString(R.string.background_task_waiting_gui)
+    AgentOverlayStatus.PreviewPaused -> resources.getString(R.string.background_preview_paused)
     AgentOverlayStatus.Queued -> resources.getString(R.string.background_task_queued)
     AgentOverlayStatus.ScreenOffPaused -> resources.getString(R.string.background_screen_off_paused)
     AgentOverlayStatus.AppTakeoverPaused -> resources.getString(R.string.background_app_takeover_paused)

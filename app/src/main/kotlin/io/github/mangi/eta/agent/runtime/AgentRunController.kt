@@ -20,11 +20,46 @@ internal class AgentRunController {
 
     private val lock = ReentrantLock()
     private val pauseCondition = lock.newCondition()
+    private val inputsDrained = lock.newCondition()
+    private var activeInputs = 0
+    private var manualOwner: String? = null
+
+    /** Count the actual transport call, never a checkpoint waiting for resume. */
+    fun <T> withScreenOperation(block: () -> T): T {
+        lock.withLock {
+            try { while (paused && !cancelled) pauseCondition.await() }
+            catch (_: InterruptedException) { Thread.currentThread().interrupt(); throw AgentRunCancelledException() }
+            if (cancelled) throw AgentRunCancelledException()
+            activeInputs++
+        }
+        try { return block() } finally {
+            lock.withLock { activeInputs--; inputsDrained.signalAll() }
+        }
+    }
+
+    /** Pausing and admission share one lock: a new input cannot slip past the drain. */
+    fun acquireManual(owner: String, timeoutMs: Long = 2500): Boolean = lock.withLock {
+        if (cancelled || manualOwner != null && manualOwner != owner) return false
+        manualOwner = owner
+        pause(forAppTakeover = true)
+        var remaining = TimeUnit.MILLISECONDS.toNanos(timeoutMs)
+        try { while (activeInputs > 0 && remaining > 0 && !cancelled) remaining = inputsDrained.awaitNanos(remaining) }
+        catch (_: InterruptedException) { manualOwner = null; Thread.currentThread().interrupt(); return false }
+        if (activeInputs != 0 || cancelled) { manualOwner = null; return false }
+        true
+    }
+
+    fun releaseManual(owner: String) = lock.withLock {
+        if (manualOwner == owner) manualOwner = null
+        // Closing a preview never resumes a task.
+    }
     private val steeringMessages = ArrayDeque<String>()
     private var acceptingSteering = true
     @Volatile
     private var paused = false
     @Volatile var pausedForAppTakeover: Boolean = false
+        private set
+    @Volatile var pausedForPreview: Boolean = false
         private set
 
     val isPaused: Boolean
@@ -44,7 +79,9 @@ internal class AgentRunController {
             steeringMessages.clear()
             paused = false
             pausedForAppTakeover = false
+            pausedForPreview = false
             pauseCondition.signalAll()
+            inputsDrained.signalAll()
         }
         resources.forEach { resource ->
             runCatching { resource.cancel() }
@@ -90,6 +127,7 @@ internal class AgentRunController {
         lock.withLock {
             paused = true
             pausedForAppTakeover = forAppTakeover
+            pausedForPreview = manualOwner != null
             pauseListeners.forEach { it(true) }
         }
     }
@@ -99,15 +137,22 @@ internal class AgentRunController {
      */
     fun resume() {
         lock.withLock {
+            if (manualOwner != null || cancelled) return
             if (paused) resumeGeneration++
             paused = false
             pausedForAppTakeover = false
+            pausedForPreview = false
             pauseListeners.forEach { it(false) }
             pauseCondition.signalAll()
         }
     }
 
     /** Child model calls obey the parent's screen-off/manual pause without sharing steering. */
+    fun observePause(listener: (Boolean) -> Unit): ResourceBinding {
+        pauseListeners.add(listener)
+        return ResourceBinding { pauseListeners.remove(listener) }
+    }
+
     fun linkChild(child: AgentRunController): ResourceBinding {
         val cancellation = register { child.cancel(cancellationReason) }
         val listener: (Boolean) -> Unit = { if (it) child.pause() else child.resume() }

@@ -92,6 +92,14 @@
             android:theme="@style/Theme.EtaVoiceAssistBridge" />
 
         <activity
+            android:name=".agent.runtime.TaskPreviewActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/Theme.EtaTaskPreview" />
+
+        <activity
             android:name=".agent.voice.EtaVoiceAssistActivity"
             android:excludeFromRecents="true"
             android:exported="true"

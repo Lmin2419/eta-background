@@ -221,4 +221,31 @@ public class VDriveLifecycleTest {
         worker.taskDisplay = 0; session.orphanAt = 1; worker.load(session);
         assertNull(worker.foregroundGuard());
     }
+    @Test public void closingPreviewDropsParkedCaptureWithoutChangingAiFrameOrTaskIdentity() throws Exception {
+        worker = new Worker(RuntimeEnvironment.getApplication());
+        VDriveWorker.Session session = worker.new Session("audit.preview");
+        session.displayId = 42; session.taskId = 71; session.orphanAt = 1;
+        session.reader = ImageReader.newInstance(32, 64, PixelFormat.RGBA_8888, 3);
+        worker.sessions.put(session.pkg, session); worker.load(session);
+        VDriveWorker.Frame frame = worker.new Frame();
+        Bitmap bitmap = Bitmap.createBitmap(32, 64, Bitmap.Config.ARGB_8888);
+        frame.bmp = bitmap; worker.frames.put(42, frame);
+        JSONObject aiFrame = new JSONObject().put("frameId", "model-original");
+        worker.lastScreenshot = aiFrame;
+        assertTrue(worker.preview(new JSONObject().put("cmd", "preview_release")).getBoolean("ok"));
+        assertNull(session.reader); assertTrue(bitmap.isRecycled()); assertTrue(worker.frames.isEmpty());
+        assertSame(session, worker.sessions.get(session.pkg)); assertEquals(1, session.orphanAt);
+        assertSame(aiFrame, worker.lastScreenshot);
+    }
+    @Test public void closingLivePreviewDoesNotDestroyTheAgentsCaptureSurface() throws Exception {
+        worker = new Worker(RuntimeEnvironment.getApplication());
+        VDriveWorker.Session session = worker.new Session("audit.preview");
+        session.displayId = 42; session.taskId = 71;
+        session.reader = ImageReader.newInstance(32, 64, PixelFormat.RGBA_8888, 3);
+        worker.sessions.put(session.pkg, session); worker.load(session);
+        ImageReader capture = session.reader;
+        assertTrue(worker.preview(new JSONObject().put("cmd", "preview_release")).getBoolean("ok"));
+        assertSame(capture, session.reader); assertSame(capture, worker.reader);
+    }
+
 }

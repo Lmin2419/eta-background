@@ -139,6 +139,41 @@ class AgentRuntimeScreenOnTest {
         }
     }
 
+    @Test fun screenOffKeepsBackgroundWorkButNeverResumesManualPause() {
+        val host = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        val service = host.get()
+        val display = service.getSystemService(android.hardware.display.DisplayManager::class.java).getDisplay(0)
+        val run = service.registerRun("background-off", ownsGui = false)
+        val other = service.registerRun("manual-off", ownsGui = false)
+        val opening = service.registerRun("opening-off", ownsGui = false)
+        opening.hasExecutedForegroundTool = true
+        opening.backgroundScreenPhase = BackgroundScreenPhase.OpeningApp
+        val screen = TaskScreenSession(run.runId, run.session.controller,
+            object : ScreenToolBackend { override fun execute(name: String, arguments: String): String? = null },
+            { io.github.mangi.eta.agent.model.AgentModelClient.ToolResult("{}") })
+        screen.observeLegacyResult("screen_open", """{"ok":true,"mode":"hidden","displayId":7}""")
+        TaskPreviewRegistry.register(run.runId, run.session.controller, screen)
+        run.hasExecutedForegroundTool = true // A prior foreground step must not pause the new background stage.
+        other.session.controller.pause()
+        try {
+            shadowOf(display).setState(android.view.Display.STATE_OFF)
+            service.field<android.content.BroadcastReceiver>("screenReceiver").onReceive(service,
+                android.content.Intent(android.content.Intent.ACTION_SCREEN_OFF))
+            assertFalse(run.session.controller.isPaused)
+            assertFalse(opening.session.controller.isPaused)
+            assertTrue(other.session.controller.isPaused)
+            assertFalse(TaskPreviewRegistry.mainDisplayAvailable(service))
+            shadowOf(display).setState(android.view.Display.STATE_ON)
+            service.field<android.content.BroadcastReceiver>("screenReceiver").onReceive(service,
+                android.content.Intent(android.content.Intent.ACTION_SCREEN_ON))
+            assertTrue(other.session.controller.isPaused)
+        } finally {
+            TaskPreviewRegistry.unregister(run.runId)
+            shadowOf(display).setState(android.view.Display.STATE_ON)
+            host.destroy()
+        }
+    }
+
     @Test
     fun physicalScreenOffPausesRunAndScreenOnRequiresManualResume() {
         val controller = Robolectric.buildService(AgentRuntimeService::class.java).create()
@@ -146,6 +181,7 @@ class AgentRuntimeScreenOnTest {
         val display = service.getSystemService(android.hardware.display.DisplayManager::class.java).getDisplay(0)
         try {
             val run = service.registerRun("screen-off", ownsGui = false)
+            run.hasExecutedForegroundTool = true
             // Another display may keep global power interactive while the phone's screen is off.
             shadowOf(service.getSystemService(android.os.PowerManager::class.java)).setIsInteractive(true)
             shadowOf(display).setState(android.view.Display.STATE_OFF)

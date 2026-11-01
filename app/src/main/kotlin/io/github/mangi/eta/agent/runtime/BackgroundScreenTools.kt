@@ -156,7 +156,7 @@ internal class BackgroundScreenTools(
             phase(BackgroundScreenPhase.OpeningApp)
             val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30)
             controller.throwIfCancelled()
-            var result = next.tools.execute(name, arguments)
+            var result = controller.withScreenOperation { next.tools.execute(name, arguments) }
             // A parked screen may need asynchronous engine cleanup after the app lease
             // has been returned. Retry only the explicit pre-launch rejection, never a timeout.
             while (runCatching { JSONObject(result.orEmpty()).optString("code") == "CLEANUP_PENDING" }.getOrDefault(false)
@@ -164,7 +164,7 @@ internal class BackgroundScreenTools(
                 phase(BackgroundScreenPhase.ReleasingScreen)
                 Thread.sleep(250)
                 controller.throwIfCancelled()
-                result = next.tools.execute(name, arguments)
+                result = controller.withScreenOperation { next.tools.execute(name, arguments) }
             }
             if (runCatching { JSONObject(result.orEmpty()).optBoolean("ok") }.getOrDefault(false)) {
                 onAppOpened(app)
@@ -186,7 +186,12 @@ internal class BackgroundScreenTools(
         if (current.closing.get()) return "屏幕正在回收，请先调用 screen_open 打开下一应用"
         if (name == "screen_finish") phase(BackgroundScreenPhase.RestoringDisplay)
         val observationGeneration = controller.resumeGeneration
-        return current.tools.execute(name, arguments).also { result ->
+        return controller.withScreenOperation {
+            // Pause may have begun after preflight, while this call was waiting for admission.
+            if (name in MUTATING_TOOLS && observationGeneration != controller.resumeGeneration)
+                """{"ok":false,"code":"OBSERVE_AFTER_RESUME","error":"暂停期间页面可能变化，请重新观察；本次操作未执行。","operationMayHaveRun":false}"""
+            else current.tools.execute(name, arguments)
+        }.also { result ->
             val response = runCatching { JSONObject(result.orEmpty()) }.getOrNull()
             if (response?.optString("code") == "APP_TAKEN_OVER") pauseForTakeover(current)
             if (response?.optString("code") in LOST_SESSION_CODES ||

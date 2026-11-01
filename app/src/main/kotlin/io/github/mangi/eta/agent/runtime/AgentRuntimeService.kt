@@ -120,7 +120,8 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) {
                 runs.all().filterNot { it.session.isTerminal }.forEach { run ->
-                    if (!run.session.controller.isPaused) {
+                    if (!run.session.controller.isPaused && !TaskPreviewRegistry.isBackground(run.runId) &&
+                        run.backgroundScreenPhase == null && run.hasExecutedForegroundTool) {
                         run.pausedForScreenOff = true
                         requestPause(run.runId)
                     }
@@ -451,10 +452,18 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             session = AgentRuntimeSession(
                 runId = request.runId,
                 operation = request.operation,
+                onCommitting = { mainHandler.post { if (!destroyed) publishExecutionState() } },
                 eventSink = { event -> sendEventTo(replyTo, event) },
                 resultSink = { result -> sendResultTo(replyTo, result) },
-                beforeTerminalPublish = {
-                    runs.finish(request.runId, session)?.releaseIncoming()
+                beforeTerminalPublish = { result ->
+                    runs.finish(request.runId, session)?.let { finished ->
+                        finished.releaseIncoming()
+                        mainHandler.post {
+                            AgentExecutionService.completeTask(this, notificationState(finished).copy(
+                                completed = true, status = finished.presentationStatus(),
+                                streamPreview = (if (result.ok) result.content else result.error.orEmpty()).takeLast(240)))
+                        }
+                    }
                     AgentExecutionService.release("run:${request.runId}")
                     mainHandler.post {
                         if (!destroyed) {
@@ -521,21 +530,12 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                 AgentRunCheckpointStore.start(applicationContext, request)
             }, entryPersistenceIo)
         }
-        if (!isMainDisplayOn()) {
-            run.pausedForScreenOff = true
-            run.session.controller.pause()
-        }
         publishExecutionState()
         return run
     }
 
     private fun failBeforeExecution(run: RuntimeRunRegistry.Run, message: String) {
         run.releaseIncoming()
-        mainHandler.post {
-            if (!destroyed) AgentExecutionService.completeTask(this, notificationState(run).copy(
-                completed = true, status = if (message == "已停止") AgentOverlayStatus.Stopped else AgentOverlayStatus.RunFailed,
-                streamPreview = message.takeLast(240)))
-        }
         val result = AgentRuntimeWire.RunResult(
             run.runId, false, "", message,
             operation = run.request.operation, rewriteTargetMessageId = run.request.rewriteTargetMessageId,
@@ -556,6 +556,9 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private fun executePreparedRun(run: RuntimeRunRegistry.Run) {
         if (!runs.contains(run)) return
         val screenOnBinding = run.session.controller.register { mainHandler.post(::updateKeepScreenOn) }
+        val pauseBinding = run.session.controller.observePause {
+            mainHandler.post { if (!destroyed) { publishExecutionState(); updateKeepScreenOn() } }
+        }
         thread(name = "agent-runtime") {
             try {
                 try { run.entryPersistence.join() } catch (_: Exception) {
@@ -572,6 +575,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                 executeRun(run)
             } finally {
                 screenOnBinding.close()
+                pauseBinding.close()
             }
         }
     }
@@ -653,12 +657,8 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             }
             runCatching {
                 run.overlayState = run.overlayState.applyEvent(event)
-                if (event is AgentEvent.RunFinished || event is AgentEvent.RunFailed) {
-                    AgentExecutionService.completeTask(this, notificationState(run).copy(
-                        completed = true, status = run.overlayState.status))
-                }
                 if (displayedRun === run && !run.session.isTerminal) {
-                    state.value = run.overlayState
+                    state.value = run.overlayState.copy(status = taskStatus(run), phase = run.presentationPhase())
                     syncActiveRunOverlayVisibility(run)
                 }
                 publishExecutionState()
@@ -694,15 +694,6 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         mainHandler.post {
             if (destroyed) return@post
             run.completedContext = completedContext
-            AgentExecutionService.completeTask(this, notificationState(run).copy(
-                completed = true,
-                status = when {
-                    result.ok -> AgentOverlayStatus.ResultReady
-                    result.error == "已停止" -> AgentOverlayStatus.Stopped
-                    else -> AgentOverlayStatus.RunFailed
-                },
-                streamPreview = (if (result.ok) result.content else result.error.orEmpty()).takeLast(240),
-            ))
             if (runs.all().any { !it.session.isTerminal }) {
                 publishExecutionState()
                 return@post
@@ -1148,7 +1139,9 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         if (selected != null) {
             if (displayedRun !== selected) bindDisplayedRun(selected)
             state.value = selected.overlayState.copy(status = taskStatus(selected),
-                phase = if (selected.session.controller.isPaused) AgentOverlayPhase.PAUSED else selected.overlayState.phase)
+                // The foreground permission pause outlives a cancelled owner. Keep its
+                // resume control visible; it is not a second terminal state for that task.
+                phase = if (guiControl.state.value.userPaused) AgentOverlayPhase.PAUSED else selected.presentationPhase())
             val working = active.any { !it.queued && !it.session.controller.isPaused && !it.session.controller.isCancelled }
             ambientState.value = state.value.copy(phase = if (working) AgentOverlayPhase.RUNNING else AgentOverlayPhase.PAUSED)
             if (!isMainDisplayOn() || AgentOverlayVisibilityPolicy.shouldSuppressOverlayInEtaUi(
@@ -1169,21 +1162,12 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         AgentExecutionService.updateTasks(this, snapshots)
     }
 
-    private fun taskStatus(run: RuntimeRunRegistry.Run): AgentOverlayStatus = when {
-        run.session.controller.isCancelled -> AgentOverlayStatus.Stopping
-        run.session.controller.isPaused -> when {
-            run.session.controller.pausedForAppTakeover -> AgentOverlayStatus.AppTakeoverPaused
-            run.pausedForScreenOff -> AgentOverlayStatus.ScreenOffPaused
-            else -> AgentOverlayStatus.Paused
-        }
-        run.queued -> AgentOverlayStatus.Queued
-        run.backgroundScreenPhase != null -> AgentOverlayStatus.BackgroundScreen(run.backgroundScreenPhase!!)
-        else -> run.overlayState.status
-    }
+    private fun taskStatus(run: RuntimeRunRegistry.Run) = run.presentationStatus()
 
     private fun notificationState(run: RuntimeRunRegistry.Run) = TaskNotificationState(
         runId = run.runId, conversationId = run.conversationId, title = run.request.prompt,
         status = taskStatus(run),
+        runtimeAuthoritative = true,
         streamPreview = if (run.overlayState.status == AgentOverlayStatus.GeneratingAnswer || run.overlayState.status == AgentOverlayStatus.ResultReady)
             run.overlayState.detailText.takeLast(80) else run.overlayState.thought.takeLast(80),
         paused = run.session.controller.isPaused,

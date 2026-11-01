@@ -87,7 +87,8 @@ class TaskCompletionNotificationTest {
         assertEquals("chat-one", shadowOf(actions[0].actionIntent).savedIntent.getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
         assertEquals("one", shadowOf(actions[1].actionIntent).savedIntent.getStringExtra(CompletedAppActivity.EXTRA_RUN_ID))
         assertEquals("app.one", shadowOf(actions[1].actionIntent).savedIntent.getStringExtra(CompletedAppActivity.EXTRA_PACKAGE))
-        assertEquals(completed.contentIntent, actions[1].actionIntent)
+        assertNotEquals(completed.contentIntent, actions[1].actionIntent)
+        assertEquals(TaskPreviewActivity::class.java.name, shadowOf(completed.contentIntent).savedIntent.component?.className)
         assertEquals(AgentExecutionService.ACTION_REPLY, shadowOf(actions[2].actionIntent).savedIntent.action)
         assertEquals(AgentExecutionService.REPLY_TEXT, actions[2].remoteInputs.single().resultKey)
         assertTrue(card("two").notification.flags and Notification.FLAG_ONLY_ALERT_ONCE != 0)
@@ -104,6 +105,19 @@ class TaskCompletionNotificationTest {
         shadowOf(Looper.getMainLooper()).idle()
         assertEquals(setOf(original.id, card("two").id), manager.activeNotifications.map { it.id }.toSet())
         assertTrue(card("one").notification.flags and Notification.FLAG_ONLY_ALERT_ONCE != 0)
+    }
+
+    @Test fun legacyCompletionCannotRaceTheRuntimeCommit() {
+        val active = task("authority").copy(runtimeAuthoritative = true)
+        start(active)
+        AgentExecutionService.publishRunCompletion(service, active.runId, active.conversationId!!, "已完成", "model finished")
+        shadowOf(Looper.getMainLooper()).idle()
+        assertFalse(AgentExecutionService.task(active.runId)!!.completed)
+        assertEquals(active.status, AgentExecutionService.task(active.runId)!!.status)
+        finish(active)
+        assertTrue(AgentExecutionService.task(active.runId)!!.completed)
+        AgentExecutionService.publishRunCompletion(service, active.runId, active.conversationId, "失败", "late")
+        assertEquals(AgentOverlayStatus.ResultReady, AgentExecutionService.task(active.runId)!!.status)
     }
 
     @Test fun disablingAlertsKeepsCardsAndNewTasksReadTheCurrentSetting() {

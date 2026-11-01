@@ -117,6 +117,7 @@ internal class RuntimeRunRegistry(private val capacity: Int = MAX_ACTIVE_RUNS) {
             handoffSource = request.handoff?.source.orEmpty(),
             phase = when {
                 session.isCommitting -> AgentRuntimeWire.RunPhase.Committing
+                session.controller.isCancelled -> AgentRuntimeWire.RunPhase.Stopping
                 session.controller.isPaused -> AgentRuntimeWire.RunPhase.Paused
                 queued -> AgentRuntimeWire.RunPhase.Queued
                 preparing -> AgentRuntimeWire.RunPhase.Preparing

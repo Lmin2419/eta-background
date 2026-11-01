@@ -505,6 +505,15 @@ public final class ShadowTools {
                 new JSONObject().put("cmd", "present_completed").put("runId", runId).put("package", pkg).toString(), 35000);
     }
 
+    /** Authenticated UI preview/control; never exposed in the model tool catalog. */
+    public static String preview(String runId, String pkg, String owner, String command, String arguments) throws Exception {
+        if (!command.startsWith("preview_")) throw new IllegalArgumentException("preview command required");
+        JSONObject request = new JSONObject(arguments).put("cmd", command).put("runId", runId)
+                .put("package", pkg).put("owner", owner);
+        return new ShadowTools("user-preview").send(ENGINE_PORT, request.toString(),
+                "preview_input".equals(command) ? 35000 : 3000);
+    }
+
     public void keepAlive() {
         if (closed) return;
         try { received(send(ENGINE_PORT, new JSONObject().put("cmd", "keepalive").put("sessionId", sessionId).toString(), 2000)); }

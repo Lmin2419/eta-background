@@ -18,7 +18,7 @@ import java.time.Duration
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36, 37], application = Application::class)
 class AgentSystemNotificationTest {
-    @Test fun completedCardOpensItsOwnTargetAppOnlyOnUserTap() {
+    @Test fun completedCardPreviewsAndItsExplicitOpenAppActionHandsOff() {
         val controller = Robolectric.buildService(AgentExecutionService::class.java).create()
         val service = controller.get()
         val manager = service.getSystemService(NotificationManager::class.java)
@@ -42,14 +42,17 @@ class AgentSystemNotificationTest {
             val finished = manager.activeNotifications.single()
             assertEquals(original.id, finished.id)
             val destination = shadowOf(finished.notification.contentIntent).savedIntent
-            assertEquals(CompletedAppActivity::class.java.name, destination.component?.className)
-            assertEquals(target, destination.getStringExtra(CompletedAppActivity.EXTRA_PACKAGE))
+            assertEquals(TaskPreviewActivity::class.java.name, destination.component?.className)
+            assertEquals(target, destination.getStringExtra("package"))
             assertEquals("app-click", destination.getStringExtra(CompletedAppActivity.EXTRA_RUN_ID))
             assertNull(shadowOf(service.application).nextStartedActivity)
             finished.notification.contentIntent.send()
-            assertEquals(CompletedAppActivity::class.java.name, shadowOf(service.application).nextStartedActivity.component?.className)
+            assertEquals(TaskPreviewActivity::class.java.name, shadowOf(service.application).nextStartedActivity.component?.className)
             assertEquals(3, finished.notification.actions.size)
-            assertEquals(finished.notification.contentIntent, finished.notification.actions[1].actionIntent)
+            assertFalse(finished.notification.contentIntent == finished.notification.actions[1].actionIntent)
+            assertEquals(CompletedAppActivity::class.java.name, shadowOf(finished.notification.actions[1].actionIntent).savedIntent.component?.className)
+            assertEquals(target, shadowOf(finished.notification.actions[1].actionIntent).savedIntent.getStringExtra(CompletedAppActivity.EXTRA_PACKAGE))
+            assertNotNull(finished.notification.getLargeIcon())
             val reply = finished.notification.actions[2]
             assertEquals(Notification.Action.SEMANTIC_ACTION_REPLY, reply.semanticAction)
             assertEquals(AgentExecutionService.REPLY_TEXT, reply.remoteInputs.single().resultKey)

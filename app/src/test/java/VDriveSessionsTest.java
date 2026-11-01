@@ -346,4 +346,52 @@ public class VDriveSessionsTest {
         worker.draining = true;
         assertEquals("COMMAND_DRAINING", VDrive.processLine(request.toString()).getString("code"));
     }
+    private String previewOpen(String run, String app) throws Exception {
+        String id = run + ":" + UUID.randomUUID(); ids.add(id);
+        assertTrue(VDrive.processLine(new JSONObject().put("cmd", "launch").put("sessionId", id)
+                .put("component", app).toString()).getBoolean("ok"));
+        return id;
+    }
+    private JSONObject preview(String run, String app, String cmd, String owner) throws Exception {
+        return VDrive.processLine(new JSONObject().put("cmd", cmd).put("runId", run).put("package", app)
+                .put("owner", owner).toString());
+    }
+    @Test public void previewCannotReadAnotherRunsScreenOrClaimAParkedPage() throws Exception {
+        String id = previewOpen("preview-a", "app.preview"); park(id);
+        assertEquals("PREVIEW_UNAVAILABLE", preview("other", "app.preview", "preview_frame", "owner-0123456789abcdef").getString("code"));
+        assertTrue(preview("preview-a", "app.preview", "preview_frame", "owner-0123456789abcdef").getBoolean("ok"));
+        assertTrue(made.get(id).parked);
+        assertEquals("SESSION_CLOSED", send(id, "tap").getString("code"));
+        assertEquals(1, count());
+    }
+    @Test public void manualLeaseBlocksAiAndHandoffButNotOtherTasksThenExpires() throws Exception {
+        String id = previewOpen("preview-a", "app.preview");
+        String other = open("app.other");
+        long now = VDrive.clock.getAsLong();
+        VDrive.clock = () -> now;
+        assertTrue(preview("preview-a", "app.preview", "preview_acquire", "owner-0123456789abcdef").getBoolean("ok"));
+        assertEquals("MANUAL_CONTROL", send(id, "tap").getString("code"));
+        assertTrue(send(other, "tap").getBoolean("ok"));
+        assertEquals("MANUAL_LEASE_EXPIRED", preview("preview-a", "app.preview", "preview_input", "other-0123456789abcdef").getString("code"));
+        assertTrue(preview("preview-a", "app.preview", "preview_input", "owner-0123456789abcdef").getBoolean("ok"));
+        VDrive.clock = () -> now + 10001;
+        assertEquals("MANUAL_LEASE_EXPIRED", preview("preview-a", "app.preview", "preview_input", "owner-0123456789abcdef").getString("code"));
+        assertTrue(send(id, "tap").getBoolean("ok"));
+    }
+    @Test public void uncertainWorkerCannotBeTakenOverEvenWithNoActiveRpc() throws Exception {
+        String id = previewOpen("preview-drain", "app.preview");
+        made.get(id).draining = true;
+        assertEquals("INPUT_DRAIN_PENDING", preview("preview-drain", "app.preview", "preview_acquire", "owner-0123456789abcdef").getString("code"));
+        made.get(id).draining = false;
+        JSONObject req = new JSONObject().put("cmd", "preview_acquire").put("runId", "preview-drain")
+                .put("package", "app.preview").put("owner", "owner-0123456789abcdef").put("requireParked", true);
+        assertEquals("TASK_NOT_SETTLED", VDrive.processLine(req.toString()).getString("code"));
+        park(id);
+        assertTrue(VDrive.processLine(req.toString()).getBoolean("ok"));
+        assertEquals("APP_BUSY", VDrive.processLine(new JSONObject().put("cmd", "present_completed")
+                .put("runId", "preview-drain").put("package", "app.preview").toString()).getString("code"));
+        assertTrue(preview("preview-drain", "app.preview", "preview_release", "owner-0123456789abcdef").getBoolean("ok"));
+        assertTrue(made.get(id).parked);
+    }
+
 }
