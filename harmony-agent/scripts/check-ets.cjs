@@ -43,6 +43,12 @@ const pages = JSON.parse(fs.readFileSync(path.join(project, 'entry/src/main/reso
 const entries = {};
 for (const page of pages) entries[page] = path.join(src, page + '.ets');
 entries.ability = path.join(src, 'entryability/EntryAbility.ets');
+// Extension abilities (for example the accessibility extension) are compiled by DevEco from module.json5
+// even though no page imports them, so every srcEntry is an entry here too.
+const moduleJson = fs.readFileSync(path.join(project, 'entry/src/main/module.json5'), 'utf8');
+for (const match of moduleJson.matchAll(/"srcEntry"\s*:\s*"\.\/ets\/([^"]+)"/g)) {
+  entries['srcEntry:' + match[1]] = path.join(src, match[1]);
+}
 entries.preview = path.join(src, 'pages/FoundationPreview.ets');
 entries.etaGallery = path.join(src, 'pages/EtaGallery.ets');
 // Keep direct core entries as additional checks; Index and EntryAbility now use these ports.

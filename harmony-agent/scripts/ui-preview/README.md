@@ -46,6 +46,7 @@ npm run test:ui -- tests/ui/02-drawer.json            # 单个场景
 | `longPress` | 长按，`"hold": 1.0` 秒；也支持 `offset`（例如按在气泡边缘而不是文字上，文字上长按会触发系统的文字选择） |
 | `swipe` | `{"swipe": {"direction": "right"}}`，方向 `up` / `down` / `left` / `right`；`"on": {选择器}` 在某个元素上滑，`"distance": 0.6` 为距离占比 |
 | `back` | `{"back": true}`，系统返回键 |
+| `tapAt` | `{"tapAt": [0.65, 0.54]}`，按屏幕比例点击。**只用于系统对话框**（`showAlertDialog`）：它们在单独的子窗口里，控件树看不到。点完要在后面的步骤断言效果（例如消息消失） |
 | `dump` | 保存截图并打印当前所有可见元素（类型、id、文字、无障碍文字、占位文字、是否可用、位置），写场景时用来找选择器 |
 | `type` | 输入文字，**只支持 a–z、0–9 和空格**（预览器的输入法通道无法把文字送进输入框，改用实体按键事件） |
 | `wait` | 等待秒数 |
@@ -65,6 +66,8 @@ npm run test:ui -- tests/ui/02-drawer.json            # 单个场景
 - 不能输入中文。
 - 依赖 `postFrameCallback` 的逐帧动画（例如回复文字的渐显）在预览器里不一定推进；涉及这类效果的场景要以真机为准。
 - `bindPopup` 的气泡背景和阴影不绘制，只显示内容（加 `backgroundBlurStyle: BlurStyle.NONE` 也一样）；弹层外观只能在真机上看。
-- 菜单（`bindMenu` / `bindContextMenu`）的内容会出现在控件树里，可以断言和点击。
+- 菜单（`bindMenu` / `bindContextMenu`）的内容会出现在控件树里，可以断言和点击；系统对话框（`showAlertDialog`）不会，只能截图查看并用 `tapAt` 点按钮。
+- 预览器没有 `taskpool` 模块（返回空对象），依赖它的代码要有同线程兜底，例如 Markdown 解析。
+- 预览器本身偶尔会原生崩溃（例如 `TextFieldPattern::GetInspectorId` 段错误，约五分之一的概率出现在打开带输入框的页面时）。`run.sh` 遇到“原生信号崩溃且日志中没有应用错误”时会把这个场景重跑一次，摘要中注明；连续两次崩溃，或者有任何 JS 错误，仍然判为失败。
 - 运行时要求 abc 所在目录以 `/data/storage/el1/bundle/` 开头、目录名以 `.abc` 结尾（与真机沙箱路径一致），所以需要写入 `/data` 的权限。
 - 兼容层针对 SDK 26.0.0.38 验证；升级 SDK 后先跑一遍 `npm run test:ui` 确认。

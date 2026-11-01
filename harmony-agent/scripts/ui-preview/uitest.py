@@ -108,7 +108,14 @@ class Preview:
                 found.append({'type': n.get('$type'), 'id': attrs.get('id', ''), 'text': text if isinstance(text, str) else '',
                               'placeholder': attrs.get('placeholder', ''), 'a11y': attrs.get('accessibilityText', '') or '',
                               'rect': rect, 'enabled': attrs.get('enabled', True) not in (False, 'false'), 'attrs': attrs})
-                for c in n.get('$children', []): walk(c)
+                children = n.get('$children', [])
+                if attrs.get('visibility') in ('Visibility.Hidden', 'Visibility.None'): return
+                if n.get('$type') == 'Navigation':
+                    # A pushed page covers the nav bar and the pages below it, which still report as visible.
+                    pages = [c for c in children if isinstance(c, dict) and c.get('$type') == 'NavDestination'
+                             and c.get('$attrs', {}).get('visibility') not in ('Visibility.Hidden', 'Visibility.None')]
+                    if pages: children = pages[-1:]
+                for c in children: walk(c)
         walk(self.tree or {}); return found
 
     def find(self, target):
@@ -211,9 +218,16 @@ async def run(build, scenario_file, report):
                 elif 'expectMissing' in step:
                     await asyncio.sleep(0.5); await p.inspect()
                     if p.find(step['expectMissing']): raise AssertionError('still visible: %s' % json.dumps(step['expectMissing'], ensure_ascii=False))
-                elif 'tap' in step or 'longPress' in step or 'swipe' in step or 'back' in step:
+                elif 'tap' in step or 'longPress' in step or 'swipe' in step or 'back' in step or 'tapAt' in step:
                     await p.inspect(); tree_before = json.dumps(p.tree, sort_keys=True)
                     if 'back' in step: p.command('BackClicked')
+                    elif 'tapAt' in step:
+                        # Only for system dialogs (showAlertDialog), which live in a sub-window the inspector
+                        # cannot see. Fractions of the screen; assert the effect in a later step.
+                        fx, fy = step['tapAt']
+                        if not (0 < fx < 1 and 0 < fy < 1): raise AssertionError('tapAt takes screen fractions between 0 and 1')
+                        node = {'rect': [fx * p.width, fy * p.height, 0, 0]}
+                        await p.tap(node)
                     elif 'swipe' in step:
                         sw = step['swipe']; w, h = p.width, p.height
                         if 'on' in sw:
