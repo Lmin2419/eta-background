@@ -20,9 +20,12 @@ export struct SettingsScreen {
   @Builder private row(title:Resource,source:Resource,color:ResourceColor,enabled:boolean,action:()=>void,summary:ResourceStr=''){
     EtaArrowPreference({title,summary:enabled?summary:$r('app.string.eta_port_unavailable'),isEnabled:enabled,hasLeading:true,startAction:()=>{this.icon(source,color,enabled);},onAction:action})
   }
+  @Builder private modelProviderRow(){
+    EtaArrowPreference({title:$r('app.string.ui_model_provider_e8c7f5'),summary:this.state.chat.provider?this.state.chat.provider+' / '+(this.state.chat.model||''):$r('app.string.settings_not_configured'),isEnabled:true,hasLeading:true,startAction:()=>{this.icon($r('app.media.ic_rounded_cloud'),$r('app.color.eta_preference_blue'),true);},onAction:()=>this.controller?.navigate('providers')})
+  }
   @Builder private pendingSwitch(title:Resource,source:Resource,color:ResourceColor){EtaSwitchPreference({title,summary:$r('app.string.eta_port_unavailable'),isEnabled:false,hasLeading:true,startAction:()=>{this.icon(source,color,false);}})}
   @Builder private agent(){Column(){
-    this.row($r('app.string.ui_model_provider_e8c7f5'),$r('app.media.ic_rounded_cloud'),$r('app.color.eta_preference_blue'),true,()=>this.controller?.navigate('providers'),this.state.chat.provider?this.state.chat.provider+' / '+(this.state.chat.model||''):$r('app.string.settings_not_configured'))
+    this.modelProviderRow()
     EtaPreferenceDivider()
     EtaSwitchPreference({title:$r('app.string.ui_deep_thinking_enabled_by_default_c032d6'),checked:this.state.runtimePreferences.thinkingEnabled,isEnabled:!!this.controller?.ports.runtimePreferences,hasLeading:true,startAction:()=>{this.icon($r('app.media.ic_rounded_psychology'),$r('app.color.eta_preference_blue'));},onCheckedChange:(value:boolean)=>{void this.controller?.updateRuntimePreferences({thinkingEnabled:value});}})
   }}
