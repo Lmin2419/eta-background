@@ -33,7 +33,9 @@
 
 第 2 轮增加每个任务独立的原生前后台操作入口：原生 GUI 工具可用显式 `execution_location=background` 复用现有后台屏幕和旧 `screen_*` 执行路径；前台仍走现有 GUI 控制权管理。后台观察、截图、节点、坐标、`observation_id`/`frame_id` 和恢复/接管失效规则均由任务自己的会话维护，不存在全局当前屏幕，也没有第二个虚拟显示引擎。第 2 轮返修按 `Boot.dump()` 真实字段 `cls/pkg/vid/edit/click/scrollable/actions/enabled/bounds` 转换节点；节点观察使用 `Boot.handle()` 最终响应里的权威 `geometry`，默认不截图，需要截图时才读取 `VDriveWorker.shot()` 的实际截图尺寸；输入前比较 `displayId/width/height/rotation`，且不修改已发布观察的帧号、尺寸或缩放。`PASTE`、`NOTIFICATIONS`、`QUICK_SETTINGS`、URI 和系统面板等后台不可靠操作返回明确错误，不会改走主屏。
 
-以上两轮都没有修改 VDrive 引擎、部署脚本、认证、版本配对、通知、助手浮窗、虚拟屏交还、任务调度或息屏策略，也没有更改包名、签名、`versionCode` 或 `versionName`。这不是 3.4.0 的完整升级，尚未发布，当前正式下载链接和 `2026103003` 安装包保持不变。五轮目标、边界、风险和未决事项见 [3.4.0 分阶段整合计划](INTEGRATION_3_4_PLAN.md)。
+第 2 轮补充修复新旧工具交替使用时的观察生命周期：旧 `screen_*` 输入、重新打开或结束屏幕之前，先失效本任务的原生观察，即使工具超时、连接异常或返回非 JSON，也必须重新观察才能再次输入；只读查询不替换已发布截图的帧号。丢屏、系统重启、接管及结果不确定的回执统一失效观察。后台观察必须具有明确、非主屏且上下层一致的 displayId，不能凭相同宽高接受缺失或矛盾的屏幕身份。
+
+以上两轮都没有修改 VDrive 引擎、部署脚本、认证、版本配对、通知、助手浮窗、虚拟屏交还、任务调度或息屏策略，也没有更改包名、签名、`versionCode` 或 `versionName`。这不是 3.4.0 的完整升级，尚未发布，当前正式下载链接和 `2026103003` 安装包保持不变。五轮历史目标见 [3.4.0 分阶段整合计划](INTEGRATION_3_4_PLAN.md)；后续统一任务状态、通知三级预览、接管及息屏适配以[当前实施方案](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/INTEGRATION_PLAN_CURRENT.md)为准，尚未作为本轮新增功能交付。
 
 长按电源键触发软重启目前只有用户报告，完整 `system_server` 崩溃栈尚未提供；本轮未定位、未修复，不能把本轮合并视为该问题的修复。
 

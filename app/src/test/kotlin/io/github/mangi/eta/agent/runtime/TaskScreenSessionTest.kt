@@ -82,6 +82,38 @@ class TaskScreenSessionTest {
     }
 
     @Test
+    fun backgroundObservationRequiresAnUnambiguousNonDefaultDisplayIdentity() {
+        for (includeTree in listOf(true, false)) {
+            for (invalidIdentity in listOf("missing", "main-screen", "conflicting")) {
+                val backend = FakeBackend()
+                val response = JSONObject(if (includeTree) backend.dumpResult else backend.shotResult)
+                val geometry = response.getJSONObject("geometry")
+                when (invalidIdentity) {
+                    "missing" -> {
+                        response.remove("displayId")
+                        geometry.remove("displayId")
+                    }
+                    "main-screen" -> {
+                        response.put("displayId", 0)
+                        geometry.put("displayId", 0)
+                    }
+                    "conflicting" -> response.put("displayId", 99)
+                }
+                if (includeTree) backend.dumpResult = response.toString() else backend.shotResult = response.toString()
+                val tools = session(backend)
+                tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+                val observed = JSONObject(tools.execute(call(
+                    "observe_screen",
+                    JSONObject().put("include_ui_tree", includeTree).put("include_screenshot", !includeTree).toString(),
+                ))!!.content)
+                assertFalse("tree=$includeTree identity=$invalidIdentity: $observed", observed.getBoolean("ok"))
+                assertFalse(observed.has("observation_id"))
+                assertFalse(backend.names().contains("screen_tap"))
+            }
+        }
+    }
+
+    @Test
     fun backgroundLaunchObserveAndTapKeepOneTaskLocalObservation() {
         val backend = FakeBackend()
         val tools = session(backend)

@@ -185,10 +185,27 @@ internal class TaskScreenSession(
         }
     }
 
+    /**
+     * Legacy input shares the same screen but not the native observation protocol. Invalidate
+     * before dispatch: the call may throw or return a non-JSON error after input was sent.
+     * Reads must leave the published frame untouched, including passive screen_shot refreshes.
+     */
+    fun beforeLegacyCall(name: String) {
+        if (name in BackgroundScreenTools.MUTATING_TOOLS || name == "screen_open" || name == "screen_finish") {
+            invalidateObservation()
+        }
+    }
+
     /** Update task-local state after a legacy screen_* call without replacing its executor path. */
     fun observeLegacyResult(name: String, raw: String?) {
         val result = parseJson(raw) ?: return
         val ok = result.optBoolean("ok", false)
+        // Apply loss/uncertainty to every reply, including screen_state/open/finish. A when
+        // branch for one of these names must not suppress the common invalidation rule.
+        if (result.optString("code") in LOST_SESSION_CODES ||
+            result.optString("code") == "APP_TAKEN_OVER" || result.optBoolean("operationMayHaveRun", false)) {
+            invalidateObservation()
+        }
         when (name) {
             "screen_open" -> if (ok && result.optString("mode") == "hidden" &&
                 (result.optInt("displayId", result.optInt("display", 0)) > 0)) {
@@ -205,12 +222,6 @@ internal class TaskScreenSession(
             }
             "screen_state" -> if (result.has("sessionValid") && !result.optBoolean("sessionValid")) {
                 synchronized(lock) { observation = null }
-            }
-            else -> {
-                if (result.optString("code") in LOST_SESSION_CODES ||
-                    result.optString("code") == "APP_TAKEN_OVER") {
-                    synchronized(lock) { observation = null }
-                }
             }
         }
     }
@@ -906,8 +917,14 @@ internal class TaskScreenSession(
         val rotation = geometry?.optInt("rotation", -1)?.takeIf { it in 0..3 }
             ?: json.optInt("rotation", -1).takeIf { it in 0..3 }
             ?: return null
-        val displayId = geometry?.optInt("displayId", -1)?.takeIf { it >= 0 }
-            ?: json.optInt("displayId", -1).takeIf { it >= 0 }
+        // A background observation must identify one hidden display. Missing identities
+        // must not compare equal as null == null, and display 0 must never become a fallback.
+        val geometryDisplayId = geometry?.takeIf { it.has("displayId") }?.optInt("displayId", -1)
+        val responseDisplayId = json.takeIf { it.has("displayId") }?.optInt("displayId", -1)
+        if (geometryDisplayId != null && geometryDisplayId <= 0) return null
+        if (responseDisplayId != null && responseDisplayId <= 0) return null
+        if (geometryDisplayId != null && responseDisplayId != null && geometryDisplayId != responseDisplayId) return null
+        val displayId = geometryDisplayId ?: responseDisplayId ?: return null
         return Geometry(displayId, width, height, rotation)
     }
 

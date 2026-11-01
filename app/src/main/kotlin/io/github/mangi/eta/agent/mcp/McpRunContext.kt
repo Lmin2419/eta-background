@@ -291,6 +291,7 @@ internal class RoutingToolExecutor(
         // per-run background screen. A null result keeps the old foreground path byte-for-byte.
         taskScreen?.execute(toolCall)?.let { return it }
         // etax: screen_* 后台虚拟屏工具，以及 terminal 里的界面类 shell 命令拦截
+        if (shadow != null) taskScreen?.beforeLegacyCall(toolCall.name)
         shadow?.execute(toolCall.name, toolCall.argumentsJson)
             ?.let { raw ->
                 taskScreen?.observeLegacyResult(toolCall.name, raw)

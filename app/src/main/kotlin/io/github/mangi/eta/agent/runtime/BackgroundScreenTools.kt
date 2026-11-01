@@ -234,7 +234,7 @@ internal class BackgroundScreenTools(
 
     companion object {
         private val LOST_SESSION_CODES = setOf("NO_SESSION", "SESSION_CLOSED", "STALE_SCREEN", "SYSTEM_RESTARTED")
-        private val MUTATING_TOOLS = setOf("screen_tap", "screen_click", "screen_press", "screen_swipe", "screen_drag", "screen_scroll", "screen_text", "screen_key")
+        internal val MUTATING_TOOLS = setOf("screen_tap", "screen_click", "screen_press", "screen_swipe", "screen_drag", "screen_scroll", "screen_text", "screen_key")
         private val OBSERVATION_TOOLS = setOf("screen_dump", "screen_list", "screen_shot")
         private val sharedLeases = ScreenLeaseRegistry()
         private val maintenance = java.util.concurrent.Executors.newScheduledThreadPool(3) { runnable ->
