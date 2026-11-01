@@ -62,8 +62,9 @@
 ## 当前指令（ChatGPT 维护）
 
 - instruction_id: C004
-- instruction_revision: 1
+- instruction_revision: 2
 - issued_at: 2026-11-01T15:28:29Z
+- revised_at: 2026-11-01T15:30:34Z
 - status: READY
 - target: ChatGPT
 - mode: 用户已要求由 ChatGPT 重新接手；手动推进，不恢复每小时自动检查
@@ -93,12 +94,33 @@
 - 本分支 VDriveWorker.restoreMainFocus 有针对主屏 IME/焦点被虚拟显示影响的条件恢复处理；上游 RootShellDeviceController.pressKey 在虚拟屏无 Root 路径仍可能调用全局无障碍按键。这是可审查的风险路径，不能据此唯一确定用户键盘收起事件的原因。
 - 上游 Runtime 没有本分支 ACTION_SCREEN_OFF 即暂停全部活动任务的处理；上游虚拟显示标志包含 OWN_DISPLAY_GROUP、ALWAYS_UNLOCKED、OWN_FOCUS、STEAL_TOP_FOCUS_DISABLED。本分支已有独立显示组/焦点标志但未启用 ALWAYS_UNLOCKED。已查上游 Runtime、虚拟显示与 Manifest 未发现专门的息屏网络保活机制；keepScreenOn 也不能等同于深度休眠联网保障。
 
+### 通知内三级预览：用户新增的具体交互（2026-11-01T15:30:34Z）
+
+用户希望把上游胶囊的小手机/小画面交互融合到现有通知，不再增加常驻悬浮胶囊。目标顺序：
+
+1. **收起**：现有任务通知显示状态，右侧是小手机形状的图标/缩略画面；不额外占一条通知。
+2. **展开**：原任务通知展示小屏画面预览和任务状态。此时查看不暂停 AI；点预览只放大，不把这一点击穿透给后台 App。
+3. **再点画面**：进入更大的预览/操作视图，再按既定暂停确认流程手动接管，或选择打开原 App 到主屏。关闭大预览不会取消任务。
+4. 两个任务各自绑定通知、画面及控制；完成卡片保留“打开 ETA 会话 / 打开 App / 继续指令”三个独立按钮，不用第四个按钮挤掉现有入口。
+
+**目标与已证实的平台能力分开：**
+
+- 已读本分支 AgentExecutionService.notification：当前使用 Notification.ProgressStyle，并请求 promoted ongoing；现有 contentIntent 的运行/完成跳转与三个 action 分离。未来预览入口须使用各任务唯一身份，不能直接复用当前“打开 App”按钮的 PendingIntent。
+- Android 官方 Live Updates 要求标准或指定样式，明确不允许 customContentView/RemoteViews；支持列表没有 BigPictureStyle。不能为了嵌入大预览直接替换成自定义通知而默认流体云仍存在。
+- 普通通知允许大图或自定义收起/展开布局，但这不证明 ColorOS 流体云的紧凑胶囊也允许任意右侧图片/交互画布。系统决定原生布局、位置及展开行为，setLargeIcon 等只作为待验证的标准接口候选。
+- 此次未取得支持任意画面嵌入 ColorOS 流体云的厂商接口证据；不据此断言所有厂商路径都不可能，也不能承诺已能实现完整三级原生通知。
+- 第 4 轮先验证通知样式能力：保证现有流体云与每任务通知不重复、不丢失、三个完成入口及内联回复可用，再确认右侧缩略图和展开预览实际如何呈现。静态/低频预览与连续可交互画面分开，不通过高频重发系统通知模拟视频。
+- 若原生通知不能承载展开预览，候选兼容方式是通知入口打开临时的 App 预览面板，再点放大；它属于应用承接，不能宣传为“画面全部嵌入原生通知”。需要调整用户交互目标时向用户展示实际差异，不静默替换需求或新增系统 Hook。
+- 保持当前模型观察帧不可变、主屏输入法隔离及锁屏通知隐私；通知展示不得反复生成新的模型观察或把预览点按误注入后台任务。
+
+参考：[Android Live Updates](https://developer.android.com/develop/ui/views/notifications/live-update)、[自定义通知](https://developer.android.com/develop/ui/views/notifications/custom-notification)、[展开通知](https://developer.android.com/develop/ui/views/notifications/expanded)。本条是交互要求与可行性核对，不是已实现记录。
+
 ### 具体整合顺序与完成标准
 
 1. 收尾第 2 轮尚未覆盖的技术核验；U001–U003 已确认的手机场景不重复。保留原验收门槛，不把功能取舍更新写成技术验收通过。
 2. 第 3 轮复用 AgentRuntimeSession.complete/cancel 的结果权威，统一会话、通知及后续预览的只读状态；不新建第二套终态库，不新增设计报告循环。
 3. 第 4 轮把上游的视窗与动效适配到本分支任务：
-   - 流体云/任务通知继续负责状态，运行中任务提供查看画面入口；不重新常驻一条与系统流体云重叠的胶囊。系统通知不嵌入任意可交互画布，点击后由 App 展示小窗。
+   - 采用上方用户指定的“通知收起小手机 → 展开小预览 → 再点放大”目标，先核验原生通知/流体云能力；不重建常驻胶囊、不发重复卡片。受限时明确区分原生通知展示和 App 预览承接，不把降级方案当作需求已完整实现。
    - 两项任务状态仍各自展示，展开的小窗明确绑定选定 runId/sessionId/displayId；关闭/切换预览不得停止或切换另一个任务。
    - 默认只看画面，不抢键盘焦点；接管时只暂停本任务，等在途动作停止后开放点按/长按/滑动；继续交给 AI 前重新观察。
    - 预览读取独立的显示帧，不覆盖模型已发布的 observation_id/frame_id，不通过高频 screen_shot 调用不断写文件或改变模型坐标依据。窗口关闭时停止额外预览刷新，避免为两个隐藏小窗持续编码。
@@ -167,7 +189,13 @@
 - evidence: 最新清单、设计、POLLING_EVIDENCE.md 已实际读取；写工具测试提交及删除已核实；前次问题见 [C001 评审](coordination/C001_REVIEW_F002.md)
 - device_gate: 部分手机可见功能已获用户实测通过（U001/U002/U003）；通知内继续、双任务通知同时运行、停止一个不影响另一个均已确认；已确认场景不重复测试，完整第 2 轮验收仍未完成
 - next_phase_permission: 第 3 轮设计方向通过；业务实现待第 2 轮真机验收，不再要求额外设计报告
-- issued_next_instruction: C004 revision 1（ChatGPT 手动接手；dsh 不新增实施）
+- issued_next_instruction: C004 revision 2（通知三级预览需求；ChatGPT 手动接手；dsh 不新增实施）
+
+### 通知预览交互细化 — 2026-11-01T15:30:34Z
+
+- 用户将第 4 轮交互明确为通知收起时右侧小手机标志、展开通知显示小屏预览、再点放大；已记录到 C004 revision 2。
+- 实际核对本分支通知构造及 Android 官方 Live Updates、自定义/展开通知文档。现有 ProgressStyle 与任意自定义布局不能直接等价替换；流体云保留和三级预览能否同时实现仍需平台能力验证。
+- 没有新增业务提交、安装测试或重新开启定时；未把设计目标标成已经实现。
 
 ### 用户重新接手与整合范围调整 — 2026-11-01T15:28:29Z
 
