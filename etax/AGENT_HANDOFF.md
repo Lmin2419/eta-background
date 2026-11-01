@@ -105,10 +105,12 @@
 - updated_at: 2026-11-01T12:18:30Z
 - implementation_head: 9204329cffd78e392bf45d73104866701f131a1c
 - device_status: BLOCKED_DEVICE（`adb devices -l` 无条目；仅记录一次具体缺口）
-- polling_mechanism: DSH 原生定时任务（`@deepseek-ai/dsh-schedule`，Host 持久调度；不是 Windows 计划任务、sleep 循环或仅下载/提醒）
+- polling_platform: DSH Desktop `0.2.1-rc.5` 的 Automation/Schedule（Host 服务 `@deepseek-ai/dsh-schedule`；非 Windows 计划任务）
+- polling_mechanism: DSH 原生定时任务（Host 持久调度；不是 Windows 计划任务、sleep 循环或仅下载/提醒）
 - polling_task_id: `schedule-43f97cf5-0425-46a1-8af3-53242b98fb52`
 - polling_status: active（启用）
-- polling_frequency: `every_seconds=3600`（固定每小时；UTC 锚点 `13:02:03Z`；显示时区 Asia/Shanghai）
+- polling_frequency: `every_seconds=3600`（固定每小时；UTC 锚点 `13:02:03Z`）
+- polling_timezone: Asia/Shanghai（显示；调度按 UTC 瞬时固定间隔）
 - polling_next_run: 2026-11-01T13:02:03.314Z（2026-11-01T21:02:03.314+08:00）
 - polling_survives_session_end: 会话空闲/结束后可由 Host 恢复为冷 Session 后投递（已由两次试运行验证）；DSH Desktop/Host 退出、电脑休眠或关机时不会运行；跨 Host 重启后的自动恢复**未验证**
 - polling_process_dependency: 需要 DSH Desktop/Host 进程和电脑保持运行；不需要保持当前聊天窗口打开；不另建常驻服务
