@@ -41,6 +41,7 @@ export struct SettingsScreen {
     this.row($r('app.string.settings_tools_list'),$r('app.media.ic_rounded_dashboard'),$r('app.color.eta_preference_green'),false,()=>{});EtaPreferenceDivider()
     this.pendingSwitch($r('app.string.ui_enable_web_browsing_tools_8b6b03'),$r('app.media.ic_rounded_language'),$r('app.color.eta_preference_blue'));EtaPreferenceDivider()
     this.row($r('app.string.web_tools_settings_title'),$r('app.media.ic_rounded_travel_explore'),$r('app.color.eta_preference_blue'),false,()=>{});EtaPreferenceDivider()
+    this.row($r('app.string.phone_ops_title'),$r('app.media.ic_rounded_smartphone'),$r('app.color.eta_preference_green'),true,()=>this.controller?.openPhoneOps(),$r('app.string.phone_ops_summary'));EtaPreferenceDivider()
     this.pendingSwitch($r('app.string.ui_enable_device_direct_tools_e2d595'),$r('app.media.ic_rounded_smartphone'),$r('app.color.eta_preference_green'));EtaPreferenceDivider()
     this.pendingSwitch($r('app.string.ui_allow_reading_of_sensitive_device_information_feaec0'),$r('app.media.ic_rounded_visibility'),$r('app.color.eta_preference_blue'));EtaPreferenceDivider()
     this.pendingSwitch($r('app.string.ui_allow_sensitive_device_operation_3d42ea'),$r('app.media.ic_rounded_gpp_maybe'),$r('app.color.eta_preference_orange'));EtaPreferenceDivider()

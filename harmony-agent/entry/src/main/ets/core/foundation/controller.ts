@@ -417,6 +417,7 @@ export class FoundationController {
   }
   log(area: DiagnosticArea, stage: string, detail = ''): void { this.ports.diagnostics?.record(area, stage, detail); }
   openDiagnostics(): void { this.navigate('diagnostics'); void this.refreshEnvironment(); }
+  openPhoneOps(): void { this.navigate('phoneOps'); }
   diagnosticReport(): string { return diagnosticReport(this.environment, this.ports.diagnostics?.events() || [], Date.now()); }
   clearDiagnostics(): void { this.ports.diagnostics?.clear(); this.changed(); }
   private diagnosticView(): DiagnosticView {
