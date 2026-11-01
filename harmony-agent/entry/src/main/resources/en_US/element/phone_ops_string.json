@@ -1,0 +1,116 @@
+{
+  "string": [
+    {
+      "name": "phone_ops_title",
+      "value": "Phone operations"
+    },
+    {
+      "name": "phone_ops_summary",
+      "value": "Connect to this phone over wireless debugging"
+    },
+    {
+      "name": "phone_ops_intro",
+      "value": "Open Settings → System → Developer options → Wireless debugging and note the IP address and port."
+    },
+    {
+      "name": "phone_ops_address_hint",
+      "value": "IP:port, e.g. 192.168.1.5:5555"
+    },
+    {
+      "name": "phone_ops_invalid",
+      "value": "Enter the IP:port shown on the wireless debugging page"
+    },
+    {
+      "name": "phone_ops_status",
+      "value": "Status"
+    },
+    {
+      "name": "phone_ops_reason",
+      "value": "Reason"
+    },
+    {
+      "name": "phone_ops_identity",
+      "value": "Shell identity"
+    },
+    {
+      "name": "phone_ops_uitest",
+      "value": "UITest available"
+    },
+    {
+      "name": "phone_ops_yes",
+      "value": "Yes"
+    },
+    {
+      "name": "phone_ops_no",
+      "value": "No"
+    },
+    {
+      "name": "phone_ops_node_count",
+      "value": "Last dumped node count"
+    },
+    {
+      "name": "phone_ops_connect",
+      "value": "Connect"
+    },
+    {
+      "name": "phone_ops_dump",
+      "value": "Test screen dump"
+    },
+    {
+      "name": "phone_ops_disconnect",
+      "value": "Disconnect"
+    },
+    {
+      "name": "phone_ops_status_unconfigured",
+      "value": "Not configured"
+    },
+    {
+      "name": "phone_ops_status_connecting",
+      "value": "Connecting"
+    },
+    {
+      "name": "phone_ops_status_authorizing",
+      "value": "Waiting for authorization: allow debugging on the phone"
+    },
+    {
+      "name": "phone_ops_status_connected",
+      "value": "Connected"
+    },
+    {
+      "name": "phone_ops_status_disconnected",
+      "value": "Disconnected"
+    },
+    {
+      "name": "phone_ops_status_native_missing",
+      "value": "Native library not loaded"
+    },
+    {
+      "name": "hdc_disconnected_user",
+      "value": "Disconnected by user"
+    },
+    {
+      "name": "hdc_disconnected_timeout",
+      "value": "Connection timed out"
+    },
+    {
+      "name": "hdc_disconnected_refused",
+      "value": "Connection refused"
+    },
+    {
+      "name": "hdc_disconnected_unauthorized",
+      "value": "Debugging not authorized"
+    },
+    {
+      "name": "hdc_disconnected_lost",
+      "value": "Connection lost"
+    },
+    {
+      "name": "hdc_disconnected_protocol",
+      "value": "Protocol error"
+    },
+    {
+      "name": "hdc_disconnected_unknown",
+      "value": "Unknown reason"
+    }
+  ]
+}

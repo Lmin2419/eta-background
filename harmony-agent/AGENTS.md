@@ -18,6 +18,7 @@ HarmonyOS 原生 AI 助手，ArkUI + ArkTS。**界面、文案和交互逻辑按
 | --- | --- |
 | `entry/src/main/ets/core/` | 纯 TypeScript 逻辑（可单测）。`core/foundation/` 是 0.9 框架；`core/eta/` 放从 Eta 移植的逻辑和 `tokens.ts` |
 | `entry/src/main/ets/ui/eta/` | 从 Eta 移植的 ArkUI 组件和页面（M1 起） |
+| `entry/src/main/ets/ui/harmony/` | 鸿蒙版独有的原创页面（Eta 没有对应页面，例如手机操作连接页）。文件头写“随身助手原创代码”，不加 Eta 的版权行；`ui/eta/` 下只放移植件 |
 | `entry/src/main/ets/ui/foundation/` | 0.9 页面，M1 完成后删除 |
 | 仓库根目录 `app/` | Eta Android 源码（移植来源，只读），基准提交 `3b1794d` |
 | `entry/src/main/ets/platform/` | 鸿蒙平台适配（RDB、ASSET、HTTP、通知、后台） |
@@ -57,6 +58,11 @@ npm run verify      # 交付前一次跑完以上五项，汇总写到 dist/veri
   - 有自己状态的行（渐显进度、展开、输入框焦点）：用 `@Observed` 槽位 + `@ObjectLink`，用 `syncSlots` 原地替换内容，key 保持 id。
 
   两个工具在 `core/eta/renderKey.ts`。只用 id 或下标作 key、而行内容来自 item 的写法视为缺陷。
+- **`@Builder` 的按位置参数不会随状态刷新**：`@Builder row(label, value)` 被调用时，参数值只取第一次的。之后状态变了，里面的文字也不变。所以：
+  - 参数会随状态变化时，只用**一个对象字面量参数**：`row({ label: …, value: this.state.x })`，ArkUI 会重新求值；
+  - 或者改用带 `@Prop` 的子组件。
+
+  0.9.37 的“手机操作”页连接后状态仍显示“未配置”，就是这个原因。只传固定文案、图标的按位置参数可以保留。
 - 不要在 `onAreaChange` 等布局回调里无条件写会影响布局的 `@State`，否则会出现“渲染过程中修改状态”的错误，甚至反复重绘；至少先比较新旧值，只在变化时写。
 - 生成 HAP 需要 HarmonyOS 命令行工具（`HARMONY_CLT_HOME`，`npm run build:harmony`），通常没有。所以：逻辑仍然写在 `core/**/*.ts` 并写单测，`.ets` 保持薄；PR 中写明“ArkTS 检查通过 / 未生成 HAP”，最终以用户的 DevEco 编译为准。
 

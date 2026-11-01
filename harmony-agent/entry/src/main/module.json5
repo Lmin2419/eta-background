@@ -48,6 +48,20 @@
         "launchType": "singleton"
       }
     ],
+    "extensionAbilities": [
+      {
+        "name": "AgentAccessibility",
+        "srcEntry": "./ets/accessibility/AgentAccessibility.ets",
+        "type": "accessibility",
+        "exported": true,
+        "metadata": [
+          {
+            "name": "ohos.accessibleability",
+            "resource": "$profile:accessibility_config"
+          }
+        ]
+      }
+    ],
     "requestPermissions": [
       {
         "name": "ohos.permission.INTERNET"

@@ -1,0 +1,1 @@
+{"name":"17-dark","page":"pages/FoundationPreview","screen":{"color":"dark"},"steps":[{"waitFor":{"a11y":"会话历史"},"timeout":20},{"screenshot":"dark-home"},{"tap":{"a11y":"会话历史"}},{"waitFor":{"a11y":"设置"},"timeout":10},{"screenshot":"dark-drawer"},{"tap":{"a11y":"设置"}},{"waitFor":{"text":"模型提供商"},"timeout":10},{"screenshot":"dark-settings"}]}

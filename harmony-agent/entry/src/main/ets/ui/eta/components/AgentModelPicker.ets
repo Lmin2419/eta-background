@@ -6,6 +6,7 @@ import { EtaComponentSizes as S, MiuixFontSizes as F, EtaChatDefaults as C, EtaM
 import { modelBrandResource } from './ModelBrandResources';
 import { EtaListDataSource } from './EtaListDataSource';
 import { EtaChoiceChip } from './EtaSmallComponents';
+import { renderKey } from '../../../core/eta/renderKey';
 
 @Component
 export struct ModelBrandMark {
@@ -77,7 +78,7 @@ export struct AgentModelPickerContent {
               EtaChoiceChip({text:$r('app.string.model_picker_filter_all'),selected:this.state.pickerFilter===null,onAction:()=>this.controller?.filterPickerProvider(null)})
               ForEach(this.state.picker.providerGroups,(group:AgentModelProviderGroupUi)=>{
                 EtaChoiceChip({text:group.providerName,selected:this.state.pickerFilter===group.providerId,onAction:()=>this.controller?.filterPickerProvider(group.providerId)})
-              },(group:AgentModelProviderGroupUi)=>group.providerId)
+              },(group:AgentModelProviderGroupUi)=>renderKey(group.providerId,group))
             }.padding({left:S.Dp20,right:S.Dp20})
           }.scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off).margin({bottom:S.Dp6})
         }
@@ -90,7 +91,7 @@ export struct AgentModelPickerContent {
             else {Text(entry.title).fontSize(F.Footnote1).fontColor($r('app.color.miuix_on_surface_variant_summary')).maxLines(1)
               .textOverflow({overflow:TextOverflow.Ellipsis}).padding({left:this.isSheet?S.Dp24:S.Dp20,right:this.isSheet?S.Dp24:S.Dp20,top:S.Dp14,bottom:S.Dp4})}
           }
-        },(entry:PickerEntry)=>entry.key)
+        },(entry:PickerEntry)=>renderKey(entry.key,entry))
       }.width('100%').layoutWeight(1).padding({top:S.Dp2,bottom:this.isSheet?S.Dp12:S.Dp6}).scrollBar(BarState.Auto).onAppear(()=>{try{this.scroller.scrollToIndex(this.selectedIndex,false);}catch(_){}})
     }.width('100%').height('100%').backgroundColor($r('app.color.miuix_surface'))
   }

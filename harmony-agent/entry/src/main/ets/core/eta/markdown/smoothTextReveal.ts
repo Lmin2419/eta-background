@@ -76,6 +76,8 @@ export class SmoothTextRevealCoordinator {
   private paused = false;
   drained = true;
   started = new Set<number>();
+  /** Called when the coordinator goes from drained to having text left to reveal. */
+  onPending: (() => void) | null = null;
   get isAnimationPaused(): boolean {
     return this.paused;
   }
@@ -187,9 +189,13 @@ export class SmoothTextRevealCoordinator {
     record.node?.onRevealDataChanged();
   }
   private updateDrained(): void {
+    const wasDrained = this.drained;
     this.drained = [...this.records.values()].every(
       (record) => record.progress >= record.targetCount,
     );
+    // Compose restarts withFrameNanos when new text arrives; here the frame loop may already have stopped
+    // (it ticks before a newly created block registers its text), so tell the owner to start it again.
+    if (wasDrained && !this.drained) this.onPending?.();
   }
 }
 export class SmoothTextRevealState {

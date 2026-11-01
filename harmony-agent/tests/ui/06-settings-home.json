@@ -1,0 +1,1 @@
+{"name":"06-settings-home","page":"pages/FoundationPreview","steps":[{"waitFor":{"a11y":"会话历史"},"timeout":20},{"tap":{"a11y":"会话历史"}},{"waitFor":{"a11y":"设置"},"timeout":10},{"tap":{"a11y":"设置"}},{"waitFor":{"text":"模型提供商"},"timeout":10},{"screenshot":"settings"},{"tap":{"a11y":"返回"}},{"waitFor":{"contains":"有什么可以帮你"},"timeout":10},{"screenshot":"back-home"}]}

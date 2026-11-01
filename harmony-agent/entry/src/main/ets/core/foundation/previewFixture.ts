@@ -1,11 +1,16 @@
 import { ConversationRepository } from '../conversations';
 import { DraftRepository } from '../drafts';
 import { ProfileRepository } from '../profiles';
+import { AppearanceSettingsRepository, defaultAppearance } from '../eta/appearanceSettings';
 import { FoundationController } from './controller';
 import { HttpTransport } from '../model';
+import { FakePhoneOpsTransport } from '../eta/device/phoneOpsController';
+import { setPhoneOpsPreviewTransport } from '../eta/device/phoneOpsPreview';
 
 /** Preview-only data and transport. The production entry does not import this module. */
 export function previewController(): FoundationController {
+  // The phone-operation page uses a fake transport in the preview only (x86 cannot load the arm64 HDC library).
+  setPhoneOpsPreviewTransport(() => new FakePhoneOpsTransport());
   let counter = 0;
   const memory = (initial = '') => { let raw = initial; return { read: async () => raw, write: async (value: string) => { raw = value; } }; };
   const profiles = new ProfileRepository(memory(JSON.stringify({ selectedId: 'preview', profiles: [{ id: 'preview', name: '示例模型服务', baseUrl: 'https://preview.example/v1', model: '示例模型', models: ['示例模型', '示例推理模型'], streaming: true, screenshots: false, allowInsecureHttp: false }] })), { put: async () => {}, get: async () => '', remove: async () => {} }, () => 'p' + ++counter);
@@ -16,7 +21,7 @@ export function previewController(): FoundationController {
     return { cancel: () => { cancelled = true; }, post: async () => JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'OK' }, finish_reason: 'stop' }] }),
       get: async () => JSON.stringify({ data: ['示例模型', '示例推理模型', '新增模型 A', '新增模型 B', '新增模型 C'].map(id => ({ id })) }),
       stream: async (_url, _headers, _body, chunk) => {
-        for (const text of ['这是预览数据。', '\n\n', '回复会逐段显示，', '也可以点击停止。', '\n\n**可以继续切换会话、编辑模型或查看侧栏。**']) {
+        for (const text of ['这是预览数据。', '\n\n', '回复会逐段显示，', '也可以点击停止。', '\n\n**可以继续切换会话、编辑模型或查看侧栏。**', '\n\n1. 列表第一项\n', '2. 列表第二项']) {
           await new Promise(resolve => setTimeout(resolve, 300)); if (cancelled) throw new Error('CANCELLED');
           chunk('data: ' + JSON.stringify({ choices: [{ delta: { content: text }, finish_reason: null }] }) + '\n\n');
         }
@@ -24,6 +29,7 @@ export function previewController(): FoundationController {
       }
     };
   };
-  controller = new FoundationController({ chats, profiles, drafts, transport, uuid: () => 'r' + ++counter, load: async () => { await profiles.load(); await chats.load(); await drafts.load(); } });
+  const appearance = new AppearanceSettingsRepository(memory(JSON.stringify(defaultAppearance())), { apply: async () => {} }, () => controller?.changed());
+  controller = new FoundationController({ chats, profiles, drafts, transport, appearance, paneDate: () => ({ now: Date.now(), locale: 'zh', timeZone: 'UTC', use24HourClock: true, yesterdayLabel: '昨天', recentLabel: '最近', formatter: { calendarDate: (ms:number) => { const d=new Date(ms); return { year: d.getUTCFullYear(), month: d.getUTCMonth()+1, day: d.getUTCDate() }; }, format: (ms:number) => new Date(ms).toISOString().slice(11,16), mediumDate: (ms:number) => new Date(ms).toISOString().slice(0,10) } }), uuid: () => 'r' + ++counter, load: async () => { await profiles.load(); await chats.load(); await drafts.load(); await appearance.load(); } });
   return controller;
 }

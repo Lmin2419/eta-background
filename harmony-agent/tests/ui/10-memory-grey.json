@@ -1,0 +1,1 @@
+{"name":"10-memory-grey","page":"pages/FoundationPreview","steps":[{"waitFor":{"a11y":"会话历史"},"timeout":20},{"tap":{"a11y":"会话历史"}},{"waitFor":{"a11y":"设置"},"timeout":10},{"tap":{"a11y":"设置"}},{"wait":1},{"tap":{"text":"记忆"},"expectChange":false},{"wait":1},{"expect":{"text":"设置"}},{"expect":{"text":"鸿蒙版尚未接入"}},{"screenshot":"memory-grey"}]}

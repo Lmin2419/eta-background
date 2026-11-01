@@ -19,6 +19,7 @@ import { EtaHaptic } from '../../../../core/eta/hapticFeedback';
 import { CapabilityDraft, ModelCapabilityEdit, capabilityDraft, toggleReasoning, toggleEffort, resetAutomaticReasoning, updatedCapabilities, editorEfforts, compactModelTokens, supportsModelReasoning } from '../../../../core/eta/modelCapabilityEditor';
 import { ReasoningEffort } from '../../../../core/eta/protocol/providerTypes';
 import { effortDisplayName, geminiReasoningCapabilities } from '../../../../core/eta/reasoningCapabilityResolver';
+import { renderKey } from '../../../../core/eta/renderKey';
 @CustomDialog
 struct ModelEditDialog {
   controller?:CustomDialogController;
@@ -98,7 +99,7 @@ export struct ProviderModelsTab {
       if(!this.state.editor.selectionMode){ListItem(){ProviderSection({title:$r('app.string.ui_model_management_183414'),content:() => { this.actions(); }})}}
       ListItem(){TextInput({text:this.state.editor.modelQuery,placeholder:$r('app.string.ui_search_model_df5586')}).fontSize(F.Body1).fontColor($r('app.color.miuix_on_surface')).backgroundColor($r('app.color.miuix_secondary')).margin({left:S.Dp16,right:S.Dp16,top:S.Dp4,bottom:S.Dp8}).onChange((v:string)=>this.controller?.editor.modelSearch(v))}
       if(this.state.editor.message||this.state.editor.error){ListItem(){Text(this.state.editor.error||this.state.editor.message).fontSize(F.Body2).fontColor(this.state.editor.error?$r('app.color.miuix_error'):$r('app.color.miuix_on_surface_variant_summary')).padding(S.Dp16)}}
-      LazyForEach(this.source,(model:ProviderModelUi)=>{ListItem(){this.row(model)}.padding({left:S.Dp16,right:S.Dp16})},(model:ProviderModelUi)=>model.id)
+      LazyForEach(this.source,(model:ProviderModelUi)=>{ListItem(){this.row(model)}.padding({left:S.Dp16,right:S.Dp16})},(model:ProviderModelUi)=>renderKey(model.id,model))
     }.width('100%').layoutWeight(1).scrollBar(BarState.Auto).edgeEffect(EdgeEffect.Spring)
     Text($r('app.string.eta_provider_draft_models')).fontSize(F.Footnote2).fontColor($r('app.color.miuix_on_surface_variant_summary')).padding(S.Dp8)
     if(this.state.editor.selectionMode){EtaTextButton({text:this.plural($r('app.plural.provider_delete_models_action'),this.state.editor.modelSelection.length),destructive:true,isEnabled:this.state.editor.modelSelection.length>0&&!this.state.editor.busy,onAction:()=>this.remove()}).width('100%')}

@@ -20,9 +20,12 @@ export struct SettingsScreen {
   @Builder private row(title:Resource,source:Resource,color:ResourceColor,enabled:boolean,action:()=>void,summary:ResourceStr=''){
     EtaArrowPreference({title,summary:enabled?summary:$r('app.string.eta_port_unavailable'),isEnabled:enabled,hasLeading:true,startAction:()=>{this.icon(source,color,enabled);},onAction:action})
   }
+  @Builder private modelProviderRow(){
+    EtaArrowPreference({title:$r('app.string.ui_model_provider_e8c7f5'),summary:this.state.chat.provider?this.state.chat.provider+' / '+(this.state.chat.model||''):$r('app.string.settings_not_configured'),isEnabled:true,hasLeading:true,startAction:()=>{this.icon($r('app.media.ic_rounded_cloud'),$r('app.color.eta_preference_blue'),true);},onAction:()=>this.controller?.navigate('providers')})
+  }
   @Builder private pendingSwitch(title:Resource,source:Resource,color:ResourceColor){EtaSwitchPreference({title,summary:$r('app.string.eta_port_unavailable'),isEnabled:false,hasLeading:true,startAction:()=>{this.icon(source,color,false);}})}
   @Builder private agent(){Column(){
-    this.row($r('app.string.ui_model_provider_e8c7f5'),$r('app.media.ic_rounded_cloud'),$r('app.color.eta_preference_blue'),true,()=>this.controller?.navigate('providers'),this.state.chat.provider?this.state.chat.provider+' / '+(this.state.chat.model||''):$r('app.string.settings_not_configured'))
+    this.modelProviderRow()
     EtaPreferenceDivider()
     EtaSwitchPreference({title:$r('app.string.ui_deep_thinking_enabled_by_default_c032d6'),checked:this.state.runtimePreferences.thinkingEnabled,isEnabled:!!this.controller?.ports.runtimePreferences,hasLeading:true,startAction:()=>{this.icon($r('app.media.ic_rounded_psychology'),$r('app.color.eta_preference_blue'));},onCheckedChange:(value:boolean)=>{void this.controller?.updateRuntimePreferences({thinkingEnabled:value});}})
   }}
@@ -38,6 +41,7 @@ export struct SettingsScreen {
     this.row($r('app.string.settings_tools_list'),$r('app.media.ic_rounded_dashboard'),$r('app.color.eta_preference_green'),false,()=>{});EtaPreferenceDivider()
     this.pendingSwitch($r('app.string.ui_enable_web_browsing_tools_8b6b03'),$r('app.media.ic_rounded_language'),$r('app.color.eta_preference_blue'));EtaPreferenceDivider()
     this.row($r('app.string.web_tools_settings_title'),$r('app.media.ic_rounded_travel_explore'),$r('app.color.eta_preference_blue'),false,()=>{});EtaPreferenceDivider()
+    this.row($r('app.string.phone_ops_title'),$r('app.media.ic_rounded_smartphone'),$r('app.color.eta_preference_green'),true,()=>this.controller?.openPhoneOps(),$r('app.string.phone_ops_summary'));EtaPreferenceDivider()
     this.pendingSwitch($r('app.string.ui_enable_device_direct_tools_e2d595'),$r('app.media.ic_rounded_smartphone'),$r('app.color.eta_preference_green'));EtaPreferenceDivider()
     this.pendingSwitch($r('app.string.ui_allow_reading_of_sensitive_device_information_feaec0'),$r('app.media.ic_rounded_visibility'),$r('app.color.eta_preference_blue'));EtaPreferenceDivider()
     this.pendingSwitch($r('app.string.ui_allow_sensitive_device_operation_3d42ea'),$r('app.media.ic_rounded_gpp_maybe'),$r('app.color.eta_preference_orange'));EtaPreferenceDivider()

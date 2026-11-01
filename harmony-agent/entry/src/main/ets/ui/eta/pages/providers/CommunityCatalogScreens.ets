@@ -10,6 +10,7 @@ import { EtaPreferenceDivider, EtaPreferenceGroupTitle } from '../../components/
 import { EtaCheckboxPreference } from '../../components/EtaSelectionPreferences';
 import { EtaTextButton } from '../../components/EtaControls';
 import { EtaCard } from '../../components/EtaCard';
+import { renderKey } from '../../../../core/eta/renderKey';
 @Component
 export struct CommunityCatalogScreen {
   @Prop @Watch('refreshRows') state:ShellState=emptyShellState();controller:FoundationController|undefined=undefined;
@@ -36,7 +37,7 @@ export struct CommunityCatalogScreen {
     ListItem(){EtaPreferenceGroupTitle({title:$r('app.string.eta_catalog_provider_count',this.source.totalCount())})}
     if(this.state.catalog.loading){ListItem(){LoadingProgress().width(S.Dp28).height(S.Dp28).margin(S.Dp40)}}
     if(!this.source.totalCount()&&!this.state.catalog.loading){ListItem(){Text($r('app.string.eta_catalog_empty')).fontSize(F.Body1).fontColor($r('app.color.miuix_on_surface_variant_summary')).width('100%').padding(S.Dp24)}}
-    LazyForEach(this.source,(p:CommunityCatalogProvider)=>{ListItem(){EtaCard({insidePadding:S.Dp16,clickable:true,sinkFeedback:true,content:()=>{this.provider(p);},onAction:()=>this.controller?.chooseCommunity(p.id)}).margin({left:S.Dp16,right:S.Dp16,top:S.Dp6,bottom:S.Dp6})}},(p:CommunityCatalogProvider)=>p.id)
+    LazyForEach(this.source,(p:CommunityCatalogProvider)=>{ListItem(){EtaCard({insidePadding:S.Dp16,clickable:true,sinkFeedback:true,content:()=>{this.provider(p);},onAction:()=>this.controller?.chooseCommunity(p.id)}).margin({left:S.Dp16,right:S.Dp16,top:S.Dp6,bottom:S.Dp6})}},(p:CommunityCatalogProvider)=>renderKey(p.id,p))
   }.width('100%').height('100%').scrollBar(BarState.Auto).edgeEffect(EdgeEffect.Spring)}
   build(){ProviderPage({title:$r('app.string.eta_catalog_add'),blurEnabled:this.state.appearance.blurEnabled,actions:() => { this.refreshButton(); },content:() => { this.body(); },onBack:()=>this.controller?.back()})}
 }
@@ -62,7 +63,7 @@ export struct CommunityCatalogProviderScreen {
     ListItem(){Row(){EtaTextButton({text:$r('app.string.eta_catalog_select_visible'),isEnabled:!!this.source.totalCount()&&!this.state.catalog.importing,onAction:()=>this.controller?.community?.selectVisible()});Blank();EtaTextButton({text:$r('app.string.eta_catalog_clear'),isEnabled:!!this.state.catalog.selectedIds.length&&!this.state.catalog.importing,onAction:()=>this.controller?.community?.clear()})}.padding({left:S.Dp16,right:S.Dp16}).width('100%')}
     ListItem(){EtaPreferenceGroupTitle({title:$r('app.string.eta_catalog_models_title',this.source.totalCount())})}
     if(!this.source.totalCount()){ListItem(){Text($r('app.string.page_no_matching_model_found_ae7e96')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')).padding(S.Dp24)}}
-    LazyForEach(this.source,(model:CommunityCatalogModel)=>{ListItem(){EtaCheckboxPreference({title:model.displayName,summary:model.modelId+' · '+String(model.contextWindow)+' tokens'+(model.releaseDate?' · '+model.releaseDate:''),checked:this.state.catalog.selectedIds.includes(model.modelId),isEnabled:!this.state.catalog.importing,onCheckedChange:()=>this.controller?.community?.toggle(model.modelId)})}.margin({left:S.Dp16,right:S.Dp16}).backgroundColor($r('app.color.miuix_surface_container'))},(model:CommunityCatalogModel)=>model.modelId)
+    LazyForEach(this.source,(model:CommunityCatalogModel)=>{ListItem(){EtaCheckboxPreference({title:model.displayName,summary:model.modelId+' · '+String(model.contextWindow)+' tokens'+(model.releaseDate?' · '+model.releaseDate:''),checked:this.state.catalog.selectedIds.includes(model.modelId),isEnabled:!this.state.catalog.importing,onCheckedChange:()=>this.controller?.community?.toggle(model.modelId)})}.margin({left:S.Dp16,right:S.Dp16}).backgroundColor($r('app.color.miuix_surface_container'))},(model:CommunityCatalogModel)=>renderKey(model.modelId,model))
   }.width('100%').height('100%').scrollBar(BarState.Auto).edgeEffect(EdgeEffect.Spring)}
   build(){ProviderPage({title:this.state.catalog.selection?.name||$r('app.string.eta_catalog_pick'),blurEnabled:this.state.appearance.blurEnabled,actions:() => { this.importButton(); },content:() => { this.body(); },onBack:()=>this.controller?.back()})}
 }

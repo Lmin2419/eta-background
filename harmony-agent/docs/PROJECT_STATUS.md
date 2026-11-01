@@ -4,6 +4,90 @@
 
 第三轮已结束：[完整执行报告](reports/2026-10-31-round3.md)。11 个可审查 PR，1 个阻塞草稿（#35）；最后 PR #36。
 
+## 0.9.39（R4-5：`@Builder` 按位置参数审计；检查点 B 总包）
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| 设置页“模型提供商”摘要、MCP 对话框的输入框改为在 builder 内直接读状态。按位置传参时，状态变了界面不会更新 | ArkTS 0 error；场景 22 只覆盖重新进入设置页的路径 | **待测**（检查点 B4、B7） |
+| 检查点 B 总包：第四至第六轮的全部改动（#38–#49、D0b2 原生库）合在 `harmony/checkpoint-b` | `npm run verify`：992 项单测，ArkTS 0 error，资源通过，22 个界面场景全部通过 | **待测**：按 [CHECKPOINT-B.md](device-runs/CHECKPOINT-B.md) 一次测完 |
+
+## 0.9.37（D0b3：手机操作连接页）
+
+dsh 实现，Claude 修复编译错误和行为问题后验收。验收版本存于 `harmony/d0b3-verified`。
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| “设置 → 手机操作”：填写无线调试地址 → 连接 → 授权 → 显示 shell 身份和 UITest 可用性 → 测试读屏（只显示控件数）→ 断开 | 场景 20（假传输层下完整流程）、21（非法地址）通过 | **待测**（检查点 ⑦） |
+| 原生库加载失败时显示“原生库未加载”，不会崩溃，也不会假装连接；假传输层只在预览中注册 | 单测 + ArkTS 0 error | 待测（⑦-0） |
+| 连接失败按 HDC 返回的文字分类为待授权、拒绝、超时、未知，第一行写入诊断日志 | 单测 | 关键字要按真机输出修正 |
+
+## 0.9.38（R4-4：列表 key 审计）
+
+dsh 完成大部分改动后被编译错误卡住；Claude 修复并补完。
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| 8 个只读列表改用 `renderKey(id, 行数据)`：会话侧栏、排队消息、模型选择、模型服务列表、模型列表、社区目录、MCP 服务器与工具、诊断日志。原来只用 id 作 key，内容变了界面不变，例如改了模型服务的名称，列表仍显示旧名称 | `09-provider-edit`：改名、保存、返回后列表显示新名称；恢复旧 key 时这个场景失败 | **待测**（检查点 B）：改名后列表立即显示新名称 |
+| 工作过程（思考、工具调用）的步骤和分组内的调用改为 `@Observed` 槽位原地更新（`WorkStepView`、`ToolCallView`），工具状态更新时已展开的卡片不会收起；“是否最后一步”也放进槽位，追加步骤后连接线正确 | ArkTS 0 error。预览假模型不产生工具调用，界面场景覆盖不到 | **待测**：用会调用工具的对话观察 |
+| 请求头编辑改为槽位（dsh） | 同上 | 待测：连续输入不丢焦点 |
+| `09-provider-edit`、`13-sidebar` 转为正式场景 | 19 个场景全部通过 | — |
+
+**修复记录**：dsh 的版本有 32 个编译错误。主要原因是替换 key 时吞掉了 `ForEach(...)` 的右括号；另外 `AgentWorkProcess` 用了无类型对象字面量。Claude 从基线文件重新生成了这 8 个文件。
+
+**留到真机确认**：
+- 在侧栏长按会话，预览器里没有出现“重命名 / 删除”菜单，而是选中了会话并关闭侧栏。预览器发送的是鼠标事件，不能确定真机是否同样如此，列入检查点 B；
+- 预览器里输入太快时，模型配置页的输入框会丢字（每个字间隔 20 ms）。正常打字速度下不会出现，场景里加了 `delay`。
+
+## D0b2（Claude：HDC 原生库入库，不升版本）
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| `entry/libs/arm64-v8a/libagent_hdc.so`：应用内置的 HDC 客户端，用公开 OpenHarmony SDK 的 native 工具链交叉编译，构建脚本 `scripts/build-native-ohos.sh`。DevEco 直接打包，不需要编译 C++。页面接线在 D0b3 | AArch64；运行时只依赖手机自带的 4 个系统库，C++ 运行库静态链接；372 个外部符号全部能解析；两次构建 SHA-256 相同 | **待测**（检查点 ⑦）：还没有在真机上加载过 |
+| `fetch-native.py`：网络屏蔽 GitHub 压缩包时改用 git 获取，再用 `git archive` 重建压缩包，必须与原来固定的 SHA-256 一致（四个都一致）。`fetch-ohos-sdk.sh --with-native` 取 native 工具链 | 同上 | 不适用 |
+
+## 0.9.36（D0a：无障碍扩展实验）
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| 新增 `AccessibilityExtensionAbility`（retrieve / gesture）、`accessibility_config.json`、`module.json5` 的 `extensionAbilities`；扩展只记录前台包名与控件数量，不读取文字，按界面请求注入一次点击 | ArkTS / 资源检查通过；`19-a11y-probe` 预览器场景通过 | 检查点 ⑥（见 `device-runs/CHECKPOINT-B.md`） |
+| 新增 `core/eta/device/accessibilityProbe.ts`（探针类型、容错解析、序列化、注入结果校验）+ 5 项单测；诊断页新增“无障碍实验”区：连接状态、前台包名、控件数、最近事件、注入结果、刷新、请求注入点击、测试按钮 | `npm test` +5 项通过 | 检查点 ⑥ |
+| 未连接时显示“未连接”，刷新按钮有反应 | 预览器场景断言 | — |
+
+## 0.9.35（R4-3：修复 R4-2 发现的问题，PR #40）
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| 问题 1：模型提供商页点某一项时 `EtaPreferenceRow` 报 `class constructor cannot called without 'new'`。原因是 `startAction` 里以普通箭头函数调用 struct 组件 `ProviderBrandIcon`，更新阶段被当成构造函数；改为调用本文件已有的 `@Builder logo()` | CI：08-providers、18-narrow 通过 | 检查点 B（模型页可正常进入） |
+| 问题 2：外观页切换主题时代码抛“外观服务尚未初始化”。预览入口补内存版 `AppearanceSettingsRepository`，主题模式/模糊等设置可在预览器里生效 | CI：07-appearance 通过 | 不适用（预览数据） |
+| 13-sidebar、14-message-actions、09-provider-edit 仍未通过，留在 `tests/ui/pending/`，详见 PR 的阻塞说明 | — | — |
+
+## R4-2：界面场景补齐（不升版本，PR #39）
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| 新增 13 个界面场景：设置首页、外观、模型服务、编辑服务、记忆（灰）、MCP（灰）、诊断、会话侧栏、消息操作、停止、新对话、深色、窄屏 | CI 三项通过；`tests/ui` 的 12 个场景全部通过（原有 5 个 + 新增 7 个） | 不适用 |
+| 6 个场景留在 `tests/ui/pending/`：08/09/18 点“模型”触发 `EtaPreferenceRow ... class constructor cannot called without 'new'`；07 切换主题后断言失败；13 侧栏搜索后返回无响应；14 回复后找不到删除按钮 | 失败步骤、错误原文、截图见各场景目录，由 R4-3 处理 | — |
+
+## 0.9.34（R4-1：回复文字看不见、流式只显示第一段）
+
+dsh 实现帧时钟兜底并定位到渲染层后阻塞；Claude 接手完成根因修复。
+
+**根因**：ArkUI 的 `ForEach` 遇到 key 不变的子项会直接复用，不再执行子项构建函数，所以新内容传不进去。Eta 的 Compose 会自动重组，移植时把 Markdown 的块和文字片段都按起始偏移作 key，导致两个问题：
+- 第一个 `Span` 永远停在最初的文字和透明颜色，回复看不见；
+- 正在增长的段落永远停在第一次出现时的文字。
+
+另外，预览器没有 `taskpool` 模块，Markdown 解析一直退化成整段纯文本。
+
+| 改动 | 自动验证 | 真机 |
+| --- | --- | --- |
+| `renderSpans` 的 key 包含文字、可见性和样式；Markdown 块改为每个偏移一个 `@Observed` 槽位，原地更新内容（保留渐显进度）；表格行和单元格的 key 包含内容指纹。新增 `core/eta/renderKey.ts`（`renderKey`、`syncSlots`） | 新增 6 项单测，其中 2 项在旧 key 下失败；`05-reply-visible` 断言三段文字、加粗、列表全部可见且没有透明文字 | **待测**：回复逐段出现、逐字渐显，最后完整显示 |
+| 列表项同样改为 `@Observed` 槽位原地更新（`MarkdownListView` / `MarkdownListItemView`），不再按内容重建 | 同上 | 同上 |
+| 渐显协调器从“已完成”变为“有待显示文字”时通知 `StreamingMarkdown` 重新启动帧循环（`onPending`）。原来最后一块文字可能在帧循环停止后才登记，一直透明（预览器中约一半概率出现在最后一个列表项） | 新增 2 项单测，去掉唤醒时失败；`05-reply-visible` 连续 6 次通过 | 同上 |
+| `parseEtaMarkdown`：`taskpool` 返回的不是字符串时，在当前线程解析，不再退化为纯文本 | 预览器中加粗和有序列表正常显示 | 真机走 `taskpool`，行为不变 |
+| 预览假模型的回复末尾增加两项有序列表，用来覆盖流式列表 | 同上 | 不适用 |
+| 新增 `core/eta/frameFallback.ts`：`start()` 后 100 ms 内没有收到 `postFrameCallback` 时，改用 `setTimeout` 每 16 ms 驱动一次 `tick`，秒数按两次调用的实际时间差计算；真实帧到达后立即停用兜底，`stop()` 或 `tick` 返回 `false` 时清掉定时器。`EtaFrameLoop.ets` 只负责把 `postFrameCallback` 和 `setTimeout` 接到这个类上 | `npm run check` 通过；`tests/eta/frameFallback.test.ts` 5 项通过；ArkTS / 资源 / 界面测试以 PR 的 Harmony CI 为准（本机 Windows 无 Linux 预览器） | **待测**：回复文字应逐渐出现，不再一直透明 |
+| 验收场景 `05-reply-visible` 从 `tests/ui/pending/` 移入 `tests/ui/` | 该场景在预览器中通过（CI 结果见 PR） | 检查点 B |
+
 ## 0.9.33（Claude：无头界面测试，修复顶栏和输入栏不显示）
 
 | 改动 | 自动验证 | 真机 |

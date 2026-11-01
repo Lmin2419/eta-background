@@ -14,7 +14,19 @@ for source in json.loads((root / 'scripts/native-sources.json').read_text()):
     archive = vendor / f"{name}-locked.tar.gz"
     if not archive.exists():
         partial = archive.with_suffix('.part')
-        subprocess.run(['curl', '-fLsS', '--retry', '2', source['url'], '-o', str(partial)], check=True)
+        if subprocess.run(['curl', '-fLsS', '--retry', '2', source['url'], '-o', str(partial)]).returncode != 0:
+            # Some networks block codeload.github.com but allow git. GitHub builds these tarballs with
+            # `git archive | gzip -n`, so the rebuilt archive must match the same pinned SHA-256 below.
+            print(f'{name}: tarball download failed, fetching {source["ref"]} with git')
+            clone = vendor / f'.{name}-git'
+            subprocess.run(['rm', '-rf', str(clone)], check=True)
+            subprocess.run(['git', 'init', '-q', str(clone)], check=True)
+            subprocess.run(['git', '-C', str(clone), 'fetch', '-q', '--depth', '1', source['git'], source['ref']], check=True)
+            with open(partial, 'wb') as out:
+                git = subprocess.Popen(['git', '-C', str(clone), 'archive', '--format=tar', '--prefix=' + source['archivePrefix'] + '/', 'FETCH_HEAD'], stdout=subprocess.PIPE)
+                subprocess.run(['gzip', '-cn'], stdin=git.stdout, stdout=out, check=True)
+                if git.wait() != 0: raise SystemExit(f'git archive failed for {name}')
+            subprocess.run(['rm', '-rf', str(clone)], check=True)
         partial.rename(archive)
     if hashlib.sha256(archive.read_bytes()).hexdigest() != source['sha256']:
         raise SystemExit(f'Checksum mismatch: {archive}; remove this archive and retry.')

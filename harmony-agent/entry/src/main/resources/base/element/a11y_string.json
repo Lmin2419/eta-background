@@ -1,0 +1,60 @@
+{
+  "string": [
+    {
+      "name": "a11y_probe_title",
+      "value": "无障碍实验"
+    },
+    {
+      "name": "a11y_probe_state",
+      "value": "连接状态"
+    },
+    {
+      "name": "a11y_probe_connected",
+      "value": "已连接"
+    },
+    {
+      "name": "a11y_probe_disconnected",
+      "value": "未连接"
+    },
+    {
+      "name": "a11y_probe_bundle",
+      "value": "前台包名"
+    },
+    {
+      "name": "a11y_probe_nodes",
+      "value": "控件数"
+    },
+    {
+      "name": "a11y_probe_last_event",
+      "value": "最近事件"
+    },
+    {
+      "name": "a11y_probe_gesture",
+      "value": "注入结果"
+    },
+    {
+      "name": "a11y_probe_refresh",
+      "value": "刷新"
+    },
+    {
+      "name": "a11y_probe_request",
+      "value": "请求注入点击"
+    },
+    {
+      "name": "a11y_probe_clicks",
+      "value": "点击次数：%d"
+    },
+    {
+      "name": "a11y_probe_requested",
+      "value": "已请求注入，等待扩展处理"
+    },
+    {
+      "name": "a11y_probe_refreshed",
+      "value": "已刷新"
+    },
+    {
+      "name": "a11y_probe_read_error",
+      "value": "读取错误"
+    }
+  ]
+}

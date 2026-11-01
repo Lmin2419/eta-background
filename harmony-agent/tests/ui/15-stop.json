@@ -1,0 +1,1 @@
+{"name":"15-stop","page":"pages/FoundationPreview","steps":[{"waitFor":{"id":"eta-composer"},"timeout":20},{"tap":{"id":"eta-composer"},"expectChange":false},{"type":"hello"},{"tap":{"a11y":"发送","enabled":true}},{"waitFor":{"a11y":"停止"},"timeout":10},{"tap":{"a11y":"停止"}},{"waitFor":{"contains":"已停止"},"timeout":10},{"screenshot":"stopped"}]}
