@@ -5,7 +5,7 @@
 - dsh 实现，并在预览器里自测；
 - 用户合并 PR，只在真机检查点测试。
 
-本轮任务见第二节“第六轮”；第四、五轮的验收结果在它前面。
+本轮任务见第二节“第七轮”；之前各轮的队列和验收结果在它后面。
 
 当前分支 `harmony/ui-preview-tests`（0.9.33，PR #37），之前的 PR 链都叠在它下面。下一步：用户真机测 0.9.33，然后把整条链一次合并进 `main`。
 
@@ -118,6 +118,118 @@
 - 手势注入 `injectGestureSync`。
 
 新接口很可能只对系统应用开放。真机上服务可能不出现在设置里，或者开启后收不到事件。实验成本很低，仍然做，结论以检查点 ⑥ 为准；但 **HDC 通道（D0b）很可能是主通道**，所以 Claude 的 D0b2 提前。
+
+### 第七轮队列（dsh，2026-11-01）
+
+**第六轮验收**：#46–#49 全部通过。Claude 已把第四至第六轮和 D0b2、D0b3 合成总 PR #50（0.9.39）。用户合并 #50 后测真机检查点 B。
+
+**开工前提**：
+1. **先修网络**：在你的机器上，`git fetch origin` 必须能成功。之前 fetch 一直连不上 `github.com:443`，所以你拿不到 Claude 的修改，#48 被旧版本反复覆盖。修不好就停下，在 PR 里写“需要 Claude”，不要开工。
+2. **等 #50 合并**：然后 `git fetch origin && git checkout -B <新分支> origin/harmony/ui-preview-tests`。#46–#49 的旧分支不要再用、也不要再推送。
+
+**检查点 B 的结果优先**：用户贴回真机结果后，Claude 会写修复卡放在本节最前面。修复卡一出现，先停下手上的任务去做修复卡。
+
+| 顺序 | 任务 | 分支 / PR base | 版本 |
+| --- | --- | --- | --- |
+| 1 | R7-1 鸿蒙应用目录（D2a） | 新分支，base `harmony/ui-preview-tests` | 不升 |
+| 2 | R7-2 uitest 控件树解析（D2b） | 新分支，base `harmony/ui-preview-tests`（不依赖 R7-1） | 不升 |
+| 停 | 等检查点 B 的结论（闸门 G-D0），再由 Claude 安排 D2 的后端实现 | | |
+
+两个任务都是纯逻辑加单测，不改界面，不改 D0b3 页面，不改 `core/device.ts`。
+
+#### R7-1 鸿蒙应用目录（D2a）
+
+**目的**：模型说“打开计算器”时，要知道 bundle 名和入口 Ability。数据来自 Open-AutoGLM，Claude 已把原文件存进仓库：`third_party/open-autoglm/apps_harmonyos.py`（Apache-2.0，提交号和 SHA-256 见同目录 `SOURCE.md`）。**这个文件不要修改。**
+
+文件里有两个字典：
+- `APP_PACKAGES`：应用名称 → bundle，共 115 个名称，对应 83 个 bundle（多个名称可以指向同一个 bundle，例如“设置”和“系统设置”）；
+- `APP_ABILITIES`：bundle → 入口 Ability，共 39 个，不在这里的 bundle 用 `EntryAbility`。
+
+要做的：
+1. **生成脚本** `scripts/gen-harmony-apps.cjs`：
+   - 读上面的 `.py` 文件，用正则逐行取 `"键": "值",`，按所在字典分开；
+   - 生成 `entry/src/main/ets/core/eta/device/harmonyApps.generated.ts`；
+   - 带 `--check` 参数时不写文件，只比较：生成结果和已提交的文件不同就退出码 1。
+2. **生成的数据**：每个 bundle 一条，按 bundle 在 `APP_PACKAGES` 里第一次出现的顺序排列：
+   ```ts
+   export interface HarmonyApp { names: string[]; bundle: string; ability: string; launchable: boolean }
+   export const HARMONY_APPS: HarmonyApp[] = [ /* 83 条 */ ];
+   ```
+   - `names` 按原文件顺序；
+   - `ability` 取 `APP_ABILITIES[bundle]`，没有就是 `'EntryAbility'`；
+   - `launchable`：ability 以 `ExtAbility` 或 `ServiceAbility` 结尾时为 `false`（录屏、截屏、小艺字幕、通话界面这 4 个是后台服务，不能当应用打开），否则为 `true`；
+   - 文件头写明：由脚本生成不要手改、来源和提交号、Apache-2.0。
+3. **查询** `entry/src/main/ets/core/eta/device/appCatalog.ts`（原创代码，文件头不写 Eta 版权）：
+   - `normalizeAppName(s)`：去掉首尾空白，转小写，删除空格、`-`、`_`；
+   - `findApp(query): HarmonyApp | null`：规范化后**完全等于**某个名称，或者完全等于某个 bundle，就返回它；否则返回 `null`。不做模糊匹配，因为打开错的应用比打不开更糟；
+   - `suggestApps(query, limit = 5): HarmonyApp[]`：规范化后名称包含查询词、或查询词包含名称的应用，按目录顺序，每个 bundle 只出现一次，最多 `limit` 个。查询词为空时返回空数组；
+   - `appLabel(bundle): string | null`：这个 bundle 的第一个名称。
+4. **THIRD_PARTY_NOTICES.md**：加一节“Open-AutoGLM 鸿蒙应用目录（R7-1）”，写来源、提交号、许可证、用在哪个文件。
+5. **单测** `tests/eta/device/appCatalog.test.ts`，至少包括：
+   - 共 83 个应用，所有 `names` 加起来 115 个，bundle 不重复；
+   - “微信”→ `com.tencent.wechat`，ability 为 `EntryAbility`；
+   - “计算器”→ ability 为 `com.huawei.hmos.calculator.CalculatorAbility`；
+   - “设置”和“系统设置”是同一个应用；`android system settings`、`Android-System-Settings` 都能找到它；
+   - 直接用 bundle `com.huawei.hmos.settings` 也能找到；
+   - “录屏”的 `launchable` 为 `false`；
+   - 不存在的名称返回 `null`；`suggestApps('微')` 包含微信，并且不超过 5 个；
+   - 用 `child_process` 运行 `node scripts/gen-harmony-apps.cjs --check`，退出码为 0。
+
+**验收标准**：`npm run verify` 全过；生成文件和 `--check` 一致；没有改动 `third_party/`。
+
+#### R7-2 uitest 控件树解析（D2b）
+
+**目的**：HDC 后端用 `uitest dumpLayout` 读屏，结果要转换成 Eta 的观察模型，即 `core/eta/device/observation.ts` 里的 `ElementObservation` 和 `UiNode`，这样后面才能直接用 Eta 的观察引用、动作后对比等逻辑。旧的 `core/device.ts` 里有一个 `parseLayout`，输出的是旧格式。逻辑可以照着它写，但**这次不要改、也不要删 `core/device.ts`**，等检查点 B 之后再切换。
+
+新文件 `entry/src/main/ets/core/eta/device/uitestLayout.ts`（原创代码，文件头不写 Eta 版权）：
+
+```ts
+export interface ScreenBounds { width: number; height: number }
+export function parseUitestLayout(raw: string, screen: ScreenBounds, observationId: string, maxNodes?: number): ElementObservation
+```
+
+1. **输入格式**：`dumpLayout` 输出的是一棵 JSON 树。每个节点是 `{ "attributes": {...}, "children": [...] }`，属性值**都是字符串**，布尔值写作 `"true"` / `"false"`。下面是一个节点的样子；字段以真机为准，检查点 B 之后 Claude 会补一份真机导出的样本：
+   ```json
+   {"attributes":{"bounds":"[0,200][1260,330]","bundleName":"com.huawei.hmos.settings","checkable":"false","checked":"false","clickable":"true","description":"","enabled":"true","focused":"false","hint":"","id":"","key":"wlan_entry","longClickable":"false","scrollable":"false","selected":"false","text":"WLAN","type":"Row","visible":"true"},"children":[]}
+   ```
+2. **遍历**：深度优先、先序，顺序和 JSON 里的顺序一致。用显式栈，不要递归。
+   - 原始文本超过 4,000,000 个字符时抛错；
+   - 访问超过 10,000 个节点时抛错（和旧代码一样，提示页面节点过多）；
+   - JSON 无效时抛错，错误信息里不要带原始内容。
+3. **跳过的节点**：`visible` 为 `"false"`、`bounds` 解析不出来、面积为 0、完全在屏幕外的节点不放进 `nodes`，但**仍然要遍历它的子节点**（和旧代码一致）。
+4. **字段对应**：
+
+   | `UiNode` | 来自 |
+   | --- | --- |
+   | `index` | 放进 `nodes` 的顺序，从 0 开始 |
+   | `text` | `text`，最多 300 字；密码控件为 `''` |
+   | `desc` | `description` |
+   | `className` | `type` |
+   | `packageName` | `bundleName` |
+   | `viewId` | `id`，为空时用 `key` |
+   | `hint` | `hint`，为空时不设 |
+   | `bounds` | 解析 `"[l,t][r,b]"`，再裁剪到屏幕范围内 |
+   | `clickable` / `longClickable` / `scrollable` / `focused` / `enabled` / `selected` | 同名属性等于 `"true"` |
+   | `checked` | `checkable` 为 `"true"` 时取 `checked === "true"`，否则为 `null` |
+   | `password` | `password` 或 `isPassword` 为 `"true"` |
+   | `editable` | 不是密码控件，并且 `editable` 为 `"true"` 或 `type` 是 `TextInput`、`TextArea`、`Search` 之一 |
+
+5. **`ElementObservation`**：
+   - `id` 为传入的 `observationId`；`source` 为 `ElementSource.UIAUTOMATOR`（uitest 在鸿蒙上对应 Android 的 uiautomator，后续 Eta 逻辑按这个来源处理，不要给枚举加新值）；`windowId` 为 `null`；
+   - `maxNodes` 默认 120；`nodes` 超过它就截断，`truncated` 为 `true`；
+   - `packageName`：`nodes` 里出现次数最多的非空 `bundleName`，次数相同取先出现的；都为空时是 `''`；
+   - `treeSignature`：用 `core/eta/renderKey.ts` 里的 `fingerprint`，对屏幕宽高加上**所有**未跳过节点（包括超过 120 个之后的）的文字、类型、bounds、checked、selected、enabled 计算。任何一个节点的这些值变了，签名都要变；
+   - 一个可见节点都没有时抛错（提示当前页面没有可读取的控件树）。
+6. **单测** `tests/eta/device/uitestLayout.test.ts`，样本放在 `tests/fixtures/uitest/`。手写一份“设置首页”样本：嵌套至少 3 层、15 个以上节点，包含一个不可见节点（它下面有可见子节点）、一个屏幕外节点、一个密码输入框、一个开关（`checkable`）、一个可滚动列表。至少测：
+   - 节点数、顺序和 `index` 正确；不可见节点被跳过，但它的子节点还在；
+   - 屏幕外节点被跳过；越出屏幕的 bounds 被裁剪；
+   - 密码控件的 `text` 为空、`password` 为 `true`、`editable` 为 `false`；原文没有出现在结果的任何字段里（把结果 `JSON.stringify` 后检查）；
+   - 开关的 `checked` 为布尔值，普通节点的 `checked` 为 `null`；`viewId` 在 `id` 为空时用 `key`；
+   - `maxNodes = 5` 时只有 5 个节点、`truncated` 为 `true`；第 6 个以后的节点文字变化，签名也变化；
+   - 屏幕宽高变化，签名变化；文字完全相同，签名相同；
+   - 无效 JSON、空树、超过 10,000 个节点（用代码生成）都抛错。
+
+**验收标准**：`npm run verify` 全过；`core/device.ts` 和 D0b3 相关文件没有改动。
 
 ### 第六轮队列（dsh）
 
