@@ -19,7 +19,11 @@
 | 引擎 | `20261030-e40-takeover` |
 | 证据 | [候选构建](https://github.com/Lmin2419/eta-background/actions/runs/41277041172) · [工件 13072382013](https://github.com/Lmin2419/eta-background/actions/runs/41277041172/artifacts/13072382013) · [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41277043314) |
 
-当前业务候选为 [2ada136](https://github.com/Lmin2419/eta-background/commit/2ada1360dd56a72de46cd57dc627e149c37efd9a)，包含原整合及本轮衔接修复。[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41325658764) 已成功；[Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41325654694) 于 2026-11-01T16:36Z 仍在构建 Release，尚无工件，不把旧包链接当作新包。安装包完成后核对来源和签名，再安排受影响路径的手机验证。
+### 当前候选 2ada136（待用户安装、尚无真机结果）
+
+当前业务候选为 [2ada136](https://github.com/Lmin2419/eta-background/commit/2ada1360dd56a72de46cd57dc627e149c37efd9a)，包含原整合及本轮衔接修复。2026-11-01T16:39Z 已核验两项 CI 均成功。签名构建日志记录 2,159 项回归（0 失败、0 错误、1 跳过）、Lint 386 Warning/1 Hint，以及引擎配对 20261030-e40-takeover。[候选 APK](https://github.com/Lmin2419/eta-background/actions/runs/41325654694/artifacts/13091174677)：Etax-v3.3.5+etax.2ada136.apk；工件 13091174677，6,718,343 bytes，2026-12-01T16:38:31Z 到期（下载需登录 GitHub）。日志中的 APK SHA-256 与工件 digest 均为 b0d95406e98c919ab0b9d857a6a5bec0ea34448d3728b1f3f89d95088b5129b5；证书 SHA-256 为 dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5，与此前 4637961 测试包记录一致。未远程安装、未上传二进制到仓库、未发布或替换正式下载。
+
+由用户自行覆盖安装后确认版本后缀 2ada136，再按当前候选记录新入口与受影响路径结果。上方 9204329 包信息为历史记录，U001–U003 为 4637961 旧版反馈，均不作为新候选已验证的依据。
 
 ### 手机独立测试方式
 
