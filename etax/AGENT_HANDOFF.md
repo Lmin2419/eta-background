@@ -120,8 +120,8 @@
 ## 调度信息（ChatGPT 维护）
 
 - requested_cadence: 每小时检查一次
-- automation_status: 正在配置
-- automation_id: 待创建后填入
+- automation_status: 已创建并启用（每小时；Asia/Shanghai）
+- automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 读取本文、PR 和必要证据；有新反馈则验收并写回下一步；无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
 - external_agent_limit: 定时读取不等于 dsh 自动被唤醒；需以执行反馈中的实际轮询机制为准。
