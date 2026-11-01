@@ -2,8 +2,11 @@
 // ui/components/EtaCard.kt @ 3b1794d; Harmony's M0 diagnostic data/controls are retained.
 // Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 import { pasteboard } from '@kit.BasicServicesKit';
+import { common } from '@kit.AbilityKit';
 import { FoundationController, ShellState, emptyShellState } from '../../../core/foundation/controller';
 import { DiagnosticFact } from '../../../core/diagnostics';
+import { AccessibilityProbe, A11Y_TEST_BUTTON_TEXT, emptyAccessibilityProbe } from '../../../core/eta/device/accessibilityProbe';
+import { readAccessibilityProbe, requestAccessibilityGesture } from '../../../platform/AccessibilityProbeFile';
 import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/tokens';
 import { MiuixScaffoldPage } from '../components/MiuixScaffoldPage';
 import { EtaCard } from '../components/EtaCard';
@@ -13,6 +16,17 @@ export struct DiagnosticsPage {
   @Prop state:ShellState=emptyShellState();
   controller:FoundationController|undefined=undefined;
   @State private notice:ResourceStr='';
+  @State private probe:AccessibilityProbe=emptyAccessibilityProbe();
+  @State private probeClicks:number=0;
+  @State private probeNotice:ResourceStr='';
+  aboutToAppear():void{this.refreshProbe(false);}
+  private filesDir():string{const context=this.getUIContext().getHostContext();return context!==undefined&&context!==null?(context as common.UIAbilityContext).filesDir:'';}
+  private refreshProbe(notify:boolean):void{const dir=this.filesDir();if(dir===''){this.probe=emptyAccessibilityProbe();if(notify)this.probeNotice=$r('app.string.a11y_probe_refreshed');return;}
+    this.probe=readAccessibilityProbe(dir);
+    if(notify)this.probeNotice=$r('app.string.a11y_probe_refreshed');}
+  private requestInjection():void{const dir=this.filesDir();if(dir===''||!requestAccessibilityGesture(dir)){this.probeNotice=$r('app.string.a11y_probe_disconnected');return;}
+    this.probeNotice=$r('app.string.a11y_probe_requested');}
+  private probeTime(value:number):string{return value<=0?'-':new Date(value).toISOString().slice(11,19);}
   private copy():void{
     if(!this.controller)return;
     try{void pasteboard.getSystemPasteboard().setData(pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN,this.controller.diagnosticReport()))
@@ -32,8 +46,31 @@ export struct DiagnosticsPage {
     if(!this.state.diagnostics.lines.length){Text($r('app.string.eta_diagnostics_empty')).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary'))}
     ForEach(this.state.diagnostics.lines,(line:string)=>{Text(line).fontSize(F.Footnote1).fontFamily('monospace').fontColor($r('app.color.miuix_on_surface')).width('100%').copyOption(CopyOptions.LocalDevice)},(line:string,index:number)=>String(index)+line)
   }}
+  @Builder private probeRow(label:ResourceStr,value:ResourceStr){Row({space:S.Dp16}){
+    Text(label).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface_variant_summary')).layoutWeight(1)
+    Text(value).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface')).textAlign(TextAlign.End).layoutWeight(2)
+  }.width('100%')}
+  @Builder private a11yProbe(){Column({space:S.Dp12}){
+    Text($r('app.string.a11y_probe_title')).fontSize(F.Body1).fontWeight(FontWeight.Medium).fontColor($r('app.color.miuix_on_surface')).width('100%')
+    this.probeRow($r('app.string.a11y_probe_state'),this.probe.connected?$r('app.string.a11y_probe_connected'):$r('app.string.a11y_probe_disconnected'))
+    this.probeRow($r('app.string.a11y_probe_bundle'),this.probe.foregroundBundle!==''?this.probe.foregroundBundle:'-')
+    this.probeRow($r('app.string.a11y_probe_nodes'),String(this.probe.nodeCount))
+    this.probeRow($r('app.string.a11y_probe_last_event'),this.probeTime(this.probe.lastEventAt))
+    this.probeRow($r('app.string.a11y_probe_gesture'),this.probe.gesture.result)
+    if(this.probe.readError!==''){this.probeRow($r('app.string.a11y_probe_read_error'),this.probe.readError)}
+    Row({space:S.Dp8}){
+      EtaTextButton({text:$r('app.string.a11y_probe_refresh'),onAction:()=>this.refreshProbe(true)}).layoutWeight(1)
+      EtaTextButton({text:$r('app.string.a11y_probe_request'),primary:true,onAction:()=>this.requestInjection()}).layoutWeight(1)
+    }.width('100%')
+    Button(A11Y_TEST_BUTTON_TEXT).id('eta-a11y-test').fontSize(F.Body2).height(S.Dp40)
+      .backgroundColor($r('app.color.miuix_surface_container_high')).fontColor($r('app.color.miuix_on_surface'))
+      .onClick(()=>{this.probeClicks+=1;})
+    Text($r('app.string.a11y_probe_clicks',this.probeClicks)).fontSize(F.Body2).fontColor($r('app.color.miuix_on_surface'))
+    if(this.probeNotice!==''){Text(this.probeNotice).fontSize(F.Footnote1).fontColor($r('app.color.eta_settings_primary'))}
+  }.width('100%').id('eta-a11y-probe')}
   @Builder private content(){Column({space:S.Dp16}){
     EtaCard({insidePadding:S.Dp16,content:() => { this.facts(); }})
+    EtaCard({insidePadding:S.Dp16,content:() => { this.a11yProbe(); }})
     Row({space:S.Dp8}){
       EtaTextButton({text:$r('app.string.eta_diagnostics_copy'),primary:true,onAction:()=>this.copy()}).layoutWeight(1)
       EtaTextButton({text:$r('app.string.eta_diagnostics_clear'),isEnabled:this.state.diagnostics.total>0,onAction:()=>this.clear()}).layoutWeight(1)
