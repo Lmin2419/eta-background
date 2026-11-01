@@ -11,7 +11,7 @@ import {EtaSwitchPreference} from '../components/EtaSelectionPreferences';
 import {EtaTextButton} from '../components/EtaControls';
 import {ListEmptyState} from '../components/EtaSmallComponents';
 import {McpFormDialog,mcpNotice} from './McpDialogs';
-import { renderKey } from '../../../../core/eta/renderKey';
+import { renderKey } from '../../../core/eta/renderKey';
 @Component
 export struct McpServersScreen {
  @Prop @Watch('sync') state:ShellState=emptyShellState();

@@ -11,7 +11,7 @@ import { EtaComponentSizes as S, MiuixFontSizes as F } from '../../../core/eta/t
 import { MiuixScaffoldPage } from '../components/MiuixScaffoldPage';
 import { EtaCard } from '../components/EtaCard';
 import { EtaTextButton } from '../components/EtaControls';
-import { renderKey } from '../../../../core/eta/renderKey';
+import { renderKey } from '../../../core/eta/renderKey';
 @Component
 export struct DiagnosticsPage {
   @Prop state:ShellState=emptyShellState();
