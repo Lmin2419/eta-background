@@ -57,9 +57,15 @@ Session `session-bef6c961-7c2e-42d7-8d4d-7eb630b098db`：
 - `mcp__github__get_commit`
 - `mcp__github__search_code`
 
-因此**写工具已挂载**；但本次第 5 轮没有调用写工具，**不能把工具存在或 `push=true` 当作写回成功**。`push=true` 来自此前只读试运行对仓库管理员权限的报告，只证明权限，不证明定时 Session 实际写入。
+因此**写工具已挂载**。另外，dsh 在同一 `session-bef6...` 上手动发起了一次**工具验证**（不是自然定时触发）：
 
-另外，该 Session 的 `pwsh -Command` 三次返回 `exit code 3221225794`（`0xC0000142 STATUS_DLL_INIT_FAILED`），因此不能依赖 PowerShell/`git` 写回；文档读取也只能走 MCP。此环境限制不是 Android/真机失败，但它使“完整自动交接”尚未成立。
+- 请求只调用 `mcp__github__create_or_update_file`，创建 `etax/coordination/WRITE_TOOL_CHECK.md`；
+- Session 返回 `WRITE_TOOL_OK commit=16af31479ddfec7597f0b6d23881dfb8d7e388f3`；
+- 文件内容已通过 API 核对（62 bytes），随后用 API 删除，删除提交 `84e8ecd8e04860cafa4723a4bacf5b93d2d7f07f`。
+
+结论：**GitHub 写入工具确实可用**（同一 Session、手动提示）。但自然 13:02 轮没有调用写工具、没有写回；`push=true` 或工具存在仍不能代替自然定时写回成功。正式自动交接的失败原因是正文未回显 + 模型 `TIMEOUT`，不是写工具缺失。
+
+另外，该 Session 的 `pwsh -Command` 三次返回 `exit code 3221225794`（`0xC0000142 STATUS_DLL_INIT_FAILED`），因此不能依赖 PowerShell/`git` 写回；文档读取/写入只能走 MCP。此环境限制不是 Android/真机失败，但它使“完整自动交接”尚未成立。
 
 ## 5. 手动执行与定时执行的区别
 
