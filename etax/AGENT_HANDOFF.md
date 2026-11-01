@@ -121,14 +121,14 @@ C001 材料已实际读到，协作分支只有文档变化，业务 PR 保持�
 - polling_last_delivery: scheduledAt `2026-11-01T13:02:03.314Z`；deliveredAt `2026-11-01T13:02:03.352Z`；messageId `06ff1ec3-c4bb-4933-80e1-c02dee869d8d`
 - polling_last_turn: Session `session-bef6c961-7c2e-42d7-8d4d-7eb630b098db` 第 5 轮；曾 running=true，随后 running=false；turn/end `reason=error, code=TIMEOUT`（模型请求重试 5 次后超时）
 - polling_read_issue: `mcp__github__get_file_contents` 返回 `successfully downloaded text file (SHA: 360dc2c...)`，同时 `[embedded resource unsupported; raw resource data remains available to programmatic callers]`；模型未获得文件正文，只看到 SHA/提交列表
-- polling_write_tools: 工具清单确认存在 `mcp__github__create_or_update_file`、`mcp__github__push_files` 等写入工具
-- polling_write_status: BLOCKED_ACCESS（本次第 5 轮未调用写工具，未写回；`push=true`/工具存在不等于自动写回成功）
+- polling_write_tools: 工具清单确认存在 `mcp__github__create_or_update_file`、`mcp__github__push_files` 等写入工具；同一 Session 手动提示实测 `create_or_update_file` 成功创建测试文件，返回 `WRITE_TOOL_OK commit=16af31479ddfec7597f0b6d23881dfb8d7e388f3`，随后删除（`84e8ecd8...`）
+- polling_write_status: 写工具可用（手动实测通过）；自然 13:02 轮未调用写工具、未写回，自动交接仍受阻（正文未回显 + `TIMEOUT`）；`push=true` 不等于自动写回成功
 - polling_survives_session_end: 会话空闲/结束后可由 Host 恢复到冷 Session 后投递（21:02 自然触发已证明）；DSH Desktop/Host 退出、电脑休眠或关机时不会运行；跨 Host 重启后的自动恢复**未验证**
 - polling_process_dependency: 需要 DSH Desktop/Host 进程和电脑保持运行；不需要保持当前聊天窗口打开
 - polling_powershell: 定时 Session 的 `pwsh -Command` 三次返回 `0xC0000142 STATUS_DLL_INIT_FAILED`；不得依赖 shell，本轮不修复 Host/系统
 - deliverables: [真机回归清单](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/REGRESSION_CHECKLIST_9204329.md)；[第 3 轮设计草稿](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/ROUND3_DESIGN_DRAFT.md)；[定时投递与写回证据](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/POLLING_EVIDENCE.md)
 - actual_tests: 20 项真机用例全部未执行（无设备）；没有把预期写成实际
-- blockers: 无可用测试设备（`adb devices -l` 为空）；正式定时 Session 自动写回受资源正文不可读 + 模型超时 + PowerShell 0xC0000142 限制
+- blockers: 无可用测试设备（`adb devices -l` 为空）；正式定时 Session 自动写回受资源正文不可读 + 模型超时 + PowerShell 0xC0000142 限制（写工具本身已手动验证可用）
 - question_for_reviewer: 请评审 C002 文档修订；正式定时自动写回仍未成功，是否按 C002 的“精确说明受阻”接受本回执。
 - next_action: 等待评审/设备条件；保留原任务与频率，不重复建任务，不进入第 3 轮实现
 
@@ -139,8 +139,9 @@ C001 材料已实际读到，协作分支只有文档变化，业务 PR 保持�
 - 已读取远端最新 C002 / revision 2，以及评审附件 `C001_REVIEW_F002.md`；未停在 C001 等待状态。
 - 已按 A1–A3 修订清单（commit `70c94871517ddf211ded922a91d544cf22603071`）：第 20 项只整理既有现象/日志，不主动触发软重启；第 2–4 项明确原生工具、`package` 字段、`type_text` 的 `index`+`observation_id`、截图 `frame_id` 和输入后重新观察；第 5/9/12 项补充可判定条件与“未覆盖”规则。
 - 已按 B1–B3 重写设计草稿（commit `2764ae3caff463d7168152ecc299f94413e58555`）：沿用 `AgentRuntimeSession.complete/cancel` 的终态权威和发布顺序；优先复用现有顺序/身份，不新增第二套终态仲裁或持久化库；按 `RuntimeRunRegistry.snapshot()` 优先级补全排队/准备/GUI 等待/暂停恢复/提交竞争；区分单次工具不确定、run 终态和第 4 轮用户语义。
-- 已记录正式任务 21:02 的实际投递（`13:02:03.314Z` 计划、`13:02:03.352Z` 投递）和 Session 第 5 轮行为。注意 C002 revision 2 的 `revised_at` 是 `13:21:50Z`，晚于 13:02；该次自然触发不可能执行 revision 2，只能看到早期 C002 文件；`get_file_contents` 只返回 SHA + `[embedded resource unsupported]`，未返回正文；模型随后 5 次重试均 `TIMEOUT`，turn 以 `error/TIMEOUT` 结束，没有写工具调用或提交。证据见 `etax/coordination/POLLING_EVIDENCE.md`（最新 commit `c41ab447bba78cf8cfe738ffed41014bddcf3e25`，含时点说明）。
-- 已确认该 Session 工具清单存在 `mcp__github__create_or_update_file`/`push_files`，但本次未实际执行写回；因此 `push=true` 只代表权限，不代表自动写回通过。当前 `running=false`，无并发实例。
+- 已记录正式任务 21:02 的实际投递（`13:02:03.314Z` 计划、`13:02:03.352Z` 投递）和 Session 第 5 轮行为。注意 C002 revision 2 的 `revised_at` 是 `13:21:50Z`，晚于 13:02；该次自然触发不可能执行 revision 2，只能看到早期 C002 文件；`get_file_contents` 只返回 SHA + `[embedded resource unsupported]`，未返回正文；模型随后 5 次重试均 `TIMEOUT`，turn 以 `error/TIMEOUT` 结束，没有写工具调用或提交。证据见 `etax/coordination/POLLING_EVIDENCE.md`（最新 commit `e0f858a09eda94ac3c57078307c188fa12aa9eb1`，含时点说明与同 Session 手动写工具验证）。
+- 已确认该 Session 工具清单存在 `mcp__github__create_or_update_file`/`push_files`。为回答“写工具是否可用”，手动向同一 Session 发起一次独立工具验证（不是自然定时触发）：它成功创建 `etax/coordination/WRITE_TOOL_CHECK.md`，返回 `WRITE_TOOL_OK commit=16af31479ddfec7597f0b6d23881dfb8d7e388f3`；文件已核对并删除（`84e8ecd8...`）。这证明**写工具存在且可用**，但不证明自然定时轮已写回。
+- 自然 13:02 轮仍未调用写工具、没有反馈提交，原因是正文未回显 + 模型超时；`push=true` 只代表权限，不代表自动写回成功。当前 `running=false`，无并发实例。
 - 已确认 PowerShell 错误 `0xC0000142 STATUS_DLL_INIT_FAILED`；本轮文档工作改用当前 dsh 的 GitHub API 完成，不宣称定时 Session 已能执行 shell/编译。
 - 已上传 `etax/coordination/POLLING_EVIDENCE.md`，区分手动提交与定时投递/写回。
 - 未执行：20 项真机用例仍全部未执行；无业务代码/候选 head 变更；未合并、未发布、未提前进入第 3 轮实现。
