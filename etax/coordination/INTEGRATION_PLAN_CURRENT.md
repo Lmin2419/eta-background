@@ -1,6 +1,6 @@
 # Eta 后台版与上游整合：当前实施方案
 
-更新：2026-11-01。负责人：ChatGPT。依据：用户最新确认、C004、上游源码对比。状态：方案已调整，新增业务功能尚未实现。
+更新：2026-11-01。负责人：ChatGPT。依据：用户最新确认、C004、上游源码对比。状态：已开工，第 2 轮衔接返修已提交；统一状态、通知预览与息屏适配尚未实现。
 
 本文是当前整合范围与实施顺序的统一入口，补充并更新旧 INTEGRATION_3_4_PLAN.md 的第三至第五轮目标；旧文件及 ROUND3_DESIGN_DRAFT.md 保留其历史基线和设计依据。后续直接修订本文，不再逐轮生成重复方案。本文不改变候选源码或发布状态。
 
@@ -9,15 +9,25 @@
 | 项目 | 当前事实 |
 | --- | --- |
 | 业务 PR | [#45](https://github.com/Lmin2419/eta-background/pull/45)，Draft/open、未合并 |
-| 第 2 轮候选 | 9204329cffd78e392bf45d73104866701f131a1c |
+| 当前第 2 轮候选 | [2ada1360dd56a72de46cd57dc627e149c37efd9a](https://github.com/Lmin2419/eta-background/commit/2ada1360dd56a72de46cd57dc627e149c37efd9a)；原候选 9204329 |
 | 上游参考 | [v3.4.0 / e90922a](https://github.com/Mangi-11/Eta/tree/e90922a4490389f524a10c6acebbcca336883935) |
 | 引擎 | 单个 VDrive，20261030-e40-takeover |
 | 已完成整合 | 第 1 轮 Android/Linux 环境说明；第 2 轮每任务原生前后台入口、观察与坐标协议适配 |
 | 已确认手机体验 | U001–U003：后台计算、会话/App 跳转、通知内继续、两任务同时显示运行、停止一个而另一个继续正常 |
 | 尚无完整真机证据 | 新旧工具实际路径、同 App 串行、静态/旋转/暂停/接管后的观察合同、超时不重放等 |
-| 当前进度 | 第 3 轮仅设计；第 4 轮预览和本次息屏适配尚未实现 |
+| 当前进度 | 第 2 轮新增观察衔接与屏幕身份修复；第 3 轮仅设计，第 4 轮预览和本次息屏适配尚未实现 |
 
 U001–U003 不重测、不再写成“所有手机测试未执行”。用户观察不替代未提供的工具/显示屏证据；新业务 SHA 不自动继承旧 APK 的全部验证结论。
+
+### 2026-11-01 开工后的实际交付
+
+已提交 [2ada136](https://github.com/Lmin2419/eta-background/commit/2ada1360dd56a72de46cd57dc627e149c37efd9a) 至原业务分支，PR #45 保持 Draft/open。此次是第 2 轮基础入口返修，未提前实施第 3–5 轮业务功能。
+
+- 旧 screen_* 输入、重新打开/结束屏幕前失效原生观察；操作结果不确定、连接异常或非 JSON 回执也不能继续用旧坐标。只读查询保留原生已发布帧。
+- 后台观察拒绝缺失、主屏 0 及外层/几何互相矛盾的 displayId。
+- 新增 8 项回归；修复前路由复现 6 项失败，修复后相关 48 项通过。Linux 全量 2,159 项：0 失败、0 错误、1 跳过；12 项接线和 8 项引擎部署测试通过。Lint 和 Debug 构建通过；Lint 为 0 错误、386 Warning、1 Hint。
+- 该 head 的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41325658764) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41325654694) 已触发，2026-11-01T16:22Z 查询仍在运行；上述通过结论为本地 Linux 实际结果，不代填 CI 结论。
+- 已同步[手机清单](REGRESSION_CHECKLIST_9204329.md)的 U001–U003 结果，去掉 USB/ADB 前置并纠正静态帧测试步骤；未把技术项或新候选真机测试填通过。此文件仍记录原候选上下文，新候选没有实机结果。
 
 ## 2. 范围与保留项
 
@@ -136,6 +146,6 @@ PowerHooks.kt 和 AssistantManager.kt 与上游 3.4.0 内容相同，不能重�
 
 ## 7. 开发与发布边界
 
-第 2 轮剩余验收门槛保持，不因用户接受新方案而伪填通过。当前只调整方案与交接记录，不修改候选 head。实施按阶段提交审查，不合并 main、不发布、不改下载链接/包名/签名；不远程操作用户手机。ChatGPT 手动推进，每小时检查保持关闭，dsh 不再按旧指令新增实施。
+第 2 轮剩余验收门槛保持，不因用户接受新方案而伪填通过。用户“开工”后已按阶段实施第 2 轮衔接返修，新候选为 2ada136；旧手机结果保留其实际版本归属。实施按阶段提交审查，不合并 main、不发布、不改下载链接/包名/签名；不远程操作用户手机。ChatGPT 手动推进，每小时检查保持关闭，dsh 不再按旧指令新增实施。
 
 来源：[交接记录](../AGENT_HANDOFF.md)、[既有第三轮设计](ROUND3_DESIGN_DRAFT.md)、[原整合计划](https://github.com/Lmin2419/eta-background/blob/9204329cffd78e392bf45d73104866701f131a1c/etax/INTEGRATION_3_4_PLAN.md)、[Android Live Updates](https://developer.android.com/develop/ui/views/notifications/live-update)、[自定义通知](https://developer.android.com/develop/ui/views/notifications/custom-notification)。
