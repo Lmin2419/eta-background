@@ -120,7 +120,22 @@ class Preview:
 
     def find(self, target):
         # Every given key must match; nodes with no size are not on screen and are skipped.
+        if 'within' in target:
+            # Only nodes whose center lies inside the first element matching the "within" selector.
+            box = self.find(target['within'])
+            if not box: return None
+            inner = dict(target); del inner['within']
+            bx, by, bw, bh = box['rect']
+            for n in self.nodes():
+                cx, cy = n['rect'][0] + n['rect'][2] / 2, n['rect'][1] + n['rect'][3] / 2
+                if bx <= cx <= bx + bw and by <= cy <= by + bh and self.matches(n, inner): return n
+            return None
         for n in self.nodes():
+            if self.matches(n, target): return n
+        return None
+
+    def matches(self, n, target):
+        for _ in (0,):
             if n['rect'][2] <= 0 or n['rect'][3] <= 0: continue
             if 'id' in target and n['id'] != target['id']: continue
             if 'text' in target and n['text'] != target['text']: continue
@@ -131,8 +146,8 @@ class Preview:
             if 'type' in target and n['type'] != target['type']: continue
             if 'enabled' in target and n['enabled'] != target['enabled']: continue
             if 'attrs' in target and any(str(n['attrs'].get(k)) != str(v) for k, v in target['attrs'].items()): continue
-            return n
-        return None
+            return True
+        return False
 
     INTERACTIVE = {'Button', 'TextInput', 'TextArea', 'Search', 'Toggle', 'Checkbox', 'Radio', 'Slider', 'Select'}
     def elements(self):
@@ -179,14 +194,14 @@ class Preview:
     # The previewer's input-method path does not reach text fields, so letters are sent as hardware
     # key presses (KEYCODE_A = 2017 ... KEYCODE_Z, KEYCODE_0 = 2000 ..., SPACE = 2050). ASCII only.
     KEYCODES = dict([(chr(ord('a') + i), 2017 + i) for i in range(26)] + [(str(i), 2000 + i) for i in range(10)]
-                    + [(' ', 2050), ('.', 2044), (',', 2043), ('-', 2057), ('/', 2064), (';', 2062), ('=', 2058)])
+                    + [(' ', 2050), ('.', 2044), (',', 2043), ('-', 2057), ('/', 2064), (';', 2062), ('=', 2058), ('\b', 2055)])
     SHIFTED = {':': 2062, '_': 2057}  # typed as Shift + the base key
     SHIFT = 2047
     async def type(self, text):
         for ch in text.lower():
             code, shift = self.KEYCODES.get(ch), False
             if code is None and ch in self.SHIFTED: code, shift = self.SHIFTED[ch], True
-            if code is None: raise AssertionError('type supports a-z, 0-9, space and . , - / ; = : _ only: %r' % ch)
+            if code is None: raise AssertionError('type supports a-z, 0-9, space, . , - / ; = : _ and \\b (backspace) only: %r' % ch)
             pressed = [self.SHIFT, code] if shift else [code]
             if shift: self.command('KeyPress', {'isInputMethod': False, 'keyCode': self.SHIFT, 'keyAction': 0, 'keyString': '', 'pressedCodes': [self.SHIFT]})
             for action in (0, 1):
