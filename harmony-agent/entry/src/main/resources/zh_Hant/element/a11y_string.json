@@ -1,0 +1,56 @@
+{
+  "string": [
+    {
+      "name": "a11y_probe_title",
+      "value": "無障礙實驗"
+    },
+    {
+      "name": "a11y_probe_state",
+      "value": "連線狀態"
+    },
+    {
+      "name": "a11y_probe_connected",
+      "value": "已連線"
+    },
+    {
+      "name": "a11y_probe_disconnected",
+      "value": "未連線"
+    },
+    {
+      "name": "a11y_probe_bundle",
+      "value": "前景包名"
+    },
+    {
+      "name": "a11y_probe_nodes",
+      "value": "控件數"
+    },
+    {
+      "name": "a11y_probe_last_event",
+      "value": "最近事件"
+    },
+    {
+      "name": "a11y_probe_gesture",
+      "value": "注入結果"
+    },
+    {
+      "name": "a11y_probe_refresh",
+      "value": "重新整理"
+    },
+    {
+      "name": "a11y_probe_request",
+      "value": "請求注入點擊"
+    },
+    {
+      "name": "a11y_probe_clicks",
+      "value": "點擊次數：%d"
+    },
+    {
+      "name": "a11y_probe_requested",
+      "value": "已請求注入，等待擴充功能處理"
+    },
+    {
+      "name": "a11y_probe_refreshed",
+      "value": "已重新整理"
+    }
+  ]
+}

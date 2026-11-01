@@ -8,7 +8,7 @@
 
 | 改动 | 自动验证 | 真机 |
 | --- | --- | --- |
-| 新增 `AccessibilityExtensionAbility`（retrieve / gesture）、`accessibility_config.json`、`module.json5` 的 `extensionAbilities`；扩展只记录前台包名与控件数量，不读取文字，按界面请求注入一次点击 | ArkTS / 资源检查通过；`19-a11y-probe` 预览器场景通过 | 检查点 ⑥（见 `CHECKPOINT-B.md`） |
+| 新增 `AccessibilityExtensionAbility`（retrieve / gesture）、`accessibility_config.json`、`module.json5` 的 `extensionAbilities`；扩展只记录前台包名与控件数量，不读取文字，按界面请求注入一次点击 | ArkTS / 资源检查通过；`19-a11y-probe` 预览器场景通过 | 检查点 ⑥（见 `device-runs/CHECKPOINT-B.md`） |
 | 新增 `core/eta/device/accessibilityProbe.ts`（探针类型、容错解析、序列化、注入结果校验）+ 5 项单测；诊断页新增“无障碍实验”区：连接状态、前台包名、控件数、最近事件、注入结果、刷新、请求注入点击、测试按钮 | `npm test` +5 项通过 | 检查点 ⑥ |
 | 未连接时显示“未连接”，刷新按钮有反应 | 预览器场景断言 | — |
 

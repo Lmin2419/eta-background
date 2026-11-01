@@ -1,0 +1,56 @@
+{
+  "string": [
+    {
+      "name": "a11y_probe_title",
+      "value": "Accessibility experiment"
+    },
+    {
+      "name": "a11y_probe_state",
+      "value": "Connection"
+    },
+    {
+      "name": "a11y_probe_connected",
+      "value": "Connected"
+    },
+    {
+      "name": "a11y_probe_disconnected",
+      "value": "Not connected"
+    },
+    {
+      "name": "a11y_probe_bundle",
+      "value": "Foreground package"
+    },
+    {
+      "name": "a11y_probe_nodes",
+      "value": "Node count"
+    },
+    {
+      "name": "a11y_probe_last_event",
+      "value": "Last event"
+    },
+    {
+      "name": "a11y_probe_gesture",
+      "value": "Injection result"
+    },
+    {
+      "name": "a11y_probe_refresh",
+      "value": "Refresh"
+    },
+    {
+      "name": "a11y_probe_request",
+      "value": "Request injected tap"
+    },
+    {
+      "name": "a11y_probe_clicks",
+      "value": "Tap count: %d"
+    },
+    {
+      "name": "a11y_probe_requested",
+      "value": "Injection requested, waiting for the extension"
+    },
+    {
+      "name": "a11y_probe_refreshed",
+      "value": "Refreshed"
+    }
+  ]
+}

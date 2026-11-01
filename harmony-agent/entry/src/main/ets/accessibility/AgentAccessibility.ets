@@ -1,5 +1,5 @@
-// Copyright © 2026 蛮吉 (Mangi-11). PolyForm Noncommercial 1.0.0.
-// D0a 无障碍扩展实验：只记录前台包名与控件数量，不读取、不记录任何文字。
+// 随身助手原创代码（无障碍扩展实验，D0a）。
+// 只记录前台包名与控件数量，不读取、不记录任何文字。
 import { AccessibilityExtensionAbility, AccessibilityEvent, AccessibilityElement, GesturePath, GesturePoint } from '@kit.AccessibilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { fileIo as fs } from '@kit.CoreFileKit';
@@ -10,6 +10,7 @@ import {
   normalizeGestureResult,
   parseAccessibilityProbe,
   serializeAccessibilityProbe,
+  A11Y_TEST_BUTTON_TEXT,
 } from '../core/eta/device/accessibilityProbe';
 
 const PROBE_FILE = 'a11y-probe.json';
@@ -17,10 +18,17 @@ const GESTURE_FILE = 'a11y-gesture-request.json';
 const MAX_NODES = 500;
 const EVENT_INTERVAL_MS = 1000;
 const GESTURE_DURATION_MS = 100;
-const TEST_BUTTON_TEXT = '无障碍注入测试按钮';
+const MAX_FILE_BYTES = 64 * 1024;
 
 interface GestureRequest {
   requestedAt?: number;
+}
+
+interface NodeRect {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
 }
 
 export default class AgentAccessibility extends AccessibilityExtensionAbility {
@@ -41,34 +49,36 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
     this.writeProbe(true);
   }
 
-  onAccessibilityEvent(event: AccessibilityEvent): void {
+  onAccessibilityEvent(_event: AccessibilityEvent): void {
     const now = Date.now();
     if (now - this.lastEventAt < EVENT_INTERVAL_MS) return;
     this.lastEventAt = now;
-    this.probe.lastEventAt = now;
-    const bundle = event.bundleName;
-    if (typeof bundle === 'string' && bundle !== '') this.probe.foregroundBundle = bundle;
-    this.context
-      .getWindowRootElement()
-      .then((root: AccessibilityElement) => {
-        this.probe.nodeCount = this.countNodes(root, MAX_NODES);
-        this.maybeInjectGesture();
-        this.writeProbe(false);
-      })
-      .catch((_error: BusinessError) => {
-        this.probe.nodeCount = 0;
-        this.writeProbe(false);
-      });
+    this.refreshProbeFromWindow(now).catch((error: BusinessError) => {
+      this.probe.nodeCount = 0;
+      this.probe.gesture.result = normalizeGestureResult('error:' + String(error.code));
+      this.probe.gesture.at = Date.now();
+      this.writeProbe(true);
+    });
   }
 
-  private countNodes(root: AccessibilityElement, limit: number): number {
+  private async refreshProbeFromWindow(now: number): Promise<void> {
+    this.probe.lastEventAt = now;
+    const root = await this.context.getWindowRootElement();
+    const bundle = await root.attributeValue('bundleName');
+    if (typeof bundle === 'string' && bundle !== '') this.probe.foregroundBundle = bundle;
+    this.probe.nodeCount = await this.countNodes(root, MAX_NODES);
+    await this.maybeInjectGesture(root);
+    this.writeProbe(false);
+  }
+
+  private async countNodes(root: AccessibilityElement, limit: number): Promise<number> {
     let count = 0;
     const stack: AccessibilityElement[] = [root];
     while (stack.length > 0 && count < limit) {
       const node = stack.pop();
       if (node === undefined) break;
       count += 1;
-      const children = node.children;
+      const children = (await node.attributeValue('children')) as AccessibilityElement[];
       if (children !== undefined && children !== null) {
         for (let index = 0; index < children.length && count + stack.length < limit; index++) {
           stack.push(children[index]);
@@ -78,7 +88,7 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
     return Math.min(count, limit);
   }
 
-  private maybeInjectGesture(): void {
+  private async maybeInjectGesture(root: AccessibilityElement): Promise<void> {
     const requestText = this.readText(GESTURE_FILE);
     if (requestText.trim() === '') return;
     let request: GestureRequest = {};
@@ -87,39 +97,35 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
     } catch (_) {
       request = {};
     }
-    const requestedAt = typeof request.requestedAt === 'number' ? request.requestedAt : Date.now();
-    this.probe.gesture.requestedAt = requestedAt;
-    if (this.probe.foregroundBundle !== this.context.abilityInfo.bundleName) {
+    this.probe.gesture.requestedAt = typeof request.requestedAt === 'number' ? request.requestedAt : Date.now();
+    if (this.probe.foregroundBundle !== this.context.applicationInfo.name) {
       this.probe.gesture.result = normalizeGestureResult('error:not-foreground');
       this.probe.gesture.at = Date.now();
       this.removeFile(GESTURE_FILE);
       return;
     }
-    this.context
-      .getWindowRootElement()
-      .then((root: AccessibilityElement) => {
-        return root.findElement('content', TEST_BUTTON_TEXT);
-      })
-      .then((target: AccessibilityElement) => {
-        const rect = target.rect;
-        const centerX = Math.floor((rect.left + rect.right) / 2);
-        const centerY = Math.floor((rect.top + rect.bottom) / 2);
-        const path = new GesturePath(GESTURE_DURATION_MS);
-        const point = new GesturePoint(centerX, centerY);
-        path.addPoint(point);
-        this.context.injectGestureSync(path);
-        this.probe.gesture.result = 'ok';
-        this.probe.gesture.at = Date.now();
-        this.removeFile(GESTURE_FILE);
-        this.writeProbe(true);
-      })
-      .catch((error: BusinessError) => {
-        const code = error !== undefined && error.code !== undefined ? String(error.code) : 'unknown';
-        this.probe.gesture.result = normalizeGestureResult('error:' + code);
-        this.probe.gesture.at = Date.now();
-        this.removeFile(GESTURE_FILE);
-        this.writeProbe(true);
-      });
+    const matches = (await root.findElement('content', A11Y_TEST_BUTTON_TEXT)) as AccessibilityElement[];
+    if (matches === undefined || matches === null || matches.length === 0) {
+      this.probe.gesture.result = 'not-found';
+      this.probe.gesture.at = Date.now();
+      this.removeFile(GESTURE_FILE);
+      return;
+    }
+    const rect = (await matches[0].attributeValue('rect')) as NodeRect;
+    if (rect === undefined || rect === null) {
+      this.probe.gesture.result = normalizeGestureResult('error:no-rect');
+      this.probe.gesture.at = Date.now();
+      this.removeFile(GESTURE_FILE);
+      return;
+    }
+    const centerX = Math.floor(rect.left + rect.width / 2);
+    const centerY = Math.floor(rect.top + rect.height / 2);
+    const path = new GesturePath(GESTURE_DURATION_MS);
+    path.points.push(new GesturePoint(centerX, centerY));
+    this.context.injectGestureSync(path);
+    this.probe.gesture.result = 'ok';
+    this.probe.gesture.at = Date.now();
+    this.removeFile(GESTURE_FILE);
   }
 
   private writeProbe(force: boolean): void {
@@ -135,7 +141,7 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
       const file = fs.openSync(path, fs.OpenMode.READ_ONLY);
       try {
         const size = fs.statSync(file.fd).size;
-        if (size <= 0 || size > 64 * 1024) return '';
+        if (size <= 0 || size > MAX_FILE_BYTES) return '';
         const buffer = new ArrayBuffer(size);
         const read = fs.readSync(file.fd, buffer);
         if (read <= 0) return '';
@@ -158,7 +164,7 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
         fs.closeSync(file);
       }
     } catch (_) {
-      // 扩展与界面不在同一进程，写失败时下一帧再试；这里不抛给系统。
+      // 扩展与界面不在同一进程，写失败时下一帧再试。
     }
   }
 

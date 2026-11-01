@@ -14,6 +14,7 @@ export interface AccessibilityProbe {
   gesture: GestureProbe;
 }
 export const MAX_PROBE_NODES = 500;
+export const A11Y_TEST_BUTTON_TEXT = '无障碍注入测试按钮';
 export const GESTURE_NOT_REQUESTED = 'not-requested';
 export function emptyAccessibilityProbe(): AccessibilityProbe {
   return {
