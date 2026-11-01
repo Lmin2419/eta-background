@@ -11,6 +11,7 @@
     "check:res": "node scripts/check-resources.cjs",
     "test:ui": "bash scripts/ui-preview/run.sh",
     "verify": "bash scripts/verify.sh",
+    "wait:review": "node scripts/wait-for-review.cjs",
     "build:harmony": "bash scripts/build.sh",
     "test:foundation": "tsx --test tests/foundation.test.ts",
     "build:preview": "python3 scripts/build-preview.py",

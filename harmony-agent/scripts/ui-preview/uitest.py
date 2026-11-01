@@ -67,6 +67,12 @@ class Preview:
                 await asyncio.sleep(0.1)
         else: raise RuntimeError('previewer image socket did not open')
         self.frame_task = asyncio.create_task(self.frames_loop())
+        # Querying the inspector before the first layout finishes crashes the previewer natively
+        # (Inspector::GetInspector, seen on slower CI runners). Wait for a rendered frame and let it settle.
+        for _ in range(300):
+            if self.frames > 0 or self.crashed or self.proc.poll() is not None: break
+            await asyncio.sleep(0.1)
+        await asyncio.sleep(1.0)
 
     def pump(self):
         size = 0
@@ -120,7 +126,22 @@ class Preview:
 
     def find(self, target):
         # Every given key must match; nodes with no size are not on screen and are skipped.
+        if 'within' in target:
+            # Only nodes whose center lies inside the first element matching the "within" selector.
+            box = self.find(target['within'])
+            if not box: return None
+            inner = dict(target); del inner['within']
+            bx, by, bw, bh = box['rect']
+            for n in self.nodes():
+                cx, cy = n['rect'][0] + n['rect'][2] / 2, n['rect'][1] + n['rect'][3] / 2
+                if bx <= cx <= bx + bw and by <= cy <= by + bh and self.matches(n, inner): return n
+            return None
         for n in self.nodes():
+            if self.matches(n, target): return n
+        return None
+
+    def matches(self, n, target):
+        for _ in (0,):
             if n['rect'][2] <= 0 or n['rect'][3] <= 0: continue
             if 'id' in target and n['id'] != target['id']: continue
             if 'text' in target and n['text'] != target['text']: continue
@@ -131,8 +152,8 @@ class Preview:
             if 'type' in target and n['type'] != target['type']: continue
             if 'enabled' in target and n['enabled'] != target['enabled']: continue
             if 'attrs' in target and any(str(n['attrs'].get(k)) != str(v) for k, v in target['attrs'].items()): continue
-            return n
-        return None
+            return True
+        return False
 
     INTERACTIVE = {'Button', 'TextInput', 'TextArea', 'Search', 'Toggle', 'Checkbox', 'Radio', 'Slider', 'Select'}
     def elements(self):
@@ -182,11 +203,12 @@ class Preview:
                     + [(' ', 2050), ('.', 2044), (',', 2043), ('-', 2057), ('/', 2064), (';', 2062), ('=', 2058)])
     SHIFTED = {':': 2062, '_': 2057}  # typed as Shift + the base key
     SHIFT = 2047
-    async def type(self, text):
+    async def type(self, text, delay=0.0):
         for ch in text.lower():
+            if delay: await asyncio.sleep(delay)
             code, shift = self.KEYCODES.get(ch), False
             if code is None and ch in self.SHIFTED: code, shift = self.SHIFTED[ch], True
-            if code is None: raise AssertionError('type supports a-z, 0-9, space and . , - / ; = : _ only: %r' % ch)
+            if code is None: raise AssertionError('type supports a-z, 0-9, space and . , - / ; = : _ only (no backspace in the previewer): %r' % ch)
             pressed = [self.SHIFT, code] if shift else [code]
             if shift: self.command('KeyPress', {'isInputMethod': False, 'keyCode': self.SHIFT, 'keyAction': 0, 'keyString': '', 'pressedCodes': [self.SHIFT]})
             for action in (0, 1):
@@ -256,7 +278,7 @@ async def run(build, scenario_file, report):
                     if step.get('expectChange', True) and json.dumps(p.tree, sort_keys=True) == tree_before:
                         raise AssertionError('the page did not change after this step (unresponsive?)')
                 elif 'dump' in step: await asyncio.sleep(0.6); await p.inspect(); p.screenshot(step['dump']); p.dump(step['dump'])
-                elif 'type' in step: await p.type(step['type']); await asyncio.sleep(0.5)
+                elif 'type' in step: await p.type(step['type'], step.get('delay', 0.0)); await asyncio.sleep(0.5)
                 elif 'screenshot' in step: await asyncio.sleep(0.6); await p.inspect(); p.screenshot(step['screenshot'])
                 if p.crashed: raise AssertionError('previewer crashed')
                 if len(p.errors) > before: raise AssertionError('application error: ' + p.errors[before])

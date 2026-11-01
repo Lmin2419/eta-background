@@ -18,6 +18,7 @@ HarmonyOS 原生 AI 助手，ArkUI + ArkTS。**界面、文案和交互逻辑按
 | --- | --- |
 | `entry/src/main/ets/core/` | 纯 TypeScript 逻辑（可单测）。`core/foundation/` 是 0.9 框架；`core/eta/` 放从 Eta 移植的逻辑和 `tokens.ts` |
 | `entry/src/main/ets/ui/eta/` | 从 Eta 移植的 ArkUI 组件和页面（M1 起） |
+| `entry/src/main/ets/ui/harmony/` | 鸿蒙版独有的原创页面（Eta 没有对应页面，例如手机操作连接页）。文件头写“随身助手原创代码”，不加 Eta 的版权行；`ui/eta/` 下只放移植件 |
 | `entry/src/main/ets/ui/foundation/` | 0.9 页面，M1 完成后删除 |
 | 仓库根目录 `app/` | Eta Android 源码（移植来源，只读），基准提交 `3b1794d` |
 | `entry/src/main/ets/platform/` | 鸿蒙平台适配（RDB、ASSET、HTTP、通知、后台） |
