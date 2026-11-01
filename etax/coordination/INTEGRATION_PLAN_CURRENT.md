@@ -26,7 +26,8 @@
 - 旧 screen_* 输入、重新打开/结束屏幕前失效原生观察；操作结果不确定、连接异常或非 JSON 回执也不能继续用旧坐标。只读查询保留原生已发布帧。
 - 后台观察拒绝缺失、主屏 0 及外层/几何互相矛盾的 displayId。
 - 新增 8 项回归；修复前路由复现 6 项失败，修复后相关 48 项通过。Linux 全量 2,159 项：0 失败、0 错误、1 跳过；12 项接线和 8 项引擎部署测试通过。Lint 和 Debug 构建通过；Lint 为 0 错误、386 Warning、1 Hint。
-- 2026-11-01T16:36Z 实际查询：[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41325658764) 已成功；[Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41325654694) 的回归/静态检查步骤已成功，Release 构建仍在运行，尚无安装工件。上述测试计数为本地 Linux 实际结果。
+- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41325658764) 和 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41325654694) 均已成功，签名构建日志同样记录 2,159 项回归（0 失败、0 错误、1 跳过）。
+- 2026-11-01T16:39Z 已核验两项 CI 均成功。签名构建日志记录 2,159 项回归（0 失败、0 错误、1 跳过）、Lint 386 Warning/1 Hint，以及引擎配对 20261030-e40-takeover。[候选 APK](https://github.com/Lmin2419/eta-background/actions/runs/41325654694/artifacts/13091174677)：Etax-v3.3.5+etax.2ada136.apk；工件 13091174677，6,718,343 bytes，2026-12-01T16:38:31Z 到期（下载需登录 GitHub）。日志中的 APK SHA-256 与工件 digest 均为 b0d95406e98c919ab0b9d857a6a5bec0ea34448d3728b1f3f89d95088b5129b5；证书 SHA-256 为 dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5，与此前 4637961 测试包记录一致。未远程安装、未上传二进制到仓库、未发布或替换正式下载。
 - 已同步[手机清单](REGRESSION_CHECKLIST_9204329.md)的 U001–U003 结果，去掉 USB/ADB 前置并纠正静态帧测试步骤；未把技术项或新候选真机测试填通过。现已按用户确认将反馈归回 4637961 旧版，9204329 和新候选均无已确认的实机结果。
 
 ## 2. 范围与保留项
