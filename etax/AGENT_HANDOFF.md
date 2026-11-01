@@ -99,26 +99,43 @@
 
 ## 执行反馈（dsh 维护）
 
-- acknowledged_instruction: 尚未确认
-- feedback_revision: 0
-- status: 尚未开始 C001
-- updated_at: —
+- acknowledged_instruction: C001 / revision 2（已实际配置并试运行）
+- feedback_revision: 1
+- status: REVIEW_READY
+- updated_at: 2026-11-01T12:08:14Z
 - implementation_head: 9204329cffd78e392bf45d73104866701f131a1c
-- device_status: BLOCKED_DEVICE（依据用户转交的 dsh 报告）
-- polling_mechanism: 待 dsh 核实
-- polling_task_id: —
-- polling_survives_session_end: 未知
-- deliverables: 待上传测试清单
-- actual_tests: 20 项未执行（无设备）
-- blockers: 尚无可连接测试设备
-- question_for_reviewer: —
-- next_action: 执行 C001
-
-每次新增反馈补充：已做事项、变更文件/提交、验证命令和实际结果、证据链接、未执行项与原因。请勿修改“评审记录”来给自己验收通过。
+- device_status: BLOCKED_DEVICE（`adb devices -l` 无条目；仅记录一次具体缺口）
+- polling_mechanism: DSH 原生定时任务（`@deepseek-ai/dsh-schedule`，Host 持久调度；不是 Windows 计划任务、sleep 循环或仅下载/提醒）
+- polling_task_id: `schedule-43f97cf5-0425-46a1-8af3-53242b98fb52`
+- polling_status: active（启用）
+- polling_frequency: `every_seconds=3600`（固定每小时；UTC 锚点 `13:02:03Z`；显示时区 Asia/Shanghai）
+- polling_next_run: 2026-11-01T13:02:03.314Z（2026-11-01T21:02:03.314+08:00）
+- polling_survives_session_end: 会话空闲/结束后可由 Host 恢复为冷 Session 后投递（已由试运行验证）；DSH Desktop/Host 退出、电脑休眠或关机时不会运行；跨 Host 重启后的自动恢复**未验证**
+- polling_process_dependency: 需要 DSH Desktop/Host 进程和电脑保持运行；不需要保持当前聊天窗口打开；不另建常驻服务
+- polling_test_task: `schedule-86f26d19-6d02-48ad-8f19-558678ae4786`（一次性 60 秒试运行，已验证后删除；不属于正式任务）
+- polling_test_result: 到点投递并唤醒空闲 Session；`deliveredAt=2026-11-01T12:03:03.361Z`；Session 返回 `SCHEDULE_WAKE_OK` + 当前 ISO 时间；不是手动 sleep 冒充
+- deliverables: [真机回归清单](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/REGRESSION_CHECKLIST_9204329.md)；[第 3 轮设计草稿](https://github.com/Lmin2419/eta-background/blob/coordination/eta-integration/etax/coordination/ROUND3_DESIGN_DRAFT.md)
+- actual_tests: 20 项真机用例全部未执行（无设备）；没有把预期写成实际
+- blockers: 无可用测试设备；`adb devices -l` 为空，型号/Android/ColorOS 无法核验。一次记录，不循环重试。
+- question_for_reviewer: 是否接受本回执；真机条件具备后是否按清单执行并填写结果。
+- next_action: 等待评审/设备条件；保持每小时轻量读取，不重复设备操作、不提前进入第 3 轮业务实现
 
 ## 反馈历史（dsh 维护，新增条目）
 
-尚无执行回执。
+### F001 / C001 revision 2 — 2026-11-01T12:08:14Z
+
+- 已读取远端最新交接文档（GitHub blob SHA `0761cecf92f7c316e566cd4f274f7223210ec3ce`），确认 C001 / revision 2，未重做已完成事项。
+- 已实际创建 DSH 原生每小时定时任务：任务 ID `schedule-43f97cf5-0425-46a1-8af3-53242b98fb52`，标题“Eta 交接每小时检查”，状态 active，`every_seconds=3600`。创建前/清理后目录仅此一个正式任务，没有重复创建同用途任务。
+- 定时提示包含本文完整 URL、协作分支/路径、去重键、写回规则、禁止合并/发布/提前第 3 轮和凭证路径；任务绑定专用 Session `session-bef6c961-7c2e-42d7-8d4d-7eb630b098db`。
+- 已实际执行一次**定时触发试运行**：一次性任务在 60 秒后于 `2026-11-01T12:03:03.361Z` 投递到空闲 Session；Session 返回 `SCHEDULE_WAKE_OK 当前 ISO 时间：2026-11-01T12:03:03Z`，证明能唤醒 Agent 而非仅提醒/下载。试运行任务随后通过 `schedule/delete` 删除（`deleted: true`），不污染正式任务。
+- 已上传脱敏清单：`etax/coordination/REGRESSION_CHECKLIST_9204329.md`（20 项，含步骤、预期、实际/错误码、证据引用和“未执行”状态；无本机路径、APK 二进制、令牌或设备序列号）。
+- 清单开头已包含候选 APK 身份、设备连接/系统/已装版本核对命令、用户最少动作和现场步骤；未自行安装 APK、改设备设置或触发软重启。
+- 已上传 `etax/coordination/ROUND3_DESIGN_DRAFT.md`：现有状态来源、统一状态模型候选、事件接缝、迁移、拟改文件、兼容风险和测试；仅设计，未改业务 head/代码，未扩大范围。
+- 验证命令与结果：`adb devices -l` → 空；`adb version` → `1.0.41 / 37.0.1-15733141`；APK SHA-256 `2b3dbc...`，签名证书 SHA-256 `dc309f...`，包名/版本/引擎与固定候选一致；`schedule/catalog` 清理后仅正式任务，状态 active。
+- 未执行：20 项真机测试全部保持“未执行（无设备）”；没有新增业务提交、合并、发布、标签或正式下载链接变更。
+- 证据：候选构建/工件/PR Check 见上文；定时任务运行证据为 schedule catalog 的 `lastDelivery` 与 Session 第 2 轮回复；清单/设计为协作分支链接。
+- 风险/未验证：DSH Host 重启后的冷恢复、电脑休眠/关机时的行为、真机全部 20 项。长按电源键软重启仍未修复，不作为本轮常规触发。
+- 评审请求：请确认回执、轮询能力和材料可读性；下一指令前不进入第 3 轮实现。
 
 ## 评审记录（ChatGPT 维护）
 
