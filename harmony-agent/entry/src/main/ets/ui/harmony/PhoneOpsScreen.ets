@@ -21,7 +21,7 @@ export struct PhoneOpsScreen {
   @State private snapshot: PhoneOpsSnapshot = nativeMissingSnapshot('');
   @State private address: string = '';
   @State private invalid: boolean = false;
-  private controller: PhoneOpsController | undefined = undefined;
+  private ops: PhoneOpsController | undefined = undefined;
 
   aboutToAppear(): void {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
@@ -36,11 +36,11 @@ export struct PhoneOpsScreen {
       }
     };
     const changed = (): void => {
-      const controller = this.controller;
+      const controller = this.ops;
       if (controller !== undefined) this.snapshot = controller.snapshot();
     };
-    this.controller = new PhoneOpsController(transport, counter, changed);
-    this.snapshot = this.controller.snapshot();
+    this.ops = new PhoneOpsController(transport, counter, changed);
+    this.snapshot = this.ops.snapshot();
   }
 
   private statusText(): ResourceStr {
@@ -63,7 +63,7 @@ export struct PhoneOpsScreen {
   }
 
   private onConnect(): void {
-    const controller = this.controller;
+    const controller = this.ops;
     if (controller === undefined) return;
     const target = validateHdcTarget(this.address);
     if (target === null || !controller.configure(target)) {
@@ -77,7 +77,7 @@ export struct PhoneOpsScreen {
   }
 
   private onDump(): void {
-    const controller = this.controller;
+    const controller = this.ops;
     if (controller === undefined) return;
     controller.testDump().then((): void => {
       this.snapshot = controller.snapshot();
@@ -85,7 +85,7 @@ export struct PhoneOpsScreen {
   }
 
   private onDisconnect(): void {
-    const controller = this.controller;
+    const controller = this.ops;
     if (controller === undefined) return;
     controller.disconnect();
     this.snapshot = controller.snapshot();
