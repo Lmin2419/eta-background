@@ -473,10 +473,59 @@
 
 #### D0b3 手机操作连接页（0.9.37）
 
-D0b2 完成后，Claude 补充本卡的细节再开工。范围：
-- “设置 → 手机操作”页，按 PHONE_OPS_PLAN 的 D0b；
-- 预览器使用假传输层，写场景覆盖每个状态的显示；
-- 真机检查点 ⑦ 写进 `CHECKPOINT-B.md`。
+**前提**：D0b2 已入库 `entry/libs/arm64-v8a/libagent_hdc.so`（见 `BUILD-INFO.md`）。不要改这个库；需要改原生代码时停下来，交给 Claude。
+
+**原理**：
+- 应用内置一个 HDC 客户端，连到**本机**的“无线调试”端口。
+- 连上后，以 shell 身份执行 `uitest` 读屏和操作。
+- 0.3 版本在真机上读到过 103 个控件，所以这条路是验证过的。
+
+**要做的**：
+
+1. **原生库接线**：
+   - `platform/Services.ets` 已有 `NativeHdcTransport`，它包装了 `start` / `command` / `cancel`；
+   - 新增 `platform/HdcConnectionTransport.ets`，在它之上实现 D0b1 的 `HdcTransport` 接口；
+   - `connect(target, attempt)` 依次执行：
+     1. `start(filesDir + '/hdc')`；
+     2. `tconn <target>`；
+     3. `shell id`：输出含 `uid=` 才算已授权，否则返回 `authorizing`；
+     4. `shell uitest help`：确认 uitest 可用。
+
+     流程参照 `core/device.ts` 的 `HarmonyDevice.connect`。
+   - 超时、拒绝连接、协议错误映射到 D0b1 的 `HdcConnectOutcome`。**原生库的报错原文只写进诊断日志，不显示给用户。**
+2. **控制器**：
+   - 连接状态放在 `core`：`HdcConnection` 加一个“页面快照”，包含状态、原因的文案键、目标地址、shell 身份（只显示 `uid=` 那一段）、uitest 是否可用、最近一次测试读屏的控件数；
+   - 页面只渲染快照、发送意图；
+   - 单测覆盖快照的每种状态。
+3. **页面**：“设置 → 手机操作”。Eta 没有这个页面，按 Eta 设置页的样式做（`EtaPreferenceRow`、`EtaCard`），文案走资源。内容依次是：
+   - 说明卡：打开“设置 → 系统 → 开发者选项 → 无线调试”，记下页面上的 IP 地址和端口；
+   - 地址输入框：`IP:端口`，用 D0b1 的 `validateHdcTarget` 校验；
+   - “连接”按钮；
+   - 状态行：未配置、连接中、待授权（提示“请在手机弹窗中允许调试”）、已连接、已断开（原因）；
+   - 已连接后显示 shell 身份、uitest 是否可用；
+   - “测试读屏”按钮：执行 `uitest dumpLayout`，用 `core/device.ts` 的 `parseLayout` 统计控件数，**只显示数量，不显示任何文字**；
+   - “断开”按钮。
+4. **入口**：设置页“启用设备直达工具”所在的分组里加一行“手机操作”，点击进入这个页面。其他手机工具开关仍是灰色，**不注册任何模型工具**。
+5. **预览器**：
+   - `FoundationPreview` 注入假传输层，可以按场景切换：成功、待授权、拒绝；
+   - 场景 `20-phone-ops.json`：进入页面 → 点地址输入框 → `{"type": "127.0.0.1:5555"}`（`type` 已支持 `.` 和 `:`）→ 连接 → 断言状态文字 → 测试读屏 → 断言控件数 → 断开；
+   - 另写一个“非法地址”的场景，断言出现提示、不会去连接。
+6. **真机检查点 ⑦**：步骤写进 `docs/device-runs/CHECKPOINT-B.md`：
+   1. 断开电脑；
+   2. 开启无线调试；
+   3. 在应用里填写地址并连接；
+   4. 允许授权弹窗；
+   5. 看 shell 身份和 uitest 是否可用；
+   6. 测试读屏，控件数应大于 0；
+   7. 关闭无线调试，页面应显示断开原因；
+   8. 记录任何报错原文。
+
+**不做**：
+- 不接入聊天、不注册模型工具（那是 D2、D3）；
+- 不做后台保活；
+- 不保存截图。
+
+**验收**：`npm run verify` 全过；新场景通过；PR 中列出新增的文案和页面截图。
 
 ### 本轮队列（2026-10-31 第三轮，Claude 审阅后安排）
 
