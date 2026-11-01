@@ -194,14 +194,15 @@ class Preview:
     # The previewer's input-method path does not reach text fields, so letters are sent as hardware
     # key presses (KEYCODE_A = 2017 ... KEYCODE_Z, KEYCODE_0 = 2000 ..., SPACE = 2050). ASCII only.
     KEYCODES = dict([(chr(ord('a') + i), 2017 + i) for i in range(26)] + [(str(i), 2000 + i) for i in range(10)]
-                    + [(' ', 2050), ('.', 2044), (',', 2043), ('-', 2057), ('/', 2064), (';', 2062), ('=', 2058), ('\b', 2055)])
+                    + [(' ', 2050), ('.', 2044), (',', 2043), ('-', 2057), ('/', 2064), (';', 2062), ('=', 2058)])
     SHIFTED = {':': 2062, '_': 2057}  # typed as Shift + the base key
     SHIFT = 2047
-    async def type(self, text):
+    async def type(self, text, delay=0.0):
         for ch in text.lower():
+            if delay: await asyncio.sleep(delay)
             code, shift = self.KEYCODES.get(ch), False
             if code is None and ch in self.SHIFTED: code, shift = self.SHIFTED[ch], True
-            if code is None: raise AssertionError('type supports a-z, 0-9, space, . , - / ; = : _ and \\b (backspace) only: %r' % ch)
+            if code is None: raise AssertionError('type supports a-z, 0-9, space and . , - / ; = : _ only (no backspace in the previewer): %r' % ch)
             pressed = [self.SHIFT, code] if shift else [code]
             if shift: self.command('KeyPress', {'isInputMethod': False, 'keyCode': self.SHIFT, 'keyAction': 0, 'keyString': '', 'pressedCodes': [self.SHIFT]})
             for action in (0, 1):
@@ -271,7 +272,7 @@ async def run(build, scenario_file, report):
                     if step.get('expectChange', True) and json.dumps(p.tree, sort_keys=True) == tree_before:
                         raise AssertionError('the page did not change after this step (unresponsive?)')
                 elif 'dump' in step: await asyncio.sleep(0.6); await p.inspect(); p.screenshot(step['dump']); p.dump(step['dump'])
-                elif 'type' in step: await p.type(step['type']); await asyncio.sleep(0.5)
+                elif 'type' in step: await p.type(step['type'], step.get('delay', 0.0)); await asyncio.sleep(0.5)
                 elif 'screenshot' in step: await asyncio.sleep(0.6); await p.inspect(); p.screenshot(step['screenshot'])
                 if p.crashed: raise AssertionError('previewer crashed')
                 if len(p.errors) > before: raise AssertionError('application error: ' + p.errors[before])
