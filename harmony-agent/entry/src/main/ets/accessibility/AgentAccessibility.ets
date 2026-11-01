@@ -35,6 +35,7 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
   private probe: AccessibilityProbe = emptyAccessibilityProbe();
   private lastEventAt = 0;
   private lastWriteAt = 0;
+  private busy = false;
 
   onConnect(): void {
     this.probe = parseAccessibilityProbe(this.readText(PROBE_FILE));
@@ -51,13 +52,17 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
 
   onAccessibilityEvent(_event: AccessibilityEvent): void {
     const now = Date.now();
-    if (now - this.lastEventAt < EVENT_INTERVAL_MS) return;
+    // Reading up to 500 nodes is one IPC call each and can take longer than the throttle interval.
+    if (this.busy || now - this.lastEventAt < EVENT_INTERVAL_MS) return;
     this.lastEventAt = now;
+    this.busy = true;
     this.refreshProbeFromWindow(now).catch((error: BusinessError) => {
+      // A failed window read is recorded on its own, so it is not mistaken for a failed injection.
       this.probe.nodeCount = 0;
-      this.probe.gesture.result = normalizeGestureResult('error:' + String(error.code));
-      this.probe.gesture.at = Date.now();
+      this.probe.readError = normalizeGestureResult('error:' + String(error.code));
       this.writeProbe(true);
+    }).finally(() => {
+      this.busy = false;
     });
   }
 
@@ -67,8 +72,10 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
     const bundle = await root.attributeValue('bundleName');
     if (typeof bundle === 'string' && bundle !== '') this.probe.foregroundBundle = bundle;
     this.probe.nodeCount = await this.countNodes(root, MAX_NODES);
-    await this.maybeInjectGesture(root);
-    this.writeProbe(false);
+    this.probe.readError = '';
+    const handledGesture = await this.maybeInjectGesture(root);
+    // A gesture result must reach the diagnostics page even if a write happened less than a second ago.
+    this.writeProbe(handledGesture);
   }
 
   private async countNodes(root: AccessibilityElement, limit: number): Promise<number> {
@@ -88,9 +95,9 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
     return Math.min(count, limit);
   }
 
-  private async maybeInjectGesture(root: AccessibilityElement): Promise<void> {
+  private async maybeInjectGesture(root: AccessibilityElement): Promise<boolean> {
     const requestText = this.readText(GESTURE_FILE);
-    if (requestText.trim() === '') return;
+    if (requestText.trim() === '') return false;
     let request: GestureRequest = {};
     try {
       request = JSON.parse(requestText) as GestureRequest;
@@ -102,30 +109,36 @@ export default class AgentAccessibility extends AccessibilityExtensionAbility {
       this.probe.gesture.result = normalizeGestureResult('error:not-foreground');
       this.probe.gesture.at = Date.now();
       this.removeFile(GESTURE_FILE);
-      return;
+      return true;
     }
     const matches = (await root.findElement('content', A11Y_TEST_BUTTON_TEXT)) as AccessibilityElement[];
     if (matches === undefined || matches === null || matches.length === 0) {
       this.probe.gesture.result = 'not-found';
       this.probe.gesture.at = Date.now();
       this.removeFile(GESTURE_FILE);
-      return;
+      return true;
     }
     const rect = (await matches[0].attributeValue('rect')) as NodeRect;
     if (rect === undefined || rect === null) {
       this.probe.gesture.result = normalizeGestureResult('error:no-rect');
       this.probe.gesture.at = Date.now();
       this.removeFile(GESTURE_FILE);
-      return;
+      return true;
     }
     const centerX = Math.floor(rect.left + rect.width / 2);
     const centerY = Math.floor(rect.top + rect.height / 2);
     const path = new GesturePath(GESTURE_DURATION_MS);
     path.points.push(new GesturePoint(centerX, centerY));
-    this.context.injectGestureSync(path);
-    this.probe.gesture.result = 'ok';
+    try {
+      this.context.injectGestureSync(path);
+      // "ok" only means the system accepted the gesture; the diagnostics counter shows whether it landed.
+      this.probe.gesture.result = 'ok';
+    } catch (error) {
+      this.probe.gesture.result = normalizeGestureResult('error:' + String((error as BusinessError).code));
+    }
     this.probe.gesture.at = Date.now();
     this.removeFile(GESTURE_FILE);
+    return true;
   }
 
   private writeProbe(force: boolean): void {

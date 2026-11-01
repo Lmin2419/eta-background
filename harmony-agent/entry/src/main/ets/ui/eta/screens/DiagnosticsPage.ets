@@ -57,6 +57,7 @@ export struct DiagnosticsPage {
     this.probeRow($r('app.string.a11y_probe_nodes'),String(this.probe.nodeCount))
     this.probeRow($r('app.string.a11y_probe_last_event'),this.probeTime(this.probe.lastEventAt))
     this.probeRow($r('app.string.a11y_probe_gesture'),this.probe.gesture.result)
+    if(this.probe.readError!==''){this.probeRow($r('app.string.a11y_probe_read_error'),this.probe.readError)}
     Row({space:S.Dp8}){
       EtaTextButton({text:$r('app.string.a11y_probe_refresh'),onAction:()=>this.refreshProbe(true)}).layoutWeight(1)
       EtaTextButton({text:$r('app.string.a11y_probe_request'),primary:true,onAction:()=>this.requestInjection()}).layoutWeight(1)

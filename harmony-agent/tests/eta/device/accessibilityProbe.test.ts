@@ -1,7 +1,8 @@
-// Copyright © 2026 蛮吉 (Mangi-11). PolyForm Noncommercial 1.0.0.
+// 随身助手原创代码（无障碍扩展实验，D0a）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  GESTURE_NOT_REQUESTED,
   MAX_PROBE_NODES,
   emptyAccessibilityProbe,
   normalizeGestureResult,
@@ -27,6 +28,7 @@ test('serialize and parse keep every probe field', () => {
     lastEventAt: 2000,
     foregroundBundle: 'com.example.app',
     nodeCount: 42,
+    readError: '',
     gesture: { requestedAt: 3000, result: 'ok', at: 3001 },
   };
   assert.deepEqual(parseAccessibilityProbe(serializeAccessibilityProbe(probe)), probe);
@@ -44,4 +46,14 @@ test('gesture result only accepts ok, not-found or error codes', () => {
   assert.equal(normalizeGestureResult('error:1600001'), 'error:1600001');
   assert.equal(normalizeGestureResult('error:'), 'error:unknown');
   assert.equal(normalizeGestureResult('boom'), 'error:unknown');
+});
+
+test('readError round-trips and stays separate from the gesture result', () => {
+  const probe = emptyAccessibilityProbe();
+  assert.equal(probe.readError, '');
+  probe.readError = 'error:9300003';
+  const parsed = parseAccessibilityProbe(serializeAccessibilityProbe(probe));
+  assert.equal(parsed.readError, 'error:9300003');
+  assert.equal(parsed.gesture.result, GESTURE_NOT_REQUESTED);
+  assert.equal(parseAccessibilityProbe('{"connected":true}').readError, '');
 });

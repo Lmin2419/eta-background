@@ -1,4 +1,4 @@
-// Copyright © 2026 蛮吉 (Mangi-11). PolyForm Noncommercial 1.0.0.
+// 随身助手原创代码（无障碍扩展实验，D0a）。
 // D0a 无障碍实验：扩展进程与界面进程通过 filesDir 下的 a11y-probe.json 通信。
 export interface GestureProbe {
   requestedAt: number;
@@ -11,6 +11,8 @@ export interface AccessibilityProbe {
   lastEventAt: number;
   foregroundBundle: string;
   nodeCount: number;
+  /** 最近一次读取窗口失败的原因（error:<错误码>），成功后清空；和注入结果分开记录。 */
+  readError: string;
   gesture: GestureProbe;
 }
 export const MAX_PROBE_NODES = 500;
@@ -23,6 +25,7 @@ export function emptyAccessibilityProbe(): AccessibilityProbe {
     lastEventAt: 0,
     foregroundBundle: '',
     nodeCount: 0,
+    readError: '',
     gesture: { requestedAt: 0, result: GESTURE_NOT_REQUESTED, at: 0 },
   };
 }
@@ -54,6 +57,7 @@ export function parseAccessibilityProbe(text: string): AccessibilityProbe {
     lastEventAt: numberOr(raw.lastEventAt, 0),
     foregroundBundle: textOr(raw.foregroundBundle, '').trim(),
     nodeCount: Math.max(0, Math.min(MAX_PROBE_NODES, Math.floor(numberOr(raw.nodeCount, 0)))),
+    readError: textOr(raw.readError, ''),
     gesture: {
       requestedAt: numberOr(gesture.requestedAt, 0),
       result: textOr(gesture.result, GESTURE_NOT_REQUESTED),
@@ -68,6 +72,7 @@ export function serializeAccessibilityProbe(probe: AccessibilityProbe): string {
     lastEventAt: probe.lastEventAt,
     foregroundBundle: probe.foregroundBundle,
     nodeCount: probe.nodeCount,
+    readError: probe.readError,
     gesture: {
       requestedAt: probe.gesture.requestedAt,
       result: probe.gesture.result,

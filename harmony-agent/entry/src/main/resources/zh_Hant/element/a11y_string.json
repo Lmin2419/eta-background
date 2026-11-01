@@ -51,6 +51,10 @@
     {
       "name": "a11y_probe_refreshed",
       "value": "已重新整理"
+    },
+    {
+      "name": "a11y_probe_read_error",
+      "value": "讀取錯誤"
     }
   ]
 }

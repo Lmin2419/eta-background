@@ -51,6 +51,10 @@
     {
       "name": "a11y_probe_refreshed",
       "value": "Refreshed"
+    },
+    {
+      "name": "a11y_probe_read_error",
+      "value": "Read error"
     }
   ]
 }

@@ -1,4 +1,4 @@
-// Copyright © 2026 蛮吉 (Mangi-11). PolyForm Noncommercial 1.0.0.
+// 随身助手原创代码（无障碍扩展实验，D0a）。
 // D0a：界面进程读写扩展进程留下的探针文件（同一 filesDir，两个小 JSON）。
 import { fileIo as fs } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
