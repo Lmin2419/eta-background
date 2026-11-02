@@ -1,8 +1,8 @@
 # Eta 后台版与上游整合：当前实施方案
 
-> 当前 C014 原生常用任务和提示词优化已实现；C013 e46 交还/坐标返修、C012 通用反馈与 C011 三轮优化随候选保留。最终签名包验证中，四项上游整合能力仍为保留基线。
+> 当前 C014 原生常用任务和提示词优化已实现；C013 e46 交还/坐标返修、C012 通用反馈与 C011 三轮优化随候选保留。同 head 全量检查和原签名包核验已完成，四项上游整合能力仍为保留基线。
 
-更新：2026-11-02T19:45:26Z。负责人：ChatGPT。依据：用户追加常用任务原生能力接入和预填充提示词优化。源码和本地检查已完成，最终 head 的 CI/签名包核验中，尚未发布、尚未真机实测。
+更新：2026-11-02T19:57:20Z。负责人：ChatGPT。依据：用户追加常用任务原生能力接入和预填充提示词优化。源码、本地检查、最终 head 的 CI 和原签名包独立核验已完成；尚未发布，手机实测未执行。
 
 ## 1. 当前候选与证据归属
 
@@ -129,7 +129,9 @@ common_task 通过原生目录/权限过滤/运行时/隐私归档/工作过程�
 
 ## 4. 验证与交付
 
-最终源码 6016745：[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41510965270)、[Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41510955867) 正在运行。功能提交 a2a5c4 本地全量 2278 项、0 失败/错误、1 跳过，Lint 0 错误、393 Warning、1 Hint，Debug 通过。最终 6016745 本地 22 项定向与 Debug 通过；其全量/Lint/原签名 APK 等待同 head CI 核验，不能用旧版本证据替代。
+最终源码 6016745：[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41510965270) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41510955867) 均成功；实际读取两项 job 日志。全量 2278 项、0 失败/错误、1 跳过；Lint 0 错误、393 Warning、1 Hint；Debug/Release、12 项接线、8 项部署回归通过。本地功能提交全量及最终 head 22 项定向/Debug 同样通过。
+
+已实际下载并核验 [6016745 原签名测试包](https://github.com/Lmin2419/eta-background/actions/runs/41510955867/artifacts/13174936352)：6,782,783 bytes，SHA-256 0b3c243a5122893e29f237e3132af62d02962bd0584d83dde4e773da1ffb8a15，与工件 digest 一致。包名/版本、原签名证书及 5 项 e46 引擎资产核验通过，未包含 engine.token。工件属于本 head，不借用旧包或真机结果。
 
 [当前候选证据](CANDIDATE_6016745.md)记录身份和阶段结果；[0ee03be](CANDIDATE_0ee03be.md)、[55c3eed](CANDIDATE_55c3eed.md)保留为历史。新候选暂无真机结果，不要求重做旧版测试、不远程操作手机。
 
