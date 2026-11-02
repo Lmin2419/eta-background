@@ -1,6 +1,6 @@
 # Eta 后台版与上游整合：当前实施方案
 
-更新：2026-11-02T09:46:59Z。负责人：ChatGPT。依据：四项开发授权、通知兼容选项与系统计算器/完成页面接管反馈。**四项代码已进入候选，真机尚未验收，未发布。**
+更新：2026-11-02T10:04:57Z。负责人：ChatGPT。依据：四项开发授权、通知兼容选项、计算器接管及最新美团主屏验证/恢复反馈。**四项代码已进入候选，真机尚未验收，未发布。**
 
 ## 1. 当前候选与证据归属
 
@@ -73,7 +73,9 @@ e44 修复主屏手动处理后，旧屏不可用阻断只读预览恢复的路�
 
 ## 4. 验证与交付
 
-本地全量 2,191 项（0 失败、0 错误、1 跳过）、接线 12 项、部署 8 项通过。[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41422705824) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41422696799) 正在执行，本地 Lint/Debug 尚在进行，实际原签名 APK 待下载核验。
+本地与签名 CI 全量 2,191 项（0 失败、0 错误、1 跳过）、接线 12 项、部署 8 项通过；Lint 0 错误、389 Warning、1 Hint，Debug/Release 构建成功。[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41422705824) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41422696799) 均成功。
+
+[实际原签名候选 APK](https://github.com/Lmin2419/eta-background/actions/runs/41422696799/artifacts/13130804607) 已下载核验：版本 `3.3.5+etax.5afaf87`，引擎 e44，原证书不变；APK SHA-256 `269e7686a9b1795f05bb14cd462968d816d20fc587880161d54a191457c820cf`。五项引擎/脚本资产与源码和生成产物逐字节相同。未执行真机测试。
 
 [候选证据](CANDIDATE_5afaf87.md)。本次重点复测主屏完成验证后从预览恢复、实际任务继续、再次切到主屏过渡；旧包证据不移记。美团验证页无响应原因未确认，不宣称风控或所有动画问题已解决。
 

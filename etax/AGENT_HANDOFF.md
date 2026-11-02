@@ -64,14 +64,16 @@
 - instruction_id: C008
 - instruction_revision: 1
 - issued_at: 2026-11-02T09:46:59Z
-- status: RUNNING
+- status: REVIEW_READY
 - target: ChatGPT
 - candidate_head: 5afaf87b3f8cd36aecd10f75e57c139b3bc64467
 - parent_head: 7c846a3d19d1dbbfee03a5781e9666283e704750
 - engine_build: 20261102-e44-handoff
 - current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)
 - candidate_evidence: [主屏交还与恢复返修证据](coordination/CANDIDATE_5afaf87.md)
-- latest_validation: 本地全量 2,191 项（0 失败/错误、1 跳过）、12 项接线、8 项部署回归通过；本地 Lint/Debug 与两项远端 CI 正在执行，实际原签名 APK 尚待核验
+- latest_validation: 本地与签名 CI 全量 2,191 项（0 失败/错误、1 跳过）；Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署、两项 CI、Debug/Release 构建通过；实际 APK 原证书与五项内嵌引擎/脚本逐字节核验通过
+- verified_at: 2026-11-02T10:04:57Z
+- candidate_apk: [Etax-v3.3.5+etax.5afaf87.apk](https://github.com/Lmin2419/eta-background/actions/runs/41422696799/artifacts/13130804607)；6,737,651 bytes；SHA-256 `269e7686a9b1795f05bb14cd462968d816d20fc587880161d54a191457c820cf`
 - device_status: 新候选未执行真机验证；用户可独立安装，无 ADB 前置
 - mode: ChatGPT 直接修复与交付；不恢复定时，不唤醒 dsh
 
@@ -89,7 +91,7 @@
 
 ### 完成标准与边界
 
-- 等待本 head 两项 CI、实际原签名 APK 下载核验后交付；不把旧包结果移记。当前未宣称手机通过或全部 ColorOS 闪烁消失。
+- 本 head 两项 CI 与实际原签名 APK 核验已完成，交付测试候选；旧包结果不移记。等待用户实测，不宣称手机通过或全部 ColorOS 闪烁消失。
 - 手机只重点复测自然遇到验证时的“主屏处理→预览继续→实际任务执行”，再次切到主屏的过渡，以及另一任务不受影响；不主动触发验证码，不重复有副作用的点击。
 - 保留单 VDrive、两任务、同 App 串行、旧 screen_*、原通知/流体云/三个完成入口/内联回复、Harmony、已授权息屏后台和主屏锁定保护。
 - 不绕过观察/权限、不强停/重启 App、不扩大 Hook。电源键/LSP 软重启、全局冷启动白屏仍未定因，不主动复现风险操作。
@@ -145,13 +147,20 @@
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
 - last_reviewed_code_head: 5afaf87b3f8cd36aecd10f75e57c139b3bc64467
-- last_reviewed_coordination_head: b2c4aedf5c4bc26ccd93ac6831977cf928bb8618
-- reviewed_at: 2026-11-02T09:46:59Z
-- decision: e44 返修代码与本地全量通过；Lint/构建及实际原签名 APK 核验进行中
+- last_reviewed_coordination_head: eb4df911e57c63b17b9a3f69e382605257ff400a
+- reviewed_at: 2026-11-02T10:04:57Z
+- decision: e44 返修代码、自动化和原签名候选核验通过；新候选真机待验证
 - evidence: [5afaf87 返修证据](coordination/CANDIDATE_5afaf87.md)
 - device_gate: 新候选未实测；用户的美团反馈是上一候选上下文，不移记为本次测试
 - next_phase_permission: 用户直接反馈返修，保留原保护和范围；不合并/发布
 - issued_next_instruction: C008 revision 1（核验构建后交付；dsh 与定时不恢复）
+
+### 5afaf87 原签名候选核验完成 — 2026-11-02T10:04:57Z
+
+- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41422705824) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41422696799) 均成功。实际签名构建日志记录 2,191 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归及 Debug/Release 构建通过。本地全量与 Lint/Debug 同样通过。
+- 已下载并独立核验 [Etax-v3.3.5+etax.5afaf87.apk](https://github.com/Lmin2419/eta-background/actions/runs/41422696799/artifacts/13130804607)，artifact 13130804607，6,737,651 bytes；SHA-256 `269e7686a9b1795f05bb14cd462968d816d20fc587880161d54a191457c820cf`，与 CI 日志及工件 digest 相同。工件到期 2026-12-02T09:58:01Z。
+- 包名 `io.github.mangi.etax`，版本 `3.3.5+etax.5afaf87` / versionCode `2026103003`；apksigner 确认原证书 SHA-256 `dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5`。e44 的 dex、version 与三份部署脚本共五项逐字节相符，没有 engine.token。
+- 新候选没有手机实测；验证码页触摸无响应未定因，ColorOS 过渡改善仍待用户验证。未操作手机、未合并/发布/打标签、未替换正式下载或恢复定时。PR #45 仍为 Draft/open，业务 head 保持 5afaf87。详见[候选证据](coordination/CANDIDATE_5afaf87.md)。
 
 ### 主屏交还后恢复返修 — 2026-11-02T09:46:59Z
 

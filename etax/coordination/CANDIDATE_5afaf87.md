@@ -1,6 +1,6 @@
 # 候选 5afaf87：主屏处理后的恢复与采集交还
 
-状态：未发布。源码与本地全量通过，Lint/构建及实际签名 APK 待完成。更新：2026-11-02T09:46:59Z。
+状态：未发布。源码、自动化及实际原签名 APK 核验完成，真机待用户验证。更新：2026-11-02T10:04:57Z。
 
 ## 源码与用户反馈
 
@@ -23,11 +23,27 @@
 - 既有迁移测试的 APP_BUSY 预期改为 CLEANUP_PENDING；仍保留不能抢占/回收旧屏的断言。
 - 本地全量：2,191 项，0 失败、0 错误、1 跳过。
 - 接线 12/12；部署 8/8，实际 mksh/BusyBox/Toybox 路径。
-- 本地 Lint/Debug：待完成。
-- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41422705824)：进行中。
-- [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41422696799)：进行中。
-- 实际原签名 APK：待下载核验，不使用旧工件结论。
+- 本地 Lint/Debug：通过；Lint 0 错误、389 Warning、1 Hint。实际 Debug 包内 e44 DEX 与生成产物相同。
+- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41422705824)：成功；读取实际 job 125201828538 日志确认两次 BUILD SUCCESSFUL。
+- [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41422696799)：成功；实际 job 125201798335 日志确认 2,191 项（0 失败、0 错误、1 跳过），Lint 389 Warning、1 Hint、无错误，Release 构建及签名配对通过。
+- 实际原签名 APK：已下载，独立执行 aapt2/apksigner、SHA-256 与五项内嵌资产逐字节检查；不使用旧工件结论。
 - 真机未执行；没有远程安装/操作手机。
+
+## 已核验安装包
+
+| 项目 | 实际结果 |
+| --- | --- |
+| 文件 | [Etax-v3.3.5+etax.5afaf87.apk](https://github.com/Lmin2419/eta-background/actions/runs/41422696799/artifacts/13130804607) |
+| Artifact | 13130804607；到期 2026-12-02T09:58:01Z |
+| 大小 | 6,737,651 bytes |
+| APK SHA-256 | `269e7686a9b1795f05bb14cd462968d816d20fc587880161d54a191457c820cf` |
+| 包名 | `io.github.mangi.etax` |
+| 版本 | `3.3.5+etax.5afaf87`；versionCode `2026103003` |
+| 原证书 SHA-256 | `dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5` |
+| 引擎 | `20261102-e44-handoff` |
+| 资产匹配 | vdrive.dex、vdrive.version、vd.sh、install_vdrive.sh、check_pair.sh 五项与本候选源码/生成产物相同；没有 engine.token |
+
+APK 哈希与 CI 日志及 GitHub artifact digest 一致；上表来自实际下载文件。源码更新说明已在业务提交中，候选证据写在协作分支，不因此改变已构建 head。
 
 ## 手机重点与限制
 
