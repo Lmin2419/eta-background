@@ -146,6 +146,16 @@ class AgentAccessibilityService : AccessibilityService() {
             (it.isActive || it.isFocused) && it.root?.packageName?.toString() == pkg }
     } == true
 
+    /** Identity only for screenshot-only observations; no tree traversal or new observation. */
+    fun foregroundFeedbackWindow(): Pair<String, Int>? = runOnMainSync {
+        val applications = windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }
+        val target = applications.filter { it.isFocused }.singleOrNull()
+            ?: applications.filter { it.isActive }.singleOrNull() ?: return@runOnMainSync null
+        val pkg = target.root?.packageName?.toString()?.takeIf { it.isNotBlank() && it != packageName }
+            ?: return@runOnMainSync null
+        pkg to target.id
+    }
+
     fun keyboardState(): JSONObject = runOnMainSync {
         val ime = windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
         JSONObject().put("known", true).put("visible", ime != null).apply {

@@ -500,12 +500,14 @@ internal class AgentLocalTools(
             .put("code", "NO_PROGRESS").put("operationMayHaveRun", false)
             .put("message", "同一目标已提交两次但未确认结果，本次未再次点击。请检查短提示、输入值或最终结果，勿改用坐标/长按重复提交。")
             .toString())
+        val feedbackWindow = if (before == null) io.github.mangi.eta.agent.accessibility.AgentAccessibilityService.current()
+            ?.foregroundFeedbackWindow() else before.windowId?.let { before.packageName to it }
         val feedback = GuiActionFeedback.begin(browserRunId.ifBlank { "foreground-${hashCode()}" },
-            before?.packageName.orEmpty(), 0, before?.windowId ?: -1)
+            feedbackWindow?.first.orEmpty(), 0, feedbackWindow?.second ?: -1)
         feedback.use {
-            if (name in FEEDBACK_IMAGE_ACTIONS && before?.windowId != null) {
+            if (name in FEEDBACK_IMAGE_ACTIONS && feedbackWindow != null) {
                 feedback.startFrames(java.util.concurrent.Callable {
-                    if (closed.get()) null else deviceController.captureFeedbackFrame(before.packageName, before.windowId)
+                    if (closed.get()) null else deviceController.captureFeedbackFrame(feedbackWindow.first, feedbackWindow.second)
                 })
             }
             val raw = action()

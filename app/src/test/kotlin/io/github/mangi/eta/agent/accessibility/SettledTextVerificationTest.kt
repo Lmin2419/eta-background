@@ -3,6 +3,7 @@ package io.github.mangi.eta.agent.accessibility
 import android.app.Application
 import android.graphics.Rect
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,6 +15,27 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class SettledTextVerificationTest {
+    @Test fun screenshotOnlyFeedbackFindsOnlyTheFocusedMainDisplayApp() {
+        val controller = Robolectric.buildService(AgentAccessibilityService::class.java).create()
+        try {
+            val service = controller.get()
+            val background = AccessibilityWindowInfo.obtain()
+            shadowOf(background).setType(AccessibilityWindowInfo.TYPE_APPLICATION)
+            shadowOf(background).setRoot(field("background"))
+            shadowOf(background).setFocused(true)
+            shadowOf(service).setWindowsOnDisplay(7, listOf(background))
+            assertNull(service.foregroundFeedbackWindow())
+            val foreground = AccessibilityWindowInfo.obtain()
+            shadowOf(foreground).setType(AccessibilityWindowInfo.TYPE_APPLICATION)
+            shadowOf(foreground).setRoot(field("surface"))
+            shadowOf(foreground).setFocused(true)
+            shadowOf(service).setWindowsOnDisplay(0, listOf(foreground))
+            assertEquals("app", service.foregroundFeedbackWindow()?.first)
+            shadowOf(service).setWindowsOnDisplay(0, emptyList())
+            assertNull(service.foregroundFeedbackWindow())
+        } finally { controller.destroy() }
+    }
+
     @Test fun optimisticSetTextEchoDoesNotSurviveWidgetRevertingTheValue() {
         val controller = Robolectric.buildService(AgentAccessibilityService::class.java).create()
         try {
