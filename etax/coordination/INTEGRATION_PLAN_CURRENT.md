@@ -1,6 +1,6 @@
 # Eta 后台版与上游整合：当前实施方案
 
-更新：2026-11-02T06:39:33Z。负责人：ChatGPT。依据：四项开发授权、通知兼容选项与系统计算器/完成页面接管反馈。**四项代码已进入候选，真机尚未验收，未发布。**
+更新：2026-11-02T07:02:59Z。负责人：ChatGPT。依据：四项开发授权、通知兼容选项与系统计算器/完成页面接管反馈。**四项代码已进入候选，真机尚未验收，未发布。**
 
 ## 1. 当前候选与证据归属
 
@@ -69,7 +69,7 @@ e42 修复 idle/needs_observation 混淆导致的连续点击与完成页面接�
 
 ## 4. 验证与交付
 
-本地 Linux 全量 2,183 项，0 失败、0 错误、1 跳过；12 项接线和 8 项部署回归通过，e42 引擎编译/嵌入完成，Debug 和完整 Lint 已通过（0 错误、388 Warning、1 Hint），Debug 内 e42 配对相符。[PR Check 41400930694](https://github.com/Lmin2419/eta-background/actions/runs/41400930694) 与 [Etax Build 41400925568](https://github.com/Lmin2419/eta-background/actions/runs/41400925568) 仍在执行，原证书签名 APK 尚待生成和独立核验；不使用旧报告或旧 APK 代替。
+[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41400930694) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41400925568) 均成功；签名构建日志记录全量 2,183 项（0 失败、0 错误、1 跳过），Lint 0 错误、388 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建通过。已下载实际 APK，独立核验包名、版本、原证书、SHA-256 与五项内嵌引擎/脚本完全相符。真机仍待用户验证。
 
 详见 [候选证据](CANDIDATE_6883e75.md) 与 [TASK_PREVIEW.md（固定代码）](https://github.com/Lmin2419/eta-background/blob/6883e75487177f40ea403536cb9f9fec261ce4e9/etax/TASK_PREVIEW.md)。README、后台版更新说明和源码中的整合计划已同步。
 

@@ -64,14 +64,16 @@
 - instruction_id: C006
 - instruction_revision: 1
 - issued_at: 2026-11-02T06:39:33Z
-- status: RUNNING
+- status: REVIEW_READY
 - target: ChatGPT
 - candidate_head: 6883e75487177f40ea403536cb9f9fec261ce4e9
 - parent_head: 3c74066e58ccff2409b305ff3527ab454a3c238b
 - engine_build: 20261102-e42-manual
 - current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)
 - candidate_evidence: [本次返修证据](coordination/CANDIDATE_6883e75.md)
-- latest_validation: 本地 Linux 2,183 项（0 失败、0 错误、1 跳过）；12 项接线、8 项部署回归通过，Debug 与完整 Lint 均通过（0 错误、388 Warning、1 Hint），Debug 内 e42 引擎配对已核对。 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41400930694) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41400925568) 尚在执行，不将旧报告或旧包写为本候选通过。
+- evidence_updated_at: 2026-11-02T07:02:59Z
+- candidate_apk: [Etax-v3.3.5+etax.6883e75.apk](https://github.com/Lmin2419/eta-background/actions/runs/41400925568/artifacts/13122322383)；artifact 13122322383；原证书及配对已独立核验
+- latest_validation: [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41400930694) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41400925568) 均成功；签名构建日志记录全量 2,183 项（0 失败、0 错误、1 跳过），Lint 0 错误、388 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建通过。已下载实际 APK，独立核验包名、版本、原证书、SHA-256 与五项内嵌引擎/脚本完全相符。真机仍待用户验证。
 - device_status: 本候选未执行真机验证；用户可独立安装，不要求连接电脑
 - mode: ChatGPT 直接修复与交付；不恢复每小时定时，不唤醒 dsh
 
@@ -90,7 +92,7 @@
 
 ### 完成标准与边界
 
-- 等待同一 head 的两项 CI，取得原证书签名 APK 后独立核验包名、版本、证书、哈希和内嵌引擎配对，再交付。不上传 APK 到仓库、不改正式下载链接。
+- 同一 head 的两项 CI 与原签名 APK 独立核验已完成，可交付用户覆盖安装测试。没有上传 APK 到仓库或更改正式下载；真机通过须另记实际结果。
 - 手机一次集中验证：通知手机图标/首帧占位 → 计算器连续至少三次点击 → 接管时缩放和滑动轨迹 → 完成页面继续操作/打开 App → 双任务隔离。无需 ADB；不把旧结果移记。
 - 保留单 VDrive、两任务上限、同 App 串行、旧 screen_*、原通知/流体云/三个完成入口/内联回复、Harmony、已授权的息屏后台与锁定主屏保护。
 - 不关闭观察/权限检查，不重放不确定输入，不强停/强制重启第三方 App，不扩大 Hook。长按电源键软重启与全局冷启动白屏仍未定因；不主动触发风险路径。
@@ -146,13 +148,22 @@
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
 - last_reviewed_code_head: 6883e75487177f40ea403536cb9f9fec261ce4e9
-- last_reviewed_coordination_head: 76266db8c2e2d2d8c7ad9651c45777c6bb39bda6
-- reviewed_at: 2026-11-02T06:39:33Z
-- decision: 新候选已提交，已通过本地全量回归；对应 CI 与原签名 APK 尚待完成，未作真机验收
+- last_reviewed_coordination_head: 0999f72e24e2c8b49b86bc38e86422af8cfc0e6c
+- reviewed_at: 2026-11-02T07:02:59Z
+- decision: 返修候选代码、本地与两项 CI 均通过；实际原签名 APK 已独立核验，可交付手机测试；不写为真机通过
 - evidence: [6883e75 返修证据](coordination/CANDIDATE_6883e75.md)；旧候选证据与用户体验保留历史，不移记
 - device_gate: U001–U003 仅为 4637961 旧版体验；本次直接开发授权没有把第 2 轮技术门槛标为通过。新候选手机验证仍未执行
 - next_phase_permission: 四项实现由用户最新消息直接授权；部分完成/等待用户语义仍待后续，风险 Hook 问题未解决；不合并/发布
-- issued_next_instruction: C006 revision 1（直接返修接管及预览，等待同 head 构建；dsh 停止旧工作，自动检查停用）
+- issued_next_instruction: C006 revision 1（接管及预览返修包已核验交付；真机待反馈；dsh 停止旧工作，自动检查停用）
+
+### 6883e75 原签名候选核验完成 — 2026-11-02T07:02:59Z
+
+- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41400930694) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41400925568) 均成功；签名构建日志记录全量 2,183 项（0 失败、0 错误、1 跳过），Lint 0 错误、388 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建通过。已下载实际 APK，独立核验包名、版本、原证书、SHA-256 与五项内嵌引擎/脚本完全相符。真机仍待用户验证。
+- [Etax-v3.3.5+etax.6883e75.apk](https://github.com/Lmin2419/eta-background/actions/runs/41400925568/artifacts/13122322383)：6,736,363 bytes；APK SHA-256 `2b26a631ba05951f5e97c91d2ffbc87c7de310f2ee194b2eb6dba5719892a63f`，与 CI 日志及工件 digest 一致。
+- 包名 `io.github.mangi.etax`，版本 `3.3.5+etax.6883e75` / versionCode `2026103003`；实际 apksigner 证书 SHA-256 `dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5`，沿用旧签名。
+- 内嵌 `20261102-e42-manual` 的 dex、version、vd.sh、install_vdrive.sh、check_pair.sh 与本提交源码/生成产物逐字节匹配；APK 没有 engine.token。
+- PR #45 仍 Draft/open/未合并，head 不变；本次只补充协作证据，没有追加业务改动或重跑构建，没有操作用户手机。[Etax-v3.3.5+etax.6883e75.apk](https://github.com/Lmin2419/eta-background/actions/runs/41400925568/artifacts/13122322383) 为 CI 候选，未发布/打标签/替换正式下载。
+- 本次手机待验：系统计算器连续手动点击、完成页面接管、接管缩放/轨迹、首帧手机占位、实际 ColorOS 交还过渡；不将自动化写成真机成功。
 
 ### 预览与接管返修已提交 — 2026-11-02T06:39:33Z
 

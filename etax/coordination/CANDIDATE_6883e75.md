@@ -1,14 +1,29 @@
 # 6883e75：预览与接管返修候选
 
-记录时间：2026-11-02T06:39:33Z。状态：**源码与本地回归已完成，远端 CI / 签名包待完成，真机未执行。**
+记录时间：2026-11-02T07:02:59Z。状态：**源码、本地回归与两项远端 CI 通过；实际原签名 APK 已独立核验，真机未执行。**
 
-- PR：[45](https://github.com/Lmin2419/eta-background/pull/45)，Draft/open，未合并。
-- head：6883e75487177f40ea403536cb9f9fec261ce4e9；parent：3c74066e58ccff2409b305ff3527ab454a3c238b。
-- 引擎：20261102-e42-manual；只使用原部署认证通道。
-- CI：[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41400930694) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41400925568)，当前执行中。
-- 本地 Linux 单测 2,183 项，0 失败、0 错误、1 跳过；12 项接线与 8 项 mksh/BusyBox/Toybox 部署测试通过。
-- e42 dex 编译/嵌入成功；Debug 与完整 Lint 构建成功，0 错误、388 Warning、1 Hint，Debug 实际 APK 内 e42 配对相符。只引用本轮新报告。
-- 签名 APK、工件 ID、大小、SHA-256、证书验证：待本 head 原 CI 构建，不引用旧包。
+| 项目 | 核验值 |
+| --- | --- |
+| PR | [45](https://github.com/Lmin2419/eta-background/pull/45)，Draft/open，未合并 |
+| head | 6883e75487177f40ea403536cb9f9fec261ce4e9 |
+| parent | 3c74066e58ccff2409b305ff3527ab454a3c238b |
+| 引擎 | 20261102-e42-manual |
+| APK | [Etax-v3.3.5+etax.6883e75.apk](https://github.com/Lmin2419/eta-background/actions/runs/41400925568/artifacts/13122322383) |
+| 工件 ID / 大小 | 13122322383 / 6,736,363 bytes |
+| SHA-256 | 2b26a631ba05951f5e97c91d2ffbc87c7de310f2ee194b2eb6dba5719892a63f |
+| 包名 / 版本 | io.github.mangi.etax / 3.3.5+etax.6883e75 |
+| versionCode | 2026103003 |
+| 签名证书 | CN=ETAX Self Signed, O=Personal, C=CN |
+| 证书 SHA-256 | dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5 |
+| 工件到期 | 2026-12-02T07:00:40Z；GitHub 工件下载需登录 |
+
+## 已执行的验证
+
+[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41400930694) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41400925568) 均成功；签名构建日志记录全量 2,183 项（0 失败、0 错误、1 跳过），Lint 0 错误、388 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建通过。已下载实际 APK，独立核验包名、版本、原证书、SHA-256 与五项内嵌引擎/脚本完全相符。真机仍待用户验证。
+
+签名构建日志的 Regression results、Lint results、证书和 Signed APK engine pair 均已实际读取。工件 API 的 head、大小、digest 与实际下载 APK 核对；aapt2 / apksigner 独立核对包身份和原证书。vdrive.dex、vdrive.version、vd.sh、install_vdrive.sh、check_pair.sh 与源码/生成产物逐字节一致；没有 engine.token。
+
+本地完整回归与静态检查结论和 CI 相同。修复前新增两项回归确实失败，修复后完整通过；不将最初误读的旧 Lint 文件作为本候选证据。
 
 ## 修复及复现
 
