@@ -64,7 +64,7 @@
 > 用户追加常用任务原生接入和提示词优化。本轮直接由 ChatGPT 实施，包含前一批 e46 修复；定时保持取消，不唤醒 dsh。
 
 - instruction_id: C014
-- instruction_revision: 1
+- instruction_revision: 2
 - issued_at: 2026-11-02T19:27:33Z
 - status: RUNNING
 - scope: NATIVE_COMMON_TASKS_AND_STABLE_PROMPT_TRIMMING
@@ -72,7 +72,7 @@
 - delivery_permission: AUTHORIZED_BY_USER
 - target: ChatGPT
 - implementation_base: e2acd6fb5eec4c8459ff409afd302d321941afbe
-- implementation_head: a2a5c476893c302d9accb7748302f144d5652fcb
+- implementation_head: 6016745315267d1bb9525039757353b605527ab3
 - engine_build: 20261102-e46-transition
 - device_status: 新候选未实测；原任务完成后闪烁仍待手机反馈
 - next_action: 核验本 head 全量测试、Lint、构建及原签名 APK；完成后更新候选证据
@@ -85,7 +85,7 @@
 4. 保留 e46 坐标、窗口及完成页面交还改动；不扩大 Root/Hook，不强制重启第三方 App；保留单 VDrive、双任务/同 App 串行、旧工具、通知和接管、既有息屏后台/锁屏保护及 Harmony。
 5. 不远程操作手机、合并/发布/打标签/替换正式下载/改包名签名或恢复定时。完整自动化通过仍不代表 ColorOS 动画或实际模型等待已验证。
 
-[实现与验证说明](https://github.com/Lmin2419/eta-background/blob/a2a5c476893c302d9accb7748302f144d5652fcb/etax/COMMON_TASK_AGENT.md)
+[实现与验证说明](https://github.com/Lmin2419/eta-background/blob/6016745315267d1bb9525039757353b605527ab3/etax/COMMON_TASK_AGENT.md)
 
 ## 执行反馈（dsh 维护）
 
@@ -132,6 +132,13 @@
 - 评审请求：确认 C002 文档修订与“自动写回受阻”的精确证据；正式定时任务保留原 ID/频率，下一次自然触发 `14:02:03Z`，不重复创建。
 
 ## 评审记录（ChatGPT 维护）
+
+### C014 最终补充与验证进度 — 2026-11-02T19:37:47Z
+
+- 功能提交 a2a5c4 的本地全量 2278 项、0 失败/错误、1 跳过；Lint 无错误、394 条非错误诊断，Debug 构建成功。先前临时输入测量用例已移出源码，由预算回归替代；源文件和签名资产无临时副本。
+- 复核补充 6016745315267d1bb9525039757353b605527ab3：CommonTaskShortcuts 返回 SDK 的真实布尔值，Agent 不再把 Launcher 拒绝元数据更新报告为成功；保存流程本身仍有效。增加返回 false 的回归断言，3 文件小范围补充；tree 1a13cfc0cb7b2269644aa377b06db7f9e155e052。
+- 最终 head 的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41510965270) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41510955867) 正在执行；旧 a2a5c4 CI 被既有并发规则取代，不将其取消视作最终测试失败或把旧包充作新包。最终本地定向与 Debug 复核也在运行。
+- 本轮未修改引擎、Hook、包名、签名、任务限制、通知/接管策略或正式发布信息；当前新候选仍无手机实测，实际预填充耗时和最近任务过渡需实测。
 
 ### C014 常用任务原生接入已提交 — 2026-11-02T19:27:33Z
 
