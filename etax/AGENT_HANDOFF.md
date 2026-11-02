@@ -61,32 +61,31 @@
 
 ## 当前指令（ChatGPT 维护）
 
-> 用户已批准的通用短提示捕获与结果核验完成，源码、同 head 自动化和原签名候选均已核验；等待用户手机反馈，不恢复 dsh 或每小时自动化。
+> 用户反馈当前候选仍有自动点击偏移、后台错误和任务完成后的最近任务闪烁；本轮返修已提交，正在核对同一提交的测试与原签名构建。定时保持取消，不唤醒 dsh。
 
-- instruction_id: C012
-- instruction_revision: 2
-- issued_at: 2026-11-02T15:56:25Z
-- revised_at: 2026-11-02T16:35:04Z
-- status: REVIEW_READY
-- scope: GENERIC_GUI_ACTION_FEEDBACK
+- instruction_id: C013
+- instruction_revision: 1
+- issued_at: 2026-11-02T18:45:24Z
+- status: RUNNING
+- scope: COORDINATE_OBSERVATION_AND_COMPLETED_HANDOFF
 - implementation_permission: AUTHORIZED_BY_USER
 - delivery_permission: AUTHORIZED_BY_USER
 - target: ChatGPT
-- implementation_base: 55c3eed287bbe5b5c7fed60e2c46ace1947d7f9c
-- implementation_head: 0ee03be47e482b8ae300584f5161e660f1f673cf
-- engine_build: 20261102-e45-finalize（Root 引擎沿用）
-- device_status: 当前候选未实测；旧网心云报告不能算作本候选测试
-- next_action: 交付已核验候选，依据用户实际反馈继续；不自动扩展范围、合并或发布
+- implementation_base: 0ee03be47e482b8ae300584f5161e660f1f673cf
+- implementation_head: e2acd6fb5eec4c8459ff409afd302d321941afbe
+- engine_build: 20261102-e46-transition
+- device_status: 新候选未实测；用户确认闪烁发生在任务完成后
+- next_action: 核验最终源码的全量测试、Lint、构建与 APK 原证书和内嵌引擎；据结果交付，不提前宣称闪烁消失
 
-### 已实现与边界
+### 返修范围与停止条件
 
-1. 通用动作前监听短反馈，按任务/包名/显示屏归属；无法归属时不猜测。前台、原生后台和旧 screen_* 共用结果格式，仅截图前台观察也核对唯一主屏窗口。
-2. 对无可读反馈且未确认节点变化的操作提供短时、有界的内存画面证据；不持续录屏，不写截图文件，不逐帧调用模型，不把历史反馈图当作新坐标合同。
-3. 对可靠身份的同一目标合并节点/坐标/长按重复预算；稳定后的输入内容核验、键盘状态及状态变化比较一并修正。没有捕获到提示仍是未知，不升级为业务成功。
-4. 保留单 VDrive、两任务/同 App 串行、通知/预览/接管、现有息屏后台与主屏锁定保护、Harmony；不扩大 Hook，不重启第三方 App，不绕过几何或控制权检查。
-5. 不远程安装或操作手机，不触发长按电源键软重启复现，不宣称历史故障已修复；不改包名/签名/versionCode、不恢复定时、不执行旧 dsh 指令。
+1. 修复前台动作后沿用旧截图坐标；在可靠主屏窗口信息存在时，输入前检查窗口、键盘与几何变化。保留节点快速路径与静态画面，不加帧年龄阈值或盲重放。
+2. 后台观察服务暂缺窗口返回 WINDOW_NOT_READY，不误报 DISPLAY_NOT_FOUND。APP_TAKEN_OVER 控制权保护保留；截图不足以认定那一次误触发。
+3. 原有交还巡检等待同一主屏窗口、边界与显示几何稳定至少 400ms；已完成页面的清理同样保护进行中的移屏。正常完成仍停采集，不强制重启 App、不增加常驻渲染或 Hook。
+4. 保留单 VDrive、两任务/同 App 串行、旧 screen_*、流体云/每任务通知/三个入口/接管/通知内续接、当前息屏后台与锁屏保护、Harmony。
+5. 自动化不能证明 ColorOS 全部跨屏动画正常。无设备不写真机通过；不触发软重启复现，不合并、发布、改包名/签名、远程操作手机或恢复定时。
 
-[实现说明](https://github.com/Lmin2419/eta-background/blob/0ee03be47e482b8ae300584f5161e660f1f673cf/etax/ACTION_FEEDBACK.md) · [候选核验记录](coordination/CANDIDATE_0ee03be.md) · [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)。
+[实现与验证说明](https://github.com/Lmin2419/eta-background/blob/e2acd6fb5eec4c8459ff409afd302d321941afbe/etax/COORDINATES_AND_HANDOFF.md)
 
 ## 执行反馈（dsh 维护）
 
@@ -133,6 +132,15 @@
 - 评审请求：确认 C002 文档修订与“自动写回受阻”的精确证据；正式定时任务保留原 ID/频率，下一次自然触发 `14:02:03Z`，不重复创建。
 
 ## 评审记录（ChatGPT 维护）
+
+### C013 坐标与完成页面交还返修已提交 — 2026-11-02T18:45:24Z
+
+- 用户明确第二张截图是自动点击点偏；第一张关注后台点击 APP_TAKEN_OVER，后续 DISPLAY_NOT_FOUND；补充确认最近任务闪烁发生在任务完成后。手机原始工具轨迹未取得，不将 Agent 自述当根因实证。
+- 新 head e2acd6fb5eec4c8459ff409afd302d321941afbe，tree ac7201470f36d5653acab11470ecb86db1cf043e；16 文件源码、回归和更新说明已推送业务分支，PR #45 仍 Draft/open。
+- 前台旧图失效、布局预检、后台窗口暂缺语义与 e46 交还检查已实现。Root release 原本已有运行中接管保护，此次补完成页面及同一窗口稳定检查，不宣称过去没有任何保护。
+- 第一批 76 项定向通过；最后补完成页面清理隔离与字段说明后全量正在运行。12 项接线、8 项真实 shell 部署回归通过；部署测试首次因宿主未配置 javac 失败，指定现有 JDK 后通过，未改测试跳过条件。e46 dex 已重编译，SHA-256 8ec63e94edb6f65f8e765f1ac296c3283d63d79c7f77a3a179805ab82f6e4010。
+- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41503357374) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41503345924) 正在执行，未提前填写通过、签名包已核验或真机改善。
+- 未改 main、PR 元数据、发布、包名/签名/定时；dsh 执行反馈及历史原样保留。
 
 ### C012 通用反馈与原签名候选核验完成 — 2026-11-02T16:35:04Z
 
@@ -368,4 +376,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户要求 ChatGPT 接手；C012 实现与候选核验已完成，后续按用户反馈处理，不依赖或唤醒 dsh，不恢复定时，不执行历史指令。
+- external_agent_limit: 用户要求 ChatGPT 接手；C013 返修正在核验，按用户反馈处理，不依赖或唤醒 dsh，不恢复定时，不执行历史指令。
