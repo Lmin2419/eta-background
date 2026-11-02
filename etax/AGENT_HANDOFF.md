@@ -61,43 +61,40 @@
 
 ## 当前指令（ChatGPT 维护）
 
-- instruction_id: C005
+- instruction_id: C006
 - instruction_revision: 1
-- issued_at: 2026-11-01T18:34:07Z
-- status: REVIEW_READY
-- evidence_updated_at: 2026-11-01T18:43:59Z
+- issued_at: 2026-11-02T06:39:33Z
+- status: RUNNING
 - target: ChatGPT
+- candidate_head: 6883e75487177f40ea403536cb9f9fec261ce4e9
+- parent_head: 3c74066e58ccff2409b305ff3527ab454a3c238b
+- engine_build: 20261102-e42-manual
 - current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)
-- candidate_head: 3c74066e58ccff2409b305ff3527ab454a3c238b
-- parent_head: 2ada1360dd56a72de46cd57dc627e149c37efd9a
-- engine_build: 20261101-e41-preview
-- installed_version_report: 4637961；旧版 U001–U003 不移记给本候选
-- latest_validation: 对应 head 的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41335810776) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41335805841) 均成功。签名构建日志记录全量 2,175 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建均通过。已下载实际 CI 工件，独立复核包名、版本、签名、SHA-256 及内嵌引擎/脚本与源码完全一致。真机仍未执行。
-- candidate_evidence: [候选包、签名、检查及未验证项](coordination/CANDIDATE_3c74066.md)
-- candidate_apk: [Etax-v3.3.5+etax.3c74066.apk](https://github.com/Lmin2419/eta-background/actions/runs/41335805841/artifacts/13095599204)；artifact 13095599204；原证书签名已独立核验
-- device_status: 本候选真机未执行；用户可独立安装，不要求连接电脑
-- mode: ChatGPT 手动接手；每小时自动检查保持停用，dsh 不新增实施、不重建定时任务
+- candidate_evidence: [本次返修证据](coordination/CANDIDATE_6883e75.md)
+- latest_validation: 本地 Linux 2,183 项（0 失败、0 错误、1 跳过）；12 项接线、8 项部署回归通过，Debug 与完整 Lint 均通过（0 错误、388 Warning、1 Hint），Debug 内 e42 引擎配对已核对。 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41400930694) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41400925568) 尚在执行，不将旧报告或旧包写为本候选通过。
+- device_status: 本候选未执行真机验证；用户可独立安装，不要求连接电脑
+- mode: ChatGPT 直接修复与交付；不恢复每小时定时，不唤醒 dsh
 
-### 授权与交付范围
+### 用户反馈与修复范围
 
-用户明确要求“继续开发新版有统一任务状态、通知里的三级小窗预览、手动接管界面、息屏继续执行的版本”，并选择“保留流体云；点通知打开小预览，再点放大”。这取代 C004 中第 3–5 轮尚待实施的安排以及旧方案的永久息屏暂停约束；不把此授权写成第 2 轮真机验收通过。
+用户确认黑白块位于通知静态图，点击后的小窗先黑再显示实时画面；接管测试对象为系统计算器。另要求跟进上游接管时的点击/滑动跟随动画。这些是候选上下文中的用户体验报告，没有远程读取已装 APK 身份或工具日志。
 
-1. **统一任务状态已实施**：复用 Session 的 complete/cancel 终态裁定；排队、准备、等待 GUI、暂停、停止中、收尾及结果投影给通知与界面。归档提交完成前不提前发“已完成”，旧通知回调不能覆盖 Runtime 终态。
-2. **通知预览已实施**：保留 ProgressStyle/流体云和原通知。存在后台目标 App 时请求小手机图标，内容点击打开临时小预览，再点画面放大。默认只看、不暂停 AI。图标位置由 ROM 控制；不宣称画面嵌入原生流体云，不增加常驻胶囊或高频刷新通知。
-3. **手动接管已实施**：仅暂停选定 run，等待实际操作排空，再允许点按/长按/滑动/返回。超时保持只读；另一任务继续。关闭不自动恢复，明确“让 AI 继续”后旧观察失效。结束任务只控制保留页面，不复活旧 run；继续工作仍用通知内回复。
-4. **息屏后台路径已实施**：参考上游独立显示组/焦点/ALWAYS_UNLOCKED；后台任务和纯分析不再因主屏关闭全体暂停，前台锁定保护保留。没有新增保活服务、主屏亮屏锁、网络白名单或系统 Hook。ColorOS 休眠联网仍须真机验证。
+1. 通知保留标准手机图标，补可辨识的屏幕细节；小窗等待首帧或遇到纯黑白无内容帧时显示手机占位并禁用输入，取得画面后显示实时预览。
+2. 根因返修：首次人工输入令 worker 进入 needs_observation，旧代码仅允许 idle，误拦截后续点击/释放和部分完成页面。允许“操作已排空但 AI 待观察”的人工路径；每次人工输入须本拥有者新预览，不清除 AI 的观察保护；executing/draining 仍禁止输入。
+3. 人工点击改为几何/窗口校验后的目标屏触摸，坐标按 ImageView 实际矩阵映射，避免无效父节点点击。AI 原有节点优先路径保留。
+4. 接管自动放大，顶部保留独立放大/缩小；加入本地点击波纹与滑动轨迹，最多 64 点、抬手淡出，不修改原截图或模型帧。
+5. 完成小窗区分收尾/页面回收/其他拥有者，显示“任务已完成”，提供“操作页面”和原交还路径的“打开 App”；不会复活已结束 run。
+6. 最近任务切回主屏时保留旧采集 Surface，待目标窗口真正就绪再释放；面板和交还桥避免空白启动预览。ColorOS 跨屏动画仍待实测，不宣称全部闪烁已修复。
 
-实现与手机验证说明：[TASK_PREVIEW.md（固定源码）](https://github.com/Lmin2419/eta-background/blob/3c74066e58ccff2409b305ff3527ab454a3c238b/etax/TASK_PREVIEW.md)。源码、README 和整合记录已进入业务分支；仍是 Draft PR #45，未合并、未发布、未替换正式下载。
+源码与更新记录：[TASK_PREVIEW.md](https://github.com/Lmin2419/eta-background/blob/6883e75487177f40ea403536cb9f9fec261ce4e9/etax/TASK_PREVIEW.md)。README、后台版更新日志、整合记录随业务提交更新。
 
-### 完成标准与停止条件
+### 完成标准与边界
 
-- 候选只依据对应 head 的回归、静态检查、构建、签名与引擎配对记录交付；旧包结果不迁移。
-- 手机上集中验证新路径：通知小窗/放大、只读时主屏输入法、双任务中接管一个、关闭及继续、结束页面不重启、息屏联网与实际执行。无需 ADB；不重复测试旧版来充当新包证据。
-- 单 VDrive、两个后台任务、同 App 串行、旧 screen_*、每任务通知/流体云/三个完成按钮/通知内继续、Harmony 内容保持。
-- 任一任务串屏、误入主屏、旋转后错位或接管未排空即输入，先停止该候选验收并收窄修复；不绕过观察保护、不重放不确定输入、不强停第三方 App。
-- 部分完成/等待用户的结构化产品语义仍待后续；不把“模型结束”当“用户目标彻底完成”。
-- 长按电源键与 LSP/Vector 软重启未定位、未修复；本轮不触发风险路径。长任务后的全局冷启动白屏也未有唯一根因。
-- 不远程安装/操作手机，不合并 main、不发布/打标签、不改包名/签名/正式链接。外部 dsh 若读到本条，只保留其既有反馈与证据，不再执行 C001–C004 或启动重复构建。
+- 等待同一 head 的两项 CI，取得原证书签名 APK 后独立核验包名、版本、证书、哈希和内嵌引擎配对，再交付。不上传 APK 到仓库、不改正式下载链接。
+- 手机一次集中验证：通知手机图标/首帧占位 → 计算器连续至少三次点击 → 接管时缩放和滑动轨迹 → 完成页面继续操作/打开 App → 双任务隔离。无需 ADB；不把旧结果移记。
+- 保留单 VDrive、两任务上限、同 App 串行、旧 screen_*、原通知/流体云/三个完成入口/内联回复、Harmony、已授权的息屏后台与锁定主屏保护。
+- 不关闭观察/权限检查，不重放不确定输入，不强停/强制重启第三方 App，不扩大 Hook。长按电源键软重启与全局冷启动白屏仍未定因；不主动触发风险路径。
+- PR 保持 Draft，未合并/发布/打标签，不改变包名、签名或版本编号。外部 dsh 不执行旧指令、不重建定时任务，仅保留原反馈。
 
 ## 执行反馈（dsh 维护）
 
@@ -148,14 +145,21 @@
 - last_reviewed_feedback_revision: 3
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
-- last_reviewed_code_head: 3c74066e58ccff2409b305ff3527ab454a3c238b
-- last_reviewed_coordination_head: ffcc8d0196833aa6ee37460d519bc86712484da8
-- reviewed_at: 2026-11-01T18:43:59Z
-- decision: 用户授权的四项功能已实现为候选；两项远端 CI 均成功，实际签名 APK 已下载并独立核验；本候选未作真机验收，不继承旧 APK 实测
-- evidence: [3c74066 候选证据](coordination/CANDIDATE_3c74066.md)、[实际功能与手机验证](https://github.com/Lmin2419/eta-background/blob/3c74066e58ccff2409b305ff3527ab454a3c238b/etax/TASK_PREVIEW.md)
+- last_reviewed_code_head: 6883e75487177f40ea403536cb9f9fec261ce4e9
+- last_reviewed_coordination_head: 76266db8c2e2d2d8c7ad9651c45777c6bb39bda6
+- reviewed_at: 2026-11-02T06:39:33Z
+- decision: 新候选已提交，已通过本地全量回归；对应 CI 与原签名 APK 尚待完成，未作真机验收
+- evidence: [6883e75 返修证据](coordination/CANDIDATE_6883e75.md)；旧候选证据与用户体验保留历史，不移记
 - device_gate: U001–U003 仅为 4637961 旧版体验；本次直接开发授权没有把第 2 轮技术门槛标为通过。新候选手机验证仍未执行
 - next_phase_permission: 四项实现由用户最新消息直接授权；部分完成/等待用户语义仍待后续，风险 Hook 问题未解决；不合并/发布
-- issued_next_instruction: C005 revision 1（ChatGPT 交付四项候选；dsh 不继续旧工作；自动检查停用）
+- issued_next_instruction: C006 revision 1（直接返修接管及预览，等待同 head 构建；dsh 停止旧工作，自动检查停用）
+
+### 预览与接管返修已提交 — 2026-11-02T06:39:33Z
+
+- 用户补充的系统计算器及通知静态图反馈已用于定向复现。未修复代码上新增两项测试先失败，确认人工观察状态误判与只读窗口释放其他拥有者采集；修复后本地全量 2,183 项无失败/错误，1 跳过。
+- 新业务 head 6883e75487177f40ea403536cb9f9fec261ce4e9，引擎 e42；新增实际矩阵/横竖屏留白、连续三次人工输入、AI 保护保留、轨迹有界/不改截图、接管缩放、交还 Surface 时序回归。清理不再使用的旧坐标换算助手。
+- 12 项接线、8 项部署回归通过；完整 Lint 与 Debug 构建已于 06:40Z 完成，0 错误、388 Warning、1 Hint，Debug 内 e42 配对相符。两项远端 CI 仍在执行。处理中曾误读旧 Lint 报告，已向用户更正，不用旧报告作为此候选证据。
+- 不远程操作设备、不改包名/签名/Hook；源码和更新说明已提交，最终包身份待构建完成后补充。dsh 原执行反馈及历史不改写。
 
 ### 候选签名构建完成 — 2026-11-01T18:43:59Z
 
@@ -285,4 +289,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户已要求 ChatGPT 接手；C005 接替 C004，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C005 时只保留已有证据、不新增实施。
+- external_agent_limit: 用户已要求 ChatGPT 接手；C006 接替 C005，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C006 时只保留已有证据、不新增实施。
