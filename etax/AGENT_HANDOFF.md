@@ -64,18 +64,22 @@
 > 用户已明确批准第一、第二、第三轮同步实施与推进，取代 C010 的讨论暂停；由 ChatGPT 完成实现、合并验证和候选包交付，不恢复 dsh 或每小时自动化。
 
 - instruction_id: C011
-- instruction_revision: 1
+- instruction_revision: 2
 - issued_at: 2026-11-02T13:26:09Z
-- status: RUNNING
+- revised_at: 2026-11-02T14:40:42Z
+- status: REVIEW_READY
 - scope: STABILIZATION_EFFICIENCY_COMMON_TASKS
 - implementation_permission: AUTHORIZED_BY_USER
 - delivery_permission: AUTHORIZED_BY_USER
 - target: ChatGPT
 - implementation_base: 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e
-- engine_build: 20261102-e45-finalize（当前基线；若确有引擎改动再更新配对）
+- implementation_head: 55c3eed287bbe5b5c7fed60e2c46ace1947d7f9c
+- candidate_evidence: [三轮实现、自动化与原签名 APK](coordination/CANDIDATE_55c3eed.md)
+- engine_build: 20261102-e45-finalize（沿用，未改引擎源码）
 - prior_evidence: [C009 返修记录](coordination/CANDIDATE_99f2d87.md)
 - device_status: 新候选未实测；不把旧版报告或已有 CI 结果算作新候选真机验证
-- mode: 三线并行实现，统一检查、源码更新及原签名候选构建；不合并 main、不发布
+- mode: 三轮代码与自动化已完成、原签名候选实物已核验；当前候选没有手机实测
+- next_action: 等待用户真实反馈；按实际问题返修，不自动扩展功能或重建调度，不合并 main、不发布
 
 ### 本次明确范围
 
@@ -138,6 +142,16 @@
 
 ## 评审记录（ChatGPT 维护）
 
+### C011 三轮实现与候选核验完成 — 2026-11-02T14:40:42Z
+
+- 功能提交 64c268a；最终 head 55c3eed287bbe5b5c7fed60e2c46ace1947d7f9c，tree c9e19250d63e948cdd27b0770816f5e081d9f069。相对 e45 基线 55 文件、+2,110/−95；源码、测试、三语资源和更新说明已提交业务分支。
+- 第一轮沿用 e45 通知会话入口、终态彩边及显示释放修复；第二轮落实有限取数、固定区间通知分页、互斥阶段计时；第三轮落实轻量常用任务与桌面入口。复用原 Runtime/事件存储/模型，没有新增工作流、日志数据库或常驻服务。
+- 集成回归修复只读恢复查询取消阻塞、快捷任务/通知导航竞争、统计覆盖会话预览与首次 Lint 的配置感知资源读取错误；没有关闭检查或放宽控制权保护。
+- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41460660662) 和 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41460652172) 对最终 head 均成功。签名流水线全量 2,240 项、0 失败/错误、1 跳过；Lint 0 错误、391 Warning、1 Hint；12 项接线、8 项部署与 Release 通过。本地最终 Lint/Debug 通过，功能提交全量亦通过。
+- 已下载核验 [Etax-v3.3.5+etax.55c3eed.apk](https://github.com/Lmin2419/eta-background/actions/runs/41460652172/artifacts/13149228404)，6,767,283 bytes，SHA-256 ef1eb66e99ebf80cfab18ea14fe1f2bd93ec58e4996c1007649064ea660a5979。包名 io.github.mangi.etax、versionCode 2026103003，原证书 SHA-256 dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5；e45 五项资产逐字节相符，无 engine.token。工件到期 2026-12-02T14:36:13Z。
+- [完整验证记录](coordination/CANDIDATE_55c3eed.md)和[当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)已同步。本候选没有手机实测；ColorOS 动画、桌面入口、通知布局与提速仍待实测。旧报告不提供本次速度基线；软重启仍未定因。
+- PR #45 仍 Draft/open、未合并；未发布、打标签、替换正式下载、改包名/签名或操作手机。定时保持取消，不唤醒 dsh。执行反馈 F003/C002 及其历史原样保留，未代写。
+
 ### C011：用户批准三轮同步实施 — 2026-11-02T13:26:09Z
 
 - 用户明确：“第一轮、第二轮、第三轮全部同步进行、同步推进。”暂停结束，当前业务基线已实际核对为 99f2d87，PR #45 Draft/open/未合并。
@@ -145,17 +159,17 @@
 - 旧报告只确认至少 12 分 56 秒、任务时版本/模型不明；通知 61 行不独立证明 61 条聊天消息。未据此归因网络、系统 IO 或模型性能。
 
 
-- last_reviewed_feedback_revision: 3
-- last_reviewed_instruction: C002
+- last_reviewed_feedback_revision: 3（外部 dsh 的历史 C002 回执；本次未新增或代写）
+- last_reviewed_instruction: C011
 - last_reviewed_instruction_revision: 2
-- last_reviewed_code_head: 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e
-- last_reviewed_coordination_head: de842904cbdb5edb270534c3a439de5a91343c98
-- reviewed_at: 2026-11-02T11:06:13Z
-- decision: 用户暂停开发和交付；保留已提交修复与通过的自动化，转入方案讨论
-- evidence: [99f2d87 返修证据](coordination/CANDIDATE_99f2d87.md)
-- device_gate: 新候选未实测；上一候选接管/继续通过的用户反馈单独保留
-- next_phase_permission: 仅讨论设计；业务实现和安装包交付等待用户明确新指令
-- issued_next_instruction: C010 revision 1（仅讨论方案，暂停 C009 剩余交付）
+- last_reviewed_code_head: 55c3eed287bbe5b5c7fed60e2c46ace1947d7f9c
+- last_reviewed_coordination_head: e7389dd656a6651d936e08325c72d37975bb3c46
+- reviewed_at: 2026-11-02T14:40:42Z
+- decision: 三轮代码、自动化与原签名候选核验完成；新候选手机体验尚未验证
+- evidence: [55c3eed 候选证据](coordination/CANDIDATE_55c3eed.md)
+- device_gate: 本候选未实测；不沿用旧版本手机结论
+- next_phase_permission: 等待用户反馈；不自动扩展新功能、合并或发布
+- issued_next_instruction: C011 revision 2（候选核验完成，等待用户反馈）
 
 ### 用户暂停实施与交付 — 2026-11-02T11:06:13Z
 
@@ -345,4 +359,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户已要求 ChatGPT 接手，C011 授权三轮同步实施；不依赖或唤醒 dsh，不恢复定时。未直接操作 dsh Host；其后续读取仅保留历史证据，不执行旧指令或并行修改业务分支。
+- external_agent_limit: 用户已要求 ChatGPT 接手，C011 三轮候选已完成核验，后续等待用户反馈；不依赖或唤醒 dsh，不恢复定时。未直接操作 dsh Host；其后续读取仅保留历史证据，不执行旧指令或并行修改业务分支。
