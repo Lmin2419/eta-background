@@ -11,7 +11,7 @@ internal object AgentTextSystemToolCatalog {
                 AgentToolSchema.function(
                     name = "type_text",
                     description = "向输入框写入文本，结果会读回校验。默认 mode=replace 把整个输入框替换为 text，text 为空即清空；" +
-                        "mode=append 在当前光标处插入。指定 index 时写入该 editable 节点，不必先点击；不指定时写入当前输入焦点。" +
+                        "mode=append 在当前光标处插入。指定 index 时写入该 editable 节点，不指定时写入当前输入焦点；以稳定后的回读为准，未确认时先观察输入框和 action_feedback，不要重复追加。" +
                         "submit=true 写入后按输入法回车，用于搜索、发送；结果 submitted=false 时说明文本已写入但未提交，改为点击发送按钮，不要重复输入。" +
                         "中文、emoji、长文本都直接传入，无需借助剪贴板。",
                     parameters = JSONObject()
@@ -78,7 +78,7 @@ internal object AgentTextSystemToolCatalog {
             .put(
                 AgentToolSchema.function(
                     name = "press_key",
-                    description = "按系统按键或全局动作。BACK/HOME/RECENTS/NOTIFICATIONS/QUICK_SETTINGS 优先走无障碍全局动作；ENTER 优先走输入法回车。",
+                    description = "按系统按键或全局动作。BACK 是导航返回：想收键盘须先确认 keyboard.visible=true，否则可能退出页面。BACK/HOME/RECENTS/NOTIFICATIONS/QUICK_SETTINGS 优先走无障碍全局动作；ENTER 优先走输入法回车。",
                     parameters = JSONObject()
                         .put("type", "object")
                         .put(

@@ -70,6 +70,7 @@ internal class TaskScreenSession(
             append(scrollable).append('|')
             append(editable).append('|')
             append(enabled)
+            append('|').append(focused).append('|').append(checked).append('|').append(selected)
         }
 
         fun toJson(): JSONObject = JSONObject()
@@ -398,6 +399,7 @@ internal class TaskScreenSession(
                 .put("rotation", geometry.rotation))
             .put("display_id", snapshot.displayId ?: JSONObject.NULL)
             .put("focus", JSONObject().put("package", packageName))
+            .put("keyboard", dump?.optJSONObject("keyboard") ?: JSONObject().put("known", false))
             .put("observation_id", id)
             .put("observation_source", "background")
             .put("ui_tree_read", snapshot.treeRead)
@@ -875,7 +877,7 @@ internal class TaskScreenSession(
             copy.put("execution_location", TaskExecutionLocation.BACKGROUND.wireValue)
         }
         if (!copy.has("tool")) copy.put("tool", toolName)
-        return AgentModelClient.ToolResult(copy.toString())
+        return io.github.mangi.eta.agent.tool.feedbackToolResult(copy)
     }
 
     private fun invalidateObservation() {

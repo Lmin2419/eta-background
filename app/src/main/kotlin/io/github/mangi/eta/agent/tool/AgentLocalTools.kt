@@ -146,6 +146,7 @@ internal class AgentLocalTools(
     )
 
     private val publishedObservation = AtomicReference(PublishedObservation())
+    private val repeatGuard = ActionRepeatGuard(SystemClock::uptimeMillis)
     private val runAvailableSkillIds = runAvailableSkillIds
         .mapTo(mutableSetOf(), SkillParser::normalizeSkillLookup)
     private val mutatedSkillIds = ConcurrentHashMap.newKeySet<String>()
@@ -241,26 +242,27 @@ internal class AgentLocalTools(
                 "observe_screen" -> observeScreen(args, guiGeneration)
                 "release_gui" -> {
                     publishedObservation.set(PublishedObservation())
+                    repeatGuard.clear()
                     guiControl?.release()
                     textResult(JSONObject().put("ok", true).put("tool", "release_gui").toString())
                 }
-                "tap" -> afterAction(tap(args))
-                "tap_area" -> afterAction(tapArea(args))
-                "tap_element" -> afterAction(tapElement(args))
-                "long_press" -> afterAction(longPress(args))
-                "long_press_element" -> afterAction(longPressElement(args))
-                "swipe" -> afterAction(swipe(args))
-                "scroll" -> afterAction(deviceController.scroll(args.optString("direction"), args.optString("amount")))
-                "scroll_element" -> afterAction(scrollElement(args))
-                "type_text" -> afterAction(typeText(args))
+                "tap" -> afterAction(toolCall.name, args) { tap(args) }
+                "tap_area" -> afterAction(toolCall.name, args) { tapArea(args) }
+                "tap_element" -> afterAction(toolCall.name, args) { tapElement(args) }
+                "long_press" -> afterAction(toolCall.name, args) { longPress(args) }
+                "long_press_element" -> afterAction(toolCall.name, args) { longPressElement(args) }
+                "swipe" -> afterAction(toolCall.name, args) { swipe(args) }
+                "scroll" -> afterAction(toolCall.name, args) { deviceController.scroll(args.optString("direction"), args.optString("amount")) }
+                "scroll_element" -> afterAction(toolCall.name, args) { scrollElement(args) }
+                "type_text" -> afterAction(toolCall.name, args) { typeText(args) }
                 // 旧会话或旧入口仍可能请求这些工具名；保留执行路径，但不再出现在模型目录里。
-                "input_text" -> afterAction(inputText(args))
-                "replace_text" -> afterAction(replaceText(args))
-                "clear_text" -> afterAction(clearText(args))
+                "input_text" -> afterAction(toolCall.name, args) { inputText(args) }
+                "replace_text" -> afterAction(toolCall.name, args) { replaceText(args) }
+                "clear_text" -> afterAction(toolCall.name, args) { clearText(args) }
                 "set_clipboard" -> textResult(setClipboard(args))
                 "get_clipboard" -> textResult(getClipboard())
-                "paste_text" -> afterAction(pasteText(args))
-                "press_key" -> afterAction(deviceController.pressKey(args.optString("button")))
+                "paste_text" -> afterAction(toolCall.name, args) { pasteText(args) }
+                "press_key" -> afterAction(toolCall.name, args) { deviceController.pressKey(args.optString("button")) }
                 "wait" -> textResult(deviceController.waitMs(args.optInt("duration_ms", 1_000)))
                 "wait_for_text" -> textResult(waitForText(args))
                 "wait_for_package" -> textResult(waitForPackage(args))
@@ -488,32 +490,73 @@ internal class AgentLocalTools(
         )
     }
 
-    /**
-     * 成功的 GUI 动作附带一次轻量观察：只读 UI 树、不截图，节点数减半。
-     * 模型据此确认动作生效并直接用新的 observation_id 继续操作，不必再单独 observe_screen；
-     * 失败或结果未知的动作不附带，保持"先重新观察"的既有约束。
-     */
-    private fun afterAction(raw: String): AgentModelClient.ToolResult {
+    /** Arm before dispatch so short feedback survives the action's settle/observation wait. */
+    private fun afterAction(name: String, args: JSONObject, action: () -> String): AgentModelClient.ToolResult {
         if (closed.get()) throw AgentRunCancelledException()
-        val result = runCatching { JSONObject(raw) }.getOrNull()
-        if (result == null || !result.optBoolean("ok")) return textResult(raw)
         val before = publishedObservation.get().elements
-        val after = runCatching {
-            screenObservationProvider?.invoke(AFTER_ACTION_OPTIONS)
-                ?: deviceController.observe(
-                    includeScreenshot = false,
-                    includeUiTree = true,
-                    maxNodes = AFTER_ACTION_OPTIONS.maxNodes,
-                )
-        }.getOrElse { throwable ->
-            logger.debug { "Agent local tool after-action observation failed: type=${throwable.javaClass.simpleName}" }
-            return textResult(raw)
+        val target = repeatTarget(name, args, before)
+        val state = repeatState(before)
+        if (repeatGuard.blocked(target, state)) return textResult(JSONObject().put("ok", false)
+            .put("code", "NO_PROGRESS").put("operationMayHaveRun", false)
+            .put("message", "同一目标已提交两次但未确认结果，本次未再次点击。请检查短提示、输入值或最终结果，勿改用坐标/长按重复提交。")
+            .toString())
+        val feedback = GuiActionFeedback.begin(browserRunId.ifBlank { "foreground-${hashCode()}" },
+            before?.packageName.orEmpty(), 0, before?.windowId ?: -1)
+        feedback.use {
+            if (name in FEEDBACK_IMAGE_ACTIONS && before?.windowId != null) {
+                feedback.startFrames(java.util.concurrent.Callable {
+                    if (closed.get()) null else deviceController.captureFeedbackFrame(before.packageName, before.windowId)
+                })
+            }
+            val raw = action()
+            val result = runCatching { JSONObject(raw) }.getOrNull() ?: return textResult(raw)
+            val dispatched = result.optBoolean("ok") || result.optBoolean("operationMayHaveRun") ||
+                result.optString("code") == "ACTION_OUTCOME_UNKNOWN"
+            if (result.optString("code") == "ACTION_OUTCOME_UNKNOWN") result.put("operationMayHaveRun", true)
+            var changed = false
+            if (dispatched) {
+                val after = runCatching {
+                    screenObservationProvider?.invoke(AFTER_ACTION_OPTIONS) ?: deviceController.observe(
+                        includeScreenshot = false, includeUiTree = true, maxNodes = AFTER_ACTION_OPTIONS.maxNodes)
+                }.getOrNull()
+                after?.elementObservation?.let { elements ->
+                    // The observation is fresh even if the action outcome is unknown. Never change its error code.
+                    publishedObservation.set(publishedObservation.get().copy(elements = elements))
+                    val summary = AgentAfterActionSummary.build(before, elements)
+                    after.content.let { runCatching { JSONObject(it).optJSONObject("keyboard") }.getOrNull() }
+                        ?.let { summary.put("keyboard", it) }
+                    result.put("after", summary)
+                    changed = before != null && repeatState(elements) != state
+                }
+            }
+            repeatGuard.record(target, state, dispatched, changed)
+            if (closed.get()) throw AgentRunCancelledException()
+            return feedbackToolResult(feedback.finish(result, changed))
         }
-        val elements = after.elementObservation ?: return textResult(raw)
-        // 新快照取代动作前的快照：旧 index 在界面变化后本就不可靠，继续保留只会让模型误用。
-        publishedObservation.set(publishedObservation.get().copy(elements = elements))
-        result.put("after", AgentAfterActionSummary.build(before, elements))
-        return textResult(result.toString())
+    }
+
+    private fun repeatState(observation: RootShellDeviceController.ElementObservation?): String =
+        observation?.let { obs ->
+            // Both full observations and the compact after-action tree share this prefix.
+            "${obs.packageName}:${obs.windowId}:" + obs.nodes.take(AFTER_ACTION_OPTIONS.maxNodes).joinToString("|") {
+                "${it.bounds}:${it.text}:${it.desc}:${it.enabled}:${it.checked}:${it.selected}:${it.focused}"
+            }
+        }.orEmpty().let { java.security.MessageDigest.getInstance("SHA-256").digest(it.toByteArray()).joinToString("") { b -> "%02x".format(b) } }
+
+    private fun repeatTarget(name: String, args: JSONObject, before: RootShellDeviceController.ElementObservation?): String? {
+        if (before == null || name !in setOf("tap", "tap_area", "tap_element", "long_press", "long_press_element")) return null
+        val bounds = runCatching {
+            val node = if (args.has("index")) before.nodes.firstOrNull { it.index == args.optInt("index") } else {
+                val point = if (name == "tap_area") convertPoint(
+                    ((args.getInt("x1").toLong() + args.getInt("x2")) / 2).toInt(),
+                    ((args.getInt("y1").toLong() + args.getInt("y2")) / 2).toInt(), args.optString("coordinate_space"))
+                else convertPoint(args.getInt("x"), args.getInt("y"), args.optString("coordinate_space"))
+                before.nodes.filter { it.clickable && it.bounds.contains(point.x, point.y) }
+                    .minByOrNull { it.bounds.width().toLong() * it.bounds.height() }
+            }
+            node?.bounds?.toShortString()
+        }.getOrNull() ?: return null
+        return "${before.packageName}:${before.windowId}:$bounds"
     }
 
     private fun tap(args: JSONObject): String {
@@ -1489,6 +1532,7 @@ internal class AgentLocalTools(
     )
 
     private companion object {
+        val FEEDBACK_IMAGE_ACTIONS = setOf("tap", "tap_area", "tap_element", "long_press", "long_press_element", "type_text", "press_key")
         val DEVICE_DIRECT_TOOL_NAMES = io.github.mangi.eta.agent.model.AgentPhoneToolCatalog.direct + setOf(
             "set_alarm",
             "set_timer",

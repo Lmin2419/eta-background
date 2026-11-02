@@ -6,6 +6,18 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BackgroundToolResultTest {
+    @Test fun feedbackImagesReachTheModelWithoutBecomingCoordinatesOrRawHistoryText() {
+        val raw = """{"ok":true,"verified":false,"code":"ACTION_OUTCOME_UNKNOWN","action_feedback":{"texts":[{"text":"校验失败"}]},"_feedback_images":[{"image":"AA==","width":540,"height":960}]}"""
+        val result = backgroundToolResult("screen_tap", raw)
+        val content = JSONObject(result.content)
+        assertEquals("ACTION_OUTCOME_UNKNOWN", content.getString("code"))
+        assertFalse(content.getBoolean("verified"))
+        assertFalse(content.has("_feedback_images"))
+        assertFalse(content.has("observation_id"))
+        assertEquals("action_feedback", result.images.single().source)
+        assertTrue(result.sensitive)
+    }
+
     @Test
     fun engineAndObserverFailureHintsCannotAppearAsSuccessfulCompletion() {
         for (hint in listOf("后台虚拟屏引擎正在启动中，请过几秒重试该操作。", "屏幕正在回收", "无障碍尚未连接")) {

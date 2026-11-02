@@ -410,11 +410,22 @@ public final class Boot {
             for (AccessibilityNodeInfo.AccessibilityAction action : n.getActionList()) actions.put(action.getId());
             o.put("actions", actions);
             o.put("enabled", n.isEnabled());
+            o.put("focused", n.isFocused());
+            if (n.isCheckable()) o.put("checked", n.isChecked());
+            o.put("selected", n.isSelected());
+            o.put("password", n.isPassword());
+            o.put("hint", n.getHintText() == null ? "" : n.getHintText().toString());
             o.put("bounds", new JSONArray().put(r.left).put(r.top).put(r.right).put(r.bottom));
             nodes.put(o);
             count++;
         }
-        return new JSONObject().put("ok", true).put("displayId", did).put("count", count).put("nodes", nodes);
+        boolean keyboardVisible = false;
+        for (AccessibilityWindowInfo w : list) if (w.getType() == AccessibilityWindowInfo.TYPE_INPUT_METHOD) {
+            Rect bounds = new Rect(); w.getBoundsInScreen(bounds);
+            if (!bounds.isEmpty()) keyboardVisible = true;
+        }
+        return new JSONObject().put("ok", true).put("displayId", did).put("count", count).put("nodes", nodes)
+                .put("keyboard", new JSONObject().put("known", true).put("visible", keyboardVisible));
     }
 
     /**
@@ -512,11 +523,13 @@ public final class Boot {
             if (!refreshed) break;          // stale node: cannot prove anything
             CharSequence rb = target.getText();
             readback = rb == null ? "" : rb.toString();
-            verified = text.contentEquals(rb == null ? "" : rb);
-            if (verified || SystemClock.elapsedRealtime() >= deadline) break;
+            verified = !target.isPassword() && text.equals(target.isShowingHintText() ? "" : (rb == null ? "" : rb.toString()));
+            // One optimistic SET_TEXT echo is not enough: allow framework/Flutter state to settle.
+            if ((verified && SystemClock.elapsedRealtime() >= deadline - 300) || SystemClock.elapsedRealtime() >= deadline) break;
         }
         JSONObject out = new JSONObject().put("ok", ok).put("verified", verified)
-                .put("readback", readback);
+                .put("readback", target.isPassword() ? JSONObject.NULL : readback)
+                .put("verificationScope", "node_text_after_settle");
         if (!refreshed) out.put("warning", "节点刷新失败，无法确认写入结果");
         else if (!verified) out.put("warning", "写入已提交但回读不一致，输入框可能改写了内容");
         return out;

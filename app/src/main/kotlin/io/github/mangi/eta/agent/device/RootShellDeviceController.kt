@@ -173,6 +173,7 @@ internal class RootShellDeviceController(
         val json = JSONObject()
             .put("ok", true)
             .put("tool", "observe_screen")
+            .put("keyboard", accessibility?.keyboardState() ?: JSONObject().put("known", false))
             .put("screen", JSONObject().put("width", display.first).put("height", display.second))
             .put(
                 "accessibility",
@@ -364,10 +365,12 @@ internal class RootShellDeviceController(
         }
         AgentAccessibilityService.current()?.let { service ->
             val snapshot = observation?.accessibilitySnapshot
+            val verificationSnapshot = snapshot ?: service.captureNodeSnapshot(120)
+            val verificationIndex = index ?: verificationSnapshot?.nodes?.firstOrNull { it.focused && it.editable }?.index
             val result = service.setTextNode(snapshot, index, text)
             if (result.ok) {
                 waitForUiSettle("replace_text")
-                return nodeActionJson("replace_text", result)
+                return nodeActionJson("replace_text", service.verifySettledText(verificationSnapshot, verificationIndex, text, result))
             }
             return nodeActionJson("replace_text", result)
         }
@@ -725,6 +728,28 @@ internal class RootShellDeviceController(
             else -> "cmd statusbar expand-settings"
         }
         return inputCommand(command, "open_system_panel")
+    }
+
+    /** Evidence image only: never publishes/replaces model coordinates or observation IDs. */
+    fun captureFeedbackFrame(pkg: String, window: Int): JSONObject? {
+        val service = AgentAccessibilityService.current() ?: return null
+        if (!service.matchesForegroundWindow(pkg, window)) return null
+        // Use the existing overlay/secure-window policy; never root-fallback for this sampler.
+        val capture = service.captureScreenshotExcludingOverlays(screenshotExcludedPackages())
+        val bitmap = capture.bitmap ?: return null
+        try {
+            if (!capture.complete || !service.matchesForegroundWindow(pkg, window)) return null
+            val scale = minOf(1.0, 960.0 / maxOf(bitmap.width, bitmap.height))
+            val scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, maxOf(1, (bitmap.width * scale).toInt()),
+                maxOf(1, (bitmap.height * scale).toInt()), true)
+            try {
+                val bytes = java.io.ByteArrayOutputStream()
+                scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 78, bytes)
+                if (bytes.size() > 220_000) return null
+                return JSONObject().put("image", android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP))
+                    .put("width", scaled.width).put("height", scaled.height)
+            } finally { if (scaled !== bitmap) scaled.recycle() }
+        } finally { bitmap.recycle() }
     }
 
     private fun captureScreenshot(): ScreenCapture {
@@ -1299,6 +1324,7 @@ internal class RootShellDeviceController(
             json
                 .put("code", result.code)
                 .put("message", result.message.take(240))
+            if (result.code == "ACTION_OUTCOME_UNKNOWN") json.put("operationMayHaveRun", true)
         }
         return json.toString()
     }

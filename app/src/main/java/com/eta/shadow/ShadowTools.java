@@ -39,6 +39,8 @@ public final class ShadowTools {
     private volatile int display = -1;
     private JSONObject observedGeometry;
     private JSONObject lastRejection;
+    private final io.github.mangi.eta.agent.tool.BackgroundFeedbackGuard feedbackGuard =
+            new io.github.mangi.eta.agent.tool.BackgroundFeedbackGuard();
 
     public String sessionInfo() {
         return "{\"mode\":" + (mode == null ? "null" : "\"" + mode + "\"")
@@ -92,7 +94,7 @@ public final class ShadowTools {
         String text;
         try {
             JSONObject args = argumentsOf(argumentsJson);
-            text = run(name, args);
+            text = runWithFeedback(name, args);
         } catch (Throwable e) {
             String msg = e.getMessage();
             if (msg != null && msg.contains("OBSERVER_DOWN")) {
@@ -220,6 +222,45 @@ public final class ShadowTools {
     }
 
     // ---------------------------------------------------------------- tools
+
+    private String runWithFeedback(String name, JSONObject a) throws Exception {
+        boolean input = java.util.Arrays.asList("screen_tap", "screen_click", "screen_press", "screen_swipe",
+                "screen_drag", "screen_text", "screen_scroll", "screen_key").contains(name);
+        JSONObject blocked = feedbackGuard.before(name, a);
+        if (blocked != null) return blocked.toString();
+        if (!input || mode == null || display < 0) {
+            String raw = run(name, a);
+            try { feedbackGuard.record(name, new JSONObject(raw)); } catch (Exception ignored) { }
+            return raw;
+        }
+        final int expectedDisplay = display;
+        final String expectedPackage = openedPackage;
+        try (io.github.mangi.eta.agent.tool.GuiActionFeedback.Session feedback =
+                io.github.mangi.eta.agent.tool.GuiActionFeedback.begin(sessionId, expectedPackage, expectedDisplay, -1)) {
+            // Reuse the authenticated, read-only memory preview. No screenshot files, no
+            // manual lease, no mutation of observedGeometry or the model's frame contract.
+            if (display > 0 && sessionId.lastIndexOf(':') > 0 &&
+                    java.util.Arrays.asList("screen_tap", "screen_click", "screen_press", "screen_text", "screen_key").contains(name)) {
+                final String runId = sessionId.substring(0, sessionId.lastIndexOf(':'));
+                final String owner = "feedback-" + java.util.UUID.randomUUID();
+                feedback.startFrames(() -> {
+                    if (closed || takenOver || display != expectedDisplay) return null;
+                    JSONObject request = new JSONObject().put("cmd", "preview_frame").put("runId", runId)
+                            .put("package", expectedPackage).put("owner", owner).put("edge", 960);
+                    JSONObject frame = new JSONObject(send(ENGINE_PORT, request.toString(), 1400));
+                    JSONObject geometry = frame.optJSONObject("geometry");
+                    if (!frame.optBoolean("ok") || geometry == null || geometry.optInt("displayId", -1) != expectedDisplay
+                            || closed || takenOver || display != expectedDisplay) return null;
+                    return frame;
+                });
+            }
+            JSONObject result = new JSONObject(run(name, a));
+            feedbackGuard.record(name, result);
+            JSONObject after = result.optJSONObject("after");
+            boolean changed = after != null && after.optBoolean("screen_changed");
+            return feedback.finish(result, changed).toString();
+        }
+    }
 
     private String run(String name, JSONObject a) throws Exception {
         switch (name) {
@@ -383,6 +424,7 @@ public final class ShadowTools {
 
     /** #1：引擎掉线或收尾后清掉本地会话句柄（旧虚拟屏已随引擎消失）。 */
     void resetSession() {
+        feedbackGuard.clear();
         activeScreens.remove(sessionId, this);
         parkedHints.forget(openedPackage, sessionId);
         mode = null;

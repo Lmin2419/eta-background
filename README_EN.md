@@ -22,6 +22,8 @@ The unpublished `etax-340-step1-foundation` candidate retains the e45 preview/co
 
 Measurements reuse runtime events and existing conversation storage; they add no model request or background service. Notification counts describe retained notification records, not complete chat history. Speedups, ColorOS transitions and launcher shortcuts still need device validation. The official test download above is unchanged. See [implementation and validation notes](etax/EFFICIENCY_AND_COMMON_TASKS.md) (Chinese).
 
+The 2026-11-02 action-feedback candidate listens before input, returns transient text and bounded historical image evidence, checks settled input values, and limits repeated submissions to the same identifiable target across node/coordinate/long-press APIs. It applies to foreground and background tools without app-specific code. See [implementation and device-test limits](etax/ACTION_FEEDBACK.md); device validation is still pending.
+
 ## What this branch adds
 
 - Built-in Bing search with a bounded DuckDuckGo fallback, safe network diagnostics, and overlay settings navigation that remains available after permission is granted.

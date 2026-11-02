@@ -319,5 +319,5 @@ internal fun backgroundToolResult(name: String, content: String): AgentModelClie
             .put("code", if (name == "terminal") "GUI_TOOL_REQUIRED" else "BACKGROUND_TOOL_UNAVAILABLE")
             .put("message", content)
     }
-    return AgentModelClient.ToolResult(result.toString())
+    return io.github.mangi.eta.agent.tool.feedbackToolResult(result)
 }

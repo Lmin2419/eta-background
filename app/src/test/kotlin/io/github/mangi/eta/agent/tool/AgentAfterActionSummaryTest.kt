@@ -13,6 +13,24 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class AgentAfterActionSummaryTest {
+    @Test fun stateOnlyChangesAreRealEvidence() {
+        val original = node(0, "同意").copy(checked = false)
+        val before = observation("o1", "app", listOf(original))
+        for (changed in listOf(original.copy(checked = true), original.copy(enabled = false),
+            original.copy(focused = true), original.copy(selected = true))) {
+            assertTrue(AgentAfterActionSummary.build(before, observation("o2", "app", listOf(changed))).getBoolean("screen_changed"))
+        }
+    }
+
+    @Test fun compactObservationDoesNotInventChangeOrProveTheWholeScreenUnchanged() {
+        val nodes = (0..35).map { node(it, "item$it") }
+        val before = observation("o1", "app", nodes).copy(maxNodes = 60)
+        val after = observation("o2", "app", nodes.take(30)).copy(truncated = true)
+        val summary = AgentAfterActionSummary.build(before, after)
+        assertTrue(summary.isNull("screen_changed"))
+        assertTrue(summary.getBoolean("comparison_limited"))
+    }
+
     @Test
     fun unchangedScreenIsReportedSoTheModelDoesNotRepeatTheSameAction() {
         val before = observation("o1", "app.a", listOf(node(0, "搜索")))

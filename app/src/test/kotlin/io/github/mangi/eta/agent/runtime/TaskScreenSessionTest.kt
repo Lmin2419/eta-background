@@ -13,6 +13,23 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TaskScreenSessionTest {
+    @Test fun nativeBackgroundInputCarriesShortFeedbackImagesAndStillInvalidatesTheOldObservation() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observation = JSONObject(tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content)
+        backend.tapResult = """{"ok":true,"verified":false,"code":"ACTION_OUTCOME_UNKNOWN","operationMayHaveRun":true,"action_feedback":{"texts":[{"text":"校验失败"}]},"_feedback_images":[{"image":"AA==","width":540,"height":960}]}"""
+        val args = JSONObject().put("x", 10).put("y", 10).put("coordinate_space", "screenshot")
+            .put("observation_id", observation.getString("observation_id")).put("frame_id", "frame-1").toString()
+        val result = tools.execute(call("tap", args))!!
+        assertEquals("action_feedback", result.images.single().source)
+        assertEquals("ACTION_OUTCOME_UNKNOWN", JSONObject(result.content).getString("code"))
+        assertFalse(JSONObject(result.content).has("_feedback_images"))
+        val retry = JSONObject(tools.execute(call("tap", args))!!.content)
+        assertFalse(retry.getBoolean("ok"))
+        assertEquals(1, backend.names().count { it == "screen_tap" })
+    }
+
     private data class Call(val name: String, val arguments: JSONObject)
 
     private class FakeBackend : ScreenToolBackend {

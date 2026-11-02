@@ -11,11 +11,15 @@ import org.json.JSONObject
  */
 internal object AgentAfterActionSummary {
     fun build(before: ElementObservation?, after: ElementObservation): JSONObject {
-        val changed = before == null || signature(before.nodes) != signature(after.nodes)
+        val limit = minOf(before?.maxNodes ?: after.maxNodes, after.maxNodes)
+        val changed = before == null || before.packageName != after.packageName || before.windowId != after.windowId ||
+            signature(before.nodes.take(limit)) != signature(after.nodes.take(limit))
+        val limited = before == null || before.truncated || after.truncated || before.nodes.size != after.nodes.size
         return JSONObject()
             .put("observation_id", after.id)
             .put("package", after.packageName)
-            .put("screen_changed", changed)
+            .put("screen_changed", if (!changed && limited) JSONObject.NULL else changed)
+            .put("comparison_limited", limited)
             .put("package_changed", before != null && before.packageName != after.packageName)
             .put("window_changed", before != null && before.windowId != after.windowId)
             .put("ui_tree_truncated", after.truncated)
@@ -23,12 +27,12 @@ internal object AgentAfterActionSummary {
             .put(
                 "note",
                 if (changed) "以上为动作后的新界面，可直接用该 observation_id 继续操作；需要更多节点或截图时再调用 observe_screen"
-                else "界面没有可见变化，动作可能未生效；请换目标或方式，不要原样重复",
+                else "本次节点快照没有变化；短提示可能已消失或不在节点树中。先读 action_feedback，不要据此换一种点击方式重复提交",
             )
     }
 
     private fun signature(nodes: List<UiNode>): List<String> =
-        nodes.map { "${it.className}|${it.viewId}|${it.text}|${it.desc}|${it.bounds.toShortString()}" }
+        nodes.map { "${it.className}|${it.viewId}|${it.text}|${it.desc}|${it.bounds.toShortString()}|${it.enabled}|${it.checked}|${it.selected}|${it.focused}|${it.hint}" }
 
     /** 精简字段：省略默认值为 false 的布尔与包名，降低每步附带观察的 token 开销。 */
     private fun UiNode.compactJson(): JSONObject = JSONObject()

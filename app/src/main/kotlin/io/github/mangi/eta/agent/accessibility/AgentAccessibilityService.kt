@@ -111,6 +111,7 @@ class AgentAccessibilityService : AccessibilityService() {
     }
 
     private fun clearCurrentInstance() {
+        io.github.mangi.eta.agent.tool.GuiActionFeedback.disconnect()
         com.eta.shadow.Boot.detach(this) // etax
         if (instance === this) instance = null
         scrollEventObservationGate.clear()
@@ -118,6 +119,7 @@ class AgentAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event != null) runCatching { io.github.mangi.eta.agent.tool.GuiActionFeedback.onEvent(event) }
         if (event != null) com.eta.shadow.Boot.onEvent(event) // etax
         when (event?.eventType) {
             AccessibilityEvent.TYPE_WINDOWS_CHANGED,
@@ -137,6 +139,30 @@ class AgentAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() = Unit
+
+    /** Default-display capture must not follow a task into another app or display. */
+    fun matchesForegroundWindow(pkg: String, window: Int): Boolean = runOnMainSync {
+        windows.any { it.id == window && it.type == AccessibilityWindowInfo.TYPE_APPLICATION &&
+            (it.isActive || it.isFocused) && it.root?.packageName?.toString() == pkg }
+    } == true
+
+    fun keyboardState(): JSONObject = runOnMainSync {
+        val ime = windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
+        JSONObject().put("known", true).put("visible", ime != null).apply {
+            ime?.let { val bounds = Rect(); it.getBoundsInScreen(bounds); put("bounds", bounds.toShortString()) }
+        }
+    } ?: JSONObject().put("known", false)
+
+    fun feedbackDisplay(pkg: String, window: Int?): Int? {
+        val displays = runCatching { windowsOnAllDisplays }.getOrNull() ?: return null
+        val candidates = mutableSetOf<Int>()
+        for (i in 0 until displays.size()) {
+            displays.valueAt(i).take(32).filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }.forEach { w ->
+                if ((window == null || w.id == window) && w.root?.packageName?.toString() == pkg) candidates += displays.keyAt(i)
+            }
+        }
+        return candidates.singleOrNull()
+    }
 
     /**
      * 一次观察与其节点句柄组成不可变快照。调用方必须把同一实例传回节点动作，
@@ -776,6 +802,24 @@ class AgentAccessibilityService : AccessibilityService() {
                 )
             setNodeText(node, text, text.length)
         }
+    }
+
+    /** Re-resolve the same node from a fresh root after the widget has settled. Read only. */
+    fun verifySettledText(snapshot: NodeSnapshot?, index: Int?, expected: String, result: NodeActionResult): NodeActionResult {
+        if (!result.ok || result.verified != true) return result
+        val original = snapshot?.indexedNodes?.firstOrNull { it.index == index }
+            ?: return NodeActionResult.outcomeUnknown()
+        val verified = runOnMainSync {
+            if (snapshot.serviceToken != serviceToken) return@runOnMainSync false
+            val root = rootInActiveWindow ?: return@runOnMainSync false
+            if (root.windowId != original.windowId || root.packageName?.toString() != original.packageName) return@runOnMainSync false
+            val fresh = findNode(root) { it == original.node } ?: return@runOnMainSync false
+            fresh.isEditable && fresh.isEnabled && fresh.isVisibleToUser && !fresh.isPassword &&
+                fresh.packageName?.toString() == original.packageName && fresh.className?.toString() == original.className &&
+                fresh.realText() == expected
+        } == true
+        return if (verified) result else NodeActionResult.outcomeUnknown().copy(
+            message = "文本修改已提交，但稳定后的输入框内容未能确认；先查看当前输入框和短提示，不要重复追加或提交", verified = false)
     }
 
     /** 优先直接按选区写入，只有目标拒绝 SET_TEXT 时才回退系统粘贴。 */
