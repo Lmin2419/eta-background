@@ -61,40 +61,39 @@
 
 ## 当前指令（ChatGPT 维护）
 
-- instruction_id: C007
+- instruction_id: C008
 - instruction_revision: 1
-- issued_at: 2026-11-02T08:36:41Z
-- status: REVIEW_READY
+- issued_at: 2026-11-02T09:46:59Z
+- status: RUNNING
 - target: ChatGPT
-- candidate_head: 7c846a3d19d1dbbfee03a5781e9666283e704750
-- parent_head: 6883e75487177f40ea403536cb9f9fec261ce4e9
-- engine_build: 20261102-e43-resume
+- candidate_head: 5afaf87b3f8cd36aecd10f75e57c139b3bc64467
+- parent_head: 7c846a3d19d1dbbfee03a5781e9666283e704750
+- engine_build: 20261102-e44-handoff
 - current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)
-- candidate_evidence: [恢复与预览返修证据](coordination/CANDIDATE_7c846a3.md)
-- latest_validation: [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41413270652) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41413263706) 均成功；签名日志记录全量 2,186 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建通过。已下载实际 APK，独立核验包名、版本、原证书、SHA-256 及五项内嵌引擎/脚本。真机待用户验证。
-- evidence_updated_at: 2026-11-02T08:56:06Z
-- candidate_apk: [Etax-v3.3.5+etax.7c846a3.apk](https://github.com/Lmin2419/eta-background/actions/runs/41413263706/artifacts/13127447427)；artifact 13127447427，6,737,495 bytes；SHA-256 `dc65465eec0f7690f249dc0dc65bc4f4ed7040500b1b4ae324f4ec7aed338f48`。
-- device_status: 新候选未执行真机验证；用户可独立安装，不要求连接电脑
-- mode: ChatGPT 直接修复与交付；不恢复每小时定时，不唤醒 dsh
+- candidate_evidence: [主屏交还与恢复返修证据](coordination/CANDIDATE_5afaf87.md)
+- latest_validation: 本地全量 2,191 项（0 失败/错误、1 跳过）、12 项接线、8 项部署回归通过；本地 Lint/Debug 与两项远端 CI 正在执行，实际原签名 APK 尚待核验
+- device_status: 新候选未执行真机验证；用户可独立安装，无 ADB 前置
+- mode: ChatGPT 直接修复与交付；不恢复定时，不唤醒 dsh
 
 ### 用户反馈与修复范围
 
-用户确认上一版暂停后手动操作顺畅；计算器接管后“让 AI 继续”仍一直等待，高德可继续。再次澄清是任务实际没有继续，并非仅显示只读。通知静态图仍为白块，要求提高预览清晰度并评估通知实时画面。未远程读取已装 APK 身份或手机日志。
+用户安装上一候选后，美团验证页在预览中接管点击无反应，确认没有看到错误提示；自行从最近任务移到主屏完成验证后，预览“让 AI 继续”无效，通知恢复有效，再次从最近任务打开美团有闪烁。未读取手机日志，不能认定无响应必然是美团风控。
 
-1. 已在旧代码复现并修复恢复遗漏：保留 GUI 租约不等于 GUI 持有暂停；同时处理目标 run 的 GUI 暂停与控制器暂停。仍有人工输入拥有者时不清除暂停、不虚报继续，明确说明先交还控制权。三轮接管/恢复及另一任务隔离有回归。
-2. 预览按真实控制器状态区分 AI 执行的只读与暂停；小/大窗长边 640/960，质量 78，原 400KB 上限与频率不变，必要时回退质量 65。
-3. 手机图标改透明镂空并缓存位图，实际绘制与单色滤镜测试防止实心白块；ColorOS 实际模板待实测。不强行换掉原生 ProgressStyle，不高频刷新通知模拟视频；点击后的实时小窗保留。
-4. 全量检查另外重现通知会话打开与归档导入的并发检查失败，修复同次主线程加载/缺失检查，不延长超时或跳过失败。
+1. 只读预览不持手动租约，恢复直接走通知同一个 Runtime 入口，不等旧预览释放；另一窗口仍持人工控制时控制器仍拒绝恢复。
+2. 手动窗口释放已消失的旧屏可幂等确认；目标已迁移时仍校验拥有者和旧操作排空，不把 MANUAL_CONTROL / INPUT_DRAIN_PENDING 或超时视为成功，不建新屏、不自动重放。
+3. 修复 Runtime 收尾的旁路：finish(notify) 与 release_session 原本可能在移到主屏后提前断开采集/销毁旧屏，绕过原窗口就绪确认。现在由巡检确认主屏窗口后再释放，延迟的预览关闭也保留过渡采集。无固定动画延迟、全局动画修改或新增 Hook。
+4. 同 App 旧屏交还中返回 CLEANUP_PENDING，复用已有有界等待；仍不得抢占/回收交还中的屏。
+5. 输入失败提示保留到后续用户动作/成功结果，不被下一帧覆盖；美团验证页本身无响应未定因，不宣称验证码或风控已经修复。
 
-源码与更新说明：[TASK_PREVIEW.md](https://github.com/Lmin2419/eta-background/blob/7c846a3d19d1dbbfee03a5781e9666283e704750/etax/TASK_PREVIEW.md)。[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41413270652) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41413263706)。
+源码和更新说明：[TASK_PREVIEW.md](https://github.com/Lmin2419/eta-background/blob/5afaf87b3f8cd36aecd10f75e57c139b3bc64467/etax/TASK_PREVIEW.md)。[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41422705824) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41422696799)。
 
 ### 完成标准与边界
 
-- 同 head 两项 CI、实际原签名 APK 身份与引擎配对均已核验，可交付覆盖安装。新包真机仍待用户验证，不把旧包证据移记。
-- 手机重点：计算器接管→交还→真正继续计算→再接管/交还；通知恢复、另一任务不受影响、透明手机轮廓、放大数字清晰度。无 ADB 前置，不要求重做旧 20 项。
-- 保留单 VDrive、两任务、同 App 串行、旧 screen_*、流体云与原通知三个入口/内联回复、Harmony、已授权息屏后台与主屏锁定保护。
-- 不绕过观察/权限、不重放不确定操作、不强停/重启第三方 App、不扩大 Hook。LSP/电源键软重启和全局冷启动白屏仍未定因，不主动触发风险路径。
-- 保持 Draft；不合并、发布、打标签或替换正式下载，不改包名/签名/版本编号。dsh 不执行旧指令、不重建定时，保留历史反馈。
+- 等待本 head 两项 CI、实际原签名 APK 下载核验后交付；不把旧包结果移记。当前未宣称手机通过或全部 ColorOS 闪烁消失。
+- 手机只重点复测自然遇到验证时的“主屏处理→预览继续→实际任务执行”，再次切到主屏的过渡，以及另一任务不受影响；不主动触发验证码，不重复有副作用的点击。
+- 保留单 VDrive、两任务、同 App 串行、旧 screen_*、原通知/流体云/三个完成入口/内联回复、Harmony、已授权息屏后台和主屏锁定保护。
+- 不绕过观察/权限、不强停/重启 App、不扩大 Hook。电源键/LSP 软重启、全局冷启动白屏仍未定因，不主动复现风险操作。
+- Draft 保持未合并、未发布/打标签，不替换正式下载，不改包名/签名/版本编号。dsh 保留原反馈、不执行旧指令、不重建定时。
 
 ## 执行反馈（dsh 维护）
 
@@ -145,14 +144,21 @@
 - last_reviewed_feedback_revision: 3
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
-- last_reviewed_code_head: 7c846a3d19d1dbbfee03a5781e9666283e704750
-- last_reviewed_coordination_head: 4e8802fe960e2251c30590c5170753588c8cc07a
-- reviewed_at: 2026-11-02T08:56:06Z
-- decision: 本次代码、本地及两项 CI 检查通过，实际原签名 APK 已独立核验；可交付测试，不写为真机通过
-- evidence: [7c846a3 返修证据](coordination/CANDIDATE_7c846a3.md)
-- device_gate: 新候选未实测；用户确认的手动顺畅及计算器恢复失败是上一候选上下文反馈，不计为本次通过
-- next_phase_permission: 本次按用户直接反馈返修，不扩展 Hook 或发布；后续产品语义与系统问题保持原未完成状态
-- issued_next_instruction: C007 revision 1（本次候选已核验交付，待用户反馈；dsh 与定时不恢复）
+- last_reviewed_code_head: 5afaf87b3f8cd36aecd10f75e57c139b3bc64467
+- last_reviewed_coordination_head: b2c4aedf5c4bc26ccd93ac6831977cf928bb8618
+- reviewed_at: 2026-11-02T09:46:59Z
+- decision: e44 返修代码与本地全量通过；Lint/构建及实际原签名 APK 核验进行中
+- evidence: [5afaf87 返修证据](coordination/CANDIDATE_5afaf87.md)
+- device_gate: 新候选未实测；用户的美团反馈是上一候选上下文，不移记为本次测试
+- next_phase_permission: 用户直接反馈返修，保留原保护和范围；不合并/发布
+- issued_next_instruction: C008 revision 1（核验构建后交付；dsh 与定时不恢复）
+
+### 主屏交还后恢复返修 — 2026-11-02T09:46:59Z
+
+- 用户说明美团预览无错误提示但点不动，主屏验证后小窗恢复失败、通知恢复有效。代码确认只读窗口错误依赖旧屏 release 成功；修复后使用同一 Runtime 恢复入口，保留人工拥有者保护。
+- 发现 Runtime finish/release 和延迟预览关闭可提前停止移屏采集；修复旁路并保持原窗口确认流程。真实 ColorOS 动画效果和验证页无响应原因仍未确认。
+- 五项新增回归，其中四项在旧源码先失败。首轮完整检查仅一项旧迁移测试仍期待 APP_BUSY；明确交还中现返回 CLEANUP_PENDING 后同步该预期，原不抢占/不回收断言保留。重跑全量 2,191 项无失败/错误，1 跳过。
+- 12 项接线、8 项部署通过，e44 DEX 重新编译并内嵌；CI 与本地 Lint/Debug 仍进行中，签名包未先填成功。未操作手机、未发布或合并。
 
 ### 7c846a3 原签名候选核验完成 — 2026-11-02T08:56:06Z
 
@@ -314,4 +320,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户已要求 ChatGPT 接手；C007 接替 C006，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C007 时只保留已有证据、不新增实施。
+- external_agent_limit: 用户已要求 ChatGPT 接手；C008 接替 C007，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C008 时只保留已有证据、不新增实施。
