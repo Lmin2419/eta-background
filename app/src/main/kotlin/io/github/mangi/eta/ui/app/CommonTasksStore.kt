@@ -22,11 +22,16 @@ internal class CommonTasksStore(context: Context, private val scope: CoroutineSc
         private set
     var error by mutableStateOf(false)
         private set
+    var conflict by mutableStateOf(false)
+        private set
 
-    init { refresh() }
+    private var refreshPending = false
+
+    init { scope.launch { CommonTaskRepository.changes.collect { refresh() } } }
 
     fun refresh() {
-        if (busy) return
+        if (busy) { refreshPending = true; return }
+        refreshPending = false
         busy = true
         scope.launch {
             try {
@@ -34,18 +39,19 @@ internal class CommonTasksStore(context: Context, private val scope: CoroutineSc
                 loadFailed = false
             } catch (cancelled: CancellationException) { throw cancelled
             } catch (_: Exception) { loadFailed = true
-            } finally { busy = false }
+            } finally { finishOperation() }
         }
     }
 
-    fun save(id: String?, name: String, instruction: String, onSaved: (CommonTask) -> Unit) = mutate {
-        val saved = withContext(Dispatchers.IO) { repository.save(id, name, instruction) }
+    fun save(id: String?, name: String, instruction: String, expectedRevision: String? = null,
+        onSaved: (CommonTask) -> Unit) = mutate {
+        val saved = withContext(Dispatchers.IO) { repository.save(id, name, instruction, expectedRevision) }
         tasks = withContext(Dispatchers.IO) { repository.load() }
         onSaved(saved)
     }
 
-    fun delete(id: String, onDeleted: () -> Unit) = mutate {
-        withContext(Dispatchers.IO) { repository.delete(id) }
+    fun delete(id: String, expectedRevision: String? = null, onDeleted: () -> Unit) = mutate {
+        withContext(Dispatchers.IO) { repository.delete(id, expectedRevision) }
         tasks = withContext(Dispatchers.IO) { repository.load() }
         onDeleted()
     }
@@ -54,7 +60,7 @@ internal class CommonTasksStore(context: Context, private val scope: CoroutineSc
         repository.resolveShortcut(id, token)
     }
 
-    fun dismissError() { error = false }
+    fun dismissError() { error = false; conflict = false }
 
     private fun mutate(operation: suspend () -> Unit) {
         if (busy || loadFailed) return
@@ -62,8 +68,15 @@ internal class CommonTasksStore(context: Context, private val scope: CoroutineSc
         scope.launch {
             try { operation()
             } catch (cancelled: CancellationException) { throw cancelled
-            } catch (_: Exception) { error = true
-            } finally { busy = false }
+            } catch (failure: Exception) {
+                conflict = failure.message == "COMMON_TASK_CONFLICT"
+                error = true
+            } finally { finishOperation() }
         }
+    }
+
+    private fun finishOperation() {
+        busy = false
+        if (refreshPending && scope.coroutineContext[kotlinx.coroutines.Job]?.isActive != false) refresh()
     }
 }

@@ -4,7 +4,10 @@ import android.content.Context
 import android.util.AtomicFile
 import java.io.File
 import java.io.IOException
+import java.security.MessageDigest
 import java.util.UUID
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -14,14 +17,20 @@ internal data class CommonTask(
     val name: String,
     val instruction: String,
     val shortcutToken: String,
-)
+) {
+    // Content revision, not the private launcher capability. Old version-1 files need no migration.
+    val revision: String get() = MessageDigest.getInstance("SHA-256")
+        .digest(JSONArray(listOf(id, name, instruction)).toString().toByteArray(Charsets.UTF_8))
+        .joinToString("") { "%02x".format(it) }
+}
 
 internal class CommonTaskRepository(private val file: File) {
     constructor(context: Context) : this(File(context.filesDir, "common_tasks.json"))
 
     fun load(): List<CommonTask> = synchronized(lock) { read() }
 
-    fun save(id: String?, name: String, instruction: String): CommonTask = synchronized(lock) {
+    fun save(id: String?, name: String, instruction: String, expectedRevision: String? = null,
+        uniqueName: Boolean = false): CommonTask = synchronized(lock) {
         val title = name.trim()
         val prompt = instruction.trim()
         require(title.isNotEmpty() && title.length <= MAX_NAME_LENGTH)
@@ -29,6 +38,13 @@ internal class CommonTaskRepository(private val file: File) {
         val tasks = read()
         val previous = id?.let { target -> tasks.firstOrNull { it.id == target } }
         require(id == null || previous != null) { "COMMON_TASK_NOT_FOUND" }
+        require(expectedRevision == null || previous?.revision == expectedRevision) { "COMMON_TASK_CONFLICT" }
+        if (id == null && uniqueName) {
+            val matches = tasks.filter { it.name.equals(title, ignoreCase = true) }
+            // A retried creation must not create a second shortcut; a different body must not overwrite one.
+            if (matches.size == 1 && matches.single().instruction == prompt) return@synchronized matches.single()
+            require(matches.isEmpty()) { "COMMON_TASK_NAME_EXISTS" }
+        }
         require(previous != null || tasks.size < MAX_TASKS) { "COMMON_TASK_LIMIT" }
         val task = CommonTask(
             id = previous?.id ?: UUID.randomUUID().toString(),
@@ -40,8 +56,13 @@ internal class CommonTaskRepository(private val file: File) {
         task
     }
 
-    fun delete(id: String) = synchronized(lock) {
+    fun delete(id: String, expectedRevision: String? = null) = synchronized(lock) {
         val tasks = read()
+        if (expectedRevision != null) {
+            val task = tasks.firstOrNull { it.id == id }
+            require(task != null) { "COMMON_TASK_NOT_FOUND" }
+            require(task.revision == expectedRevision) { "COMMON_TASK_CONFLICT" }
+        }
         if (tasks.any { it.id == id }) write(tasks.filterNot { it.id == id })
     }
 
@@ -49,7 +70,15 @@ internal class CommonTaskRepository(private val file: File) {
         read().firstOrNull { it.id == id && it.shortcutToken == token }
     }
 
-    private fun read(): List<CommonTask> {
+    private fun read(): List<CommonTask> = try {
+        readValidated()
+    } catch (error: IOException) {
+        throw error
+    } catch (error: Exception) {
+        throw IOException("COMMON_TASK_INVALID_DATA", error)
+    }
+
+    private fun readValidated(): List<CommonTask> {
         val atomic = AtomicFile(file)
         if (!file.exists() && !File(file.path + ".bak").exists()) return emptyList()
         // A malformed file must never silently turn into an empty list and be overwritten.
@@ -87,6 +116,8 @@ internal class CommonTaskRepository(private val file: File) {
         try {
             stream.write(bytes)
             atomic.finishWrite(stream)
+            // UI and AgentRuntime execute in the same process; no polling or second database needed.
+            mutableChanges.value += 1
         } catch (error: Throwable) {
             atomic.failWrite(stream)
             throw error
@@ -99,5 +130,7 @@ internal class CommonTaskRepository(private val file: File) {
         const val MAX_INSTRUCTION_LENGTH = 8_000
         private const val MAX_FILE_BYTES = 2 * 1024 * 1024
         private val lock = Any()
+        private val mutableChanges = MutableStateFlow(0L)
+        val changes = mutableChanges.asStateFlow()
     }
 }

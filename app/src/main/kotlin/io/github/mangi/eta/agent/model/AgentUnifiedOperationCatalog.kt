@@ -82,9 +82,7 @@ internal object AgentUnifiedOperationCatalog {
                 .put("enum", JSONArray().put("foreground").put("background"))
                 .put(
                     "description",
-                    "仅当用户明确要求后台执行时传 background；成功后本任务后续原生 GUI 工具沿用后台位置。" +
-                        "省略或 auto 时沿用当前位置；前台请求继续受现有 GUI 操作权管理。" +
-                        "后台不可用会返回明确错误，不会自动改走主屏。",
+                    "用户明确要求后台才传 background；省略沿用本任务位置（初始前台）。遵守操作权；后台失败不回退主屏。",
                 ))
             if (name in observationBound && !properties.has("observation_id")) {
                 properties.put("observation_id", JSONObject()

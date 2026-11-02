@@ -43,6 +43,7 @@ internal object AgentSensitiveToolPolicy {
         "set_setting",
         "memory_get",
         "memory_write",
+        "common_task",
         "character_memory_get",
         "character_memory_write",
     )

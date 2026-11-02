@@ -67,6 +67,7 @@ internal class AgentTraceFormatter {
             AgentConversationToolCatalog.READ_HISTORY -> "读取当前会话历史"
             "memory_get", "character_memory_get" -> summarizeMemoryGetArguments(toolCall.argumentsJson)
             "memory_write", "character_memory_write" -> summarizeMemoryWriteArguments(toolCall.argumentsJson)
+            "common_task" -> "管理常用任务"
             "skills_list" -> "查看技能列表"
             "skills_read" -> "读取技能"
             "skills_read_resource" -> "读取技能资源"
@@ -318,6 +319,12 @@ internal class AgentTraceFormatter {
             "memory_get", "memory_write", "character_memory_get", "character_memory_write" ->
                 json?.let { summarizeMemoryResult(toolName, it) } ?: "完成"
             "search_apps" -> json?.let(::summarizeSearchAppsResult) ?: "完成"
+            "common_task" -> when (json?.optString("action")) {
+                "save" -> "已保存常用任务（未执行）"
+                "delete" -> "已删除常用任务"
+                "get" -> "已读取任务流程（未执行）"
+                else -> "已读取常用任务列表"
+            }
             "launch_app" -> json?.let(::summarizeLaunchAppResult) ?: "已打开"
             "skills_list", "skills_list_curated", "skills_inspect_github", "skills_install_from_github" -> json?.let {
                 summarizeSkillResult(toolName, it) ?: summarizeGenericResult(it, result)

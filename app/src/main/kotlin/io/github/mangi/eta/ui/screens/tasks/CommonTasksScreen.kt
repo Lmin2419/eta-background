@@ -46,6 +46,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
     val resources = LocalResources.current
     var editorOpen by rememberSaveable { mutableStateOf(false) }
     var editId by rememberSaveable { mutableStateOf<String?>(null) }
+    var editRevision by rememberSaveable { mutableStateOf<String?>(null) }
     var name by rememberSaveable { mutableStateOf("") }
     var instruction by rememberSaveable { mutableStateOf("") }
     var menuId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -54,6 +55,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
 
     fun edit(task: CommonTask?, copy: Boolean = false) {
         editId = if (copy) null else task?.id
+        editRevision = if (copy) null else task?.revision
         name = if (copy && task != null) resources.getString(R.string.common_tasks_copy_name, task.name)
             .take(CommonTaskRepository.MAX_NAME_LENGTH) else task?.name.orEmpty()
         instruction = task?.instruction.orEmpty()
@@ -63,7 +65,8 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
 
     LaunchedEffect(store.error) {
         if (store.error) {
-            Toast.makeText(context, R.string.common_tasks_save_failed, Toast.LENGTH_LONG).show()
+            Toast.makeText(context, if (store.conflict) R.string.common_tasks_conflict else R.string.common_tasks_save_failed,
+                Toast.LENGTH_LONG).show()
             store.dismissError()
         }
     }
@@ -135,7 +138,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
                     onCancel = { editorOpen = false }, cancelEnabled = !store.busy,
                     confirmEnabled = editable && name.isNotBlank() && instruction.isNotBlank(),
                     onConfirm = {
-                        store.save(editId, name, instruction) { saved ->
+                        store.save(editId, name, instruction, editRevision) { saved ->
                             editorOpen = false
                             // Shortcut metadata failures do not undo the saved task.
                             runCatching { CommonTaskShortcuts.update(context, saved) }
@@ -167,7 +170,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
             onDismissRequest = { if (!store.busy) deleteId = null }) {
             MiuixDialogActions(confirmText = stringResource(R.string.common_tasks_delete), destructive = true,
                 onCancel = { deleteId = null }, cancelEnabled = !store.busy, confirmEnabled = editable,
-                onConfirm = { store.delete(task.id) { deleteId = null; runCatching { CommonTaskShortcuts.disable(context, task.id) } } })
+                onConfirm = { store.delete(task.id, task.revision) { deleteId = null; runCatching { CommonTaskShortcuts.disable(context, task.id) } } })
         }
     }
 }

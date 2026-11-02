@@ -26,4 +26,6 @@
     <string name="common_tasks_empty_hint">For example: open Feishu in the background and summarize today’s messages.</string>
     <string name="common_tasks_limit">Up to %1$d tasks. Delete an unused task to add another.</string>
     <string name="common_tasks_input_limit">Name: up to %1$d characters. Instruction: up to %2$d characters.</string>
+    <string name="common_tasks_agent_description">List, read, save and edit reusable tasks directly in chat. Shares the task library and home shortcuts.</string>
+    <string name="common_tasks_conflict">This task changed elsewhere. Close the editor and reopen the latest version before saving.</string>
 </resources>

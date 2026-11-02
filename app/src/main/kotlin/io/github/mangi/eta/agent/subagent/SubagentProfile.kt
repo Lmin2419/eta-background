@@ -97,6 +97,7 @@ internal data class SubagentProfile(
             "open_uri",
             "browser_use",
             "memory_write",
+            "common_task",
             "character_memory_write",
             "skills_install_from_github",
             "terminal_daemon",

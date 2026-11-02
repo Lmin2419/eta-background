@@ -26,4 +26,6 @@
     <string name="common_tasks_empty_hint">例如：在背景開啟飛書，整理今天的訊息。</string>
     <string name="common_tasks_limit">最多儲存 %1$d 個任務，刪除不用的任務後可繼續新增。</string>
     <string name="common_tasks_input_limit">名稱最多 %1$d 字，指令最多 %2$d 字。</string>
+    <string name="common_tasks_agent_description">在對話中查看、讀取、儲存和修改常用任務，與任務列表和桌面捷徑共用流程。</string>
+    <string name="common_tasks_conflict">此任務剛被修改。請關閉編輯視窗，重新開啟最新流程後再儲存。</string>
 </resources>
