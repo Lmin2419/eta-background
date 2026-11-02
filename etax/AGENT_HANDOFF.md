@@ -61,42 +61,38 @@
 
 ## 当前指令（ChatGPT 维护）
 
-- instruction_id: C006
+- instruction_id: C007
 - instruction_revision: 1
-- issued_at: 2026-11-02T06:39:33Z
-- status: REVIEW_READY
+- issued_at: 2026-11-02T08:36:41Z
+- status: RUNNING
 - target: ChatGPT
-- candidate_head: 6883e75487177f40ea403536cb9f9fec261ce4e9
-- parent_head: 3c74066e58ccff2409b305ff3527ab454a3c238b
-- engine_build: 20261102-e42-manual
+- candidate_head: 7c846a3d19d1dbbfee03a5781e9666283e704750
+- parent_head: 6883e75487177f40ea403536cb9f9fec261ce4e9
+- engine_build: 20261102-e43-resume
 - current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)
-- candidate_evidence: [本次返修证据](coordination/CANDIDATE_6883e75.md)
-- evidence_updated_at: 2026-11-02T07:02:59Z
-- candidate_apk: [Etax-v3.3.5+etax.6883e75.apk](https://github.com/Lmin2419/eta-background/actions/runs/41400925568/artifacts/13122322383)；artifact 13122322383；原证书及配对已独立核验
-- latest_validation: [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41400930694) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41400925568) 均成功；签名构建日志记录全量 2,183 项（0 失败、0 错误、1 跳过），Lint 0 错误、388 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建通过。已下载实际 APK，独立核验包名、版本、原证书、SHA-256 与五项内嵌引擎/脚本完全相符。真机仍待用户验证。
-- device_status: 本候选未执行真机验证；用户可独立安装，不要求连接电脑
+- candidate_evidence: [恢复与预览返修证据](coordination/CANDIDATE_7c846a3.md)
+- latest_validation: 本地全量 2,186 项，0 失败/错误、1 跳过；12 项接线、8 项部署回归通过。本地 Lint/Debug 整体任务与两项远端 CI 尚在执行，原签名 APK 尚未核验，不先填成功。
+- device_status: 新候选未执行真机验证；用户可独立安装，不要求连接电脑
 - mode: ChatGPT 直接修复与交付；不恢复每小时定时，不唤醒 dsh
 
 ### 用户反馈与修复范围
 
-用户确认黑白块位于通知静态图，点击后的小窗先黑再显示实时画面；接管测试对象为系统计算器。另要求跟进上游接管时的点击/滑动跟随动画。这些是候选上下文中的用户体验报告，没有远程读取已装 APK 身份或工具日志。
+用户确认上一版暂停后手动操作顺畅；计算器接管后“让 AI 继续”仍一直等待，高德可继续。再次澄清是任务实际没有继续，并非仅显示只读。通知静态图仍为白块，要求提高预览清晰度并评估通知实时画面。未远程读取已装 APK 身份或手机日志。
 
-1. 通知保留标准手机图标，补可辨识的屏幕细节；小窗等待首帧或遇到纯黑白无内容帧时显示手机占位并禁用输入，取得画面后显示实时预览。
-2. 根因返修：首次人工输入令 worker 进入 needs_observation，旧代码仅允许 idle，误拦截后续点击/释放和部分完成页面。允许“操作已排空但 AI 待观察”的人工路径；每次人工输入须本拥有者新预览，不清除 AI 的观察保护；executing/draining 仍禁止输入。
-3. 人工点击改为几何/窗口校验后的目标屏触摸，坐标按 ImageView 实际矩阵映射，避免无效父节点点击。AI 原有节点优先路径保留。
-4. 接管自动放大，顶部保留独立放大/缩小；加入本地点击波纹与滑动轨迹，最多 64 点、抬手淡出，不修改原截图或模型帧。
-5. 完成小窗区分收尾/页面回收/其他拥有者，显示“任务已完成”，提供“操作页面”和原交还路径的“打开 App”；不会复活已结束 run。
-6. 最近任务切回主屏时保留旧采集 Surface，待目标窗口真正就绪再释放；面板和交还桥避免空白启动预览。ColorOS 跨屏动画仍待实测，不宣称全部闪烁已修复。
+1. 已在旧代码复现并修复恢复遗漏：保留 GUI 租约不等于 GUI 持有暂停；同时处理目标 run 的 GUI 暂停与控制器暂停。仍有人工输入拥有者时不清除暂停、不虚报继续，明确说明先交还控制权。三轮接管/恢复及另一任务隔离有回归。
+2. 预览按真实控制器状态区分 AI 执行的只读与暂停；小/大窗长边 640/960，质量 78，原 400KB 上限与频率不变，必要时回退质量 65。
+3. 手机图标改透明镂空并缓存位图，实际绘制与单色滤镜测试防止实心白块；ColorOS 实际模板待实测。不强行换掉原生 ProgressStyle，不高频刷新通知模拟视频；点击后的实时小窗保留。
+4. 全量检查另外重现通知会话打开与归档导入的并发检查失败，修复同次主线程加载/缺失检查，不延长超时或跳过失败。
 
-源码与更新记录：[TASK_PREVIEW.md](https://github.com/Lmin2419/eta-background/blob/6883e75487177f40ea403536cb9f9fec261ce4e9/etax/TASK_PREVIEW.md)。README、后台版更新日志、整合记录随业务提交更新。
+源码与更新说明：[TASK_PREVIEW.md](https://github.com/Lmin2419/eta-background/blob/7c846a3d19d1dbbfee03a5781e9666283e704750/etax/TASK_PREVIEW.md)。[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41413270652) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41413263706)。
 
 ### 完成标准与边界
 
-- 同一 head 的两项 CI 与原签名 APK 独立核验已完成，可交付用户覆盖安装测试。没有上传 APK 到仓库或更改正式下载；真机通过须另记实际结果。
-- 手机一次集中验证：通知手机图标/首帧占位 → 计算器连续至少三次点击 → 接管时缩放和滑动轨迹 → 完成页面继续操作/打开 App → 双任务隔离。无需 ADB；不把旧结果移记。
-- 保留单 VDrive、两任务上限、同 App 串行、旧 screen_*、原通知/流体云/三个完成入口/内联回复、Harmony、已授权的息屏后台与锁定主屏保护。
-- 不关闭观察/权限检查，不重放不确定输入，不强停/强制重启第三方 App，不扩大 Hook。长按电源键软重启与全局冷启动白屏仍未定因；不主动触发风险路径。
-- PR 保持 Draft，未合并/发布/打标签，不改变包名、签名或版本编号。外部 dsh 不执行旧指令、不重建定时任务，仅保留原反馈。
+- 等待同 head 检查成功，下载实际原签名 APK，核验包名、版本、证书、SHA-256、内嵌引擎/脚本后再交付；不把旧 APK 的证据移记。
+- 手机重点：计算器接管→交还→真正继续计算→再接管/交还；通知恢复、另一任务不受影响、透明手机轮廓、放大数字清晰度。无 ADB 前置，不要求重做旧 20 项。
+- 保留单 VDrive、两任务、同 App 串行、旧 screen_*、流体云与原通知三个入口/内联回复、Harmony、已授权息屏后台与主屏锁定保护。
+- 不绕过观察/权限、不重放不确定操作、不强停/重启第三方 App、不扩大 Hook。LSP/电源键软重启和全局冷启动白屏仍未定因，不主动触发风险路径。
+- 保持 Draft；不合并、发布、打标签或替换正式下载，不改包名/签名/版本编号。dsh 不执行旧指令、不重建定时，保留历史反馈。
 
 ## 执行反馈（dsh 维护）
 
@@ -147,14 +143,21 @@
 - last_reviewed_feedback_revision: 3
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
-- last_reviewed_code_head: 6883e75487177f40ea403536cb9f9fec261ce4e9
-- last_reviewed_coordination_head: 0999f72e24e2c8b49b86bc38e86422af8cfc0e6c
-- reviewed_at: 2026-11-02T07:02:59Z
-- decision: 返修候选代码、本地与两项 CI 均通过；实际原签名 APK 已独立核验，可交付手机测试；不写为真机通过
-- evidence: [6883e75 返修证据](coordination/CANDIDATE_6883e75.md)；旧候选证据与用户体验保留历史，不移记
-- device_gate: U001–U003 仅为 4637961 旧版体验；本次直接开发授权没有把第 2 轮技术门槛标为通过。新候选手机验证仍未执行
-- next_phase_permission: 四项实现由用户最新消息直接授权；部分完成/等待用户语义仍待后续，风险 Hook 问题未解决；不合并/发布
-- issued_next_instruction: C006 revision 1（接管及预览返修包已核验交付；真机待反馈；dsh 停止旧工作，自动检查停用）
+- last_reviewed_code_head: 7c846a3d19d1dbbfee03a5781e9666283e704750
+- last_reviewed_coordination_head: cef6cf49789a3620fd890921896b7bee7a8b892a
+- reviewed_at: 2026-11-02T08:36:41Z
+- decision: 恢复与通知图标返修代码已提交；本地全量通过，CI/静态检查与实际签名 APK 待完成
+- evidence: [7c846a3 返修证据](coordination/CANDIDATE_7c846a3.md)
+- device_gate: 新候选未实测；用户确认的手动顺畅及计算器恢复失败是上一候选上下文反馈，不计为本次通过
+- next_phase_permission: 本次按用户直接反馈返修，不扩展 Hook 或发布；后续产品语义与系统问题保持原未完成状态
+- issued_next_instruction: C007 revision 1（完成同 head 构建与包核验后交付；dsh 与定时不恢复）
+
+### 恢复 AI 与图标返修提交 — 2026-11-02T08:36:41Z
+
+- 用户补充确认“任务没继续，一直等待”。代码层复现 GUI 所有权与暂停来源混淆；修复目标控制器恢复，保留手动所有权及跨任务保护。
+- 新 head 7c846a3d19d1dbbfee03a5781e9666283e704750，引擎 e43；透明图标实际单色绘制和预览清晰度调整，通知仍使用标准模板，实时画面在小窗。
+- 全量回归暴露既有归档并发检查失败；单独重现实际异常后修复主线程检查原子性，不靠延长测试时间。最终本地 2,186 项无失败/错误，1 跳过。
+- 远端 PR Check 41413270652、Etax Build 41413263706 尚在执行；本地 Lint/Debug 整体尚在运行。未生成/核验新原签名包，未手机测试、未合并/发布。
 
 ### 6883e75 原签名候选核验完成 — 2026-11-02T07:02:59Z
 
@@ -300,4 +303,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户已要求 ChatGPT 接手；C006 接替 C005，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C006 时只保留已有证据、不新增实施。
+- external_agent_limit: 用户已要求 ChatGPT 接手；C007 接替 C006，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C007 时只保留已有证据、不新增实施。
