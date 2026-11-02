@@ -572,21 +572,17 @@ class VDriveWorker implements VDrive.Worker {
                 log("return task failed: " + t);
             }
         }
-        Throwable captureFailure = null;
-        try { stopCapture(x); } catch (Throwable error) { captureFailure = error; }
+        // Final disposal removes the display with its Surface still attached. A
+        // separate setSurface(null) first sends a display-off change during the
+        // main-screen transition. Close local buffers only after release succeeds.
         try { if (x.vd != null) x.vd.release(); }
         catch (Throwable error) {
-            if (!com.eta.shadow.EngineFailures.systemUnavailable(error)) {
-                if (captureFailure != null) error.addSuppressed(captureFailure);
-                throw error;
-            }
+            if (!com.eta.shadow.EngineFailures.systemUnavailable(error)) throw error;
             VDrive.systemFailed();
         }
         x.vd = null;
         if (x == current) vd = null;
-        // Releasing the whole display also detaches its Surface. A failed graceful
-        // park must not prevent final cleanup of the local capture buffers.
-        if (captureFailure != null) stopCapture(x);
+        stopCapture(x);
         int gone = x.displayId;
         x.reader = null;
         x.vd = null;
@@ -1327,7 +1323,7 @@ class VDriveWorker implements VDrive.Worker {
         ImageReader capture = session.reader;
         // A failed detach must leave the reader/listener usable. Closing it while the
         // display still owns its Surface abandons the producer and hides cleanup failure.
-        if (capture != null) detachCaptureSurface(session);
+        if (capture != null && session.vd != null) detachCaptureSurface(session);
         Frame frame = frames.get(session.displayId);
         Throwable failure = null;
         try { if (frame != null) frame.close(); } catch (Throwable error) { failure = error; }

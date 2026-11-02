@@ -408,6 +408,50 @@ class AgentRuntimeScreenOnTest {
     }
 
     @Test
+    fun realTerminalCallbacksRemoveGlowAfterTheLastRunDespiteOldForegroundHistory() {
+        val host = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        val service = host.get()
+        fun admit(id: String): RuntimeRunRegistry.Run {
+            val request = AgentRuntimeWire.RunRequest(id, "测试",
+                AgentModelClient.ModelConfig(baseUrl = "https://example.invalid", apiKey = "test-key", model = "test-model", systemPrompt = ""), emptyList())
+            val run = AgentRuntimeService::class.java.getDeclaredMethod("admitRun", AgentRuntimeWire.RunRequest::class.java,
+                android.os.Messenger::class.java, AgentRuntimeWire.IncomingRunRequest::class.java)
+                .apply { isAccessible = true }.invoke(service, request, null, null) as RuntimeRunRegistry.Run
+            service.field<RuntimeRunRegistry>("runs").claimNext(setOf(id))
+            run.prepared(request)
+            run.hasExecutedForegroundTool = true // A past foreground step is not live work.
+            run.lastBackgroundApp = "app.$id"
+            return run
+        }
+        try {
+            val first = admit("terminal-first")
+            val last = admit("terminal-last")
+            service.setField("displayedRun", last)
+            val control = last.session.controller
+            assertTrue(control.acquireManual("viewer"))
+            control.releaseManual("viewer"); control.resume()
+            service.invoke("publishExecutionState")
+            val glow = ComposeView(service)
+            service.setField("glowView", glow)
+            first.session.complete(AgentRuntimeWire.RunResult(first.runId, true, "完成一"))
+            shadowOf(Looper.getMainLooper()).idle()
+            org.junit.Assert.assertSame("The other running task still needs its glow", glow, service.field<ComposeView?>("glowView"))
+            last.session.complete(AgentRuntimeWire.RunResult(last.runId, true, "完成二"))
+            shadowOf(Looper.getMainLooper()).idle()
+            assertTrue(AgentRuntimeService.tasks.value.isEmpty())
+            assertTrue(AgentExecutionService.task(last.runId)!!.completed)
+            assertEquals(AgentOverlayStatus.ResultReady, AgentExecutionService.task(last.runId)!!.status)
+            assertNull("Terminal work must not retain the old running glow", service.field<ComposeView?>("glowView"))
+            org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(true)
+            service.invoke("showOverlay")
+            assertNull("A delayed overlay callback cannot relight a completed task", service.field<ComposeView?>("glowView"))
+        } finally {
+            org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(false)
+            host.destroy()
+        }
+    }
+
+    @Test
     fun destroyingServiceClearsActiveRunScreenRequest() {
         val serviceController = Robolectric.buildService(AgentRuntimeService::class.java).create()
         try {

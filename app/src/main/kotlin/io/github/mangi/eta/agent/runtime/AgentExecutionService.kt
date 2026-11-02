@@ -269,7 +269,7 @@ internal class AgentExecutionService : Service() {
             removed.forEach { removeCard(context, it) }
             var changed = removed.isNotEmpty()
             snapshot.forEach { task ->
-                if (cards[task.runId]?.completed != true && cards[task.runId] != task) {
+                if (task.runId !in completedRuns && cards[task.runId]?.completed != true && cards[task.runId] != task) {
                     cards[task.runId] = task
                     idFor(task.runId)
                     changed = true
@@ -437,6 +437,10 @@ internal class AgentExecutionService : Service() {
                     if (task.paused) R.string.overlay_resume else R.string.overlay_pause,
                     if (task.paused) android.R.drawable.ic_media_play else android.R.drawable.ic_media_pause))
                 builder.addAction(runAction(context, task.runId, ACTION_STOP_RUN, R.string.overlay_stop_task, R.drawable.ic_assistant_stop))
+                if (!task.conversationId.isNullOrBlank()) {
+                    builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, R.drawable.ic_notification),
+                        context.getString(R.string.overlay_open_conversation), conversationIntent(context, task.conversationId)).build())
+                }
             } else if (completed) {
                 if (!task.conversationId.isNullOrBlank()) {
                     builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, R.drawable.ic_notification),

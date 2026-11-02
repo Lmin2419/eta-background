@@ -29,6 +29,7 @@ public class VDriveLifecycleTest {
         boolean windowReady;
         int readinessCalls;
         boolean failDetach;
+        int detaches;
         JSONObject windowProbe;
         boolean realHandover;
         boolean realPatrol;
@@ -59,6 +60,7 @@ public class VDriveLifecycleTest {
         @Override java.util.List<?> rootTasksSnapshot() { return tasks; }
         @Override void sleepCancellable(long ms) { }
         @Override void detachCaptureSurface(Session session) {
+            detaches++;
             if (failDetach) throw new IllegalStateException("audit: detach rejected");
             super.detachCaptureSurface(session);
         }
@@ -149,6 +151,8 @@ public class VDriveLifecycleTest {
         VDriveWorker.Session session = worker.new Session("audit.target");
         session.displayId = 42;
         session.reader = ImageReader.newInstance(32, 64, PixelFormat.RGBA_8888, 3);
+        session.vd = worker.dm.createVirtualDisplay("failed-park", 32, 64, 160, session.reader.getSurface(), 0);
+        session.displayId = session.vd.getDisplay().getDisplayId();
         worker.sessions.put(session.pkg, session);
         worker.load(session);
         worker.failDetach = true;
@@ -291,6 +295,21 @@ public class VDriveLifecycleTest {
         assertNull(session.vd);
         assertFalse(worker.sessions.containsKey(session.pkg));
         assertEquals(0, worker.moves); // Recents already moved it; never move/relaunch it again.
+    }
+
+    @Test public void finalDisplayReleaseDoesNotToggleItsSurfaceOffBeforeRemovingIt() throws Exception {
+        worker = new Worker(RuntimeEnvironment.getApplication());
+        VDriveWorker.Session session = worker.new Session("audit.final-release");
+        session.reader = ImageReader.newInstance(32, 64, PixelFormat.RGBA_8888, 3);
+        session.vd = worker.dm.createVirtualDisplay("release-once", 32, 64, 160, session.reader.getSurface(), 0);
+        session.displayId = session.vd.getDisplay().getDisplayId(); session.taskId = 71;
+        worker.sessions.put(session.pkg, session); worker.load(session);
+        worker.failDetach = true;
+        worker.releaseSessionFully(session, false);
+        assertEquals("Final release must not first send a separate display-off transition", 0, worker.detaches);
+        assertNull(session.vd); assertNull(session.reader); assertTrue(worker.frames.isEmpty());
+        assertFalse(worker.sessions.containsKey(session.pkg));
+        assertEquals(0, worker.moves);
     }
 
 }

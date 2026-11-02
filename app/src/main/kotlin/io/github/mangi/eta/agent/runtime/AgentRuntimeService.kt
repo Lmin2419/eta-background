@@ -1160,9 +1160,17 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                 glowView = null
                 glowParams = null
             }
-        } else if (displayedRun?.hasExecutedForegroundTool != true && !guiControl.state.value.userPaused) {
-            displayedRun = null
-            removeAmbientWindows()
+        } else {
+            // Foreground history may keep the legacy result context, never a running
+            // glow. Background tools can also share names with foreground tools.
+            ambientState.value = ambientState.value.copy(phase = AgentOverlayPhase.FINISHED)
+            glowView?.let { view -> runCatching { windowManager?.removeView(view) } }
+            glowView = null
+            glowParams = null
+            if (!guiControl.state.value.userPaused) {
+                removeAmbientWindows()
+                if (displayedRun?.hasExecutedForegroundTool != true) displayedRun = null
+            }
         }
         val snapshots = active.map(::notificationState)
         taskStates.value = snapshots
@@ -1212,14 +1220,17 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         windowManager = wm
 
         // ── 氛围光窗口：全屏触摸穿透，彩虹光圈，截图时被 takeScreenshotOfWindow 过滤 ─
-        if ((runtimeGlowEnabled || keepScreenOn.value) && glowView == null) {
+        val showGlow = runtimeGlowEnabled && runs.all().any {
+            !it.session.isTerminal && !it.queued && !it.session.controller.isPaused && !it.session.controller.isCancelled
+        }
+        if ((showGlow || keepScreenOn.value) && glowView == null) {
             val glow = createOverlayComposeView {
-                if (runtimeGlowEnabled) AgentOverlayGlow(state = ambientState.value, corners = screenCornerRadii())
+                if (showGlow) AgentOverlayGlow(state = ambientState.value, corners = screenCornerRadii())
             }
             val glowLp = glowLayoutParams().apply {
                 // Keep the existing foreground-only screen-on behavior when visuals are off.
                 // This empty, touch-through window has no animation and acquires no wake lock.
-                if (!runtimeGlowEnabled) { width = 1; height = 1 }
+                if (!showGlow) { width = 1; height = 1 }
             }
             glow.keepScreenOn = keepScreenOn.value
             runCatching { wm.addView(glow, glowLp) }.onFailure { throwable ->

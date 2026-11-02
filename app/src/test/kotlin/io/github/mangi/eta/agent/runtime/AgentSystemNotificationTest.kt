@@ -18,6 +18,34 @@ import java.time.Duration
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36, 37], application = Application::class)
 class AgentSystemNotificationTest {
+    @Test fun runningBackgroundCardHasASeparateConversationAction() {
+        val host = Robolectric.buildService(AgentExecutionService::class.java).create()
+        val service = host.get()
+        val manager = service.getSystemService(NotificationManager::class.java)
+        try {
+            AgentExecutionService.acquire(service, "running-chat", onStop = {})
+            val task = task("running-chat").copy(targetPackage = "app.background")
+            AgentExecutionService.updateTasks(service, listOf(task))
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
+            val card = manager.activeNotifications.single().notification
+            assertEquals(TaskPreviewActivity::class.java.name, shadowOf(card.contentIntent).savedIntent.component?.className)
+            val openChat = card.actions.single { it.title == service.getString(io.github.mangi.eta.R.string.overlay_open_conversation) }
+            assertNotEquals(card.contentIntent, openChat.actionIntent)
+            openChat.actionIntent.send()
+            val intent = shadowOf(service.application).nextStartedActivity
+            assertEquals(MainActivity::class.java.name, intent.component?.className)
+            assertEquals("chat-running-chat", intent.getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
+            assertEquals(task, AgentExecutionService.task(task.runId))
+            assertEquals(listOf(AgentExecutionService.ACTION_PAUSE_RUN, AgentExecutionService.ACTION_STOP_RUN),
+                card.actions.take(2).map { shadowOf(it.actionIntent).savedIntent.action })
+        } finally {
+            AgentExecutionService.release("running-chat")
+            AgentExecutionService.updateTasks(service, emptyList())
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
+            host.destroy(); manager.cancelAll()
+        }
+    }
+
     @Test fun completedCardPreviewsAndItsExplicitOpenAppActionHandsOff() {
         val controller = Robolectric.buildService(AgentExecutionService::class.java).create()
         val service = controller.get()
@@ -105,8 +133,9 @@ class AgentSystemNotificationTest {
                 if (android.os.Build.VERSION.SDK_INT >= 37) {
                     assertEquals(chat != "chat-b", card.hasPromotableCharacteristics())
                 }
-                assertEquals(2, card.actions.size)
-                assertTrue(card.actions.all { shadowOf(it.actionIntent).savedIntent.getStringExtra("run_id") == chat!!.removePrefix("chat-") })
+                assertEquals(3, card.actions.size)
+                assertTrue(card.actions.take(2).all { shadowOf(it.actionIntent).savedIntent.getStringExtra("run_id") == chat!!.removePrefix("chat-") })
+                assertEquals(chat, shadowOf(card.actions[2].actionIntent).savedIntent.getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
                 assertFalse(card.actions.any { shadowOf(it.actionIntent).savedIntent.action == AgentExecutionService.ACTION_NEXT_TASK })
             }
             val firstDestination = cards.getValue("chat-a").notification.contentIntent

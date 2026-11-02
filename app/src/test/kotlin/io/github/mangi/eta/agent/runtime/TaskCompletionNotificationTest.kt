@@ -191,6 +191,10 @@ class TaskCompletionNotificationTest {
         finish(a.copy(streamPreview = "late final result with different content"))
         settleAlerts()
         assertTrue(manager.activeNotifications.isEmpty())
+        AgentExecutionService.updateTasks(service, listOf(a.copy(status = AgentOverlayStatus.WaitingForModel)))
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
+        assertNull("A late running snapshot cannot resurrect a dismissed completed task", AgentExecutionService.task(a.runId))
+        assertTrue(manager.activeNotifications.isEmpty())
     }
 
     @Test fun failureHasItsOwnLabelAndNoAppTaskOmitsInvalidAppAction() {
