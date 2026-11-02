@@ -296,6 +296,10 @@ internal class AgentLocalTools(
             }
         }.getOrElse { throwable ->
             if (throwable is AgentRunCancelledException) throw throwable
+            if (throwable is StaleCoordinateObservationException) return@getOrElse textResult(
+                JSONObject(errorResult("STALE_OBSERVATION", throwable.message.orEmpty()))
+                    .put("reason", "SCREENSHOT_ALREADY_USED").put("operationMayHaveRun", false).toString(),
+            )
             textResult(
                 errorResult(
                     code = when (throwable) {
@@ -474,6 +478,8 @@ internal class AgentLocalTools(
             PublishedObservation(
                 elements = observation.elementObservation,
                 coordinateSpace = observation.coordinateSpace,
+                visualCoordinatesValid = observation.image != null && observation.coordinateSpace != null,
+                inputLayout = observation.inputLayout,
                 generation = generation.takeIf { JSONObject(observation.content).optBoolean("ok") },
             ),
         )
@@ -517,13 +523,17 @@ internal class AgentLocalTools(
             if (result.optString("code") == "ACTION_OUTCOME_UNKNOWN") result.put("operationMayHaveRun", true)
             var changed = false
             if (dispatched) {
+                // The after-action node tree is not a replacement screenshot. Invalidate even
+                // when the dispatch outcome is uncertain or the following observation fails.
+                publishedObservation.updateAndGet { it.copy(visualCoordinatesValid = false) }
+                result.put("screenshot_coordinates_valid", false)
                 val after = runCatching {
                     screenObservationProvider?.invoke(AFTER_ACTION_OPTIONS) ?: deviceController.observe(
                         includeScreenshot = false, includeUiTree = true, maxNodes = AFTER_ACTION_OPTIONS.maxNodes)
                 }.getOrNull()
                 after?.elementObservation?.let { elements ->
                     // The observation is fresh even if the action outcome is unknown. Never change its error code.
-                    publishedObservation.set(publishedObservation.get().copy(elements = elements))
+                    publishedObservation.set(publishedObservation.get().copy(elements = elements, inputLayout = after.inputLayout))
                     val summary = AgentAfterActionSummary.build(before, elements)
                     after.content.let { runCatching { JSONObject(it).optJSONObject("keyboard") }.getOrNull() }
                         ?.let { summary.put("keyboard", it) }
@@ -568,9 +578,11 @@ internal class AgentLocalTools(
             coordinateSpace = args.optString("coordinate_space")
         )
         return clearOverlay(point) {
-            AgentHapticFeedback.perform(context, AgentHapticFeedback.Type.TAP)
-            showTap(point.x, point.y)
-            deviceController.tap(point.x, point.y)
+            guardedCoordinateInput {
+                AgentHapticFeedback.perform(context, AgentHapticFeedback.Type.TAP)
+                showTap(point.x, point.y)
+                deviceController.tap(point.x, point.y)
+            }
         }
     }
 
@@ -587,9 +599,11 @@ internal class AgentLocalTools(
             y = ((first.y.toLong() + second.y.toLong()) / 2L).toInt(),
         )
         return clearOverlay(point) {
-            AgentHapticFeedback.perform(context, AgentHapticFeedback.Type.TAP)
-            showTap(point.x, point.y)
-            deviceController.tap(point.x, point.y)
+            guardedCoordinateInput {
+                AgentHapticFeedback.perform(context, AgentHapticFeedback.Type.TAP)
+                showTap(point.x, point.y)
+                deviceController.tap(point.x, point.y)
+            }
         }
     }
 
@@ -636,9 +650,11 @@ internal class AgentLocalTools(
         )
         val durationMs = args.optInt("duration_ms", 800)
         return clearOverlay(point) {
-            AgentHapticFeedback.perform(context, AgentHapticFeedback.Type.LONG_PRESS)
-            showLongPress(point.x, point.y, durationMs)
-            deviceController.longPress(point.x, point.y, durationMs)
+            guardedCoordinateInput {
+                AgentHapticFeedback.perform(context, AgentHapticFeedback.Type.LONG_PRESS)
+                showLongPress(point.x, point.y, durationMs)
+                deviceController.longPress(point.x, point.y, durationMs)
+            }
         }
     }
 
@@ -655,15 +671,11 @@ internal class AgentLocalTools(
         )
         val durationMs = args.optInt("duration_ms", 500)
         return clearOverlay(start, end) {
-            AgentHapticFeedback.perform(context, AgentHapticFeedback.Type.SWIPE)
-            showSwipe(start.x, start.y, end.x, end.y, durationMs)
-            deviceController.swipe(
-                start.x,
-                start.y,
-                end.x,
-                end.y,
-                durationMs
-            )
+            guardedCoordinateInput {
+                AgentHapticFeedback.perform(context, AgentHapticFeedback.Type.SWIPE)
+                showSwipe(start.x, start.y, end.x, end.y, durationMs)
+                deviceController.swipe(start.x, start.y, end.x, end.y, durationMs)
+            }
         }
     }
 
@@ -773,7 +785,8 @@ internal class AgentLocalTools(
      * 经常把截图像素当成屏幕像素；缺省时直接报参数错误，让模型在下一步改正。
      */
     private fun convertPoint(x: Int, y: Int, coordinateSpace: String): ScreenPoint {
-        val space = publishedObservation.get().coordinateSpace
+        val published = publishedObservation.get()
+        val space = published.coordinateSpace
         val requestedSpace = coordinateSpace.trim().lowercase(Locale.ROOT)
         if (requestedSpace.isBlank()) {
             throw InvalidToolArgumentException(
@@ -784,6 +797,7 @@ internal class AgentLocalTools(
             if (x !in 0..NORMALIZED_MAX || y !in 0..NORMALIZED_MAX) {
                 throw InvalidToolArgumentException("normalized 坐标必须在 0–$NORMALIZED_MAX 之间：($x,$y)")
             }
+            requireVisualCoordinates(published)
             val (width, height) = space?.let { it.screenWidth to it.screenHeight }
                 ?: deviceController.screenDimensions()
             return ScreenPoint(
@@ -806,9 +820,10 @@ internal class AgentLocalTools(
         }
         if (space == null) {
             throw InvalidToolArgumentException(
-                "最近一次观察没有附图，没有 screenshot 坐标系；看截图定位请用 normalized，或先带截图重新观察",
+                "最近一次观察没有附图，没有 screenshot 坐标系；请先带截图重新观察，节点坐标请用 screen",
             )
         }
+        requireVisualCoordinates(published)
         val point = runCatching { space.fromScreenshot(x, y) }
             .getOrElse { throwable ->
                 throw InvalidToolArgumentException(
@@ -816,6 +831,21 @@ internal class AgentLocalTools(
                 )
             }
         return ScreenPoint(point.x, point.y)
+    }
+
+    private fun requireVisualCoordinates(observation: PublishedObservation) {
+        if (observation.visualCoordinatesValid) return
+        val message = "当前没有可用的新截图：动作执行后旧截图坐标已失效。请 observe_screen(include_screenshot=true) 后重新定位；节点坐标仍可使用最新 ui_nodes 的 screen 坐标。"
+        if (observation.coordinateSpace != null) throw StaleCoordinateObservationException(message)
+        throw InvalidToolArgumentException(message)
+    }
+
+    private fun guardedCoordinateInput(action: () -> String): String {
+        deviceController.coordinateLayoutError(publishedObservation.get().inputLayout)?.let { failure ->
+            publishedObservation.updateAndGet { it.copy(visualCoordinatesValid = false) }
+            return failure
+        }
+        return action()
     }
 
     private fun searchApps(args: JSONObject): String {
@@ -1491,11 +1521,14 @@ internal class AgentLocalTools(
     private data class ScreenPoint(val x: Int, val y: Int)
 
     private class InvalidToolArgumentException(message: String) : IllegalArgumentException(message)
+    private class StaleCoordinateObservationException(message: String) : IllegalStateException(message)
 
     private data class PublishedObservation(
         val elements: RootShellDeviceController.ElementObservation? = null,
         val coordinateSpace: RootShellDeviceController.CoordinateSpace? = null,
         val generation: Long? = null,
+        val visualCoordinatesValid: Boolean = false,
+        val inputLayout: io.github.mangi.eta.agent.accessibility.AgentAccessibilityService.InputLayout? = null,
     )
 
     private data class GitHubInspectionSnapshot(

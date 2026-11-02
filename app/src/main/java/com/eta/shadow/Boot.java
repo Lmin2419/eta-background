@@ -389,7 +389,11 @@ public final class Boot {
         int did = req.optInt("displayId", -1);
         int limit = req.optInt("limit", 250);
         List<AccessibilityWindowInfo> list = windowsOf(did);
-        if (list == null) return new JSONObject().put("ok", false).put("code", "DISPLAY_NOT_FOUND");
+        // Root geometry is authoritative. A missing observer entry can simply mean
+        // that the App/observer has not published its window yet, not a lost display.
+        if (list == null) return new JSONObject().put("ok", false).put("code", "WINDOW_NOT_READY")
+                .put("reason", "OBSERVER_WINDOW_UNAVAILABLE").put("displayId", did).put("retryable", true)
+                .put("message", "后台显示仍存在，但观察服务尚未提供窗口；可短暂等待后重新观察，不要因此重启应用或重放输入。");
         JSONArray nodes = new JSONArray();
         int count = 0;
         for (AccessibilityNodeInfo n : flatten(list, limit)) {

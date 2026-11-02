@@ -56,6 +56,15 @@ public class BootGeometryTest {
         assertTrue(result.getBoolean("ok")); assertEquals(1, result.getInt("count"));
         assertEquals(1080, result.getJSONObject("geometry").getInt("width"));
     }
+    @Test public void missingObserverWindowDoesNotClaimTheRootDisplayDisappeared() throws Exception {
+        shadowOf(controller.get()).setWindowsOnDisplay(8, null);
+        JSONObject result = call(request("dump"));
+        assertFalse(result.getBoolean("ok"));
+        assertEquals("WINDOW_NOT_READY", result.getString("code"));
+        assertEquals("OBSERVER_WINDOW_UNAVAILABLE", result.getString("reason"));
+        assertEquals(8, result.getInt("displayId"));
+        assertTrue(result.getBoolean("retryable"));
+    }
     @Test public void missingControlsHaveTheirOwnErrorsOnAnInvisiblePrivateDisplay() throws Exception {
         assertEquals("NO_EDITABLE", call(request("settext").put("text", "test")).getString("code"));
         assertEquals("NO_NODES", call(request("click2").put("text", "不存在")).getString("code"));

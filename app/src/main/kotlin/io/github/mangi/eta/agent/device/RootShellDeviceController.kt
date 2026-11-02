@@ -43,6 +43,7 @@ internal class RootShellDeviceController(
         val image: AgentModelClient.ModelImage?,
         val elementObservation: ElementObservation?,
         val coordinateSpace: CoordinateSpace?,
+        val inputLayout: AgentAccessibilityService.InputLayout? = null,
     )
 
     data class ElementObservation(
@@ -115,7 +116,8 @@ internal class RootShellDeviceController(
             return Observation(accessibilityUnavailable(), null, null, null)
         }
         val nodeLimit = maxNodes.coerceIn(1, 120)
-        val display = screenSize()
+        val inputLayout = accessibility?.inputLayout()
+        val display = inputLayout?.let { it.width to it.height } ?: screenSize()
         val focus = accessibility
             ?.currentPackageName()
             ?.takeIf { it.isNotBlank() }
@@ -159,6 +161,12 @@ internal class RootShellDeviceController(
         }
         val nodes = elementObservation?.nodes.orEmpty()
         val capture = if (includeScreenshot) captureScreenshot() else ScreenCapture.notRequested()
+        if (inputLayout != null && accessibility.inputLayout() != inputLayout) {
+            return Observation(JSONObject().put("ok", false).put("code", "STALE_OBSERVATION")
+                .put("reason", "LAYOUT_CHANGED_DURING_OBSERVATION").put("operationMayHaveRun", false)
+                .put("message", "观察期间窗口、键盘或显示布局已改变，请重新观察；本次未发布坐标观察").toString(),
+                null, null, null)
+        }
         val image = capture.image
         val coordinateSpace = if (image?.width != null && image.height != null) {
             CoordinateSpace(
@@ -217,7 +225,7 @@ internal class RootShellDeviceController(
                         )
                         .put(
                             "note",
-                            "看截图定位用 normalized（0–999，相对整屏），不受模型侧图片缩放影响；ui_nodes 的 center/bounds 用 screen",
+                            "看截图定位用 normalized（0–999，相对整屏），不受模型侧图片缩放影响；ui_nodes 的 center/bounds 用 screen。动作提交后截图坐标失效；继续按图定位须重新观察截图，after 中的新节点仍可直接使用。",
                         )
                 }
             )
@@ -241,7 +249,21 @@ internal class RootShellDeviceController(
                         .put("height", image.height)
                 }
             )
-        return Observation(json.toString(), image, elementObservation, coordinateSpace)
+        return Observation(json.toString(), image, elementObservation, coordinateSpace, inputLayout)
+    }
+
+    fun coordinateLayoutError(expected: AgentAccessibilityService.InputLayout?): String? {
+        if (expected == null) return null // Older/root-only observations may not expose window identity.
+        val actual = AgentAccessibilityService.current()?.inputLayout()
+        if (actual == expected) return null
+        return JSONObject().put("ok", false).put("code", "STALE_OBSERVATION")
+            .put("operationMayHaveRun", false).put("reason", when {
+                actual == null -> "WINDOW_UNAVAILABLE"
+                actual.width != expected.width || actual.height != expected.height || actual.rotation != expected.rotation -> "GEOMETRY_MISMATCH"
+                actual.packageName != expected.packageName || actual.windowId != expected.windowId -> "WINDOW_CHANGED"
+                actual.keyboardBounds != expected.keyboardBounds -> "KEYBOARD_CHANGED"
+                else -> "WINDOW_BOUNDS_CHANGED"
+            }).put("message", "点击前窗口、键盘或显示布局已变化，请重新观察后定位；本次没有发送触摸").toString()
     }
 
     fun tap(x: Int, y: Int): String {

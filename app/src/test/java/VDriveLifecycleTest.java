@@ -48,9 +48,9 @@ public class VDriveLifecycleTest {
             return new JSONObject().put("ok", true).put("moved", true)
                 .put("taskId", 71).put("toDisplay", 0);
         }
-        @Override boolean foregroundWindowReady(String pkg, int display) {
+        @Override String foregroundWindowSnapshot(String pkg, int display) {
             readinessCalls++;
-            return windowProbe == null ? windowReady : super.foregroundWindowReady(pkg, display);
+            return windowProbe == null ? (windowReady ? "stable-window" : null) : super.foregroundWindowSnapshot(pkg, display);
         }
         @Override JSONObject proxyA11y(JSONObject request, int timeout) { return windowProbe; }
         @Override int displayOfTask(int task) { return taskDisplay; }
@@ -58,7 +58,7 @@ public class VDriveLifecycleTest {
         @Override void moveTask(int task, int display) { moves++; taskDisplay = display; }
         @Override void tickSession(Session session, long now) { if (realPatrol) super.tickSession(session, now); }
         @Override java.util.List<?> rootTasksSnapshot() { return tasks; }
-        @Override void sleepCancellable(long ms) { }
+        @Override void sleepCancellable(long ms) { org.robolectric.shadows.ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(ms)); }
         @Override void detachCaptureSurface(Session session) {
             detaches++;
             if (failDetach) throw new IllegalStateException("audit: detach rejected");
@@ -131,7 +131,7 @@ public class VDriveLifecycleTest {
         assertSame(session, worker.sessions.get("audit.target"));
     }
 
-    @Test public void successfulHandoffRequiresTwoReadyWindowObservations() throws Exception {
+    @Test public void successfulHandoffWaitsForAStableDestinationInsteadOfTwoImmediateProbes() throws Exception {
         worker = new Worker(RuntimeEnvironment.getApplication());
         worker.windowReady = true;
         VDriveWorker.Session session = worker.new Session("audit.target");
@@ -143,7 +143,7 @@ public class VDriveLifecycleTest {
         JSONObject result = worker.presentCompleted(new JSONObject());
         assertTrue(result.getBoolean("ok"));
         assertTrue(result.getBoolean("windowReady"));
-        assertEquals(2, worker.readinessCalls);
+        assertEquals(5, worker.readinessCalls); // 0/100/200/300/400 ms, not just two ready reads.
     }
 
     @Test public void failedDetachKeepsCaptureUsableAndDoesNotAcknowledgeParking() throws Exception {
@@ -169,22 +169,22 @@ public class VDriveLifecycleTest {
 
     @Test public void focusedWindowAlsoNeedsVisibleApplicationBoundsOnTheTargetDisplay() throws Exception {
         worker = new Worker(RuntimeEnvironment.getApplication());
-        JSONObject window = new JSONObject().put("package", "audit.target").put("type", 1)
+        JSONObject window = new JSONObject().put("id", 7).put("package", "audit.target").put("type", 1)
                 .put("focused", true).put("visible", true).put("bounds", new org.json.JSONArray("[0,0,1080,2300]"));
         worker.windowProbe = new JSONObject().put("ok", true).put("displayId", 0)
                 .put("windows", new org.json.JSONArray().put(window));
-        assertTrue(worker.foregroundWindowReady("audit.target", 0));
+        assertNotNull(worker.foregroundWindowSnapshot("audit.target", 0));
         window.put("visible", false);
-        assertFalse(worker.foregroundWindowReady("audit.target", 0));
+        assertNull(worker.foregroundWindowSnapshot("audit.target", 0));
         window.put("visible", true).put("bounds", new org.json.JSONArray("[0,0,0,0]"));
-        assertFalse(worker.foregroundWindowReady("audit.target", 0));
+        assertNull(worker.foregroundWindowSnapshot("audit.target", 0));
         window.put("bounds", new org.json.JSONArray("[2000,0,3000,2300]"));
-        assertFalse(worker.foregroundWindowReady("audit.target", 0));
+        assertNull(worker.foregroundWindowSnapshot("audit.target", 0));
         window.put("bounds", new org.json.JSONArray("[0,0,1080,2300]")).put("type", 3);
-        assertFalse(worker.foregroundWindowReady("audit.target", 0));
+        assertNull(worker.foregroundWindowSnapshot("audit.target", 0));
         window.put("type", 1);
         worker.windowProbe.put("displayId", 42);
-        assertFalse(worker.foregroundWindowReady("audit.target", 0));
+        assertNull(worker.foregroundWindowSnapshot("audit.target", 0));
     }
 
     @Test public void repeatingHandoffObservesMovedTaskWithoutAnotherMove() throws Exception {
@@ -227,6 +227,10 @@ public class VDriveLifecycleTest {
         // Completed pages may be deliberately reopened by a new user-authorized run.
         worker.taskDisplay = 0; session.orphanAt = 1; worker.load(session);
         assertNull(worker.foregroundGuard());
+        assertFalse(worker.isHandingOver());
+        worker.prepareRelease();
+        assertTrue(worker.isHandingOver());
+        assertFalse(worker.isTakenOver());
     }
     @Test public void closingPreviewDropsParkedCaptureWithoutChangingAiFrameOrTaskIdentity() throws Exception {
         worker = new Worker(RuntimeEnvironment.getApplication());
@@ -291,10 +295,34 @@ public class VDriveLifecycleTest {
         worker.tickSession(session, 1200);
         assertNotNull("One ready probe is not sufficient", session.reader);
         worker.tickSession(session, 1400);
+        assertNotNull("Two probes during the animation must not trigger release", session.reader);
+        worker.tickSession(session, 1600);
         assertNull(session.reader);
         assertNull(session.vd);
         assertFalse(worker.sessions.containsKey(session.pkg));
         assertEquals(0, worker.moves); // Recents already moved it; never move/relaunch it again.
+    }
+
+    @Test public void readyWindowIdentityOrBoundsChangesRestartTheHandoffQuietInterval() throws Exception {
+        worker = new Worker(RuntimeEnvironment.getApplication()); worker.realPatrol = true;
+        worker.tasks = java.util.Collections.singletonList(new RootTask());
+        VDriveWorker.Session session = worker.new Session("audit.transition");
+        session.reader = ImageReader.newInstance(32, 64, PixelFormat.RGBA_8888, 3);
+        session.vd = worker.dm.createVirtualDisplay("layout-transition", 32, 64, 160, session.reader.getSurface(), 0);
+        session.displayId = session.vd.getDisplay().getDisplayId(); session.taskId = 71;
+        worker.sessions.put(session.pkg, session); worker.load(session);
+        JSONObject window = new JSONObject().put("id", 7).put("package", session.pkg).put("type", 1)
+                .put("focused", true).put("visible", true).put("bounds", new org.json.JSONArray("[0,0,1080,2300]"));
+        worker.windowProbe = new JSONObject().put("ok", true).put("displayId", 0)
+                .put("windows", new org.json.JSONArray().put(window));
+        worker.tickSession(session, 1000);
+        window.put("id", 8); worker.tickSession(session, 1400);
+        assertNotNull("A different ready window must not satisfy the old window's interval", session.reader);
+        window.put("bounds", new org.json.JSONArray("[0,0,1080,2200]")); worker.tickSession(session, 1800);
+        assertNotNull("Resized ready window is still transitioning", session.reader);
+        worker.tickSession(session, 2199); assertNotNull(session.reader);
+        worker.tickSession(session, 2200); assertNull(session.reader); assertNull(session.vd);
+        assertEquals(0, worker.moves);
     }
 
     @Test public void finalDisplayReleaseDoesNotToggleItsSurfaceOffBeforeRemovingIt() throws Exception {

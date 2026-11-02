@@ -16,6 +16,7 @@ internal object AgentBackgroundToolCatalog {
             "原生后台 observe_screen 设置 include_screenshot=true 后，screenshot.attached=true 且实际收到图片附件即已取得画面，不再调用 read_image 重读同帧；仅返回路径或 attached=false 不表示已看图。" +
             "确认当前页面节点没有所需正文或属于纯视觉页面后，后续观察直接请求截图，避免每轮先查空树再补图；页面改变后重新判断观察方式。" +
             "以下规则仅适用于后台 screen_*：先 screen_open，检查 inputReady/inputState；未就绪时只重新观察或诊断，不反复销毁重开应用。" +
+            "WINDOW_NOT_READY 表示显示仍在但窗口树暂不可读，短暂等待后仅重新观察，连续两次仍失败就报告状态；APP_TAKEN_OVER 表示应用已移出后台，需要用户决定是否继续，不能自行拉回。" +
             "用 screen_dump/screen_list 读节点；游戏、画布或节点不足时用 screen_shot 并通过 read_image 查看。" +
             "若 read_image 未公开，说明图片读取工具未开启，不能声称已看过截图。" +
             "后台节点坐标用 coordinate_space=display；截图坐标用 screenshot 并携带本次 frame_id，不使用前台的 normalized/screen 或 observation_id。" +

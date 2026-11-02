@@ -163,6 +163,27 @@ class AgentAccessibilityService : AccessibilityService() {
         }
     } ?: JSONObject().put("known", false)
 
+    /** Lightweight identity/layout only. No tree traversal, screenshot or frame-age limit. */
+    data class InputLayout(
+        val packageName: String, val windowId: Int, val windowBounds: String,
+        val width: Int, val height: Int, val rotation: Int, val keyboardBounds: List<String>,
+    )
+
+    fun inputLayout(): InputLayout? = runOnMainSync {
+        val current = windows.orEmpty()
+        val apps = current.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }
+        val target = apps.filter { it.isFocused }.singleOrNull()
+            ?: apps.filter { it.isActive }.singleOrNull() ?: return@runOnMainSync null
+        val pkg = target.root?.packageName?.toString()?.takeIf { it.isNotBlank() && it != packageName }
+            ?: return@runOnMainSync null
+        val size = displaySize() ?: return@runOnMainSync null
+        @Suppress("DEPRECATION")
+        val rotation = (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
+        InputLayout(pkg, target.id, Rect().also(target::getBoundsInScreen).toShortString(),
+            size.first, size.second, rotation, current.filter { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
+                .map { Rect().also(it::getBoundsInScreen).toShortString() }.sorted())
+    }
+
     fun feedbackDisplay(pkg: String, window: Int?): Int? {
         val displays = runCatching { windowsOnAllDisplays }.getOrNull() ?: return null
         val candidates = mutableSetOf<Int>()

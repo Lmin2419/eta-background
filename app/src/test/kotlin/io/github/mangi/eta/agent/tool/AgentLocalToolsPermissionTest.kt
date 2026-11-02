@@ -393,6 +393,76 @@ class AgentLocalToolsPermissionTest {
         tools.close()
     }
 
+    @Test fun dispatchedInputConsumesVisualCoordinatesButKeepsFreshNodeCoordinates() {
+        coordinateTools().use { tools ->
+            observeImage(tools)
+            val result = afterAction(tools, """{"ok":true}""")
+            assertFalse(JSONObject(result.content).getBoolean("screenshot_coordinates_valid"))
+            for (space in listOf("screenshot", "normalized")) {
+                assertEquals("STALE_OBSERVATION", coordinateCall(tools, space).getString("code"))
+            }
+            // Node coords still reach the device permission boundary; no extra screenshot is needed.
+            assertEquals("ACCESSIBILITY_UNAVAILABLE", coordinateCall(tools, "screen").getString("code"))
+            observeImage(tools)
+            assertEquals("ACCESSIBILITY_UNAVAILABLE", coordinateCall(tools, "screenshot").getString("code"))
+        }
+    }
+
+    @Test fun uncertainDispatchAlsoConsumesTheImageEvenWhenFollowingTreeReadFails() {
+        var failRead = false
+        coordinateTools { failRead }.use { tools ->
+            observeImage(tools); failRead = true
+            val result = afterAction(tools, """{"ok":false,"code":"ACTION_OUTCOME_UNKNOWN"}""")
+            assertTrue(JSONObject(result.content).getBoolean("operationMayHaveRun"))
+            assertEquals("ACTION_OUTCOME_UNKNOWN", JSONObject(result.content).getString("code"))
+            assertEquals("STALE_OBSERVATION", coordinateCall(tools, "normalized").getString("code"))
+        }
+    }
+
+    @Test fun rejectedInputAndTimeAloneDoNotInvalidateAStaticImage() {
+        coordinateTools().use { tools ->
+            observeImage(tools)
+            afterAction(tools, """{"ok":false,"code":"NODE_NOT_ACTIONABLE","operationMayHaveRun":false}""")
+            org.robolectric.shadows.ShadowSystemClock.advanceBy(java.time.Duration.ofSeconds(70))
+            assertEquals("ACCESSIBILITY_UNAVAILABLE", coordinateCall(tools, "normalized").getString("code"))
+            assertEquals("ACCESSIBILITY_UNAVAILABLE", coordinateCall(tools, "screenshot").getString("code"))
+        }
+    }
+
+    @Test fun screenshotMappingUsesTheActualScaledImageAndNormalizesTheWholeDisplay() {
+        coordinateTools().use { tools ->
+            observeImage(tools)
+            val method = AgentLocalTools::class.java.getDeclaredMethod("convertPoint", Int::class.javaPrimitiveType,
+                Int::class.javaPrimitiveType, String::class.java).apply { isAccessible = true }
+            val point = method.invoke(tools, 270, 600, "screenshot")!!
+            fun x(p: Any) = p.javaClass.getDeclaredField("x").apply { isAccessible = true }.getInt(p)
+            fun y(p: Any) = p.javaClass.getDeclaredField("y").apply { isAccessible = true }.getInt(p)
+            assertEquals(540, x(point)); assertEquals(1200, y(point))
+            val corner = method.invoke(tools, 999, 999, "normalized")!!
+            assertEquals(1079, x(corner)); assertEquals(2399, y(corner))
+        }
+    }
+
+    private fun coordinateTools(failRead: () -> Boolean = { false }) = tools(screenObservationProvider = { options ->
+        check(!failRead()) { "Simulated observer disconnect after input" }
+        observation("coords", options.includeScreenshot, if (options.includeScreenshot) AgentModelClient.ModelImage(
+            reference = "data:image/webp;base64,AA==", mimeType = "image/webp", bytes = 1,
+            width = 540, height = 1200, source = "screen") else null)
+    })
+
+    private fun observeImage(tools: AgentLocalTools) = tools.execute(AgentModelClient.ToolCall("observe", "observe_screen",
+        """{"include_screenshot":true}"""))
+
+    private fun coordinateCall(tools: AgentLocalTools, space: String) = JSONObject(tools.execute(
+        AgentModelClient.ToolCall("click", "tap", """{"x":100,"y":200,"coordinate_space":"$space"}""")).content)
+
+    private fun afterAction(tools: AgentLocalTools, reply: String): AgentModelClient.ToolResult {
+        val action: () -> String = { reply }
+        val method = AgentLocalTools::class.java.getDeclaredMethod("afterAction", String::class.java,
+            JSONObject::class.java, Function0::class.java).apply { isAccessible = true }
+        return method.invoke(tools, "tap_element", JSONObject("""{"index":7}"""), action) as AgentModelClient.ToolResult
+    }
+
     private fun tools(
         terminalEnabled: () -> Boolean = { false },
         browserEnabled: () -> Boolean = { false },

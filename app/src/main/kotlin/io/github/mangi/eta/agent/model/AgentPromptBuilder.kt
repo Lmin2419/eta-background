@@ -113,6 +113,7 @@ internal object AgentPromptBuilder {
                     "调用节点工具时必须把该节点与同一次观察的 observation_id 一起传回，过期就重新观察；" +
                     "同一手机的 GUI 操作阶段由 Runtime 排队独占，完成阶段后调用 release_gui 主动释放，再继续不依赖屏幕的工作；" +
                     "释放或用户接管后旧观察与坐标失效，继续操作前必须重新 observe_screen；" +
+                    "前台动作已提交（包括结果未确认）后，旧截图的 normalized/screenshot 坐标不可继续用；再次按图定位须 observe_screen(include_screenshot=true)，after 返回的新节点仍可直接使用，不必为节点动作重截屏。静态画面不按时间过期。" +
                     "scroll 的方向表示要显示的内容方向，例如 down 显示下方内容；" +
                     "任何工具返回 ACTION_OUTCOME_UNKNOWN 或 DIRECTION_MISMATCH 时，必须先重新观察，禁止直接重放动作；" +
                     "输入文本用 type_text：可指定 index 写入输入框；必须检查稳定后的 verified 和输入框真实内容，节点接受不等于应用已保存。未确认时重新观察，必要时明确点击输入框取得焦点后替换完整值，不要重复追加；要搜索或发送时设 submit=true；中文、长文本直接传入，不要借助剪贴板；" +

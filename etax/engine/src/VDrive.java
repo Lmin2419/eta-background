@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Root transport. Mutable display/input/capture state lives in independent workers. */
 public final class VDrive {
-    static final String BUILD = "20261102-e45-finalize";
+    static final String BUILD = "20261102-e46-transition";
     static java.util.function.BooleanSupplier health = () -> true;
     static volatile boolean systemInvalid;
     private static final String INSTANCE = UUID.randomUUID().toString();
@@ -45,6 +45,7 @@ public final class VDrive {
         default boolean isHandingOver() { return false; }
         default boolean isTakenOver() { return false; }
         default JSONObject foregroundGuard() { return null; }
+        default void prepareRelease() { foregroundGuard(); }
         default String commandState() { return "idle"; }
         default JSONObject observationGuard(boolean mutating) { return null; }
         default void observationAccepted() { }
@@ -505,8 +506,8 @@ public final class VDrive {
             if (slot == null) { retire(id); return ok(); }
         }
         if (slot.worker != null) {
-            slot.worker.foregroundGuard();
-            if (slot.worker.isTakenOver()) {
+            slot.worker.prepareRelease();
+            if (slot.worker.isTakenOver() || slot.worker.isHandingOver()) {
                 slot.worker.reconcileForeground();
                 return error("CLEANUP_PENDING", "等待主屏窗口就绪后释放旧屏");
             }

@@ -189,7 +189,8 @@ class VDriveWorker implements VDrive.Worker {
         long orphanAt = 0;
         long emptySince = 0;
         long handoffAt = 0;
-        int handoffReadyChecks;
+        String handoffWindow;
+        long handoffWindowSince;
         long createdAt = SystemClock.elapsedRealtime();
         long lastCmdAt = SystemClock.elapsedRealtime();
         String protectedPkg = "";
@@ -344,6 +345,18 @@ class VDriveWorker implements VDrive.Worker {
         reconcileForeground();
         return takeoverError();
     }
+    public void prepareRelease() {
+        foregroundGuard();
+        // Only cleanup probes parked pages here. A new authorized run may claim
+        // and reuse one; do not mark that deliberate launch as an old handoff.
+        int task = launchedTaskId, ownedDisplay = displayId;
+        if (retired || orphanAt <= 0 || task <= 0 || ownedDisplay <= 0) return;
+        int actual = displayOfTask(task);
+        if (actual >= 0 && actual != ownedDisplay) {
+            handingOver = true;
+            reconcileForeground();
+        }
+    }
     private void markTakenOver(int actualDisplay) {
         if (!takenOver) log("event=task_left_background task=" + launchedTaskId + " from=" + displayId + " to=" + actualDisplay);
         takenOver = true;
@@ -485,9 +498,9 @@ class VDriveWorker implements VDrive.Worker {
             if (x.orphanAt <= 0) markTakenOver(movedTo);
             // Keep the last Surface through the system's transition. Detaching it here
             // toggles the old display before the destination has a ready window.
-            // retireFromPatrol releases it after the two window-readiness observations.
+            // Retire only after the same destination window/layout has settled.
             if (x.handoffAt <= 0) x.handoffAt = now;
-            if (!confirmHandoffWindow(x, movedTo)) return;
+            if (!confirmHandoffWindow(x, movedTo, now)) return;
             // The actual tracked task left; its old display can go without touching its new window.
             retireFromPatrol(x);
             return;
@@ -2376,7 +2389,7 @@ class VDriveWorker implements VDrive.Worker {
             boolean ready = false;
             long readyDeadline = SystemClock.elapsedRealtime() + 1200;
             for (int attempt = 0; attempt < 8 && SystemClock.elapsedRealtime() < readyDeadline; attempt++) {
-                if (confirmHandoffWindow(session, 0)) { ready = true; break; }
+                if (confirmHandoffWindow(session, 0, SystemClock.elapsedRealtime())) { ready = true; break; }
                 sleepCancellable(100);
             }
             disposition.compareAndSet(CLAIMED, PARKED);
@@ -2456,16 +2469,16 @@ class VDriveWorker implements VDrive.Worker {
                 .put("moveMs", SystemClock.elapsedRealtime() - t);
     }
 
-    boolean foregroundWindowReady(String pkg, int did) {
+    String foregroundWindowSnapshot(String pkg, int did) {
         JSONObject probe;
         try { probe = proxyA11y(new JSONObject().put("cmd", "input_state").put("displayId", did)
                 .put("expectedPackage", pkg), 400); }
-        catch (Exception unavailable) { return false; }
-        if (probe == null || !probe.optBoolean("ok") || probe.optInt("displayId", -1) != did) return false;
+        catch (Exception unavailable) { return null; }
+        if (probe == null || !probe.optBoolean("ok") || probe.optInt("displayId", -1) != did) return null;
         DisplayGeometry display = geometry(did);
-        if (display.width <= 0 || display.height <= 0) return false;
+        if (display.width <= 0 || display.height <= 0) return null;
         org.json.JSONArray windows = probe.optJSONArray("windows");
-        if (windows == null) return false;
+        if (windows == null) return null;
         for (int index = 0; index < windows.length(); index++) {
             JSONObject window = windows.optJSONObject(index);
             if (window == null || !pkg.equals(window.optString("package")) || !window.optBoolean("focused")
@@ -2473,14 +2486,25 @@ class VDriveWorker implements VDrive.Worker {
             org.json.JSONArray bounds = window.optJSONArray("bounds");
             if (bounds == null || bounds.length() != 4) continue;
             Rect rect = new Rect(bounds.optInt(0), bounds.optInt(1), bounds.optInt(2), bounds.optInt(3));
-            if (!rect.isEmpty() && Rect.intersects(rect, new Rect(0, 0, display.width, display.height))) return true;
+            if (!rect.isEmpty() && Rect.intersects(rect, new Rect(0, 0, display.width, display.height))
+                    && window.has("id"))
+                return did + ":" + window.optInt("id") + ":" + rect.toShortString() + ":"
+                        + display.width + ":" + display.height + ":" + display.rotation;
         }
-        return false;
+        return null;
     }
 
-    private boolean confirmHandoffWindow(Session session, int display) {
-        session.handoffReadyChecks = foregroundWindowReady(session.pkg, display) ? session.handoffReadyChecks + 1 : 0;
-        return session.handoffReadyChecks >= 2;
+    // Window focus can precede the Recents animation or a layout change. Two
+    // immediate successful probes are not proof that the transition has settled.
+    // Retain only existing resources; never recapture, resize or restart the App.
+    private boolean confirmHandoffWindow(Session session, int display, long now) {
+        String snapshot = foregroundWindowSnapshot(session.pkg, display);
+        if (snapshot == null || !snapshot.equals(session.handoffWindow)) {
+            session.handoffWindow = snapshot;
+            session.handoffWindowSince = now;
+            return false;
+        }
+        return now - session.handoffWindowSince >= 400;
     }
 
     /** Bring the app the user was looking at back to the front, a few times if needed. */

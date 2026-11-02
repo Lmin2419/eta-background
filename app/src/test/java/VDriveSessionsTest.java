@@ -57,6 +57,10 @@ public class VDriveSessionsTest {
             try { return new JSONObject().put("ok", false).put("code", "APP_TAKEN_OVER"); }
             catch (Exception error) { throw new AssertionError(error); }
         }
+        public void prepareRelease() {
+            foregroundGuard();
+            if (movedToMain && parked) handingOver = true;
+        }
         public String commandState() { return draining ? "draining" : needsObservation ? "needs_observation" : "idle"; }
         public JSONObject observationGuard(boolean mutating) {
             if (!draining && !(mutating && needsObservation)) return null;
@@ -457,6 +461,18 @@ public class VDriveSessionsTest {
         send(id, "release_session");
         assertTrue(send(id, "release_session").getBoolean("ok"));
         assertEquals(0, worker.closeCalls); assertEquals(1, count());
+    }
+
+    @Test public void parkedPageMovedFromRecentsAlsoWaitsForTransitionCleanup() throws Exception {
+        String id = open("app.parked-moving"); park(id);
+        FakeWorker worker = made.get(id);
+        worker.movedToMain = true; worker.handoffReady = false;
+        assertFalse(worker.takenOver); // No running AI, so APP_TAKEN_OVER alone cannot protect it.
+        assertEquals("CLEANUP_PENDING", send(id, "release_session").getString("code"));
+        assertEquals(0, worker.closeCalls); assertEquals(1, count());
+        worker.handoffReady = true;
+        send(id, "release_session");
+        assertEquals(0, worker.closeCalls); assertEquals(0, count());
     }
 
 }
