@@ -61,40 +61,31 @@
 
 ## 当前指令（ChatGPT 维护）
 
-> 用户已明确批准第一、第二、第三轮同步实施与推进，取代 C010 的讨论暂停；由 ChatGPT 完成实现、合并验证和候选包交付，不恢复 dsh 或每小时自动化。
+> 用户已批准将短提示捕获与操作结果核验接入所有前后台 GUI 工具，由 ChatGPT 修改源码并交付候选；不恢复 dsh 或每小时自动化。
 
-- instruction_id: C011
-- instruction_revision: 2
-- issued_at: 2026-11-02T13:26:09Z
-- revised_at: 2026-11-02T14:40:42Z
-- status: REVIEW_READY
-- scope: STABILIZATION_EFFICIENCY_COMMON_TASKS
+- instruction_id: C012
+- instruction_revision: 1
+- issued_at: 2026-11-02T15:56:25Z
+- status: RUNNING
+- scope: GENERIC_GUI_ACTION_FEEDBACK
 - implementation_permission: AUTHORIZED_BY_USER
 - delivery_permission: AUTHORIZED_BY_USER
 - target: ChatGPT
-- implementation_base: 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e
-- implementation_head: 55c3eed287bbe5b5c7fed60e2c46ace1947d7f9c
-- candidate_evidence: [三轮实现、自动化与原签名 APK](coordination/CANDIDATE_55c3eed.md)
-- engine_build: 20261102-e45-finalize（沿用，未改引擎源码）
-- prior_evidence: [C009 返修记录](coordination/CANDIDATE_99f2d87.md)
-- device_status: 新候选未实测；不把旧版报告或已有 CI 结果算作新候选真机验证
-- mode: 三轮代码与自动化已完成、原签名候选实物已核验；当前候选没有手机实测
-- next_action: 等待用户真实反馈；按实际问题返修，不自动扩展功能或重建调度，不合并 main、不发布
+- implementation_base: 55c3eed287bbe5b5c7fed60e2c46ace1947d7f9c
+- implementation_head: 37b6fd45f643ccb40786011e22025c2aeb779461
+- engine_build: 20261102-e45-finalize（Root 引擎沿用）
+- device_status: 新候选未实测；旧网心云报告不能算作本候选测试
+- next_action: 完成同 head 的 Lint/构建/CI，下载核验原签名候选并补充证据；不合并、不发布
 
-### 本次明确范围
+### 本次范围与边界
 
-1. 第一轮：复核并完成已有通知会话入口、任务终态/彩边和移到主屏的显示收尾修复；保持接管恢复和通知入口。系统动画仍需实际 ColorOS 验证，不宣称所有闪烁已消失。
-2. 第二轮：普通 GUI 任务避免无界数据库探索；计数任务固定时间范围并按真实重叠内容连续遍历；优先复用原生观察的图片投递；完善现有通知历史查询的时间范围、分页和匹配记录数，并区分通知记录与聊天消息。复用 Runtime 已有事件补齐轻量计时汇总，不由模型额外分析日志。
-3. 第三轮：轻量“常用任务”，仅保存名称/指令，支持创建、编辑、复制、删除、一键新建普通会话执行及桌面快捷入口；执行和后续继续复用原 Runtime/会话，不复制整段旧历史。
-4. 不加入示范学习、项目资料夹、跨任务工作流、结果台账或定时执行。第一/三轮由用户确认，第二轮依据旧飞书计数报告及当前源码核验后确认；当时 APK/模型和完整耗时未记录，不宣称已定位具体性能占比。
+1. 通用动作前监听短反馈，按任务/包名/显示屏归属；无法归属时不猜测。前台、原生后台和旧 screen_* 共用结果格式。
+2. 对无可读反馈的操作提供短时、有界的内存画面证据；不持续录屏，不写截图文件，不逐帧调用模型，不把历史反馈图当作新坐标合同。
+3. 对可识别的同一目标合并节点/坐标/长按重复预算；稳定后的输入内容核验、键盘状态及状态变化比较一并修正。没有捕获到提示仍是未知，不升级为业务成功。
+4. 保留单 VDrive、两任务/同 App 串行、通知/预览/接管、现有息屏后台与主屏锁定保护、Harmony；不扩大 Hook，不重启第三方 App，不绕过几何或控制权检查。
+5. 不远程安装或操作手机，不触发长按电源键软重启复现，不宣称历史故障已修复；不改包名/签名/versionCode、不恢复定时、不执行旧 dsh 指令。
 
-### 保留与停止边界
-
-- 保留单 VDrive、最多两任务/同 App 串行、旧 screen_*、现有流体云/每任务通知/三个完成入口/内联回复、Harmony 及已授权的息屏后台与主屏锁定保护。
-- 不放宽观察/控制权验证、不强制重启第三方 App、不扩大系统 Hook、不修改包名/签名/versionCode。
-- 不远程安装或操作手机；长按电源键软重启仍未定位，不触发其风险路径。
-- 不合并 main、不发布、打标签或替换正式下载链接；只在业务分支提交源码与开发中记录，CI 候选实物签名/内容须核验。
-- dsh 不执行旧 C001–C010、不重建定时；原执行反馈和历史继续原样保留。
+实现说明：[ACTION_FEEDBACK.md](https://github.com/Lmin2419/eta-background/blob/37b6fd45f643ccb40786011e22025c2aeb779461/etax/ACTION_FEEDBACK.md)。
 
 ## 执行反馈（dsh 维护）
 
@@ -141,6 +132,14 @@
 - 评审请求：确认 C002 文档修订与“自动写回受阻”的精确证据；正式定时任务保留原 ID/频率，下一次自然触发 `14:02:03Z`，不重复创建。
 
 ## 评审记录（ChatGPT 维护）
+
+### C012：通用操作反馈已提交，构建核验中 — 2026-11-02T15:56:25Z
+
+- 用户在两轮讨论后明确“就按这个功能实现，开始开发修改源码”；基于 55c3eed 开发，27 文件源码/测试/说明提交为 37b6fd45f643ccb40786011e22025c2aeb779461，tree 1049436ff4dd02fda9672d3c3feda4c0c379f5d0，已以预期 head 非强推更新业务分支。
+- 短提示复制、有限图片证据、同目标重复保护和稳定输入核验已接入；不针对网心云硬编码，没有新增 Root 引擎或 Android 常驻服务。资源和兼容边界见业务文档。
+- 本地全量 2,257 项、0 失败/错误、1 跳过；其后仅补图片敏感标记与失败收尾/同屏复用不重置重复预算，最终定向回归与 Lint/Debug 正在执行。同 head 远端 CI 尚待结果，不填写为通过。
+- 12 项接线、8 项部署通过。重编译 e45 dex 摘要保持 40c45f260e324ff8945455372346373f7f8e6e6f6cdcd263d8ad6517f2e86331。当前没有新 APK 实物核验或手机测试结果。
+- 未改 PR 元数据、main、发布、签名及定时；dsh 原反馈 F003/C002 与历史原样保留。
 
 ### C011 三轮实现与候选核验完成 — 2026-11-02T14:40:42Z
 
@@ -359,4 +358,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户已要求 ChatGPT 接手，C011 三轮候选已完成核验，后续等待用户反馈；不依赖或唤醒 dsh，不恢复定时。未直接操作 dsh Host；其后续读取仅保留历史证据，不执行旧指令或并行修改业务分支。
+- external_agent_limit: 用户要求 ChatGPT 接手；C012 由 ChatGPT 完成通用反馈实现及候选核验，不依赖或唤醒 dsh，不恢复定时；不执行历史指令。
