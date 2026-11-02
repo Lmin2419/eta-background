@@ -61,31 +61,32 @@
 
 ## 当前指令（ChatGPT 维护）
 
-> 用户已批准将短提示捕获与操作结果核验接入所有前后台 GUI 工具，由 ChatGPT 修改源码并交付候选；不恢复 dsh 或每小时自动化。
+> 用户已批准的通用短提示捕获与结果核验完成，源码、同 head 自动化和原签名候选均已核验；等待用户手机反馈，不恢复 dsh 或每小时自动化。
 
 - instruction_id: C012
-- instruction_revision: 1
+- instruction_revision: 2
 - issued_at: 2026-11-02T15:56:25Z
-- status: RUNNING
+- revised_at: 2026-11-02T16:35:04Z
+- status: REVIEW_READY
 - scope: GENERIC_GUI_ACTION_FEEDBACK
 - implementation_permission: AUTHORIZED_BY_USER
 - delivery_permission: AUTHORIZED_BY_USER
 - target: ChatGPT
 - implementation_base: 55c3eed287bbe5b5c7fed60e2c46ace1947d7f9c
-- implementation_head: 37b6fd45f643ccb40786011e22025c2aeb779461
+- implementation_head: 0ee03be47e482b8ae300584f5161e660f1f673cf
 - engine_build: 20261102-e45-finalize（Root 引擎沿用）
-- device_status: 新候选未实测；旧网心云报告不能算作本候选测试
-- next_action: 完成同 head 的 Lint/构建/CI，下载核验原签名候选并补充证据；不合并、不发布
+- device_status: 当前候选未实测；旧网心云报告不能算作本候选测试
+- next_action: 交付已核验候选，依据用户实际反馈继续；不自动扩展范围、合并或发布
 
-### 本次范围与边界
+### 已实现与边界
 
-1. 通用动作前监听短反馈，按任务/包名/显示屏归属；无法归属时不猜测。前台、原生后台和旧 screen_* 共用结果格式。
-2. 对无可读反馈的操作提供短时、有界的内存画面证据；不持续录屏，不写截图文件，不逐帧调用模型，不把历史反馈图当作新坐标合同。
-3. 对可识别的同一目标合并节点/坐标/长按重复预算；稳定后的输入内容核验、键盘状态及状态变化比较一并修正。没有捕获到提示仍是未知，不升级为业务成功。
+1. 通用动作前监听短反馈，按任务/包名/显示屏归属；无法归属时不猜测。前台、原生后台和旧 screen_* 共用结果格式，仅截图前台观察也核对唯一主屏窗口。
+2. 对无可读反馈且未确认节点变化的操作提供短时、有界的内存画面证据；不持续录屏，不写截图文件，不逐帧调用模型，不把历史反馈图当作新坐标合同。
+3. 对可靠身份的同一目标合并节点/坐标/长按重复预算；稳定后的输入内容核验、键盘状态及状态变化比较一并修正。没有捕获到提示仍是未知，不升级为业务成功。
 4. 保留单 VDrive、两任务/同 App 串行、通知/预览/接管、现有息屏后台与主屏锁定保护、Harmony；不扩大 Hook，不重启第三方 App，不绕过几何或控制权检查。
 5. 不远程安装或操作手机，不触发长按电源键软重启复现，不宣称历史故障已修复；不改包名/签名/versionCode、不恢复定时、不执行旧 dsh 指令。
 
-实现说明：[ACTION_FEEDBACK.md](https://github.com/Lmin2419/eta-background/blob/37b6fd45f643ccb40786011e22025c2aeb779461/etax/ACTION_FEEDBACK.md)。
+[实现说明](https://github.com/Lmin2419/eta-background/blob/0ee03be47e482b8ae300584f5161e660f1f673cf/etax/ACTION_FEEDBACK.md) · [候选核验记录](coordination/CANDIDATE_0ee03be.md) · [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)。
 
 ## 执行反馈（dsh 维护）
 
@@ -133,6 +134,15 @@
 
 ## 评审记录（ChatGPT 维护）
 
+### C012 通用反馈与原签名候选核验完成 — 2026-11-02T16:35:04Z
+
+- 功能提交 37b6fd4；最终 head 0ee03be47e482b8ae300584f5161e660f1f673cf，tree 39caa4de16686dc583af3d01c1c3cb090d91872a。相对 55c3eed 共 27 文件、+918/−54；源码、测试和更新日志已在业务分支，未改 PR 元数据或 main。
+- 动作前短文字监听、有界内存画面、跨 API 同目标重复预算、稳定输入核验和本屏键盘状态已接入；最后补全仅截图前台观察的窗口归属。Root e45、认证/部署及系统 Hook 没有修改。
+- 最终 head 的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41477823128) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41477814638) 均成功；实际日志为全量 2,258 项、0 失败/错误、1 跳过，Lint 0 错误、393 Warning、1 Hint；12 项接线、8 项部署及 Debug/Release 构建通过。最终本地 24 项定向与 Debug 通过，未将较早 2,257 项本地全量当成最终 SHA 的全量。
+- 已下载核验 [Etax-v3.3.5+etax.0ee03be.apk](https://github.com/Lmin2419/eta-background/actions/runs/41477814638/artifacts/13160521263)，6,776,995 bytes；SHA-256 0fb940be2e15db2b4fe72b2951149b304db8d39cabf1eb8b41378bd060bfdfc3，与 CI/工件 digest 一致。包名 io.github.mangi.etax、versionCode 2026103003；原证书 dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5；e45 五项内嵌资产逐字节相符，无 engine.token。工件到期 2026-12-02T16:32:22Z。
+- [完整候选证据](coordination/CANDIDATE_0ee03be.md)与[当前方案](coordination/INTEGRATION_PLAN_CURRENT.md)已更新。当前没有手机实测，不保证每条短提示都能捕获，不将旧报告移记为新候选成功；软重启与历史系统级异常仍未唯一定位。
+- 未合并、发布、打标签、替换正式下载、改签名或远程操作手机。定时继续取消，不唤醒 dsh。外部执行反馈及其历史原样保留。
+
 ### C012：通用操作反馈已提交，构建核验中 — 2026-11-02T15:56:25Z
 
 - 用户在两轮讨论后明确“就按这个功能实现，开始开发修改源码”；基于 55c3eed 开发，27 文件源码/测试/说明提交为 37b6fd45f643ccb40786011e22025c2aeb779461，tree 1049436ff4dd02fda9672d3c3feda4c0c379f5d0，已以预期 head 非强推更新业务分支。
@@ -159,16 +169,16 @@
 
 
 - last_reviewed_feedback_revision: 3（外部 dsh 的历史 C002 回执；本次未新增或代写）
-- last_reviewed_instruction: C011
+- last_reviewed_instruction: C012
 - last_reviewed_instruction_revision: 2
-- last_reviewed_code_head: 55c3eed287bbe5b5c7fed60e2c46ace1947d7f9c
-- last_reviewed_coordination_head: e7389dd656a6651d936e08325c72d37975bb3c46
-- reviewed_at: 2026-11-02T14:40:42Z
-- decision: 三轮代码、自动化与原签名候选核验完成；新候选手机体验尚未验证
-- evidence: [55c3eed 候选证据](coordination/CANDIDATE_55c3eed.md)
-- device_gate: 本候选未实测；不沿用旧版本手机结论
-- next_phase_permission: 等待用户反馈；不自动扩展新功能、合并或发布
-- issued_next_instruction: C011 revision 2（候选核验完成，等待用户反馈）
+- last_reviewed_code_head: 0ee03be47e482b8ae300584f5161e660f1f673cf
+- last_reviewed_coordination_head: addf5f027430611b9cd43d9085ffb3f7c52822b1
+- reviewed_at: 2026-11-02T16:35:04Z
+- decision: 通用反馈源码、同 head CI 与原签名候选核验完成；当前手机实测未执行
+- evidence: [0ee03be 候选证据](coordination/CANDIDATE_0ee03be.md)
+- device_gate: 当前候选未实测；不沿用旧版本手机结论
+- next_phase_permission: 等待用户实际反馈；不自动扩展新功能、合并或发布
+- issued_next_instruction: C012 revision 2（候选核验完成，等待用户反馈）
 
 ### 用户暂停实施与交付 — 2026-11-02T11:06:13Z
 
@@ -358,4 +368,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户要求 ChatGPT 接手；C012 由 ChatGPT 完成通用反馈实现及候选核验，不依赖或唤醒 dsh，不恢复定时；不执行历史指令。
+- external_agent_limit: 用户要求 ChatGPT 接手；C012 实现与候选核验已完成，后续按用户反馈处理，不依赖或唤醒 dsh，不恢复定时，不执行历史指令。
