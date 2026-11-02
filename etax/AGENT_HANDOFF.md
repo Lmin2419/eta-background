@@ -64,14 +64,16 @@
 - instruction_id: C007
 - instruction_revision: 1
 - issued_at: 2026-11-02T08:36:41Z
-- status: RUNNING
+- status: REVIEW_READY
 - target: ChatGPT
 - candidate_head: 7c846a3d19d1dbbfee03a5781e9666283e704750
 - parent_head: 6883e75487177f40ea403536cb9f9fec261ce4e9
 - engine_build: 20261102-e43-resume
 - current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)
 - candidate_evidence: [恢复与预览返修证据](coordination/CANDIDATE_7c846a3.md)
-- latest_validation: 本地全量 2,186 项，0 失败/错误、1 跳过；12 项接线、8 项部署回归通过。本地 Lint/Debug 整体任务与两项远端 CI 尚在执行，原签名 APK 尚未核验，不先填成功。
+- latest_validation: [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41413270652) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41413263706) 均成功；签名日志记录全量 2,186 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建通过。已下载实际 APK，独立核验包名、版本、原证书、SHA-256 及五项内嵌引擎/脚本。真机待用户验证。
+- evidence_updated_at: 2026-11-02T08:56:06Z
+- candidate_apk: [Etax-v3.3.5+etax.7c846a3.apk](https://github.com/Lmin2419/eta-background/actions/runs/41413263706/artifacts/13127447427)；artifact 13127447427，6,737,495 bytes；SHA-256 `dc65465eec0f7690f249dc0dc65bc4f4ed7040500b1b4ae324f4ec7aed338f48`。
 - device_status: 新候选未执行真机验证；用户可独立安装，不要求连接电脑
 - mode: ChatGPT 直接修复与交付；不恢复每小时定时，不唤醒 dsh
 
@@ -88,7 +90,7 @@
 
 ### 完成标准与边界
 
-- 等待同 head 检查成功，下载实际原签名 APK，核验包名、版本、证书、SHA-256、内嵌引擎/脚本后再交付；不把旧 APK 的证据移记。
+- 同 head 两项 CI、实际原签名 APK 身份与引擎配对均已核验，可交付覆盖安装。新包真机仍待用户验证，不把旧包证据移记。
 - 手机重点：计算器接管→交还→真正继续计算→再接管/交还；通知恢复、另一任务不受影响、透明手机轮廓、放大数字清晰度。无 ADB 前置，不要求重做旧 20 项。
 - 保留单 VDrive、两任务、同 App 串行、旧 screen_*、流体云与原通知三个入口/内联回复、Harmony、已授权息屏后台与主屏锁定保护。
 - 不绕过观察/权限、不重放不确定操作、不强停/重启第三方 App、不扩大 Hook。LSP/电源键软重启和全局冷启动白屏仍未定因，不主动触发风险路径。
@@ -144,13 +146,22 @@
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
 - last_reviewed_code_head: 7c846a3d19d1dbbfee03a5781e9666283e704750
-- last_reviewed_coordination_head: cef6cf49789a3620fd890921896b7bee7a8b892a
-- reviewed_at: 2026-11-02T08:36:41Z
-- decision: 恢复与通知图标返修代码已提交；本地全量通过，CI/静态检查与实际签名 APK 待完成
+- last_reviewed_coordination_head: 4e8802fe960e2251c30590c5170753588c8cc07a
+- reviewed_at: 2026-11-02T08:56:06Z
+- decision: 本次代码、本地及两项 CI 检查通过，实际原签名 APK 已独立核验；可交付测试，不写为真机通过
 - evidence: [7c846a3 返修证据](coordination/CANDIDATE_7c846a3.md)
 - device_gate: 新候选未实测；用户确认的手动顺畅及计算器恢复失败是上一候选上下文反馈，不计为本次通过
 - next_phase_permission: 本次按用户直接反馈返修，不扩展 Hook 或发布；后续产品语义与系统问题保持原未完成状态
-- issued_next_instruction: C007 revision 1（完成同 head 构建与包核验后交付；dsh 与定时不恢复）
+- issued_next_instruction: C007 revision 1（本次候选已核验交付，待用户反馈；dsh 与定时不恢复）
+
+### 7c846a3 原签名候选核验完成 — 2026-11-02T08:56:06Z
+
+- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41413270652) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41413263706) 均成功；签名日志记录全量 2,186 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建通过。已下载实际 APK，独立核验包名、版本、原证书、SHA-256 及五项内嵌引擎/脚本。真机待用户验证。
+- [Etax-v3.3.5+etax.7c846a3.apk](https://github.com/Lmin2419/eta-background/actions/runs/41413263706/artifacts/13127447427)；artifact 13127447427，6,737,495 bytes；SHA-256 `dc65465eec0f7690f249dc0dc65bc4f4ed7040500b1b4ae324f4ec7aed338f48`。 与 CI 日志和工件 digest 一致，工件到期 2026-12-02T08:53:58Z。
+- 包名 `io.github.mangi.etax`；版本 `3.3.5+etax.7c846a3` / versionCode `2026103003`。apksigner 确认原证书 SHA-256 `dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5`。
+- 内嵌 e43 的 dex、version、vd.sh、install_vdrive.sh、check_pair.sh 与源码/生成产物逐字节相符，没有 engine.token。没有上传二进制到仓库或操作手机。
+- 本地完整检查同样通过，Lint 新增一项 createBitmap 的 UseKtx 建议，不是编译错误；没有将 389 条 Warning 写成零警告。
+- 本轮未合并/发布/打标签、未替换正式下载；PR #45 head 保持 7c846a3d19d1dbbfee03a5781e9666283e704750。详见[候选证据](coordination/CANDIDATE_7c846a3.md)。
 
 ### 恢复 AI 与图标返修提交 — 2026-11-02T08:36:41Z
 

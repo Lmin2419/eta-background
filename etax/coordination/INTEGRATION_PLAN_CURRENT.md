@@ -1,6 +1,6 @@
 # Eta 后台版与上游整合：当前实施方案
 
-更新：2026-11-02T08:36:41Z。负责人：ChatGPT。依据：四项开发授权、通知兼容选项与系统计算器/完成页面接管反馈。**四项代码已进入候选，真机尚未验收，未发布。**
+更新：2026-11-02T08:56:06Z。负责人：ChatGPT。依据：四项开发授权、通知兼容选项与系统计算器/完成页面接管反馈。**四项代码已进入候选，真机尚未验收，未发布。**
 
 ## 1. 当前候选与证据归属
 
@@ -71,9 +71,9 @@ e43 修复任务仍保留 GUI 租约但暂停由预览直接施加时遗漏控�
 
 ## 4. 验证与交付
 
-本地全量 2,186 项（0 失败、0 错误、1 跳过）、接线 12 项、部署 8 项通过。本地 Lint/Debug 整体与 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41413270652)、[Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41413263706) 尚在执行；实际原签名 APK 尚待下载核验。会话归档并发检查失败已重现并修复，没有跳过失败或延长超时。
+[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41413270652) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41413263706) 均成功；签名日志记录全量 2,186 项（0 失败、0 错误、1 跳过），Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署回归、Debug 与 Release 构建通过。已下载实际 APK，独立核验包名、版本、原证书、SHA-256 及五项内嵌引擎/脚本。真机待用户验证。
 
-详见 [候选证据](CANDIDATE_7c846a3.md) 与 [源码说明](https://github.com/Lmin2419/eta-background/blob/7c846a3d19d1dbbfee03a5781e9666283e704750/etax/TASK_PREVIEW.md)。本次重点复测计算器真正恢复、重复接管、通知手机轮廓与清晰度；旧结果不移记。
+[Etax-v3.3.5+etax.7c846a3.apk](https://github.com/Lmin2419/eta-background/actions/runs/41413263706/artifacts/13127447427)；artifact 13127447427，6,737,495 bytes；SHA-256 `dc65465eec0f7690f249dc0dc65bc4f4ed7040500b1b4ae324f4ec7aed338f48`。 原签名可覆盖安装，未替换正式下载。[候选证据](CANDIDATE_7c846a3.md) 与 [源码说明](https://github.com/Lmin2419/eta-background/blob/7c846a3d19d1dbbfee03a5781e9666283e704750/etax/TASK_PREVIEW.md) 已同步。本地检查同样通过，实际包内 e43 与源码配对。本次重点复测计算器真正恢复、重复接管、通知手机轮廓与清晰度，旧结果不移记。
 
 手机验证集中一次完成，不要求 ADB：覆盖安装并核对版本 → 后台计算任务/通知三个入口 → 小预览和放大/主屏键盘 → 两任务中接管一个再明确继续 → 已结束页面预览 → 锁屏 2–5 分钟检查真实联网及任务结果。只读查看不暂停、接管等排空、恢复重新观察、关闭不擅自恢复、旧通知不串屏是重点。不要通过长按电源键主动复现软重启，从 ETA 图标开始普通测试。
 

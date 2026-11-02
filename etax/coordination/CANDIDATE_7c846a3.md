@@ -1,6 +1,6 @@
 # 候选 7c846a3：恢复 AI、预览清晰度与通知图标
 
-状态：未发布；源码与本地全量单测已通过，远端 CI 与原签名 APK 待完成。本文最终交付前补充实际结果，不把 pending 写成通过。
+状态：未发布；源码、本地及两项 CI 检查通过，实际原签名 APK 已独立核验，可交付测试。真机未执行。证据更新：2026-11-02T08:56:06Z。
 
 ## 源码与用户反馈
 
@@ -21,11 +21,29 @@
 
 - 本地全量：2,186 项，0 失败、0 错误、1 跳过。
 - 接线：12/12；引擎部署：8/8（mksh/BusyBox/Toybox 路径）。
-- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41413270652)：待完成。
-- [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41413263706)：待完成。
-- 本地 Lint/Debug：待完成。
-- 实际签名 APK 身份/引擎配对：待下载后独立核验。
+- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41413270652)：成功；已读取实际 job 日志。
+- [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41413263706)：成功；已读取实际签名构建日志，全量 2,186 项、0 失败/错误、1 跳过，Lint 389 Warning、1 Hint、0 错误。
+- 本地 Lint/Debug：成功，报告生成于 2026-11-02T08:36:13Z，389 Warning、1 Hint、0 错误；Debug 内 e43 配对一致。新增 Warning 是 createBitmap 的 UseKtx 建议，未忽略失败。
+- 实际签名 APK 身份/引擎配对：通过，见下表。
 - 没有安装或操作用户手机，真机未执行。旧候选结果不移记。
+
+## 实际 APK 核验
+
+[Etax-v3.3.5+etax.7c846a3.apk](https://github.com/Lmin2419/eta-background/actions/runs/41413263706/artifacts/13127447427)；artifact 13127447427，6,737,495 bytes；SHA-256 `dc65465eec0f7690f249dc0dc65bc4f4ed7040500b1b4ae324f4ec7aed338f48`。
+
+| 项目 | 实测值 |
+| --- | --- |
+| 源码 head | `7c846a3d19d1dbbfee03a5781e9666283e704750` |
+| 包名 | `io.github.mangi.etax` |
+| 版本 / versionCode | `3.3.5+etax.7c846a3` / `2026103003` |
+| 原证书 SHA-256 | `dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5` |
+| 引擎 | `20261102-e43-resume` |
+| DEX SHA-256 | `c70ebd7403971fb4c9d25c251b34f3bb21c0057a4dd7cbf8c177e2bbed4a50aa` |
+| 五项内嵌比对 | vdrive.dex / vdrive.version / vd.sh / install_vdrive.sh / check_pair.sh 均与本 head 源码及生成产物逐字节一致 |
+| engine.token | APK 未包含 |
+| 工件到期 | 2026-12-02T08:53:58Z |
+
+以上来自下载实际工件后 aapt2、apksigner、SHA-256 与 Zip 内容比对，不只是引用执行者报告。没有安装到用户手机；签名包可覆盖安装，未发布为正式版。
 
 ## 无需电脑的重点验证
 
