@@ -1,6 +1,6 @@
 # 常用任务原生接入候选 6016745
 
-更新：2026-11-02T19:45:26Z。**源码与本地验证已完成；最终 head 的云端检查和原签名 APK 核验尚在进行。不是发布版，也不把基线包当作本包。**
+更新：2026-11-02T19:57:20Z。**本 head 的源码、云端全量检查、Debug/Release 和原签名 APK 独立核验已完成；手机实测未执行。此包是 Draft PR 测试候选，尚未发布。**
 
 ## 源码
 
@@ -17,16 +17,25 @@
 | 本地功能提交 a2a5c4 全量 | 2278 项、0 失败/错误、1 跳过 |
 | 本地 a2a5c4 Lint / Debug | 成功；0 错误、393 Warning、1 Hint |
 | 最终 6016745 定向 / Debug | 22 项、0 失败/错误/跳过，Debug 成功；包含快捷方式拒绝更新的补充断言 |
-| 接线 | 12/12；最终补充不改接线 |
-| 最终 PR Check | [41510965270](https://github.com/Lmin2419/eta-background/actions/runs/41510965270)，运行中 |
-| 最终 Etax Build | [41510955867](https://github.com/Lmin2419/eta-background/actions/runs/41510955867)，运行中 |
-| 最终 head 全量 / Lint / 部署 / Release | 等待最终 CI，不能用上一提交的本地结果替代 |
-| 最终 APK 独立核验 | 尚未取得工件，包身份/证书/摘要/内嵌资产未填通过 |
+| 接线 / 部署 | 本 head 两项 CI 日志：12/12 接线、8/8 部署回归通过 |
+| 最终 PR Check | [41510965270](https://github.com/Lmin2419/eta-background/actions/runs/41510965270)，成功；实际读取 job 125502868641 日志 |
+| 最终 Etax Build | [41510955867](https://github.com/Lmin2419/eta-background/actions/runs/41510955867)，成功；实际读取 job 125502876103 日志 |
+| 最终 head 全量 / Lint / Debug / Release | 2278 项、0 失败/错误、1 跳过；Lint 0 错误、393 Warning、1 Hint；Debug 和 Release 成功 |
+| 最终 APK 独立核验 | 已实际下载；digest、包身份、原证书及 5 项内嵌资产一致，无 engine.token |
 | 手机 | 未执行；没有远程安装或操作手机 |
 
 a2a5c4 的 CI 41510091145/41510078760 被同分支并发规则取消，已实际读取取消状态；不算最终 head 检查失败，也不冒充通过。最终候选无重复触发。
 
 固定输入样本已经计入新 common_task 工具：全功能组内置系统文字 8710→6707 字符；系统消息和基础工具 JSON 83128→77169 UTF-8 字节（减少 7.2%）。无历史、记忆、图片、自定义提示和运行时追加工具；不是 token、首字时间或缓存命中率测量。64 个长流程不改变前缀，已有预算回归。
+
+## 原签名候选包
+
+- [Etax-v3.3.5+etax.6016745.apk](https://github.com/Lmin2419/eta-background/actions/runs/41510955867/artifacts/13174936352)；artifact 13174936352，所属 workflow head 与本候选完全相同。
+- 大小：6782783 bytes；SHA-256：`0b3c243a5122893e29f237e3132af62d02962bd0584d83dde4e773da1ffb8a15`，实际文件与 Actions artifact digest 一致。
+- 包名：`io.github.mangi.etax`；版本：`3.3.5+etax.6016745`；versionCode：`2026103003`。
+- apksigner 验证通过，证书 SHA-256：`dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5`，与既有测试包原签名一致。
+- ZIP 内 vdrive.dex、vdrive.version 及 vd.sh/install_vdrive.sh/check_pair.sh 与当前源码/生成资产逐字节相符；引擎 `20261102-e46-transition`；未包含 engine.token。
+- Actions 工件到期：2026-12-02T19:55:00Z。不创建 Release、不替换正式下载，也不把 APK 二进制放入仓库。
 
 ## 手机验证
 
