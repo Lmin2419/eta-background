@@ -936,8 +936,13 @@ internal class AgentAppState(
         }
         try {
             ids.forEach { id ->
-                val loaded = ensureConversationLoaded(id)
-                check(loaded || withContext(Dispatchers.Main.immediate) { id !in conversationsById }) {
+                // Keep the missing-conversation check in the same main-thread turn.
+                // Another archive importer may otherwise create a fully loaded chat
+                // between the failed lookup and the check, making it look unavailable.
+                val available = withContext(Dispatchers.Main.immediate) {
+                    ensureConversationLoaded(id) || id !in conversationsById
+                }
+                check(available) {
                     "Conversation content unavailable"
                 }
             }

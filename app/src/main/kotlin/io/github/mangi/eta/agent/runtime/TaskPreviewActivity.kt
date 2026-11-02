@@ -183,7 +183,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
             while (isActive && visible) {
                 if (!TaskPreviewRegistry.mainDisplayAvailable(this@TaskPreviewActivity)) { finish(); break }
                 if (!busy && !closing && down == null) {
-                    val result = rpc("preview_frame", JSONObject().put("edge", if (expanded) 720 else 480)
+                    val result = rpc("preview_frame", JSONObject().put("edge", if (expanded) 960 else 640)
                         .put("since", if (freshFrame) "" else previewKey))
                     if (!visible) break
                     if (busy || closing || down != null) { freshFrame = true; continue }
@@ -224,7 +224,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
             val wasMissing = geometry == null
             geometry = displayGeometry
             val old = frame; frame = bitmap; picture.setImageBitmap(bitmap); old?.recycle()
-            if (wasMissing) hint.text = if (manual) "可操作 · 上方可放大，关闭后 AI 保持暂停" else "只读预览 · 点击画面或上方按钮放大"
+            if (wasMissing) hint.text = if (manual) "可操作 · 上方可放大，关闭后 AI 保持暂停" else readOnlyHint()
         }
         updateControls()
     }
@@ -295,7 +295,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
                 controller?.releaseManual(owner); manual = false; geometry = null; freshFrame = true; clearGesture()
                 val active = TaskPreviewRegistry.controller(runId)?.isCancelled == false && AgentExecutionService.task(runId)?.completed != true
                 if (resumeTask && active) AgentRuntimeService.dispatchNotificationAction(AgentExecutionService.ACTION_RESUME_RUN, runId)
-                hint.text = if (active) "已交还控制权 · AI 继续前会重新观察" else "接管结束 · 继续任务请使用通知中的“继续指令”"
+                hint.text = if (active) "已交还控制权 · 等待任务恢复" else "接管结束 · 继续任务请使用通知中的“继续指令”"
             } else hint.text = previewFailure(result)
             busy = false; updateControls()
         }
@@ -338,6 +338,16 @@ internal class TaskPreviewActivity : ComponentActivity() {
         zoom.isEnabled = enabled && !resizing
         openApp.visibility = if (card?.completed == true) View.VISIBLE else View.GONE
         openApp.isEnabled = enabled
+        if (!manual && !busy && geometry != null &&
+            (hint.text.startsWith("只读预览") || hint.text.startsWith("AI 正在") ||
+                hint.text.startsWith("任务已暂停") || hint.text.startsWith("已交还控制权"))) hint.text = readOnlyHint()
+    }
+
+    private fun readOnlyHint(): String = when {
+        AgentExecutionService.task(runId)?.completed == true -> "只读预览 · 任务已结束，可操作页面或打开 App"
+        TaskPreviewRegistry.controller(runId)?.isPaused == true -> "任务已暂停 · 点击“让 AI 继续”恢复"
+        TaskPreviewRegistry.controller(runId) != null -> "AI 正在执行 · 预览只读，手动操作请点“接管”"
+        else -> "只读预览 · 点击画面或上方按钮放大"
     }
 
     private fun touch(event: MotionEvent): Boolean {

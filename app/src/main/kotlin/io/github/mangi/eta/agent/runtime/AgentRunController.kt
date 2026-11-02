@@ -135,16 +135,15 @@ internal class AgentRunController {
     /**
      * 恢复执行：唤醒被 [throwIfCancelled] 阻塞的工作线程，从挂起点继续。
      */
-    fun resume() {
-        lock.withLock {
-            if (manualOwner != null || cancelled) return
-            if (paused) resumeGeneration++
-            paused = false
-            pausedForAppTakeover = false
-            pausedForPreview = false
-            pauseListeners.forEach { it(false) }
-            pauseCondition.signalAll()
-        }
+    fun resume(): Boolean = lock.withLock {
+        if (manualOwner != null || cancelled) return false
+        if (paused) resumeGeneration++
+        paused = false
+        pausedForAppTakeover = false
+        pausedForPreview = false
+        pauseListeners.forEach { it(false) }
+        pauseCondition.signalAll()
+        true
     }
 
     /** Child model calls obey the parent's screen-off/manual pause without sharing steering. */

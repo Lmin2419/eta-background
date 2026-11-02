@@ -48,6 +48,17 @@ class TaskPreviewActivityTest {
             assertFalse(view.isFinishing)
             assertFalse(controller.isPaused)
             assertEquals(0L, controller.resumeGeneration)
+            val image = Bitmap.createBitmap(108, 240, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }
+            view.displayFrame(image, JSONObject().put("displayId", 7).put("width", 1080).put("height", 2400).put("rotation", 0), "read-only")
+            val hint = TaskPreviewActivity::class.java.getDeclaredField("hint").apply { isAccessible = true }.get(view) as android.widget.TextView
+            assertTrue(hint.text.startsWith("AI 正在执行"))
+            controller.pause()
+            TaskPreviewActivity::class.java.getDeclaredMethod("updateControls").apply { isAccessible = true }.invoke(view)
+            assertTrue(hint.text.startsWith("任务已暂停"))
+            controller.resume()
+            TaskPreviewActivity::class.java.getDeclaredMethod("updateControls").apply { isAccessible = true }.invoke(view)
+            assertTrue(hint.text.startsWith("AI 正在执行"))
+            view.displayFrame(null, null, "clear")
         } finally { TaskPreviewRegistry.unregister("view"); activity.destroy() }
     }
 

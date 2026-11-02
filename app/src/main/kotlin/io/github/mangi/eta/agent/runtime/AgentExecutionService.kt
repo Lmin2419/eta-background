@@ -10,6 +10,8 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.drawable.Icon
 import android.hardware.display.DisplayManager
 import android.net.Uri
@@ -205,6 +207,16 @@ internal class AgentExecutionService : Service() {
         private val cards = linkedMapOf<String, TaskNotificationState>()
         private val notificationIds = mutableMapOf<String, Int>()
         private val posted = mutableMapOf<Int, TaskNotificationState>()
+        private var phoneIcon: Icon? = null
+
+        /** Send transparent pixels, not a vendor-reinterpreted layered vector. */
+        @Synchronized internal fun taskPhoneIcon(context: Context): Icon = phoneIcon ?: run {
+            val bitmap = Bitmap.createBitmap(96, 144, Bitmap.Config.ARGB_8888)
+            val drawable = context.getDrawable(R.drawable.ic_task_phone)!!
+            drawable.setBounds(0, 0, bitmap.width, bitmap.height)
+            drawable.draw(Canvas(bitmap))
+            Icon.createWithBitmap(bitmap).also { phoneIcon = it }
+        }
         private val repliedRuns = linkedSetOf<String>()
         // Finite jobs may outlive the FGS: its last lease is normally released at completion.
         private val completionScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -410,8 +422,7 @@ internal class AgentExecutionService : Service() {
                 // Keep the continue action available, including after an unsuccessful App handoff.
                 .setOngoing(!completed).setAutoCancel(completed && task.targetPackage.isNullOrBlank()).setOnlyAlertOnce(!alert)
                 .setVisibility(Notification.VISIBILITY_PRIVATE)
-            if (!task?.targetPackage.isNullOrBlank()) builder.setLargeIcon(
-                Icon.createWithResource(context, R.drawable.ic_task_phone))
+            if (!task?.targetPackage.isNullOrBlank()) builder.setLargeIcon(taskPhoneIcon(context))
             completionLabel?.let(builder::setSubText)
             if (completed) {
                 val dismissed = Intent(context, TaskNotificationDismissReceiver::class.java).setAction(ACTION_DISMISS_COMPLETED)

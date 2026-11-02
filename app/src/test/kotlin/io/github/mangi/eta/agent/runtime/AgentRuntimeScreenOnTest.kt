@@ -302,6 +302,49 @@ class AgentRuntimeScreenOnTest {
     }
 
     @Test
+    fun previewResumeWithRetainedGuiOwnershipWorksOnEveryCycle() {
+        val host = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        try {
+            val service = host.get()
+            val run = service.registerRun("preview-retained-gui")
+            val other = service.registerRun("preview-unrelated", ownsGui = false)
+            service.invokeForRun("selectOverlayTask", run.runId)
+            repeat(3) {
+                assertTrue(run.session.controller.acquireManual("preview-owner"))
+                // The preview owns the pause, not GuiControlCoordinator.pauseForUser.
+                assertFalse(service.field<GuiControlCoordinator>("guiControl").state.value.userPaused)
+                run.session.controller.releaseManual("preview-owner")
+                AgentRuntimeService.dispatchNotificationAction(AgentExecutionService.ACTION_RESUME_RUN, run.runId)
+                shadowOf(Looper.getMainLooper()).idle()
+                assertFalse("Resume must unblock the task even while it still owns GUI", run.session.controller.isPaused)
+                assertEquals(it + 1L, run.session.controller.resumeGeneration)
+                assertFalse(other.session.controller.isPaused)
+            }
+        } finally { host.destroy() }
+    }
+
+    @Test
+    fun resumeCannotClearTheGuiPauseOrClaimContinuingWhileManualInputStillOwnsIt() {
+        val host = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        try {
+            val service = host.get()
+            val run = service.registerRun("preview-held-gui")
+            service.invokeForRun("selectOverlayTask", run.runId)
+            service.invokeForRun("requestPause", run.runId)
+            assertTrue(run.session.controller.acquireManual("preview-owner"))
+            service.invoke("requestResume")
+            assertTrue(run.session.controller.isPaused)
+            assertTrue(service.field<GuiControlCoordinator>("guiControl").state.value.userPaused)
+            assertFalse(run.overlayState.status == AgentOverlayStatus.Continuing)
+            assertEquals("仍在手动接管，请在预览窗口点“让 AI 继续”", org.robolectric.shadows.ShadowToast.getTextOfLatestToast())
+            run.session.controller.releaseManual("preview-owner")
+            service.invoke("requestResume")
+            assertFalse(run.session.controller.isPaused)
+            assertFalse(service.field<GuiControlCoordinator>("guiControl").state.value.userPaused)
+        } finally { host.destroy() }
+    }
+
+    @Test
     fun completedRunStopsKeepingScreenOnBeforeServiceDestruction() {
         val serviceController = Robolectric.buildService(AgentRuntimeService::class.java).create()
         try {

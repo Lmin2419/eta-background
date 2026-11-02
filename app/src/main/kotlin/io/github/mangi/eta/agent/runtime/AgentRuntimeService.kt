@@ -976,10 +976,17 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         val run = displayedRun?.takeIf { runs.contains(it) }
         run?.pausedForScreenOff = false
         if (run == null || run.session.controller.isCancelled || guiControl.state.value.ownerRunId == run.runId) guiControl.resumeForUser()
-        else run.session.controller.resume()
-        run?.let { it.overlayState = it.overlayState.copy(phase = AgentOverlayPhase.RUNNING, status = AgentOverlayStatus.Continuing) }
+        // A preview pauses the run directly. Retaining a GUI lease does not imply
+        // GuiControlCoordinator owns that pause, so both authorities must be resumed.
+        // The controller still refuses while manual input holds its lease.
+        if (run != null && !run.session.isTerminal && run.session.controller.resume()) {
+            run.overlayState = run.overlayState.copy(phase = AgentOverlayPhase.RUNNING, status = AgentOverlayStatus.Continuing)
+        } else if (run?.session?.controller?.let { !it.isCancelled && it.isPaused && it.pausedForPreview } == true) {
+            android.widget.Toast.makeText(this, "仍在手动接管，请在预览窗口点“让 AI 继续”", android.widget.Toast.LENGTH_SHORT).show()
+        }
         drainPendingRuns()
         updateKeepScreenOn()
+        publishExecutionState()
     }
 
     private fun handleNotificationAction(action: String, runId: String) {

@@ -62,10 +62,12 @@ internal class GuiControlCoordinator {
     fun resumeForUser(): Boolean {
         val resumed = lock.withLock {
             if (!userPauseRequested) return false
+            // Do not drop the GUI pause while a preview still owns manual input.
+            val paused = pausedController
+            if (paused != null && !paused.isCancelled && !paused.resume()) return false
             userPauseRequested = false
             generation++
             val current = owner?.takeUnless { it.closed }
-            pausedController?.resume()
             pausedController = null
             mutableState.value = State(current?.runId)
             changed.signalAll()

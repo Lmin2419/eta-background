@@ -2208,7 +2208,7 @@ class VDriveWorker implements VDrive.Worker {
             fr.close();
             return fail("FRAME_GEOMETRY_CHANGED", "等待方向更新后的画面");
         }
-        int edge = Math.max(160, Math.min(720, req.optInt("edge", 480)));
+        int edge = Math.max(160, Math.min(960, req.optInt("edge", 640)));
         String previewKey = displayId + ":" + fr.receivedAt + ":" + frameOk + ":" + edge;
         if (previewKey.equals(req.optString("since")))
             return new JSONObject().put("ok", true).put("unchanged", true).put("geometry", geometry.json());
@@ -2228,7 +2228,12 @@ class VDriveWorker implements VDrive.Worker {
             scaled = Bitmap.createScaledBitmap(logical, Math.max(1, (int) (geometry.width * scale)),
                     Math.max(1, (int) (geometry.height * scale)), true);
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            scaled.compress(Bitmap.CompressFormat.JPEG, 65, bytes);
+            scaled.compress(Bitmap.CompressFormat.JPEG, 78, bytes);
+            // Preserve the transport cap even on detailed maps; do not raise RPC limits.
+            if (bytes.size() > 400000) {
+                bytes.reset();
+                scaled.compress(Bitmap.CompressFormat.JPEG, 65, bytes);
+            }
             if (bytes.size() > 400000) return fail("PREVIEW_TOO_LARGE", "预览超过内存传输限制");
             return new JSONObject().put("ok", true).put("geometry", geometry.json()).put("previewKey", previewKey)
                     .put("width", scaled.getWidth()).put("height", scaled.getHeight())
