@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRun: (CommonTask) -> Unit) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     var editorOpen by rememberSaveable { mutableStateOf(false) }
     var editId by rememberSaveable { mutableStateOf<String?>(null) }
     var name by rememberSaveable { mutableStateOf("") }
@@ -52,7 +54,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
 
     fun edit(task: CommonTask?, copy: Boolean = false) {
         editId = if (copy) null else task?.id
-        name = if (copy && task != null) context.getString(R.string.common_tasks_copy_name, task.name)
+        name = if (copy && task != null) resources.getString(R.string.common_tasks_copy_name, task.name)
             .take(CommonTaskRepository.MAX_NAME_LENGTH) else task?.name.orEmpty()
         instruction = task?.instruction.orEmpty()
         editorOpen = true
