@@ -17,9 +17,8 @@ internal object CommonTaskShortcuts {
         ShortcutManagerCompat.isRequestPinShortcutSupported(context) &&
             ShortcutManagerCompat.requestPinShortcut(context, info(context, task), null)
 
-    fun update(context: Context, task: CommonTask) {
+    fun update(context: Context, task: CommonTask): Boolean =
         ShortcutManagerCompat.updateShortcuts(context, listOf(info(context, task)))
-    }
 
     fun disable(context: Context, id: String) {
         ShortcutManagerCompat.disableShortcuts(context, listOf(PREFIX + id),

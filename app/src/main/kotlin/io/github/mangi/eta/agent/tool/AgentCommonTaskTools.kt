@@ -10,7 +10,7 @@ import org.json.JSONObject
 internal class AgentCommonTaskTools(
     private val repository: CommonTaskRepository,
     private val writable: Boolean = true,
-    private val onSaved: (CommonTask) -> Unit = {},
+    private val onSaved: (CommonTask) -> Boolean = { true },
     private val onDeleted: (String) -> Unit = {},
 ) {
     constructor(context: Context, writable: Boolean) : this(CommonTaskRepository(context), writable,
@@ -46,7 +46,7 @@ internal class AgentCommonTaskTools(
                     val task = repository.save(id, text(args, "name", 60), text(args, "instruction", 8000),
                         expectedRevision = revision, uniqueName = true)
                     result.put("task", summary(task))
-                        .put("shortcut_updated", runCatching { onSaved(task) }.isSuccess)
+                        .put("shortcut_updated", runCatching { onSaved(task) }.getOrDefault(false))
                 }
                 "delete" -> {
                     val id = text(args, "id", 64)

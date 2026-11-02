@@ -119,6 +119,10 @@ class AgentCommonTaskToolsTest {
             AgentCommonTaskTools(repository, onSaved = { error("Launcher unavailable") }))
         assertTrue(result.getBoolean("ok"))
         assertFalse(result.getBoolean("shortcut_updated"))
+        val declined = call(args("save").put("name", "N").put("instruction", "I"),
+            AgentCommonTaskTools(repository, onSaved = { false }))
+        assertTrue(declined.getBoolean("ok"))
+        assertFalse(declined.getBoolean("shortcut_updated"))
         assertEquals(1, repository.load().size)
     }
 
