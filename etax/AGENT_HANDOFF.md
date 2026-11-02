@@ -61,35 +61,37 @@
 
 ## 当前指令（ChatGPT 维护）
 
-- instruction_id: C009
+> 用户已暂停后续开发与安装包交付。现在只讨论更好的整体方案，须等用户明确确定方案并指示实施后再继续。
+
+- instruction_id: C010
 - instruction_revision: 1
-- issued_at: 2026-11-02T10:47:21Z
-- status: RUNNING
+- issued_at: 2026-11-02T11:06:13Z
+- status: READY
+- scope: DESIGN_DISCUSSION_ONLY
+- implementation_permission: PAUSED_BY_USER
+- delivery_permission: PAUSED_BY_USER
 - target: ChatGPT
-- candidate_head: 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e
+- preserved_code_head: 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e
 - parent_head: 5afaf87b3f8cd36aecd10f75e57c139b3bc64467
 - engine_build: 20261102-e45-finalize
-- current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)
-- candidate_evidence: [会话入口与终态返修证据](coordination/CANDIDATE_99f2d87.md)
-- latest_validation: 本地全量 2,195 项（0 失败/错误、1 跳过）、12 项接线、8 项部署回归通过；本地 Lint/Debug 与两项 CI 正在执行，实际原签名 APK 待核验
-- device_status: 新候选未实测；用户确认上一候选接管/手动操作/AI 继续流程跑通，但最终答复后彩边仍在、主屏切换仍闪烁
-- mode: ChatGPT 直接修复交付；不恢复定时，不唤醒 dsh
+- current_plan: [暂停实施的现有方案](coordination/INTEGRATION_PLAN_CURRENT.md)
+- prior_evidence: [C009 返修记录](coordination/CANDIDATE_99f2d87.md)
+- latest_validation: 本地 2,195 项（0 失败/错误、1 跳过），Lint 0 错误、389 Warning、1 Hint，Debug、接线 12/12、部署 8/8 通过；两项 CI 已成功，实际原签名 APK 未下载核验、未向用户交付
+- device_status: 此候选未实测；上一候选接管/手动操作/AI 继续跑通的用户反馈保留
+- mode: 方案讨论；不恢复定时，不唤醒 dsh，不推进 C009 剩余交付
 
-### 用户需求与实际修复
+### 当前讨论范围
 
-1. 运行/暂停通知新增“打开 ETA 会话”第三个独立按钮，打开对应聊天；主体仍预览，前两个暂停/继续与停止按钮、三个完成入口与内联回复保留。
-2. 无实际活动任务时撤掉彩边；保留过去前台操作的结果上下文不能保留运行窗口，延迟显示回调也检查真实任务。一个完成不影响另一个仍运行的彩边，全球前台权限暂停控件保留。
-3. 已关闭的完成卡片拒绝晚到的旧运行快照；终态仍由 Runtime 提交决定，不用流式文字推定完成。
-4. 最终回收直接释放虚拟显示，再关闭本地采集缓冲；避免先 setSurface(null) 再释放显示的额外状态变化。保持主屏窗口就绪确认，释放失败保留句柄/缓冲，不重启 App、不改全局动画、不扩大 Hook。实际 ColorOS 闪烁改善待测。
+用户明确要求先商量更好的方案，确定之后再开发和交付。可讨论任务级验收、可恢复的业务步骤、官方接口/导出数据接入和任务工作台等方向；这些是建议，不是已批准功能。避免把已有预览、接管、并行和通知功能重新包装成新增能力。
 
-[源码更新说明](https://github.com/Lmin2419/eta-background/blob/99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e/etax/TASK_PREVIEW.md)；[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41431105518) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41431098545)。
+下一步明确真实使用场景、目标与验收方法，再形成实现范围和取舍。未获用户明确后续指示前，不增加业务实现，不下载/交付候选包，不把 CI 成功写成设备验收或方案获批。
 
-### 完成标准与停止边界
+### 保留与停止边界
 
-- 核对本 head 两项 CI 与实际原签名 APK 后交付；旧包测试不移记，不宣称已经真机通过或全部闪烁消失。
-- 手机重点：运行卡片的会话按钮、主体预览、接管后继续到最终答复的通知和彩边、另一任务继续运行、最近任务移主屏的动画与页面稳定。无需 ADB，不主动诱发验证或软重启。
-- 保留单 VDrive、两个后台任务、同 App 串行、旧 screen_*、流体云/每任务通知/三个完成入口/内联回复、Harmony、已授权息屏后台与主屏锁定保护。
-- 不合并 main、不发布/打标签/替换正式下载、不改包名/签名/版本编号。电源键/LSP 软重启和全局冷启动白屏仍未定因。dsh 保留反馈、不重建定时或执行旧指令。
+- 已提交修复保留在当前业务分支，不回滚、不合并 main、不发布/打标签/替换正式下载、不改包名/签名/versionCode。
+- 单 VDrive、两任务、同 App 串行、旧 screen_*、原通知/流体云/完成入口/内联回复、Harmony 及已授权息屏和主屏锁定保护保留。
+- 不操作手机、不触发已知软重启等风险路径。实际 ColorOS 切屏效果仍未验证，不宣称全部闪烁已消失。
+- 既有 CI 已自然完成；此前每小时自动化保持停用，dsh 不执行旧 C001–C009 或重建定时。
 
 ## 执行反馈（dsh 维护）
 
@@ -141,13 +143,20 @@
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
 - last_reviewed_code_head: 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e
-- last_reviewed_coordination_head: 732446995b522bba8fbbe493b95e26882c80f593
-- reviewed_at: 2026-11-02T10:47:21Z
-- decision: e45 代码与本地全量通过；Lint/构建和原签名 APK 核验进行中
+- last_reviewed_coordination_head: de842904cbdb5edb270534c3a439de5a91343c98
+- reviewed_at: 2026-11-02T11:06:13Z
+- decision: 用户暂停开发和交付；保留已提交修复与通过的自动化，转入方案讨论
 - evidence: [99f2d87 返修证据](coordination/CANDIDATE_99f2d87.md)
 - device_gate: 新候选未实测；上一候选接管/继续通过的用户反馈单独保留
-- next_phase_permission: 用户直接反馈返修，保留原保护和范围；不合并/发布
-- issued_next_instruction: C009 revision 1（核验包后交付；定时与 dsh 不恢复）
+- next_phase_permission: 仅讨论设计；业务实现和安装包交付等待用户明确新指令
+- issued_next_instruction: C010 revision 1（仅讨论方案，暂停 C009 剩余交付）
+
+### 用户暂停实施与交付 — 2026-11-02T11:06:13Z
+
+- 用户要求：“不用先完成交付，我觉得我们先商量更好的方案。我们确定好方案之后，再进行开发和交付。”后续只讨论整体方案，不再推进安装包交付或新业务实现。
+- 保留业务 head 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e。此前本地 2,195 项全量无失败/错误、1 跳过；Lint 0 错误、389 Warning、1 Hint；Debug、12 项接线、8 项部署通过。
+- 停止等待时两项既有 CI 已自然成功：[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41431105518) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41431098545)。本次未继续下载核验 APK，未提供安装包或声称真机通过；源代码不回滚。
+- 任务验收、业务步骤恢复、官方数据接入和任务工作台均为讨论建议，未授权实施。未恢复调度、未唤醒 dsh、未合并/发布。
 
 ### e45 会话入口与结束彩边返修 — 2026-11-02T10:47:21Z
 
@@ -330,4 +339,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户已要求 ChatGPT 接手；C009 接替 C008，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C009 时只保留已有证据、不新增实施。
+- external_agent_limit: 用户已要求 ChatGPT 接手；C010 仅讨论方案，暂停 C009 交付，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C010 时只保留已有证据，不开发、不交付、不重建定时；等待用户明确新指令。
