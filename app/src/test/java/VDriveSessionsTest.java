@@ -26,6 +26,7 @@ public class VDriveSessionsTest {
             lastRequest = json;
             if (json.optString("cmd").equals("launch")) { parked = false; capturing = true; }
             if (json.optString("cmd").equals("finish")) { parked = true; capturing = false; }
+            if (json.optString("cmd").equals("preview_input")) needsObservation = true;
             if (json.optString("cmd").equals("present")) {
                 parked = true;
                 if (failPresent) return new JSONObject().put("ok", false).put("code", "HANDOVER_FAILED");
@@ -55,7 +56,7 @@ public class VDriveSessionsTest {
             try { return new JSONObject().put("ok", false).put("code", "APP_TAKEN_OVER"); }
             catch (Exception error) { throw new AssertionError(error); }
         }
-        public String commandState() { return draining ? "draining" : "idle"; }
+        public String commandState() { return draining ? "draining" : needsObservation ? "needs_observation" : "idle"; }
         public JSONObject observationGuard(boolean mutating) {
             if (!draining && !(mutating && needsObservation)) return null;
             try { return new JSONObject().put("ok", false).put("code", draining ? "COMMAND_DRAINING" : "OBSERVE_AFTER_TIMEOUT"); }
@@ -373,6 +374,7 @@ public class VDriveSessionsTest {
         assertEquals("MANUAL_CONTROL", send(id, "tap").getString("code"));
         assertTrue(send(other, "tap").getBoolean("ok"));
         assertEquals("MANUAL_LEASE_EXPIRED", preview("preview-a", "app.preview", "preview_input", "other-0123456789abcdef").getString("code"));
+        assertTrue(preview("preview-a", "app.preview", "preview_frame", "owner-0123456789abcdef").getBoolean("ok"));
         assertTrue(preview("preview-a", "app.preview", "preview_input", "owner-0123456789abcdef").getBoolean("ok"));
         VDrive.clock = () -> now + 10001;
         assertEquals("MANUAL_LEASE_EXPIRED", preview("preview-a", "app.preview", "preview_input", "owner-0123456789abcdef").getString("code"));
@@ -392,6 +394,32 @@ public class VDriveSessionsTest {
                 .put("runId", "preview-drain").put("package", "app.preview").toString()).getString("code"));
         assertTrue(preview("preview-drain", "app.preview", "preview_release", "owner-0123456789abcdef").getBoolean("ok"));
         assertTrue(made.get(id).parked);
+    }
+
+    @Test public void completedPageCanBeControlledRepeatedlyWithoutClearingTheAiObservationGuard() throws Exception {
+        String id = previewOpen("completed-manual", "app.completed");
+        park(id);
+        FakeWorker worker = made.get(id);
+        worker.needsObservation = true; // Drained, but the AI still owes a new observation.
+        String owner = "owner-0123456789abcdef";
+        assertTrue(preview("completed-manual", "app.completed", "preview_acquire", owner).getBoolean("ok"));
+        for (int i = 0; i < 3; i++) {
+            assertEquals("PREVIEW_OBSERVATION_REQUIRED", preview("completed-manual", "app.completed", "preview_input", owner).getString("code"));
+            assertTrue(preview("completed-manual", "app.completed", "preview_frame", owner).getBoolean("ok"));
+            assertTrue(preview("completed-manual", "app.completed", "preview_input", owner).getBoolean("ok"));
+            assertTrue(worker.needsObservation);
+        }
+        assertTrue(preview("completed-manual", "app.completed", "preview_release", owner).getBoolean("ok"));
+        assertTrue(worker.parked);
+        assertTrue(worker.needsObservation);
+    }
+
+    @Test public void closingAReadonlyWindowCannotReleaseAnotherWindowsManualCapture() throws Exception {
+        previewOpen("two-windows", "app.preview");
+        String owner = "owner-0123456789abcdef";
+        assertTrue(preview("two-windows", "app.preview", "preview_acquire", owner).getBoolean("ok"));
+        assertEquals("MANUAL_CONTROL", preview("two-windows", "app.preview", "preview_release", "other-0123456789abcdef").getString("code"));
+        assertTrue(preview("two-windows", "app.preview", "preview_release", owner).getBoolean("ok"));
     }
 
 }

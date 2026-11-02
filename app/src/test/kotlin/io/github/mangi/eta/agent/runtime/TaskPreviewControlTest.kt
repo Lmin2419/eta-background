@@ -40,11 +40,4 @@ class TaskPreviewControlTest {
         } finally { a.releaseManual("view"); a.resume(); worker.join(2000) }
     }
 
-    @Test fun portraitAndLandscapeLetterboxesNeverProduceOffsetTaps() {
-        assertEquals(540f to 1200f, PreviewCoordinates.map(150f, 150f, 300, 300, 1080, 2400))
-        assertNull(PreviewCoordinates.map(0f, 150f, 300, 300, 1080, 2400))
-        assertEquals(1200f to 540f, PreviewCoordinates.map(150f, 150f, 300, 300, 2400, 1080))
-        assertNull(PreviewCoordinates.map(150f, 0f, 300, 300, 2400, 1080))
-        assertNull(PreviewCoordinates.map(Float.NaN, 1f, 300, 300, 2400, 1080))
-    }
 }

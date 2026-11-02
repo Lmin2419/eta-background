@@ -31,6 +31,8 @@ public class VDriveLifecycleTest {
         boolean failDetach;
         JSONObject windowProbe;
         boolean realHandover;
+        boolean realPatrol;
+        java.util.List<?> tasks;
         int taskDisplay = 42, moves;
         Worker(Context context) throws Exception {
             super(context);
@@ -53,7 +55,8 @@ public class VDriveLifecycleTest {
         @Override int displayOfTask(int task) { return taskDisplay; }
         @Override boolean waitForTaskDisplay(int task, int display, int attempts) { return taskDisplay == display; }
         @Override void moveTask(int task, int display) { moves++; taskDisplay = display; }
-        @Override void tickSession(Session session, long now) { }
+        @Override void tickSession(Session session, long now) { if (realPatrol) super.tickSession(session, now); }
+        @Override java.util.List<?> rootTasksSnapshot() { return tasks; }
         @Override void sleepCancellable(long ms) { }
         @Override void detachCaptureSurface(Session session) {
             if (failDetach) throw new IllegalStateException("audit: detach rejected");
@@ -246,6 +249,33 @@ public class VDriveLifecycleTest {
         ImageReader capture = session.reader;
         assertTrue(worker.preview(new JSONObject().put("cmd", "preview_release")).getBoolean("ok"));
         assertSame(capture, session.reader); assertSame(capture, worker.reader);
+    }
+
+    public static class RootTask {
+        public int taskId = 71;
+        public int displayId = 0;
+    }
+
+    @Test public void recentsHandoffKeepsSurfaceUntilTheDestinationWindowIsActuallyReady() throws Exception {
+        worker = new Worker(RuntimeEnvironment.getApplication());
+        worker.realPatrol = true;
+        worker.tasks = java.util.Collections.singletonList(new RootTask());
+        VDriveWorker.Session session = worker.new Session("audit.transition");
+        session.reader = ImageReader.newInstance(32, 64, PixelFormat.RGBA_8888, 3);
+        session.vd = worker.dm.createVirtualDisplay("transition", 32, 64, 160, session.reader.getSurface(), 0);
+        session.displayId = session.vd.getDisplay().getDisplayId(); session.taskId = 71;
+        worker.sessions.put(session.pkg, session); worker.load(session);
+        worker.tickSession(session, 1000);
+        assertTrue(worker.isTakenOver());
+        assertNotNull("Surface must survive the first unready destination window", session.reader);
+        worker.windowReady = true;
+        worker.tickSession(session, 1200);
+        assertNotNull("One ready probe is not sufficient", session.reader);
+        worker.tickSession(session, 1400);
+        assertNull(session.reader);
+        assertNull(session.vd);
+        assertFalse(worker.sessions.containsKey(session.pkg));
+        assertEquals(0, worker.moves); // Recents already moved it; never move/relaunch it again.
     }
 
 }

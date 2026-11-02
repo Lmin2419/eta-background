@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Root transport. Mutable display/input/capture state lives in independent workers. */
 public final class VDrive {
-    static final String BUILD = "20261101-e41-preview";
+    static final String BUILD = "20261102-e42-manual";
     static java.util.function.BooleanSupplier health = () -> true;
     static volatile boolean systemInvalid;
     private static final String INSTANCE = UUID.randomUUID().toString();
@@ -75,6 +75,7 @@ public final class VDrive {
         int inFlight;
         String manualOwner = "";
         long manualUntil;
+        boolean manualNeedsPreview = true;
         boolean manuallyHeld() {
             if (now() >= manualUntil) manualOwner = "";
             return !manualOwner.isEmpty();
@@ -428,28 +429,49 @@ public final class VDrive {
             if (cmd.equals("preview_acquire")) {
                 if (request.optBoolean("requireParked") && !target.parked)
                     return error("TASK_NOT_SETTLED", "任务仍在收尾，请稍后接管");
-                if ((held && !owner.equals(target.manualOwner)) || target.inFlight != 0
-                        || !"idle".equals(target.worker.commandState()))
+                if (held && !owner.equals(target.manualOwner))
+                    return error("MANUAL_CONTROL", "另一预览窗口正在操作此页面");
+                if (target.inFlight != 0 || !manualOperationDrained(target.worker))
                     return error("INPUT_DRAIN_PENDING", "正在等待旧操作结束，尚未允许手动输入");
                 target.manualOwner = owner;
                 target.manualUntil = now() + 10000;
+                target.manualNeedsPreview = true;
                 return ok();
             }
             if (cmd.equals("preview_release")) {
-                if (target.inFlight != 0 || !"idle".equals(target.worker.commandState()))
+                if (held && !owner.equals(target.manualOwner))
+                    return error("MANUAL_CONTROL", "另一预览窗口正在操作此页面");
+                if (target.inFlight != 0 || !manualOperationDrained(target.worker))
                     return error("INPUT_DRAIN_PENDING", "旧操作尚未结束，暂不交还控制权");
                 if (owner.equals(target.manualOwner)) target.manualOwner = "";
             } else if (cmd.equals("preview_input")) {
                 if (!held || !owner.equals(target.manualOwner)) return error("MANUAL_LEASE_EXPIRED", "请重新接管");
-                if (target.inFlight != 0 || !"idle".equals(target.worker.commandState()))
+                if (target.inFlight != 0 || !manualOperationDrained(target.worker))
                     return error("INPUT_DRAIN_PENDING", "上一操作尚未结束，不能重复输入");
+                if (target.manualNeedsPreview)
+                    return error("PREVIEW_OBSERVATION_REQUIRED", "请先等待当前预览画面，再进行下一次操作");
+                target.manualNeedsPreview = true;
                 target.manualUntil = now() + 10000;
             } else if (!cmd.equals("preview_frame")) return error("BAD_ARGUMENT", "未知预览操作");
             if (owner.equals(target.manualOwner)) target.manualUntil = now() + 10000;
             target.inFlight++;
         }
-        try { return target.worker.processLine(request.toString()); }
+        try {
+            JSONObject result = target.worker.processLine(request.toString());
+            synchronized (workers) {
+                if (cmd.equals("preview_frame") && result.optBoolean("ok") && owner.equals(target.manualOwner))
+                    target.manualNeedsPreview = false;
+            }
+            return result;
+        }
         finally { synchronized (workers) { target.inFlight--; } }
+    }
+
+    // An invalid AI observation is not an in-flight operation. Manual control obtains
+    // its own fresh preview; it must never clear the model's observationRequired guard.
+    private static boolean manualOperationDrained(Worker worker) {
+        String state = worker.commandState();
+        return "idle".equals(state) || "needs_observation".equals(state);
     }
 
     private static void workerReleased(Slot released) {

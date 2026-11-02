@@ -467,8 +467,7 @@ class VDriveWorker implements VDrive.Worker {
         // One consistent ActivityTaskManager snapshot, instead of several queries and pidof forks per tick.
         List<?> tasks;
         try {
-            if (atmGetService == null || atmAllRootTasks == null) return;
-            tasks = (List<?>) atmAllRootTasks.invoke(atmGetService.invoke(null));
+            tasks = rootTasksSnapshot();
             if (tasks == null) return; // Unknown placement must never be treated as an empty screen.
         } catch (Throwable unavailable) { return; }
         boolean occupied = false;
@@ -484,7 +483,9 @@ class VDriveWorker implements VDrive.Worker {
             // old display through that transition, without resizing or restarting the App.
             handingOver = true;
             if (x.orphanAt <= 0) markTakenOver(movedTo);
-            if (takenOver && x.reader != null) stopCapture(x);
+            // Keep the last Surface through the system's transition. Detaching it here
+            // toggles the old display before the destination has a ready window.
+            // retireFromPatrol releases it after the two window-readiness observations.
             if (x.handoffAt <= 0) x.handoffAt = now;
             if (!confirmHandoffWindow(x, movedTo)) return;
             // The actual tracked task left; its old display can go without touching its new window.
@@ -506,6 +507,11 @@ class VDriveWorker implements VDrive.Worker {
         x.emptySince = 0;
         if (x == current) emptySince = 0;
         if (now - x.lastCmdAt > IDLE_MS) retireFromPatrol(x);
+    }
+
+    List<?> rootTasksSnapshot() throws Exception {
+        if (atmGetService == null || atmAllRootTasks == null) return null;
+        return (List<?>) atmAllRootTasks.invoke(atmGetService.invoke(null));
     }
 
     private void retireFromPatrol(Session session) {
@@ -2177,13 +2183,15 @@ class VDriveWorker implements VDrive.Worker {
                 return fail("BAD_ARGUMENT", "不支持此接管操作");
             if (action.equals("key") && req.optInt("code") != KeyEvent.KEYCODE_BACK)
                 return fail("BAD_ARGUMENT", "接管仅支持目标屏返回键");
-            JSONObject ready = awaitInputReady(displayId, "", req, 1200);
-            if (!ready.optBoolean("ready")) return fail("INPUT_NOT_READY", "目标窗口未就绪").put("operationMayHaveRun", false);
             req.put("displayId", displayId).put("coordinateSpace", "display");
+            JSONObject ready = awaitInputReady(displayId, current.pkg, req, 1200);
+            if (!ready.optBoolean("ready")) return fail("INPUT_NOT_READY", "目标窗口未就绪").put("operationMayHaveRun", false);
+            invalid = ScreenGeometry.check(geometry, geometry(displayId).json());
+            if (invalid != null) return invalid.put("operationMayHaveRun", false);
             // Invalidate AI input contracts; resume must obtain a new model observation.
             lastScreenshot = null;
             observationRequired = true;
-            JSONObject result = dispatch(action, req);
+            JSONObject result = manualInput(action, req);
             result.put("operationMayHaveRun", true);
             if (!ScreenGeometry.same(geometry, geometry(displayId).json()))
                 return fail("GEOMETRY_CHANGED_DURING_OPERATION", "画面方向已改变，请重新查看").put("operationMayHaveRun", true);
@@ -2230,6 +2238,20 @@ class VDriveWorker implements VDrive.Worker {
             if (logical != null && logical != crop && logical != fr.bmp) logical.recycle();
             if (crop != fr.bmp) crop.recycle();
         }
+    }
+
+    /** Human input must hit the pixel the user selected, not an accessibility ancestor.
+     * AI tap/press keep their existing node-first focus-preserving behaviour. */
+    JSONObject manualInput(String action, JSONObject req) throws Exception {
+        if (!action.equals("tap") && !action.equals("press")) return dispatch(action, req);
+        int did = req.getInt("displayId");
+        if (did <= 0 || !hasTaskOnDisplay()) return fail("NO_TASK_ON_DISPLAY", "后台页面已不可操作");
+        float x = (float) req.getDouble("x"), y = (float) req.getDouble("y");
+        JSONObject bad = checkPoint(did, x, y);
+        if (bad != null) return bad;
+        long hold = action.equals("tap") ? 40 : clamp(req.optLong("holdMs", 800), 500, 15000);
+        injectTouch(did, x, y, x, y, hold, 0);
+        return new JSONObject().put("ok", true).put("via", "manual_touch");
     }
 
     boolean ensureShotDir() {

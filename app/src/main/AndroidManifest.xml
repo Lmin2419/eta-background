@@ -89,7 +89,7 @@
             android:excludeFromRecents="true"
             android:noHistory="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:theme="@style/Theme.EtaVoiceAssistBridge" />
+            android:theme="@style/Theme.EtaCompletedApp" />
 
         <activity
             android:name=".agent.runtime.TaskPreviewActivity"

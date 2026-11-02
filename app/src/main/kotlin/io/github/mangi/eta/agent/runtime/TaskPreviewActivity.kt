@@ -1,6 +1,9 @@
 package io.github.mangi.eta.agent.runtime
 
 import android.animation.ValueAnimator
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -15,6 +18,8 @@ import android.util.Base64
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.view.animation.DecelerateInterpolator
 import android.widget.Button
@@ -24,6 +29,8 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.eta.shadow.ShadowTools
+import io.github.mangi.eta.R
+import io.github.mangi.eta.agent.overlay.AgentOverlayStatus
 import io.github.mangi.eta.agent.overlay.localizedText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -46,6 +53,10 @@ internal class TaskPreviewActivity : ComponentActivity() {
     private var expanded = false
     private var manual = false
     private var busy = false
+    private var resizing = false
+    private var closing = false
+    private var freshFrame = true
+    private var downInView: Pair<Float, Float>? = null
     private var controller: AgentRunController? = null
     private var frame: Bitmap? = null
     private var geometry: JSONObject? = null
@@ -56,12 +67,14 @@ internal class TaskPreviewActivity : ComponentActivity() {
     private var polling: Job? = null
     private var animation: ValueAnimator? = null
     private lateinit var root: LinearLayout
-    private lateinit var picture: ImageView
+    private lateinit var picture: TaskPreviewImageView
     private lateinit var status: TextView
     private lateinit var hint: TextView
     private lateinit var take: Button
     private lateinit var resume: Button
     private lateinit var back: Button
+    private lateinit var zoom: Button
+    private lateinit var openApp: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,17 +93,19 @@ internal class TaskPreviewActivity : ComponentActivity() {
         val header = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
         status = label("后台屏幕", 15f)
         header.addView(status, LinearLayout.LayoutParams(0, dp(42), 1f))
+        zoom = button("放大") { toggleSize() }
+        header.addView(zoom)
         header.addView(button("关闭") { finish() })
         root.addView(header)
-        picture = ImageView(this).apply {
+        picture = TaskPreviewImageView(this).apply {
             scaleType = ImageView.ScaleType.FIT_CENTER
-            contentDescription = "后台应用实时预览；点击放大，接管后可操作"
-            setBackgroundColor(Color.BLACK)
-            setOnClickListener { if (!manual && !busy) { expanded = !expanded; resize(true) } }
+            contentDescription = "后台应用预览；只读时点击放大，接管后使用上方放大按钮"
+            setBackgroundColor(Color.rgb(30, 33, 45))
+            setOnClickListener { if (!manual) toggleSize() }
             setOnTouchListener { _, event -> touch(event) }
         }
         root.addView(picture, LinearLayout.LayoutParams(-1, 0, 1f))
-        hint = label("只读预览 · 点击画面放大", 12f)
+        hint = label("正在连接画面…", 12f)
         root.addView(hint, LinearLayout.LayoutParams(-1, dp(44)))
         val controls = LinearLayout(this)
         take = button("接管") { acquire() }
@@ -98,6 +113,8 @@ internal class TaskPreviewActivity : ComponentActivity() {
         back = button("返回") { sendInput("key", JSONObject().put("code", 4)) }
         listOf(take, resume, back).forEach { controls.addView(it, LinearLayout.LayoutParams(0, dp(48), 1f)) }
         root.addView(controls)
+        openApp = button("打开 App") { openCompletedApp() }
+        root.addView(openApp, LinearLayout.LayoutParams(-1, dp(44)))
         setContentView(root)
         resize(animate = false)
         root.alpha = 0f
@@ -114,23 +131,46 @@ internal class TaskPreviewActivity : ComponentActivity() {
         setPadding(dp(4), 0, dp(4), 0); setOnClickListener { click() }
     }
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+    private fun toggleSize() {
+        if (busy || resizing || closing) return
+        expanded = !expanded
+        clearGesture()
+        resize(animate = true)
+    }
+
+    private fun clearGesture() {
+        down = null; downInView = null; gestureGeometry = null
+        if (::picture.isInitialized) picture.clearTouch()
+    }
+
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
-        down = null; gestureGeometry = null; geometry = null
+        clearGesture(); geometry = null; freshFrame = true
         if (::picture.isInitialized) resize(animate = false)
     }
 
     private fun resize(animate: Boolean) {
         animation?.cancel()
-        val bounds = windowManager.currentWindowMetrics.bounds
-        val width = if (expanded) (bounds.width() * .94).toInt() else minOf(dp(320), (bounds.width() * .9).toInt())
-        val height = if (expanded) (bounds.height() * .8).toInt() else minOf(dp(450), (bounds.height() * .65).toInt())
+        // Current metrics may already be the small floating window on an OEM ROM.
+        // Always size against the display, not against our previous panel size.
+        val metrics = windowManager.maximumWindowMetrics
+        val insets = metrics.windowInsets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+        val availableWidth = (metrics.bounds.width() - insets.left - insets.right).coerceAtLeast(1)
+        val availableHeight = (metrics.bounds.height() - insets.top - insets.bottom - dp(24)).coerceAtLeast(1)
+        window.attributes = window.attributes.apply { y = insets.top + dp(12) }
+        val width = if (expanded) (availableWidth * .96).toInt() else minOf(dp(320), (availableWidth * .92).toInt())
+        val height = if (expanded) (availableHeight * .94).toInt() else minOf(dp(450), (availableHeight * .75).toInt())
         val fromW = window.attributes.width.takeIf { it > 0 } ?: width
         val fromH = window.attributes.height.takeIf { it > 0 } ?: height
-        if (!animate) { window.setLayout(width, height); return }
+        zoom.text = if (expanded) "缩小" else "放大"
+        if (!animate || !ValueAnimator.areAnimatorsEnabled()) { resizing = false; window.setLayout(width, height); updateControls(); return }
+        resizing = true; updateControls()
         animation = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 240; interpolator = DecelerateInterpolator()
             addUpdateListener { val f = it.animatedValue as Float; window.setLayout((fromW + (width - fromW) * f).toInt(), (fromH + (height - fromH) * f).toInt()) }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) { resizing = false; updateControls() }
+            })
             start()
         }
     }
@@ -142,10 +182,11 @@ internal class TaskPreviewActivity : ComponentActivity() {
         polling = lifecycleScope.launch {
             while (isActive && visible) {
                 if (!TaskPreviewRegistry.mainDisplayAvailable(this@TaskPreviewActivity)) { finish(); break }
-                if (!busy && down == null) {
+                if (!busy && !closing && down == null) {
                     val result = rpc("preview_frame", JSONObject().put("edge", if (expanded) 720 else 480)
-                        .put("since", if (geometry != null) previewKey else ""))
+                        .put("since", if (freshFrame) "" else previewKey))
                     if (!visible) break
+                    if (busy || closing || down != null) { freshFrame = true; continue }
                     if (result.optBoolean("ok") && !result.optBoolean("unchanged")) {
                         val encoded = result.optString("image")
                         val bitmap = withContext(Dispatchers.Default) {
@@ -155,16 +196,18 @@ internal class TaskPreviewActivity : ComponentActivity() {
                             }.getOrNull()
                         }
                         if (!visible) { bitmap?.recycle(); break }
-                        if (bitmap != null) {
-                            geometry = result.optJSONObject("geometry")
-                            previewKey = result.optString("previewKey")
-                            val old = frame; frame = bitmap; picture.setImageBitmap(bitmap); old?.recycle()
+                        if (busy || closing || down != null) { bitmap?.recycle(); freshFrame = true; continue }
+                        displayFrame(bitmap, result.optJSONObject("geometry"), result.optString("previewKey"))
+                    } else if (!result.optBoolean("ok")) {
+                        geometry = null; freshFrame = true
+                        val code = result.optString("code")
+                        if (code !in setOf("COMMAND_BUSY", "COMMAND_DRAINING")) clearFrame()
+                        hint.text = when (code) {
+                            "NO_FRAME", "FRAME_GEOMETRY_CHANGED" -> "等待可用画面 · 暂以手机图标显示"
+                            "COMMAND_BUSY", "COMMAND_DRAINING" -> "操作尚未结束，等待画面更新…"
+                            else -> previewFailure(result)
                         }
-                    } else if (!result.optBoolean("ok") && result.optString("code") !in setOf("NO_FRAME", "COMMAND_BUSY", "FRAME_GEOMETRY_CHANGED")) {
-                        hint.text = result.optString("message", "预览暂不可用，请返回通知查看任务")
-                        geometry = null
                     }
-                    AgentExecutionService.task(runId)?.let { status.text = it.status.localizedText(resources) }
                     updateControls()
                 }
                 delay(if (expanded) 350 else 800)
@@ -172,13 +215,39 @@ internal class TaskPreviewActivity : ComponentActivity() {
         }
     }
 
+    internal fun displayFrame(bitmap: Bitmap?, displayGeometry: JSONObject?, key: String) {
+        previewKey = key; freshFrame = false
+        if (bitmap == null || !PreviewFrameContent.usable(bitmap)) {
+            bitmap?.recycle(); clearFrame()
+            hint.text = "暂未取得可用画面 · 手机图标为占位，不可点击操作"
+        } else {
+            val wasMissing = geometry == null
+            geometry = displayGeometry
+            val old = frame; frame = bitmap; picture.setImageBitmap(bitmap); old?.recycle()
+            if (wasMissing) hint.text = if (manual) "可操作 · 上方可放大，关闭后 AI 保持暂停" else "只读预览 · 点击画面或上方按钮放大"
+        }
+        updateControls()
+    }
+
+    private fun clearFrame() {
+        geometry = null
+        if (::picture.isInitialized) { picture.setImageDrawable(null); picture.clearTouch() }
+        frame?.recycle(); frame = null
+    }
+
+    override fun finish() {
+        if (!closing && visible && ::root.isInitialized && ValueAnimator.areAnimatorsEnabled()) {
+            closing = true; clearGesture(); updateControls()
+            root.animate().alpha(0f).translationY(-dp(8).toFloat()).setDuration(150).withEndAction { super.finish() }.start()
+        } else super.finish()
+    }
+
     override fun onStop() {
         visible = false
         polling?.cancel()
         animation?.cancel()
-        geometry = null; down = null
-        if (::picture.isInitialized) picture.setImageDrawable(null)
-        frame?.recycle(); frame = null
+        clearGesture(); clearFrame()
+        if (::root.isInitialized) root.animate().cancel()
         // A bounded process-owned executor completes release even if the Activity is destroyed.
         val ownedController = controller
         cleanup.execute {
@@ -199,76 +268,123 @@ internal class TaskPreviewActivity : ComponentActivity() {
     }
 
     private fun acquire() {
-        if (busy || manual || geometry == null) return
+        if (busy || resizing || closing || manual || geometry == null) return
         busy = true; updateControls(); hint.text = "正在暂停此任务并等待操作结束…"
         lifecycleScope.launch {
-            controller = TaskPreviewRegistry.controller(runId)
+            controller = TaskPreviewRegistry.controller(runId)?.takeUnless { it.isCancelled || AgentExecutionService.task(runId)?.completed == true }
             val drained = withContext(Dispatchers.IO) { controller?.acquireManual(owner) ?: true }
             val result = if (drained && visible) rpc("preview_acquire", JSONObject().put("requireParked", controller == null)) else JSONObject()
             manual = result.optBoolean("ok") && visible
             if (!manual) controller?.releaseManual(owner)
             busy = false
-            hint.text = if (manual) "已接管 · 点击、长按或滑动；关闭后 AI 保持暂停" else "尚未取得控制权；请等待旧操作结束后重试"
+            if (manual) {
+                geometry = null; freshFrame = true; clearGesture()
+                if (!expanded) { expanded = true; resize(animate = true) }
+            }
+            hint.text = if (manual) "已接管，正在更新画面…" else if (!drained) "本任务已暂停，仍有操作未退出；稍后可再接管" else previewFailure(result)
             updateControls()
         }
     }
 
     private fun release(resumeTask: Boolean) {
-        if (busy) return
+        if (busy || closing) return
         busy = true; updateControls()
         lifecycleScope.launch {
             val result = rpc("preview_release")
             if (result.optBoolean("ok")) {
-                controller?.releaseManual(owner); manual = false; geometry = null
-                val active = TaskPreviewRegistry.controller(runId) != null
+                controller?.releaseManual(owner); manual = false; geometry = null; freshFrame = true; clearGesture()
+                val active = TaskPreviewRegistry.controller(runId)?.isCancelled == false && AgentExecutionService.task(runId)?.completed != true
                 if (resumeTask && active) AgentRuntimeService.dispatchNotificationAction(AgentExecutionService.ACTION_RESUME_RUN, runId)
                 hint.text = if (active) "已交还控制权 · AI 继续前会重新观察" else "接管结束 · 继续任务请使用通知中的“继续指令”"
-            } else hint.text = "控制权释放尚未确认；未恢复 AI，请稍后再试"
+            } else hint.text = previewFailure(result)
             busy = false; updateControls()
         }
     }
 
+    private fun openCompletedApp() {
+        if (busy || closing || AgentExecutionService.task(runId)?.completed != true) return
+        busy = true; updateControls()
+        lifecycleScope.launch {
+            val result = rpc("preview_release")
+            if (result.optBoolean("ok") || result.optString("code") in setOf("PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER")) {
+                controller?.releaseManual(owner); manual = false
+                startActivity(Intent(this@TaskPreviewActivity, CompletedAppActivity::class.java)
+                    .putExtra(CompletedAppActivity.EXTRA_RUN_ID, runId).putExtra(CompletedAppActivity.EXTRA_PACKAGE, pkg),
+                    ActivityOptions.makeCustomAnimation(this@TaskPreviewActivity, android.R.anim.fade_in, android.R.anim.fade_out).toBundle())
+                finish()
+            } else { hint.text = previewFailure(result); busy = false; updateControls() }
+        }
+    }
+
+    private fun previewFailure(result: JSONObject): String = when (result.optString("code")) {
+        "TASK_NOT_SETTLED" -> "结果已返回，后台页面仍在收尾；请稍后接管"
+        "INPUT_DRAIN_PENDING", "COMMAND_BUSY", "COMMAND_DRAINING" -> "上一操作尚未结束；本次未输入，请稍后再试"
+        "PREVIEW_OBSERVATION_REQUIRED", "STALE_OBSERVATION" -> "正在更新画面，更新后可继续操作"
+        "MANUAL_CONTROL" -> "另一个预览窗口正在控制此页面，请先结束那里的接管"
+        "PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER" -> "此页面已交还或回收，可从通知打开 App 或继续指令"
+        "MANUAL_LEASE_EXPIRED" -> "接管已过期，请重新点击接管"
+        else -> result.optString("message").ifBlank { "暂时无法接管，请刷新画面后重试" }
+    }
+
     private fun updateControls() {
-        take.isEnabled = !busy && !manual && geometry != null
-        back.isEnabled = !busy && manual && geometry != null
-        resume.isEnabled = !busy && (manual || TaskPreviewRegistry.controller(runId)?.isPaused == true)
-        resume.text = if (TaskPreviewRegistry.controller(runId) == null) "结束接管" else "让 AI 继续"
+        val card = AgentExecutionService.task(runId)
+        card?.let { status.text = if (it.completed && it.status == AgentOverlayStatus.ResultReady) getString(R.string.background_task_completed) else it.status.localizedText(resources) }
+        val enabled = !busy && !closing
+        take.isEnabled = enabled && !resizing && !manual && geometry != null
+        take.text = if (card?.completed == true) "操作页面" else "接管"
+        back.isEnabled = enabled && !resizing && manual && geometry != null
+        resume.isEnabled = enabled && (manual || TaskPreviewRegistry.controller(runId)?.isPaused == true)
+        resume.text = if (card?.completed == true || TaskPreviewRegistry.controller(runId) == null) "结束接管" else "让 AI 继续"
+        zoom.isEnabled = enabled && !resizing
+        openApp.visibility = if (card?.completed == true) View.VISIBLE else View.GONE
+        openApp.isEnabled = enabled
     }
 
     private fun touch(event: MotionEvent): Boolean {
+        if (busy || resizing || closing) return true
         if (!manual) {
-            if (event.action == MotionEvent.ACTION_UP && !busy) picture.performClick()
+            if (event.actionMasked == MotionEvent.ACTION_UP) picture.performClick()
             return true
         }
-        if (busy) return true
         val g = geometry ?: return true
-        fun point() = PreviewCoordinates.map(event.x, event.y, picture.width, picture.height, g.optInt("width"), g.optInt("height"))
+        fun point() = picture.displayPoint(event.x, event.y, g.optInt("width"), g.optInt("height"))
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> { down = point(); downTime = SystemClock.uptimeMillis(); gestureGeometry = JSONObject(g.toString()) }
-            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_POINTER_DOWN -> { down = null; gestureGeometry = null }
+            MotionEvent.ACTION_DOWN -> {
+                down = point(); downTime = SystemClock.uptimeMillis(); gestureGeometry = JSONObject(g.toString())
+                downInView = event.x to event.y
+                if (down != null) picture.touchStart(event.x, event.y)
+            }
+            MotionEvent.ACTION_MOVE -> if (down != null) {
+                if (point() == null) clearGesture() else picture.touchMove(event.x, event.y)
+            }
+            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_POINTER_DOWN -> clearGesture()
             MotionEvent.ACTION_UP -> {
                 val start = down; val end = point(); down = null
                 if (start != null && end != null) {
-                    val duration = (SystemClock.uptimeMillis() - downTime).coerceIn(40, 1200)
-                    val moved = kotlin.math.hypot((end.first - start.first).toDouble(), (end.second - start.second).toDouble()) > g.optInt("width") * .025
+                    val duration = (SystemClock.uptimeMillis() - downTime).coerceIn(40, 15000)
+                    val startView = downInView ?: (event.x to event.y)
+                    val moved = kotlin.math.hypot((event.x - startView.first).toDouble(), (event.y - startView.second).toDouble()) > ViewConfiguration.get(this).scaledTouchSlop
                     val args = if (moved) JSONObject().put("x1", start.first).put("y1", start.second)
                         .put("x2", end.first).put("y2", end.second).put("durationMs", duration)
                     else JSONObject().put("x", start.first).put("y", start.second).put("holdMs", duration)
-                    sendInput(if (moved) "swipe" else if (duration >= 500) "press" else "tap", args, gestureGeometry)
+                    picture.touchMove(event.x, event.y); picture.touchEnd()
+                    sendInput(if (moved) "swipe" else if (duration >= ViewConfiguration.getLongPressTimeout()) "press" else "tap", args, gestureGeometry)
+                } else {
+                    picture.clearTouch()
                 }
-                gestureGeometry = null
+                gestureGeometry = null; downInView = null
             }
         }
         return true
     }
 
     private fun sendInput(action: String, args: JSONObject, observed: JSONObject? = geometry) {
-        if (!manual || busy || observed == null || !TaskPreviewRegistry.mainDisplayAvailable(this)) return
+        if (!manual || busy || resizing || closing || observed == null || !TaskPreviewRegistry.mainDisplayAvailable(this)) return
         busy = true; updateControls()
         lifecycleScope.launch {
             val result = rpc("preview_input", args.put("action", action).put("expectedGeometry", observed))
-            geometry = null // No auto-replay, including timeouts and orientation changes.
-            if (!result.optBoolean("ok")) hint.text = result.optString("message", "操作未确认，请重新查看画面")
+            geometry = null; freshFrame = true // No auto-replay, including timeouts and orientation changes.
+            if (!result.optBoolean("ok")) hint.text = previewFailure(result)
             if (result.optString("code") in setOf("MANUAL_LEASE_EXPIRED", "PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER")) {
                 manual = false; controller?.releaseManual(owner)
             }

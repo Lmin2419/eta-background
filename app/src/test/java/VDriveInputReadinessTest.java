@@ -27,7 +27,7 @@ public class VDriveInputReadinessTest {
     static class Worker extends VDriveWorker {
         final List<MotionEvent> events = new ArrayList<>();
         final List<String> launchRoutes = new ArrayList<>();
-        int probes, readyAfter = 1, injectCalls;
+        int probes, readyAfter = 1, injectCalls, nodeClicks;
         boolean rejectMove;
         Worker(Context context) throws Exception {
             super(context); work.removeCallbacksAndMessages(null); displayId = 7;
@@ -40,9 +40,14 @@ public class VDriveInputReadinessTest {
             try {
                 if ("input_state".equals(request.optString("cmd"))) return new JSONObject().put("ok", true).put("ready", ++probes >= readyAfter);
                 if ("snapshot".equals(request.optString("cmd"))) return new JSONObject().put("ok", true).put("observable", false);
+                if ("tapnode".equals(request.optString("cmd"))) {
+                    nodeClicks++;
+                    if (fakeNodeAccepts) return new JSONObject().put("ok", true).put("changed", false);
+                }
                 return new JSONObject().put("ok", false).put("code", "NO_NODE");
             } catch (Exception error) { throw new AssertionError(error); }
         }
+        boolean fakeNodeAccepts;
         @Override JSONObject launch(JSONObject request) throws Exception {
             String route = request.optString("via"); launchRoutes.add(route);
             return new JSONObject().put("ok", true).put("displayId", 7).put("via", route);
@@ -109,5 +114,35 @@ public class VDriveInputReadinessTest {
                 .put("x1", 100).put("y1", 300).put("x2", 100).put("y2", 100).put("durationMs", 16));
         assertTrue(result.getBoolean("accepted")); assertFalse(result.getBoolean("verified"));
         assertEquals("UNKNOWN", result.getString("outcome")); assertTrue(worker.injectCalls > 0);
+    }
+
+    @Test public void manualCalculatorTapsAlwaysReachTheSelectedPixelEvenWhenANodeClaimsSuccess() throws Exception {
+        VDriveWorker.Session session = worker.new Session("example.calculator");
+        session.displayId = 7; worker.sessions.put(session.pkg, session); worker.load(session);
+        worker.fakeNodeAccepts = true;
+        for (int i = 0; i < 3; i++) {
+            JSONObject result = worker.preview(new JSONObject().put("cmd", "preview_input")
+                    .put("action", "tap").put("x", 120 + i * 200).put("y", 1800)
+                    .put("expectedGeometry", worker.geometry(7).json()));
+            assertTrue(result.toString(), result.getBoolean("ok"));
+            assertEquals("manual_touch", result.getString("via"));
+            assertEquals("needs_observation", worker.commandState());
+            assertEquals("OBSERVE_AFTER_TIMEOUT", worker.observationGuard(true).getString("code"));
+            assertEquals(120f + i * 200, worker.events.get(i * 2).getX(), 0);
+            assertEquals(1800f, worker.events.get(i * 2).getY(), 0);
+        }
+        assertEquals(0, worker.nodeClicks);
+        assertEquals(6, worker.events.size());
+        for (int display : DisplayRoute.displays) assertEquals(7, display);
+    }
+
+    @Test public void manualInputStillRefusesWrongGeometryBeforeTouchInjection() throws Exception {
+        VDriveWorker.Session session = worker.new Session("example.calculator");
+        session.displayId = 7; worker.sessions.put(session.pkg, session); worker.load(session);
+        JSONObject result = worker.preview(new JSONObject().put("cmd", "preview_input")
+                .put("action", "tap").put("x", 120).put("y", 1800)
+                .put("expectedGeometry", worker.geometry(7).json().put("rotation", 1)));
+        assertFalse(result.getBoolean("ok"));
+        assertEquals(0, worker.injectCalls);
     }
 }

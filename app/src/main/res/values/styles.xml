@@ -24,7 +24,14 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsFloating">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
         <item name="android:backgroundDimAmount">0.18</item>
         <item name="android:windowCloseOnTouchOutside">true</item>
+    </style>
+    <style name="Theme.EtaCompletedApp" parent="Theme.EtaVoiceAssistBridge">
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 </resources>
