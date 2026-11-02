@@ -61,41 +61,35 @@
 
 ## 当前指令（ChatGPT 维护）
 
-- instruction_id: C008
+- instruction_id: C009
 - instruction_revision: 1
-- issued_at: 2026-11-02T09:46:59Z
-- status: REVIEW_READY
+- issued_at: 2026-11-02T10:47:21Z
+- status: RUNNING
 - target: ChatGPT
-- candidate_head: 5afaf87b3f8cd36aecd10f75e57c139b3bc64467
-- parent_head: 7c846a3d19d1dbbfee03a5781e9666283e704750
-- engine_build: 20261102-e44-handoff
+- candidate_head: 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e
+- parent_head: 5afaf87b3f8cd36aecd10f75e57c139b3bc64467
+- engine_build: 20261102-e45-finalize
 - current_plan: [当前实施方案](coordination/INTEGRATION_PLAN_CURRENT.md)
-- candidate_evidence: [主屏交还与恢复返修证据](coordination/CANDIDATE_5afaf87.md)
-- latest_validation: 本地与签名 CI 全量 2,191 项（0 失败/错误、1 跳过）；Lint 0 错误、389 Warning、1 Hint；12 项接线、8 项部署、两项 CI、Debug/Release 构建通过；实际 APK 原证书与五项内嵌引擎/脚本逐字节核验通过
-- verified_at: 2026-11-02T10:04:57Z
-- candidate_apk: [Etax-v3.3.5+etax.5afaf87.apk](https://github.com/Lmin2419/eta-background/actions/runs/41422696799/artifacts/13130804607)；6,737,651 bytes；SHA-256 `269e7686a9b1795f05bb14cd462968d816d20fc587880161d54a191457c820cf`
-- device_status: 新候选未执行真机验证；用户可独立安装，无 ADB 前置
-- mode: ChatGPT 直接修复与交付；不恢复定时，不唤醒 dsh
+- candidate_evidence: [会话入口与终态返修证据](coordination/CANDIDATE_99f2d87.md)
+- latest_validation: 本地全量 2,195 项（0 失败/错误、1 跳过）、12 项接线、8 项部署回归通过；本地 Lint/Debug 与两项 CI 正在执行，实际原签名 APK 待核验
+- device_status: 新候选未实测；用户确认上一候选接管/手动操作/AI 继续流程跑通，但最终答复后彩边仍在、主屏切换仍闪烁
+- mode: ChatGPT 直接修复交付；不恢复定时，不唤醒 dsh
 
-### 用户反馈与修复范围
+### 用户需求与实际修复
 
-用户安装上一候选后，美团验证页在预览中接管点击无反应，确认没有看到错误提示；自行从最近任务移到主屏完成验证后，预览“让 AI 继续”无效，通知恢复有效，再次从最近任务打开美团有闪烁。未读取手机日志，不能认定无响应必然是美团风控。
+1. 运行/暂停通知新增“打开 ETA 会话”第三个独立按钮，打开对应聊天；主体仍预览，前两个暂停/继续与停止按钮、三个完成入口与内联回复保留。
+2. 无实际活动任务时撤掉彩边；保留过去前台操作的结果上下文不能保留运行窗口，延迟显示回调也检查真实任务。一个完成不影响另一个仍运行的彩边，全球前台权限暂停控件保留。
+3. 已关闭的完成卡片拒绝晚到的旧运行快照；终态仍由 Runtime 提交决定，不用流式文字推定完成。
+4. 最终回收直接释放虚拟显示，再关闭本地采集缓冲；避免先 setSurface(null) 再释放显示的额外状态变化。保持主屏窗口就绪确认，释放失败保留句柄/缓冲，不重启 App、不改全局动画、不扩大 Hook。实际 ColorOS 闪烁改善待测。
 
-1. 只读预览不持手动租约，恢复直接走通知同一个 Runtime 入口，不等旧预览释放；另一窗口仍持人工控制时控制器仍拒绝恢复。
-2. 手动窗口释放已消失的旧屏可幂等确认；目标已迁移时仍校验拥有者和旧操作排空，不把 MANUAL_CONTROL / INPUT_DRAIN_PENDING 或超时视为成功，不建新屏、不自动重放。
-3. 修复 Runtime 收尾的旁路：finish(notify) 与 release_session 原本可能在移到主屏后提前断开采集/销毁旧屏，绕过原窗口就绪确认。现在由巡检确认主屏窗口后再释放，延迟的预览关闭也保留过渡采集。无固定动画延迟、全局动画修改或新增 Hook。
-4. 同 App 旧屏交还中返回 CLEANUP_PENDING，复用已有有界等待；仍不得抢占/回收交还中的屏。
-5. 输入失败提示保留到后续用户动作/成功结果，不被下一帧覆盖；美团验证页本身无响应未定因，不宣称验证码或风控已经修复。
+[源码更新说明](https://github.com/Lmin2419/eta-background/blob/99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e/etax/TASK_PREVIEW.md)；[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41431105518) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41431098545)。
 
-源码和更新说明：[TASK_PREVIEW.md](https://github.com/Lmin2419/eta-background/blob/5afaf87b3f8cd36aecd10f75e57c139b3bc64467/etax/TASK_PREVIEW.md)。[PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41422705824) / [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41422696799)。
+### 完成标准与停止边界
 
-### 完成标准与边界
-
-- 本 head 两项 CI 与实际原签名 APK 核验已完成，交付测试候选；旧包结果不移记。等待用户实测，不宣称手机通过或全部 ColorOS 闪烁消失。
-- 手机只重点复测自然遇到验证时的“主屏处理→预览继续→实际任务执行”，再次切到主屏的过渡，以及另一任务不受影响；不主动触发验证码，不重复有副作用的点击。
-- 保留单 VDrive、两任务、同 App 串行、旧 screen_*、原通知/流体云/三个完成入口/内联回复、Harmony、已授权息屏后台和主屏锁定保护。
-- 不绕过观察/权限、不强停/重启 App、不扩大 Hook。电源键/LSP 软重启、全局冷启动白屏仍未定因，不主动复现风险操作。
-- Draft 保持未合并、未发布/打标签，不替换正式下载，不改包名/签名/版本编号。dsh 保留原反馈、不执行旧指令、不重建定时。
+- 核对本 head 两项 CI 与实际原签名 APK 后交付；旧包测试不移记，不宣称已经真机通过或全部闪烁消失。
+- 手机重点：运行卡片的会话按钮、主体预览、接管后继续到最终答复的通知和彩边、另一任务继续运行、最近任务移主屏的动画与页面稳定。无需 ADB，不主动诱发验证或软重启。
+- 保留单 VDrive、两个后台任务、同 App 串行、旧 screen_*、流体云/每任务通知/三个完成入口/内联回复、Harmony、已授权息屏后台与主屏锁定保护。
+- 不合并 main、不发布/打标签/替换正式下载、不改包名/签名/版本编号。电源键/LSP 软重启和全局冷启动白屏仍未定因。dsh 保留反馈、不重建定时或执行旧指令。
 
 ## 执行反馈（dsh 维护）
 
@@ -146,14 +140,21 @@
 - last_reviewed_feedback_revision: 3
 - last_reviewed_instruction: C002
 - last_reviewed_instruction_revision: 2
-- last_reviewed_code_head: 5afaf87b3f8cd36aecd10f75e57c139b3bc64467
-- last_reviewed_coordination_head: eb4df911e57c63b17b9a3f69e382605257ff400a
-- reviewed_at: 2026-11-02T10:04:57Z
-- decision: e44 返修代码、自动化和原签名候选核验通过；新候选真机待验证
-- evidence: [5afaf87 返修证据](coordination/CANDIDATE_5afaf87.md)
-- device_gate: 新候选未实测；用户的美团反馈是上一候选上下文，不移记为本次测试
+- last_reviewed_code_head: 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e
+- last_reviewed_coordination_head: 732446995b522bba8fbbe493b95e26882c80f593
+- reviewed_at: 2026-11-02T10:47:21Z
+- decision: e45 代码与本地全量通过；Lint/构建和原签名 APK 核验进行中
+- evidence: [99f2d87 返修证据](coordination/CANDIDATE_99f2d87.md)
+- device_gate: 新候选未实测；上一候选接管/继续通过的用户反馈单独保留
 - next_phase_permission: 用户直接反馈返修，保留原保护和范围；不合并/发布
-- issued_next_instruction: C008 revision 1（核验构建后交付；dsh 与定时不恢复）
+- issued_next_instruction: C009 revision 1（核验包后交付；定时与 dsh 不恢复）
+
+### e45 会话入口与结束彩边返修 — 2026-11-02T10:47:21Z
+
+- 用户确认会话已出现最终答复但彩边残留，并要求运行通知可直接打开 ETA 会话；接管/AI 继续流程已跑通。代码确认空活动列表仍可因前台历史标记保留彩边，修复为空闲必退场、延迟显示亦查活动任务。
+- 新通知入口、真实 Runtime 终态回调、完成卡片旧快照、显示最终释放有回归；彩边测试纠正所选任务后再次在旧实现复现最后一个任务完成仍留彩边。旧停采集失败夹具补上真实 VirtualDisplay，继续验证失败保留资源，未放宽保护断言。
+- 本地全量 2,195 项，0 失败/错误、1 跳过；接线 12/12、Android shell 部署 8/8。代码 head 99f2d87843a0d07ba4a6ca6998019e7ceb1a8d8e，引擎 e45。静态检查、Debug 和两项 CI 正在执行，尚未先填原签名包成功。
+- 显示回收取消额外的先关输出动作，保留窗口就绪和释放失败重试；真实 ColorOS 过渡效果仍未验证。未操作手机、未合并/发布。
 
 ### 5afaf87 原签名候选核验完成 — 2026-11-02T10:04:57Z
 
@@ -329,4 +330,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户已要求 ChatGPT 接手；C008 接替 C007，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C008 时只保留已有证据、不新增实施。
+- external_agent_limit: 用户已要求 ChatGPT 接手；C009 接替 C008，不再修复或依赖 dsh 定时交接。未直接操作 dsh Host，其任务是否仍启用未知，不能声称已关闭；dsh 后续读到 C009 时只保留已有证据、不新增实施。
