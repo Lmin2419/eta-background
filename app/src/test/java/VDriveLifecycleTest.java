@@ -251,6 +251,21 @@ public class VDriveLifecycleTest {
         assertSame(capture, session.reader); assertSame(capture, worker.reader);
     }
 
+    @Test public void finishingAfterUserMovesAppCannotDetachTheSurfaceBeforeTheWindowIsReady() throws Exception {
+        worker = new Worker(RuntimeEnvironment.getApplication());
+        VDriveWorker.Session session = worker.new Session("audit.moved");
+        session.displayId = 42; session.taskId = 71;
+        session.reader = ImageReader.newInstance(32, 64, PixelFormat.RGBA_8888, 3);
+        worker.sessions.put(session.pkg, session); worker.load(session);
+        worker.taskDisplay = 0;
+        assertEquals("APP_TAKEN_OVER", worker.finish(new JSONObject().put("mode", "notify")).getString("code"));
+        assertNotNull(session.reader); assertEquals(0, session.orphanAt); assertFalse(worker.isParked());
+        // Even a delayed preview close after a park must not bypass transition cleanup.
+        session.orphanAt = 1; worker.load(session);
+        assertTrue(worker.preview(new JSONObject().put("cmd", "preview_release")).getBoolean("ok"));
+        assertNotNull(session.reader);
+    }
+
     public static class RootTask {
         public int taskId = 71;
         public int displayId = 0;

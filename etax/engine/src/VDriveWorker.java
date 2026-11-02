@@ -96,7 +96,7 @@ class VDriveWorker implements VDrive.Worker {
             long delay = previewUntil - SystemClock.elapsedRealtime();
             if (delay > 0) { work.postDelayed(this, delay); return; }
             previewExpiryScheduled = false;
-            if (current != null && current.orphanAt > 0) {
+            if (current != null && current.orphanAt > 0 && !handingOver) {
                 try { stopCapture(current); } catch (Throwable error) { log("preview cleanup: " + error.getClass().getSimpleName()); }
             }
         }
@@ -2167,7 +2167,7 @@ class VDriveWorker implements VDrive.Worker {
         if (current == null || displayId <= 0 || retired) return fail("PREVIEW_UNAVAILABLE", "后台页面已释放");
         if (command.equals("preview_release")) {
             previewUntil = 0;
-            if (current.orphanAt > 0) stopCapture(current);
+            if (current.orphanAt > 0 && !handingOver) stopCapture(current);
             return new JSONObject().put("ok", true);
         }
         JSONObject moved = foregroundGuard();
@@ -2339,6 +2339,13 @@ class VDriveWorker implements VDrive.Worker {
             releaseSessionFully(s, false);
             out.put("released", true);
         } else {
+            // Runtime cleanup also calls finish(notify) after detecting a user
+            // takeover. Parking here would detach the Surface before the normal
+            // destination-window checks; leave that cleanup to the patrol.
+            JSONObject moved = foregroundGuard();
+            if (moved != null) return moved;
+            if (handingOver && s.handoffAt > 0)
+                return fail("HANDOFF_PENDING", "应用正在切换主屏，等待窗口就绪");
             stopCapture(s);
             s.orphanAt = SystemClock.elapsedRealtime();
             if (s == current) orphanAt = s.orphanAt;

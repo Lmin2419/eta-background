@@ -344,6 +344,49 @@ class AgentRuntimeScreenOnTest {
         } finally { host.destroy() }
     }
 
+    @org.robolectric.annotation.Implements(value = com.eta.shadow.ShadowTools::class, isInAndroidSdk = false)
+    class UnavailablePreview {
+        companion object {
+            @JvmStatic @org.robolectric.annotation.Implementation
+            fun preview(runId: String, pkg: String, owner: String, command: String, arguments: String): String =
+                """{"ok":false,"code":"PREVIEW_UNAVAILABLE"}"""
+        }
+    }
+
+    @Test @Config(shadows = [UnavailablePreview::class])
+    fun readonlyPreviewResumeAfterAppMovedToMainUsesTheSameRuntimeActionAsNotification() {
+        val app = org.robolectric.RuntimeEnvironment.getApplication()
+        shadowOf(app.getSystemService(android.app.KeyguardManager::class.java)).setKeyguardLocked(false)
+        shadowOf(app.getSystemService(android.hardware.display.DisplayManager::class.java).getDisplay(0))
+            .setState(android.view.Display.STATE_ON)
+        val host = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        val run = host.get().registerRun("moved-to-main", ownsGui = false)
+        val c = run.session.controller
+        c.pause(forAppTakeover = true)
+        TaskPreviewRegistry.register(run.runId, c, TaskScreenSession(run.runId, c,
+            object : ScreenToolBackend { override fun execute(name: String, arguments: String): String? = error("No model input expected") },
+            { AgentModelClient.ToolResult("{}") }))
+        val panel = Robolectric.buildActivity(TaskPreviewActivity::class.java,
+            android.content.Intent(app, TaskPreviewActivity::class.java).putExtra("run_id", run.runId).putExtra("package", "app.moved")).create()
+        try {
+            val resume = TaskPreviewActivity::class.java.getDeclaredField("resume").apply { isAccessible = true }
+                .get(panel.get()) as android.widget.Button
+            assertTrue(resume.isEnabled)
+            resume.performClick()
+            val deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2)
+            while (c.isPaused && System.nanoTime() < deadline) {
+                shadowOf(Looper.getMainLooper()).idle(); Thread.sleep(1)
+            }
+            assertFalse("Missing old preview must not prevent resuming the run", c.isPaused)
+            // A read-only viewer still cannot release another viewer's manual lease.
+            assertTrue(c.acquireManual("another-viewer"))
+            TaskPreviewActivity::class.java.getDeclaredMethod("updateControls").apply { isAccessible = true }.invoke(panel.get())
+            resume.performClick(); shadowOf(Looper.getMainLooper()).idle()
+            assertTrue(c.isPaused)
+            c.releaseManual("another-viewer")
+        } finally { TaskPreviewRegistry.unregister(run.runId); panel.destroy(); host.destroy() }
+    }
+
     @Test
     fun completedRunStopsKeepingScreenOnBeforeServiceDestruction() {
         val serviceController = Robolectric.buildService(AgentRuntimeService::class.java).create()

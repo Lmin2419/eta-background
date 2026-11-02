@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Root transport. Mutable display/input/capture state lives in independent workers. */
 public final class VDrive {
-    static final String BUILD = "20261102-e43-resume";
+    static final String BUILD = "20261102-e44-handoff";
     static java.util.function.BooleanSupplier health = () -> true;
     static volatile boolean systemInvalid;
     private static final String INSTANCE = UUID.randomUUID().toString();
@@ -301,7 +301,11 @@ public final class VDrive {
                 if (slot == null && cmd.equals("launch")) {
                     String pkg = req.optString("component").split("/")[0];
                     for (Slot existing : workers.values()) {
-                        if (existing.pkg.equals(pkg)) return error("APP_BUSY", "应用正被另一任务使用");
+                        if (existing.pkg.equals(pkg)) {
+                            if (existing.worker != null && (existing.worker.isTakenOver() || existing.worker.isHandingOver()))
+                                return error("CLEANUP_PENDING", "等待此应用的主屏交还确认和旧屏清理");
+                            return error("APP_BUSY", "应用正被另一任务使用");
+                        }
                     }
                     if (workers.size() >= LIMIT) return error(
                             workers.values().stream().anyMatch(value -> value.closing ||
@@ -423,8 +427,12 @@ public final class VDrive {
                 if (e.getValue().pkg.equals(pkg) && e.getKey().startsWith(run + ":")
                         && e.getKey().lastIndexOf(':') == run.length()) { target = e.getValue(); break; }
             }
-            if (target == null || target.worker == null || target.closing || target.worker.isTakenOver())
-                return error("PREVIEW_UNAVAILABLE", "此任务已无保留页面，或应用已交还/被其他任务使用");
+            if (target == null || target.worker == null)
+                return cmd.equals("preview_release") ? ok().put("pageAvailable", false)
+                        : error("PREVIEW_UNAVAILABLE", "此任务已无保留页面");
+            boolean unavailable = target.closing || target.worker.isTakenOver();
+            if (unavailable && !cmd.equals("preview_release"))
+                return error("PREVIEW_UNAVAILABLE", "此任务页面已交还或正在释放");
             boolean held = target.manuallyHeld();
             if (cmd.equals("preview_acquire")) {
                 if (request.optBoolean("requireParked") && !target.parked)
@@ -444,6 +452,9 @@ public final class VDrive {
                 if (target.inFlight != 0 || !manualOperationDrained(target.worker))
                     return error("INPUT_DRAIN_PENDING", "旧操作尚未结束，暂不交还控制权");
                 if (owner.equals(target.manualOwner)) target.manualOwner = "";
+                // Releasing our lease is allowed after a main-screen takeover.
+                // Do not touch the old Surface while the window is transitioning.
+                if (unavailable) return ok().put("pageAvailable", false);
             } else if (cmd.equals("preview_input")) {
                 if (!held || !owner.equals(target.manualOwner)) return error("MANUAL_LEASE_EXPIRED", "请重新接管");
                 if (target.inFlight != 0 || !manualOperationDrained(target.worker))
@@ -490,9 +501,19 @@ public final class VDrive {
     private static JSONObject release(String id) {
         Slot slot;
         synchronized (workers) {
-            retire(id);
             slot = workers.get(id);
-            if (slot == null) return ok();
+            if (slot == null) { retire(id); return ok(); }
+        }
+        if (slot.worker != null) {
+            slot.worker.foregroundGuard();
+            if (slot.worker.isTakenOver()) {
+                slot.worker.reconcileForeground();
+                return error("CLEANUP_PENDING", "等待主屏窗口就绪后释放旧屏");
+            }
+        }
+        synchronized (workers) {
+            if (workers.get(id) != slot) return ok();
+            retire(id);
             slot.closing = true;
         }
         if (slot.worker == null || !slot.worker.closeSession()) return error("CLEANUP_PENDING", "旧操作尚未退出，屏幕容量仍保留");

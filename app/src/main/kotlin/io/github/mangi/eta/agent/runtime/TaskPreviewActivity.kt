@@ -56,6 +56,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
     private var resizing = false
     private var closing = false
     private var freshFrame = true
+    private var inputFeedback: String? = null
     private var downInView: Pair<Float, Float>? = null
     private var controller: AgentRunController? = null
     private var frame: Bitmap? = null
@@ -224,7 +225,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
             val wasMissing = geometry == null
             geometry = displayGeometry
             val old = frame; frame = bitmap; picture.setImageBitmap(bitmap); old?.recycle()
-            if (wasMissing) hint.text = if (manual) "可操作 · 上方可放大，关闭后 AI 保持暂停" else readOnlyHint()
+            if (wasMissing) hint.text = inputFeedback ?: if (manual) "可操作 · 上方可放大，关闭后 AI 保持暂停" else readOnlyHint()
         }
         updateControls()
     }
@@ -269,6 +270,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
 
     private fun acquire() {
         if (busy || resizing || closing || manual || geometry == null) return
+        inputFeedback = null
         busy = true; updateControls(); hint.text = "正在暂停此任务并等待操作结束…"
         lifecycleScope.launch {
             controller = TaskPreviewRegistry.controller(runId)?.takeUnless { it.isCancelled || AgentExecutionService.task(runId)?.completed == true }
@@ -288,17 +290,28 @@ internal class TaskPreviewActivity : ComponentActivity() {
 
     private fun release(resumeTask: Boolean) {
         if (busy || closing) return
+        // A newly opened, read-only window owns no manual lease. The old display
+        // may already be gone after the user solved a prompt on the main screen.
+        // Resume through the same runtime action as the notification; the run
+        // controller still rejects a manual owner held by a different window.
+        if (!manual) { finishRelease(resumeTask); return }
         busy = true; updateControls()
         lifecycleScope.launch {
             val result = rpc("preview_release")
             if (result.optBoolean("ok")) {
-                controller?.releaseManual(owner); manual = false; geometry = null; freshFrame = true; clearGesture()
-                val active = TaskPreviewRegistry.controller(runId)?.isCancelled == false && AgentExecutionService.task(runId)?.completed != true
-                if (resumeTask && active) AgentRuntimeService.dispatchNotificationAction(AgentExecutionService.ACTION_RESUME_RUN, runId)
-                hint.text = if (active) "已交还控制权 · 等待任务恢复" else "接管结束 · 继续任务请使用通知中的“继续指令”"
+                finishRelease(resumeTask)
             } else hint.text = previewFailure(result)
             busy = false; updateControls()
         }
+    }
+
+    private fun finishRelease(resumeTask: Boolean) {
+        controller?.releaseManual(owner); manual = false; geometry = null; freshFrame = true; clearGesture()
+        inputFeedback = null
+        val active = TaskPreviewRegistry.controller(runId)?.isCancelled == false && AgentExecutionService.task(runId)?.completed != true
+        if (resumeTask && active) AgentRuntimeService.dispatchNotificationAction(AgentExecutionService.ACTION_RESUME_RUN, runId)
+        hint.text = if (active) "已交还控制权 · 等待任务恢复" else "接管结束 · 继续任务请使用通知中的“继续指令”"
+        updateControls()
     }
 
     private fun openCompletedApp() {
@@ -321,7 +334,10 @@ internal class TaskPreviewActivity : ComponentActivity() {
         "INPUT_DRAIN_PENDING", "COMMAND_BUSY", "COMMAND_DRAINING" -> "上一操作尚未结束；本次未输入，请稍后再试"
         "PREVIEW_OBSERVATION_REQUIRED", "STALE_OBSERVATION" -> "正在更新画面，更新后可继续操作"
         "MANUAL_CONTROL" -> "另一个预览窗口正在控制此页面，请先结束那里的接管"
-        "PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER" -> "此页面已交还或回收，可从通知打开 App 或继续指令"
+        "PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER" -> if (TaskPreviewRegistry.controller(runId)?.isPaused == true)
+            "应用已移至主屏或旧屏已释放 · 完成手动操作后可点“让 AI 继续”"
+            else "此页面已交还或回收，可从通知打开 App 或继续指令"
+        "INPUT_NOT_READY" -> "目标窗口未就绪，本次未输入；可在主屏完成操作后让 AI 继续"
         "MANUAL_LEASE_EXPIRED" -> "接管已过期，请重新点击接管"
         else -> result.optString("message").ifBlank { "暂时无法接管，请刷新画面后重试" }
     }
@@ -393,13 +409,20 @@ internal class TaskPreviewActivity : ComponentActivity() {
         busy = true; updateControls()
         lifecycleScope.launch {
             val result = rpc("preview_input", args.put("action", action).put("expectedGeometry", observed))
-            geometry = null; freshFrame = true // No auto-replay, including timeouts and orientation changes.
-            if (!result.optBoolean("ok")) hint.text = previewFailure(result)
-            if (result.optString("code") in setOf("MANUAL_LEASE_EXPIRED", "PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER")) {
-                manual = false; controller?.releaseManual(owner)
-            }
+            acceptInputResult(result)
             busy = false; updateControls()
         }
+    }
+
+    internal fun acceptInputResult(result: JSONObject) {
+        geometry = null; freshFrame = true // No replay, including unknown outcomes.
+        inputFeedback = if (result.optBoolean("ok")) null else previewFailure(result)
+        inputFeedback?.let { hint.text = it }
+        if (result.optString("code") in setOf("MANUAL_LEASE_EXPIRED", "PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER")) {
+            manual = false; controller?.releaseManual(owner)
+        }
+        // A fresh preview is not an acknowledgement that an earlier input succeeded.
+        // Keep its failure visible until the next user action or successful input.
     }
 
     companion object {

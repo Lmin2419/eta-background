@@ -100,4 +100,32 @@ class TaskPreviewActivityTest {
             assertTrue(real.isRecycled)
         } finally { activity.destroy() }
     }
+
+    @Test fun aFreshFrameDoesNotEraseThePreviousInputFailure() {
+        val app = RuntimeEnvironment.getApplication()
+        shadowOf(app.getSystemService(KeyguardManager::class.java)).setKeyguardLocked(false)
+        shadowOf(app.getSystemService(DisplayManager::class.java).getDisplay(0)).setState(Display.STATE_ON)
+        val activity = Robolectric.buildActivity(TaskPreviewActivity::class.java,
+            Intent(app, TaskPreviewActivity::class.java).putExtra("run_id", "input-feedback").putExtra("package", "app.target")).create()
+        val view = activity.get()
+        fun field(name: String) = TaskPreviewActivity::class.java.getDeclaredField(name).apply { isAccessible = true }
+        try {
+            field("manual").setBoolean(view, true)
+            val g = JSONObject().put("displayId", 7).put("width", 1080).put("height", 2400).put("rotation", 0)
+            fun nextFrame(key: String) = view.displayFrame(
+                Bitmap.createBitmap(108, 240, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }, g, key)
+            nextFrame("first")
+            view.acceptInputResult(JSONObject().put("ok", false).put("code", "INPUT_NOT_READY"))
+            val hint = field("hint").get(view) as android.widget.TextView
+            val failure = hint.text.toString()
+            assertTrue(failure.contains("目标窗口未就绪"))
+            assertNull(field("geometry").get(view))
+            nextFrame("second")
+            assertEquals(failure, hint.text.toString())
+            view.acceptInputResult(JSONObject().put("ok", true))
+            nextFrame("third")
+            assertTrue(hint.text.startsWith("可操作"))
+            view.displayFrame(null, null, "clear")
+        } finally { activity.destroy() }
+    }
 }

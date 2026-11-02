@@ -16,6 +16,7 @@ public class VDriveSessionsTest {
         volatile boolean acknowledgeClose = true;
         boolean parked, capturing, movedToMain;
         boolean failPresent;
+        boolean handoffReady = true;
         boolean handingOver, needsObservation, draining, takenOver;
         int closeCalls, reconcileCalls;
         Runnable releaseListener = () -> { };
@@ -67,7 +68,7 @@ public class VDriveSessionsTest {
         public void setReleaseListener(Runnable listener) { releaseListener = listener; }
         public void reconcileForeground() {
             reconcileCalls++;
-            if (movedToMain) { capturing = false; releaseListener.run(); }
+            if (movedToMain && handoffReady) { capturing = false; releaseListener.run(); }
         }
         public void keepAlive() { }
         public int displayId() { return 12; }
@@ -86,7 +87,7 @@ public class VDriveSessionsTest {
         };
     }
     @After public void tearDown() throws Exception {
-        for (FakeWorker worker : made.values()) worker.acknowledgeClose = true;
+        for (FakeWorker worker : made.values()) { worker.acknowledgeClose = true; worker.handoffReady = true; }
         for (String id : ids) send(id, "release_session");
         VDrive.factory = original;
         VDrive.clock = originalClock;
@@ -321,7 +322,8 @@ public class VDriveSessionsTest {
         assertEquals("CLEANUP_PENDING", VDrive.processLine(request.toString()).getString("code"));
         assertEquals(0, worker.closeCalls);
         request.put("component", "app.first");
-        assertEquals("APP_BUSY", VDrive.processLine(request.toString()).getString("code"));
+        // A handoff is cleanup in progress, not a second task owning the App.
+        assertEquals("CLEANUP_PENDING", VDrive.processLine(request.toString()).getString("code"));
         assertEquals(0, worker.closeCalls);
         worker.handingOver = false;
         request.put("component", "app.third");
@@ -420,6 +422,41 @@ public class VDriveSessionsTest {
         assertTrue(preview("two-windows", "app.preview", "preview_acquire", owner).getBoolean("ok"));
         assertEquals("MANUAL_CONTROL", preview("two-windows", "app.preview", "preview_release", "other-0123456789abcdef").getString("code"));
         assertTrue(preview("two-windows", "app.preview", "preview_release", owner).getBoolean("ok"));
+    }
+
+    @Test public void previewReleaseAfterMainScreenTakeoverIsIdempotentButStillChecksOwnershipAndDrain() throws Exception {
+        String id = previewOpen("moved-preview", "app.preview");
+        String owner = "owner-0123456789abcdef";
+        assertTrue(preview("moved-preview", "app.preview", "preview_acquire", owner).getBoolean("ok"));
+        FakeWorker worker = made.get(id);
+        worker.takenOver = true;
+        assertEquals("MANUAL_CONTROL", preview("moved-preview", "app.preview", "preview_release", "other-0123456789abcdef").getString("code"));
+        worker.draining = true;
+        assertEquals("INPUT_DRAIN_PENDING", preview("moved-preview", "app.preview", "preview_release", owner).getString("code"));
+        worker.draining = false;
+        assertTrue(preview("moved-preview", "app.preview", "preview_release", owner).getBoolean("ok"));
+        assertEquals("PREVIEW_UNAVAILABLE", preview("moved-preview", "app.preview", "preview_input", owner).getString("code"));
+        worker.releaseListener.run();
+        assertTrue(preview("moved-preview", "app.preview", "preview_release", owner).getBoolean("ok"));
+        assertEquals(0, count()); // Releasing an absent page must not create a replacement.
+    }
+
+    @Test public void runtimeCleanupAfterUserMovesAppMustNotDestroyTheDisplayDuringTheTransition() throws Exception {
+        String id = open("app.moving");
+        String other = open("app.other");
+        FakeWorker worker = made.get(id);
+        worker.movedToMain = true; worker.handoffReady = false;
+        assertEquals("CLEANUP_PENDING", send(id, "release_session").getString("code"));
+        assertTrue(worker.capturing); assertEquals(0, worker.closeCalls); assertEquals(2, count());
+        assertEquals("APP_TAKEN_OVER", send(id, "tap").getString("code"));
+        assertTrue(send(other, "tap").getBoolean("ok"));
+        assertEquals("CLEANUP_PENDING", VDrive.processLine(new JSONObject().put("cmd", "launch")
+                .put("sessionId", "next-after-verification").put("component", "app.moving").toString()).getString("code"));
+        assertEquals(2, count()); // No new screen before the old transition is acknowledged.
+        worker.handoffReady = true;
+        send(id, "release_session");
+        assertTrue(send(id, "release_session").getBoolean("ok"));
+        assertEquals(0, worker.closeCalls); assertEquals(1, count());
     }
 
 }
