@@ -61,31 +61,31 @@
 
 ## 当前指令（ChatGPT 维护）
 
-> 用户反馈当前候选仍有自动点击偏移、后台错误和任务完成后的最近任务闪烁；本轮返修已提交，正在核对同一提交的测试与原签名构建。定时保持取消，不唤醒 dsh。
+> 用户追加常用任务原生接入和提示词优化。本轮直接由 ChatGPT 实施，包含前一批 e46 修复；定时保持取消，不唤醒 dsh。
 
-- instruction_id: C013
+- instruction_id: C014
 - instruction_revision: 1
-- issued_at: 2026-11-02T18:45:24Z
+- issued_at: 2026-11-02T19:27:33Z
 - status: RUNNING
-- scope: COORDINATE_OBSERVATION_AND_COMPLETED_HANDOFF
+- scope: NATIVE_COMMON_TASKS_AND_STABLE_PROMPT_TRIMMING
 - implementation_permission: AUTHORIZED_BY_USER
 - delivery_permission: AUTHORIZED_BY_USER
 - target: ChatGPT
-- implementation_base: 0ee03be47e482b8ae300584f5161e660f1f673cf
-- implementation_head: e2acd6fb5eec4c8459ff409afd302d321941afbe
+- implementation_base: e2acd6fb5eec4c8459ff409afd302d321941afbe
+- implementation_head: a2a5c476893c302d9accb7748302f144d5652fcb
 - engine_build: 20261102-e46-transition
-- device_status: 新候选未实测；用户确认闪烁发生在任务完成后
-- next_action: 核验最终源码的全量测试、Lint、构建与 APK 原证书和内嵌引擎；据结果交付，不提前宣称闪烁消失
+- device_status: 新候选未实测；原任务完成后闪烁仍待手机反馈
+- next_action: 核验本 head 全量测试、Lint、构建及原签名 APK；完成后更新候选证据
 
-### 返修范围与停止条件
+### 本轮范围与停止条件
 
-1. 修复前台动作后沿用旧截图坐标；在可靠主屏窗口信息存在时，输入前检查窗口、键盘与几何变化。保留节点快速路径与静态画面，不加帧年龄阈值或盲重放。
-2. 后台观察服务暂缺窗口返回 WINDOW_NOT_READY，不误报 DISPLAY_NOT_FOUND。APP_TAKEN_OVER 控制权保护保留；截图不足以认定那一次误触发。
-3. 原有交还巡检等待同一主屏窗口、边界与显示几何稳定至少 400ms；已完成页面的清理同样保护进行中的移屏。正常完成仍停采集，不强制重启 App、不增加常驻渲染或 Hook。
-4. 保留单 VDrive、两任务/同 App 串行、旧 screen_*、流体云/每任务通知/三个入口/接管/通知内续接、当前息屏后台与锁屏保护、Harmony。
-5. 自动化不能证明 ColorOS 全部跨屏动画正常。无设备不写真机通过；不触发软重启复现，不合并、发布、改包名/签名、远程操作手机或恢复定时。
+1. 将 common_task 接入原生目录、能力过滤、执行路由和展示；与已有常用任务页面/快捷方式共用原子文件。支持按需列出、读取、保存、编辑、删除，不添加第二套运行时或定时。
+2. 仅在用户要求时保存/修改/删除；用户要求运行时读取最新版并使用现有工具执行。保留页面一键执行新普通会话的既有行为。修改冲突、重复创建、隐私归档与 UI 同步必须验证。
+3. 压缩内置重复提示和执行位置说明，不截断用户提示/历史/记忆，不向每个请求注入全部任务内容，不删安全校验。以实际构造 JSON 比较输入量，不能把字节减少宣称为已测提速。
+4. 保留 e46 坐标、窗口及完成页面交还改动；不扩大 Root/Hook，不强制重启第三方 App；保留单 VDrive、双任务/同 App 串行、旧工具、通知和接管、既有息屏后台/锁屏保护及 Harmony。
+5. 不远程操作手机、合并/发布/打标签/替换正式下载/改包名签名或恢复定时。完整自动化通过仍不代表 ColorOS 动画或实际模型等待已验证。
 
-[实现与验证说明](https://github.com/Lmin2419/eta-background/blob/e2acd6fb5eec4c8459ff409afd302d321941afbe/etax/COORDINATES_AND_HANDOFF.md)
+[实现与验证说明](https://github.com/Lmin2419/eta-background/blob/a2a5c476893c302d9accb7748302f144d5652fcb/etax/COMMON_TASK_AGENT.md)
 
 ## 执行反馈（dsh 维护）
 
@@ -133,6 +133,21 @@
 
 ## 评审记录（ChatGPT 维护）
 
+### C014 常用任务原生接入已提交 — 2026-11-02T19:27:33Z
+
+- 新 head a2a5c476893c302d9accb7748302f144d5652fcb，tree eefcd29d88554989227dbf5bc20dcf44a4126148；28 文件 +602/−88，源码、测试、首页及更新日志已提交。PR #45 仍 Draft/open，未改 PR 元数据。
+- 原生 common_task 已接入；与 UI 共用库，内容版本防止覆盖并发编辑，重复创建去重，变更事件刷新 UI，不额外轮询或请求模型。目录/正文按需读取，私有快捷校验值不返回模型。
+- 提示与执行位置说明压缩；固定全功能样本内置系统字符 8710→6707，系统消息及基础工具 JSON 字节 83128→77169；计入新增原生工具。不代表 token 或真机提速，完整方法见源码说明。
+- 初批 34 项定向通过，随后将临时测量用例替换为输入预算回归；最终全量、本地 Lint/Debug 和本 head CI 正在执行，未提前填通过。
+- [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41510091145)、[Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41510078760) 自动触发，无重复构建。e46 引擎及部署/Hook 未改，手机未操作，dsh 原反馈保留。
+
+### C013 最终自动化与原签名包已核验 — 2026-11-02T19:27:33Z
+
+- e2acd6f 的 PR Check 41503357374、Etax Build 41503345924 均成功；实际签名构建日志全量 2266 项、0 失败/错误、1 跳过。Lint 0 错误、393 Warning、1 Hint；Debug/Release、12 项接线、8 项部署通过。
+- 实际下载 [Etax-v3.3.5+etax.e2acd6f.apk](https://github.com/Lmin2419/eta-background/actions/runs/41503345924/artifacts/13171511428)，6780039 bytes，SHA-256 99ccf5fd2e5a97719d76b90de4f27cf96deb90df450936a294cc983a5c3427f1，与工件 digest 一致；包名 io.github.mangi.etax / versionCode 2026103003。
+- apksigner 确认原证书 SHA-256 dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5。e46 的 dex、version 与三项脚本逐字节相符，无 engine.token。
+- 该包仅作为 C013 已验证基线。用户在构建期间追加 C014，后续提供合并了两批改动的新候选，旧 APK 的结果不移记到新 head。没有真机闪烁消失或点击全面改善的结论。
+
 ### C013 坐标与完成页面交还返修已提交 — 2026-11-02T18:45:24Z
 
 - 用户明确第二张截图是自动点击点偏；第一张关注后台点击 APP_TAKEN_OVER，后续 DISPLAY_NOT_FOUND；补充确认最近任务闪烁发生在任务完成后。手机原始工具轨迹未取得，不将 Agent 自述当根因实证。
@@ -177,9 +192,9 @@
 
 
 - last_reviewed_feedback_revision: 3（外部 dsh 的历史 C002 回执；本次未新增或代写）
-- last_reviewed_instruction: C012
-- last_reviewed_instruction_revision: 2
-- last_reviewed_code_head: 0ee03be47e482b8ae300584f5161e660f1f673cf
+- last_reviewed_instruction: C013
+- last_reviewed_instruction_revision: 1
+- last_reviewed_code_head: e2acd6fb5eec4c8459ff409afd302d321941afbe
 - last_reviewed_coordination_head: addf5f027430611b9cd43d9085ffb3f7c52822b1
 - reviewed_at: 2026-11-02T16:35:04Z
 - decision: 通用反馈源码、同 head CI 与原签名候选核验完成；当前手机实测未执行
@@ -376,4 +391,4 @@
 - automation_id: 6ae70a9730d081919646705ba469f1c2
 - behavior: 后续由用户消息或明确手动请求触发读取与评审；不再每小时触发，不自行恢复定时。无变化不提交、不重复通知。
 - notify_user_when: 达到阶段里程碑、出现新风险或确实需要设备/权限/产品决策；相同阻塞不重复催促。
-- external_agent_limit: 用户要求 ChatGPT 接手；C013 返修正在核验，按用户反馈处理，不依赖或唤醒 dsh，不恢复定时，不执行历史指令。
+- external_agent_limit: 用户要求 ChatGPT 接手；C014 原生常用任务与提示词优化正在核验，不依赖或唤醒 dsh，不恢复定时，不执行历史指令。
