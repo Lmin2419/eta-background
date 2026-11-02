@@ -50,6 +50,21 @@ class AgentUnifiedOperationCatalogTest {
         assertFalse(screen.getJSONObject("parameters").getJSONObject("properties").has("execution_location"))
     }
 
+    @Test
+    fun nativeObservationExplainsImageDeliveryWithoutChangingDefaultObservationOptions() {
+        val tools = AgentToolCatalog.build(terminalTools = false, browserTools = false)
+        val observation = tools.function("observe_screen")
+        val description = observation.getString("description")
+        assertTrue(description.contains("screenshot.attached 和图片附件"))
+        assertTrue(description.contains("已收到图片无需再用 read_image 读取同帧"))
+        assertTrue(description.contains("仅路径不表示已看图"))
+
+        val properties = observation.getJSONObject("parameters").getJSONObject("properties")
+        assertFalse(properties.getJSONObject("include_screenshot").getBoolean("default"))
+        assertTrue(properties.getJSONObject("include_ui_tree").getBoolean("default"))
+        assertEquals("string", properties.getJSONObject("execution_location").getString("type"))
+    }
+
     private fun org.json.JSONArray.function(name: String): JSONObject =
         (0 until length())
             .asSequence()

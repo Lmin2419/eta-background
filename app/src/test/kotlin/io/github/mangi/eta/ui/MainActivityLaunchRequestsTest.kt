@@ -7,6 +7,8 @@ import io.github.mangi.eta.agent.voice.EtaAssistantOverlayService
 import io.github.mangi.eta.ui.app.ArchivedConversationRequest
 import io.github.mangi.eta.ui.voice.ACTION_SPEECH_SETTINGS
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -15,6 +17,67 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = android.app.Application::class)
 class MainActivityLaunchRequestsTest {
+    @Test fun shortcutReplacesOldNavigationRatherThanRunningAlongsideIt() {
+        val old = MainActivityLaunchRequests(
+            conversationId = "old-chat", assistantConversationKey = "old-assistant",
+            archivedConversation = ArchivedConversationRequest("source", "old-archive"),
+            composeReply = true, terminal = true, speechSettings = true,
+        )
+        val accepted = old.accept(commonTaskIntent())
+        assertEquals(MainActivityLaunchRequests(commonTask = accepted.commonTask), accepted)
+        assertEquals("saved-task", accepted.commonTask?.taskId)
+    }
+
+    @Test fun notificationNavigationCancelsPendingShortcutAndLateConsumptionCannotEraseNewNavigation() {
+        val pending = MainActivityLaunchRequests().accept(commonTaskIntent())
+        val requestId = requireNotNull(pending.commonTask).requestId
+        val notification = pending.accept(Intent(MainActivity.ACTION_OPEN_CONVERSATION_ID)
+            .putExtra(MainActivity.EXTRA_CONVERSATION_ID, "notification-chat"))
+        assertNull(notification.commonTask)
+        assertEquals("notification-chat", notification.conversationId)
+        assertEquals(notification, notification.consumeCommonTask(requestId))
+        val newerShortcut = pending.accept(commonTaskIntent())
+        assertEquals(newerShortcut, newerShortcut.consumeCommonTask(requestId))
+        assertNull(newerShortcut.consumeCommonTask(requireNotNull(newerShortcut.commonTask).requestId).commonTask)
+    }
+
+    @Test fun explicitNavigationEntrypointsCancelAPendingShortcut() {
+        val pending = MainActivityLaunchRequests().accept(commonTaskIntent())
+        listOf(
+            Intent(MainActivity.ACTION_OPEN_TERMINAL),
+            Intent(ACTION_SPEECH_SETTINGS),
+            Intent(MainActivity.ACTION_OPEN_ARCHIVED_CONVERSATION)
+                .putExtra(MainActivity.EXTRA_HANDOFF_SOURCE, "source")
+                .putExtra(MainActivity.EXTRA_CONVERSATION_KEY, "archive"),
+            Intent(EtaAssistantOverlayService.ACTION_OPEN_CONVERSATION)
+                .putExtra(EtaAssistantOverlayService.EXTRA_CONVERSATION_KEY, "assistant"),
+        ).forEach { assertNull(pending.accept(it).commonTask) }
+    }
+
+    private fun commonTaskIntent() = Intent(MainActivity.ACTION_RUN_COMMON_TASK)
+        .putExtra(MainActivity.EXTRA_COMMON_TASK_ID, "saved-task")
+        .putExtra(MainActivity.EXTRA_COMMON_TASK_TOKEN, "a".repeat(36))
+
+    @Test fun shortcutRequestKeepsItsIdentityAcrossRecreationAndDoesNotReplayAfterConsumption() {
+        val intent = Intent(MainActivity.ACTION_RUN_COMMON_TASK)
+            .putExtra(MainActivity.EXTRA_COMMON_TASK_ID, "saved-task")
+            .putExtra(MainActivity.EXTRA_COMMON_TASK_TOKEN, "a".repeat(36))
+        val pending = MainActivityLaunchRequests.restore(null, intent)
+        assertEquals("saved-task", pending.commonTask?.taskId)
+        assertEquals(pending, MainActivityLaunchRequests.restore(savedState(pending), intent))
+        assertNull(MainActivityLaunchRequests.restore(savedState(pending.copy(commonTask = null)), intent).commonTask)
+        assertNotEquals(pending.commonTask?.requestId, pending.accept(intent).commonTask?.requestId)
+    }
+
+    @Test fun externallySuppliedPromptCannotCreateATaskLaunch() {
+        val arbitrary = Intent(MainActivity.ACTION_RUN_COMMON_TASK)
+            .putExtra(MainActivity.EXTRA_COMMON_TASK_ID, "saved-task")
+            .putExtra("instruction", "untrusted instruction")
+        assertNull(MainActivityLaunchRequests().accept(arbitrary).commonTask)
+        arbitrary.putExtra(MainActivity.EXTRA_COMMON_TASK_TOKEN, "short")
+        assertNull(MainActivityLaunchRequests().accept(arbitrary).commonTask)
+    }
+
     @Test fun `继续指令保留会话与输入焦点请求且不会在消费后重放`() {
         val intent = Intent(MainActivity.ACTION_OPEN_CONVERSATION_ID)
             .putExtra(MainActivity.EXTRA_CONVERSATION_ID, "game-chat")

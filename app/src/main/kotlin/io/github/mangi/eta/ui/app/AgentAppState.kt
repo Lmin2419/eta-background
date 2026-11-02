@@ -6,6 +6,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.SystemClock
 import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -28,6 +29,7 @@ import io.github.mangi.eta.agent.roleplay.CharacterCardCodec
 import io.github.mangi.eta.agent.roleplay.RoleplayMessageLink
 import io.github.mangi.eta.agent.roleplay.RoleplayMessageState
 import io.github.mangi.eta.data.repository.CharacterRepository
+import io.github.mangi.eta.data.repository.CommonTaskRepository
 import io.github.mangi.eta.agent.runtime.AgentEvent
 import io.github.mangi.eta.agent.runtime.GuiControlStatus
 import io.github.mangi.eta.agent.runtime.AgentConversationIdentity
@@ -162,6 +164,7 @@ internal class AgentAppState(
         private set
 
     private var runtimeTaskStatuses: Map<String, AgentOverlayStatus> = emptyMap()
+    private val commonTaskLaunches = CommonTaskLaunchGuard()
 
     init {
         scope.launch {
@@ -362,7 +365,9 @@ internal class AgentAppState(
             AgentRunCheckpointStore.list(appContext)
         }
         val checkpoints = rawCheckpoints.map { it.copy(handoff = AssistantRunRecovery.project(it.handoff)) }
-        val initialCompletedQuery = client.queryCompletedRuns()
+        // These synchronous Binder waits must stop with the UI scope, not outlive it through
+        // several binding timeouts. Interrupting a query does not cancel an executing task.
+        val initialCompletedQuery = runInterruptible { client.queryCompletedRuns() }
         if (initialCompletedQuery is AgentRuntimeClient.CompletedRunsQuery.Unavailable) {
             AndroidAgentLogger.warnThrottled("agent_ui_drain_results_failed") {
                 "Agent UI pending result recovery failed"
@@ -372,11 +377,11 @@ internal class AgentAppState(
             (initialCompletedQuery as? AgentRuntimeClient.CompletedRunsQuery.Known)
                 ?.runs
                 .orEmpty()
-        val activeRunQuery = client.queryActiveRuns()
+        val activeRunQuery = runInterruptible { client.queryActiveRuns() }
         val terminalRaceQuery = if (
             activeRunQuery is AgentRuntimeClient.ActiveRunsQuery.Known
         ) {
-            client.queryCompletedRuns()
+            runInterruptible { client.queryCompletedRuns() }
         } else {
             initialCompletedQuery
         }
@@ -1076,6 +1081,23 @@ internal class AgentAppState(
         persistConversations()
     }
 
+    /** A saved task is submitted exactly like a new ordinary chat, without the previous draft/history. */
+    fun startCommonTask(taskId: String, instruction: String, requestId: String,
+        elapsedMs: Long = SystemClock.elapsedRealtime()): Boolean {
+        val prompt = instruction.trim()
+        if (taskId.isBlank() || requestId.isBlank() || prompt.isEmpty() ||
+            prompt.length > CommonTaskRepository.MAX_INSTRUCTION_LENGTH) return false
+        if (!commonTaskLaunches.claim(requestId, taskId, elapsedMs)) return false
+        val selectedModel = modelPickerState.selectedModel?.id
+        createConversation()
+        if (selectedModel != null) {
+            homeState = homeState.copy(modelId = selectedModel)
+            refreshConversationModel()
+        }
+        sendCurrentMessage(prompt)
+        return true
+    }
+
     fun startCharacterConversation(binding: RoleplayBinding, greeting: String) {
         createConversation()
         val id = newConversationId()
@@ -1193,6 +1215,7 @@ internal class AgentAppState(
                 noticeContextCompaction = noticeText(SystemNoticeCode.ContextCompaction),
                 noticeRuntimeFailed = noticeText(SystemNoticeCode.RuntimeFailed),
                 noticeInterrupted = noticeText(SystemNoticeCode.Interrupted),
+                noticeRunPerformance = noticeText(SystemNoticeCode.RunPerformance),
             ),
         ) }
     }
@@ -1205,6 +1228,7 @@ internal class AgentAppState(
             SystemNoticeCode.ModelRetry -> R.string.system_notice_model_retry
             SystemNoticeCode.RuntimeFailed -> R.string.system_notice_runtime_failed
             SystemNoticeCode.Interrupted -> R.string.system_notice_interrupted
+            SystemNoticeCode.RunPerformance -> R.string.system_notice_run_performance
         },
     )
 
@@ -2306,7 +2330,9 @@ internal class AgentAppState(
                 conversationUpdatedAt[id] ?: 0L
             }
             .map { (id, state) ->
-                val lastMessage = state.messages.lastOrNull()
+                val lastMessage = state.messages.lastOrNull {
+                    it !is SystemNoticeMessageUi || it.code != SystemNoticeCode.RunPerformance
+                }
                 ConversationSummaryUi(
                     id = id,
                     title = conversationTitles[id].orEmpty().ifBlank {

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.rounded.AddComment
+import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material.icons.rounded.Terminal
@@ -92,6 +93,7 @@ internal fun AgentAppShell(
     onDismissConversationPane: () -> Unit,
     onSearchConversations: (String) -> Unit,
     onNewConversation: () -> Unit,
+    onOpenCommonTasks: () -> Unit,
     onOpenTerminal: () -> Unit,
     onLaunchKimiWeb: () -> Unit,
     kimiWebLabel: String,
@@ -133,6 +135,7 @@ internal fun AgentAppShell(
                             onBack = onBack,
                             onOpenConversationPane = onOpenConversationPane,
                             onNewConversation = onNewConversation,
+                            onOpenCommonTasks = onOpenCommonTasks,
                             onOpenTerminal = onOpenTerminal,
                             onLaunchKimiWeb = onLaunchKimiWeb,
                             kimiWebLabel = kimiWebLabel,
@@ -194,6 +197,7 @@ private fun AgentTopBar(
     onBack: () -> Unit,
     onOpenConversationPane: () -> Unit,
     onNewConversation: () -> Unit,
+    onOpenCommonTasks: () -> Unit,
     onOpenTerminal: () -> Unit,
     onLaunchKimiWeb: () -> Unit,
     kimiWebLabel: String,
@@ -228,6 +232,7 @@ private fun AgentTopBar(
         if (isHome) {
             TopBarOverflowMenu(
                 onNewConversation = onNewConversation,
+                onOpenCommonTasks = onOpenCommonTasks,
                 onOpenTerminal = onOpenTerminal,
                 onLaunchKimiWeb = onLaunchKimiWeb,
                 kimiWebLabel = kimiWebLabel,
@@ -270,6 +275,7 @@ private val TopBarMenuIconSize = 20.dp
 @Composable
 private fun TopBarOverflowMenu(
     onNewConversation: () -> Unit,
+    onOpenCommonTasks: () -> Unit,
     onOpenTerminal: () -> Unit,
     onLaunchKimiWeb: () -> Unit,
     kimiWebLabel: String,
@@ -297,6 +303,7 @@ private fun TopBarOverflowMenu(
             onDismissRequest = { showMenu = false },
         ) {
             val newConversationText = stringResource(R.string.action_new_conversation)
+            val commonTasksText = stringResource(R.string.common_tasks_title)
             val openTerminalText = stringResource(R.string.action_open_terminal)
             val launchKimiWebText = kimiWebLabel
             val stopKimiWebText = stringResource(R.string.capability_kimi_stop)
@@ -306,6 +313,7 @@ private fun TopBarOverflowMenu(
             )
             val menuItems = remember(
                 newConversationText,
+                commonTasksText,
                 openTerminalText,
                 launchKimiWebText,
                 openBrowserText,
@@ -354,6 +362,13 @@ private fun TopBarOverflowMenu(
                                 contentDescription = null,
                                 modifier = modifier.size(TopBarMenuIconSize),
                             )
+                        },
+                    ),
+                    DropdownItem(
+                        text = commonTasksText,
+                        icon = { modifier ->
+                            Icon(imageVector = Icons.Rounded.BookmarkBorder, contentDescription = null,
+                                modifier = modifier.size(TopBarMenuIconSize))
                         },
                     ),
                 ) + (if (canStopKimiWeb) {
@@ -407,7 +422,8 @@ private fun TopBarOverflowMenu(
                                 1 -> onOpenTerminal()
                                 2 -> onLaunchKimiWeb()
                                 3 -> onOpenBrowser()
-                                4 -> onStopKimiWeb()
+                                4 -> onOpenCommonTasks()
+                                5 -> onStopKimiWeb()
                             }
                         },
                     )
@@ -424,6 +440,7 @@ private fun titleForRoute(route: AppRoute?): String = when (route) {
     is AppRoute.Tools -> stringResource(R.string.route_tools)
     is AppRoute.WebToolsSettings -> stringResource(R.string.web_tools_settings_title)
     is AppRoute.Skills -> stringResource(R.string.route_skills)
+    is AppRoute.CommonTasks -> stringResource(R.string.common_tasks_title)
     is AppRoute.Subagents -> "Subagent"
     is AppRoute.Characters -> "角色"
     is AppRoute.CharacterDetail -> "角色详情"

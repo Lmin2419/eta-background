@@ -703,6 +703,11 @@ internal object AgentRuntimeWire {
                 putBoolean("terminal_tools", event.terminalTools)
             }
 
+            is AgentEvent.RunPerformance -> {
+                putString(KEY_TYPE, "run_performance")
+                putString("summary", event.summary.toJson())
+            }
+
             is AgentEvent.RoundStarted -> {
                 putString(KEY_TYPE, "round_started")
                 putInt("round", event.round)
@@ -863,6 +868,8 @@ internal object AgentRuntimeWire {
 
     /** 将 [Bundle] 还原为 [AgentEvent]，无法识别时返回 null。 */
     fun eventFromBundle(bundle: Bundle): AgentEvent? = when (bundle.getString(KEY_TYPE)) {
+        "run_performance" -> RunPerformanceSummary.fromJson(bundle.getString("summary"))
+            ?.let { AgentEvent.RunPerformance(it) }
         "gui_control_changed" -> GuiControlStatus.fromWireValue(bundle.getString("status").orEmpty())
             ?.let { AgentEvent.GuiControlChanged(it) }
         "run_started" -> AgentEvent.RunStarted(

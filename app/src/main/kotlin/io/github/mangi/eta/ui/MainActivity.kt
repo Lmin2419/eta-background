@@ -66,6 +66,16 @@ class MainActivity : ComponentActivity() {
                     onResolvedDarkModeChange = ::updateSystemBars,
                 ) {
                     AgentAppRoot(
+                        requestedCommonTask = launchRequests.commonTask,
+                        onCommonTaskConsumed = { requestId ->
+                            if (launchRequests.commonTask?.requestId != requestId) {
+                                false
+                            } else {
+                                launchRequests = launchRequests.consumeCommonTask(requestId)
+                                if (intent?.action == ACTION_RUN_COMMON_TASK) intent?.action = null
+                                true
+                            }
+                        },
                         assistantConversationKey = launchRequests.assistantConversationKey,
                         requestedConversationId = launchRequests.conversationId,
                         composeReply = launchRequests.composeReply,
@@ -186,6 +196,9 @@ class MainActivity : ComponentActivity() {
             private set
 
         const val ACTION_OPEN_TERMINAL = "io.github.mangi.eta.action.OPEN_TERMINAL"
+        const val ACTION_RUN_COMMON_TASK = "io.github.mangi.eta.action.RUN_COMMON_TASK"
+        const val EXTRA_COMMON_TASK_ID = "io.github.mangi.eta.extra.COMMON_TASK_ID"
+        const val EXTRA_COMMON_TASK_TOKEN = "io.github.mangi.eta.extra.COMMON_TASK_TOKEN"
         /** 运行浮层的结果卡片回到本体：App 发起的 run 带会话 ID，直接打开该会话。 */
         const val ACTION_OPEN_CONVERSATION_ID = "io.github.mangi.eta.action.OPEN_CONVERSATION_ID"
         const val EXTRA_CONVERSATION_ID = "io.github.mangi.eta.extra.CONVERSATION_ID"

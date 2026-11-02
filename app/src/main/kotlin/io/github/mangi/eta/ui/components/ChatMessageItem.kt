@@ -86,6 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.model.AgentFileReferencePromptCodec
+import io.github.mangi.eta.agent.runtime.RunPerformanceSummary
 import io.github.mangi.eta.agent.overlay.toolDisplayName
 import io.github.mangi.eta.ui.markdown.MarkdownTone
 import io.github.mangi.eta.ui.markdown.StaticMarkdown
@@ -231,6 +232,8 @@ internal fun ChatMessageItem(
         )
         is SystemNoticeMessageUi -> if (message.code == SystemNoticeCode.ContextCompaction) {
             ContextCompactionMarker(message = message, modifier = modifier)
+        } else if (message.code == SystemNoticeCode.RunPerformance) {
+            RunPerformanceMarker(message = message, modifier = modifier)
         } else {
             AgentMessageBlock(
                 message = AgentMessageUi(
@@ -245,6 +248,7 @@ internal fun ChatMessageItem(
                                     SystemNoticeCode.ModelRetry -> R.string.system_notice_model_retry
                                     SystemNoticeCode.RuntimeFailed -> R.string.system_notice_runtime_failed
                                     SystemNoticeCode.Interrupted -> R.string.system_notice_interrupted
+                                    SystemNoticeCode.RunPerformance -> R.string.system_notice_run_performance
                                 },
                             ),
                         )
@@ -533,6 +537,32 @@ private fun ContextCompactionMarker(
 }
 
 // ── Agent 结果 ───────────────────────────────────────────────────────
+
+@Composable
+private fun RunPerformanceMarker(message: SystemNoticeMessageUi, modifier: Modifier = Modifier) {
+    val summary = remember(message.detail) { RunPerformanceSummary.fromJson(message.detail) } ?: return
+    var expanded by rememberSaveable(message.id) { mutableStateOf(false) }
+    val chinese = stringResource(R.string.system_notice_run_performance).any { it.code in 0x4e00..0x9fff }
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                .clickable { expanded = !expanded }.padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(summary.title(chinese), style = MiuixTheme.textStyles.footnote1,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary, modifier = Modifier.weight(1f))
+            Icon(Icons.Rounded.ChevronRight, contentDescription = null,
+                modifier = Modifier.size(16.dp).graphicsLayer(rotationZ = if (expanded) 90f else 0f),
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+        }
+        AnimatedVisibility(visible = expanded) {
+            SelectionContainer {
+                Text(summary.details(chinese), style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+            }
+        }
+    }
+}
 
 @Composable
 private fun AgentMessageBlock(

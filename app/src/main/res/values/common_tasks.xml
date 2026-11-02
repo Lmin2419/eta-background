@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_tasks_title">Common tasks</string>
+    <string name="common_tasks_description">Save an instruction you use often. Each run starts a new conversation with the currently selected model.</string>
+    <string name="common_tasks_create">New task</string>
+    <string name="common_tasks_edit">Edit task</string>
+    <string name="common_tasks_copy">Make a copy</string>
+    <string name="common_tasks_copy_name">%1$s (copy)</string>
+    <string name="common_tasks_delete">Delete task</string>
+    <string name="common_tasks_delete_confirm">Delete “%1$s”? Existing conversations are kept. Its desktop shortcut will no longer run.</string>
+    <string name="common_tasks_name">Task name</string>
+    <string name="common_tasks_instruction">Instruction</string>
+    <string name="common_tasks_save">Save</string>
+    <string name="common_tasks_run">Run now</string>
+    <string name="common_tasks_manage">Manage</string>
+    <string name="common_tasks_pin">Add to home screen</string>
+    <string name="common_tasks_pin_requested">Home screen shortcut requested. Confirm in your launcher if prompted.</string>
+    <string name="common_tasks_pin_unavailable">This launcher cannot add the shortcut. You can still run the task here.</string>
+    <string name="common_tasks_missing">This task is unavailable. Open Common tasks to check or recreate its shortcut.</string>
+    <string name="common_tasks_save_failed">Could not save this change. Your existing tasks are kept; please try again.</string>
+    <string name="common_tasks_load_failed">Could not read saved tasks</string>
+    <string name="common_tasks_load_preserved">The local file has been kept. Retry before editing tasks.</string>
+    <string name="common_tasks_retry">Retry</string>
+    <string name="common_tasks_loading">Loading tasks…</string>
+    <string name="common_tasks_empty">No saved tasks yet</string>
+    <string name="common_tasks_empty_hint">For example: open Feishu in the background and summarize today’s messages.</string>
+    <string name="common_tasks_limit">Up to %1$d tasks. Delete an unused task to add another.</string>
+    <string name="common_tasks_input_limit">Name: up to %1$d characters. Instruction: up to %2$d characters.</string>
+</resources>

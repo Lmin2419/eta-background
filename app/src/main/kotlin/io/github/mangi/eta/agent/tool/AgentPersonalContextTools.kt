@@ -18,6 +18,8 @@ import io.github.mangi.eta.agent.model.AgentModelClient
 import io.github.mangi.eta.data.repository.NotificationHistoryRepository
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.DateTimeException
+import java.time.OffsetDateTime
 
 internal class AgentPersonalContextTools(private val context: Context) {
     private val notificationHistory by lazy { NotificationHistoryRepository(context) }
@@ -38,12 +40,23 @@ internal class AgentPersonalContextTools(private val context: Context) {
                 "请先在权限健康页授予 Eta 通知使用权；授权后开始记录最近 7 天通知",
             )
         }
-        return notificationHistory.search(
-            query = args.optString("query").trim(),
-            packageName = args.optString("package_name").trim(),
-            maxAgeHours = args.optInt("max_age_hours", 24).coerceIn(1, 168),
-            limit = args.optInt("limit", 20).coerceIn(1, 50),
-        )
+        return try {
+            fun time(name: String): Long? = if (args.isNull(name)) null else
+                OffsetDateTime.parse(args.getString(name)).toInstant().toEpochMilli()
+            notificationHistory.search(
+                query = args.optString("query").trim(),
+                packageName = args.optString("package_name").trim(),
+                maxAgeHours = args.optInt("max_age_hours", 24).coerceIn(1, 168),
+                limit = args.optInt("limit", 20).coerceIn(1, 50),
+                startTime = time("start_time"),
+                endTime = time("end_time"),
+                cursor = args.optString("cursor").takeIf { it.isNotBlank() },
+            )
+        } catch (_: DateTimeException) {
+            error("NOTIFICATION_HISTORY_TIME_RANGE_INVALID", "start_time/end_time 必须是带时区偏移的 ISO 8601 时间")
+        } catch (_: ArithmeticException) {
+            error("NOTIFICATION_HISTORY_TIME_RANGE_INVALID", "时间超出支持范围")
+        }
     }
 
     private fun recentAppActivity(args: JSONObject): String {

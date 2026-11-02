@@ -49,6 +49,7 @@ import io.github.mangi.eta.agent.runtime.AgentRuntimeService
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.data.repository.RuntimeConfigRepository
 import io.github.mangi.eta.ui.AppearanceSettingsScreen
+import io.github.mangi.eta.ui.CommonTaskLaunchRequest
 import io.github.mangi.eta.ui.SettingsScreen
 import io.github.mangi.eta.ui.components.MiuixDialogActions
 import io.github.mangi.eta.ui.model.AgentHomeAction
@@ -81,6 +82,7 @@ import io.github.mangi.eta.ui.screens.mcp.McpServersScreen
 import io.github.mangi.eta.ui.screens.memory.AgentMemoryScreen
 import io.github.mangi.eta.ui.screens.permissions.PermissionHealthScreen
 import io.github.mangi.eta.ui.screens.skills.AgentSkillsScreen
+import io.github.mangi.eta.ui.screens.tasks.CommonTasksScreen
 import io.github.mangi.eta.ui.screens.subagent.SubagentSettingsScreen
 import io.github.mangi.eta.ui.screens.terminal.LinuxEnvironmentScreen
 import io.github.mangi.eta.ui.screens.terminal.LinuxFilesScreen
@@ -93,6 +95,7 @@ import io.github.mangi.eta.ui.voice.SpeechOssScreen
 import io.github.mangi.eta.ui.voice.SpeechRecognitionScreen
 import io.github.mangi.eta.ui.voice.SpeechSettingsScreen
 import io.github.mangi.eta.ui.voice.SpeechSynthesisScreen
+import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -122,6 +125,8 @@ fun AgentAppRoot(
     onTerminalOpened: () -> Unit = {},
     onSpeechSettingsOpened: () -> Unit = {},
     onAssistantConversationOpened: (Boolean) -> Unit = {},
+    requestedCommonTask: CommonTaskLaunchRequest? = null,
+    onCommonTaskConsumed: (String) -> Boolean = { false },
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -153,6 +158,7 @@ fun AgentAppRoot(
     }
     val skills = appViewModel.skills
     val memory = appViewModel.memory
+    val commonTasks = appViewModel.commonTasks
     val permissionHealth = appViewModel.permissionHealth
     val toolsState = remember { buildToolsState(context) }
     val characterStore = viewModel<CharacterLibraryViewModel>().store
@@ -222,6 +228,23 @@ fun AgentAppRoot(
     }
 
     var pendingComposeId by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(requestedCommonTask?.requestId) {
+        val request = requestedCommonTask ?: return@LaunchedEffect
+        val task = try {
+            commonTasks.resolveShortcut(request.taskId, request.token)
+        } catch (cancelled: CancellationException) { throw cancelled
+        } catch (_: Exception) { null }
+        // Consume after the cancellable read, before submitting; recreation cannot replay the Intent.
+        // A newer navigation request can arrive while the file read is in flight.
+        if (!onCommonTaskConsumed(request.requestId)) return@LaunchedEffect
+        if (task == null) {
+            Toast.makeText(context, R.string.common_tasks_missing, Toast.LENGTH_LONG).show()
+        } else if (agentState.startCommonTask(task.id, task.instruction, request.requestId)) {
+            requestExecutionNotifications()
+            conversationPaneOpen = false
+            navigator.popToHome()
+        }
+    }
     LaunchedEffect(requestedConversationId, composeReply) {
         val conversationId = requestedConversationId ?: return@LaunchedEffect
         if (agentState.openConversationById(conversationId)) {
@@ -303,6 +326,7 @@ fun AgentAppRoot(
             onDismissConversationPane = { conversationPaneOpen = false },
             onSearchConversations = { query -> agentState.updateSearchQuery(query) },
             onNewConversation = { createConversation() },
+            onOpenCommonTasks = { pushRoute(AppRoute.CommonTasks) },
             onOpenTerminal = { pushRoute(AppRoute.Terminal) },
             onLaunchKimiWeb = {
                 requestExecutionNotifications()
@@ -497,6 +521,16 @@ fun AgentAppRoot(
                         }
                     },
                 )
+            }
+            entry<AppRoute.CommonTasks>(swipeDismiss = swipeDismiss) {
+                CommonTasksScreen(commonTasks, onBack = ::popRoute, onRun = { task ->
+                    if (navigator.current() == AppRoute.CommonTasks &&
+                        agentState.startCommonTask(task.id, task.instruction, UUID.randomUUID().toString())) {
+                        requestExecutionNotifications()
+                        conversationPaneOpen = false
+                        navigator.popToHome()
+                    }
+                })
             }
             entry<AppRoute.Characters>(swipeDismiss = swipeDismiss) {
                 LaunchedEffect(backStack.lastOrNull() == AppRoute.Characters) {

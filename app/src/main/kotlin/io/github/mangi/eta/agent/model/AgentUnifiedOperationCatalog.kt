@@ -70,7 +70,8 @@ internal object AgentUnifiedOperationCatalog {
                 val existing = function.optString("description")
                 function.put(
                     "description",
-                    existing + " 后台执行时返回后台 observation_id、display 坐标契约与同一任务屏幕的截图信息。",
+                    existing + " 后台执行时返回后台 observation_id、display 坐标契约与同一任务屏幕的截图信息。" +
+                        "后台 include_screenshot=true 时检查 screenshot.attached 和图片附件；已收到图片无需再用 read_image 读取同帧，仅路径不表示已看图。",
                 )
             }
             val properties = parameters.optJSONObject("properties") ?: JSONObject().also {

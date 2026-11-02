@@ -1,6 +1,7 @@
 package io.github.mangi.eta.ui.app
 
 import io.github.mangi.eta.agent.model.AgentFileReferencePromptCodec
+import io.github.mangi.eta.agent.runtime.RunPerformanceSummary
 import io.github.mangi.eta.ui.model.AgentChatMessageUi
 import io.github.mangi.eta.ui.model.AgentMessageUi
 import io.github.mangi.eta.ui.model.SystemNoticeCode
@@ -39,6 +40,7 @@ internal object ConversationMarkdownExporter {
         val noticeRuntimeFailed: String,
         val noticeInterrupted: String,
         val noticeContextCompaction: String = "上下文压缩",
+        val noticeRunPerformance: String = "执行统计",
     ) {
         fun toolStatus(status: ToolActivityStatusUi): String = when (status) {
             ToolActivityStatusUi.Running -> toolStatusRunning
@@ -54,6 +56,7 @@ internal object ConversationMarkdownExporter {
             SystemNoticeCode.ModelRetry -> noticeModelRetry
             SystemNoticeCode.RuntimeFailed -> noticeRuntimeFailed
             SystemNoticeCode.Interrupted -> noticeInterrupted
+            SystemNoticeCode.RunPerformance -> noticeRunPerformance
         }
     }
 
@@ -123,7 +126,11 @@ internal object ConversationMarkdownExporter {
 
         is SystemNoticeMessageUi -> buildList {
             add(labels.notice(code))
-            detail?.takeIf { it.isNotBlank() }?.let(::add)
+            if (code == SystemNoticeCode.RunPerformance) {
+                RunPerformanceSummary.fromJson(detail)?.let { summary ->
+                    add(summary.details(labels.noticeRunPerformance.any { it.code in 0x4e00..0x9fff }))
+                }
+            } else detail?.takeIf { it.isNotBlank() }?.let(::add)
         }.toBlockquote()
 
         else -> null

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_tasks_title">常用任务</string>
+    <string name="common_tasks_description">保存经常使用的指令，每次在新会话中执行，使用当前选择的模型。</string>
+    <string name="common_tasks_create">新建任务</string>
+    <string name="common_tasks_edit">编辑任务</string>
+    <string name="common_tasks_copy">复制任务</string>
+    <string name="common_tasks_copy_name">%1$s（副本）</string>
+    <string name="common_tasks_delete">删除任务</string>
+    <string name="common_tasks_delete_confirm">删除“%1$s”？已有会话会保留，桌面快捷方式将无法再执行。</string>
+    <string name="common_tasks_name">任务名称</string>
+    <string name="common_tasks_instruction">执行指令</string>
+    <string name="common_tasks_save">保存</string>
+    <string name="common_tasks_run">立即执行</string>
+    <string name="common_tasks_manage">管理</string>
+    <string name="common_tasks_pin">添加到桌面</string>
+    <string name="common_tasks_pin_requested">已请求添加桌面快捷方式，请根据桌面提示确认。</string>
+    <string name="common_tasks_pin_unavailable">当前桌面无法添加快捷方式，仍可在常用任务中执行。</string>
+    <string name="common_tasks_missing">此任务已不可用，请到“常用任务”检查或重新添加快捷方式。</string>
+    <string name="common_tasks_save_failed">未能保存本次修改，已有任务保留，请重试。</string>
+    <string name="common_tasks_load_failed">无法读取常用任务</string>
+    <string name="common_tasks_load_preserved">本地文件已保留，请重试读取后再编辑。</string>
+    <string name="common_tasks_retry">重试</string>
+    <string name="common_tasks_loading">正在读取任务…</string>
+    <string name="common_tasks_empty">还没有常用任务</string>
+    <string name="common_tasks_empty_hint">例如：后台打开飞书，整理今天的消息。</string>
+    <string name="common_tasks_limit">最多保存 %1$d 个任务，删除不用的任务后可继续添加。</string>
+    <string name="common_tasks_input_limit">名称最多 %1$d 字，指令最多 %2$d 字。</string>
+</resources>

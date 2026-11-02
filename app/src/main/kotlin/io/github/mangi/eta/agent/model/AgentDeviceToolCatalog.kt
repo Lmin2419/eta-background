@@ -127,12 +127,15 @@ internal object AgentDeviceToolCatalog {
             .put(
                 function(
                     "search_notification_history",
-                    "检索 Eta 在用户授予通知使用权后记录的最近 7 天通知。原始结果不写入持久会话。",
+                    "检索 Eta 授权后保留的最近 7 天通知，可按固定时间区间分页。count 是本页数，total_matches 是保留的匹配通知数；通知会合并、漏发或覆盖，不等于聊天消息总数。原始结果不写入持久会话。",
                     properties(
                         "query" to string("可选标题或正文关键词", 200),
                         "package_name" to string("可选精确包名", 255),
-                        "max_age_hours" to integer("回溯小时数，默认 24", 1, 168),
+                        "max_age_hours" to integer("未提供 start_time 时从查询结束时间回溯的小时数，默认 24；翻页保持原值", 1, 168),
                         "limit" to integer("最多返回数量，默认 20", 1, 50),
+                        "start_time" to string("可选，包含的起始时间，带时区偏移的 ISO 8601；与结束时间跨度不超过 7 天", 64),
+                        "end_time" to string("可选，不包含的结束时间，带时区偏移的 ISO 8601；默认冻结本次查询时刻，未来时间截到当前时刻", 64),
+                        "cursor" to string("翻页传上次 next_cursor，保留 query/package_name/max_age_hours；时间参数可省略沿用固定区间。记录变化报错时重新开始，不能混合旧页", 16_384),
                     ),
                 ),
             )

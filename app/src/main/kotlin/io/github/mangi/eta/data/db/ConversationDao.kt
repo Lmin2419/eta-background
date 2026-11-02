@@ -18,7 +18,8 @@ internal interface ConversationDao : ChunkedTextDao {
             "WHERE owner_table = 'conversation_messages' AND owner_id = m.id AND field = 'content' " +
             "AND chunk_index = 0), substr(m.content, 1, 256)) AS message_preview " +
             "FROM conversations c LEFT JOIN conversation_messages m ON m.conversation_id = c.id " +
-            "AND m.sort_index = (SELECT MAX(sort_index) FROM conversation_messages WHERE conversation_id = c.id) " +
+            "AND m.sort_index = (SELECT MAX(sort_index) FROM conversation_messages WHERE conversation_id = c.id " +
+            "AND NOT (type = 'system_notice' AND content = 'run_performance')) " +
             "ORDER BY c.updated_at DESC, c.id ASC"
     )
     suspend fun conversationIndex(): List<ConversationIndexRow>

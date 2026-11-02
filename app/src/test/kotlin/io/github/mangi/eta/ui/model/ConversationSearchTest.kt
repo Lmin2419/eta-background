@@ -17,6 +17,7 @@ class ConversationSearchTest {
             SystemNoticeCode.ModelRetry -> "Retrying"
             SystemNoticeCode.RuntimeFailed -> "Runtime failed"
             SystemNoticeCode.Interrupted -> "Interrupted"
+            SystemNoticeCode.RunPerformance -> "Execution details"
         }
     }
 

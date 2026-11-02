@@ -85,6 +85,8 @@ internal class AgentRuntimeRunExecutor(
         var cancelled = false
         var checkpointRecorder: AgentRunCheckpointRecorder? = null
         val timing = AgentRunTiming(AndroidAgentLogger)
+        val timingPauseBinding = runController.observePause(timing::pauseChanged)
+        timing.pauseChanged(runController.isPaused)
 
         // 失败清理需要在 try 外拿到会话 id。
         var memoryConversationId: String? = null
@@ -441,12 +443,26 @@ internal class AgentRuntimeRunExecutor(
                 rewriteTargetMessageId = request.rewriteTargetMessageId,
             )
         } finally {
+            timingPauseBinding.close()
+            timing.beginCleanup()
             TaskPreviewRegistry.unregister(request.runId)
             runCatching { toolsBinding?.close() }
             runCatching { toolExecutor?.close() }
             runCatching { guiRun?.close() }
             runCatching { browserBinding?.close() }
         }
+
+        // Metrics must never control completion, add model input, or prevent publishing a result.
+        runCatching {
+            val event = AgentEvent.RunPerformance(timing.finish())
+            if (!session.isTerminal) {
+                acceptEvent(session, event, archivedEvents, entrySurfaceGuard, checkpointRecorder)
+            } else {
+                // A cancellation can already have published its terminal result. Preserve the
+                // bounded measurement in an existing assistant archive without reviving the run.
+                archivedEvents?.add(event)
+            }
+        }.onFailure { AndroidAgentLogger.warn("Agent timing summary unavailable: ${it.safeLogType()}") }
 
         if (cancelled && session.isTerminal) {
             runCatching {

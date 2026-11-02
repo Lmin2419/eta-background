@@ -332,6 +332,21 @@ class AgentConversationStoreTest {
     }
 
     @Test
+    fun performanceSummaryDoesNotReplaceUnloadedOrColdStartConversationPreview() = runBlocking {
+        val active = AgentChatHomeUiState(messages = emptyList(), input = "", isStreaming = false, thinkingEnabled = false)
+        val answer = AgentMessageUi("assistant-dormant-1", "actual answer")
+        val completed = active.copy(messages = listOf(answer,
+            SystemNoticeMessageUi("assistant-dormant-performance", SystemNoticeCode.RunPerformance, "{}")))
+        AgentConversationStore.save(context, "active", mapOf("active" to active, "dormant" to completed),
+            mapOf("active" to "Active", "dormant" to "Dormant"), mapOf("active" to 2L, "dormant" to 1L))
+        val preview = AgentConversationStore.load(context).conversationsById.getValue("dormant")
+        assertFalse(preview.isConversationLoaded)
+        assertEquals("actual answer", (preview.messages.single() as AgentMessageUi).content)
+        assertEquals(listOf(answer), AgentConversationStore.unloadConversation(completed).messages)
+        assertEquals(2, AgentConversationStore.loadAllMessages(context, "dormant").size)
+    }
+
+    @Test
     fun unopenedConversationOnlyReadsItsBoundedPreview() = runBlocking {
         val dao = EtaDatabase.get(context).conversationDao()
         dao.insertConversations(listOf(

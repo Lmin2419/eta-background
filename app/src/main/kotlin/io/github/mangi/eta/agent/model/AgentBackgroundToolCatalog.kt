@@ -13,6 +13,8 @@ internal object AgentBackgroundToolCatalog {
              else "当前未确认 Root 授权，后台操作暂不可用；可以说明其存在及所需条件，不能声称现在能够执行。") +
             "后台最多同时操作 ${ShadowSchema.MAX_CONCURRENT_APPS} 个不同应用；同一应用串行，额外任务等待。后台虚拟屏任务可在主屏关闭后继续；主屏锁定时不得执行前台操作或主动亮屏。系统省电或网络限制仍可能中断连接，不能承诺绕过限制。" +
             "用户可从任务通知打开只读预览，主动接管会暂停该任务；恢复后必须重新观察，不得重放旧输入。" +
+            "原生后台 observe_screen 设置 include_screenshot=true 后，screenshot.attached=true 且实际收到图片附件即已取得画面，不再调用 read_image 重读同帧；仅返回路径或 attached=false 不表示已看图。" +
+            "确认当前页面节点没有所需正文或属于纯视觉页面后，后续观察直接请求截图，避免每轮先查空树再补图；页面改变后重新判断观察方式。" +
             "以下规则仅适用于后台 screen_*：先 screen_open，检查 inputReady/inputState；未就绪时只重新观察或诊断，不反复销毁重开应用。" +
             "用 screen_dump/screen_list 读节点；游戏、画布或节点不足时用 screen_shot 并通过 read_image 查看。" +
             "若 read_image 未公开，说明图片读取工具未开启，不能声称已看过截图。" +

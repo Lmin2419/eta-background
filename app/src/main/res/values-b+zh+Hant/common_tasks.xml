@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_tasks_title">常用任務</string>
+    <string name="common_tasks_description">儲存經常使用的指令，每次在新對話中執行，使用目前選擇的模型。</string>
+    <string name="common_tasks_create">新增任務</string>
+    <string name="common_tasks_edit">編輯任務</string>
+    <string name="common_tasks_copy">複製任務</string>
+    <string name="common_tasks_copy_name">%1$s（副本）</string>
+    <string name="common_tasks_delete">刪除任務</string>
+    <string name="common_tasks_delete_confirm">刪除「%1$s」？現有對話會保留，桌面捷徑將無法再執行。</string>
+    <string name="common_tasks_name">任務名稱</string>
+    <string name="common_tasks_instruction">執行指令</string>
+    <string name="common_tasks_save">儲存</string>
+    <string name="common_tasks_run">立即執行</string>
+    <string name="common_tasks_manage">管理</string>
+    <string name="common_tasks_pin">加入主畫面</string>
+    <string name="common_tasks_pin_requested">已請求加入主畫面捷徑，請依桌面提示確認。</string>
+    <string name="common_tasks_pin_unavailable">目前桌面無法加入捷徑，仍可在常用任務中執行。</string>
+    <string name="common_tasks_missing">此任務已無法使用，請至「常用任務」檢查或重新加入捷徑。</string>
+    <string name="common_tasks_save_failed">無法儲存本次修改，現有任務保留，請重試。</string>
+    <string name="common_tasks_load_failed">無法讀取常用任務</string>
+    <string name="common_tasks_load_preserved">本機檔案已保留，請重新讀取後再編輯。</string>
+    <string name="common_tasks_retry">重試</string>
+    <string name="common_tasks_loading">正在讀取任務…</string>
+    <string name="common_tasks_empty">尚無常用任務</string>
+    <string name="common_tasks_empty_hint">例如：在背景開啟飛書，整理今天的訊息。</string>
+    <string name="common_tasks_limit">最多儲存 %1$d 個任務，刪除不用的任務後可繼續新增。</string>
+    <string name="common_tasks_input_limit">名稱最多 %1$d 字，指令最多 %2$d 字。</string>
+</resources>

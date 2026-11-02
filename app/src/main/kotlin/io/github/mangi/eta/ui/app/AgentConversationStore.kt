@@ -328,7 +328,9 @@ internal object AgentConversationStore {
     ): Set<String> = ConversationSearchRepository.search(context, query, matchingNoticeCodes.map { it.wireValue })
 
     fun unloadConversation(state: AgentChatHomeUiState): AgentChatHomeUiState = state.copy(
-        messages = listOfNotNull(state.messages.lastOrNull()?.let { message -> when (message) {
+        messages = listOfNotNull(state.messages.lastOrNull {
+            it !is SystemNoticeMessageUi || it.code != SystemNoticeCode.RunPerformance
+        }?.let { message -> when (message) {
             is UserMessageUi -> message.copy(content = message.content.take(256), images = emptyList())
             is AgentMessageUi -> message.copy(content = message.content.take(256), searchSuggestionsHtml = emptyList())
             is ThinkingMessageUi -> message.copy(content = message.content.take(256))

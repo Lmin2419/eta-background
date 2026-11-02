@@ -16,6 +16,12 @@ This build also includes capture-allocation rollback, foreground-window handoff 
 
 Local and CI checks report 2,108 tests: 2,107 passed, 1 skipped, no failures or errors. Eight deployment tests and twelve integration checks passed; lint reported no errors. The APK retains the previous signing certificate and CI verified its embedded engine assets. **The device-wide cold-start blank-screen cause remains unproven and requires device testing; this release does not claim to have eliminated it.** Downloading requires a GitHub login; the artifact expires on **2026-11-29 (UTC)**.
 
+## Integration candidate: task controls, efficiency and saved tasks
+
+The unpublished `etax-340-step1-foundation` candidate retains the e45 preview/control fixes and adds bounded data-reading guidance, fixed-window notification paging, a compact measured execution summary, and local **Saved tasks**. Save a name and instruction from the home menu, run it in a fresh ordinary conversation using the current model, or request a desktop shortcut. Notification replies still continue their original conversation.
+
+Measurements reuse runtime events and existing conversation storage; they add no model request or background service. Notification counts describe retained notification records, not complete chat history. Speedups, ColorOS transitions and launcher shortcuts still need device validation. The official test download above is unchanged. See [implementation and validation notes](etax/EFFICIENCY_AND_COMMON_TASKS.md) (Chinese).
+
 ## What this branch adds
 
 - Built-in Bing search with a bounded DuckDuckGo fallback, safe network diagnostics, and overlay settings navigation that remains available after permission is granted.

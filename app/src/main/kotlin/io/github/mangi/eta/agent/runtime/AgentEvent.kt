@@ -5,6 +5,11 @@ import io.github.mangi.eta.core.toSafeLogToken
 internal sealed interface AgentEvent {
     fun toLogLine(): String
 
+    data class RunPerformance(val summary: RunPerformanceSummary) : AgentEvent {
+        override fun toLogLine(): String =
+            "run_performance elapsed_ms=${summary.elapsedMs}, requests=${summary.requests}, tools=${summary.toolCalls}"
+    }
+
     enum class AssistantBlockKind {
         TEXT,
         THINKING,

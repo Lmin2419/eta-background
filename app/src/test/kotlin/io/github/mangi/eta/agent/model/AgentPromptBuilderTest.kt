@@ -34,6 +34,72 @@ class AgentPromptBuilderTest {
             if (custom.isNotBlank()) assertTrue(contents.contains(custom))
         }
     }
+
+    @Test
+    fun ordinaryTasksBoundDataExplorationWhileExplicitAnalysisKeepsRootAccess() {
+        for (rootAvailable in listOf(false, true)) {
+            for (terminalTools in listOf(false, true)) {
+                val contents = AgentPromptBuilder.buildSystemMessages(
+                    modelConfig("自定义助手", terminalTools, browserTools = false),
+                    SkillContext.EMPTY, AgentMemoryContext.DISABLED, rootAvailable,
+                ).systemContents().joinToString("\n")
+
+                assertTrue(contents.contains("普通查询、计数和界面操作优先用现成工具或目标 App 界面"))
+                assertTrue(contents.contains("不为取数临时安装 Linux 环境或编写数据库二进制解析器"))
+                assertFalse(contents.contains("可以主动使用它们定位并只读检查相关应用私有文件与数据库"))
+                if (rootAvailable) {
+                    assertTrue(contents.contains("已知路径、已知格式执行有界只读查询"))
+                    assertTrue(contents.contains("遇到加密、格式不支持或路径不可访问，就结束该取数分支"))
+                    assertTrue(contents.contains("只有用户明确要求文件/数据库分析、排障或开发时，才探索"))
+                    assertTrue(contents.contains("不修改源数据"))
+                } else {
+                    assertFalse(contents.contains("可用已公开的 Root Shell/文件工具"))
+                    assertTrue(contents.contains("只能使用本轮公开的工具与已确认授权的数据来源"))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun countingGuidanceKeepsOneTimeRangeAndRequiresContinuousCoverage() {
+        val contents = AgentPromptBuilder.buildSystemMessages(
+            modelConfig("", terminalTools = false, browserTools = false),
+            SkillContext.EMPTY, AgentMemoryContext.DISABLED, rootAvailable = false,
+        ).systemContents().joinToString("\n")
+
+        assertTrue(contents.contains("按首次取时与设备时区确定起止时间"))
+        assertTrue(contents.contains("后续翻页保持这个区间"))
+        assertTrue(contents.contains("重叠条目确认连续覆盖，再累计新条目"))
+        assertTrue(contents.contains("缺少重叠就回查缺口"))
+        assertTrue(contents.contains("不能只按时间戳去重"))
+        assertTrue(contents.contains("相同内容也可能是多条"))
+        assertTrue(contents.contains("无法区分的部分标为未确认"))
+        assertTrue(contents.contains("start_time/end_time"))
+        assertTrue(contents.contains("next_cursor"))
+        assertTrue(contents.contains("total_matches 只代表现存匹配通知记录"))
+        assertTrue(contents.contains("未经完整性核对不能当作聊天消息总数"))
+    }
+
+    @Test
+    fun nativeAttachedScreenshotsDoNotRequireLegacyReadImageRoundTrip() {
+        val contents = AgentPromptBuilder.buildSystemMessages(
+            modelConfig("", terminalTools = true, browserTools = false),
+            SkillContext.EMPTY, AgentMemoryContext.DISABLED, rootAvailable = true,
+        ).systemContents().joinToString("\n")
+
+        assertTrue(contents.contains("screenshot.attached=true 且实际收到图片附件"))
+        assertTrue(contents.contains("不再调用 read_image 重读同帧"))
+        assertTrue(contents.contains("仅返回路径或 attached=false 不表示已看图"))
+        assertTrue(contents.contains("避免每轮先查空树再补图"))
+        assertTrue(contents.contains("页面改变后重新判断观察方式"))
+        // The legacy path still requires explicit image delivery, and geometry guards remain.
+        assertTrue(contents.contains("用 screen_shot 并通过 read_image 查看"))
+        assertTrue(contents.contains("不能声称已看过截图"))
+        assertTrue(contents.contains("只读取 UI 树，不附截图"))
+        assertTrue(contents.contains("禁止把新截图与旧节点混用"))
+        assertTrue(contents.contains("必须先重新观察，禁止直接重放动作"))
+    }
+
     @Test
     fun rootPromptOnlyDependsOnGrantSoTransientProbeStatesKeepThePrefixStable() {
         fun prompt(state: RootAccessState) = AgentPromptBuilder.buildSystemMessages(
@@ -205,7 +271,7 @@ class AgentPromptBuilderTest {
         assertTrue(messages.systemContents().any { it.contains("工具已向你公开表示对应能力已由用户开启") })
         assertTrue(messages.systemContents().any { it.contains("从多个相关来源按时间和代表性取样") })
         assertTrue(messages.systemContents().any { it.contains("系统记忆") })
-        assertTrue(messages.systemContents().any { it.contains("主动使用它们定位并只读检查") })
+        assertTrue(messages.systemContents().any { it.contains("已知路径、已知格式执行有界只读查询") })
         assertTrue(messages.systemContents().any { it.contains("相关应用私有文件与数据库") })
         assertTrue(messages.systemContents().any { it.contains("执行有界查询，不修改源数据") })
         assertTrue(messages.systemContents().any { it.contains("合法且克制的 GitHub Flavored Markdown") })

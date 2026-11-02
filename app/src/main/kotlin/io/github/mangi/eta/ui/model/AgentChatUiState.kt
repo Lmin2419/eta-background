@@ -78,6 +78,7 @@ enum class SystemNoticeCode(val wireValue: String) {
     RuntimeFailed("runtime_failed"),
     ModelRetry("model_retry"),
     ContextCompaction("context_compaction"),
+    RunPerformance("run_performance"),
     Interrupted("interrupted");
 
     companion object {

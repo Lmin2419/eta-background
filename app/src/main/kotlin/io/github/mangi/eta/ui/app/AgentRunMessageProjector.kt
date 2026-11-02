@@ -28,6 +28,13 @@ internal class AgentRunMessageProjector(
         event: AgentEvent,
         messages: List<AgentChatMessageUi>,
     ): List<AgentChatMessageUi> = when (event) {
+        is AgentEvent.RunPerformance -> {
+            val notice = SystemNoticeMessageUi(
+                id = "assistant-$runId-performance", code = SystemNoticeCode.RunPerformance,
+                detail = event.summary.toJson(),
+            )
+            if (messages.any { it == notice }) messages else messages.filterNot { it.id == notice.id } + notice
+        }
         is AgentEvent.GuiControlChanged -> messages
         is AgentEvent.AssistantBlockStart -> startAssistantBlock(runId, event, messages)
         is AgentEvent.AssistantBlockDelta -> when (event.kind) {
@@ -669,7 +676,8 @@ internal class AgentRunMessageProjector(
             return messages.indices.lastOrNull { index ->
                 val message = messages[index]
                 index > retryIndex &&
-                    (message is AgentMessageUi || includeNotices && message is SystemNoticeMessageUi) &&
+                    (message is AgentMessageUi || includeNotices && message is SystemNoticeMessageUi &&
+                        message.code != SystemNoticeCode.RunPerformance) &&
                     isAssistantMessageForRun(message.id, runId)
             } ?: -1
         }
