@@ -1,0 +1,208 @@
+package io.github.mangi.eta.assistant
+
+import android.content.Context
+import android.os.SystemClock
+import android.provider.Settings
+import android.util.AtomicFile
+import io.github.mangi.eta.EtaApp
+import io.github.mangi.eta.agent.device.BoundedRootCommandExecutor
+import io.github.mangi.eta.agent.device.DeviceToolContract
+import io.github.mangi.eta.agent.device.RootAccess
+import io.github.mangi.eta.core.AndroidAgentLogger
+import java.io.File
+import java.io.FileNotFoundException
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+
+internal class NativeAssistantBackupFile(context: Context) : AssistantBackupStore {
+    private val file = AtomicFile(File(context.filesDir, "native_assistant_backup.json"))
+
+    override fun load(): AssistantBackup? = try {
+        val json = JSONObject(file.readFully().toString(Charsets.UTF_8))
+        require(json.getInt("version") == 1)
+        val attempted = json.getJSONArray("attempted")
+        AssistantBackup(assistantSnapshotFromJson(json.getJSONObject("original")),
+            json.getBoolean("roleAttempted"),
+            (0 until attempted.length()).map { AssistantSetting.valueOf(attempted.getString(it)) }.toSet(),
+            json.tick("appliedAt"), json.tick("confirmedAt"))
+    } catch (_: FileNotFoundException) {
+        if (file.baseFile.exists() || File(file.baseFile.path + ".bak").exists()) {
+            throw AssistantSetupFailure("BACKUP_UNAVAILABLE")
+        }
+        null
+    } catch (_: Exception) {
+        throw AssistantSetupFailure("BACKUP_UNAVAILABLE")
+    }
+
+    override fun save(backup: AssistantBackup) {
+        val json = JSONObject().put("version", 1).put("original", backup.original.toJson())
+            .put("roleAttempted", backup.roleAttempted)
+            .put("attempted", JSONArray(backup.attempted.map { it.name }))
+            .put("appliedAt", backup.appliedAt?.toJson() ?: JSONObject.NULL)
+            .put("confirmedAt", backup.confirmedAt?.toJson() ?: JSONObject.NULL)
+        writeAtomic(file, json)
+    }
+
+    override fun clear() {
+        file.delete()
+        if (file.baseFile.exists() || File(file.baseFile.path + ".bak").exists()) {
+            throw AssistantSetupFailure("BACKUP_UNAVAILABLE")
+        }
+    }
+}
+
+/** Visible-window evidence only; it does not claim to identify a physical power-key press. */
+internal object NativeAssistantWakeEvidence {
+    fun recordVisible(context: Context) {
+        if (!File(context.filesDir, "native_assistant_backup.json").exists()) return
+        runCatching { writeAtomic(file(context), tick(context).toJson()) }
+    }
+
+    fun read(context: Context): AssistantTick? = runCatching {
+        val json = JSONObject(file(context).readFully().toString(Charsets.UTF_8))
+        AssistantTick(json.getInt("boot"), json.getLong("elapsed"))
+    }.getOrNull()
+
+    private fun file(context: Context) = AtomicFile(File(context.filesDir, "native_assistant_wake.json"))
+
+    fun tick(context: Context): AssistantTick = AssistantTick(
+        runCatching { Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1) }.getOrDefault(-1),
+        SystemClock.elapsedRealtime(),
+    )
+}
+
+private fun AssistantTick.toJson() = JSONObject().put("boot", boot).put("elapsed", elapsed)
+private fun JSONObject.tick(key: String): AssistantTick? = if (isNull(key)) null else getJSONObject(key).let {
+    AssistantTick(it.getInt("boot"), it.getLong("elapsed"))
+}
+
+private fun writeAtomic(file: AtomicFile, json: JSONObject) {
+    val stream = file.startWrite()
+    try {
+        stream.write(json.toString().toByteArray(Charsets.UTF_8))
+        file.finishWrite(stream)
+    } catch (failure: Exception) {
+        file.failWrite(stream)
+        throw AssistantSetupFailure("BACKUP_UNAVAILABLE")
+    }
+}
+
+internal class NativeAssistantRootDevice(private val context: Context) : AssistantSetupDevice {
+    private val userId = DeviceToolContract.appUserId(context)
+
+    override fun read(): AssistantSnapshot = assistantSnapshotFromJson(call(JSONObject().put("operation", "read")))
+
+    override fun changeRole(expected: List<String>, target: List<String>) {
+        call(JSONObject().put("operation", "role").put("expected", JSONArray(expected)).put("target", JSONArray(target)))
+    }
+
+    override fun changeSetting(setting: AssistantSetting, expected: String?, target: String?) {
+        call(JSONObject().put("operation", "setting").put("setting", setting.name)
+            .put("expected", expected ?: JSONObject.NULL).put("target", target ?: JSONObject.NULL))
+    }
+
+    private fun call(request: JSONObject): JSONObject {
+        request.put("version", 1).put("user", userId)
+        val command = "CLASSPATH=${DeviceToolContract.quote(context.applicationInfo.sourceDir)} " +
+            "app_process /system/bin io.github.mangi.eta.assistant.NativeAssistantRootMain"
+        val result = BoundedRootCommandExecutor(AndroidAgentLogger).use {
+            it.execute(command, timeoutMillis = 30_000, maxOutputBytes = 16 * 1024,
+                input = request.toString().toByteArray(Charsets.UTF_8))
+        }
+        if (!result.ok || result.truncated) throw AssistantSetupFailure(when {
+            result.timedOut -> "COMMAND_TIMEOUT"
+            result.errorCode in setOf("ROOT_REQUIRED", "ROOT_UNAVAILABLE") -> result.errorCode
+            else -> "COMMAND_RESULT_UNKNOWN"
+        })
+        val reply = result.stdout.lineSequence().lastOrNull { it.startsWith(NativeAssistantRootMain.MARKER) }
+            ?.removePrefix(NativeAssistantRootMain.MARKER)
+            ?.let { runCatching { JSONObject(it) }.getOrNull() }
+            ?: throw AssistantSetupFailure("COMMAND_RESULT_UNKNOWN")
+        if (!reply.optBoolean("ok")) throw AssistantSetupFailure(reply.optString("code", "NATIVE_ROUTE_UNAVAILABLE"))
+        return reply
+    }
+}
+
+internal data class NativeAssistantUiState(
+    val busy: Boolean = false,
+    val status: String = "OFF",
+    val backupExists: Boolean = false,
+    val configured: Boolean = false,
+    val error: String? = null,
+)
+
+/** App-owned work survives closing the settings dialog; at most one transaction runs. */
+internal object NativeAssistantSettings {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val working = AtomicBoolean(false)
+    private val mutableState = MutableStateFlow(NativeAssistantUiState())
+    val state = mutableState.asStateFlow()
+
+    fun refresh(context: Context) = run(context, "refresh")
+    fun enable(context: Context) = run(context, "enable")
+    fun restore(context: Context) = run(context, "restore")
+    fun confirmWake(context: Context) = run(context, "confirm")
+
+    private fun run(context: Context, action: String) {
+        if (!working.compareAndSet(false, true)) return
+        val app = context.applicationContext
+        mutableState.value = mutableState.value.copy(busy = true, error = null)
+        scope.launch {
+            val store = NativeAssistantBackupFile(app)
+            val device = NativeAssistantRootDevice(app)
+            val setup = NativeAssistantSetup(app.packageName, DeviceToolContract.appUserId(app), device, store) {
+                NativeAssistantWakeEvidence.tick(app)
+            }
+            var failure: String? = null
+            try {
+                if (action != "refresh") RootAccess.request(app).join()
+                if (!RootAccess.isGranted) throw AssistantSetupFailure("ROOT_REQUIRED")
+                // Connected != proven active hook, but a connected framework prevents a clean test.
+                if (action in setOf("enable", "confirm") && EtaApp.serviceInstance != null) {
+                    throw AssistantSetupFailure("FRAMEWORK_CONNECTED")
+                }
+                if (action == "enable" && !Settings.canDrawOverlays(app)) throw AssistantSetupFailure("OVERLAY_REQUIRED")
+                when (action) {
+                    "enable" -> setup.enable()
+                    "restore" -> setup.restore()
+                    "confirm" -> setup.confirmWake(NativeAssistantWakeEvidence.read(app))
+                }
+            } catch (error: Exception) {
+                failure = (error as? AssistantSetupFailure)?.code ?: "NATIVE_ROUTE_UNAVAILABLE"
+            }
+            try {
+                val backup = store.load()
+                val snapshot = if (RootAccess.isGranted) device.read() else null
+                val configured = backup?.appliedAt != null && snapshot?.let(setup::configured) == true
+                val confirmed = configured && backup.confirmedAt?.boot?.let {
+                    it >= 0 && it == NativeAssistantWakeEvidence.tick(app).boot
+                } == true
+                mutableState.value = NativeAssistantUiState(
+                    status = when {
+                        backup == null -> "OFF"
+                        snapshot == null -> "ROOT_REQUIRED"
+                        backup.appliedAt == null -> "RESTORE_FIRST"
+                        !configured -> "CONFIGURATION_CHANGED"
+                        EtaApp.serviceInstance != null -> "FRAMEWORK_CONNECTED"
+                        confirmed -> "CONFIRMED_BY_USER"
+                        else -> "AWAITING_KEY_TEST"
+                    },
+                    backupExists = backup != null, configured = configured, error = failure,
+                )
+            } catch (error: Exception) {
+                mutableState.value = mutableState.value.copy(busy = false, configured = false,
+                    backupExists = File(app.filesDir, "native_assistant_backup.json").exists(),
+                    status = "CHECK_UNAVAILABLE", error = failure ?: (error as? AssistantSetupFailure)?.code ?: "NATIVE_ROUTE_UNAVAILABLE")
+            } finally {
+                working.set(false)
+            }
+        }
+    }
+}

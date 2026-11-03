@@ -1,0 +1,26 @@
+<resources>
+    <string name="native_assistant_title">長按電源鍵喚起（Root）</string>
+    <string name="native_assistant_entry_summary">內建設定，支援備份與還原原助理</string>
+    <string name="native_assistant_explanation">透過系統助理通道喚起 ETA，無需 Vector 或 LSPosed。部分 ColorOS 仍將電源鍵交給小布，設定完成後需要實際確認。</string>
+    <string name="native_assistant_enable">啟用原生喚起</string>
+    <string name="native_assistant_off">尚未啟用；開啟時申請 Root 並儲存目前設定。</string>
+    <string name="native_assistant_busy">正在檢查或更新設定…</string>
+    <string name="native_assistant_pending">設定已完成 · 長按喚起尚未驗證</string>
+    <string name="native_assistant_confirmed">本次開機的長按喚起已由你確認</string>
+    <string name="native_assistant_confirm">確認已透過長按喚起 ETA</string>
+    <string name="native_assistant_test_instruction">離開此頁，長按一次電源鍵。若出現 ETA 面板，返回這裡確認；若仍開啟小布或沒有反應，可還原原設定。</string>
+    <string name="native_assistant_restore">還原原設定</string>
+    <string name="native_assistant_restore_summary">還原儲存的助理與電源鍵設定，需要 Root。</string>
+    <string name="native_assistant_refresh">檢查目前狀態</string>
+    <string name="native_assistant_root_required">目前沒有 Root 權限。授權後才能設定或還原，既有備份會保留。</string>
+    <string name="native_assistant_framework">Xposed 框架仍連線，目前無法獨立驗證原生電源鍵通道。不要為此檢查重新注入或重新啟動。</string>
+    <string name="native_assistant_overlay_required">請先允許 ETA 顯示懸浮視窗，以便展示助理面板。</string>
+    <string name="native_assistant_overlay">開啟懸浮視窗授權設定</string>
+    <string name="native_assistant_changed">助理或電源鍵設定已變更，已停止覆寫；原備份保留。</string>
+    <string name="native_assistant_restore_first">先前的設定尚需還原。請先還原原設定，再重新開啟。</string>
+    <string name="native_assistant_backup_failed">無法讀取或儲存原設定備份，已停止設定。</string>
+    <string name="native_assistant_user_changed">請切回安裝此 ETA 的 Android 使用者後再操作。</string>
+    <string name="native_assistant_wake_not_seen">尚未記錄到設定後新開啟的 ETA 面板。請實際長按喚起後再確認。</string>
+    <string name="native_assistant_uncertain">系統命令逾時或結果不確定，未自動重複執行。請先檢查狀態，再決定還原。</string>
+    <string name="native_assistant_unavailable">目前系統未完成原生助理操作，不能視為已接管電源鍵；如有備份可還原原設定。</string>
+</resources>

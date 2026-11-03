@@ -64,6 +64,10 @@
 -keepattributes SourceFile,LineNumberTable
 
 # app_process 通过固定类名启动受控的一方应用操作入口。
+-keep class io.github.mangi.eta.assistant.NativeAssistantRootMain {
+    public static void main(java.lang.String[]);
+}
+
 -keep class io.github.mangi.eta.agent.phone.PhoneCommandMain {
     public static void main(java.lang.String[]);
 }

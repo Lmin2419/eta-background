@@ -1,0 +1,26 @@
+<resources>
+    <string name="native_assistant_title">Power-key assistant (Root)</string>
+    <string name="native_assistant_entry_summary">Built-in setup, original settings backup and restore</string>
+    <string name="native_assistant_explanation">Uses the system assistant route without Vector or LSPosed. Some ColorOS versions still route the power key to the vendor assistant; configuration alone does not verify key support.</string>
+    <string name="native_assistant_enable">Enable native assistant route</string>
+    <string name="native_assistant_off">Not enabled. Enabling requests Root and saves the current configuration.</string>
+    <string name="native_assistant_busy">Checking or updating configuration…</string>
+    <string name="native_assistant_pending">Configured · power-key wake is not yet verified</string>
+    <string name="native_assistant_confirmed">Power-key wake confirmed by you during this boot</string>
+    <string name="native_assistant_confirm">Confirm I opened Eta with the power key</string>
+    <string name="native_assistant_test_instruction">Close this page, hold the power key once, then return here if the Eta panel appears. If the vendor assistant opens or nothing happens, restore the original configuration.</string>
+    <string name="native_assistant_restore">Restore original configuration</string>
+    <string name="native_assistant_restore_summary">Restores the saved assistant and power-key setting. Requires Root.</string>
+    <string name="native_assistant_refresh">Check current status</string>
+    <string name="native_assistant_root_required">Root is unavailable. Grant access before setup or restoration; the backup is retained.</string>
+    <string name="native_assistant_framework">The Xposed framework is still connected. Native power-key wake cannot be verified independently in this state. Do not reinject or reboot for this check.</string>
+    <string name="native_assistant_overlay_required">Allow Eta to display over other apps so the assistant panel can appear.</string>
+    <string name="native_assistant_overlay">Open overlay permission settings</string>
+    <string name="native_assistant_changed">The assistant or power-key configuration has changed. Automatic overwriting stopped; the original backup is retained.</string>
+    <string name="native_assistant_restore_first">An earlier setup needs restoration. Restore the saved configuration before enabling again.</string>
+    <string name="native_assistant_backup_failed">The original configuration backup cannot be read or saved. Setup has stopped.</string>
+    <string name="native_assistant_user_changed">Switch back to the Android user running this Eta installation before changing the assistant.</string>
+    <string name="native_assistant_wake_not_seen">No recent Eta panel was recorded after setup. Open it using the power key before confirming.</string>
+    <string name="native_assistant_uncertain">The system command timed out or its result is unknown. No automatic retry was sent. Check status before restoring.</string>
+    <string name="native_assistant_unavailable">This system did not complete the native assistant operation. Key support is unverified; restore the backup if one is available.</string>
+</resources>

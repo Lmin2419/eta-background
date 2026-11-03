@@ -1,0 +1,26 @@
+<resources>
+    <string name="native_assistant_title">长按电源键唤起（Root）</string>
+    <string name="native_assistant_entry_summary">内置配置，支持备份与恢复原助手</string>
+    <string name="native_assistant_explanation">通过系统助手通道唤起 ETA，无需 Vector 或 LSPosed。部分 ColorOS 仍将电源键交给小布，配置完成后需要实际确认。</string>
+    <string name="native_assistant_enable">启用原生唤起</string>
+    <string name="native_assistant_off">尚未启用；开启时申请 Root 并保存当前配置。</string>
+    <string name="native_assistant_busy">正在检查或更新配置…</string>
+    <string name="native_assistant_pending">配置已完成 · 长按唤起尚未验证</string>
+    <string name="native_assistant_confirmed">本次开机的长按唤起已由你确认</string>
+    <string name="native_assistant_confirm">确认已通过长按唤起 ETA</string>
+    <string name="native_assistant_test_instruction">退出此页，长按一次电源键。若出现 ETA 面板，返回这里确认；若仍打开小布或没有反应，可恢复原配置。</string>
+    <string name="native_assistant_restore">恢复原配置</string>
+    <string name="native_assistant_restore_summary">恢复保存的助手和电源键配置，需要 Root。</string>
+    <string name="native_assistant_refresh">检查当前状态</string>
+    <string name="native_assistant_root_required">当前没有 Root 权限。授权后才能配置或恢复，已有备份会保留。</string>
+    <string name="native_assistant_framework">Xposed 框架仍连接，当前无法独立验证原生电源键通道。不要为这项检查重新注入或重启。</string>
+    <string name="native_assistant_overlay_required">请先允许 ETA 显示悬浮窗，以便展示助手面板。</string>
+    <string name="native_assistant_overlay">打开悬浮窗授权设置</string>
+    <string name="native_assistant_changed">助手或电源键配置已变化，已停止覆盖；原备份保留。</string>
+    <string name="native_assistant_restore_first">之前的配置尚需恢复。请先恢复原配置，再重新开启。</string>
+    <string name="native_assistant_backup_failed">无法读取或保存原配置备份，已停止设置。</string>
+    <string name="native_assistant_user_changed">请切回安装此 ETA 的 Android 用户后再操作。</string>
+    <string name="native_assistant_wake_not_seen">尚未记录到配置后新打开的 ETA 面板。请实际长按唤起后再确认。</string>
+    <string name="native_assistant_uncertain">系统命令超时或结果不确定，未自动重复执行。请先检查状态，再决定恢复。</string>
+    <string name="native_assistant_unavailable">当前系统未完成原生助手操作，不能视为已接管电源键；如有备份可恢复原配置。</string>
+</resources>

@@ -253,6 +253,7 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
             stopSelf()
             return
         }
+        io.github.mangi.eta.assistant.NativeAssistantWakeEvidence.recordVisible(this)
         presentEntryInput()
     }
 

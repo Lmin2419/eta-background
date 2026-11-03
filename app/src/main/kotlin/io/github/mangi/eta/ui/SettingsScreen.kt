@@ -485,6 +485,8 @@ private fun SettingsPageContent(
                         },
                         onClick = openAssistantSettings,
                     )
+                    EtaPreferenceDivider()
+                    NativeAssistantPreference(context)
                     if (prefs != null || hasConnectedFramework) {
                         EtaPreferenceDivider()
                         EtaDropdownPreference(
