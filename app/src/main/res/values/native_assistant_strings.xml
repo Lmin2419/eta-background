@@ -1,7 +1,7 @@
 <resources>
     <string name="native_assistant_title">Power-key assistant (Root)</string>
     <string name="native_assistant_entry_summary">Built-in setup, original settings backup and restore</string>
-    <string name="native_assistant_explanation">Uses the system assistant route without Vector or LSPosed. Some ColorOS versions still route the power key to the vendor assistant; configuration alone does not verify key support.</string>
+    <string name="native_assistant_explanation">No Vector or LSPosed required. On the adapted PMA110 ColorOS firmware, Eta receives the system long-press event while the vendor power-key assistant route is suppressed. Other devices use the default assistant route. Configuration still needs a physical-key check. Restore here before uninstalling Eta or changing assistants; restoration requires Root.</string>
     <string name="native_assistant_enable">Enable native assistant route</string>
     <string name="native_assistant_off">Not enabled. Enabling requests Root and saves the current configuration.</string>
     <string name="native_assistant_busy">Checking or updating configuration…</string>
@@ -23,4 +23,9 @@
     <string name="native_assistant_wake_not_seen">No recent Eta panel was recorded after setup. Open it using the power key before confirming.</string>
     <string name="native_assistant_uncertain">The system command timed out or its result is unknown. No automatic retry was sent. Check status before restoring.</string>
     <string name="native_assistant_unavailable">This system did not complete the native assistant operation. Key support is unverified; restore the backup if one is available.</string>
+    <string name="native_assistant_coloros_required">The default assistant is configured, but the ColorOS key route is missing. Enable this switch to apply the adaptation; your original backup is preserved.</string>
+    <string name="native_assistant_coloros_unsupported">This firmware does not match the reviewed ColorOS key route. No vendor adaptation will be applied.</string>
+    <string name="native_assistant_coloros_owned">An existing vendor policy controls this assistant entry. Eta will not overwrite it.</string>
+    <string name="native_assistant_coloros_policy_unavailable">The ColorOS policy interface rejected or could not complete the operation. Key takeover is not verified; retain the backup for restoration.</string>
+    <string name="native_assistant_service_not_ready">The power-key event arrived, but the Eta assistant service was not ready. No system restart or automatic reconfiguration was attempted.</string>
 </resources>

@@ -25,15 +25,28 @@ internal object NativeAssistantRootMain {
             }
         }, 25_000L)
         val reply = try {
-            if (Process.myUid() != 0) throw AssistantSetupFailure("ROOT_REQUIRED")
             val bytes = System.`in`.readNBytes(16 * 1024 + 1)
             require(bytes.size <= 16 * 1024)
             val request = JSONObject(bytes.toString(Charsets.UTF_8))
             require(request.getInt("version") == 1)
+            val operation = request.getString("operation")
+            val requiredUid = if (operation == "oplus_policy") 1000 else 0
+            if (Process.myUid() != requiredUid) throw AssistantSetupFailure("ROOT_REQUIRED")
             val user = request.getInt("user").also { require(it in 0..21474) }
             checkUser(user)
-            val result = when (request.getString("operation")) {
+            val result = when (operation) {
                 "read" -> readSnapshot(user).toJson()
+                "oplus_read" -> OplusPowerRoot.read(user)
+                "oplus_property" -> {
+                    OplusPowerRoot.changeProperty(user, request.getString("expected"), request.getString("target"))
+                    checkUser(user)
+                    JSONObject()
+                }
+                "oplus_policy" -> {
+                    OplusPowerRoot.changePolicy(user, request.nullableString("expected"), request.nullableString("target"))
+                    checkUser(user)
+                    JSONObject()
+                }
                 "role" -> {
                     val expected = request.getJSONArray("expected").roles()
                     val target = request.getJSONArray("target").roles()

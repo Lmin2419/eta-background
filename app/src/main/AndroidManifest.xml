@@ -113,6 +113,16 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".assistant.OplusPowerWakeReceiver"
+            android:exported="true"
+            android:permission="android.permission.DEVICE_POWER"
+            android:process=":voice">
+            <intent-filter>
+                <action android:name="oppo.intent.action.power.longpress" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".agent.voice.EtaVoiceInteractionService"
             android:exported="true"

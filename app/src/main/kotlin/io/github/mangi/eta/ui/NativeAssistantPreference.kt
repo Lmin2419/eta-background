@@ -57,7 +57,7 @@ internal fun NativeAssistantPreference(context: Context) {
             EtaSwitchPreference(
                 title = stringResource(R.string.native_assistant_enable),
                 checked = state.configured,
-                enabled = !state.busy && (!state.backupExists || state.configured),
+                enabled = !state.busy && (state.canEnable || state.configured),
                 summary = nativeAssistantMessage(context, if (state.busy) "BUSY" else state.status),
                 onCheckedChange = { if (it) NativeAssistantSettings.enable(context) else NativeAssistantSettings.restore(context) },
             )
@@ -98,5 +98,10 @@ private fun nativeAssistantMessage(context: Context, code: String): String = con
     "USER_CHANGED" -> R.string.native_assistant_user_changed
     "WAKE_NOT_SEEN" -> R.string.native_assistant_wake_not_seen
     "COMMAND_TIMEOUT", "COMMAND_RESULT_UNKNOWN" -> R.string.native_assistant_uncertain
+    "COLOROS_ADAPTER_REQUIRED" -> R.string.native_assistant_coloros_required
+    "COLOROS_FIRMWARE_UNSUPPORTED" -> R.string.native_assistant_coloros_unsupported
+    "COLOROS_POLICY_OWNED" -> R.string.native_assistant_coloros_owned
+    "COLOROS_POLICY_UNAVAILABLE" -> R.string.native_assistant_coloros_policy_unavailable
+    "ASSISTANT_SERVICE_NOT_READY" -> R.string.native_assistant_service_not_ready
     else -> R.string.native_assistant_unavailable
 })

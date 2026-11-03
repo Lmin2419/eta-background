@@ -1,7 +1,7 @@
 <resources>
     <string name="native_assistant_title">長按電源鍵喚起（Root）</string>
     <string name="native_assistant_entry_summary">內建設定，支援備份與還原原助理</string>
-    <string name="native_assistant_explanation">透過系統助理通道喚起 ETA，無需 Vector 或 LSPosed。部分 ColorOS 仍將電源鍵交給小布，設定完成後需要實際確認。</string>
+    <string name="native_assistant_explanation">無需 Vector 或 LSPosed。已適配的 PMA110 韌體由 ETA 接收系統長按事件，並關閉小布的電源鍵入口；其他裝置使用預設助理通道。設定後仍需實際長按確認。解除安裝 ETA 或更換助理前，請在此還原原設定；還原需要 Root。</string>
     <string name="native_assistant_enable">啟用原生喚起</string>
     <string name="native_assistant_off">尚未啟用；開啟時申請 Root 並儲存目前設定。</string>
     <string name="native_assistant_busy">正在檢查或更新設定…</string>
@@ -23,4 +23,9 @@
     <string name="native_assistant_wake_not_seen">尚未記錄到設定後新開啟的 ETA 面板。請實際長按喚起後再確認。</string>
     <string name="native_assistant_uncertain">系統命令逾時或結果不確定，未自動重複執行。請先檢查狀態，再決定還原。</string>
     <string name="native_assistant_unavailable">目前系統未完成原生助理操作，不能視為已接管電源鍵；如有備份可還原原設定。</string>
+    <string name="native_assistant_coloros_required">預設助理已設定，尚缺 ColorOS 按鍵適配。開啟此開關即可補齊，原設定備份會保留。</string>
+    <string name="native_assistant_coloros_unsupported">目前韌體與已核對的 ColorOS 按鍵實作不符，未套用廠商適配。</string>
+    <string name="native_assistant_coloros_owned">此助理入口已有廠商原則控制，ETA 不會覆寫。</string>
+    <string name="native_assistant_coloros_policy_unavailable">ColorOS 原則介面未完成操作，不能視為已接管電源鍵；保留備份以便還原。</string>
+    <string name="native_assistant_service_not_ready">已收到電源鍵事件，但 ETA 系統助理服務尚未就緒。未重新啟動系統，也未自動重設助理。</string>
 </resources>

@@ -1,6 +1,7 @@
 package io.github.mangi.eta.assistant
 
 import android.content.Context
+import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.AtomicFile
@@ -25,7 +26,7 @@ internal class NativeAssistantBackupFile(context: Context) : AssistantBackupStor
     private val file = AtomicFile(File(context.filesDir, "native_assistant_backup.json"))
 
     override fun load(): AssistantBackup? = try {
-        val json = JSONObject(file.readFully().toString(Charsets.UTF_8))
+        val json = JSONObject(readAssistantAtomic(file).toString(Charsets.UTF_8))
         require(json.getInt("version") == 1)
         val attempted = json.getJSONArray("attempted")
         AssistantBackup(assistantSnapshotFromJson(json.getJSONObject("original")),
@@ -66,7 +67,7 @@ internal object NativeAssistantWakeEvidence {
     }
 
     fun read(context: Context): AssistantTick? = runCatching {
-        val json = JSONObject(file(context).readFully().toString(Charsets.UTF_8))
+        val json = JSONObject(readAssistantAtomic(file(context)).toString(Charsets.UTF_8))
         AssistantTick(json.getInt("boot"), json.getLong("elapsed"))
     }.getOrNull()
 
@@ -78,16 +79,26 @@ internal object NativeAssistantWakeEvidence {
     )
 }
 
-private fun AssistantTick.toJson() = JSONObject().put("boot", boot).put("elapsed", elapsed)
-private fun JSONObject.tick(key: String): AssistantTick? = if (isNull(key)) null else getJSONObject(key).let {
+internal fun AssistantTick.toJson() = JSONObject().put("boot", boot).put("elapsed", elapsed)
+internal fun JSONObject.tick(key: String): AssistantTick? = if (isNull(key)) null else getJSONObject(key).let {
     AssistantTick(it.getInt("boot"), it.getLong("elapsed"))
 }
 
-private fun writeAtomic(file: AtomicFile, json: JSONObject) {
+/** Readers in :voice must not let AtomicFile.openRead delete another process's in-flight .new. */
+internal fun readAssistantAtomic(file: AtomicFile): ByteArray {
+    val legacy = File(file.baseFile.path + ".bak")
+    return (if (legacy.exists()) legacy else file.baseFile).readBytes()
+}
+
+internal fun writeAtomic(file: AtomicFile, json: JSONObject) {
+    val bytes = json.toString().toByteArray(Charsets.UTF_8)
     val stream = file.startWrite()
     try {
-        stream.write(json.toString().toByteArray(Charsets.UTF_8))
+        stream.write(bytes)
         file.finishWrite(stream)
+        // AtomicFile logs rename failures instead of throwing. Never mutate system settings after
+        // merely assuming the original-value journal was committed successfully.
+        if (!file.baseFile.readBytes().contentEquals(bytes)) throw AssistantSetupFailure("BACKUP_UNAVAILABLE")
     } catch (failure: Exception) {
         file.failWrite(stream)
         throw AssistantSetupFailure("BACKUP_UNAVAILABLE")
@@ -108,10 +119,13 @@ internal class NativeAssistantRootDevice(private val context: Context) : Assista
             .put("expected", expected ?: JSONObject.NULL).put("target", target ?: JSONObject.NULL))
     }
 
-    private fun call(request: JSONObject): JSONObject {
+    internal fun call(request: JSONObject, asSystem: Boolean = false): JSONObject {
         request.put("version", 1).put("user", userId)
-        val command = "CLASSPATH=${DeviceToolContract.quote(context.applicationInfo.sourceDir)} " +
+        val launcher = "CLASSPATH=${DeviceToolContract.quote(context.applicationInfo.sourceDir)} " +
             "app_process /system/bin io.github.mangi.eta.assistant.NativeAssistantRootMain"
+        // Binder records the helper's identity when the process starts. Dropping UID after the
+        // first transaction cannot satisfy this firmware's vendor-policy permission check.
+        val command = if (asSystem) "su 1000 -c ${DeviceToolContract.quote(launcher)}" else launcher
         val result = BoundedRootCommandExecutor(AndroidAgentLogger).use {
             it.execute(command, timeoutMillis = 30_000, maxOutputBytes = 16 * 1024,
                 input = request.toString().toByteArray(Charsets.UTF_8))
@@ -135,6 +149,7 @@ internal data class NativeAssistantUiState(
     val status: String = "OFF",
     val backupExists: Boolean = false,
     val configured: Boolean = false,
+    val canEnable: Boolean = true,
     val error: String? = null,
 )
 
@@ -157,6 +172,10 @@ internal object NativeAssistantSettings {
         scope.launch {
             val store = NativeAssistantBackupFile(app)
             val device = NativeAssistantRootDevice(app)
+            val oplusStore = OplusPowerBackupFile(app)
+            val oplusDevice = OplusPowerRootDevice(app)
+            val oplus = OplusPowerRoute(oplusDevice, oplusStore) { NativeAssistantWakeEvidence.tick(app) }
+            val needsOplus = OplusPowerContract.isCandidate(Build.MODEL, Build.VERSION.SDK_INT) || OplusPowerBackupFile.exists(app)
             val setup = NativeAssistantSetup(app.packageName, DeviceToolContract.appUserId(app), device, store) {
                 NativeAssistantWakeEvidence.tick(app)
             }
@@ -170,9 +189,41 @@ internal object NativeAssistantSettings {
                 }
                 if (action == "enable" && !Settings.canDrawOverlays(app)) throw AssistantSetupFailure("OVERLAY_REQUIRED")
                 when (action) {
-                    "enable" -> setup.enable()
-                    "restore" -> setup.restore()
-                    "confirm" -> setup.confirmWake(NativeAssistantWakeEvidence.read(app))
+                    "enable" -> {
+                        if (needsOplus) {
+                            val probe = oplusDevice.read()
+                            if (!probe.supported) throw AssistantSetupFailure("COLOROS_FIRMWARE_UNSUPPORTED")
+                            if (probe.gate !in setOf(null, "", "0")) throw AssistantSetupFailure("COLOROS_POLICY_OWNED")
+                        }
+                        val existing = store.load()
+                        val upgrading = needsOplus && existing?.appliedAt != null && setup.configured(device.read())
+                        if (!upgrading) setup.enable()
+                        if (needsOplus) {
+                            try {
+                                oplus.enable()
+                            } catch (failure: Exception) {
+                                // Only undo our newly created AOSP setup after OEM rollback completed.
+                                // Keep a pre-existing setup and its original backup when upgrading it.
+                                if (!upgrading && oplusStore.load() == null) runCatching { setup.restore() }
+                                throw failure
+                            }
+                        }
+                    }
+                    "restore" -> {
+                        if (OplusPowerBackupFile.exists(app)) oplus.restore()
+                        setup.restore()
+                    }
+                    "confirm" -> {
+                        val visible = NativeAssistantWakeEvidence.read(app)
+                        if (needsOplus) {
+                            if (!oplus.configured(oplusDevice.read())) throw AssistantSetupFailure("CONFIGURATION_CHANGED")
+                            val applied = oplusStore.load()?.appliedAt ?: throw AssistantSetupFailure("NOT_CONFIGURED")
+                            if (visible == null || (!visible.follows(applied) && visible.boot <= applied.boot)) {
+                                throw AssistantSetupFailure("WAKE_NOT_SEEN")
+                            }
+                        }
+                        setup.confirmWake(visible)
+                    }
                 }
             } catch (error: Exception) {
                 failure = (error as? AssistantSetupFailure)?.code ?: "NATIVE_ROUTE_UNAVAILABLE"
@@ -180,25 +231,37 @@ internal object NativeAssistantSettings {
             try {
                 val backup = store.load()
                 val snapshot = if (RootAccess.isGranted) device.read() else null
-                val configured = backup?.appliedAt != null && snapshot?.let(setup::configured) == true
-                val confirmed = configured && backup.confirmedAt?.boot?.let {
-                    it >= 0 && it == NativeAssistantWakeEvidence.tick(app).boot
+                val oplusBackup = oplusStore.load()
+                val oplusSnapshot = if (needsOplus && RootAccess.isGranted) oplusDevice.read() else null
+                val baseConfigured = backup?.appliedAt != null && snapshot?.let(setup::configured) == true
+                val configured = baseConfigured && (!needsOplus || oplusSnapshot?.let(oplus::configured) == true)
+                val confirmed = configured && backup.confirmedAt?.let {
+                    val applied = oplusBackup?.appliedAt
+                    it.boot >= 0 && it.boot == NativeAssistantWakeEvidence.tick(app).boot &&
+                        (!needsOplus || (applied != null && (it.follows(applied) || it.boot > applied.boot)))
                 } == true
                 mutableState.value = NativeAssistantUiState(
                     status = when {
-                        backup == null -> "OFF"
+                        backup == null && oplusBackup == null -> "OFF"
                         snapshot == null -> "ROOT_REQUIRED"
-                        backup.appliedAt == null -> "RESTORE_FIRST"
+                        backup?.appliedAt == null -> "RESTORE_FIRST"
+                        needsOplus && oplusSnapshot?.supported != true -> "COLOROS_FIRMWARE_UNSUPPORTED"
+                        needsOplus && baseConfigured && oplusBackup == null -> "COLOROS_ADAPTER_REQUIRED"
+                        oplusBackup != null && oplusBackup.appliedAt == null -> "RESTORE_FIRST"
                         !configured -> "CONFIGURATION_CHANGED"
                         EtaApp.serviceInstance != null -> "FRAMEWORK_CONNECTED"
                         confirmed -> "CONFIRMED_BY_USER"
                         else -> "AWAITING_KEY_TEST"
                     },
-                    backupExists = backup != null, configured = configured, error = failure,
+                    backupExists = backup != null || oplusBackup != null, configured = configured,
+                    canEnable = (backup == null && oplusBackup == null) ||
+                        (baseConfigured && needsOplus && oplusBackup == null && oplusSnapshot?.supported == true),
+                    error = failure ?: if (configured && needsOplus) OplusPowerWake.lastFailure(app) else null,
                 )
             } catch (error: Exception) {
                 mutableState.value = mutableState.value.copy(busy = false, configured = false,
-                    backupExists = File(app.filesDir, "native_assistant_backup.json").exists(),
+                    canEnable = false,
+                    backupExists = File(app.filesDir, "native_assistant_backup.json").exists() || OplusPowerBackupFile.exists(app),
                     status = "CHECK_UNAVAILABLE", error = failure ?: (error as? AssistantSetupFailure)?.code ?: "NATIVE_ROUTE_UNAVAILABLE")
             } finally {
                 working.set(false)
