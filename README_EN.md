@@ -20,6 +20,8 @@ Local and CI checks report 2,108 tests: 2,107 passed, 1 skipped, no failures or 
 
 ## Integration candidate: task controls, efficiency and saved tasks
 
+The e47 candidate (`20261103-e47-recovery`) closes and exits a resident engine after system-service connection loss. Deployment recognizes owned engines despite thread-name changes and IPv6 sockets, rechecks process identity before signalling, and leaves unknown port owners untouched. Recovery diagnostics distinguish port conflicts and connection loss from Root failure. See [recovery and validation](etax/ENGINE_RECOVERY.md). The reported ColorOS native power-key replacement failure remains unresolved.
+
 The unpublished `etax-340-step1-foundation` candidate retains the e45 preview/control fixes and adds bounded data-reading guidance, fixed-window notification paging, a compact measured execution summary, and local **Saved tasks**. Save a name and instruction from the home menu, run it in a fresh ordinary conversation using the current model, or request a desktop shortcut. Notification replies still continue their original conversation.
 
 Measurements reuse runtime events and existing conversation storage; they add no model request or background service. Notification counts describe retained notification records, not complete chat history. Speedups, ColorOS transitions and launcher shortcuts still need device validation. The official test download above is unchanged. See [implementation and validation notes](etax/EFFICIENCY_AND_COMMON_TASKS.md) (Chinese).

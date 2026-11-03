@@ -16,6 +16,7 @@ public class EngineRecoveryTest {
     private VDrive.WorkerFactory original;
     private java.util.function.BooleanSupplier health;
     private String credential;
+    private EngineShutdown shutdown;
     private final List<String> sessions = new ArrayList<>();
     private static class Worker implements VDrive.Worker {
         volatile boolean closed;
@@ -26,12 +27,13 @@ public class EngineRecoveryTest {
         public int displayId() { return 7; }
         public void setReleaseListener(Runnable callback) { onRelease = callback; }
     }
-    @Before public void setUp() { original = VDrive.factory; health = VDrive.health; credential = VDrive.credential; VDrive.systemInvalid = false; VDrive.health = () -> true; }
+    @Before public void setUp() { original = VDrive.factory; health = VDrive.health; credential = VDrive.credential; shutdown = VDrive.shutdown; VDrive.systemInvalid = false; VDrive.health = () -> true; }
     @After public void tearDown() throws Exception {
         VDrive.systemInvalid = false; VDrive.health = health;
         for (String id : sessions) request(id, "release_session");
         VDrive.factory = original;
         VDrive.credential = credential;
+        VDrive.shutdown = shutdown;
     }
     private String session() { String id = UUID.randomUUID().toString(); sessions.add(id); return id; }
     private JSONObject request(String id, String command) throws Exception {
@@ -49,6 +51,28 @@ public class EngineRecoveryTest {
         VDrive.health = () -> false;
         assertFalse(request("read", "ping").getBoolean("pong"));
         assertEquals("SYSTEM_RESTARTED", request(session(), "launch").getString("code"));
+    }
+    @Test public void lostSystemWithNoSessionsReleasesListenerAndRequestsOnlyOwnExit() throws Exception {
+        List<Runnable> deadlines = new ArrayList<>();
+        java.util.concurrent.atomic.AtomicInteger exit = new java.util.concurrent.atomic.AtomicInteger(-1);
+        VDrive.shutdown = new EngineShutdown((delay, action) -> deadlines.add(action), exit::set);
+        try (java.net.ServerSocket socket = new java.net.ServerSocket(0)) {
+            assertTrue(VDrive.shutdown.attach(socket));
+            VDrive.health = () -> false;
+            assertEquals("SYSTEM_RESTARTED", request("read", "status").getString("code"));
+            assertTrue(socket.isClosed());
+            assertEquals("SYSTEM_RESTARTED", request(session(), "launch").getString("code"));
+            assertEquals(1, deadlines.size());
+            assertEquals(-1, exit.get());
+            deadlines.get(0).run();
+            assertEquals(75, exit.get());
+        }
+    }
+    @Test public void requestedExitCannotAcceptMoreWorkOnAnExistingConnection() throws Exception {
+        VDrive.shutdown = new EngineShutdown((delay, action) -> {}, code -> {});
+        VDrive.shutdown.request(0);
+        assertEquals("ENGINE_STOPPING", request("read", "status").getString("code"));
+        assertEquals("ENGINE_STOPPING", request(session(), "launch").getString("code"));
     }
     @Test public void blockedCreationDoesNotBlockStatusAndReleaseCancelsItsReservation() throws Exception {
         CountDownLatch entered = new CountDownLatch(1), proceed = new CountDownLatch(1);

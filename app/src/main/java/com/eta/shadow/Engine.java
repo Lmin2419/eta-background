@@ -50,6 +50,7 @@ public final class Engine {
     private static final AtomicBoolean WORKER_BUSY = new AtomicBoolean(false);
     private static volatile long lastAttemptAt = 0L;
     private static volatile String lastReason = null;
+    private static volatile String connectionReason = null;
     private static volatile String bundledVer = null;
     private static volatile String bundledHash;
     private static volatile long nextAttemptAt;
@@ -91,7 +92,27 @@ public final class Engine {
 
     /** 失败时给工具调用返回的可读提示。 */
     public static String reasonHint() {
-        String r = lastReason;
+        return hintFor(recoveryCode(null));
+    }
+
+    static void systemConnectionLost() { connectionReason = "SYSTEM_RESTARTED"; }
+
+    private static String recoveryCode(String currentCode) {
+        String failure = lastReason;
+        if (failure != null) return failure;
+        if ("SYSTEM_RESTARTED".equals(currentCode) || "UNAUTHORIZED".equals(currentCode)) return currentCode;
+        failure = connectionReason;
+        return failure != null ? failure : WORKER_BUSY.get() ? "STARTING" : "ENGINE_DOWN";
+    }
+
+    static org.json.JSONObject recoveryStatus(String currentCode) throws org.json.JSONException {
+        return new org.json.JSONObject().put("code", recoveryCode(currentCode))
+                .put("inProgress", WORKER_BUSY.get())
+                .put("retryAfterMs", Math.max(0L, nextAttemptAt - SystemClock.elapsedRealtime()))
+                .put("lastDeploymentCode", lastReason == null ? org.json.JSONObject.NULL : lastReason);
+    }
+
+    static String hintFor(String r) {
         if ("NOT_BUNDLED".equals(r)) {
             return "后台虚拟屏引擎没有打进这个 APK（assets 里没有 vdrive.dex）。"
                     + "请把引擎放进 etax/engine/ 再重新编译。";
@@ -102,8 +123,15 @@ public final class Engine {
                     + "（刚重启过的话临时 root 已失效，需要先重新获取 root。）";
         }
         if ("STAGE_FAILED".equals(r)) return "无法暂存 APK 内的引擎文件，请检查应用存储空间并导出诊断。";
+        if ("SU_IO_FAILED".equals(r)) return "引擎部署通道中断，尚不能确定 Root 是否可用，请导出诊断后重试。";
         if ("DEPLOY_BUSY".equals(r)) return "另一次后台引擎部署尚未结束，请稍后重试。";
-        if ("PORT_BUSY".equals(r)) return "后台引擎端口尚未释放，本次启动未完成，请稍后重试；可导出诊断查看部署结果。";
+        if ("PORT_BUSY".equals(r)) return "后台引擎端口 8733 仍被占用，恢复已中止并限制重试频率。"
+                + "这不代表没有 Root；无法确认归属的占用进程不会被终止，请导出诊断查看部署结果。";
+        if ("SYSTEM_RESTARTED".equals(r)) return "后台引擎与 Android 系统服务的连接已失效，正在按退避策略恢复 ETA 引擎。"
+                + "这不代表没有 Root，也不需要重启手机；恢复后请重新打开后台屏幕，不要重放结果不确定的点击。";
+        if ("STARTING".equals(r)) return "后台引擎正在恢复，请稍后检查状态；不要重复提交可能已执行的操作。";
+        if ("PAIR_MISMATCH".equals(r)) return "运行中的后台引擎与当前 APK 不匹配，正在尝试部署配套引擎，请稍后检查状态。";
+        if ("UNAUTHORIZED".equals(r)) return "后台引擎认证不匹配，需要重新部署配套引擎；不会绕过认证连接。";
         if (r != null && r.startsWith("TOKEN_")) return "后台引擎认证文件缺失、损坏或无法读取，请导出诊断；不会绕过认证启动。";
         if ("STOP_FAILED".equals(r) || "ROLLBACK_FAILED".equals(r)) return "未能确认引擎完全退出，已中止后续替换或回滚，请导出诊断。";
         if ("START_FAILED".equals(r) || "INSTALL_FAILED".equals(r) || "TIMEOUT".equals(r)) {
@@ -162,8 +190,13 @@ public final class Engine {
         try {
             org.json.JSONObject status = probeStatus(ctx, timeoutMs);
             String want = bundledVersion(ctx);
-            return status.optBoolean("ok") && status.optBoolean("healthy") && want != null
+            boolean ready = status.optBoolean("ok") && status.optBoolean("healthy") && want != null
                     && want.equals(status.optString("build")) && bundledHash(ctx).equals(status.optString("dexSha256"));
+            if (ready) { connectionReason = null; lastReason = null; }
+            else if ("SYSTEM_RESTARTED".equals(status.optString("code"))) systemConnectionLost();
+            else if ("UNAUTHORIZED".equals(status.optString("code"))) connectionReason = "UNAUTHORIZED";
+            else if (status.optBoolean("ok") && status.optBoolean("healthy")) connectionReason = "PAIR_MISMATCH";
+            return ready;
         } catch (Exception error) { return false; }
     }
 
@@ -283,8 +316,8 @@ public final class Engine {
                 lastReason = failure.get() == null ? "INSTALL_FAILED" : failure.get();
             }
         } catch (java.io.IOException e) {
-            lastReason = "NO_ROOT";                 // 没有 su 二进制：这台机器没 root
-            android.util.Log.w(TAG, "su not available: " + e);
+            lastReason = p == null ? "NO_ROOT" : "SU_IO_FAILED";
+            android.util.Log.w(TAG, "engine deployment channel: " + e.getClass().getSimpleName());
         } catch (Throwable t) {
             android.util.Log.w(TAG, "engine start failed: " + t);
         } finally {

@@ -29,26 +29,46 @@ wait_port_free() {
 is_engine_pid() {
   directory=/proc/$1
   [ -r "$directory/cmdline" ] || return 1
-  [ "$(awk '/^Uid:/{print $2}' "$directory/status" 2>/dev/null)" = 0 ] || return 1
+  # comm is a mutable thread name (and may be truncated). Check UID/argv instead;
+  # shell builtins keep scanning non-root processes cheap.
+  owner=''
+  [ -r "$directory/status" ] || return 1
+  while read -r field real effective rest; do
+    if [ "$field" = 'Uid:' ]; then owner=$real:$effective; break; fi
+  done < "$directory/status"
+  [ "$owner" = '0:0' ] || return 1
   command=$(tr '\000' '\n' < "$directory/cmdline" 2>/dev/null) || return 1
-  if printf '%s\n' "$command" | grep -qx 'eta-vdrive-8733'; then return 0; fi
+  # Do not mistake a shell/diagnostic command mentioning the engine for the engine.
+  first=$(printf '%s\n' "$command" | head -1)
+  case "${first##*/}" in
+    eta-vdrive-8733) return 0 ;;
+    VDrive|app_process|app_process32|app_process64) ;;
+    *) return 1 ;;
+  esac
   printf '%s\n' "$command" | grep -qx 'VDrive' || return 1
   if printf '%s\n' "$command" | grep -qx -- "--tcp=$PORT"; then return 0; fi
   # Some app_process versions overwrite argv. Attribute the legacy process by the
   # actual listening socket, never by the class name alone (test engines may coexist).
-  inode=$(awk '$2 == "0100007F:221D" && $4 == "0A" {print $10}' /proc/net/tcp)
-  [ -n "$inode" ] || return 1
+  # Android's Java loopback socket can appear as IPv4-mapped IPv6 in tcp6.
+  # There may also be multiple listening sockets; match each owned inode.
+  port_hex=$(printf '%04X' "$PORT")
+  inodes=$(
+    for table in /proc/net/tcp /proc/net/tcp6; do
+      [ ! -r "$table" ] || awk -v port=":$port_hex" '$2 ~ (port "$") && $4 == "0A" {print $10}' "$table"
+    done
+  )
+  [ -n "$inodes" ] || return 1
   for descriptor in "$directory"/fd/*; do
-    [ "$(readlink "$descriptor" 2>/dev/null)" = "socket:[$inode]" ] && return 0
+    socket=$(readlink "$descriptor" 2>/dev/null) || continue
+    for inode in $inodes; do
+      [ "$socket" = "socket:[$inode]" ] && return 0
+    done
   done
   return 1
 }
 
 engine_pids() {
   for directory in /proc/[0-9]*; do
-    [ -r "$directory/comm" ] || continue
-    IFS= read -r comm < "$directory/comm" || continue
-    case "$comm" in eta-vdrive-*|VDrive|app_process*) ;; *) continue ;; esac
     process=${directory##*/}
     if is_engine_pid "$process"; then printf '%s\n' "$process"; fi
   done
@@ -80,7 +100,9 @@ stop_engine() {
       sleep 0.2
       count=$((count + 1))
     done
-    if [ "$(identity "$process")" = "$started" ]; then kill -9 "$process" 2>/dev/null || true; fi
+    if [ "$(identity "$process")" = "$started" ] && is_engine_pid "$process"; then
+      kill -9 "$process" 2>/dev/null || true
+    fi
     count=0
     while [ "$(identity "$process")" = "$started" ] && [ "$count" -lt 15 ]; do
       sleep 0.2

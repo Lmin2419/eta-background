@@ -8,17 +8,22 @@ import java.util.*;
 
 /** Root transport. Mutable display/input/capture state lives in independent workers. */
 public final class VDrive {
-    static final String BUILD = "20261102-e46-transition";
+    static final String BUILD = "20261103-e47-recovery";
     static java.util.function.BooleanSupplier health = () -> true;
     static volatile boolean systemInvalid;
+    // Installed only by the resident process entrypoint, never by embedded tests.
+    static volatile EngineShutdown shutdown;
     private static final String INSTANCE = UUID.randomUUID().toString();
     private static int pid;
     private static String dexHash = "";
     static String credential;
     private static final java.util.concurrent.Semaphore clients = new java.util.concurrent.Semaphore(16);
-    static void systemFailed() {
-        if (!systemInvalid) log("event=system_connection_lost instance=" + INSTANCE);
+    static synchronized void systemFailed() {
+        if (systemInvalid) return;
         systemInvalid = true;
+        log("event=system_connection_lost instance=" + INSTANCE);
+        EngineShutdown guard = shutdown;
+        if (guard != null) guard.request(75);
     }
     static boolean healthy() {
         if (!health.getAsBoolean()) systemFailed();
@@ -103,6 +108,7 @@ public final class VDrive {
         getContext.setAccessible(true);
         context = (Context) getContext.invoke(activityThread);
         pid = android.os.Process.myPid();
+        shutdown = new EngineShutdown();
         health = new SystemServiceHealth();
         try (InputStream input = new FileInputStream("/data/local/tmp/eta/vdrive.dex")) {
             dexHash = com.eta.shadow.EngineWire.sha256(input);
@@ -131,12 +137,17 @@ public final class VDrive {
         if (port > 0) {
             ServerSocket server = new ServerSocket();
             server.setReuseAddress(true);
+            if (!shutdown.attach(server)) return;
             try { server.bind(new InetSocketAddress("127.0.0.1", port)); }
             catch (java.net.BindException busy) {
                 server.close();
                 System.err.println("ETA_ENGINE_ERROR=PORT_BUSY");
                 System.exit(98);
                 return;
+            }
+            catch (SocketException closed) {
+                if (shutdown.isRequested()) return;
+                throw closed;
             }
             new Thread(() -> {
                 while (!server.isClosed()) {
@@ -146,7 +157,7 @@ public final class VDrive {
                         Thread t = new Thread(() -> { try { serve(client); } finally { clients.release(); } }, "vdrive-client");
                         t.setDaemon(true);
                         t.start();
-                    } catch (IOException e) { log(e.getClass().getSimpleName()); }
+                    } catch (IOException e) { if (!server.isClosed()) log(e.getClass().getSimpleName()); }
                 }
             }, "vdrive-listen").start();
             if (mcpPort > 0) McpEndpoint.start(mcpPort);
@@ -183,7 +194,8 @@ public final class VDrive {
             String id = req.optString("sessionId", "legacy-mcp");
             if (cmd.equals("quit")) {
                 // Exit stays bounded even when cleanup encounters a dead/hung Binder.
-                new Thread(() -> { try { Thread.sleep(1500); } catch (Exception ignored) {} System.exit(0); }, "vdrive-exit").start();
+                EngineShutdown guard = shutdown;
+                if (guard != null) guard.request(0);
                 new Thread(() -> {
                     List<String> ids;
                     synchronized (workers) { ids = new ArrayList<>(workers.keySet()); }
@@ -209,6 +221,7 @@ public final class VDrive {
                                 .put("displayId", worker == null ? -1 : worker.displayId()));
                     }
                 boolean ready = healthy();
+                if (shutdown != null && shutdown.isRequested()) ready = false;
                 boolean sessionTakenOver;
                 synchronized (workers) {
                     Slot selected = workers.get(id);
@@ -216,12 +229,15 @@ public final class VDrive {
                 }
                 return new JSONObject().put("ok", ready).put("pong", ready).put("healthy", ready).put("build", BUILD)
                         .put("sessionTakenOver", sessionTakenOver)
-                        .put("code", ready ? "READY" : "SYSTEM_RESTARTED").put("pid", pid).put("instance", INSTANCE)
+                        .put("code", ready ? "READY" : systemInvalid ? "SYSTEM_RESTARTED" : "ENGINE_STOPPING")
+                        .put("pid", pid).put("instance", INSTANCE)
                         .put("dexSha256", dexHash)
                         .put("sessions", sessions).put("count", sessions.length()).put("limit", LIMIT);
             }
             if (!healthy() && !cmd.equals("release_session"))
                 return error("SYSTEM_RESTARTED", "Android 系统服务连接已失效；请等待引擎恢复后重新 screen_open");
+            if (shutdown != null && shutdown.isRequested() && !cmd.equals("release_session"))
+                return error("ENGINE_STOPPING", "后台引擎正在退出，请等待恢复后重新打开屏幕");
             if (cmd.equals("present_completed")) return presentCompleted(req);
             if (cmd.startsWith("preview_")) return preview(req);
             if (cmd.equals("release_session")) {

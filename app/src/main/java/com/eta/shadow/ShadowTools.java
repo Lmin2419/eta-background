@@ -374,7 +374,10 @@ public final class ShadowTools {
         boolean observerOk = ShadowSettings.observerReady();
         o.put("observer", new JSONObject().put("ok", observerOk));
         o.put("health", ShadowSettings.statusLine(ShadowSettings.app()));
-        if (!engineOk) o.put("fix", ShadowSettings.engineFixHint());
+        if (!engineOk) {
+            JSONObject recovery = Engine.recoveryStatus(o.getJSONObject("engine").optString("code"));
+            o.put("recovery", recovery).put("fix", Engine.hintFor(recovery.getString("code")));
+        }
         else if (!observerOk) o.put("fix", ShadowSettings.observerFixHint());
         return o.toString();
     }
@@ -642,6 +645,7 @@ public final class ShadowTools {
         if ("NO_SESSION".equals(code) || "SESSION_CLOSED".equals(code) || "STALE_SCREEN".equals(code)
                 || "SYSTEM_RESTARTED".equals(code)) resetSession();
         if ("SYSTEM_RESTARTED".equals(code)) {
+            Engine.systemConnectionLost();
             EngineJournal.record(ShadowSettings.app(), "system_connection", "lost");
             ShadowSettings.markEngineReady(false);
             Engine.warm(ShadowSettings.app());

@@ -99,10 +99,8 @@ public final class ShadowSettings {
     }
 
     public static String engineFixHint() {
-        return "后台操作当前不可用：root 引擎没有运行（连不上 127.0.0.1:" + ENGINE_PORT + "）。"
-                + "引擎已打包在 APK 里，会在授予 root 后自动启动。"
-                + "修复方法：确认手机已 root，并在 Magisk/KernelSU 里允许 io.github.mangi.etax 使用 root，然后重试。"
-                + "如果手机刚重启过，临时 root 已经失效，需要先重新获取 root 再重试。";
+        return "后台引擎尚未就绪（127.0.0.1:" + ENGINE_PORT + "），仅凭连接失败无法判断 Root 是否可用。"
+                + "请稍后检查 screen_state 的 engine/recovery 字段；若持续失败，可在设置中导出引擎诊断。";
     }
 
     public static String observerFixHint() {
