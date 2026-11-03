@@ -101,7 +101,7 @@ internal fun toolDisplayNameResource(name: String): Int? = when (name) {
     "set_clipboard" -> R.string.tool_set_clipboard
     "get_clipboard" -> R.string.tool_get_clipboard
     "paste_text" -> R.string.tool_paste_text
-    "press_key" -> R.string.tool_press_key
+    "screen_back", "press_key" -> R.string.tool_press_key
     "wait" -> R.string.tool_wait
     "wait_for_text" -> R.string.tool_wait_for_text
     "wait_for_package" -> R.string.tool_wait_for_package

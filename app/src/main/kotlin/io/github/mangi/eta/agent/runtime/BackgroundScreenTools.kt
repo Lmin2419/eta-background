@@ -79,6 +79,7 @@ internal class BackgroundScreenTools(
         val takenOver = java.util.concurrent.atomic.AtomicBoolean()
         val released = CountDownLatch(1)
         var heartbeat: java.util.concurrent.ScheduledFuture<*>? = null
+        var awaitingInput = false
     }
     private val lock = Any()
     private var binding: Binding? = null
@@ -108,7 +109,7 @@ internal class BackgroundScreenTools(
     }
 
     @Synchronized override fun execute(name: String, arguments: String): String? {
-        return try { executeInternal(name, arguments) } finally { phase(null) }
+        return try { BackgroundRecoveryPolicy.decorate(name, executeInternal(name, arguments)) } finally { phase(null) }
     }
 
     private fun executeInternal(name: String, arguments: String): String? {
@@ -157,16 +158,20 @@ internal class BackgroundScreenTools(
             val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30)
             controller.throwIfCancelled()
             var result = controller.withScreenOperation { next.tools.execute(name, arguments) }
+            var cleanupRetries = 0
             // A parked screen may need asynchronous engine cleanup after the app lease
             // has been returned. Retry only the explicit pre-launch rejection, never a timeout.
             while (runCatching { JSONObject(result.orEmpty()).optString("code") == "CLEANUP_PENDING" }.getOrDefault(false)
-                && System.nanoTime() < deadline) {
+                && cleanupRetries < 3 && System.nanoTime() < deadline) {
+                cleanupRetries++
                 phase(BackgroundScreenPhase.ReleasingScreen)
                 Thread.sleep(250)
                 controller.throwIfCancelled()
                 result = controller.withScreenOperation { next.tools.execute(name, arguments) }
             }
             if (runCatching { JSONObject(result.orEmpty()).optBoolean("ok") }.getOrDefault(false)) {
+                val opened = JSONObject(result.orEmpty())
+                next.awaitingInput = opened.has("inputReady") && !opened.optBoolean("inputReady")
                 onAppOpened(app)
             }
             if (runCatching { JSONObject(result.orEmpty()).optString("code") == "APP_TAKEN_OVER" }.getOrDefault(false)) {
@@ -181,12 +186,28 @@ internal class BackgroundScreenTools(
         if (current == null) {
             // A terminal guard and health query need no GUI session, but node reads never target display 0 implicitly.
             return if (name == "terminal" || name == "screen_state") ShadowTools(runId).intercept(name, arguments)
-            else """{"ok":false,"code":"NO_SESSION","reason":"NO_ACTIVE_BINDING","error":"当前任务没有可操作的屏幕；已完成页面可能仍被保留，请调用 screen_open 重新取得所有权。"}"""
+            else """{"ok":false,"code":"NO_SESSION","reason":"NO_ACTIVE_BINDING","error":"当前任务会话不可用；已完成页面可能仍保留。请报告状态，由用户决定是否重新打开，不能把新会话视作原页面恢复。"}"""
         }
-        if (current.closing.get()) return "屏幕正在回收，请先调用 screen_open 打开下一应用"
+        if (current.closing.get()) return """{"ok":false,"code":"CLEANUP_PENDING","operationMayHaveRun":false,"error":"当前任务的屏幕正在回收，请等待释放结果；不要强停应用或反复重开。"}"""
         if (name == "screen_finish") phase(BackgroundScreenPhase.RestoringDisplay)
         val observationGeneration = controller.resumeGeneration
         return controller.withScreenOperation {
+            if (name in MUTATING_TOOLS && current.awaitingInput) {
+                val rawReadiness = current.tools.execute("screen_input_state", "{}")
+                controller.throwIfCancelled()
+                val readiness = runCatching {
+                    JSONObject(rawReadiness.orEmpty())
+                }.getOrNull()
+                if (readiness?.optBoolean("ok") != true || !readiness.optBoolean("ready")) {
+                    return@withScreenOperation JSONObject().put("ok", false)
+                        .put("code", readiness?.optString("code")?.takeIf { it.isNotBlank() } ?: "INPUT_NOT_READY")
+                        .put("inputReady", false).put("inputState", readiness ?: JSONObject().put("reason", "OBSERVER_UNAVAILABLE"))
+                        .put("operationMayHaveRun", false)
+                        .put("message", "启动请求已接受，但当前窗口尚未确认可操作；本次没有发送输入，请检查后台状态或等待观察服务恢复。")
+                        .toString()
+                }
+                current.awaitingInput = false
+            }
             // Pause may have begun after preflight, while this call was waiting for admission.
             if (name in MUTATING_TOOLS && observationGeneration != controller.resumeGeneration)
                 """{"ok":false,"code":"OBSERVE_AFTER_RESUME","error":"暂停期间页面可能变化，请重新观察；本次操作未执行。","operationMayHaveRun":false}"""

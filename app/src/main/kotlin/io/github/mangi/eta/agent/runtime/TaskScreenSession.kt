@@ -137,6 +137,19 @@ internal class TaskScreenSession(
      * the existing foreground executor must handle it unchanged.
      */
     fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult? {
+        if (toolCall.name == "screen_back") {
+            controller.throwIfCancelled()
+            if (!rootAvailable()) return error("ROOT_REQUIRED", "后台返回需要 Root；本次未发送返回键", "screen_back")
+            if (currentLocation() != TaskExecutionLocation.BACKGROUND) {
+                return error("BACKGROUND_SESSION_REQUIRED", "当前任务没有后台屏幕；本次未发送返回键", "screen_back")
+            }
+            // Legacy callers need no native observation ID. Create one on this run's
+            // existing binding, then reuse exactly the native key admission checks.
+            invalidateObservation()
+            val observed = backgroundObserve(JSONObject().put("include_ui_tree", true).put("include_screenshot", false))
+            val snapshot = synchronized(lock) { observation } ?: return observed
+            return pressKey(JSONObject().put("button", "BACK").put("observation_id", snapshot.id))
+        }
         if (toolCall.name !in AgentUnifiedOperationCatalog.names) return null
         val args = runCatching { JSONObject(toolCall.argumentsJson.ifBlank { "{}" }) }.getOrElse {
             return error("INVALID_ARGUMENT", "工具参数不是 JSON object", toolCall.name)

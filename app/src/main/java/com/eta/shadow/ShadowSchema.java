@@ -10,11 +10,11 @@ public final class ShadowSchema {
             new java.util.LinkedHashSet<>(java.util.Arrays.asList("screen_open", "screen_state",
                     "screen_tap", "screen_swipe", "screen_press", "screen_drag", "screen_text",
                     "screen_click", "screen_wait", "screen_scroll", "screen_list", "screen_dump",
-                    "screen_shot", "screen_diag", "screen_finish")));
+                    "screen_shot", "screen_diag", "screen_finish", "screen_back")));
     public static final java.util.Set<String> OBSERVER_TOOLS = java.util.Collections.unmodifiableSet(
             new java.util.HashSet<>(java.util.Arrays.asList("screen_open", "screen_tap", "screen_swipe",
                     "screen_press", "screen_drag", "screen_text", "screen_click", "screen_wait",
-                    "screen_scroll", "screen_list", "screen_dump", "screen_diag")));
+                    "screen_scroll", "screen_list", "screen_dump", "screen_diag", "screen_input_state", "screen_back")));
 
     public static void append(JSONArray tools) {
         // Foreground tools remain available even with a healthy background engine.
@@ -39,6 +39,7 @@ public final class ShadowSchema {
                             .put("orientation", property("string", "auto 默认按应用方向；横屏游戏请选 landscape，竖屏应用 portrait。仅新建屏生效，不重建已有 App。").put("enum", new JSONArray().put("auto").put("landscape").put("portrait"))),
                     ""));
             tools.put(tool("screen_state", "查看后台操作会话与引擎状态（含 root 引擎是否就绪）。", new JSONObject(), ""));
+            tools.put(tool("screen_back", "在本任务的后台应用执行一次返回，退出弹窗、图片或详情页。内部先观察并校验本任务屏幕，不需要 observation_id，不重开应用，不向主屏发送按键。键盘显示时返回可能先收键盘；结果需观察确认。应用移屏、失联或暂停时停止，不自动强停重开。", new JSONObject(), ""));
             tools.put(tool("screen_tap", "在当前屏幕点按坐标。截图坐标必须携带 coordinate_space=screenshot 和该截图 frame_id；节点 bounds 用 display。",
                     coordinates(props3("x", "integer", "横坐标", "y", "integer", "纵坐标")), "x,y"));
             tools.put(tool("screen_swipe", "从一点滑到另一点。accepted 仅表示输入被接受，按 outcome/after 核对目标页面；UNKNOWN 或无变化时先重新观察，不盲目重复。",
@@ -61,7 +62,7 @@ public final class ShadowSchema {
                             .put("view_id", property("string", "view id（可只写后半段）"))
                             .put("exact", property("boolean", "是否精确匹配文本/描述，默认 true")),
                     ""));
-            tools.put(tool("screen_wait", "等待某段文字出现，或等待界面停止变化。",
+            tools.put(tool("screen_wait", "优先传 text 等待目标文字。视频、直播、动画页面不要等待整页静止；无文字可等时直接观察目标界面。整页静止等待最多4秒，UI_NOT_QUIET 不代表页面不可操作，不反复等待或重开应用。",
                     props3("text", "string", "等待出现的文字",
                             "timeout_ms", "integer", "超时毫秒",
                             "quiet_ms", "integer", "静止阈值毫秒"),

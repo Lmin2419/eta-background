@@ -13,6 +13,48 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TaskScreenSessionTest {
+    @Test fun legacyBackObservesTheSameBindingWithoutReopeningOrTakingAScreenshot() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.observeLegacyResult("screen_open", backend.openResult)
+        val result = JSONObject(tools.execute(call("screen_back", "{}"))!!.content)
+        assertTrue(result.getBoolean("ok"))
+        assertEquals(listOf("screen_dump", "screen_dump", "screen_key"), backend.names())
+        assertEquals(4, backend.calls.last().arguments.getInt("code"))
+        val oldInput = JSONObject(tools.execute(call("press_key", """{"button":"BACK","observation_id":"old"}"""))!!.content)
+        assertFalse(oldInput.getBoolean("ok"))
+        assertEquals(1, backend.names().count { it == "screen_key" })
+    }
+
+    @Test fun legacyBackNeverFallsThroughToForegroundOrUsesAnotherTasksObservation() {
+        val first = FakeBackend()
+        val second = FakeBackend()
+        val active = session(first)
+        val unopened = session(second)
+        active.observeLegacyResult("screen_open", first.openResult)
+        assertTrue(JSONObject(active.execute(call("screen_back", "{}"))!!.content).getBoolean("ok"))
+        assertEquals("BACKGROUND_SESSION_REQUIRED", JSONObject(unopened.execute(call("screen_back", "{}"))!!.content).getString("code"))
+        assertTrue(second.calls.isEmpty())
+    }
+
+    @Test fun legacyBackStopsOnTakeoverOrGeometryChangeWithoutSendingAKey() {
+        for (takenOver in listOf(true, false)) {
+            val backend = FakeBackend()
+            val tools = session(backend)
+            tools.observeLegacyResult("screen_open", backend.openResult)
+            var dumps = 0
+            backend.onExecute = { name ->
+                if (name == "screen_dump") {
+                    dumps++
+                    if (takenOver) backend.dumpResult = """{"ok":false,"code":"APP_TAKEN_OVER"}"""
+                    else if (dumps == 2) backend.dumpResult = dumpJson(rotation = 1)
+                }
+            }
+            assertFalse(JSONObject(tools.execute(call("screen_back", "{}"))!!.content).getBoolean("ok"))
+            assertFalse(backend.names().contains("screen_key"))
+        }
+    }
+
     @Test fun nativeBackgroundInputCarriesShortFeedbackImagesAndStillInvalidatesTheOldObservation() {
         val backend = FakeBackend()
         val tools = session(backend)

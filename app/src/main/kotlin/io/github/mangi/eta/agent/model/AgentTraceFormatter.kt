@@ -21,6 +21,7 @@ internal class AgentTraceFormatter {
             "screen_list", "screen_dump" -> "读取后台界面"
             "screen_shot" -> "截取后台画面"
             "screen_wait" -> "等待后台界面"
+            "screen_back" -> "后台返回"
             "screen_finish" -> "后台操作收尾"
             BROWSER_TOOL_NAME -> summarizeBrowserArguments(toolCall.argumentsJson)
             "web_search" -> "搜索网页"

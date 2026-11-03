@@ -23,11 +23,15 @@ class BackgroundScreenRecoveryTest {
         val calls = CopyOnWriteArrayList<String>()
         val keeps = CopyOnWriteArrayList<Boolean>()
         var lost = false
+        var pendingWindow = false
+        var inputReady = false
         var lostCode = "STALE_SCREEN"
         var onTakeover: (() -> Unit)? = null
         override fun setTakeoverListener(listener: () -> Unit) { onTakeover = listener }
         override fun execute(name: String, arguments: String): String {
             calls += name
+            if (name == "screen_input_state") return "{\"ok\":true,\"ready\":$inputReady}"
+            if (name == "screen_open" && pendingWindow) return """{"ok":true,"inputReady":false,"inputState":{"reason":"OBSERVER_UNAVAILABLE"}}"""
             if (lost && name == "screen_tap") return "{\"ok\":false,\"code\":\"$lostCode\"}"
             if (name == "screen_open" && pendingLaunches-- > 0) return "{\"ok\":false,\"code\":\"CLEANUP_PENDING\"}"
             return "{\"ok\":true}"
@@ -37,6 +41,34 @@ class BackgroundScreenRecoveryTest {
             return attempts.incrementAndGet() > failures && releaseAllowed
         }
         override fun keepAlive() = Unit
+    }
+
+    @Test fun acceptedLaunchBlocksInputUntilTheSameBindingConfirmsAVisibleWindow() {
+        val connection = Connection().apply { pendingWindow = true }
+        val tools = BackgroundScreenTools("window-ready", AgentRunController(), registry = ScreenLeaseRegistry(), connectionFactory = { connection })
+        try {
+            val launch = org.json.JSONObject(tools.execute("screen_open", """{"package":"app.one"}""")!!)
+            assertEquals("OBSERVER_UNAVAILABLE", launch.getJSONObject("recovery").getString("state"))
+            val blocked = org.json.JSONObject(tools.execute("screen_tap", "{}")!!)
+            assertEquals("INPUT_NOT_READY", blocked.getString("code"))
+            assertFalse(blocked.getBoolean("operationMayHaveRun"))
+            assertFalse(connection.calls.contains("screen_tap"))
+            connection.inputReady = true
+            assertTrue(org.json.JSONObject(tools.execute("screen_tap", "{}")!!).getBoolean("ok"))
+            assertEquals(1, connection.calls.count { it == "screen_open" })
+            assertEquals(1, connection.calls.count { it == "screen_tap" })
+        } finally { tools.close() }
+    }
+
+    @Test fun cleanupPendingRetriesAreBoundedAndDoNotForceStopOrCreateAnotherBinding() {
+        val connection = Connection().apply { pendingLaunches = 100 }
+        val tools = BackgroundScreenTools("bounded-cleanup", AgentRunController(), registry = ScreenLeaseRegistry(), connectionFactory = { connection })
+        try {
+            val result = org.json.JSONObject(tools.execute("screen_open", """{"package":"app.one"}""")!!)
+            assertEquals("RELEASING", result.getJSONObject("recovery").getString("state"))
+            assertEquals(4, connection.calls.size)
+            assertTrue(connection.calls.all { it == "screen_open" })
+        } finally { tools.close() }
     }
 
     @Test fun resumedTaskMustObserveBeforeApplyingOldCoordinates() {

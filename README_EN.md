@@ -64,3 +64,7 @@ Credit to **蛮吉 (Mangi-11)** and the [Eta contributors](https://github.com/Ma
 This project retains **[PolyForm Noncommercial 1.0.0](LICENSE)** and the upstream copyright notice. It is source-available under a noncommercial license, not MIT/Apache or OSI-defined open source. Third-party components retain their own licenses.
 
 Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
+
+## Background navigation candidate
+
+The 2026-11-03 candidate adds task-bound `screen_back`, input admission after an unready launch, structured recovery guidance, and a four-second cap on whole-page idle waits. Text waits retain their own timeout. Engine e46 is unchanged; ColorOS device acceptance is pending. See [behavior and acceptance steps](etax/BACKGROUND_NAVIGATION.md).

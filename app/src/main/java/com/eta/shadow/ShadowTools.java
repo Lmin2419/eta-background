@@ -187,7 +187,7 @@ public final class ShadowTools {
     private boolean needsObserver(String n) {
         switch (n) {
             case "screen_text": case "screen_click": case "screen_wait":
-            case "screen_scroll": case "screen_list": case "screen_dump": case "screen_diag":
+            case "screen_scroll": case "screen_list": case "screen_dump": case "screen_diag": case "screen_input_state":
                 return true;
             default: return false;
         }
@@ -272,6 +272,8 @@ public final class ShadowTools {
             case "screen_press": return eng("press", a);
             case "screen_drag": return eng("drag", a);
             case "screen_key": return eng("key", a);
+            case "screen_input_state": return obs("input_state", new JSONObject(a.toString()).put("expectedPackage", openedPackage));
+            case "screen_back": return "{\"ok\":false,\"code\":\"BACKGROUND_ROUTE_REQUIRED\",\"operationMayHaveRun\":false,\"message\":\"后台返回需要本任务的运行时入口；本次未执行\"}";
             case "screen_shot": return eng("shot", a);
             case "screen_text": return obs("settext", a);
             case "screen_click": return obs("click2", a);
@@ -487,9 +489,13 @@ public final class ShadowTools {
     private String obs(String cmd, JSONObject a) throws Exception {
         // Read-only inspection works without an open session: display stays -1 and
         // the observer falls back to the main screen.
-        boolean readOnly = "list".equals(cmd) || "dump".equals(cmd) || "diag".equals(cmd) || "wait".equals(cmd) || "idle".equals(cmd);
+        boolean readOnly = "list".equals(cmd) || "dump".equals(cmd) || "diag".equals(cmd) || "wait".equals(cmd) || "idle".equals(cmd) || "input_state".equals(cmd);
         requireSession();
         int callTimeout = 25000;
+        if ("input_state".equals(cmd)) callTimeout = 1500;
+        // A live/video page may never become globally quiet. Limit this diagnostic
+        // wait, not text waits or app operations, and preserve a useful timeout reason.
+        if ("idle".equals(cmd)) a.put("timeout_ms", Math.max(0, Math.min(4000L, a.optLong("timeout_ms", 4000L))));
         if ("wait".equals(cmd) || "idle".equals(cmd)) {
             long want = a.optLong("timeout_ms", 8000L);
             callTimeout = (int) Math.min(120000L, want + 8000L);
@@ -501,6 +507,12 @@ public final class ShadowTools {
         if (!readOnly && observedGeometry != null) q.put("expectedGeometry", observedGeometry);
         String response = observer(q.toString(), callTimeout);
         JSONObject result = new JSONObject(response);
+        if ("idle".equals(cmd) && "TIMEOUT".equals(result.optString("code"))) {
+            result.put("code", "UI_NOT_QUIET").put("effective_timeout_ms", a.optLong("timeout_ms"))
+                    .put("message", "页面在等待窗口内未静止，可能存在视频或动画；请观察目标按钮或用 text 等待，不要据此强停或重开应用。")
+                    .put("operationMayHaveRun", false);
+            return result.toString();
+        }
         if (readOnly && result.optBoolean("ok")) rememberGeometry(result);
         return response;
     }
