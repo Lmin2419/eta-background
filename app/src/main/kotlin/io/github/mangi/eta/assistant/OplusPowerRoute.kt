@@ -113,6 +113,9 @@ internal class OplusPowerRoute(
     }
 
     private companion object {
-        val uncertainCodes = setOf("COMMAND_TIMEOUT", "COMMAND_RESULT_UNKNOWN", "ROOT_REQUIRED", "ROOT_UNAVAILABLE")
+        // A rejected precondition can mean another writer installed the same value we intended.
+        // Do not assume ownership and automatically undo it just because it equals our target.
+        val uncertainCodes = setOf("COMMAND_TIMEOUT", "COMMAND_RESULT_UNKNOWN", "ROOT_REQUIRED", "ROOT_UNAVAILABLE",
+            "CONFIGURATION_CHANGED")
     }
 }

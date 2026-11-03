@@ -90,6 +90,17 @@ class OplusPowerRouteTest {
         assertEquals(original, device.snapshot)
     }
 
+    @Test fun configurationConflictDoesNotTriggerAutomaticRollback() {
+        // A conflict is not proof that a target-valued setting belongs to this transaction.
+        device.gateFailure = "CONFIGURATION_CHANGED"
+        device.failAfterGateWrite = true
+        code("CONFIGURATION_CHANGED") { route.enable() }
+        assertEquals(listOf("broadcast:1", "gate:1"), device.writes)
+        assertNotNull(store.saved)
+        assertNull(store.saved!!.appliedAt)
+        assertFalse(route.configured(device.snapshot))
+    }
+
     @Test fun interruptedRestorationDisarmsEtaAndReopensTheStockRouteFirst() {
         route.enable()
         device.broadcastFailure = "COMMAND_TIMEOUT"
