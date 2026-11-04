@@ -33,6 +33,22 @@ class BrowserActionBatchTest {
         assertFalse(json.getBoolean("automatic_replay"))
     }
 
+    @Test fun lostSubmitContextStopsBatchDespiteAChangedCurrentUrl() {
+        var calls = 0
+        val result = BrowserActionBatch.execute(
+            listOf("type", "click").map { JSONObject().put("action", it) }, check = {}, action = {
+                calls++
+                BrowserToolResult("""{"ok":false,"code":"SCRIPT_CONTEXT_CHANGED","status":"unconfirmed","operationMayHaveRun":true,"automatic_replay":false,"outcome":"UNKNOWN","url":"https://fixture.invalid/result"}""")
+            },
+        )
+        val json = JSONObject(result.content)
+        assertEquals(1, calls)
+        assertEquals(0, json.getInt("completed_count"))
+        assertEquals("SCRIPT_CONTEXT_CHANGED", json.getString("code"))
+        assertFalse(json.getBoolean("automatic_replay"))
+        assertTrue(json.getBoolean("operationMayHaveRun"))
+    }
+
     @Test fun pendingDelayedFeedbackStopsBeforeNextInput() {
         val steps = listOf("type", "click", "get_readable").map { JSONObject().put("action", it) }
         var calls = 0

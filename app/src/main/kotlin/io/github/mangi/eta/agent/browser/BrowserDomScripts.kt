@@ -55,7 +55,7 @@ internal object BrowserDomScripts {
                   Number(style.opacity || 1) <= 0) return false;
               if ((style.clip && style.clip !== 'auto') ||
                   (style.clipPath && style.clipPath !== 'none')) return false;
-              ancestor = ancestor.parentElement;
+              ancestor = ancestor.parentElement || (ancestor.getRootNode && ancestor.getRootNode().host) || null;
               depth++;
             }
             if (ancestor) return false;
@@ -87,11 +87,65 @@ internal object BrowserDomScripts {
               return '\\' + ch.charCodeAt(0).toString(16) + ' ';
             });
           }
-          function selectorFor(element) {
+          function queryInRoot(root, selector) {
+            if (root.nodeType === Node.DOCUMENT_NODE) return Document.prototype.querySelectorAll.call(root, selector);
+            if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) return DocumentFragment.prototype.querySelectorAll.call(root, selector);
+            return Element.prototype.querySelectorAll.call(root, selector);
+          }
+          function queryOpenRoots(selector, limit, deadline) {
+            var found = [], roots = [document], scanned = 0, shadows = 0, truncated = false;
+            if (selector.indexOf(' >>> ') >= 0) {
+              var path = selector.split(' >>> '), root = document, target = null;
+              if (path.length > 8) throw new Error('SHADOW_PATH_TOO_DEEP');
+              for (var part = 0; part < path.length; part++) {
+                target = queryInRoot(root, path[part])[0] || null;
+                if (!target) break;
+                if (part + 1 < path.length) {
+                  root = target.shadowRoot;
+                  if (!root) { target = null; break; }
+                }
+              }
+              return { elements: target ? [target] : [], scanned_nodes: path.length,
+                open_shadow_roots: Math.max(0, path.length - 1), truncated: false };
+            }
+            for (var rootIndex = 0; rootIndex < roots.length; rootIndex++) {
+              if (Date.now() > deadline || scanned >= 6000) { truncated = true; break; }
+              var matches = queryInRoot(roots[rootIndex], selector);
+              for (var index = 0; index < matches.length; index++) {
+                if (found.length >= limit) { truncated = true; break; }
+                found.push(matches[index]);
+              }
+              if (found.length >= limit) { truncated = true; break; }
+              var walker = document.createTreeWalker(roots[rootIndex], NodeFilter.SHOW_ELEMENT), item;
+              while ((item = walker.nextNode())) {
+                scanned++;
+                if (scanned > 6000 || (scanned % 32 === 0 && Date.now() > deadline)) { truncated = true; break; }
+                if (item.shadowRoot) {
+                  if (roots.length >= 24) { truncated = true; continue; }
+                  roots.push(item.shadowRoot); shadows++;
+                }
+              }
+              if (scanned > 6000 || Date.now() > deadline) { truncated = true; break; }
+            }
+            return { elements: found, scanned_nodes: Math.min(scanned, 6000), open_shadow_roots: shadows, truncated: truncated };
+          }
+          function selectorFor(element, shadowDepth) {
+            if (!element || !(element instanceof Element)) return null;
+            var root = element.getRootNode ? element.getRootNode() : document;
+            var local = selectorWithinRoot(element, root);
+            if (root && root.host) {
+              if ((shadowDepth || 0) >= 7 || !local) return null;
+              var host = selectorFor(root.host, (shadowDepth || 0) + 1);
+              var path = host ? host + ' >>> ' + local : '';
+              return path && path.length <= MAX_SELECTOR_CHARS ? path : null;
+            }
+            return local;
+          }
+          function selectorWithinRoot(element, root) {
             if (!element || !(element instanceof Element)) return null;
             if (element.id) {
               var byId = '#' + cssEscape(element.id);
-              try { if (document.querySelectorAll(byId).length === 1) return byId; } catch (_) {}
+              try { if (queryInRoot(root, byId).length === 1) return byId; } catch (_) {}
             }
             var parts = [];
             var node = element;
@@ -114,7 +168,7 @@ internal object BrowserDomScripts {
               parts.unshift(part);
               var candidate = parts.join(' > ');
               if (candidate.length > MAX_SELECTOR_CHARS) break;
-              try { if (document.querySelectorAll(candidate).length === 1) return candidate; } catch (_) {}
+              try { if (queryInRoot(root, candidate).length === 1) return candidate; } catch (_) {}
               node = parent;
               depth++;
             }
@@ -188,7 +242,7 @@ internal object BrowserDomScripts {
             var target = null;
             var deadline = Date.now() + 300;
             if (selector) {
-              target = document.querySelector(selector);
+              target = queryOpenRoots(selector, 1, deadline).elements[0] || null;
             } else if (Number.isFinite(x) && Number.isFinite(y)) {
               target = document.elementFromPoint(x, y);
             }
@@ -399,7 +453,7 @@ internal object BrowserDomScripts {
         var selector = $selectorLiteral;
         var target = null;
         if (selector) {
-          var matches = document.querySelectorAll(selector);
+          var matches = queryOpenRoots(selector, 2000, Date.now() + 300).elements;
           for (var index = 0; index < matches.length && index < 2000; index++) {
             if (visible(matches[index])) { target = matches[index]; break; }
           }
@@ -432,19 +486,25 @@ internal object BrowserDomScripts {
         )
         return """
         var selector = $selectorLiteral;
-        var matches = document.querySelectorAll(selector);
+        var deadline = Date.now() + 500;
+        var query = queryOpenRoots(selector, 17, Date.now() + 200);
         var elements = [];
         var scanned = 0;
-        var deadline = Date.now() + 500;
-        for (var index = 0; index < matches.length && index < 3000 && elements.length < 16 && Date.now() <= deadline; index++) {
+        for (var index = 0; index < query.elements.length && elements.length < 16 && Date.now() <= deadline; index++) {
           scanned++;
-          elements.push(describe(matches[index], deadline));
+          elements.push(describe(query.elements[index], deadline));
         }
         return {
           selector_used: selector,
           element_count: elements.length,
           scanned_elements: scanned,
-          truncated: scanned < matches.length,
+          scanned_dom_nodes: query.scanned_nodes,
+          open_shadow_roots: query.open_shadow_roots,
+          query_scope: 'document_and_open_shadow_roots',
+          closed_shadow_roots_supported: false,
+          frames_included: false,
+          document_ready_state: document.readyState,
+          truncated: query.truncated || scanned < query.elements.length,
           elements: elements
         };
         """.trimIndent()
@@ -457,11 +517,12 @@ internal object BrowserDomScripts {
             var rect = target.getBoundingClientRect();
             var cx = rect.left + rect.width / 2;
             var cy = rect.top + rect.height / 2;
+            var matched = describe(target);
             ['mousemove','mouseover','mousedown','mouseup'].forEach(function(kind) {
               target.dispatchEvent(new MouseEvent(kind, { bubbles: true, cancelable: true, clientX: cx, clientY: cy }));
             });
             target.click();
-            return { matched_element: describe(target) };
+            return { matched_element: matched };
             """.trimIndent()
 
     fun type(selector: String?, x: Int?, y: Int?, text: String, submit: Boolean): String =
@@ -483,17 +544,18 @@ internal object BrowserDomScripts {
             target.dispatchEvent(new Event('change', { bubbles: true }));
             var inputVerified = (target.isContentEditable ? target.textContent : target.value) === value;
             if (!inputVerified) throw new Error('INPUT_NOT_VERIFIED');
+            var matched = describe(target);
             if ($submit) {
               var form = target.form || target.closest('form');
               if (form && form.requestSubmit) form.requestSubmit();
               else target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }));
             }
-            return { matched_element: describe(target), typed_chars: value.length, input_verified: inputVerified, submitted: $submit };
+            return { matched_element: matched, typed_chars: value.length, input_verified: inputVerified, submitted: $submit };
             """.trimIndent()
 
     fun verifyInput(selector: String, expected: String): String =
         """
-        var target = document.querySelector(${JSONObject.quote(selector)});
+        var target = queryOpenRoots(${JSONObject.quote(selector)}, 1, Date.now() + 300).elements[0] || null;
         return { input_verified: !!target && editable(target) &&
           (target.isContentEditable ? target.textContent : target.value) === ${JSONObject.quote(expected)} };
         """.trimIndent()
@@ -502,7 +564,7 @@ internal object BrowserDomScripts {
         val selectorLiteral = selector?.let(JSONObject::quote) ?: "null"
         return """
         var selector = $selectorLiteral;
-        var target = selector ? document.querySelector(selector) : (document.scrollingElement || document.documentElement);
+        var target = selector ? (queryOpenRoots(selector, 1, Date.now() + 300).elements[0] || null) : (document.scrollingElement || document.documentElement);
         if (!target || (selector && !visible(target))) throw new Error('TARGET_NOT_VISIBLE');
         var delta = ${if (direction == "up") -amount else amount};
         var documentTarget = target === document.scrollingElement || target === document.documentElement || target === document.body;
@@ -531,6 +593,18 @@ internal object BrowserDomScripts {
         };
         """.trimIndent()
 
+    /** Loading/paint readiness, not a business-result or full-article completeness assertion. */
+    fun observationReadiness(): String =
+        """
+        var body = document.body || document.documentElement;
+        var text = body ? collectVisibleText(body, 160, 160, Date.now() + 25).text : '';
+        var visual = queryOpenRoots('input,button,textarea,select,img,canvas,video,svg,iframe,object,embed', 32, Date.now() + 40).elements;
+        var visibleVisual = visual.some(function(item) { return visible(item); });
+        return { document_ready_state: document.readyState, has_body: !!document.body,
+          observable_content: text.trim().length > 0 || visibleVisual,
+          text_chars: text.length, viewport_width: window.innerWidth, viewport_height: window.innerHeight };
+        """.trimIndent()
+
     fun readiness(): String =
         """
         var summary = collectVisibleText(document.body || document.documentElement, 600, 160, Date.now() + 20).text;
@@ -544,7 +618,7 @@ internal object BrowserDomScripts {
 
     fun selectorState(selector: String): String =
         """
-        var matches = document.querySelectorAll(${JSONObject.quote(selector)});
+        var matches = queryOpenRoots(${JSONObject.quote(selector)}, 2000, Date.now() + 300).elements;
         var target = null;
         for (var index = 0; index < matches.length && index < 2000; index++) {
           if (visible(matches[index])) { target = matches[index]; break; }

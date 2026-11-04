@@ -21,6 +21,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.Implementation
+import org.robolectric.annotation.Implements
 import org.robolectric.shadows.ShadowSpeechRecognizer
 
 @RunWith(RobolectricTestRunner::class)
@@ -67,6 +69,58 @@ class SpeechLifecycleTest {
         controller.finish()
         current.triggerOnResults(text("新结果"))
         assertEquals(listOf("新结果"), results)
+    }
+
+    @Test
+    @Config(sdk = [33], shadows = [ImmediateStopRecognizer::class])
+    fun synchronousStopErrorDoesNotResurrectRecognizingState() {
+        ImmediateStopRecognizer.resultOnStop = false
+        val recognizer = start()
+        controller.finish()
+        assertFalse(controller.state.value.active)
+        assertNotNull(controller.state.value.error)
+        recognizer.triggerOnResults(text("迟到结果"))
+        assertTrue(results.isEmpty())
+        assertFalse(controller.state.value.active)
+    }
+
+    @Test
+    @Config(sdk = [33], shadows = [ImmediateStopRecognizer::class])
+    fun synchronousStopResultIsDeliveredOnceWithoutPhantomBusyState() {
+        ImmediateStopRecognizer.resultOnStop = true
+        val recognizer = start()
+        controller.finish()
+        controller.finish()
+        recognizer.triggerOnResults(text("迟到结果"))
+        assertEquals(listOf("本次最终结果"), results)
+        assertFalse(controller.state.value.active)
+    }
+
+    @Test fun cancelDuringRecognitionRejectsLateAutomaticSubmission() {
+        val overlay = overlay()
+        try {
+            val recognizer = overlay.begin(SpeechSettings())
+            recognizer.triggerOnPartialResults(text("保留在输入框的草稿"))
+            recognizer.triggerOnEndOfSpeech()
+            assertEquals(EtaSpeechPhase.RECOGNIZING, overlay.state.value.phase)
+            overlay.cancel()
+            recognizer.triggerOnResults(text("不应发送的迟到结果"))
+            assertTrue(results.isEmpty())
+            assertFalse(overlay.state.value.active)
+            assertTrue(recognizer.isDestroyed)
+        } finally { overlay.cancel() }
+    }
+
+    @Implements(SpeechRecognizer::class)
+    class ImmediateStopRecognizer : ShadowSpeechRecognizer() {
+        @Implementation
+        fun stopListening() {
+            if (resultOnStop) triggerOnResults(Bundle().apply {
+                putStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION, arrayListOf("本次最终结果"))
+            }) else triggerOnError(SpeechRecognizer.ERROR_NETWORK)
+        }
+
+        companion object { @JvmField var resultOnStop = false }
     }
 
     @Test fun closingOwnerReleasesRecognitionAndTimeouts() {

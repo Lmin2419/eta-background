@@ -1886,6 +1886,11 @@ class VDriveWorker implements VDrive.Worker {
         return new JSONObject().put("ok", true);
     }
 
+    // MotionEvent.FLAG_NO_FOCUS_CHANGE is hidden from the SDK, but its framework value is
+    // 0x40 since Android 12. InputDispatcher preserves it for trusted injected events and
+    // skips the outside-focus notification that can dismiss the main display's IME.
+    private static final int MOTION_FLAG_NO_FOCUS_CHANGE = 0x40;
+
     /** One touch event; downTime keeps a gesture's events on a consistent timeline. */
     void injectMotion(int did, long downTime, int action, float x, float y) throws Exception {
         long now = SystemClock.uptimeMillis();
@@ -1894,9 +1899,14 @@ class VDriveWorker implements VDrive.Worker {
         MotionEvent.PointerCoords point = new MotionEvent.PointerCoords();
         point.x = x; point.y = y; point.size = 1;
         point.pressure = action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL ? 0 : 1;
+        // Keep the target display/window and normal in-app touch handling. Only prevent
+        // a background touch from requesting a global focus transfer; foreground input
+        // must still be able to focus the window the user actually touched.
+        int flags = did > 0 && android.os.Build.VERSION.SDK_INT >= 31
+                ? MOTION_FLAG_NO_FOCUS_CHANGE : 0;
         MotionEvent ev = MotionEvent.obtain(downTime, now, action, 1,
                 new MotionEvent.PointerProperties[]{finger}, new MotionEvent.PointerCoords[]{point},
-                0, 0, 1, 1, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
+                0, 0, 1, 1, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, flags);
         try {
             motionSetDisplay.invoke(ev, did);
             injectEvent(ev);

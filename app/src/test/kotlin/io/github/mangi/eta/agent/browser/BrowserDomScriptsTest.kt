@@ -24,7 +24,7 @@ class BrowserDomScriptsTest {
             BrowserDomScripts.click(selector = "#submit", x = null, y = null)
         )
 
-        assertTrue(script.contains("document.querySelector(selector);"))
+        assertTrue(script.contains("queryOpenRoots(selector, 1, deadline)"))
         assertFalse(script.contains("requireHitTarget"))
         assertFalse(script.contains("TARGET_OCCLUDED"))
     }

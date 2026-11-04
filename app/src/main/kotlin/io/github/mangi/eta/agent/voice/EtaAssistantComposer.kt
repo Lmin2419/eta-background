@@ -107,7 +107,7 @@ internal fun AssistantComposer(
             label = "assistant_input_mode",
         ) { voiceMode ->
             if (voiceMode) {
-                AssistantVoiceEntry(speech, input, onKeyboard, onFinishSpeech)
+                AssistantVoiceEntry(speech, input, onKeyboard, onFinishSpeech, onCancelSpeech)
             } else {
                 AssistantInputBar(
                     state = state,
@@ -184,12 +184,14 @@ private fun AssistantInputBar(
         else -> R.drawable.ic_assistant_voice
     }
     val trailingDescription = when {
+        speech.phase == EtaSpeechPhase.RECOGNIZING -> R.string.action_stop
         speech.active -> R.string.voice_finish_speech
         state.phase == EtaVoicePhase.PROCESSING -> R.string.action_stop
         canSubmit || !recognitionEnabled -> R.string.voice_send
         else -> R.string.voice_tap_to_speak
     }
     val trailingAction = when {
+        speech.phase == EtaSpeechPhase.RECOGNIZING -> onCancelSpeech
         speech.active -> onFinishSpeech
         state.phase == EtaVoicePhase.PROCESSING -> onStop
         canSubmit || !recognitionEnabled -> onSubmit
@@ -256,8 +258,7 @@ private fun AssistantInputBar(
             iconRes = trailingIcon,
             contentDescription = stringResource(trailingDescription),
             tint = contentColor,
-            enabled = speech.phase != EtaSpeechPhase.RECOGNIZING &&
-                (recognitionEnabled || canSubmit || state.phase == EtaVoicePhase.PROCESSING),
+            enabled = speech.active || recognitionEnabled || canSubmit || state.phase == EtaVoicePhase.PROCESSING,
             holdToTalkAvailable = recognitionEnabled && !speech.active && !canSubmit && state.phase != EtaVoicePhase.PROCESSING,
             onClick = trailingAction,
             onHoldStart = { onMicrophone(true) },
@@ -345,6 +346,7 @@ private fun AssistantVoiceEntry(
     input: String,
     onKeyboard: () -> Unit,
     onFinishSpeech: () -> Unit,
+    onCancelSpeech: () -> Unit,
 ) {
     val controls = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
@@ -386,10 +388,14 @@ private fun AssistantVoiceEntry(
         Spacer(Modifier.width(12.dp))
         AssistantRoundButton(
             iconRes = R.drawable.ic_assistant_stop,
-            contentDescription = stringResource(R.string.voice_finish_speech),
+            contentDescription = stringResource(
+                if (speech.phase == EtaSpeechPhase.RECOGNIZING) R.string.action_stop else R.string.voice_finish_speech,
+            ),
             progress = controls.value,
-            enabled = controls.value >= 0.5f && speech.phase != EtaSpeechPhase.RECOGNIZING,
-            onClick = onFinishSpeech,
+            // The square remains actionable while waiting for recognition/refinement.
+            // Finishing recording and cancelling a pending result are distinct actions.
+            enabled = controls.value >= 0.5f,
+            onClick = if (speech.phase == EtaSpeechPhase.RECOGNIZING) onCancelSpeech else onFinishSpeech,
         )
     }
 }

@@ -255,8 +255,8 @@ internal class EtaSpeechInput(
             return
         }
         try {
-            recognizer?.stopListening()
             onRecognizing()
+            recognizer?.stopListening()
         } catch (error: RuntimeException) {
             AndroidAgentLogger.warn("Eta speech stop failed: type=${error.javaClass.simpleName}")
             releaseRecognition()

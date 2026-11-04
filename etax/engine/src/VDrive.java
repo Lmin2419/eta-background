@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Root transport. Mutable display/input/capture state lives in independent workers. */
 public final class VDrive {
-    static final String BUILD = "20261103-e47-recovery";
+    static final String BUILD = "20261104-e48-ime-focus";
     static java.util.function.BooleanSupplier health = () -> true;
     static volatile boolean systemInvalid;
     // Installed only by the resident process entrypoint, never by embedded tests.

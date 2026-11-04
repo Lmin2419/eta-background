@@ -50,6 +50,45 @@ import top.yukonga.miuix.kmp.squircle.LocalSquircleEnabled
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class EtaVoicePanelTouchTest {
     @Test
+    fun voiceSquareFinishesRecordingThenCanCancelPendingRecognitionWithoutKeyboard() = withPanel { panel ->
+        panel.speech.value = EtaSpeechState(phase = EtaSpeechPhase.LISTENING)
+        panel.advance()
+        panel.tapDescription(R.string.voice_finish_speech)
+        assertEquals(1, panel.speechFinishes)
+        assertEquals(EtaSpeechPhase.RECOGNIZING, panel.speech.value.phase)
+        panel.tapDescription(R.string.action_stop)
+        assertEquals(1, panel.speechCancels)
+        assertFalse(panel.speech.value.active)
+        assertEquals(0, panel.taskStops)
+        assertEquals(0, panel.keyboardShows)
+    }
+
+    @Test
+    fun voiceSquareCanCancelAutomaticEndpointRecognition() = withPanel { panel ->
+        panel.speech.value = EtaSpeechState(phase = EtaSpeechPhase.RECOGNIZING)
+        panel.advance()
+        panel.tapDescription(R.string.action_stop)
+        assertEquals(1, panel.speechCancels)
+        assertEquals(0, panel.speechFinishes)
+        assertEquals(0, panel.taskStops)
+    }
+
+    @Test
+    fun conversationInputSquareCancelsRecognitionAndTaskStopRemainsSeparate() = withPanel { panel ->
+        panel.showReply()
+        panel.speech.value = EtaSpeechState(phase = EtaSpeechPhase.RECOGNIZING)
+        panel.advance()
+        panel.tapDescription(R.string.action_stop)
+        assertEquals(1, panel.speechCancels)
+        assertEquals(0, panel.taskStops)
+        panel.state.value = panel.state.value.copy(phase = EtaVoicePhase.PROCESSING)
+        panel.advance()
+        panel.tapDescription(R.string.action_stop)
+        assertEquals(1, panel.taskStops)
+        assertEquals(1, panel.speechCancels)
+    }
+
+    @Test
     fun disablingGlowStillRevealsTextInputAndCompletesEntranceOnce() =
         withPanel(recognitionEnabled = false, glowEnabled = false, initialFrames = 1) { panel ->
             panel.gainWindowFocus()
@@ -260,6 +299,10 @@ class EtaVoicePanelTouchTest {
         private val onGainWindowFocus: () -> Unit,
     ) {
         val state = mutableStateOf(EtaVoiceUiState())
+        val speech = mutableStateOf(EtaSpeechState())
+        var speechFinishes = 0
+        var speechCancels = 0
+        var taskStops = 0
         val exitRequested = mutableStateOf(false)
         var exits = 0
         val recognitionEnabled = mutableStateOf(recognitionEnabled)
@@ -297,7 +340,7 @@ class EtaVoicePanelTouchTest {
                             speechLevel = { 0f },
                             state = state.value,
                             input = "",
-                            speech = EtaSpeechState(),
+                            speech = speech.value,
                             recognitionEnabled = this.recognitionEnabled.value,
                             entranceComplete = entranceComplete.value,
                             onEntranceFinished = {
@@ -312,8 +355,11 @@ class EtaVoicePanelTouchTest {
                             },
                             onInputFocus = { inputActivated = true },
                             onMicrophone = { microphoneStarts++ },
-                            onCancelSpeech = {},
-                            onFinishSpeech = {},
+                            onCancelSpeech = { speechCancels++; speech.value = EtaSpeechState() },
+                            onFinishSpeech = {
+                                speechFinishes++
+                                speech.value = speech.value.copy(phase = EtaSpeechPhase.RECOGNIZING)
+                            },
                             onDownloadModel = {},
                             onOpenSpeechSettings = {},
                             onKeyboard = {},
@@ -326,7 +372,7 @@ class EtaVoicePanelTouchTest {
                             onInputChange = {},
                             onSuggestionClick = {},
                             onSubmit = {},
-                            onStop = {},
+                            onStop = { taskStops++ },
                             onClose = { closed++ },
                             onOpenConversation = { opened++ },
                         )
@@ -403,6 +449,22 @@ class EtaVoicePanelTouchTest {
                 node.config.getOrNull(SemanticsProperties.ContentDescription)?.contains(description) == true ||
                     node.children.any(::find)
             return find(root().semanticsOwner.unmergedRootSemanticsNode)
+        }
+
+        fun tapDescription(resource: Int) {
+            val description = activity.getString(resource)
+            fun find(node: SemanticsNode): SemanticsNode? =
+                if (node.config.getOrNull(SemanticsProperties.ContentDescription)?.contains(description) == true) node
+                else node.children.firstNotNullOfOrNull(::find)
+            val node = requireNotNull(find(root().semanticsOwner.unmergedRootSemanticsNode)) { description }
+            val point = node.boundsInRoot.center
+            val down = SystemClock.uptimeMillis()
+            for (action in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP)) {
+                val event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, point.x, point.y, 0)
+                try { root().view.dispatchTouchEvent(event) } finally { event.recycle() }
+                shadowOf(android.os.Looper.getMainLooper()).idleFor(Duration.ofMillis(16))
+            }
+            advance()
         }
 
         private fun findTextInput(node: SemanticsNode): SemanticsNode? {

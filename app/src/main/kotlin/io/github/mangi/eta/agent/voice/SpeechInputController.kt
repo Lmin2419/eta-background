@@ -216,9 +216,11 @@ internal class SpeechInputController(
         if (finishRequested) return
         finishRequested = true
         if (mutableState.value.phase == EtaSpeechPhase.STARTING) { cancel(); return }
+        // stopListening may synchronously deliver an error/result. Publish the waiting
+        // state first so a terminal callback cannot be overwritten with a phantom busy state.
+        mutableState.value = mutableState.value.copy(phase = EtaSpeechPhase.RECOGNIZING, progress = "正在识别", level = 0f)
         recorder?.finish()
         system?.finish()
-        mutableState.value = mutableState.value.copy(phase = EtaSpeechPhase.RECOGNIZING, progress = "正在识别", level = 0f)
     }
 
     fun downloadModel() { system?.downloadModel() }
