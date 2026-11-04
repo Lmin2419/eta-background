@@ -63,4 +63,39 @@ HTTP helper 同任务复用、空闲 30 秒退出；增强浏览器按请求释�
 
 ## 自动化记录
 
-本轮代码检查、测试与 APK 构建结果由同一候选源码生成，最终结果在此处补充。手机验收未在云端代做；未验证项不能据自动化通过改成通过。
+最终代码候选：`dafb1d9d68649eeac9df27779baf414d0bd40538`。主实现为 `57c4b1b`，后续取消修正防止任务结束与可选运行时首次初始化交错时启动新进程，同时让设置页能力探测随页面协程取消。
+
+| 检查 | 实际结果与范围 |
+| --- | --- |
+| 最终候选本地 Linux 全量单测 | 2390 项，0 失败、0 错误、1 跳过；3 分 34 秒。 |
+| 本地取消、读取升级及协议回归 | 最终候选 20 项通过，0 失败。 |
+| 引擎部署脚本回归 | 13 项通过；本轮未修改引擎源码。 |
+| 后台接线检查 | 12/12 通过。 |
+| Python 适配器 | 10/10，通过固定依赖执行；含 2 项真实 HTTP fixture，不能代表挑战站成功率。 |
+| 生产生成的浏览器脚本 | 云端 Chromium 合成页面 14/14；覆盖 100ms 提示、晚到提示、输入拒绝、受限响应和验证页识别，不替代 Android WebView 验收。 |
+| 请求体测量 | 同配置内置工具 137 → 121；系统提示与工具定义 116113 → 105812 UTF-8 字节（约 −8.9%），不等于 token 或手机等待时间减少相同比例。详见 [原始测量](web/validation/prompt-footprint.json)。 |
+| 最终候选 PR Check | [完整单测、Lint、Debug 构建](https://github.com/Lmin2419/eta-background/actions/runs/41791842455) 成功。 |
+| 最终候选 Etax Build | [完整单测、Lint、签名 Release 构建](https://github.com/Lmin2419/eta-background/actions/runs/41791835167) 成功：2390 项单测，0 失败、0 错误、1 跳过；Lint 0 错误、422 Warning、1 Hint。 |
+
+主实现 `57c4b1b` 的 Linux 签名工作流已完成 2387 项单测（0 失败、0 错误、1 跳过）和静态检查，随后由最终候选替代；这些结果不能当作最终候选的 APK 验证。首次本地全量检查曾出现过时文案断言及一个既有异步会话超时：文案断言改为行为校验，异步测试未改动或放宽超时，其所在 15 项测试单独重跑通过。
+
+手机验收未在云端代做；未验证项不能据自动化通过改成通过。真实 Cloudflare 样本未取得正文，Android ARM64 / PRoot 兼容性仍待实际设备检查。
+
+全量测试中跳过的既有 `EtaWaveShaderTest.effectCompilesWithAndroidShaderCompiler` 受宿主原生测试运行时缺少 child shader 支持限制，与本轮网页功能无关，不能据此宣称真机着色器已验证。
+
+## 候选安装包
+
+[下载 CI 候选 APK](https://github.com/Lmin2419/eta-background/actions/runs/41791835167/artifacts/13304024439)（GitHub 工件有保留期限，未替换正式下载）。
+
+| 项目 | 已核对结果 |
+| --- | --- |
+| 代码提交 | `dafb1d9d68649eeac9df27779baf414d0bd40538`；后续文档提交不改变此 APK 的源码身份 |
+| 版本 | `3.3.5+etax.dafb1d9`，versionCode `2026103003` |
+| 包名 | `io.github.mangi.etax` |
+| 大小 | 6,839,079 字节；Python 和 Chromium 不包含在 APK 中 |
+| APK SHA-256 | `12d60908b126be4d7951286425b9a7583c94399ee3cf4b3f9dfceb03d84b0e02` |
+| 证书 SHA-256 | `dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5`，与既有后台版证书一致 |
+| 引擎 | `20261103-e47-recovery` |
+| 工件核验 | 实际下载 APK 后验证签名、包名、版本、哈希；内嵌引擎、部署脚本与 Scrapling 适配器共 6 项资源逐字节匹配，无内嵌 `engine.token` |
+
+本轮没有合并 main、发布 Release、打标签或操作用户手机。
