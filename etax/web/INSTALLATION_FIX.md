@@ -16,7 +16,7 @@
 
 固定 Patchright 1.64.4 支持 `debian13-arm64`。只读检查官方 ARM64 Node 与 Chromium 的 ELF 依赖，没有发现可以据此认定的缺库根因。没有为猜测追加系统包，也没有添加未经验证的二进制镜像或关闭 TLS/浏览器沙箱。
 
-使用全新缓存运行真实 CLI `python -m patchright install --no-shell chromium`，实际联网下载并解压 ARM64 Chrome 与 FFmpeg，退出码 0，耗时 17.734 秒。缓存含 `chromium-1248`、`ffmpeg-1013`，没有 headless-shell。
+使用全新缓存运行真实 CLI `python -m patchright install --no-shell chromium`，实际联网下载并解压 ARM64 Chrome 与 FFmpeg，退出码 0，耗时 17.734 秒。缓存含 `chromium-1248`、`ffmpeg-1013`，没有 headless-shell。该次云端取证脚本设置 600 秒截止；新版手机安装器的浏览器步骤是 1800 秒，两者不混记。
 
 具体命令、实际执行平台、目标架构、大小及限制见[结构化验证记录](validation/browser-install-arm64.json)。
 
@@ -41,4 +41,21 @@ SDK 使用请求 socket 超时；持续有数据的下载可超过 60 秒。1800
 
 ## 自动化与候选包
 
-本地定向回归 38 项通过，0 失败、0 错误；包含尾部错误捕获、错误分类、超时/取消、完成标记、界面提示及既有 Debian/PRoot/APK 工具安装回归。同一源码的完整 CI 与签名工件将在构建完成后补充。真实手机的安装及浏览器启动尚未在此环境验证。
+候选源码：`4fcee11a8d4e9eceb36cf0e7d308351da119ddb9`。本地完整单测 2411 项、0 失败、0 错误、1 个既有跳过。安装诊断及既有环境安装定向回归 38 项通过；补充下载进度与阶段时限后定向回归 21 项通过，覆盖尾部错误捕获、错误分类、超时/取消、完成标记、真实 CLI 进度分段与重试重置、慢 UI 不阻塞命令输出、界面提示。
+
+同一源码的 [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41805581064) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41805573974) 均成功。签名构建日志确认完整单测 2411 项、0 失败、0 错误、1 跳过；Lint 0 错误，423 Warning、1 Hint。本地 Lint 同样 0 错误（422 Warning、1 Hint）。
+
+| 项目 | 实际核验结果 |
+| --- | --- |
+| 候选 APK | `Etax-v3.3.5+etax.4fcee11.apk` |
+| 版本 / 包名 | `3.3.5+etax.4fcee11` / `io.github.mangi.etax` |
+| versionCode | `2026103003` |
+| 大小 | 6,855,031 字节 |
+| APK SHA-256 | `b5af9c06e87579cff6ccb1da8096d16f47ca9b4821f7b058a2ceef6df8cf33ea` |
+| 签名证书 SHA-256 | `dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5`（沿用既有证书） |
+| 引擎 | `20261103-e47-recovery` |
+| CI 工件 | [artifact 13310802302](https://github.com/Lmin2419/eta-background/actions/runs/41805573974/artifacts/13310802302)，保留至 2026-12-04 |
+
+已实际下载上述 APK，核验 SHA-256、包名、版本、签名；6 个引擎/部署脚本/网页 worker 资产与本地源码产物逐字匹配，新增进度与诊断文字资源存在，包内没有 `engine.token`。本轮未合并 main、未发布标签、未替换正式下载链接。
+
+真实手机的安装及浏览器启动尚未在此环境验证；云端安装与缓存测试不替代手机验收。
