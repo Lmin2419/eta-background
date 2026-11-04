@@ -29,7 +29,26 @@
 
 自动化覆盖语音物理触摸、识别同步/迟到回调、浏览器文档更换及取消、批次不重放、离屏首帧和六项后台触摸标记用例。真实 Chromium 本地页面验证开放 Shadow DOM 的查找/点击/输入、有限扫描、延迟内容和表单仅提交一次；Chromium 没有复现 Android WebView 回执丢失，后者通过确定性回归验证。
 
-当前构建及完整检查结果待候选生成后补充，不沿用上一安装包的检查结果。
+### 候选安装包与实际检查
+
+候选 `3.3.5+etax.9c379f6`，源码 [9c379f614ddd67fa60391f064fd3753d23e9dbe9](https://github.com/Lmin2419/eta-background/commit/9c379f614ddd67fa60391f064fd3753d23e9dbe9)。
+
+| 项目 | 实际结果 |
+| --- | --- |
+| APK | [Etax-v3.3.5+etax.9c379f6.apk](https://github.com/Lmin2419/eta-background/actions/runs/41856322884/artifacts/13339587699) |
+| 大小 | 6,860,251 bytes |
+| SHA-256 | `a2b8f60544a7e6c05857f8ed489ed5bdf5ccc1ce2737e05da9d51c9cc87caa25` |
+| 签名证书 SHA-256 | `dc309f48b192f58aef3c750841728e284ad05db2a07a607b2e1fafbcc4c1a2a5`（与原候选一致） |
+| 包名 / versionCode | `io.github.mangi.etax` / `2026103003` |
+| 内嵌引擎 | `20261104-e48-ime-focus`；六项资产与本地源码构建结果逐字节一致，未嵌入认证令牌 |
+| 完整单测 | 本地及 Linux CI 均为 2,437 项，0 失败、0 错误、1 跳过 |
+| 跳过项 | 原有 `EtaWaveShaderTest`：测试运行时缺少子着色器支持；本轮新增用例没有跳过 |
+| 引擎部署 / 接线 | 13 项部署回归、12 项接线检查通过 |
+| Lint | 0 错误、424 Warning、1 Hint |
+| Debug / Release | [PR Check](https://github.com/Lmin2419/eta-background/actions/runs/41856334507) 与 [Etax Build](https://github.com/Lmin2419/eta-background/actions/runs/41856322884) 均成功 |
+
+实际下载后已验证 APK 摘要、包名、版本、原证书及内嵌引擎配对。Actions 附件需登录 GitHub，2026-12-04（UTC）到期。新包尚未获得手机验收结果；自动化不证明 ColorOS 主屏键盘问题已完全消失。
+
 
 手机只需正常使用下核对以下三项，不要求重启、重新注入或制造故障：
 
