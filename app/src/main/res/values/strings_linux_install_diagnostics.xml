@@ -21,4 +21,6 @@
     <string name="linux_install_reason_environment">The Linux installation command could not start. Check that the selected environment and its execution permissions are available.</string>
     <string name="linux_install_reason_write">The installation directory or completion status could not be written. This installation was not marked complete.</string>
     <string name="linux_install_reason_unknown">The cause is not yet known. Keep the stage and diagnostic code below for troubleshooting.</string>
+  <string name="linux_browser_component_finishing">%1$s download 100%% · finishing extraction and checks</string>
+  <string name="linux_browser_component_downloaded">%1$s downloaded · continuing installation</string>
 </resources>

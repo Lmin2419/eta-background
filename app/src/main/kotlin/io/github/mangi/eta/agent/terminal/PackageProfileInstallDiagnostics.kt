@@ -46,7 +46,7 @@ internal object PackageProfileInstallDiagnostics {
                 "read timed out" in evidence || "request timed out" in evidence ||
                 "timed out after" in evidence || "und_err_connect_timeout" in evidence -> "INSTALL_NETWORK_TIMEOUT"
             "econnreset" in evidence || "econnrefused" in evidence || "enetunreach" in evidence ||
-                "network is unreachable" in evidence -> "INSTALL_NETWORK_FAILED"
+                "network is unreachable" in evidence || "download failed: server closed connection" in evidence -> "INSTALL_NETWORK_FAILED"
             HTTP_RATE_LIMIT.containsMatchIn(evidence) -> "INSTALL_DOWNLOAD_RATE_LIMITED"
             HTTP_DENIED.containsMatchIn(evidence) -> "INSTALL_DOWNLOAD_DENIED"
             HTTP_NOT_FOUND.containsMatchIn(evidence) -> "INSTALL_DOWNLOAD_NOT_FOUND"
@@ -87,7 +87,10 @@ internal object PackageProfileInstallCommands {
         if (setup.isNotBlank()) {
             val step = if (profile == LinuxPackageProfiles.WEB_BROWSER) PackageProfileInstallStep.BROWSER_DOWNLOAD
                 else PackageProfileInstallStep.PROFILE_SETUP
-            execute(step, "set -e\n$setup")?.let { return it }
+            // The pinned Chrome archive is ~190 MiB. Keep a fixed overall budget;
+            // real progress does not reset it, and the SDK retains its 60 s socket timeout.
+            val timeout = if (step == PackageProfileInstallStep.BROWSER_DOWNLOAD) 1_800L else 600L
+            execute(step, "set -e\n$setup", timeout)?.let { return it }
         }
         val marker = "/${profile.markerName}"
         val temporary = "$marker.installing"

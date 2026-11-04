@@ -44,6 +44,7 @@ class PackageProfileInstallDiagnosticsTest {
             "request ETIMEDOUT" to "INSTALL_NETWORK_TIMEOUT",
             "Error: Request to https://download.test/private?token=secret timed out after 60000ms" to "INSTALL_NETWORK_TIMEOUT",
             "connect ECONNREFUSED private.test" to "INSTALL_NETWORK_FAILED",
+            "Download failed: server closed connection. URL: https://private.test/?token=secret" to "INSTALL_NETWORK_FAILED",
             "connect ENETUNREACH 192.0.2.1:443" to "INSTALL_NETWORK_FAILED",
             "Download failed: server returned code 403 body 'secret'" to "INSTALL_DOWNLOAD_DENIED",
             "HTTP 429 secret" to "INSTALL_DOWNLOAD_RATE_LIMITED",
@@ -117,6 +118,28 @@ class PackageProfileInstallDiagnosticsTest {
         }
         assertEquals(listOf(PackageProfileInstallStep.BROWSER_DOWNLOAD, PackageProfileInstallStep.ACTIVATE_MARKER), steps)
         assertEquals("INSTALL_MARKER_FAILED", failure?.code)
+    }
+
+    @Test fun onlyBrowserDownloadReceivesThirtyMinuteBudget() = runBlocking {
+        for (profile in listOf(LinuxPackageProfiles.WEB_BROWSER, LinuxPackageProfiles.WEB_HTTP, LinuxPackageProfiles.NODE)) {
+            val timeouts = linkedMapOf<PackageProfileInstallStep, Long>()
+            val failure = PackageProfileInstallCommands.run(profile,
+                LinuxPackageSpec(packages = listOf("dependency"), setupScript = "setup"), "/usr/local/bin/eta-apt", {}) { step, _, timeout ->
+                timeouts[step] = timeout
+                InstallerCommandResult(0, "")
+            }
+            assertNull(failure)
+            assertEquals(600L, timeouts[PackageProfileInstallStep.SYSTEM_PACKAGES])
+            assertEquals(30L, timeouts[PackageProfileInstallStep.ACTIVATE_MARKER])
+            if (profile == LinuxPackageProfiles.WEB_BROWSER) {
+                assertEquals(1_800L, timeouts[PackageProfileInstallStep.BROWSER_DOWNLOAD])
+            } else {
+                assertEquals(600L, timeouts[PackageProfileInstallStep.PROFILE_SETUP])
+                assertFalse(timeouts.containsKey(PackageProfileInstallStep.BROWSER_DOWNLOAD))
+            }
+        }
+        assertTrue(LinuxPackageProfiles.WEB_BROWSER.spec(LinuxDistribution.DEBIAN).setupScript.orEmpty()
+            .contains("PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=60000"))
     }
 
     private fun code(step: PackageProfileInstallStep, exit: Int, output: String = "") =

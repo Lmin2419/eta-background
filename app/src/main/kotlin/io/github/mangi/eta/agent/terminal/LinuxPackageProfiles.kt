@@ -26,6 +26,9 @@ internal data class PackageProfileInstallProgress(
     val stage: PackageProfileInstallStage,
     val downloadedBytes: Long = 0,
     val totalBytes: Long = 0,
+    val component: BrowserDownloadComponent? = null,
+    val componentPercent: Int? = null,
+    val componentDownloaded: Boolean = false,
 )
 
 internal sealed interface PackageProfileInstallResult {
@@ -265,13 +268,27 @@ internal class LinuxPackageProfileInstaller(
             LinuxDistribution.DEBIAN -> "/usr/local/bin/eta-apt"
         }
         PackageProfileInstallCommands.run(profile, spec, packageHelper, onProgress) { step, command, timeout ->
-            InstallerShellRunner.run(
-                command = command,
-                timeoutSeconds = timeout,
-                environment = distribution.terminalEnvironment,
-                linuxRootfsPath = rootfs.absolutePath,
-                captureTail = true,
-            ).also { result ->
+            val result = if (step == PackageProfileInstallStep.BROWSER_DOWNLOAD) {
+                BrowserInstallProgressRelay.run(onProgress) { outputLine ->
+                    InstallerShellRunner.run(
+                        command = command,
+                        timeoutSeconds = timeout,
+                        environment = distribution.terminalEnvironment,
+                        linuxRootfsPath = rootfs.absolutePath,
+                        captureTail = true,
+                        onOutputLine = outputLine,
+                    )
+                }
+            } else {
+                InstallerShellRunner.run(
+                    command = command,
+                    timeoutSeconds = timeout,
+                    environment = distribution.terminalEnvironment,
+                    linuxRootfsPath = rootfs.absolutePath,
+                    captureTail = true,
+                )
+            }
+            result.also {
                 val code = if (result.exitCode == 0 && !result.timedOut) "OK" else PackageProfileInstallDiagnostics.code(step, result)
                 AndroidAgentLogger.info(
                     "Package profile distribution=${distribution.wireName} profile=${profile.id} step=$step " +

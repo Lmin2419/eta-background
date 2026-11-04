@@ -425,6 +425,8 @@ internal object InstallerShellRunner {
         linuxRootfsPath: String? = null,
         identity: String? = null,
         captureTail: Boolean = false,
+        // Called on the output-draining thread; callbacks must be bounded and non-blocking.
+        onOutputLine: ((String) -> Unit)? = null,
     ): InstallerCommandResult = runInterruptible(Dispatchers.IO) {
         val started = System.nanoTime()
         fun elapsedMs() = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started).coerceAtLeast(0)
@@ -437,6 +439,7 @@ internal object InstallerShellRunner {
             linuxRootfsPath = linuxRootfsPath,
         ) ?: return@runInterruptible InstallerCommandResult(exitCode = -1, output = "", elapsedMs = elapsedMs())
         val output = InstallerOutputBuffer(MAX_OUTPUT_BYTES, captureTail)
+        val lines = onOutputLine?.let { InstallerOutputLines(it) }
         val reader = thread(name = "eta-alpine-installer-output", isDaemon = true) {
             runCatching {
                 process.inputStream.use { input ->
@@ -445,7 +448,9 @@ internal object InstallerShellRunner {
                         val count = input.read(buffer)
                         if (count < 0) break
                         output.append(buffer, count)
+                        lines?.append(buffer, count)
                     }
+                    lines?.finish()
                 }
             }
         }

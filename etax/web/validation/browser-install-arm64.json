@@ -52,5 +52,16 @@
     "source": "https://cdn.playwright.dev/builds/cft/156.0.8078.4/linux-arm64/chrome-linux-arm64.zip",
     "observed_redirect": "https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux-arm64/chrome-linux-arm64.zip"
   },
-  "reused_prior_archive": false
+  "reused_prior_archive": false,
+  "completed_cache_reuse": {
+    "exit_code": 0,
+    "duration_seconds": 0.878,
+    "download_started": false,
+    "cache_entries": [
+      ".links",
+      "chromium-1248",
+      "ffmpeg-1013"
+    ],
+    "scope": "Reuse only already completed ARM64 artifacts; ARM64 browser not executed."
+  }
 }

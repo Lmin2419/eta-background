@@ -619,7 +619,16 @@ private fun DebianInstallProgress.summary(context: Context): String {
 private fun PackageProfileInstallProgress.summary(context: Context, profileTitle: String): String =
     when (stage) {
         PackageProfileInstallStage.CHECKING -> context.getString(R.string.linux_profile_stage_checking)
-        PackageProfileInstallStage.DOWNLOADING -> if (totalBytes > 0L) {
+        PackageProfileInstallStage.DOWNLOADING -> if (component != null) {
+            when {
+                componentDownloaded -> context.getString(R.string.linux_browser_component_downloaded, component.label)
+                componentPercent == 100 -> context.getString(R.string.linux_browser_component_finishing, component.label)
+                componentPercent != null -> context.getString(
+                    R.string.linux_profile_stage_downloading_percent, component.label, componentPercent,
+                )
+                else -> context.getString(R.string.linux_profile_stage_downloading, component.label)
+            }
+        } else if (totalBytes > 0L) {
             context.getString(
                 R.string.linux_profile_stage_downloading_percent,
                 profileTitle,

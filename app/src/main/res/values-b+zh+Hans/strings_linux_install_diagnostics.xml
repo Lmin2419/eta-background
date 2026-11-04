@@ -21,4 +21,6 @@
     <string name="linux_install_reason_environment">Linux 安装命令未能启动，请检查所选环境及其运行权限是否可用。</string>
     <string name="linux_install_reason_write">无法写入安装目录或完成状态，本次没有标记为安装完成。</string>
     <string name="linux_install_reason_unknown">原因尚未确定，请保留下方的失败阶段与诊断码以便排查。</string>
+  <string name="linux_browser_component_finishing">%1$s 下载100%% · 正在解压和校验</string>
+  <string name="linux_browser_component_downloaded">%1$s 已下载 · 继续完成安装</string>
 </resources>
