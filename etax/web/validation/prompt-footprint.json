@@ -1,0 +1,64 @@
+{
+  "baseline": {
+    "tool_count": 137,
+    "combined_utf8_bytes": 116113,
+    "system_utf8_bytes": 15247,
+    "system_chars": 6749,
+    "tools_utf8_bytes": 100844,
+    "retired_tool_count": 16
+  },
+  "working": {
+    "tool_count": 121,
+    "combined_utf8_bytes": 105812,
+    "system_utf8_bytes": 13690,
+    "system_chars": 5894,
+    "tools_utf8_bytes": 92100,
+    "retired_tool_count": 0
+  },
+  "baseline_sha": "3f53973fcbe74ba304729afcf88d0af62dda1889",
+  "scope": "Generated system messages and full enabled built-in schemas; no user prompt/history/memory/skills/custom provider prompt. UTF-8 bytes/chars only, not tokens/latency.",
+  "method": "Compile the baseline catalog/prompt sources from git and the working sources against the same application dependencies; execute AgentPromptBuilder.buildSystemMessages and AgentToolCatalog.build, serialize using org.json, count UTF-8 bytes and Kotlin String characters.",
+  "configuration": {
+    "model": "test-model",
+    "system_prompt": "",
+    "root_available": true,
+    "lsposed_available": true,
+    "terminal_tools": true,
+    "browser_tools": true,
+    "subagent_prompt": true,
+    "device_direct_tools": true,
+    "device_sensitive_read_tools": true,
+    "device_sensitive_action_tools": true,
+    "skill_github_discovery": true,
+    "skill_github_install": true,
+    "memory_tools": true,
+    "memory_context": "disabled",
+    "skill_context": "empty",
+    "execution_context": null
+  },
+  "exclusions": [
+    "User input and history",
+    "User/system custom prompt",
+    "Memory and skills bodies",
+    "Dynamic MCP, subagent and conversation-history schemas appended by runtime",
+    "Actual token counts, model prefill time and device performance"
+  ],
+  "working_sources_sha256": {
+    "AgentBackgroundToolCatalog.kt": "8af804ff2249bbbf008ac111e8c87c682d5ef87d271911390f76b98fc76c8495",
+    "AgentBrowserToolCatalog.kt": "bd338f1d6148fc7a87737c0013430f2fe3f905d988fe6b0b4d474048411d4105",
+    "AgentCommonTaskToolCatalog.kt": "48f4e84aab4b731fe2229a9b161aaed5fc9d05af08a27e3d07eee05ae718c27e",
+    "AgentContextAppToolCatalog.kt": "73bf5c83a491d686b160e184393fdb52d457459caef6d08e30699d6554455db1",
+    "AgentGestureToolCatalog.kt": "6df3439f847b42e6ef598ea52e19b1eccb1aeeafd0647d4bf4288a72e1c1a077",
+    "AgentPromptBuilder.kt": "1283c295f80000451693b8551cfa55a064ca43bfb09a2938b09edea289eb3c0f",
+    "AgentToolCatalog.kt": "8a7f48ec69d7bcc4f4b9dafde7f07607186bea4cc1c5c0e0955bf97456053b9b",
+    "AgentToolRequirements.kt": "112f7e9c8014429741bbd3ec58aba3cda719b697a6ac92d4f7c8a0cc74e89274",
+    "AgentUnifiedOperationCatalog.kt": "9f9962e4cd7dd6dd2ce1614cfb85baf45ac37dd4c34cf4f4cf40d61d4e94ccaa",
+    "AgentWebToolCatalog.kt": "10610fe39c797fe2bdb9950dcfc6871cc0767725b1cc55d26171ba11c727da11",
+    "ShadowSchema.java": "51fc31341e4c08abebe79e7e4df924171f84a855807b8876d6b3967e34cae068"
+  },
+  "reductions": {
+    "tool_count": 16,
+    "system_characters": 855,
+    "combined_utf8_bytes": 10301
+  }
+}

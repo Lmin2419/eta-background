@@ -93,7 +93,7 @@ internal object AgentContextAppToolCatalog {
             .put(
                 AgentToolSchema.function(
                     name = "observe_screen",
-                    description = "取得手机操作权并观察当前屏幕；其他会话占用时由 Runtime 等待。默认只返回前台应用、屏幕尺寸、observation_id 与可见 UI 节点，不附截图。节点为空、目标无法唯一识别、界面以 Canvas/地图/图片/二维码等视觉内容为主，或任务依赖颜色、图像、空间布局时，显式设置 include_screenshot=true；补截图时保持 include_ui_tree=true，以同一次新观察刷新节点和 observation_id，禁止把新截图与旧节点混用。节点动作必须原样携带同一次观察的 observation_id；树被截断但节点语义仍有效时，优先把 max_nodes 提高到 120 后重试。手机操作阶段完成后调用 release_gui，让其他会话继续；释放或用户接管后必须重新观察才能操作。",
+                    description = "观察本任务所在屏幕并取得操作权，其他任务占用时排队。默认只读 UI 树；需视觉定位时 include_screenshot=true，并同时刷新树。节点语义有效但被截断时提高 max_nodes。返回 observation_id；节点/坐标不得跨观察、跨任务或跨屏复用。",
                     parameters = JSONObject()
                         .put("type", "object")
                         .put(
@@ -128,7 +128,7 @@ internal object AgentContextAppToolCatalog {
             .put(
                 AgentToolSchema.function(
                     name = "release_gui",
-                    description = "结束当前手机操作阶段并释放操作权，让其他会话使用手机。纯思考、网页、Shell 或文件工作不需要继续占用手机。释放后旧观察、节点与坐标全部失效；再次操作前先 observe_screen。没有持有操作权时调用也会成功。",
+                    description = "结束本任务的屏幕操作阶段，释放操作权；后台保留页面及任务通知，不移到主屏。旧观察和坐标失效，再操作须重新观察。纯思考、网页或文件工作无需占用屏幕。",
                     parameters = JSONObject()
                         .put("type", "object")
                         .put("properties", JSONObject())

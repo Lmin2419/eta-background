@@ -117,7 +117,7 @@ internal class BackgroundScreenTools(
         controller.throwIfCancelled()
         if (takeoverPending.getAndSet(false)) return """{"ok":false,"code":"APP_TAKEN_OVER","error":"应用已离开后台屏，原后台操作已暂停。用户恢复后请重新观察并取得后台屏，不能重放旧输入或自动切换到前台操作。"}"""
         if (binding != null && controller.resumeGeneration != observedGeneration && name in MUTATING_TOOLS) {
-            return """{"ok":false,"code":"OBSERVE_AFTER_RESUME","error":"暂停后页面可能已经变化，请先调用 screen_dump、screen_list 或 screen_shot 重新观察，再决定下一步。此操作尚未执行。"}"""
+            return """{"ok":false,"code":"OBSERVE_AFTER_RESUME","error":"暂停后页面可能已经变化，请先调用 observe_screen 重新观察，再决定下一步。此操作尚未执行。"}"""
         }
         if (name == "screen_open") {
             val args = JSONObject(arguments)

@@ -34,8 +34,9 @@ internal object BuiltInWebSearch {
                     PublicWebSearch.parse(decoded.text, response.finalUrl, limit, transport::ensureActive)
                 }
                 transport.ensureActive()
+                val relevantPage = SearchRelevance.filter(query, page)
                 attempts += SearchAttempt(provider, "OK")
-                return page.copy(attempts = attempts.toList())
+                return relevantPage.copy(attempts = attempts.toList())
             } catch (failure: WebRequestException) {
                 if (failure.code == "WEB_CANCELLED") throw failure
                 attempts += SearchAttempt(provider, failure.code, failure.status)

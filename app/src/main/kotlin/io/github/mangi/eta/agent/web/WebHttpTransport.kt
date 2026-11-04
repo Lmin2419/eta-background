@@ -33,6 +33,8 @@ internal data class WebHttpResponse(
     val contentType: String?,
     val bytes: ByteArray,
     val truncated: Boolean,
+    /** Only a normalized signal is retained; error bodies and arbitrary headers are never exposed. */
+    val challengeDetected: Boolean = false,
 )
 
 /** 独立匿名 GET 请求，不继承 WebView 登录状态；关闭只取消本次运行拥有的请求。 */
@@ -122,8 +124,9 @@ internal class WebHttpTransport(baseClient: OkHttpClient) : Closeable {
                         }
                     } else {
                         val status = response.code
+                        val challenge = response.header("cf-mitigated").equals("challenge", ignoreCase = true)
                         // 错误响应不读取正文，避免认证信息和服务器回显进入日志或错误说明。
-                        if (!response.isSuccessful) return WebHttpResponse(initial.toString(), url.toString(), status, response.header("Content-Type"), byteArrayOf(), false)
+                        if (!response.isSuccessful) return WebHttpResponse(initial.toString(), url.toString(), status, response.header("Content-Type"), byteArrayOf(), false, challenge)
                         val responseBody = response.body
                         val output = ByteArrayOutputStream(minOf(maxBytes, 16_384))
                         var truncated = false
@@ -143,7 +146,7 @@ internal class WebHttpTransport(baseClient: OkHttpClient) : Closeable {
                             }
                         }
                         ensureActive()
-                        return WebHttpResponse(initial.toString(), url.toString(), status, response.header("Content-Type"), output.toByteArray(), truncated)
+                        return WebHttpResponse(initial.toString(), url.toString(), status, response.header("Content-Type"), output.toByteArray(), truncated, challenge)
                     }
                 }
             } catch (failure: WebRequestException) {

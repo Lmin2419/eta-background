@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import org.json.JSONObject
 import org.junit.After
@@ -274,6 +275,45 @@ class BrowserSessionRegistryTest {
         }
     }
 
+    @Test
+    fun oldCleanupCannotStopNewUserNavigation() {
+        val session = BrowserSessionRegistry.get(newKey())
+        val view = seedPage(session, "https://old.example")
+        val epoch = AgentBrowserSession::class.java.getDeclaredField("operationEpoch").apply { isAccessible = true }.get(session) as AtomicLong
+        val generation = AgentBrowserSession::class.java.getDeclaredField("navigationGeneration").apply { isAccessible = true }.get(session) as AtomicLong
+        epoch.set(5L); generation.set(7L)
+        val stop = AgentBrowserSession::class.java.getDeclaredMethod("stopOwnedNavigation", WebView::class.java, Long::class.javaPrimitiveType, Long::class.javaPrimitiveType).apply { isAccessible = true }
+        stop.invoke(session, view, 7L, 5L)
+        epoch.incrementAndGet(); generation.incrementAndGet()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(0, view.stops)
+        stop.invoke(session, view, 8L, 6L)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(1, view.stops)
+    }
+
+    @Test
+    fun navigationTotalDeadlineStopsOwnedLoadWithoutReplayingIt() {
+        val session = BrowserSessionRegistry.get(newKey())
+        val view = seedPage(session, "https://original.example")
+        val navigation = FutureTask {
+            session.execute(context, JSONObject().put("action", "navigate").put("url", "https://slow.example")
+                .put("timeout_ms", 1200L), "run-timeout", "tool-timeout")
+        }
+        val worker = Thread(navigation).apply { start() }
+        try {
+            pumpUntil { view.loads == 1 }
+            pumpUntil { navigation.isDone && view.stops > 0 }
+            val result = JSONObject(navigation.get().content)
+            assertFalse(result.getBoolean("ok"))
+            assertTrue(result.getBoolean("operationMayHaveRun"))
+            assertEquals(1, view.loads)
+            assertFalse(session.snapshots.value.isLoading)
+        } finally {
+            worker.interrupt(); worker.join(1_000L)
+        }
+    }
+
     private fun pumpUntil(condition: () -> Boolean) {
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5L)
         while (!condition() && System.nanoTime() < deadline) {
@@ -308,6 +348,8 @@ class BrowserSessionRegistryTest {
     private inner class RecordingWebView : WebView(this@BrowserSessionRegistryTest.context) {
         var cacheCleared = false
         var loads = 0
+        var stops = 0
+        override fun stopLoading() { stops += 1 }
         override fun clearCache(includeDiskFiles: Boolean) { cacheCleared = true }
         override fun loadUrl(url: String) { loads += 1 }
     }

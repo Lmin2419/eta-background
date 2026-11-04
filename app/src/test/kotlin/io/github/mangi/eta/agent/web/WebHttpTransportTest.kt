@@ -93,6 +93,18 @@ class WebHttpTransportTest {
         }
     }
 
+    @Test fun challengeHeaderSurvivesAsABooleanWithoutReadingOrExposingTheErrorBody() {
+        WebFixtureServer { WebFixtureResponse(403, headers = mapOf("cf-mitigated" to "challenge", "X-Private" to "secret"),
+            body = "credential=private-server-echo".toByteArray()) }.use { server ->
+            WebHttpTransport(OkHttpClient()).use { transport ->
+                val response = transport.get(server.url("/challenge"))
+                assertTrue(response.challengeDetected)
+                assertTrue(response.bytes.isEmpty())
+                assertEquals("WEB_CHALLENGE", WebReadQuality.inspect(response.status, response.contentType, "", response.challengeDetected)?.code)
+            }
+        }
+    }
+
     @Test fun redirectLoopsAndCredentialUrlsFailExplicitly() {
         WebFixtureServer { WebFixtureResponse(302, headers = mapOf("Location" to "/loop")) }.use { server ->
             WebHttpTransport(OkHttpClient()).use { transport ->

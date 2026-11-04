@@ -23,9 +23,11 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.core.graphics.createBitmap
 import io.github.mangi.eta.agent.media.AgentImageCodec
+import io.github.mangi.eta.agent.runtime.AgentRunCancelledException
 import io.github.mangi.eta.agent.tool.requiredText
 import java.io.ByteArrayOutputStream
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
@@ -126,6 +128,9 @@ internal class AgentBrowserSession(
     private var currentHttpStatus: Int? = null
 
     @Volatile
+    private var feedbackPageUrl: String = ""
+
+    @Volatile
     private var currentProgress: Int = 0
 
     @Volatile
@@ -145,6 +150,11 @@ internal class AgentBrowserSession(
 
     @Volatile
     private var activeOperationEpoch: Long = 0L
+
+    @Volatile
+    private var activeDeadlineNanos: Long = Long.MAX_VALUE
+    private var activeCancellationCheck: () -> Unit = {}
+    private val operationTimings = linkedMapOf<String, Long>()
 
     @Volatile
     private var lastAgentToolCallId: String? = null
@@ -190,6 +200,30 @@ internal class AgentBrowserSession(
                     publishSnapshotOnMain()
                 }
             }
+        }
+        return result
+    }
+
+    /** Internal read fallback. The bounded full snapshot goes to fetch_url's cache, never directly to the model. */
+    fun fetchReadable(
+        context: Context,
+        url: String,
+        runId: String,
+        toolCallId: String,
+        maxChars: Int = 200_000,
+        timeoutMs: Long = 25_000L,
+        checkCancellation: () -> Unit = {},
+    ): BrowserToolResult {
+        val result = executeInternal(
+            context, JSONObject().put("action", "navigate").put("url", url)
+                .put("timeout_ms", timeoutMs).put("max_chars", maxChars.coerceIn(256, 200_000)),
+            userInitiated = false, agentRunId = runId, checkCancellation = checkCancellation,
+            snapshotRead = true,
+        )
+        if (JSONObject(result.content).optBoolean("ok") && toolCallId.isNotBlank()) {
+            runCatching { callOnMain {
+                lastAgentRunId = runId; lastAgentToolCallId = toolCallId; publishSnapshotOnMain()
+            } }
         }
         return result
     }
@@ -249,16 +283,11 @@ internal class AgentBrowserSession(
     private fun interruptCurrentAction(force: Boolean) {
         if (!force && activeActionIsUserInitiated) return
         interrupted.set(true)
-        operationEpoch.incrementAndGet()
+        val cancelledEpoch = operationEpoch.incrementAndGet()
         activeOperationEpoch = 0L
-        navigationGeneration.incrementAndGet()
+        val cancelledNavigation = navigationGeneration.incrementAndGet()
         currentLoadWaiter?.complete(LoadOutcome(false, "CANCELLED", "操作已取消"))
-        mainHandler.post {
-            runCatching { webView?.stopLoading() }
-            currentLoading = false
-            currentPageVisible = committedMainFrameUrl.isNotBlank()
-            publishSnapshotOnMain()
-        }
+        webView?.let { stopOwnedNavigation(it, cancelledNavigation, cancelledEpoch) }
     }
 
     fun attachTo(container: ViewGroup, hostContext: Context) {
@@ -336,6 +365,7 @@ internal class AgentBrowserSession(
         userInitiated: Boolean,
         agentRunId: String? = null,
         checkCancellation: () -> Unit = {},
+        snapshotRead: Boolean = false,
     ): BrowserToolResult {
         initialize(context)
         val action = args.optString("action").trim().lowercase(Locale.ROOT)
@@ -347,8 +377,14 @@ internal class AgentBrowserSession(
         }
         checkCancellation()
         if (isDataClearing()) return errorResult(action, "BROWSER_DATA_CLEARING", "正在清除浏览器数据，请稍后再试", "blocked")
-        // 等待另一动作时也响应本 run 的取消，不能获得锁后清掉已经到达的取消信号。
-        while (!operationLock.tryLock(100L, TimeUnit.MILLISECONDS)) checkCancellation()
+        val budgetMs = args.optLong("timeout_ms", if (action == "batch") BATCH_TIMEOUT_MS else 30_000L)
+            .coerceIn(1L, BATCH_TIMEOUT_MS)
+        val callDeadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(budgetMs)
+        // Waiting for this session is part of the caller's deadline too.
+        while (!operationLock.tryLock(minOf(100L, budgetMs), TimeUnit.MILLISECONDS)) {
+            checkCancellation()
+            if (System.nanoTime() >= callDeadline) return errorResult(action, "OPERATION_TIMEOUT", "浏览器正忙，本次操作未执行", "timeout")
+        }
         return try {
             checkCancellation()
             if (closed) return errorResult(action, "BROWSER_SESSION_CLOSED", "浏览器会话已关闭")
@@ -366,6 +402,9 @@ internal class AgentBrowserSession(
             activeOperationEpoch = epoch
             activeActionIsUserInitiated = userInitiated
             activeAgentRunId = agentRunId.takeUnless { userInitiated }
+            activeCancellationCheck = checkCancellation
+            activeDeadlineNanos = callDeadline
+            operationTimings.clear()
             try {
                 checkCancellation()
                 callOnMain {
@@ -373,26 +412,38 @@ internal class AgentBrowserSession(
                     publishSnapshotOnMain()
                 }
                 runCatching {
-                    when (action) {
-                        "navigate" -> navigate(args)
-                        "get_readable" -> readPage(args, readable = true)
-                        "get_text" -> readPage(args, readable = false)
-                        "find_elements" -> findElements(args)
-                        "click" -> click(args)
-                        "type" -> type(args)
-                        "scroll" -> scroll(args)
-                        "screenshot" -> screenshot(args)
-                        "get_page_info" -> pageInfo()
-                        "go_back" -> historyNavigation(action, backwards = true)
-                        "go_forward" -> historyNavigation(action, backwards = false)
-                        "reload" -> reload()
-                        "wait_for_selector" -> waitForSelector(args)
-                        else -> throw BrowserFailure("INVALID_ACTION", "浏览器 action 无效")
-                    }
+                    if (snapshotRead) {
+                        val navigation = dispatchAction("navigate", args)
+                        if (!JSONObject(navigation.content).optBoolean("ok")) navigation
+                        else readFullSnapshot(args)
+                    } else if (action == "batch") {
+                        val steps = BrowserActionBatch.parse(args)
+                        val batch = BrowserActionBatch.execute(steps, check = {}, action = { step ->
+                            runCatching {
+                                throwIfInterrupted()
+                                dispatchAction(step.getString("action"), step)
+                            }.getOrElse { failureResult(step.getString("action"), it) }
+                        })
+                        val batchEnvelope = JSONObject(batch.content)
+                        if (batchEnvelope.optBoolean("ok") && steps.last().getString("action") in BrowserActionBatch.inputActions) {
+                            // Small final read is observation only; it never retries or commits another action.
+                            runCatching { readPage(JSONObject().put("max_chars", 1600), readable = true) }
+                                .onSuccess { summary ->
+                                    val readable = JSONObject(summary.content)
+                                    listOf("text", "title", "url", "links", "truncated", "next_offset", "content_format").forEach { key ->
+                                        if (readable.has(key)) batchEnvelope.put(key, readable.opt(key))
+                                    }
+                                }.onFailure { batchEnvelope.put("summary_available", false) }
+                        }
+                        batchEnvelope.put("timing_ms", JSONObject(operationTimings.toMap()))
+                        toolResult(batchEnvelope, batch.images)
+                    } else dispatchAction(action, args)
                 }.getOrElse { throwable -> failureResult(action, throwable) }
             } finally {
                 if (activeOperationEpoch == epoch) activeOperationEpoch = 0L
                 activeActionIsUserInitiated = false
+                activeDeadlineNanos = Long.MAX_VALUE
+                activeCancellationCheck = {}
                 if (activeAgentRunId == agentRunId) activeAgentRunId = null
             }
         } finally {
@@ -401,9 +452,63 @@ internal class AgentBrowserSession(
         }
     }
 
+    private fun dispatchAction(action: String, args: JSONObject): BrowserToolResult {
+        throwIfInterrupted()
+        if (!activeActionIsUserInitiated && action in BrowserActionBatch.inputActions) {
+            webView?.takeIf { feedbackPageUrl.isNotBlank() && feedbackPageUrl == currentUrl }?.let { view ->
+                val pending = evaluateObject(view, BrowserFeedbackScripts.read(acknowledge = true))
+                if ((pending.optJSONArray("messages")?.length() ?: 0) > 0) {
+                    return toolResult(baseEnvelope(action, false, "blocked")
+                        .put("code", "PENDING_ACTION_FEEDBACK")
+                        .put("message", "上一操作出现了延迟提示，请先根据提示决定下一步；本次动作未执行")
+                        .put("operationMayHaveRun", false).put("feedback", pending))
+                }
+            }
+        }
+        val started = System.nanoTime()
+        val result = try { when (action) {
+            "navigate" -> measured("navigation") { navigate(args) }
+            "get_readable" -> measured("extraction") { readPage(args, readable = true) }
+            "get_text" -> measured("extraction") { readPage(args, readable = false) }
+            "find_elements" -> findElements(args)
+            "click" -> click(args)
+            "type" -> type(args)
+            "scroll" -> scroll(args)
+            "screenshot" -> measured("screenshot") { screenshot(args) }
+            "get_page_info" -> pageInfo()
+            "get_responses" -> responseInfo()
+            "go_back" -> historyNavigation(action, backwards = true)
+            "go_forward" -> historyNavigation(action, backwards = false)
+            "reload" -> reload()
+            "wait_for_selector" -> waitForSelector(args)
+            else -> throw BrowserFailure("INVALID_ACTION", "浏览器 action 无效")
+        } } catch (failure: Throwable) {
+            if ((failure as? BrowserFailure)?.status == "timeout") {
+                webView?.let { stopOwnedNavigation(it, navigationGeneration.get(), activeOperationEpoch) }
+            }
+            val failed = failureResult(action, failure)
+            if (action in BrowserActionBatch.inputActions) toolResult(JSONObject(failed.content)
+                .put("operationMayHaveRun", true).put("automatic_replay", false).put("outcome", "UNKNOWN"))
+            else failed
+        }
+        val envelope = JSONObject(result.content)
+            .put("elapsed_ms", TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started))
+            .put("source_role", "untrusted_web_content")
+            .put("timing_ms", JSONObject(operationTimings.toMap()))
+        // A read also acknowledges late messages, so subsequent inputs do not silently skip them.
+        if (envelope.optBoolean("ok") && action !in BrowserActionBatch.inputActions && webView != null && feedbackPageUrl.isNotBlank() && feedbackPageUrl == currentUrl) {
+            val feedback = evaluateObject(requirePage(), BrowserFeedbackScripts.read(acknowledge = true))
+            if ((feedback.optJSONArray("messages")?.length() ?: 0) > 0) envelope.put("feedback", feedback)
+        }
+        return toolResult(envelope, result.images)
+    }
+
     private fun navigate(args: JSONObject): BrowserToolResult {
         val rawUrl = args.optString("url").trim()
         if (rawUrl.isBlank()) throw BrowserFailure("INVALID_ARGUMENT", "navigate 缺少 url")
+        if (runCatching { Uri.parse(rawUrl).scheme?.lowercase(Locale.ROOT) }.getOrNull() !in setOf("http", "https")) {
+            throw BrowserFailure("INVALID_ARGUMENT", "navigate 仅支持 HTTP 或 HTTPS 网页")
+        }
         val view = ensureWebView()
         val epoch = activeOperationEpoch
         val waiter = LoadWaiter()
@@ -428,30 +533,65 @@ internal class AgentBrowserSession(
         }
 
         val outcome = try {
-            waiter.await(timeout) ?: run {
-                navigationGeneration.incrementAndGet()
-                callOnMain {
-                    view.stopLoading()
-                    currentLoading = false
-                    currentPageVisible = committedMainFrameUrl.isNotBlank()
-                    currentError = "页面加载超时"
-                    publishSnapshotOnMain()
-                }
+            val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeout)
+            var loaded: LoadOutcome? = null
+            while (loaded == null && System.nanoTime() < deadline) {
+                throwIfInterrupted()
+                loaded = waiter.await(remainingWaitMs(100L))
+            }
+            loaded ?: run {
+                stopOwnedNavigation(view, generation, epoch)
                 throw BrowserFailure("NAVIGATION_TIMEOUT", "页面加载超时", status = "timeout")
             }
+        } catch (failure: Throwable) {
+            stopOwnedNavigation(view, generation, epoch)
+            throw failure
         } finally {
             if (currentLoadWaiter === waiter) currentLoadWaiter = null
         }
         if (!outcome.ok) throw BrowserFailure(outcome.code, outcome.message)
         throwIfInterrupted()
 
+        if (evaluateObject(view, BrowserDomScripts.readiness()).optBoolean("challenge")) {
+            throw BrowserFailure("WEB_CHALLENGE", "网页仍显示人机验证，尚未取得目标正文", "blocked")
+        }
         currentHttpStatus?.takeIf { it >= 400 }?.let { code ->
             throw BrowserFailure("HTTP_$code", "网页返回 HTTP $code")
         }
+        evaluateObject(view, BrowserFeedbackScripts.install())
+        feedbackPageUrl = currentUrl
         return toolResult(
             baseEnvelope("navigate", ok = true, status = "ok")
                 .put("redirected", rawUrl != currentUrl)
         )
+    }
+
+    private fun readFullSnapshot(args: JSONObject): BrowserToolResult {
+        val view = requirePage()
+        val readyDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3L)
+        var state: JSONObject
+        do {
+            throwIfInterrupted()
+            state = evaluateObject(view, BrowserDomScripts.readiness())
+            when {
+                state.optBoolean("challenge") -> throw BrowserFailure("WEB_CHALLENGE", "网页仍显示人机验证，尚未取得目标正文", "blocked")
+                state.optBoolean("login_required") -> throw BrowserFailure("WEB_LOGIN_REQUIRED", "网页需要登录，尚未取得目标正文", "blocked")
+            }
+            if (state.optBoolean("content_ready") || System.nanoTime() >= readyDeadline) break
+            Thread.sleep(remainingWaitMs(100L))
+        } while (true)
+        if (!state.optBoolean("content_ready")) {
+            throw BrowserFailure("WEB_CONTENT_UNAVAILABLE", "页面仍未出现足够可读正文，未将加载占位内容当作结果")
+        }
+        val value = measured("extraction") {
+            evaluateObject(view, BrowserDomScripts.readable(0, args.optInt("max_chars", 200_000).coerceIn(256, 200_000)))
+        }
+        if (value.optString("text").isBlank()) throw BrowserFailure("WEB_CONTENT_UNAVAILABLE", "页面已打开，但尚无可读取正文")
+        val envelope = mergeValue(baseEnvelope("get_readable", true, "ok"), value)
+            .put("content_format", "markdown").put("source_role", "untrusted_web_content")
+            .put("content_ready", state.optBoolean("content_ready"))
+            .put("timing_ms", JSONObject(operationTimings.toMap()))
+        return BrowserToolResult(envelope.toString())
     }
 
     private fun readPage(args: JSONObject, readable: Boolean): BrowserToolResult {
@@ -487,12 +627,14 @@ internal class AgentBrowserSession(
     private fun click(args: JSONObject): BrowserToolResult {
         val target = targetFrom(args)
         val view = requirePage()
-        val value = evaluateObject(view, BrowserDomScripts.click(target.selector, target.x, target.y))
-        waitForPostAction()
-        return toolResult(
-            mergeValue(baseEnvelope("click", true, "ok"), value)
-                .put("side_effect", "possible")
-        )
+        val actionId = armFeedback(view)
+        return inputResult("click") {
+            val value = evaluateObject(view, BrowserDomScripts.click(target.selector, target.x, target.y))
+            val feedback = waitForPostAction(view, actionId)
+            toolResult(mergeValue(baseEnvelope("click", true, "ok"), value)
+                .put("side_effect", "possible").put("input_accepted", true)
+                .put("outcome", "UNCONFIRMED").put("feedback", feedback))
+        }
     }
 
     private fun type(args: JSONObject): BrowserToolResult {
@@ -500,21 +642,21 @@ internal class AgentBrowserSession(
         val submit = args.optBoolean("submit", false)
         val target = targetFrom(args)
         val view = requirePage()
-        val value = evaluateObject(
-            view,
-            BrowserDomScripts.type(
-                selector = target.selector,
-                x = target.x,
-                y = target.y,
-                text = inputText,
-                submit = submit,
-            )
-        )
-        waitForPostAction()
-        return toolResult(
-            mergeValue(baseEnvelope("type", true, "ok"), value)
+        val actionId = armFeedback(view)
+        return inputResult("type") {
+            val value = evaluateObject(view, BrowserDomScripts.type(target.selector, target.x, target.y, inputText, submit))
+            val feedback = waitForPostAction(view, actionId)
+            if (!submit) {
+                val selector = value.optJSONObject("matched_element")?.optString("selector").orEmpty()
+                val verified = selector.isNotBlank() && evaluateObject(view, BrowserDomScripts.verifyInput(selector, inputText)).optBoolean("input_verified")
+                if (!verified) return@inputResult toolResult(baseEnvelope("type", false, "unconfirmed")
+                    .put("code", "INPUT_NOT_VERIFIED").put("message", "页面未保留预期输入，请根据当前画面重新确认")
+                    .put("operationMayHaveRun", true).put("input_verified", false).put("feedback", feedback))
+            }
+            toolResult(mergeValue(baseEnvelope("type", true, "ok"), value)
                 .put("side_effect", if (submit) "possible" else "local_input")
-        )
+                .put("input_accepted", true).put("outcome", "UNCONFIRMED").put("feedback", feedback))
+        }
     }
 
     private fun scroll(args: JSONObject): BrowserToolResult {
@@ -524,9 +666,12 @@ internal class AgentBrowserSession(
             ?: throw BrowserFailure("INVALID_ARGUMENT", "direction 仅支持 up 或 down")
         val amount = args.optInt("amount", 600).coerceIn(1, 5_000)
         val selector = validatedSelector(args, required = false)
-        val value = evaluateObject(view, BrowserDomScripts.scroll(selector, direction, amount))
-        Thread.sleep(200)
-        return toolResult(mergeValue(baseEnvelope("scroll", true, "ok"), value))
+        val actionId = armFeedback(view)
+        return inputResult("scroll") {
+            val value = evaluateObject(view, BrowserDomScripts.scroll(selector, direction, amount))
+            val feedback = waitForPostAction(view, actionId)
+            toolResult(mergeValue(baseEnvelope("scroll", true, "ok"), value).put("feedback", feedback))
+        }
     }
 
     private fun screenshot(args: JSONObject): BrowserToolResult {
@@ -540,6 +685,10 @@ internal class AgentBrowserSession(
         val image = captured.takeIf { includeImage }
         return toolResult(envelope, listOfNotNull(image))
     }
+
+    private fun responseInfo(): BrowserToolResult = toolResult(
+        mergeValue(baseEnvelope("get_responses", true, "ok"), evaluateObject(requirePage(), BrowserFeedbackScripts.responses()))
+    )
 
     private fun pageInfo(): BrowserToolResult {
         val view = requirePage()
@@ -591,9 +740,9 @@ internal class AgentBrowserSession(
         val view = requirePage()
         val selector = validatedSelector(args, required = true)!!
         val timeout = args.optLong("timeout_ms", 5_000L).coerceIn(500L, 30_000L)
-        val deadline = System.currentTimeMillis() + timeout
+        val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeout)
         var state = JSONObject().put("found", false).put("visible", false)
-        while (System.currentTimeMillis() < deadline) {
+        while (System.nanoTime() < deadline) {
             throwIfInterrupted()
             state = evaluateObject(view, BrowserDomScripts.selectorState(selector))
             if (state.optBoolean("found")) {
@@ -602,7 +751,7 @@ internal class AgentBrowserSession(
                         .put("selector", selector.take(240))
                 )
             }
-            Thread.sleep(250L)
+            Thread.sleep(remainingWaitMs(100L))
         }
         return toolResult(
             mergeValue(baseEnvelope("wait_for_selector", false, "not_found"), state)
@@ -656,28 +805,89 @@ internal class AgentBrowserSession(
         return view
     }
 
-    private fun waitForPostAction() {
-        Thread.sleep(250L)
-        val deadline = System.currentTimeMillis() + POST_ACTION_TIMEOUT_MS
-        while (snapshots.value.isLoading && System.currentTimeMillis() < deadline) {
-            throwIfInterrupted()
-            Thread.sleep(100L)
+    private fun armFeedback(view: WebView): String {
+        evaluateObject(view, BrowserFeedbackScripts.install())
+        feedbackPageUrl = currentUrl
+        val id = UUID.randomUUID().toString()
+        evaluateObject(view, BrowserFeedbackScripts.arm(id))
+        return id
+    }
+
+    private fun inputResult(action: String, block: () -> BrowserToolResult): BrowserToolResult = try {
+        block()
+    } catch (error: Throwable) {
+        if ((error as? BrowserFailure)?.status == "timeout") {
+            webView?.let { stopOwnedNavigation(it, navigationGeneration.get(), activeOperationEpoch) }
         }
-        if (snapshots.value.isLoading) {
-            navigationGeneration.incrementAndGet()
-            mainHandler.post { runCatching { webView?.stopLoading() } }
-            throw BrowserFailure("ACTION_TIMEOUT", "网页操作后的页面加载超时", "timeout")
+        val result = failureResult(action, error)
+        toolResult(JSONObject(result.content).put("operationMayHaveRun", true)
+            .put("automatic_replay", false).put("outcome", "UNKNOWN"))
+    }
+
+    private fun waitForPostAction(view: WebView? = null, actionId: String? = null): JSONObject =
+        measured("action_wait") { awaitPostAction(view, actionId) }
+
+    private fun awaitPostAction(view: WebView?, actionId: String?): JSONObject {
+        val started = System.nanoTime()
+        val deadline = started + TimeUnit.MILLISECONDS.toNanos(POST_ACTION_TIMEOUT_MS)
+        var feedback = JSONObject().put("messages", JSONArray())
+        while (System.nanoTime() < deadline) {
+            throwIfInterrupted()
+            if (view != null && !snapshots.value.isLoading) {
+                feedback = evaluateObject(view, BrowserFeedbackScripts.read(acknowledge = false))
+                if (feedback.optString("action_id") != actionId.orEmpty()) {
+                    return JSONObject().put("page_changed", true).put("messages", JSONArray())
+                }
+                val elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)
+                val hasMessage = (feedback.optJSONArray("messages")?.length() ?: 0) > 0
+                // Messages are decisive evidence to return to the model, not proof of business success.
+                // Animation-only changes do not hold the tool until the whole page becomes quiet.
+                if (hasMessage || (feedback.optBoolean("changed") && elapsed >= 120L) || elapsed >= 900L) {
+                    return evaluateObject(view, BrowserFeedbackScripts.read(acknowledge = true))
+                }
+            } else if (!snapshots.value.isLoading) {
+                return feedback
+            }
+            Thread.sleep(remainingWaitMs(60L))
+        }
+        // Never replay an input when load completion is uncertain.
+        throw BrowserFailure("ACTION_TIMEOUT", "网页操作后的加载尚未完成，请重新观察，不要重复提交", "timeout")
+    }
+
+    private fun <T> measured(phase: String, block: () -> T): T {
+        val started = System.nanoTime()
+        return try { block() } finally {
+            operationTimings[phase] = (operationTimings[phase] ?: 0L) + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)
         }
     }
 
+    private fun remainingWaitMs(maximum: Long): Long {
+        throwIfInterrupted()
+        return minOf(maximum, TimeUnit.NANOSECONDS.toMillis(activeDeadlineNanos - System.nanoTime()).coerceAtLeast(1L))
+    }
+
     private fun throwIfInterrupted() {
+        activeCancellationCheck()
         if (isDataClearing() || interrupted.get() || activeOperationEpoch == 0L) {
             throw BrowserFailure("CANCELLED", "操作已取消", "cancelled")
+        }
+        if (System.nanoTime() >= activeDeadlineNanos) {
+            throw BrowserFailure("OPERATION_TIMEOUT", "浏览器操作已达到总时限，请重新观察后决定下一步", "timeout")
+        }
+    }
+
+    private fun stopOwnedNavigation(view: WebView, generation: Long, epoch: Long) {
+        mainHandler.post {
+            if (webView !== view || navigationGeneration.get() != generation || operationEpoch.get() != epoch) return@post
+            runCatching { view.stopLoading() }
+            currentLoading = false
+            currentPageVisible = committedMainFrameUrl.isNotBlank()
+            publishSnapshotOnMain()
         }
     }
 
     private fun requireActiveOperation(epoch: Long) {
-        if (isDataClearing() || epoch == 0L || activeOperationEpoch != epoch || interrupted.get()) {
+        if (isDataClearing() || epoch == 0L || activeOperationEpoch != epoch || interrupted.get() || System.nanoTime() >= activeDeadlineNanos) {
             throw BrowserFailure("CANCELLED", "操作已取消", "cancelled")
         }
     }
@@ -685,7 +895,7 @@ internal class AgentBrowserSession(
     @SuppressLint("SetJavaScriptEnabled")
     private fun ensureWebView(): WebView {
         webView?.let { return it }
-        return callOnMain {
+        return measured("browser_start") { callOnMain {
             webView ?: run {
                 val base = appContext ?: error("browser context unavailable")
                 val wrapper = MutableContextWrapper(attachedContainer?.context ?: base)
@@ -714,7 +924,7 @@ internal class AgentBrowserSession(
                 publishSnapshotOnMain()
                 view
             }
-        }
+        } }
     }
 
     private fun attachWebViewOnMain(view: WebView, container: ViewGroup) {
@@ -766,6 +976,7 @@ internal class AgentBrowserSession(
         currentLoading = false
         currentPageVisible = false
         committedMainFrameUrl = ""
+        feedbackPageUrl = ""
         lastAgentRunId = null
         lastAgentToolCallId = null
         navigationGeneration.incrementAndGet()
@@ -776,8 +987,9 @@ internal class AgentBrowserSession(
         throwIfInterrupted()
         val epoch = activeOperationEpoch
         val future = CompletableFuture<String>()
+        val timeout = remainingWaitMs(JAVASCRIPT_TIMEOUT_MS)
         mainHandler.post {
-            if (isDataClearing() || webView !== view || interrupted.get() || activeOperationEpoch != epoch || epoch == 0L) {
+            if (future.isCancelled || isDataClearing() || webView !== view || interrupted.get() || activeOperationEpoch != epoch || epoch == 0L || System.nanoTime() >= activeDeadlineNanos) {
                 future.completeExceptionally(BrowserFailure("CANCELLED", "操作已取消", "cancelled"))
             } else {
                 runCatching {
@@ -792,15 +1004,15 @@ internal class AgentBrowserSession(
             }
         }
         val raw = try {
-            future.get(JAVASCRIPT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            future.get(timeout, TimeUnit.MILLISECONDS)
         } catch (_: TimeoutException) {
             future.cancel(true)
             if (activeOperationEpoch == epoch) {
                 interrupted.set(true)
-                operationEpoch.incrementAndGet()
+                val cancelledEpoch = operationEpoch.incrementAndGet()
                 activeOperationEpoch = 0L
+                stopOwnedNavigation(view, navigationGeneration.get(), cancelledEpoch)
             }
-            mainHandler.post { runCatching { view.stopLoading() } }
             throw BrowserFailure("SCRIPT_TIMEOUT", "网页响应超时", "timeout")
         } catch (error: ExecutionException) {
             throw error.cause ?: error
@@ -920,7 +1132,9 @@ internal class AgentBrowserSession(
     )
 
     private fun failureResult(action: String, throwable: Throwable): BrowserToolResult {
-        val failure = throwable as? BrowserFailure
+        val failure = (throwable as? BrowserFailure) ?: if (throwable is AgentRunCancelledException || throwable is java.util.concurrent.CancellationException || throwable is InterruptedException) {
+            BrowserFailure("CANCELLED", "操作已取消", "cancelled")
+        } else null
         val message = failure?.message ?: if (throwable is JSONException) throwable.message.orEmpty() else "浏览器操作失败"
         if (failure?.code !in setOf("CANCELLED", "USER_CONTROL_ACTIVE")) {
             runCatching {
@@ -994,13 +1208,15 @@ internal class AgentBrowserSession(
     private fun <T> callOnMain(block: () -> T): T {
         if (Looper.myLooper() == Looper.getMainLooper()) return block()
         val future = CompletableFuture<T>()
+        val timeout = if (activeOperationEpoch != 0L) remainingWaitMs(JAVASCRIPT_TIMEOUT_MS) else JAVASCRIPT_TIMEOUT_MS
         mainHandler.post {
+            if (future.isCancelled) return@post
             runCatching(block)
                 .onSuccess(future::complete)
                 .onFailure(future::completeExceptionally)
         }
         return try {
-            future.get(JAVASCRIPT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            future.get(timeout, TimeUnit.MILLISECONDS)
         } catch (_: TimeoutException) {
             future.cancel(true)
             throw BrowserFailure("MAIN_THREAD_TIMEOUT", "浏览器主线程响应超时", "timeout")
@@ -1016,6 +1232,7 @@ internal class AgentBrowserSession(
     private inner class BrowserClient : WebViewClient() {
         override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
             if (webView !== view) return
+            feedbackPageUrl = ""
             currentUrl = url.orEmpty()
             currentHost = hostOf(currentUrl)
             currentTitle = view.title.orEmpty()
@@ -1150,26 +1367,13 @@ internal class AgentBrowserSession(
         private const val NAVIGATION_TIMEOUT_MS = 25_000L
         private const val JAVASCRIPT_TIMEOUT_MS = 8_000L
         private const val POST_ACTION_TIMEOUT_MS = 10_000L
+        private const val BATCH_TIMEOUT_MS = 30_000L
         private const val OFFSCREEN_VIEWPORT_MAX_WIDTH = 1_280
         private const val OFFSCREEN_VIEWPORT_MAX_HEIGHT = 2_400
         private const val PREVIEW_MAX_WIDTH = 480
         private const val PREVIEW_MAX_HEIGHT = 900
         private const val PREVIEW_QUALITY = 60
-        private val SUPPORTED_ACTIONS = setOf(
-            "navigate",
-            "get_readable",
-            "get_text",
-            "find_elements",
-            "click",
-            "type",
-            "scroll",
-            "screenshot",
-            "get_page_info",
-            "go_back",
-            "go_forward",
-            "reload",
-            "wait_for_selector",
-        )
+        private val SUPPORTED_ACTIONS = BrowserActionBatch.singleActions + "batch"
     }
 
 }

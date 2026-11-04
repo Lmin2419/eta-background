@@ -17,7 +17,7 @@ import org.junit.Test
 
 class AgentPromptBuilderTest {
     @Test
-    fun customProviderPromptsKeepBuiltInBackgroundRulesAndCoordinateProtocolsSeparate() {
+    fun customProviderPromptsUseOneObservationContractForBothLocations() {
         for (custom in listOf("", "用户自定义语气")) {
             val contents = AgentPromptBuilder.buildSystemMessages(
                 modelConfig(custom, terminalTools = false, browserTools = false),
@@ -26,9 +26,10 @@ class AgentPromptBuilderTest {
             assertTrue(contents.contains("内置前台操作和后台虚拟屏操作"))
             assertTrue(contents.contains("后台最多同时操作 2 个不同应用"))
             assertTrue(contents.contains("后台虚拟屏任务可在主屏关闭后继续"))
-            assertTrue(contents.contains("仅适用于前台 GUI 工具，不适用于后台 screen_*"))
+            assertTrue(contents.contains("前后台共用 observation_id 合同"))
             assertTrue(contents.contains("execution_location="))
-            assertTrue(contents.contains("不使用前台的 normalized/screen 或 observation_id"))
+            assertFalse(contents.contains("旧 screen_*"))
+            assertTrue(contents.contains("后台按键也用 press_key"))
             assertTrue(contents.contains("NO_PROGRESS"))
             assertTrue(contents.contains("未翻到历史、文字被裁切或复制失败不能推断消息被删除"))
             if (custom.isNotBlank()) assertTrue(contents.contains(custom))
@@ -81,7 +82,7 @@ class AgentPromptBuilderTest {
     }
 
     @Test
-    fun nativeAttachedScreenshotsDoNotRequireLegacyReadImageRoundTrip() {
+    fun attachedScreenshotsDoNotRequireAnotherReadImageRoundTrip() {
         val contents = AgentPromptBuilder.buildSystemMessages(
             modelConfig("", terminalTools = true, browserTools = false),
             SkillContext.EMPTY, AgentMemoryContext.DISABLED, rootAvailable = true,
@@ -92,9 +93,8 @@ class AgentPromptBuilderTest {
         assertTrue(contents.contains("仅返回路径或 attached=false 不表示已看图"))
         assertTrue(contents.contains("避免每轮先查空树再补图"))
         assertTrue(contents.contains("页面改变后重新判断观察方式"))
-        // The legacy path still requires explicit image delivery, and geometry guards remain.
-        assertTrue(contents.contains("用 screen_shot 并通过 read_image 查看"))
-        assertTrue(contents.contains("不能声称已看过截图"))
+        assertFalse(contents.contains("screen_shot"))
+        assertTrue(contents.contains("coordinate_contract"))
         assertTrue(contents.contains("只读取 UI 树，不附截图"))
         assertTrue(contents.contains("禁止把新截图与旧节点混用"))
         assertTrue(contents.contains("必须先重新观察，禁止直接重放动作"))
@@ -134,7 +134,7 @@ class AgentPromptBuilderTest {
             rootAvailable = false,
             executionContext = TerminalExecutionContext(TerminalEnvironment.DEBIAN, null, "/eta/custom workspace"),
         )
-        val terminal = messages.systemContents().single { it.contains("Eta 内置文件与终端工具") }
+        val terminal = messages.systemContents().joinToString("\n")
         assertTrue(terminal.contains("/eta/custom workspace"))
         assertTrue(terminal.contains("debian"))
         assertTrue(terminal.contains("identity=user"))
@@ -246,7 +246,7 @@ class AgentPromptBuilderTest {
         )
 
         assertEquals(
-            listOf("system", "system", "system", "system", "user", "assistant", "user"),
+            listOf("system", "system", "system", "system", "system", "user", "assistant", "user"),
             messages.roles(),
         )
         assertEquals("自定义系统约束", messages.getJSONObject(0).getString("content"))
@@ -282,10 +282,10 @@ class AgentPromptBuilderTest {
         assertTrue(messages.getJSONObject(2).getString("content").contains("观察返回内容后再读下一张"))
         assertTrue(messages.getJSONObject(3).getString("content").contains("可调用 subagent 派发子智能体"))
         assertFalse(messages.systemContents().any { it.contains("网页浏览、读取") })
-        assertEquals("旧问题", messages.getJSONObject(4).getString("content"))
-        assertEquals("旧回答", messages.getJSONObject(5).getString("content"))
+        assertEquals("旧问题", messages.getJSONObject(5).getString("content"))
+        assertEquals("旧回答", messages.getJSONObject(6).getString("content"))
 
-        val currentContent = messages.getJSONObject(6).getJSONArray("content")
+        val currentContent = messages.getJSONObject(7).getJSONArray("content")
         assertEquals("当前问题", currentContent.getJSONObject(0).getString("text"))
         assertEquals(
             image.reference,
@@ -318,18 +318,18 @@ class AgentPromptBuilderTest {
             skillContext = SkillContext(installedSkills = listOf(skill)),
         )
 
-        assertEquals(listOf("system", "system", "system", "system", "user"), messages.roles())
+        assertEquals(listOf("system", "system", "system", "system", "system", "user"), messages.roles())
         val systemContents = messages.systemContents()
         assertTrue(systemContents.any { it.contains("browser_use") })
         assertFalse(systemContents.any { it.contains("只需 command") })
         assertTrue(messages.getJSONObject(2).getString("content").contains("可调用 subagent 派发子智能体"))
         val skillMessage = systemContents.single { it.contains("id=screen-audit") }
-        assertEquals(skillMessage, messages.getJSONObject(3).getString("content"))
+        assertEquals(skillMessage, messages.getJSONObject(4).getString("content"))
         assertTrue(skillMessage.contains("path=/skills/screen-audit/SKILL.md"))
         assertTrue(skillMessage.contains("capabilities=scripts, assets"))
         assertTrue(skillMessage.contains("description=检查屏幕 并输出 结论"))
         assertTrue(skillMessage.contains("先调用 skills_read"))
-        assertEquals("读取网页", messages.getJSONObject(4).getString("content"))
+        assertEquals("读取网页", messages.getJSONObject(5).getString("content"))
     }
 
     @Test
@@ -348,6 +348,24 @@ class AgentPromptBuilderTest {
         assertFalse(disabled.any { it.contains(subagentGuidance) })
         assertEquals(1, enabled.count { it.contains(subagentGuidance) })
         assertEquals(disabled, enabled.filterNot { it.contains(subagentGuidance) })
+    }
+
+    @Test
+    fun modelRootAndWorkspaceChangesLeaveStableGuidancePrefixIdentical() {
+        fun messages(model: String, root: Boolean, workspace: String) = AgentPromptBuilder.buildSystemMessages(
+            modelConfig("Provider prompt", terminalTools = true, browserTools = true).copy(model = model),
+            SkillContext.EMPTY, AgentMemoryContext.DISABLED, rootAvailable = root,
+            executionContext = TerminalExecutionContext(TerminalEnvironment.DEBIAN, null, workspace),
+        ).systemContents()
+        val first = messages("model-a", false, "/workspace/a")
+        val changed = messages("model-b", true, "/workspace/b")
+        val runtime = first.indexOfFirst { it.startsWith("当前运行配置") }
+        assertTrue(runtime > 1)
+        assertEquals(first.take(runtime), changed.take(runtime))
+        assertTrue(first[runtime].contains("model-a"))
+        assertTrue(changed[runtime].contains("model-b"))
+        assertTrue(first[runtime].contains("/workspace/a"))
+        assertFalse(first.take(runtime).joinToString().contains("/workspace/a"))
     }
 
     @Test

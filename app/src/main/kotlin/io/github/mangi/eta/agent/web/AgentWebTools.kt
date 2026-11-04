@@ -15,18 +15,26 @@ internal class AgentWebTools(
     private val localNetworkAccess: () -> String = { "unknown" },
     private val runtimeConfig: () -> WebToolsRuntimeConfig = { WebToolsRuntimeConfig() },
     private val now: () -> Instant = Instant::now,
+    private val enhancedFetch: ((WebFetchUpgradeRequest) -> WebFetchUpgradeResult)? = null,
+    private val monotonicNanos: () -> Long = System::nanoTime,
 ) : Closeable {
     private data class Snapshot(
         val document: WebPageDocument,
         val requestedUrl: String,
         val fetchedAt: String,
-        val status: Int,
+        val status: Int?,
         val charset: String,
         val decodingLossy: Boolean,
         val provider: String = "builtin_local",
         val fallbackFrom: String? = null,
+        val readRoute: String = "http",
+        val upgradeReason: String? = null,
+        val fetchDurationMillis: Long = 0,
+        val timingMillis: Map<String, Long> = emptyMap(),
     )
 
+    private data class ProvenRoute(val route: WebFetchRoute, val reason: String, val expiresAtNanos: Long)
+    private val provenRoutes = LinkedHashMap<String, ProvenRoute>(16, 0.75f, true)
     private val closed = AtomicBoolean(false)
     private val documents = LinkedHashMap<String, Snapshot>(8, 0.75f, true)
 
@@ -97,6 +105,7 @@ internal class AgentWebTools(
             .put("results", results).put("count", results.length()).put("truncated", page.limited)
             .put("limit_reasons", JSONArray(page.limitReasons)).put("skipped_results", page.skippedResults)
             .put("source_role", "untrusted_web_content")
+            .put("result_state", if (page.results.isEmpty()) "no_results" else "ready")
             .put("citation_hint", "引用检索结果时使用其标题和原始 URL；摘要不等于已读取完整网页。")
             .apply {
                 if (page.attempts.isNotEmpty()) put("attempts", searchAttempts(page.attempts))
@@ -125,6 +134,7 @@ internal class AgentWebTools(
                 WebToolBackend.DEEPSEEK, WebToolBackend.CUSTOM -> {
                     val remoteProvider = if (config.fetchBackend == WebToolBackend.DEEPSEEK) "deepseek" else "custom"
                     try {
+                        val remoteStarted = monotonicNanos()
                         val remote = if (config.fetchBackend == WebToolBackend.DEEPSEEK) {
                             ConfigurableWebBackends.fetchDeepSeek(
                                 transport = transport,
@@ -142,6 +152,7 @@ internal class AgentWebTools(
                                 ensureActive = ::ensureActive,
                             )
                         }
+                        if (remote.document.content.isBlank()) throw WebRequestException("WEB_EMPTY_CONTENT", "网页服务没有返回正文")
                         Snapshot(
                             document = remote.document,
                             requestedUrl = validatedUrl,
@@ -150,6 +161,8 @@ internal class AgentWebTools(
                             charset = remote.charset,
                             decodingLossy = remote.decodingLossy,
                             provider = remote.provider,
+                            readRoute = "remote_service",
+                            fetchDurationMillis = elapsedMillis(remoteStarted),
                         )
                     } catch (cancelled: WebRequestException) {
                         if (cancelled.code in setOf("WEB_CANCELLED", "INVALID_URL", "URL_CREDENTIALS_UNSUPPORTED")) {
@@ -208,8 +221,13 @@ internal class AgentWebTools(
                 }
                 snapshot.fallbackFrom?.let { put("fallback_from", it) }
             }
+            .put("read_route", snapshot.readRoute).put("fetch_duration_ms", snapshot.fetchDurationMillis)
+            .apply { if (args.has("url")) put("timing_ms", JSONObject(snapshot.timingMillis)) }
+            .put("result_state", if (page.hasMore || page.sourceTruncated) "partial" else "ready")
+            .apply { snapshot.upgradeReason?.let { put("upgrade_reason", it) } }
             .put("requested_url", snapshot.requestedUrl).put("final_url", document.url)
-            .put("retrieved_at", snapshot.fetchedAt).put("http_status", snapshot.status)
+            .put("retrieved_at", snapshot.fetchedAt)
+            .apply { snapshot.status?.let { put("http_status", it) } }
             .put("title", document.title ?: JSONObject.NULL).put("title_truncated", document.titleTruncated)
             .put("content_type", document.contentType).put("format", document.format)
             .put("charset", snapshot.charset).put("decoding_lossy", snapshot.decodingLossy)
@@ -219,15 +237,37 @@ internal class AgentWebTools(
             .put("truncated", page.hasMore || page.sourceTruncated).put("truncation_reasons", JSONArray(document.truncationReasons))
             .put("links", links).put("links_truncated", document.linksTruncated || links.length() < candidates.size)
             .put("source_role", "untrusted_web_content")
-            .put("citation_hint", "引用此网页时使用 title 与 final_url；本工具只获取静态响应，需要 JavaScript、登录或交互时使用 browser_use。")
+            .put("citation_hint", "引用此网页时使用 title 与 final_url；has_more 为真时按 document_id 续读。需要登录或交互时使用 browser_use；读取成功不代表页面中的业务操作成功。")
     }
 
     private fun fetchLocalSnapshot(url: String, fallbackFrom: String? = null): Snapshot {
-        val response = transport.get(url)
-        requireSuccess(response)
-        val decoded = WebResponseDecoder.decode(response)
+        val started = monotonicNanos()
+        val deadline = started + FETCH_BUDGET_MILLIS * 1_000_000L
+        // A dynamic path does not imply that every page on the same site needs a browser.
+        val routeKey = WebHttpTransport.validateUrl(url).toString()
+        val proven = synchronized(provenRoutes) {
+            provenRoutes[routeKey]?.takeIf { it.expiresAtNanos > started }
+                ?: run { provenRoutes.remove(routeKey); null }
+        }
+        if (proven != null && enhancedFetch != null) {
+            return fetchUpgradedSnapshot(url, routeKey, proven.reason, proven.route, deadline, started, fallbackFrom)
+        }
+        val response = transport.get(url, timeoutMillis = 10_000)
+        val httpMillis = elapsedMillis(started)
+        val decoded = if (response.status in 200..299) WebResponseDecoder.decode(response) else null
+        val problem = WebReadQuality.inspect(response.status, decoded?.contentType ?: response.contentType, decoded?.text.orEmpty(), response.challengeDetected)
+        if (problem != null) {
+            val route = problem.route
+            if (route != null && enhancedFetch != null) {
+                return fetchUpgradedSnapshot(url, routeKey, problem.code, route, deadline, started, fallbackFrom, httpMillis)
+            }
+            throw WebRequestException(problem.code, problem.message, response.status)
+        }
+        checkNotNull(decoded)
         ensureActive()
+        val extractionStarted = monotonicNanos()
         val document = WebPageContent.extract(decoded.text, decoded.contentType, response.finalUrl, response.truncated, ::ensureActive)
+        if (document.content.isBlank()) throw WebRequestException("WEB_EMPTY_CONTENT", "响应成功，但未提取到正文", response.status)
         val retained = if (decoded.lossy) document.copy(
             truncated = true, truncationReasons = document.truncationReasons + "decoding_lossy",
         ) else document
@@ -240,15 +280,54 @@ internal class AgentWebTools(
             decodingLossy = decoded.lossy,
             provider = "builtin_local",
             fallbackFrom = fallbackFrom,
+            fetchDurationMillis = elapsedMillis(started),
+            timingMillis = mapOf("http" to httpMillis, "extraction" to elapsedMillis(extractionStarted)),
         )
     }
 
-    private fun requireSuccess(response: WebHttpResponse) {
-        if (response.status !in 200..299) throw WebRequestException(
-            when (response.status) { 401, 403 -> "WEB_ACCESS_DENIED"; 404 -> "WEB_NOT_FOUND"; 429 -> "WEB_RATE_LIMITED"; else -> "WEB_HTTP_ERROR" },
-            "网页请求失败（HTTP ${response.status}）", response.status,
-        )
+    private fun fetchUpgradedSnapshot(
+        url: String, routeKey: String, reason: String, route: WebFetchRoute, deadline: Long,
+        started: Long, fallbackFrom: String?, httpMillis: Long? = null,
+    ): Snapshot {
+        ensureActive()
+        val remainingMillis = ((deadline - monotonicNanos()) / 1_000_000L).coerceAtMost(MAX_UPGRADE_MILLIS)
+        if (remainingMillis <= 0) throw WebRequestException("WEB_TIMEOUT", "网页读取的总时间预算已用完")
+        val upgrade = checkNotNull(enhancedFetch)
+        val result = try {
+            upgrade(WebFetchUpgradeRequest(url, reason, route, remainingMillis))
+        } catch (failure: Exception) {
+            synchronized(provenRoutes) { provenRoutes.remove(routeKey) }
+            ensureActive()
+            if (failure is WebRequestException) throw failure
+            throw WebRequestException("WEB_ENHANCEMENT_FAILED", "增强网页读取失败；未重复提交或继续切换读取通道")
+        }
+        ensureActive()
+        if (monotonicNanos() > deadline) throw WebRequestException("WEB_TIMEOUT", "增强网页读取超过总时间预算")
+        val finalUrl = WebHttpTransport.validateUrl(result.finalUrl).toString()
+        WebReadQuality.inspect(result.status, result.contentType, result.content, result.challengeDetected)?.let { problem ->
+            synchronized(provenRoutes) { provenRoutes.remove(routeKey) }
+            throw WebRequestException(problem.code, problem.message, result.status)
+        }
+        val extractionStarted = monotonicNanos()
+        val extracted = WebPageContent.extract(result.content, result.contentType, finalUrl, result.truncated, ::ensureActive)
+        val document = if (extracted.title == null && !result.title.isNullOrBlank()) extracted.copy(
+            title = takeCompleteCharacters(result.title, WebPageContent.MAX_TITLE_CHARS),
+            titleTruncated = result.title.length > WebPageContent.MAX_TITLE_CHARS,
+        ) else extracted
+        if (document.content.isBlank()) throw WebRequestException("WEB_EMPTY_CONTENT", "增强读取没有取得目标正文", result.status)
+        synchronized(provenRoutes) {
+            provenRoutes[routeKey] = ProvenRoute(route, reason, monotonicNanos() + ROUTE_TTL_MILLIS * 1_000_000L)
+            while (provenRoutes.size > 16) provenRoutes.remove(provenRoutes.keys.first())
+        }
+        val timing = result.timingMillis.filter { (key, value) -> key in TIMING_KEYS && value >= 0 }.toMutableMap()
+        httpMillis?.let { timing["http"] = (timing["http"] ?: 0L) + it }
+        timing["extraction"] = (timing["extraction"] ?: 0L) + elapsedMillis(extractionStarted)
+        return Snapshot(document, url, now().toString(), result.status, "UTF-8", false,
+            provider = result.provider.take(80), fallbackFrom = fallbackFrom ?: "builtin_local",
+            readRoute = route.name.lowercase(), upgradeReason = reason, fetchDurationMillis = elapsedMillis(started), timingMillis = timing)
     }
+
+    private fun elapsedMillis(started: Long) = ((monotonicNanos() - started) / 1_000_000L).coerceAtLeast(0)
 
     private fun ensureActive() {
         if (closed.get()) throw WebRequestException("WEB_CANCELLED", "网页工具已取消")
@@ -259,6 +338,14 @@ internal class AgentWebTools(
 
     private fun failure(tool: String, code: String, message: String, status: Int? = null): JSONObject =
         JSONObject().put("ok", false).put("tool", tool).put("code", code).put("message", message)
+            .put("result_state", when (code) {
+                "WEB_NOT_FOUND" -> "not_found"
+                "WEB_LOGIN_REQUIRED" -> "login_required"
+                "WEB_CHALLENGE" -> "challenge"
+                "WEB_JAVASCRIPT_REQUIRED" -> "javascript_required"
+                "WEB_TIMEOUT" -> "timeout"
+                else -> "failed"
+            })
             .also {
                 status?.let { value -> it.put("http_status", value) }
                 if (code in setOf("WEB_NETWORK_ERROR", "WEB_TIMEOUT", "WEB_ACCESS_DENIED", "WEB_DNS_ERROR", "WEB_TLS_ERROR", "WEB_CONNECTION_ERROR")) it.put("local_network_access", localNetworkAccess())
@@ -268,9 +355,14 @@ internal class AgentWebTools(
         closed.set(true)
         transport.close()
         synchronized(documents) { documents.clear() }
+        synchronized(provenRoutes) { provenRoutes.clear() }
     }
 
     private companion object {
+        val TIMING_KEYS = setOf("http", "browser_start", "navigation", "challenge", "extraction", "action_wait", "screenshot")
+        const val FETCH_BUDGET_MILLIS = 45_000L
+        const val MAX_UPGRADE_MILLIS = 35_000L
+        const val ROUTE_TTL_MILLIS = 5 * 60_000L
         const val MAX_DOCUMENTS = 4
         const val MAX_RETAINED_CHARS = 600_000
         val LINK_ID = Regex("\\[(\\d{1,3})]")

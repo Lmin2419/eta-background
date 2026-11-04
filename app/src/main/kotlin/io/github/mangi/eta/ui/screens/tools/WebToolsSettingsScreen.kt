@@ -108,6 +108,9 @@ internal fun WebToolsSettingsScreen(onBack: () -> Unit) {
                         else R.string.web_tools_overview_resilient_note,
                     ),
                 )
+                if (settings.fetchBackend == WebToolBackend.BUILTIN) {
+                    WebToolsNote(stringResource(R.string.web_tools_enhancement_note))
+                }
             }
         }
         if (usesDeepSeek) {

@@ -137,19 +137,6 @@ internal class TaskScreenSession(
      * the existing foreground executor must handle it unchanged.
      */
     fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult? {
-        if (toolCall.name == "screen_back") {
-            controller.throwIfCancelled()
-            if (!rootAvailable()) return error("ROOT_REQUIRED", "后台返回需要 Root；本次未发送返回键", "screen_back")
-            if (currentLocation() != TaskExecutionLocation.BACKGROUND) {
-                return error("BACKGROUND_SESSION_REQUIRED", "当前任务没有后台屏幕；本次未发送返回键", "screen_back")
-            }
-            // Legacy callers need no native observation ID. Create one on this run's
-            // existing binding, then reuse exactly the native key admission checks.
-            invalidateObservation()
-            val observed = backgroundObserve(JSONObject().put("include_ui_tree", true).put("include_screenshot", false))
-            val snapshot = synchronized(lock) { observation } ?: return observed
-            return pressKey(JSONObject().put("button", "BACK").put("observation_id", snapshot.id))
-        }
         if (toolCall.name !in AgentUnifiedOperationCatalog.names) return null
         val args = runCatching { JSONObject(toolCall.argumentsJson.ifBlank { "{}" }) }.getOrElse {
             return error("INVALID_ARGUMENT", "工具参数不是 JSON object", toolCall.name)
@@ -165,6 +152,9 @@ internal class TaskScreenSession(
                 toolCall.name,
             )
         }
+
+        if (toolCall.name == "observe_screen" && args.optBoolean("status_only", false) &&
+            target == TaskExecutionLocation.BACKGROUND) return backgroundStatus()
 
         if (target == TaskExecutionLocation.FOREGROUND) {
             if (currentLocation() == TaskExecutionLocation.BACKGROUND) {
@@ -196,47 +186,6 @@ internal class TaskScreenSession(
             executeBackground(toolCall.name, args)
         } catch (failure: IllegalArgumentException) {
             error("INVALID_COORDINATE", failure.message ?: "后台坐标或参数无效", toolCall.name)
-        }
-    }
-
-    /**
-     * Legacy input shares the same screen but not the native observation protocol. Invalidate
-     * before dispatch: the call may throw or return a non-JSON error after input was sent.
-     * Reads must leave the published frame untouched, including passive screen_shot refreshes.
-     */
-    fun beforeLegacyCall(name: String) {
-        if (name in BackgroundScreenTools.MUTATING_TOOLS || name == "screen_open" || name == "screen_finish") {
-            invalidateObservation()
-        }
-    }
-
-    /** Update task-local state after a legacy screen_* call without replacing its executor path. */
-    fun observeLegacyResult(name: String, raw: String?) {
-        val result = parseJson(raw) ?: return
-        val ok = result.optBoolean("ok", false)
-        // Apply loss/uncertainty to every reply, including screen_state/open/finish. A when
-        // branch for one of these names must not suppress the common invalidation rule.
-        if (result.optString("code") in LOST_SESSION_CODES ||
-            result.optString("code") == "APP_TAKEN_OVER" || result.optBoolean("operationMayHaveRun", false)) {
-            invalidateObservation()
-        }
-        when (name) {
-            "screen_open" -> if (ok && result.optString("mode") == "hidden" &&
-                (result.optInt("displayId", result.optInt("display", 0)) > 0)) {
-                synchronized(lock) {
-                    location = TaskExecutionLocation.BACKGROUND
-                    observation = null
-                }
-            }
-            "screen_finish" -> if (ok) {
-                synchronized(lock) {
-                    location = TaskExecutionLocation.FOREGROUND
-                    observation = null
-                }
-            }
-            "screen_state" -> if (result.has("sessionValid") && !result.optBoolean("sessionValid")) {
-                synchronized(lock) { observation = null }
-            }
         }
     }
 
@@ -281,6 +230,28 @@ internal class TaskScreenSession(
         )
     }
 
+    /** Status cannot acquire a display, publish an input observation, or change task location. */
+    private fun backgroundStatus(): AgentModelClient.ToolResult {
+        controller.throwIfCancelled()
+        val status = backendResult("screen_state", JSONObject())
+        if (status.optString("code") in LOST_SESSION_CODES || status.optString("code") == "APP_TAKEN_OVER") invalidateObservation()
+        if (status.has("sessionValid") && !status.optBoolean("sessionValid")) invalidateObservation()
+        // Do not expose engine logs, authentication material or other tasks' sessions.
+        fun select(source: JSONObject?, names: List<String>) = JSONObject().also { filtered ->
+            names.forEach { key -> source?.opt(key)?.let { filtered.put(key, it) } }
+        }
+        val response = JSONObject().put("ok", status.optBoolean("ok", true)).put("status_only", true)
+            .put("task_execution_location", currentLocation().wireValue)
+            .put("engine", select(status.optJSONObject("engine"), listOf("ok", "healthy", "build", "code", "state")))
+            .put("observer", select(status.optJSONObject("observer"), listOf("ok", "ready", "code")))
+            .put("session", select(status.optJSONObject("session"), listOf("mode", "display")))
+            .put("recovery", select(status.optJSONObject("recovery"), listOf("code", "state", "next_action", "automatic_force_stop", "backoffRemainingMs")))
+        status.opt("sessionValid")?.let { response.put("sessionValid", it) }
+        status.opt("code")?.let { response.put("code", it) }
+        status.opt("reason")?.let { response.put("reason", it) }
+        return resultWithLocation(response, "observe_screen")
+    }
+
     private fun backgroundObserve(args: JSONObject): AgentModelClient.ToolResult {
         controller.throwIfCancelled()
         val options = AgentScreenObservationContract.resolve(args)
@@ -320,15 +291,12 @@ internal class TaskScreenSession(
         if (options.includeScreenshot) {
             shot = backendResult("screen_shot", JSONObject().put("scale", 0.5))
             if (!shot.optBoolean("ok", false)) {
+                val backendFailure = shot
                 screenshotError = shot.optString("error").ifBlank { shot.optString("code", "SCREENSHOT_FAILED") }
                 shot = null
                 if (!options.includeUiTree) {
                     invalidateObservation()
-                    return error(
-                        "BACKGROUND_GEOMETRY_UNAVAILABLE",
-                        "仅截图观察无法取得权威几何（$screenshotError）；本次没有生成观察",
-                        "observe_screen",
-                    )
+                    return resultWithLocation(backendFailure, "observe_screen")
                 }
             } else {
                 screenshotGeometry = geometryOf(shot) ?: run {
@@ -470,9 +438,6 @@ internal class TaskScreenSession(
         "scroll" -> scroll(args)
         "scroll_element" -> scrollElement(args)
         "type_text" -> typeText(args)
-        "input_text" -> typeText(args)
-        "replace_text" -> typeText(args)
-        "clear_text" -> error("BACKGROUND_UNSUPPORTED_OPERATION", "后台暂不支持 clear_text；请先观察输入框并重新输入", name)
         "wait" -> waitOnly(args)
         "wait_for_text" -> waitForText(args)
         "press_key" -> pressKey(args)
@@ -488,9 +453,7 @@ internal class TaskScreenSession(
         backendName: String,
     ): AgentModelClient.ToolResult {
         val snapshot = requireObservation(toolName, args) ?: return observationError(toolName, args)
-        if (!validateLiveSnapshot(snapshot, toolName)) {
-            return error("OBSERVATION_STALE", "屏幕已经变化，旧观察不能执行输入；请先重新 observe_screen", toolName)
-        }
+        validateLiveSnapshot(snapshot, toolName)?.let { return it }
         val point = convertPoint(args, snapshot)
         val backendArgs = JSONObject()
             .put("x", point.first)
@@ -502,9 +465,7 @@ internal class TaskScreenSession(
 
     private fun tapArea(args: JSONObject): AgentModelClient.ToolResult {
         val snapshot = requireObservation("tap_area", args) ?: return observationError("tap_area", args)
-        if (!validateLiveSnapshot(snapshot, "tap_area")) {
-            return error("OBSERVATION_STALE", "屏幕已经变化，旧观察不能执行输入；请先重新 observe_screen", "tap_area")
-        }
+        validateLiveSnapshot(snapshot, "tap_area")?.let { return it }
         val first = convertPoint(
             JSONObject().put("x", args.optInt("x1")).put("y", args.optInt("y1"))
                 .put("coordinate_space", args.optString("coordinate_space"))
@@ -527,10 +488,16 @@ internal class TaskScreenSession(
     }
 
     private fun swipe(args: JSONObject): AgentModelClient.ToolResult {
-        val snapshot = requireObservation("swipe", args) ?: return observationError("swipe", args)
-        if (!validateLiveSnapshot(snapshot, "swipe")) {
-            return error("OBSERVATION_STALE", "屏幕已经变化，旧观察不能执行输入；请先重新 observe_screen", "swipe")
+        val holdValue = args.opt("hold_ms")
+        val holdMs = if (!args.has("hold_ms")) 0 else {
+            if (holdValue !is Number || !holdValue.toDouble().isFinite() ||
+                holdValue.toDouble() != holdValue.toInt().toDouble() || holdValue.toInt() !in 0..3000) {
+                return error("INVALID_ARGUMENT", "hold_ms 必须为 0 到 3000 的整数；本次未执行", "swipe")
+            }
+            holdValue.toInt()
         }
+        val snapshot = requireObservation("swipe", args) ?: return observationError("swipe", args)
+        validateLiveSnapshot(snapshot, "swipe")?.let { return it }
         val start = convertPoint(
             JSONObject().put("x", args.optInt("x1")).put("y", args.optInt("y1"))
                 .put("coordinate_space", args.optString("coordinate_space"))
@@ -544,12 +511,13 @@ internal class TaskScreenSession(
             snapshot,
         )
         return mutateAndInvalidate(
-            "screen_swipe",
+            if (holdMs > 0) "screen_drag" else "screen_swipe",
             JSONObject()
                 .put("x1", start.first).put("y1", start.second)
                 .put("x2", end.first).put("y2", end.second)
                 .put("coordinate_space", "display")
-                .put("duration_ms", args.optInt("duration_ms", 500)),
+                .put("duration_ms", args.optInt("duration_ms", 500))
+                .apply { if (holdMs > 0) put("hold_ms", holdMs) },
             "swipe",
         )
     }
@@ -560,9 +528,7 @@ internal class TaskScreenSession(
         backendName: String,
     ): AgentModelClient.ToolResult {
         val snapshot = requireObservation(toolName, args) ?: return observationError(toolName, args)
-        if (!validateLiveSnapshot(snapshot, toolName)) {
-            return error("OBSERVATION_STALE", "屏幕已经变化，旧观察不能执行输入；请先重新 observe_screen", toolName)
-        }
+        validateLiveSnapshot(snapshot, toolName)?.let { return it }
         val node = findNode(snapshot, args)
             ?: return error("INVALID_NODE_INDEX", "观察快照中不存在节点 index=${args.optInt("index", -1)}", toolName)
         val bounds = node.bounds
@@ -579,9 +545,7 @@ internal class TaskScreenSession(
 
     private fun scroll(args: JSONObject): AgentModelClient.ToolResult {
         val snapshot = requireObservation("scroll", args) ?: return observationError("scroll", args)
-        if (!validateLiveSnapshot(snapshot, "scroll")) {
-            return error("OBSERVATION_STALE", "屏幕已经变化，旧观察不能执行输入；请先重新 observe_screen", "scroll")
-        }
+        validateLiveSnapshot(snapshot, "scroll")?.let { return it }
         return mutateAndInvalidate(
             "screen_scroll",
             JSONObject().put("direction", args.optString("direction")),
@@ -591,9 +555,7 @@ internal class TaskScreenSession(
 
     private fun scrollElement(args: JSONObject): AgentModelClient.ToolResult {
         val snapshot = requireObservation("scroll_element", args) ?: return observationError("scroll_element", args)
-        if (!validateLiveSnapshot(snapshot, "scroll_element")) {
-            return error("OBSERVATION_STALE", "屏幕已经变化，旧观察不能执行输入；请先重新 observe_screen", "scroll_element")
-        }
+        validateLiveSnapshot(snapshot, "scroll_element")?.let { return it }
         val node = findNode(snapshot, args)
             ?: return error("INVALID_NODE_INDEX", "观察快照中不存在可滚动节点 index=${args.optInt("index", -1)}", "scroll_element")
         val bounds = node.bounds
@@ -612,9 +574,7 @@ internal class TaskScreenSession(
 
     private fun typeText(args: JSONObject): AgentModelClient.ToolResult {
         val snapshot = requireObservation("type_text", args) ?: return observationError("type_text", args)
-        if (!validateLiveSnapshot(snapshot, "type_text")) {
-            return error("OBSERVATION_STALE", "屏幕已经变化，旧观察不能执行输入；请先重新 observe_screen", "type_text")
-        }
+        validateLiveSnapshot(snapshot, "type_text")?.let { return it }
         val mode = args.optString("mode", "replace").lowercase(Locale.ROOT)
         if (mode == "append") {
             return error("BACKGROUND_UNSUPPORTED_OPERATION", "后台暂不支持 append 模式；本次未执行", "type_text")
@@ -672,9 +632,7 @@ internal class TaskScreenSession(
             else -> return error("INVALID_ARGUMENT", "未知按键：$button", "press_key")
         }
         val snapshot = requireObservation("press_key", args) ?: return observationError("press_key", args)
-        if (!validateLiveSnapshot(snapshot, "press_key")) {
-            return error("OBSERVATION_STALE", "屏幕已经变化，旧观察不能执行输入；请先重新 observe_screen", "press_key")
-        }
+        validateLiveSnapshot(snapshot, "press_key")?.let { return it }
         return mutateAndInvalidate(
             "screen_key",
             JSONObject().put("code", code),
@@ -759,35 +717,35 @@ internal class TaskScreenSession(
         return error("OBSERVATION_MISMATCH", "observation_id 不属于当前任务的最近观察", toolName)
     }
 
-    private fun validateLiveSnapshot(snapshot: Observation, toolName: String): Boolean {
+    private fun validateLiveSnapshot(snapshot: Observation, toolName: String): AgentModelClient.ToolResult? {
         // Boot.handle adds geometry to the dump response. Use it as the node-side
         // authority; never capture/replace a published screenshot frame during validation.
         val current = backendResult("screen_dump", JSONObject().put("limit", snapshot.limit))
         if (!current.optBoolean("ok", false)) {
             invalidateObservation()
-            return false
+            return resultWithLocation(current, toolName)
         }
         val currentGeometry = geometryOf(current) ?: run {
             invalidateObservation()
-            return false
+            return error("OBSERVATION_STALE", "屏幕几何或内容已改变，请重新 observe_screen；本次未执行", toolName)
         }
         val saved = Geometry(snapshot.displayId, snapshot.displayWidth ?: 0, snapshot.displayHeight ?: 0, snapshot.rotation ?: -1)
         if (saved.width <= 0 || saved.height <= 0 || saved.rotation !in 0..3 || !sameGeometry(saved, currentGeometry)) {
             invalidateObservation()
-            return false
+            return error("OBSERVATION_STALE", "屏幕几何或内容已改变，请重新 observe_screen；本次未执行", toolName)
         }
         if (snapshot.screenshotGeometry != null && !sameGeometry(snapshot.screenshotGeometry, currentGeometry)) {
             invalidateObservation()
-            return false
+            return error("OBSERVATION_STALE", "屏幕几何或内容已改变，请重新 observe_screen；本次未执行", toolName)
         }
         if (snapshot.treeRead) {
             val nodes = parseNodes(current)
             if (fingerprint(nodes, currentGeometry, packageOf(current)) != snapshot.fingerprint) {
                 invalidateObservation()
-                return false
+                return error("OBSERVATION_STALE", "屏幕几何或内容已改变，请重新 observe_screen；本次未执行", toolName)
             }
         }
-        return true
+        return null
     }
 
     private fun mutateAndInvalidate(
@@ -796,13 +754,10 @@ internal class TaskScreenSession(
         toolName: String,
     ): AgentModelClient.ToolResult {
         controller.throwIfCancelled()
+        // Consume the admitted observation before sending input: a transport exception or
+        // malformed reply can occur after Android already executed the action.
+        invalidateObservation()
         val result = backendResult(backendName, backendArgs)
-        val code = result.optString("code")
-        val ok = result.optBoolean("ok", false)
-        if (ok || result.optBoolean("operationMayHaveRun", false) || code in setOf("TIMEOUT", "ACTION_OUTCOME_UNKNOWN", "UNKNOWN", "APP_TAKEN_OVER") ||
-            code in LOST_SESSION_CODES) {
-            invalidateObservation()
-        }
         return resultWithLocation(result, toolName)
     }
 

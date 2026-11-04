@@ -32,7 +32,15 @@ import org.robolectric.annotation.Config
 class SubagentTest {
     @Test
     fun wildcardProfilesCannotAcquireOrOperateTheirParentsVirtualDisplay() {
-        val catalog = JSONArray().also { com.eta.shadow.ShadowSchema.append(it) }
+        val catalog = AgentToolCatalog.build(false, false).let { all ->
+            JSONArray().also { gui ->
+                for (i in 0 until all.length()) {
+                    val item = all.getJSONObject(i)
+                    if (item.getJSONObject("function").getString("name") in
+                        io.github.mangi.eta.agent.model.AgentUnifiedOperationCatalog.names) gui.put(item)
+                }
+            }
+        }
         val profiles = SubagentProfile.BUILTIN_PROFILES + listOf(
             SubagentProfile.CODER.copy(explicitTools = setOf("*")),
             SubagentProfile.CODER.copy(explicitTools = setOf("screen_open", "screen_tap", "read_file")),

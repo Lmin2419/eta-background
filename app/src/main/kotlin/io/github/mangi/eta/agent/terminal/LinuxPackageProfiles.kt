@@ -45,6 +45,7 @@ internal data class LinuxPackageProfile(
     val dependsOn: LinuxPackageProfile? = null,
 ) {
     fun spec(distribution: LinuxDistribution): LinuxPackageSpec = requireNotNull(specs[distribution])
+    fun supports(distribution: LinuxDistribution): Boolean = distribution in specs
 }
 
 internal object LinuxPackageProfiles {
@@ -118,7 +119,54 @@ internal object LinuxPackageProfiles {
             LinuxDistribution.DEBIAN to LinuxPackageSpec(setupScript = KIMI_INSTALL_SCRIPT),
         ),
     )
-    val ALL = listOf(PYTHON, NODE, SSH, KIMI)
+    /** Optional reader dependencies, installed explicitly; no Chromium download here. */
+    val WEB_HTTP = LinuxPackageProfile(
+        id = "web_http",
+        markerName = ".eta-web-http-ready",
+        revision = 1,
+        dependsOn = PYTHON,
+        specs = mapOf(
+            // curl_cffi/Patchright wheels are glibc-based. Do not attempt a musl
+            // install and call an import failure a supported Alpine runtime.
+            LinuxDistribution.DEBIAN to LinuxPackageSpec(setupScript = """
+                rm -rf /opt/eta/web-python.installing
+                uv venv --relocatable --python 3.12 /opt/eta/web-python.installing
+                uv pip install --python /opt/eta/web-python.installing/bin/python \
+                  'scrapling[fetchers,rag]==0.5' 'curl_cffi==0.17.0' \
+                  'patchright==1.64.4' 'playwright==1.64.1'
+                /opt/eta/web-python.installing/bin/python -c 'from scrapling.fetchers import FetcherSession; import importlib.metadata; assert importlib.metadata.version("scrapling") == "0.5"'
+                rm -rf /opt/eta/web-python.previous
+                if [ -d /opt/eta/web-python ]; then mv /opt/eta/web-python /opt/eta/web-python.previous; fi
+                if ! mv /opt/eta/web-python.installing /opt/eta/web-python; then
+                  if [ -d /opt/eta/web-python.previous ]; then mv /opt/eta/web-python.previous /opt/eta/web-python; fi
+                  exit 71
+                fi
+                rm -rf /opt/eta/web-python.previous
+            """.trimIndent()),
+        ),
+    )
+
+    /** Download presence is not browser readiness: runtime must pass a sandboxed launch probe. */
+    val WEB_BROWSER = LinuxPackageProfile(
+        id = "web_browser",
+        markerName = ".eta-web-browser-ready",
+        revision = 1,
+        dependsOn = WEB_HTTP,
+        specs = mapOf(
+            LinuxDistribution.DEBIAN to LinuxPackageSpec(
+                packages = listOf(
+                    "libnss3", "libatk1.0-0t64", "libatk-bridge2.0-0t64", "libcups2t64",
+                    "libdrm2", "libxkbcommon0", "libxcomposite1", "libxdamage1", "libxfixes3",
+                    "libxrandr2", "libgbm1", "libpango-1.0-0", "libcairo2", "libasound2t64",
+                ),
+                setupScript = """
+                    PLAYWRIGHT_BROWSERS_PATH=/opt/eta/web-browsers \
+                      /opt/eta/web-python/bin/python -m patchright install chromium
+                """.trimIndent(),
+            ),
+        ),
+    )
+    val ALL = listOf(PYTHON, NODE, SSH, KIMI, WEB_HTTP, WEB_BROWSER)
 }
 
 internal fun linuxPackageProfileReady(rootfs: File, profile: LinuxPackageProfile): Boolean {
@@ -156,6 +204,9 @@ internal class LinuxPackageProfileInstaller(
     ): PackageProfileInstallResult = withContext(Dispatchers.IO) {
         if (isReady()) return@withContext PackageProfileInstallResult.AlreadyReady
         onProgress(PackageProfileInstallProgress(PackageProfileInstallStage.CHECKING))
+        if (!profile.supports(distribution)) {
+            return@withContext PackageProfileInstallResult.Failed(PackageProfileInstallStage.CHECKING)
+        }
         if (!LinuxEnvironmentPaths.rootfsReady(rootfs.absolutePath) ||
             !File(rootfs, AlpineEnvironmentPaths.COMMON_TOOLS_MARKER).isFile
         ) {

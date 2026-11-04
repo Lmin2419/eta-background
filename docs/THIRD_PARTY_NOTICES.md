@@ -12,6 +12,8 @@ Eta 的离线模型目录快照来自 [models.dev](https://models.dev/api.json)�
 
 ## 网页正文解析
 
+可选网页增强组件通过用户安装的 Linux 环境调用 [D4Vinci/Scrapling](https://github.com/D4Vinci/Scrapling) 0.5，采用 [MIT License](https://github.com/D4Vinci/Scrapling/blob/main/LICENSE)。APK 只携带本项目编写的调用适配器，不内嵌 Scrapling、Python、Patchright、Playwright 或 Chromium。可选下载的各组件保留各自版权与许可；固定版本、安装范围和兼容性限制见 [网页运行时说明](../etax/web/README.md)。
+
 Eta 使用 [jsoup](https://jsoup.org/) 在本机解析已经下载的 HTML。jsoup 采用 MIT License，版权归 Jonathan Hedley；许可全文随 APK 保存在 [`assets/licenses/jsoup-MIT.txt`](../app/src/main/assets/licenses/jsoup-MIT.txt)。依赖版本以 `gradle/libs.versions.toml` 为准。
 
 Android 标准库兼容使用 [desugar_jdk_libs](https://github.com/google/desugar_jdk_libs) 的 NIO 规格，按 GNU GPL v2 with Classpath Exception 分发，许可全文保存在 [`assets/licenses/desugar-jdk-libs-LICENSE.txt`](../app/src/main/assets/licenses/desugar-jdk-libs-LICENSE.txt)。这些组件保留各自许可证权利。

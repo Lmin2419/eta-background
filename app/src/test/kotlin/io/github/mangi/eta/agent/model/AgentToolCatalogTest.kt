@@ -95,10 +95,13 @@ class AgentToolCatalogTest {
         assertEquals(60, properties.getJSONObject("max_nodes").getInt("default"))
         assertEquals(1, properties.getJSONObject("max_nodes").getInt("minimum"))
         assertEquals(120, properties.getJSONObject("max_nodes").getInt("maximum"))
-        assertTrue(function.getString("description").contains("默认只返回"))
-        assertTrue(function.getString("description").contains("include_screenshot=true"))
-        assertTrue(function.getString("description").contains("保持 include_ui_tree=true"))
-        assertTrue(function.getString("description").contains("禁止把新截图与旧节点混用"))
+        val description = function.getString("description")
+        assertTrue(description.contains("UI 树"))
+        assertTrue(description.contains("include_screenshot=true"))
+        assertTrue(description.contains("同时刷新树"))
+        assertTrue(description.contains("observation_id"))
+        assertTrue(description.contains("不得跨观察"))
+        assertFalse(properties.getJSONObject("status_only").getBoolean("default"))
     }
 
     @Test

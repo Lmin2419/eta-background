@@ -265,7 +265,7 @@ class AgentLocalToolsPermissionTest {
         val clipboard = context.getSystemService(ClipboardManager::class.java)
         clipboard.setPrimaryClip(ClipData.newPlainText("test", "existing text"))
         tools().use { tools ->
-            listOf("type_text", "input_text", "replace_text", "set_clipboard", "paste_text", "wait_for_text").forEach { name ->
+            listOf("type_text", "set_clipboard", "wait_for_text").forEach { name ->
                 listOf("{}", """{"text":null}""", """{"text":{"value":"replacement"}}""").forEach { args ->
                     val result = JSONObject(tools.execute(AgentModelClient.ToolCall("invalid-$name", name, args)).content)
                     assertEquals(result.toString(), "INVALID_ARGUMENT", result.getString("code"))
@@ -316,8 +316,8 @@ class AgentLocalToolsPermissionTest {
         val result = tools.execute(
             AgentModelClient.ToolCall(
                 id = "call-1",
-                name = "input_text",
-                argumentsJson = "{\"text\":\"hello\"}",
+                name = "type_text",
+                argumentsJson = "{\"text\":\"hello\",\"mode\":\"append\"}",
             ),
         )
 

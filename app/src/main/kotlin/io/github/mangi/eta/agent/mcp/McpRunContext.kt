@@ -288,16 +288,17 @@ internal class RoutingToolExecutor(
     private val controller: io.github.mangi.eta.agent.runtime.AgentRunController? = null,
 ) : AgentModelClient.ToolExecutor, AutoCloseable {
     override fun execute(toolCall: AgentModelClient.ToolCall): AgentModelClient.ToolResult {
-        // Native foreground tools first decide whether this task is explicitly on its
-        // per-run background screen. A null result keeps the old foreground path byte-for-byte.
+        // Engine protocol names are private. An archived instruction cannot bypass the
+        // unified observation/ownership contract by calling a former public screen tool.
+        if (toolCall.name.startsWith("screen_")) return AgentModelClient.ToolResult(
+            JSONObject().put("ok", false).put("code", "UNKNOWN_TOOL")
+                .put("message", "请使用 launch_app、observe_screen、press_key 等统一界面工具；本次未执行")
+                .toString(),
+        )
         taskScreen?.execute(toolCall)?.let { return it }
-        // etax: screen_* 后台虚拟屏工具，以及 terminal 里的界面类 shell 命令拦截
-        if (shadow != null) taskScreen?.beforeLegacyCall(toolCall.name)
-        shadow?.execute(toolCall.name, toolCall.argumentsJson)
-            ?.let { raw ->
-                taskScreen?.observeLegacyResult(toolCall.name, raw)
-                return backgroundToolResult(toolCall.name, raw)
-            }
+        // Retain the shell GUI bypass guard, not a second public screen dispatcher.
+        if (toolCall.name == "terminal") shadow?.execute(toolCall.name, toolCall.argumentsJson)
+            ?.let { raw -> return backgroundToolResult(toolCall.name, raw) }
         if (mcp.contains(toolCall.name)) return mcp.execute(toolCall)
         val foreground = io.github.mangi.eta.agent.tool.AgentToolRequirements.requiresGuiControl(toolCall.name) ||
             io.github.mangi.eta.agent.tool.AgentToolRequirements.hasForegroundIntentFallback(toolCall.name)

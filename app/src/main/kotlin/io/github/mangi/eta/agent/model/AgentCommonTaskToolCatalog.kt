@@ -17,9 +17,9 @@ internal object AgentCommonTaskToolCatalog {
             .put("instruction", string("save: full reusable instruction, not chat logs, coordinates or secrets.", 8000))
             .put("revision", string("Required for update/delete: latest revision from list/get/save; refresh after conflict.", 64))
         tools.put(AgentToolSchema.function("common_task",
-            "Eta built-in 常用任务 library shared with the task screen and home shortcuts. list returns names/IDs only; get reads one workflow. " +
-                (if (writable) "Only save/edit/delete when the user asks; save without id creates (same name/body retries reuse it). " else "Read-only in roleplay. ") +
-                "Reading or saving never starts a run or schedule. When the user asks to run a saved task, get it and execute with existing tools in this run, respecting current instructions and permissions.",
+            "Eta 内置常用任务，与任务页面和桌面快捷方式共用数据。list 只列摘要，get 按需读取一个流程；读取或保存不启动执行/定时。" +
+                (if (writable) "仅用户要求时保存/修改/删除；save 无 id 创建，相同名称和内容重试不重复创建。" else "角色会话只读。") +
+                "用户要求执行时读取最新版，在当前会话用当前工具执行；不重放保存的工具参数。",
             JSONObject().put("type", "object").put("properties", properties).put("required", JSONArray().put("action"))))
     }
 

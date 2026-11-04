@@ -1,0 +1,15 @@
+<resources>
+    <string name="linux_web_http_title">網頁增強讀取 · Scrapling</string>
+    <string name="linux_web_http_summary">Debian 可選元件，先安裝 Python。僅普通網頁請求受阻時使用；執行任務時不會臨時下載依賴。</string>
+    <string name="linux_web_http_ready">依賴已安裝；每個任務使用前會檢查增強讀取是否可用。</string>
+    <string name="linux_web_browser_title">驗證頁面瀏覽器</string>
+    <string name="linux_web_browser_summary">先安裝增強讀取；此元件下載較大。能否執行取決於手機環境，網站仍可能需要你手動驗證。</string>
+    <string name="linux_web_browser_ready">瀏覽器檔案已安裝；通過沙箱啟動檢查後才會使用，不保證所有網站可存取。</string>
+    <string name="web_tools_enhancement_note">普通網頁走快速讀取，JavaScript 頁面可用內建瀏覽器。Scrapling 增強元件可在「Linux 環境 → Debian → 可選工具」中安裝。每次請求最多升級一次，任務中不會臨時安裝依賴。</string>
+    <string name="linux_web_check">檢查可用性</string>
+    <string name="linux_web_checking">正在檢查已安裝的網頁元件…</string>
+    <string name="linux_web_http_available">HTTP 增強元件可用；具體網頁能否讀取仍取決於網站和網路。</string>
+    <string name="linux_web_browser_available">瀏覽器沙箱啟動成功；這不代表已通過網站的人機驗證。</string>
+    <string name="linux_web_browser_unavailable">瀏覽器檔案已安裝，但目前環境無法通過沙箱啟動檢查。普通網頁讀取不受影響。</string>
+    <string name="linux_web_check_failed">網頁元件檢查未通過：%1$s</string>
+</resources>

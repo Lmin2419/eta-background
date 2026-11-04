@@ -45,6 +45,10 @@ import io.github.mangi.eta.agent.terminal.PackageProfileInstallResult
 import io.github.mangi.eta.agent.terminal.PackageProfileInstallStage
 import io.github.mangi.eta.agent.terminal.SharedFolderMounts
 import io.github.mangi.eta.agent.terminal.terminalEnvironment
+import io.github.mangi.eta.agent.terminal.TerminalExecutionContext
+import io.github.mangi.eta.agent.web.ScraplingRuntime
+import io.github.mangi.eta.agent.web.WebRequestException
+import io.github.mangi.eta.agent.tool.WebBrowserWork
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.data.repository.LinuxEnvironmentSettingsRepository
 import io.github.mangi.eta.ui.app.KimiWebLaunchResult
@@ -77,6 +81,8 @@ private enum class InstallTarget {
     NODE,
     SSH,
     KIMI,
+    WEB_HTTP,
+    WEB_BROWSER,
 }
 
 private data class PackageProfileUi(
@@ -119,6 +125,20 @@ private val packageProfileUis = listOf(
         titleRes = R.string.linux_kimi_tools,
         summaryRes = R.string.linux_kimi_tools_summary,
         readyRes = R.string.linux_kimi_tools_ready,
+    ),
+    PackageProfileUi(
+        target = InstallTarget.WEB_HTTP,
+        profile = LinuxPackageProfiles.WEB_HTTP,
+        titleRes = R.string.linux_web_http_title,
+        summaryRes = R.string.linux_web_http_summary,
+        readyRes = R.string.linux_web_http_ready,
+    ),
+    PackageProfileUi(
+        target = InstallTarget.WEB_BROWSER,
+        profile = LinuxPackageProfiles.WEB_BROWSER,
+        titleRes = R.string.linux_web_browser_title,
+        summaryRes = R.string.linux_web_browser_summary,
+        readyRes = R.string.linux_web_browser_ready,
     ),
 )
 
@@ -292,6 +312,34 @@ internal fun LinuxEnvironmentScreen(
         }
     }
 
+    fun checkWebEnhancement(target: InstallTarget) {
+        if (busyTarget != null || requiresRoot) return
+        busyTarget = target
+        profileProgressSummary = context.getString(R.string.linux_web_checking)
+        resultMessage = null
+        launchInstallation {
+            resultMessage = withContext(Dispatchers.IO) {
+                try {
+                    ScraplingRuntime(appContext, TerminalExecutionContext(
+                        selectedDistribution.terminalEnvironment,
+                        LinuxEnvironmentPaths.rootfsDir(appContext, selectedDistribution).absolutePath,
+                    ), AndroidAgentLogger, { capabilities.root.isGranted }).use { runtime ->
+                        val result = if (target == InstallTarget.WEB_BROWSER) {
+                            WebBrowserWork.run(15_000, {}) { remaining -> runtime.probe(remaining, checkBrowser = true) }
+                        } else runtime.probe()
+                        context.getString(if (target == InstallTarget.WEB_BROWSER) {
+                            if (result.browser) R.string.linux_web_browser_available else R.string.linux_web_browser_unavailable
+                        } else R.string.linux_web_http_available)
+                    }
+                } catch (failure: WebRequestException) {
+                    context.getString(R.string.linux_web_check_failed, failure.code)
+                } catch (_: Exception) {
+                    context.getString(R.string.linux_web_check_failed, "SCRAPLING_UNAVAILABLE")
+                }
+            }
+        }
+    }
+
     MiuixScaffoldPage(
         title = stringResource(R.string.ui_linux_tool_environment_314d22),
         onBack = onBack,
@@ -407,9 +455,13 @@ internal fun LinuxEnvironmentScreen(
                         .padding(horizontal = EtaPreferenceDefaults.SidePadding)
                         .padding(bottom = EtaPreferenceDefaults.GroupSpacing),
                 ) {
-                    packageProfileUis.forEachIndexed { index, profileUi ->
+                    packageProfileUis.filter { profileUi ->
+                        selectedDistribution == LinuxDistribution.DEBIAN ||
+                            profileUi.target !in setOf(InstallTarget.WEB_HTTP, InstallTarget.WEB_BROWSER)
+                    }.forEachIndexed { index, profileUi ->
                         val ready = profileReady[profileUi.target] == true
                         val isKimi = profileUi.target == InstallTarget.KIMI
+                        val isWeb = profileUi.target in setOf(InstallTarget.WEB_HTTP, InstallTarget.WEB_BROWSER)
                         val summaryRes = if (selectedDistribution == LinuxDistribution.DEBIAN) {
                             profileUi.debianSummaryRes
                         } else {
@@ -454,16 +506,21 @@ internal fun LinuxEnvironmentScreen(
                                                 R.string.linux_kimi_web_launch
                                             },
                                         )
+                                        isWeb && ready -> stringResource(R.string.linux_web_check)
                                         ready -> stringResource(R.string.linux_installed)
                                         busyTarget == profileUi.target -> stringResource(R.string.linux_installing)
                                         else -> stringResource(R.string.linux_install)
                                     },
-                                    enabled = !requiresRoot && if (isKimi && ready) {
+                                    enabled = !requiresRoot && if ((isKimi || isWeb) && ready) {
                                         !kimiWebLaunching && busyTarget == null
                                     } else {
                                         busyTarget == null && !ready
                                     },
                                     onClick = {
+                                        if (isWeb && ready) {
+                                            checkWebEnhancement(profileUi.target)
+                                            return@EtaTextButton
+                                        }
                                         if (isKimi && ready) {
                                             launchKimiWeb()
                                             return@EtaTextButton

@@ -17,6 +17,9 @@ import io.github.mangi.eta.agent.model.AgentHttpClient
 import io.github.mangi.eta.agent.device.LocalNetworkPermission
 import io.github.mangi.eta.agent.web.AgentWebTools
 import io.github.mangi.eta.agent.web.WebHttpTransport
+import io.github.mangi.eta.agent.web.ScraplingRuntime
+import io.github.mangi.eta.agent.web.WebFetchRoute
+import io.github.mangi.eta.agent.web.WebRequestException
 import io.github.mangi.eta.agent.model.AgentScreenObservationContract
 import io.github.mangi.eta.agent.model.AgentSensitiveToolPolicy
 import io.github.mangi.eta.agent.model.AgentTerminalToolCatalog
@@ -124,6 +127,19 @@ internal class AgentLocalTools(
         transport = WebHttpTransport(AgentHttpClient.client),
         localNetworkAccess = { LocalNetworkPermission.accessState(context).name.lowercase(Locale.ROOT) },
         runtimeConfig = { runBlocking { WebToolsSettingsRepository.resolveRuntimeConfig(context) } },
+        enhancedFetch = { request ->
+            checkWebCancellation()
+            if (request.preferredRoute == WebFetchRoute.HTTP_FINGERPRINT) {
+                scraplingRuntimeRef.value.read(request)
+            } else WebBrowserWork.run(request.timeoutMillis, ::checkWebCancellation) { remaining ->
+                if (request.preferredRoute == WebFetchRoute.BROWSER) {
+                    BrowserFetchSnapshot.decode(browserSessionRef.value.fetchReadable(
+                        context, request.url, browserRunId, "", maxChars = 200_000,
+                        timeoutMs = remaining, checkCancellation = ::checkWebCancellation,
+                    ).content)
+                } else scraplingRuntimeRef.value.read(request.copy(timeoutMillis = remaining))
+            }
+        },
     )
     val terminalExecutionContext = LinuxEnvironmentSettingsRepository.current(context).terminalEnvironment.let { environment ->
         TerminalExecutionContext(
@@ -146,6 +162,13 @@ internal class AgentLocalTools(
         ),
         linuxSharedMountsProvider = { SharedFolderMounts.current() },
     )
+    private val scraplingRuntimeRef = lazy {
+        ScraplingRuntime(context, terminalExecutionContext, logger, rootAvailable)
+    }
+
+    private fun checkWebCancellation() {
+        if (closed.get()) throw AgentRunCancelledException()
+    }
 
     private val publishedObservation = AtomicReference(PublishedObservation())
     private val repeatGuard = ActionRepeatGuard(SystemClock::uptimeMillis)
@@ -160,8 +183,10 @@ internal class AgentLocalTools(
     override fun close() {
         if (!closed.compareAndSet(false, true)) return
         publishedObservation.set(PublishedObservation())
+        GuiActionFeedback.clearOwner(feedbackOwner)
         if (browserSessionRef.isInitialized()) browserSessionRef.value.interruptAgentAction(browserRunId)
         webTools.close()
+        if (scraplingRuntimeRef.isInitialized()) scraplingRuntimeRef.value.close()
         terminalController.interruptAll()
         deviceController.close()
         rootCommandExecutor.close()
@@ -244,6 +269,7 @@ internal class AgentLocalTools(
                 "observe_screen" -> observeScreen(args, guiGeneration)
                 "release_gui" -> {
                     publishedObservation.set(PublishedObservation())
+                    GuiActionFeedback.clearOwner(feedbackOwner)
                     repeatGuard.clear()
                     guiControl?.release()
                     textResult(JSONObject().put("ok", true).put("tool", "release_gui").toString())
@@ -257,13 +283,8 @@ internal class AgentLocalTools(
                 "scroll" -> afterAction(toolCall.name, args) { deviceController.scroll(args.optString("direction"), args.optString("amount")) }
                 "scroll_element" -> afterAction(toolCall.name, args) { scrollElement(args) }
                 "type_text" -> afterAction(toolCall.name, args) { typeText(args) }
-                // 旧会话或旧入口仍可能请求这些工具名；保留执行路径，但不再出现在模型目录里。
-                "input_text" -> afterAction(toolCall.name, args) { inputText(args) }
-                "replace_text" -> afterAction(toolCall.name, args) { replaceText(args) }
-                "clear_text" -> afterAction(toolCall.name, args) { clearText(args) }
                 "set_clipboard" -> textResult(setClipboard(args))
                 "get_clipboard" -> textResult(getClipboard())
-                "paste_text" -> afterAction(toolCall.name, args) { pasteText(args) }
                 "press_key" -> afterAction(toolCall.name, args) { deviceController.pressKey(args.optString("button")) }
                 "wait" -> textResult(deviceController.waitMs(args.optInt("duration_ms", 1_000)))
                 "wait_for_text" -> textResult(waitForText(args))
@@ -308,6 +329,7 @@ internal class AgentLocalTools(
                     code = when (throwable) {
                         is InvalidToolArgumentException, is org.json.JSONException -> "INVALID_ARGUMENT"
                         is DeviceControlUnavailableException -> "ACCESSIBILITY_UNAVAILABLE"
+                        is WebRequestException -> throwable.code
                         else -> "TOOL_ERROR"
                     },
                     message = throwable.message ?: throwable.javaClass.simpleName
@@ -444,13 +466,15 @@ internal class AgentLocalTools(
         if (!browserToolsEnabled()) {
             return textResult(errorResult("BROWSER_TOOLS_DISABLED", "请先启用网页浏览工具"))
         }
-        val result = browserSessionRef.value.execute(
+        val result = WebBrowserWork.run(args.optLong("timeout_ms", 30_000), ::checkWebCancellation) { remaining ->
+            browserSessionRef.value.execute(
             context = context,
-            args = args,
+            args = JSONObject(args.toString()).put("timeout_ms", remaining),
             runId = browserRunId,
             toolCallId = toolCallId,
             checkCancellation = { if (closed.get()) throw AgentRunCancelledException() },
-        )
+            )
+        }
         return AgentModelClient.ToolResult(
             content = result.content,
             images = result.images.map { image ->
@@ -468,6 +492,9 @@ internal class AgentLocalTools(
     }
 
     private fun observeScreen(args: JSONObject, generation: Long?): AgentModelClient.ToolResult {
+        if (args.optBoolean("status_only")) return textResult(errorResult(
+            "INVALID_ARGUMENT", "status_only 只用于后台屏幕状态，请指定 execution_location=background",
+        ))
         publishedObservation.set(PublishedObservation())
         val startedAt = SystemClock.elapsedRealtime()
         val options = AgentScreenObservationContract.resolve(args)
@@ -499,19 +526,26 @@ internal class AgentLocalTools(
         )
     }
 
+    private val feedbackOwner: String get() = browserRunId.ifBlank { "foreground-${hashCode()}" }
+
     /** Arm before dispatch so short feedback survives the action's settle/observation wait. */
     private fun afterAction(name: String, args: JSONObject, action: () -> String): AgentModelClient.ToolResult {
         if (closed.get()) throw AgentRunCancelledException()
         val before = publishedObservation.get().elements
         val target = repeatTarget(name, args, before)
         val state = repeatState(before)
+        val feedbackWindow = if (before == null) io.github.mangi.eta.agent.accessibility.AgentAccessibilityService.current()
+            ?.foregroundFeedbackWindow() else before.windowId?.let { before.packageName to it }
+        GuiActionFeedback.beforeInput(feedbackOwner, feedbackWindow?.first.orEmpty(), 0,
+            feedbackWindow?.second ?: -1)?.let { late ->
+            publishedObservation.set(PublishedObservation())
+            return feedbackToolResult(late)
+        }
         if (repeatGuard.blocked(target, state)) return textResult(JSONObject().put("ok", false)
             .put("code", "NO_PROGRESS").put("operationMayHaveRun", false)
             .put("message", "同一目标已提交两次但未确认结果，本次未再次点击。请检查短提示、输入值或最终结果，勿改用坐标/长按重复提交。")
             .toString())
-        val feedbackWindow = if (before == null) io.github.mangi.eta.agent.accessibility.AgentAccessibilityService.current()
-            ?.foregroundFeedbackWindow() else before.windowId?.let { before.packageName to it }
-        val feedback = GuiActionFeedback.begin(browserRunId.ifBlank { "foreground-${hashCode()}" },
+        val feedback = GuiActionFeedback.begin(feedbackOwner,
             feedbackWindow?.first.orEmpty(), 0, feedbackWindow?.second ?: -1)
         feedback.use {
             if (name in FEEDBACK_IMAGE_ACTIONS && feedbackWindow != null) {
@@ -662,6 +696,12 @@ internal class AgentLocalTools(
     }
 
     private fun swipe(args: JSONObject): String {
+        if (args.has("hold_ms") && (args.opt("hold_ms") !is Int || args.getInt("hold_ms") !in 0..3_000)) {
+            return errorResult("INVALID_ARGUMENT", "hold_ms 必须是 0–3000 的整数")
+        }
+        if (args.optInt("hold_ms", 0) > 0) {
+            return errorResult("UNSUPPORTED_OPERATION", "前台暂不支持按住后拖动；本次未发送手势")
+        }
         val start = convertPoint(
             x = args.getInt("x1"),
             y = args.getInt("y1"),
@@ -724,18 +764,6 @@ internal class AgentLocalTools(
         return json.toString()
     }
 
-    private fun inputText(args: JSONObject): String {
-        val text = args.requiredText("text")
-        if (text.length > 1_000) {
-            return errorResult("TEXT_TOO_LONG", "input_text 最多支持 1000 个字符")
-        }
-        return when (args.optString("mode", "append").lowercase(Locale.ROOT)) {
-            "replace" -> replaceText(args)
-            "paste" -> pasteText(args)
-            else -> deviceController.inputText(text)
-        }
-    }
-
     private fun replaceText(args: JSONObject): String {
         val index = args.optNullableInt("index")
         val observation = if (index != null) {
@@ -748,16 +776,6 @@ internal class AgentLocalTools(
             index = index,
             observation = observation,
         )
-    }
-
-    private fun clearText(args: JSONObject): String {
-        val index = args.optNullableInt("index")
-        val observation = if (index != null) {
-            requireElementObservation(args) ?: return observationError(args)
-        } else {
-            null
-        }
-        return deviceController.clearText(index = index, observation = observation)
     }
 
     private fun setClipboard(args: JSONObject): String =

@@ -1,0 +1,15 @@
+<resources>
+    <string name="linux_web_http_title">Enhanced web reading · Scrapling</string>
+    <string name="linux_web_http_summary">Optional Debian dependency. Install Python first. Used only when a normal web request is blocked; no downloads during a task.</string>
+    <string name="linux_web_http_ready">Dependencies installed; each task checks availability before using enhanced reading.</string>
+    <string name="linux_web_browser_title">Challenge-page browser</string>
+    <string name="linux_web_browser_summary">Optional large download after enhanced reading is installed. Browser availability depends on this phone; a site may still require your verification.</string>
+    <string name="linux_web_browser_ready">Browser files installed; use requires a successful sandboxed launch check. Website access is not guaranteed.</string>
+    <string name="web_tools_enhancement_note">Ordinary pages use fast HTTP reading; JavaScript pages can use the built-in browser. Optional Scrapling enhancement can be installed in Linux environment → Debian → Optional tools. Each request uses at most one upgrade, and no dependencies are downloaded while you wait for a task.</string>
+    <string name="linux_web_check">Check availability</string>
+    <string name="linux_web_checking">Checking installed web components…</string>
+    <string name="linux_web_http_available">HTTP enhancement is available. Website results still depend on the site and network.</string>
+    <string name="linux_web_browser_available">Sandboxed browser launch succeeded. This does not verify that a challenged website can be read.</string>
+    <string name="linux_web_browser_unavailable">Browser files are installed, but sandboxed launch is unavailable in this environment. Ordinary web reading is unaffected.</string>
+    <string name="linux_web_check_failed">Web component check did not succeed: %1$s</string>
+</resources>

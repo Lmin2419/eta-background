@@ -26,6 +26,24 @@ internal object BrowserPayloadLimiter {
             }
         }
 
+        // Never let network bodies or repeated step evidence hide the actual batch stop reason.
+        envelope.optJSONArray("responses")?.let { responses ->
+            var index = responses.length() - 1
+            while (encodedSize() > maxBytes && index >= 0) {
+                responses.optJSONObject(index)?.let { response ->
+                    response.put("body", "").put("truncated", true)
+                }
+                index--
+            }
+        }
+        envelope.optJSONArray("steps")?.let { steps ->
+            for (index in 0 until steps.length()) {
+                if (encodedSize() <= maxBytes) break
+                steps.optJSONObject(index)?.remove("feedback")
+                envelope.put("step_feedback_truncated", true)
+            }
+        }
+
         if (encodedSize() > maxBytes && envelope.has("text")) {
             val original = envelope.optString("text")
             val offset = envelope.optInt("offset", 0).coerceAtLeast(0)
@@ -62,7 +80,8 @@ internal object BrowserPayloadLimiter {
         listOf(
             "ok", "tool", "action", "status", "code", "message", "content_source",
             "network_policy", "url", "display_url", "host", "title", "http_status",
-            "risk_challenge",
+            "risk_challenge", "completed_count", "failed_index", "remaining_count",
+            "operationMayHaveRun", "failed_step_operation_may_have_run", "automatic_replay", "outcome", "elapsed_ms", "timing_ms",
         ).forEach { key ->
             if (!envelope.has(key)) return@forEach
             val value = envelope.opt(key)

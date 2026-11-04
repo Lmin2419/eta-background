@@ -819,6 +819,7 @@ internal object AgentRuntimeWire {
                 putInt("image_bytes", event.imageBytes)
                 event.success?.let { putBoolean("success", it) }
                 event.command?.let { putString("command", it.boundedText(MAX_DRAIN_CONTENT_CHARS)) }
+                if (event.timingMs.isNotEmpty()) putString("timing_ms", ToolTimingMetadata.encode(event.timingMs))
             }
 
             is AgentEvent.SubagentProgress -> {
@@ -982,6 +983,7 @@ internal object AgentRuntimeWire {
             // 旧版本 Runtime 不发送 success，缺省为 null 由消费端回退判断
             success = if (bundle.containsKey("success")) bundle.getBoolean("success") else null,
             command = bundle.getString("command"),
+            timingMs = ToolTimingMetadata.decode(bundle.getString("timing_ms")),
         )
 
         "subagent_progress" -> AgentEvent.SubagentProgress(

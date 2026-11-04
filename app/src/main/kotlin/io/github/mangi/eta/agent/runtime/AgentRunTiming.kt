@@ -29,6 +29,8 @@ internal class AgentRunTiming(
     private var imageBytes = 0L
     private var firstDeltaTotalMs = 0L
     private var firstDeltaSamples = 0
+    private val toolTimingsMs = mutableMapOf<String, Long>()
+    private var timedToolCalls = 0
     private var finished: RunPerformanceSummary? = null
 
     @Synchronized fun preparationFinished(skillCount: Int) {
@@ -60,10 +62,9 @@ internal class AgentRunTiming(
                 requestAt = lastAt
                 gotFirstDelta = false
             }
-            is AgentEvent.AssistantBlockDelta -> if (!gotFirstDelta && event.deltaChars > 0 &&
-                event.kind != AgentEvent.AssistantBlockKind.TOOL_CALL) {
-                requestAt?.let { firstDeltaTotalMs += lastAt - it; firstDeltaSamples++; gotFirstDelta = true }
-            }
+            is AgentEvent.AssistantBlockDelta -> if (event.deltaChars > 0) firstOutput()
+            is AgentEvent.AssistantBlockStart -> if (event.kind == AgentEvent.AssistantBlockKind.TOOL_CALL &&
+                !event.name.isNullOrBlank()) firstOutput()
             is AgentEvent.AssistantReceived -> requestAt = null
             is AgentEvent.ModelRetryScheduled -> { retries++; requestAt = null }
             is AgentEvent.ToolStarted -> {
@@ -78,6 +79,11 @@ internal class AgentRunTiming(
                 imageCount += event.imageCount.coerceAtLeast(0)
                 imageBytes += event.imageBytes.coerceAtLeast(0)
                 activeTools.remove(event.round to event.toolCallId)?.let { (name, start) ->
+                    val timings = ToolTimingMetadata.sanitize(event.timingMs)
+                    if (timings.isNotEmpty()) timedToolCalls++
+                    timings.forEach { (key, millis) ->
+                        toolTimingsMs[key] = ToolTimingMetadata.add(toolTimingsMs[key] ?: 0L, millis)
+                    }
                     slowTools += RunPerformanceSummary.SlowTool(name, lastAt - start)
                     slowTools.sortByDescending { it.elapsedMs }
                     if (slowTools.size > 3) slowTools.removeAt(3)
@@ -99,6 +105,8 @@ internal class AgentRunTiming(
             toolCalls = toolCalls, failedTools = failedTools, unfinishedTools = (toolCalls - completedTools).coerceAtLeast(0),
             imageCount = imageCount, imageBytes = imageBytes,
             firstDeltaTotalMs = firstDeltaTotalMs, firstDeltaSamples = firstDeltaSamples, slowTools = slowTools.toList(),
+            toolTimingsMs = toolTimingsMs.toMap(), timedToolCalls = timedToolCalls,
+            firstDeltaIncludesTools = true,
         ).also { finished = it; activeTools.clear() }
     }
 
@@ -114,6 +122,11 @@ internal class AgentRunTiming(
         }
         durations[phase.ordinal] += current - lastAt
         lastAt = current
+    }
+
+    private fun firstOutput() {
+        if (gotFirstDelta) return
+        requestAt?.let { firstDeltaTotalMs += lastAt - it; firstDeltaSamples++; gotFirstDelta = true }
     }
 
     private fun safeName(name: String): String = name.takeIf { it.matches(Regex("[A-Za-z0-9_.:-]{1,64}")) } ?: "tool"

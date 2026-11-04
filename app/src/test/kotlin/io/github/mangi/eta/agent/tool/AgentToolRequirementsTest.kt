@@ -12,24 +12,22 @@ import org.junit.Test
 
 class AgentToolRequirementsTest {
     @Test
-    fun backgroundToolsShareCapabilityChecksWithoutTakingForegroundControl() {
-        assertTrue(com.eta.shadow.ShadowSchema.NAMES.all { it in catalog(root = true).names() })
-        assertEquals(setOf("screen_state"), catalog(root = false).names().filter { it.startsWith("screen_") }.toSet())
-        val noRoot = AgentToolCapabilities(rootAvailable = false)
-        assertEquals("ROOT_REQUIRED", noRoot.unavailableCode("screen_open"))
-        assertEquals(null, noRoot.unavailableCode("screen_state"))
+    fun guiCapabilitiesPublishOneContractAndKeepPrivateProtocolUnknown() {
+        assertFalse(catalog(root = true).names().any { it.startsWith("screen_") })
+        assertFalse(catalog(root = false).names().any { it.startsWith("screen_") })
+        assertEquals("UNKNOWN_TOOL", AgentToolCapabilities(rootAvailable = true).unavailableCode("screen_open"))
+        assertTrue("press_key" in catalog(root = false).names())
         val noObserver = AgentToolCapabilities(rootAvailable = true, accessibilityAvailable = false)
-        assertEquals("ACCESSIBILITY_UNAVAILABLE", noObserver.unavailableCode("screen_swipe"))
-        assertEquals(null, noObserver.unavailableCode("screen_shot"))
-        assertEquals(null, noObserver.unavailableCode("screen_finish"))
-        assertTrue(com.eta.shadow.ShadowSchema.NAMES.none { AgentToolRequirements.requiresGuiControl(it) })
+        assertEquals("ACCESSIBILITY_UNAVAILABLE", noObserver.unavailableCode("swipe"))
+        assertEquals(null, noObserver.unavailableCode("release_gui"))
     }
     @Test
     fun everyRegisteredToolHasExactlyOneRequirement() {
         val tools = catalog(root = true).also { CharacterMemoryTools.appendSchemas(it) }
-        val executionOnly = setOf("input_text", "replace_text", "clear_text", "paste_text")
-        assertEquals(AgentToolRequirements.toolNames - executionOnly, tools.names())
-        executionOnly.forEach { name -> assertFalse("$name 仅保留执行兼容，不再向模型暴露", name in tools.names()) }
+        assertEquals(AgentToolRequirements.toolNames, tools.names())
+        setOf("input_text", "replace_text", "clear_text", "paste_text").forEach { name ->
+            assertFalse("$name 不再注册", name in AgentToolRequirements.toolNames)
+        }
         assertEquals(tools.length(), tools.names().size)
         assertFalse(tools.toString().contains("rootRequirement"))
     }

@@ -481,13 +481,22 @@ internal object BrowserDomScripts {
             }
             target.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: null }));
             target.dispatchEvent(new Event('change', { bubbles: true }));
+            var inputVerified = (target.isContentEditable ? target.textContent : target.value) === value;
+            if (!inputVerified) throw new Error('INPUT_NOT_VERIFIED');
             if ($submit) {
               var form = target.form || target.closest('form');
               if (form && form.requestSubmit) form.requestSubmit();
               else target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }));
             }
-            return { matched_element: describe(target), typed_chars: value.length, submitted: $submit };
+            return { matched_element: describe(target), typed_chars: value.length, input_verified: inputVerified, submitted: $submit };
             """.trimIndent()
+
+    fun verifyInput(selector: String, expected: String): String =
+        """
+        var target = document.querySelector(${JSONObject.quote(selector)});
+        return { input_verified: !!target && editable(target) &&
+          (target.isContentEditable ? target.textContent : target.value) === ${JSONObject.quote(expected)} };
+        """.trimIndent()
 
     fun scroll(selector: String?, direction: String, amount: Int): String {
         val selectorLiteral = selector?.let(JSONObject::quote) ?: "null"
@@ -520,6 +529,17 @@ internal object BrowserDomScripts {
           language: cleanInline(document.documentElement.lang, 32) || null,
           canonical_url: canonical ? absoluteUrl(canonical.getAttribute('href')) : null
         };
+        """.trimIndent()
+
+    fun readiness(): String =
+        """
+        var summary = collectVisibleText(document.body || document.documentElement, 600, 160, Date.now() + 20).text;
+        var title = String(document.title || '').toLowerCase();
+        var challenge = !!document.querySelector('#challenge-running,#challenge-stage,form#challenge-form') ||
+          (/just a moment|checking your browser|verify you are human|security verification/.test(title) && summary.length < 600);
+        var password = document.querySelector('input[type="password"]');
+        var login = !!password && visible(password) && /login|log in|sign in|登录/.test((title + ' ' + summary).toLowerCase());
+        return { challenge: challenge, login_required: login, content_ready: !challenge && !login && summary.trim().length >= 80 };
         """.trimIndent()
 
     fun selectorState(selector: String): String =

@@ -23,7 +23,6 @@ internal object AgentToolCatalog {
             AgentContextAppToolCatalog.appendTo(tools)
             AgentGestureToolCatalog.appendTo(tools)
             AgentTextSystemToolCatalog.appendTo(tools)
-            AgentBackgroundToolCatalog.appendTo(tools)
             AgentCommonTaskToolCatalog.appendTo(tools, writable = commonTasksWritable)
             AgentDeviceToolCatalog.appendTo(
                 tools,

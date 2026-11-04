@@ -367,7 +367,7 @@ internal class RootShellDeviceController(
             val result = service.inputTextFocused(text)
             if (result.ok) {
                 waitForUiSettle("input_text")
-                return nodeActionJson("input_text", result)
+                return nodeActionJson("input_text", service.verifySettledText(result))
             }
             return nodeActionJson("input_text", result)
         }
@@ -712,7 +712,7 @@ internal class RootShellDeviceController(
             val result = service.pasteText(text)
             if (result.ok) {
                 waitForUiSettle("input_text")
-                return nodeActionJson("paste_text", result)
+                return nodeActionJson("paste_text", service.verifySettledText(result))
             }
             return nodeActionJson("paste_text", result)
         }

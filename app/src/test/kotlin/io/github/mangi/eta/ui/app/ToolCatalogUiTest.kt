@@ -27,12 +27,12 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36])
 class ToolCatalogUiTest {
     @Test
-    fun backgroundCardsUseRuntimeRequirementsAndStaySeparateFromForegroundControls() {
-        val background = buildToolsState(RuntimeEnvironment.getApplication()).groups.single { it.id == "background" }
-        assertTrue(background.tools.map { it.id }.containsAll(listOf("screen_open", "screen_state", "screen_scroll", "screen_finish")))
-        assertEquals(RootRequirement.REQUIRED, toolCardRequirement("screen_open").rootRequirement)
-        assertEquals(RootRequirement.NONE, toolCardRequirement("screen_state").rootRequirement)
-        assertTrue(toolCardRequirement("screen_scroll").accessibility)
+    fun screenCardsUseTheSameToolSetForBothLocations() {
+        val groups = buildToolsState(RuntimeEnvironment.getApplication()).groups
+        val ids = groups.flatMap { it.tools }.map { it.id }
+        assertTrue(ids.none { it.startsWith("screen_") })
+        assertTrue(ids.containsAll(listOf("observe_screen", "press_key", "launch_app", "release_gui")))
+        assertTrue(groups.none { it.id == "background" })
     }
     @Test
     fun everyRuntimeToolAndDisplayedCardHasASpecificIcon() {

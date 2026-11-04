@@ -186,6 +186,8 @@ internal sealed interface AgentEvent {
         /** 可选：旧版本 Runtime 不发送，消费端缺省时回退到摘要文本判断。 */
         val success: Boolean? = null,
         val command: String? = null,
+        /** Bounded tool subphase durations; no result content or arbitrary metric names. */
+        val timingMs: Map<String, Long> = emptyMap(),
     ) : AgentEvent {
         override fun toLogLine(): String =
             "tool_finished round=$round, name=${name.toSafeLogToken()}, " +

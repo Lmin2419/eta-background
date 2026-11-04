@@ -12,6 +12,37 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BuiltInWebSearchTest {
+    @Test fun irrelevantModelResultsFallBackOnceAndNeverBecomeSuccessfulEvidence() {
+        var calls = 0
+        val client = client { chain ->
+            calls++
+            if (calls == 1) response(chain, feed(item("Chrome 浏览器扫码", "https://example.test/chrome", "浏览器设置")), mime = "application/rss+xml")
+            else response(chain, "<div id='links'><div class='web-result'><h2><a class='result__a' href='https://example.test/i5-14500H'>Intel i5-14500H</a></h2><div class='result__snippet'>处理器信息</div></div></div>")
+        }
+        AgentWebTools(WebHttpTransport(client)).use {
+            val result = search(it, "i5-14500H Cinebench 跑分")
+            assertTrue(result.toString(), result.getBoolean("ok"))
+            assertEquals(2, calls)
+            assertEquals("SEARCH_LOW_RELEVANCE", result.getJSONArray("attempts").getJSONObject(0).getString("code"))
+            assertEquals("duckduckgo_html", result.getString("provider"))
+        }
+    }
+
+    @Test fun allSourcesWithWrongModelReturnFailureRatherThanNoResults() {
+        val client = client { chain ->
+            if (chain.request().url.host == "www.bing.com") response(chain,
+                feed(item("Intel i5-14500HX", "https://example.test/i5-14500HX", "nearby model")), mime = "application/rss+xml")
+            else response(chain, duckResult)
+        }
+        AgentWebTools(WebHttpTransport(client)).use {
+            val result = search(it, "i5-14500H")
+            assertFalse(result.getBoolean("ok"))
+            assertEquals("SEARCH_UNAVAILABLE", result.getString("code"))
+            assertEquals("SEARCH_LOW_RELEVANCE", result.getJSONArray("attempts").getJSONObject(0).getString("code"))
+            assertFalse(result.has("results"))
+        }
+    }
+
     @Test fun bingReturnsOriginalSourcesWithoutContactingFallback() {
         val calls = mutableListOf<String>()
         val query = "安卓 + 测试 & extra=x"

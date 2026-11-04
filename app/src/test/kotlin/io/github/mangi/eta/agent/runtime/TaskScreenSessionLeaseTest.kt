@@ -113,99 +113,59 @@ class TaskScreenSessionLeaseTest {
     }
 
     @Test
-    fun legacyScreenToolsStillUseTheOldExecutionPath() {
+    fun engineProtocolCallsAreRejectedWithoutCreatingAScreenOrReachingTheForeground() {
         val connection = Connection("app.one")
         val controller = AgentRunController()
-        val shadow = BackgroundScreenTools(
-            "legacy", controller, registry = ScreenLeaseRegistry(1), connectionFactory = { connection },
-        )
-        val task = TaskScreenSession(
-            runId = "legacy", controller = controller, backend = shadow,
-            readScreenshot = { AgentModelClient.ToolResult("{}") },
-        )
-        var localCalls = 0
-        val local = AgentModelClient.ToolExecutor {
-            localCalls++
-            AgentModelClient.ToolResult("""{"ok":true,"path":"foreground"}""")
-        }
+        val shadow = BackgroundScreenTools("private", controller, registry = ScreenLeaseRegistry(1), connectionFactory = { connection })
+        val task = TaskScreenSession("private", controller, shadow, { AgentModelClient.ToolResult("{}") })
         val routing = RoutingToolExecutor(
-            local = local,
-            mcp = McpToolExecutor(McpRunSnapshot.EMPTY),
-            shadow = shadow,
-            taskScreen = task,
+            local = AgentModelClient.ToolExecutor { error("No private tool may reach the foreground") },
+            mcp = McpToolExecutor(McpRunSnapshot.EMPTY), shadow = shadow, taskScreen = task,
         )
         try {
-            assertTrue(ok(routing.execute(call(
-                "screen_open", """{"package":"app.one"}""",
-            ))))
-            assertEquals(TaskExecutionLocation.BACKGROUND, task.currentLocation())
-            assertTrue(ok(routing.execute(call("screen_dump", "{}"))))
-            assertTrue(ok(routing.execute(call(
-                "screen_tap", """{"x":1,"y":1,"coordinate_space":"display"}""",
-            ))))
-            assertEquals(0, localCalls)
-            assertTrue(connection.calls.contains("screen_open"))
-            assertTrue(connection.calls.contains("screen_dump"))
-            assertTrue(connection.calls.contains("screen_tap"))
-        } finally {
-            routing.close()
+            (com.eta.shadow.ShadowSchema.NAMES + "screen_key").forEach { name ->
+                val result = JSONObject(routing.execute(call(name, "{}" )).content)
+                assertEquals(name, "UNKNOWN_TOOL", result.getString("code"))
+            }
+            assertTrue(connection.calls.isEmpty())
+            assertEquals(TaskExecutionLocation.FOREGROUND, task.currentLocation())
+        } finally { routing.close() }
+    }
+
+    @Test
+    fun rejectedProtocolCallDoesNotConsumeAValidNativeObservation() {
+        withRouting { routing, connection, _ ->
+            val observed = observeScreenshot(routing)
+            val result = JSONObject(routing.execute(call("screen_swipe", "{}" )).content)
+            assertEquals("UNKNOWN_TOOL", result.getString("code"))
+            assertFalse(connection.calls.contains("screen_swipe"))
+            assertTrue(ok(routing.execute(tapFrom(observed))))
         }
     }
 
     @Test
-    fun legacyInputInvalidatesNativeScreenshotObservationEvenWhenTheTreeIsUnchanged() {
-        withRouting { routing, connection, _ ->
+    fun uncertainOrMalformedNativeInputCannotReuseTheOldObservation() {
+        for (reply in listOf(
+            """{"ok":false,"code":"GEOMETRY_CHANGED_DURING_OPERATION","operationMayHaveRun":true}""",
+            "失败：连接已断开",
+        )) withRouting { routing, connection, _ ->
             val observed = observeScreenshot(routing)
-            assertTrue(ok(routing.execute(call(
-                "screen_swipe", """{"x1":10,"y1":100,"x2":10,"y2":10,"coordinate_space":"display"}""",
-            ))))
+            connection.replyOverride = { name -> if (name == "screen_tap") reply else null }
+            assertFalse(ok(routing.execute(tapFrom(observed))))
             assertRequiresFreshObservation(routing, observed)
-            assertFalse(connection.calls.contains("screen_tap"))
-
-            // Re-observing is the only way back; do not break the legacy path itself.
-            assertTrue(ok(routing.execute(tapFrom(observeScreenshot(routing)))))
             assertEquals(1, connection.calls.count { it == "screen_tap" })
         }
     }
 
     @Test
-    fun uncertainLegacyInputCannotReuseTheOldNativeObservationOrReplay() {
+    fun thrownNativeInputConsumesObservationBeforeDispatch() {
         withRouting { routing, connection, _ ->
             val observed = observeScreenshot(routing)
             connection.replyOverride = { name ->
-                if (name == "screen_text") {
-                    """{"ok":false,"code":"GEOMETRY_CHANGED_DURING_OPERATION","operationMayHaveRun":true}"""
-                } else null
-            }
-            val result = routing.execute(call("screen_text", """{"text":"hello"}"""))
-            assertEquals("GEOMETRY_CHANGED_DURING_OPERATION", JSONObject(result.content).getString("code"))
-            assertRequiresFreshObservation(routing, observed)
-            assertEquals(1, connection.calls.count { it == "screen_text" })
-            assertFalse(connection.calls.contains("screen_tap"))
-        }
-    }
-
-    @Test
-    fun malformedLegacyInputReplyCannotLeaveANativeObservationUsable() {
-        withRouting { routing, connection, _ ->
-            val observed = observeScreenshot(routing)
-            connection.replyOverride = { name -> if (name == "screen_press") "失败：连接已断开" else null }
-            assertFalse(ok(routing.execute(call("screen_press", """{"x":10,"y":10}"""))))
-            assertRequiresFreshObservation(routing, observed)
-            assertFalse(connection.calls.contains("screen_tap"))
-        }
-    }
-
-    @Test
-    fun thrownLegacyInputCannotLeaveANativeObservationUsable() {
-        withRouting { routing, connection, _ ->
-            val observed = observeScreenshot(routing)
-            connection.replyOverride = { name ->
-                if (name == "screen_tap") throw IllegalStateException("connection failed after sending input")
+                if (name == "screen_tap") throw IllegalStateException("connection failed after input")
                 null
             }
-            val failure = runCatching { routing.execute(call("screen_tap", """{"x":10,"y":10}""")) }
-            assertTrue(failure.exceptionOrNull() is IllegalStateException)
+            assertTrue(runCatching { routing.execute(tapFrom(observed)) }.exceptionOrNull() is IllegalStateException)
             connection.replyOverride = null
             assertRequiresFreshObservation(routing, observed)
             assertEquals(1, connection.calls.count { it == "screen_tap" })
@@ -213,45 +173,14 @@ class TaskScreenSessionLeaseTest {
     }
 
     @Test
-    fun failedLegacyReopenInvalidatesThePreviousNativeObservation() {
+    fun failedNativeReopenInvalidatesThePreviousObservation() {
         withRouting { routing, connection, task ->
             val observed = observeScreenshot(routing)
             connection.replyOverride = { name ->
                 if (name == "screen_open") """{"ok":false,"code":"TIMEOUT","operationMayHaveRun":true}""" else null
             }
-            assertFalse(ok(routing.execute(call("screen_open", """{"package":"app.one"}"""))))
+            assertFalse(ok(routing.execute(call("launch_app", """{"package_name":"app.one"}"""))))
             assertEquals(TaskExecutionLocation.BACKGROUND, task.currentLocation())
-            assertRequiresFreshObservation(routing, observed)
-            assertFalse(connection.calls.contains("screen_tap"))
-        }
-    }
-
-    @Test
-    fun legacyReadOnlyCallsPreserveThePublishedNativeFrame() {
-        withRouting { routing, connection, _ ->
-            val observed = observeScreenshot(routing)
-            connection.replyOverride = { name ->
-                if (name == "screen_shot") {
-                    """{"ok":true,"frameId":"new-passive-frame","width":540,"height":1200}"""
-                } else null
-            }
-            listOf("screen_dump", "screen_list", "screen_shot", "screen_state", "screen_diag", "screen_wait").forEach {
-                assertTrue(ok(routing.execute(call(it, "{}"))))
-            }
-            assertTrue(ok(routing.execute(tapFrom(observed))))
-            assertEquals(1, connection.calls.count { it == "screen_tap" })
-        }
-    }
-
-    @Test
-    fun lostSessionReportedByLegacyStateInvalidatesNativeObservation() {
-        withRouting { routing, connection, _ ->
-            val observed = observeScreenshot(routing)
-            connection.replyOverride = { name ->
-                if (name == "screen_state") """{"ok":false,"code":"SYSTEM_RESTARTED"}""" else null
-            }
-            assertFalse(ok(routing.execute(call("screen_state", "{}"))))
-            // A later read must not make the old observation valid again.
             assertRequiresFreshObservation(routing, observed)
             assertFalse(connection.calls.contains("screen_tap"))
         }
@@ -272,7 +201,7 @@ class TaskScreenSessionLeaseTest {
             mcp = McpToolExecutor(McpRunSnapshot.EMPTY), shadow = shadow, taskScreen = task,
         )
         try {
-            assertTrue(ok(routing.execute(call("screen_open", """{"package":"app.one"}"""))))
+            assertTrue(ok(routing.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))))
             block(routing, connection, task)
         } finally {
             routing.close()

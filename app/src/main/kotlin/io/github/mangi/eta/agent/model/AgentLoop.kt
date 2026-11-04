@@ -2,6 +2,7 @@ package io.github.mangi.eta.agent.model
 
 import io.github.mangi.eta.agent.runtime.AgentEvent
 import io.github.mangi.eta.agent.runtime.AgentRunController
+import io.github.mangi.eta.agent.runtime.ToolTimingMetadata
 import io.github.mangi.eta.agent.roleplay.RoleplayRunContext
 import io.github.mangi.eta.agent.subagent.AgentSubagentToolCatalog
 import kotlinx.coroutines.Dispatchers
@@ -471,6 +472,7 @@ internal class AgentLoop(
                 imageBytes = result.images.sumOf { it.bytes },
                 success = traceFormatter.isSuccessResult(result),
                 command = result.command,
+                timingMs = ToolTimingMetadata.fromToolResult(result.content),
             )
         )
     }

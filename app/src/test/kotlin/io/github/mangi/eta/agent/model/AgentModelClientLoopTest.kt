@@ -19,6 +19,25 @@ import org.junit.Test
 
 class AgentModelClientLoopTest {
     @Test
+    fun toolTimingIsProjectedAsNumericMetadataWithoutCopyingTheResultBody() {
+        val provider = ScriptedProvider(
+            assistant(finishReason = "tool_calls", toolCalls = listOf(toolCall("context", "get_current_context", "{}"))),
+            assistant(content = "完成", finishReason = "stop"),
+        )
+        val events = mutableListOf<AgentEvent>()
+        AgentModelClient.complete(
+            config = modelConfig(), prompt = "检查状态", provider = provider, onEvent = events::add,
+            toolExecutor = AgentModelClient.ToolExecutor {
+                AgentModelClient.ToolResult("""{"ok":true,"content":"private body","timing_ms":{"http":25,"secret token":40}}""")
+            },
+        )
+        val event = events.filterIsInstance<AgentEvent.ToolFinished>().single()
+        assertEquals(mapOf("http" to 25L), event.timingMs)
+        assertFalse(event.timingMs.toString().contains("private"))
+        assertFalse(event.timingMs.toString().contains("secret"))
+    }
+
+    @Test
     fun rootProbeStatesKeepThePrefixStableUntilGrantActuallyChanges() {
         var root = RootAccessState(isChecking = true)
         val calls = mutableListOf<String>()

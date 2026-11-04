@@ -11,6 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.json.JSONObject
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -39,5 +40,24 @@ class RunPerformancePersistenceTest {
         assertNull(RunPerformanceSummary.fromJson(summary.toJson().replace("\"version\":1", "\"version\":2")))
         assertNull(AgentEventJsonCodec.decode("""{"type":"run_performance","summary":"{}"}"""))
         assertEquals(summary, RunPerformanceSummary.fromJson(summary.toJson()))
+    }
+
+    @Test fun timingMetadataSurvivesIpcAndArchiveButPrivateMetricNamesDoNot() {
+        val event = AgentEvent.ToolFinished(1, "call", "fetch_url", "ok", 0, 0, true,
+            timingMs = mapOf("http" to 200L, "extraction" to 10L))
+        assertEquals(event, AgentRuntimeWire.eventFromBundle(AgentRuntimeWire.eventToBundle(event)))
+        assertEquals(event, AgentEventJsonCodec.decode(AgentEventJsonCodec.encode(event)))
+        val unsafe = event.copy(timingMs = event.timingMs + ("private query" to 100L))
+        assertEquals(event, AgentEventJsonCodec.decode(AgentEventJsonCodec.encode(unsafe)))
+
+        val measured = summary.copy(toolTimingsMs = mapOf("http" to 900_000L), timedToolCalls = 3, firstDeltaIncludesTools = true)
+        assertEquals(measured, RunPerformanceSummary.fromJson(measured.toJson()))
+        val oldJson = JSONObject(summary.toJson()).apply {
+            remove("tool_timings_ms"); remove("timed_tool_calls"); remove("first_delta_includes_tools")
+        }
+        val restored = RunPerformanceSummary.fromJson(oldJson.toString())!!
+        assertEquals(summary, restored)
+        assertFalse(restored.firstDeltaIncludesTools)
+        assertTrue(restored.details(false).contains("text/reasoning delta"))
     }
 }

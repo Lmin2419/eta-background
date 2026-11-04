@@ -67,6 +67,41 @@ class SettledTextVerificationTest {
         } finally { controller.destroy() }
     }
 
+    @Test fun appendAndPasteRecheckFullExpectedValueAndDropTheirPrivateProof() {
+        val controller = Robolectric.buildService(AgentAccessibilityService::class.java).create()
+        try {
+            val service = controller.get()
+            val node = field("existing+inserted")
+            shadowOf(service).setRootInActiveWindow(node)
+            val snapshot = service.captureNodeSnapshot(30)!!
+            val proof = AgentAccessibilityService.TextVerification(snapshot.serviceToken, node,
+                node.windowId, "app", "android.widget.EditText", "existing+inserted")
+            val accepted = AgentAccessibilityService.NodeActionResult.success("ACTION_PASTE", verified = true)
+                .copy(clipboardWritten = true, textVerification = proof)
+            val settled = service.verifySettledText(accepted)
+            assertTrue(settled.ok)
+            assertNull(settled.textVerification)
+            node.text = "existing" // Widget rejects the appended part after its optimistic echo.
+            val rejected = service.verifySettledText(accepted)
+            assertEquals("ACTION_OUTCOME_UNKNOWN", rejected.code)
+            assertFalse(rejected.verified!!)
+            assertTrue(rejected.clipboardWritten)
+            assertNull(rejected.textVerification)
+        } finally { controller.destroy() }
+    }
+
+    @Test fun aClaimWithoutTextIdentityCannotBecomeVerifiedAfterSettling() {
+        val controller = Robolectric.buildService(AgentAccessibilityService::class.java).create()
+        try {
+            val service = controller.get()
+            shadowOf(service).setRootInActiveWindow(field("something"))
+            val accepted = AgentAccessibilityService.NodeActionResult.success("ACTION_SET_TEXT", verified = true)
+            val result = service.verifySettledText(accepted)
+            assertFalse(result.ok)
+            assertEquals("ACTION_OUTCOME_UNKNOWN", result.code)
+        } finally { controller.destroy() }
+    }
+
     private fun field(value: String) = AccessibilityNodeInfo.obtain().apply {
         packageName = "app"; className = "android.widget.EditText"; text = value
         isEditable = true; isEnabled = true; isVisibleToUser = true; isFocused = true

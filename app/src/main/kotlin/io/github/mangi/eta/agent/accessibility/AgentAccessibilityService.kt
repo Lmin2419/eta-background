@@ -853,6 +853,24 @@ class AgentAccessibilityService : AccessibilityService() {
             message = "文本修改已提交，但稳定后的输入框内容未能确认；先查看当前输入框和短提示，不要重复追加或提交", verified = false)
     }
 
+    /** Append/paste must also survive a fresh-root read, not only the widget's optimistic echo. */
+    fun verifySettledText(result: NodeActionResult): NodeActionResult {
+        if (!result.ok || result.verified != true) return result.copy(textVerification = null)
+        val proof = result.textVerification
+        val verified = proof != null && runOnMainSync {
+            if (proof.serviceToken != serviceToken) return@runOnMainSync false
+            val root = rootInActiveWindow ?: return@runOnMainSync false
+            if (root.windowId != proof.window || root.packageName?.toString() != proof.packageName) return@runOnMainSync false
+            val fresh = findNode(root) { it == proof.node } ?: return@runOnMainSync false
+            fresh.isEditable && fresh.isEnabled && fresh.isVisibleToUser && !fresh.isPassword &&
+                fresh.packageName?.toString() == proof.packageName && fresh.className?.toString() == proof.className &&
+                fresh.realText() == proof.expected
+        } == true
+        return if (verified) result.copy(textVerification = null) else NodeActionResult.outcomeUnknown().copy(
+            message = "文本修改已提交，但稳定后的输入框内容未能确认；请重新观察，不要重复追加或提交",
+            verified = false, clipboardWritten = result.clipboardWritten)
+    }
+
     /** 优先直接按选区写入，只有目标拒绝 SET_TEXT 时才回退系统粘贴。 */
     fun pasteText(text: String): NodeActionResult = runNodeActionOnMainSync {
         val node = findFocusedEditableNode()
@@ -902,6 +920,7 @@ class AgentAccessibilityService : AccessibilityService() {
                     node.realText() == plan.text
                 if (verified) {
                     NodeActionResult.success(method = "ACTION_PASTE", verified = true)
+                        .copy(textVerification = textVerification(node, plan.text))
                 } else {
                     NodeActionResult.outcomeUnknown()
                 }
@@ -1327,8 +1346,12 @@ class AgentAccessibilityService : AccessibilityService() {
                 "ACTION_SET_TEXT"
             },
             verified = !node.isPassword,
-        )
+        ).copy(textVerification = if (node.isPassword) null else textVerification(node, text))
     }
+
+    private fun textVerification(node: AccessibilityNodeInfo, expected: String) = TextVerification(
+        serviceToken, node, node.windowId, node.packageName?.toString().orEmpty(),
+        node.className?.toString().orEmpty(), expected)
 
     private fun findFocusedEditableNode(): AccessibilityNodeInfo? {
         val root = rootInActiveWindow ?: return null
@@ -2019,6 +2042,7 @@ class AgentAccessibilityService : AccessibilityService() {
         val method: String = "",
         val clipboardWritten: Boolean = false,
         val verified: Boolean? = null,
+        internal val textVerification: TextVerification? = null,
     ) {
         companion object {
             fun success(method: String, verified: Boolean? = null): NodeActionResult =
@@ -2033,6 +2057,16 @@ class AgentAccessibilityService : AccessibilityService() {
             )
         }
     }
+
+    /** Ephemeral proof consumed by the caller after settling; never serialized or kept in history. */
+    class TextVerification internal constructor(
+        internal val serviceToken: Long,
+        internal val node: AccessibilityNodeInfo,
+        internal val window: Int,
+        internal val packageName: String,
+        internal val className: String,
+        internal val expected: String,
+    )
 
     private enum class ActionDispatch {
         ACCEPTED,

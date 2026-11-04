@@ -149,9 +149,9 @@ class AgentRuntimeScreenOnTest {
         opening.hasExecutedForegroundTool = true
         opening.backgroundScreenPhase = BackgroundScreenPhase.OpeningApp
         val screen = TaskScreenSession(run.runId, run.session.controller,
-            object : ScreenToolBackend { override fun execute(name: String, arguments: String): String? = null },
+            object : ScreenToolBackend { override fun execute(name: String, arguments: String): String = """{"ok":true,"mode":"hidden","displayId":7}""" },
             { io.github.mangi.eta.agent.model.AgentModelClient.ToolResult("{}") })
-        screen.observeLegacyResult("screen_open", """{"ok":true,"mode":"hidden","displayId":7}""")
+        screen.execute(io.github.mangi.eta.agent.model.AgentModelClient.ToolCall(id = "open", name = "launch_app", argumentsJson = """{"package_name":"app.one","execution_location":"background"}"""))
         TaskPreviewRegistry.register(run.runId, run.session.controller, screen)
         run.hasExecutedForegroundTool = true // A prior foreground step must not pause the new background stage.
         other.session.controller.pause()

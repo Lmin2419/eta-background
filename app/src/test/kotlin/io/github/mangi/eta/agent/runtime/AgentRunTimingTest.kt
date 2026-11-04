@@ -95,6 +95,44 @@ class AgentRunTimingTest {
         assertEquals(0L, timing.finish().otherMs)
     }
 
+    @Test fun toolOnlyModelResponseHasFirstOutputTimingWithoutWaitingForFinalAnswer() {
+        var now = 0L
+        val timing = AgentRunTiming(logger) { now }
+        timing.accept(AgentEvent.ProviderRequestStarted(1))
+        now = 100
+        timing.accept(AgentEvent.AssistantBlockStart(1, AgentEvent.AssistantBlockKind.TEXT, 0))
+        now = 200
+        timing.accept(AgentEvent.AssistantBlockStart(1, AgentEvent.AssistantBlockKind.TOOL_CALL, 1, name = "fetch_url"))
+        now = 300
+        timing.accept(AgentEvent.AssistantBlockDelta(1, AgentEvent.AssistantBlockKind.TOOL_CALL, 1, 10, "arguments"))
+        now = 500
+        timing.accept(AgentEvent.AssistantReceived(1, 0, "", listOf("fetch_url")))
+        val summary = timing.finish()
+        assertEquals(200L, summary.firstDeltaTotalMs)
+        assertEquals(1, summary.firstDeltaSamples)
+        assertTrue(summary.firstDeltaIncludesTools)
+    }
+
+    @Test fun measuredSubphasesRemainSeparateFromElapsedTimeAndFailedCallsStillContribute() {
+        var now = 0L
+        val timing = AgentRunTiming(logger) { now }
+        timing.preparationFinished(0)
+        timing.accept(start("a"))
+        timing.accept(start("b"))
+        now = 1_000
+        timing.accept(end("a").copy(timingMs = mapOf("http" to 900L, "extraction" to 50L, "private" to 100L)))
+        val failed = end("b").copy(success = false, timingMs = mapOf("navigation" to 990L, "challenge" to -1L))
+        timing.accept(failed)
+        timing.accept(failed) // An already-finished call must not duplicate subphase evidence.
+        val summary = timing.finish()
+        assertEquals(1_000L, summary.elapsedMs)
+        assertEquals(1_000L, summary.toolsMs)
+        assertEquals(mapOf("http" to 900L, "extraction" to 50L, "navigation" to 990L), summary.toolTimingsMs)
+        assertEquals(2, summary.timedToolCalls)
+        assertTrue(summary.details(chinese = true).contains("不与任务总时长相加"))
+        assertFalse(summary.toString().contains("private"))
+    }
+
     private fun start(id: String) = AgentEvent.ToolStarted(1, id, id, "")
     private fun end(id: String, images: Int = 0, bytes: Int = 0) =
         AgentEvent.ToolFinished(1, id, id, "", images, bytes, true)

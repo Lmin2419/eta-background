@@ -8,15 +8,15 @@ import org.junit.Test
 
 class AgentUnifiedOperationCatalogTest {
     @Test
-    fun nativeGuiToolsExposeOptionalPerTaskLocationWithoutRemovingLegacyScreenTools() {
+    fun oneGuiCatalogSupportsBothLocationsWithoutPublishingEngineProtocol() {
         val tools = AgentToolCatalog.build(terminalTools = false, browserTools = false)
         val names = (0 until tools.length()).map {
             tools.getJSONObject(it).getJSONObject("function").getString("name")
         }
         assertTrue("tap" in names)
         assertTrue("observe_screen" in names)
-        assertTrue("screen_open" in names)
-        assertTrue("screen_dump" in names)
+        assertFalse(names.any { it.startsWith("screen_") })
+        assertEquals(names.size, names.distinct().size)
 
         val tap = tools.function("tap")
         val tapProperties = tap.getJSONObject("parameters").getJSONObject("properties")
@@ -44,10 +44,15 @@ class AgentUnifiedOperationCatalogTest {
     }
 
     @Test
-    fun legacyScreenToolsAreNotDecoratedWithTheNativeLocationParameter() {
+    fun unifiedLaunchExposesOrientationAndBackWithoutSecondToolSet() {
         val tools = AgentToolCatalog.build(terminalTools = false, browserTools = false)
-        val screen = tools.function("screen_open")
-        assertFalse(screen.getJSONObject("parameters").getJSONObject("properties").has("execution_location"))
+        val launch = tools.function("launch_app").getJSONObject("parameters").getJSONObject("properties")
+        assertEquals(listOf("auto", "portrait", "landscape"), launch.getJSONObject("orientation").getJSONArray("enum").stringValues())
+        val key = tools.function("press_key")
+        assertTrue("BACK" in key.getJSONObject("parameters").getJSONObject("properties")
+            .getJSONObject("button").getJSONArray("enum").stringValues())
+        assertTrue(key.getJSONObject("parameters").getJSONObject("properties").has("observation_id"))
+        assertTrue(key.getString("description").contains("不作用于主屏"))
     }
 
     @Test

@@ -66,4 +66,74 @@ class ActionFeedbackBufferTest {
         assertFalse(buffer.listening("app"))
         assertFalse(buffer.read(a).any { it.text == "expired" })
     }
+
+    @Test fun lateToastSurvivesTheListeningDeadlineAndIsDeliveredOnceBeforeNextInput() {
+        val ticket = buffer.begin("run", "app", 7, 4)!!
+        time = 300
+        buffer.record("app", 7, 4, time, "content_text", listOf("processing"))
+        assertEquals("processing", buffer.complete(ticket).single().text)
+        time = 1600 // action returned, but a short network failure toast arrives later
+        buffer.record("app", 7, null, time, "notification_or_toast", listOf("提交失败"))
+        time = 10_000 // the model takes longer to decide than the toast remains visible
+        assertFalse(buffer.listening("app"))
+        val pending = buffer.takeLate("run", "app", 7, 4)!!
+        assertEquals(ticket.actionId, pending.actionId)
+        assertEquals(listOf("提交失败"), pending.signals.map { it.text })
+        assertNull(buffer.takeLate("run", "app", 7, 4))
+    }
+
+    @Test fun lateEvidenceCannotFollowAnotherOwnerDisplayOrPage() {
+        fun arm() {
+            val ticket = buffer.begin("run", "app", 7, 4)
+            buffer.complete(ticket)
+            time += 10
+            buffer.record("app", 7, null, time, "announcement", listOf("late"))
+        }
+        arm()
+        assertNull(buffer.takeLate("other", "app", 7, 4))
+        assertNotNull(buffer.takeLate("run", "app", 7, 4))
+        arm()
+        assertNull(buffer.takeLate("run", "app", 0, 4))
+        assertNull(buffer.takeLate("run", "app", 7, 4)) // discarded on ownership change
+        arm()
+        assertNull(buffer.takeLate("run", "app", 7, 5))
+        arm()
+        buffer.clearOwner("run")
+        assertNull(buffer.takeLate("run", "app", 7, 4))
+    }
+
+    @Test fun beginningTheNextActionDoesNotAttributePrecedingEventsToIt() {
+        val ticket = buffer.begin("run", "app", 7, 4)!!
+        buffer.complete(ticket)
+        time = 500
+        assertNull(buffer.takeLate("run", "app", 7, 4))
+        val next = buffer.begin("run", "app", 7, 4)!!
+        buffer.record("app", 7, 4, 499, "announcement", listOf("queued old event"))
+        assertTrue(buffer.read(next).isEmpty())
+        assertTrue(next.actionId > ticket.actionId)
+    }
+
+    @Test fun longOperationStillReturnsEvidenceCapturedBeforeListenerExpired() {
+        val ticket = buffer.begin("run", "app", 7, 4)
+        time = 200
+        buffer.record("app", 7, null, time, "announcement", listOf("notice"))
+        time = 6000
+        assertFalse(buffer.listening("app"))
+        assertEquals("notice", buffer.complete(ticket).single().text)
+    }
+
+    @Test fun lateRetentionIsBoundedAndExplicitCancellationClearsIt() {
+        val ticket = buffer.begin("run", "app", 7, 4)
+        buffer.complete(ticket)
+        time = 200
+        buffer.record("app", 7, null, time, "announcement", listOf("late"))
+        time = 120_101
+        assertNull(buffer.takeLate("run", "app", 7, 4))
+        val next = buffer.begin("run", "app", 7, 4)
+        buffer.complete(next)
+        time += 10
+        buffer.record("app", 7, null, time, "announcement", listOf("cancelled"))
+        buffer.clearOwner("run")
+        assertNull(buffer.takeLate("run", "app", 7, 4))
+    }
 }

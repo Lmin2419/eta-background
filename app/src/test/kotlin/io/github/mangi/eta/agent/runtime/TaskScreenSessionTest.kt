@@ -13,45 +13,103 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TaskScreenSessionTest {
-    @Test fun legacyBackObservesTheSameBindingWithoutReopeningOrTakingAScreenshot() {
+    @Test fun backUsesTheTaskObservationWithoutReopeningOrTakingAScreenshot() {
         val backend = FakeBackend()
         val tools = session(backend)
-        tools.observeLegacyResult("screen_open", backend.openResult)
-        val result = JSONObject(tools.execute(call("screen_back", "{}"))!!.content)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(tools.execute(call("observe_screen", "{}"))!!.content)
+        val result = JSONObject(tools.execute(call("press_key", JSONObject().put("button", "BACK")
+            .put("observation_id", observed.getString("observation_id")).toString()))!!.content)
         assertTrue(result.getBoolean("ok"))
-        assertEquals(listOf("screen_dump", "screen_dump", "screen_key"), backend.names())
+        assertEquals(listOf("screen_open", "screen_dump", "screen_dump", "screen_key"), backend.names())
         assertEquals(4, backend.calls.last().arguments.getInt("code"))
-        val oldInput = JSONObject(tools.execute(call("press_key", """{"button":"BACK","observation_id":"old"}"""))!!.content)
-        assertFalse(oldInput.getBoolean("ok"))
+        assertFalse(JSONObject(tools.execute(call("press_key", """{"button":"BACK","observation_id":"old"}"""))!!.content).getBoolean("ok"))
         assertEquals(1, backend.names().count { it == "screen_key" })
     }
 
-    @Test fun legacyBackNeverFallsThroughToForegroundOrUsesAnotherTasksObservation() {
+    @Test fun backCannotUseAnotherTasksObservationOrFallThroughToTheMainScreen() {
         val first = FakeBackend()
         val second = FakeBackend()
         val active = session(first)
         val unopened = session(second)
-        active.observeLegacyResult("screen_open", first.openResult)
-        assertTrue(JSONObject(active.execute(call("screen_back", "{}"))!!.content).getBoolean("ok"))
-        assertEquals("BACKGROUND_SESSION_REQUIRED", JSONObject(unopened.execute(call("screen_back", "{}"))!!.content).getString("code"))
+        active.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val observed = JSONObject(active.execute(call("observe_screen", "{}"))!!.content)
+        val args = JSONObject().put("button", "BACK").put("execution_location", "background")
+            .put("observation_id", observed.getString("observation_id")).toString()
+        assertTrue(JSONObject(active.execute(call("press_key", args))!!.content).getBoolean("ok"))
+        assertEquals("BACKGROUND_SESSION_REQUIRED", JSONObject(unopened.execute(call("press_key", args))!!.content).getString("code"))
         assertTrue(second.calls.isEmpty())
     }
 
-    @Test fun legacyBackStopsOnTakeoverOrGeometryChangeWithoutSendingAKey() {
+    @Test fun backStopsOnTakeoverOrGeometryChangeWithoutSendingAKey() {
         for (takenOver in listOf(true, false)) {
             val backend = FakeBackend()
             val tools = session(backend)
-            tools.observeLegacyResult("screen_open", backend.openResult)
-            var dumps = 0
-            backend.onExecute = { name ->
-                if (name == "screen_dump") {
-                    dumps++
-                    if (takenOver) backend.dumpResult = """{"ok":false,"code":"APP_TAKEN_OVER"}"""
-                    else if (dumps == 2) backend.dumpResult = dumpJson(rotation = 1)
-                }
-            }
-            assertFalse(JSONObject(tools.execute(call("screen_back", "{}"))!!.content).getBoolean("ok"))
+            tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+            val observed = JSONObject(tools.execute(call("observe_screen", "{}"))!!.content)
+            backend.dumpResult = if (takenOver) """{"ok":false,"code":"APP_TAKEN_OVER"}""" else dumpJson(rotation = 1)
+            val result = tools.execute(call("press_key", JSONObject().put("button", "BACK")
+                .put("observation_id", observed.getString("observation_id")).toString()))!!
+            assertFalse(JSONObject(result.content).getBoolean("ok"))
             assertFalse(backend.names().contains("screen_key"))
+        }
+    }
+
+    @Test fun statusOnlyInspectsWithoutOpeningScreensOrPublishingObservationsAndRedactsOtherSessions() {
+        val calls = mutableListOf<String>()
+        val controller = AgentRunController()
+        val task = TaskScreenSession("status", controller, object : ScreenToolBackend {
+            override fun execute(name: String, arguments: String): String {
+                calls += name
+                return """{"engine":{"ok":true,"build":"test","token":"secret","sessions":[{"package":"private.other"}]},"session":{"mode":null,"display":-1},"observer":{"ok":false},"logs":"secret logs"}"""
+            }
+        }, { error("No screenshot") })
+        val result = task.execute(call("observe_screen", """{"status_only":true,"execution_location":"background"}"""))!!
+        val status = JSONObject(result.content)
+        assertEquals(listOf("screen_state"), calls)
+        assertTrue(status.getBoolean("status_only"))
+        assertEquals("test", status.getJSONObject("engine").getString("build"))
+        assertEquals(TaskExecutionLocation.FOREGROUND, task.currentLocation())
+        assertFalse(status.has("observation_id"))
+        assertFalse(result.content.contains("secret"))
+        assertFalse(result.content.contains("private.other"))
+    }
+
+    @Test fun screenshotOnlyFailurePreservesTakeoverCodeAndRecovery() {
+        val backend = FakeBackend()
+        val task = session(backend)
+        task.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        backend.shotResult = """{"ok":false,"code":"APP_TAKEN_OVER","recovery":{"next_action":"WAIT_FOR_USER"}}"""
+        val result = JSONObject(task.execute(call("observe_screen", """{"include_ui_tree":false,"include_screenshot":true}"""))!!.content)
+        assertEquals("APP_TAKEN_OVER", result.getString("code"))
+        assertEquals("WAIT_FOR_USER", result.getJSONObject("recovery").getString("next_action"))
+    }
+
+    @Test fun swipeCanHoldBeforeDraggingWithoutAnotherPublicTool() {
+        for (hold in listOf(0, 600)) {
+            val backend = FakeBackend()
+            val task = session(backend)
+            task.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+            val observed = JSONObject(task.execute(call("observe_screen", "{}"))!!.content)
+            val args = JSONObject().put("x1", 10).put("y1", 100).put("x2", 10).put("y2", 200)
+                .put("coordinate_space", "display").put("hold_ms", hold)
+                .put("observation_id", observed.getString("observation_id"))
+            assertTrue(JSONObject(task.execute(call("swipe", args.toString()))!!.content).getBoolean("ok"))
+            val gesture = backend.calls.last()
+            assertEquals(if (hold > 0) "screen_drag" else "screen_swipe", gesture.name)
+            assertEquals(hold, gesture.arguments.optInt("hold_ms", 0))
+            assertFalse(JSONObject(task.execute(call("swipe", args.toString()))!!.content).getBoolean("ok"))
+        }
+    }
+
+    @Test fun malformedDragHoldIsRejectedBeforeInput() {
+        for (hold in listOf<Any>(-1, 3001, 1.5, "500")) {
+            val backend = FakeBackend()
+            val task = session(backend)
+            task.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+            val args = JSONObject().put("hold_ms", hold)
+            assertEquals("INVALID_ARGUMENT", JSONObject(task.execute(call("swipe", args.toString()))!!.content).getString("code"))
+            assertFalse(backend.names().any { it in setOf("screen_swipe", "screen_drag") })
         }
     }
 
@@ -94,7 +152,7 @@ class TaskScreenSessionTest {
                 "screen_open" -> openResult
                 "screen_dump" -> dumpResult
                 "screen_shot" -> shotResult
-                "screen_tap" -> tapResult
+                "screen_tap", "screen_swipe", "screen_drag" -> tapResult
                 "screen_press" -> pressResult
                 "screen_text" -> textResult
                 "screen_key" -> keyResult

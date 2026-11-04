@@ -30,18 +30,12 @@ internal object AgentToolRequirements {
                 check(put(name, LocalToolRequirement(root)) == null) { "Duplicate tool: $name" }
             }
         }
-        com.eta.shadow.ShadowSchema.NAMES.forEach { name ->
-            put(name, LocalToolRequirement(
-                rootRequirement = if (name == "screen_state") RootRequirement.NONE else RootRequirement.REQUIRED,
-                accessibility = name in com.eta.shadow.ShadowSchema.OBSERVER_TOOLS,
-            ))
-        }
         register(
             RootRequirement.NONE,
             "get_current_context", "search_apps", "launch_app", "open_uri", "browser_use", "web_search", "fetch_url",
             "observe_screen", "release_gui", "tap", "tap_area", "tap_element", "long_press",
-            "long_press_element", "swipe", "scroll", "scroll_element", "type_text", "input_text",
-            "replace_text", "clear_text", "set_clipboard", "get_clipboard", "paste_text",
+            "long_press_element", "swipe", "scroll", "scroll_element", "type_text",
+            "set_clipboard", "get_clipboard",
             "wait", "wait_for_text", "wait_for_package", "open_system_panel",
             "set_alarm", "set_timer", "device_status", "inspect_app", "media_control", "set_volume",
             "search_notification_history", "recent_app_activity", "app_usage_summary",
@@ -78,8 +72,8 @@ internal object AgentToolRequirements {
         put("search_calendar_events", LocalToolRequirement(RootRequirement.PARTIAL, systemAccess = ToolSystemAccess.CALENDAR_READ))
         listOf(
             "observe_screen", "tap", "tap_area", "tap_element", "long_press",
-            "long_press_element", "swipe", "scroll", "scroll_element", "type_text", "input_text",
-            "replace_text", "clear_text", "paste_text", "press_key", "open_system_panel",
+            "long_press_element", "swipe", "scroll", "scroll_element", "type_text",
+            "press_key", "open_system_panel",
             "wait_for_text", "wait_for_package",
         ).forEach { name -> put(name, getValue(name).copy(accessibility = true)) }
         listOf(
@@ -88,8 +82,8 @@ internal object AgentToolRequirements {
         ).forEach { name -> put(name, getValue(name).copy(gui = true)) }
         listOf(
             "tap", "tap_area", "tap_element", "long_press", "long_press_element", "swipe",
-            "scroll", "scroll_element", "type_text", "input_text", "replace_text", "clear_text",
-            "paste_text", "press_key",
+            "scroll", "scroll_element", "type_text",
+            "press_key",
         ).forEach { name -> put(name, getValue(name).copy(gui = true, freshObservation = true)) }
         mapOf(
             "recent_notifications" to ToolSystemAccess.NOTIFICATIONS,

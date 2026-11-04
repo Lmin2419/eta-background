@@ -105,7 +105,7 @@ public final class ShadowTools {
                 resetSession();
                 ShadowSettings.markEngineReady(false);
                 Engine.warm(ctx);
-                text = "后台虚拟屏引擎连接中断，已在后台尝试重启。请重新 screen_open 后再继续。";
+                text = "后台虚拟屏引擎连接中断，已在后台尝试恢复。请先用 observe_screen(status_only=true, execution_location=background) 检查状态，再决定是否重新 launch_app。";
             } else if (e instanceof java.net.SocketTimeoutException || (msg != null && msg.contains("timed out"))) {
                 text = "{\"ok\":false,\"code\":\"TIMEOUT\",\"operationMayHaveRun\":true,"
                         + "\"message\":\"操作等待超时，可能已执行；请先重新观察，勿直接重复点击或发送。\"}";
@@ -135,7 +135,7 @@ public final class ShadowTools {
                 if (hit != null) {
                     return "请使用 GUI 工具做界面操作（检测到 shell 命令 `"
                             + hit.trim() + "`）。"
-                            + "当前页面使用 observe_screen/tap_element 等前台工具；只有用户要求后台执行时使用 screen_*，不要擅自切换操作位置。";
+                            + "前后台均使用 observe_screen/tap_element 等统一界面工具；只有用户要求后台执行时传 execution_location=background，不要擅自切换操作位置。";
                 }
             }
         } catch (Throwable ignored) {
@@ -226,6 +226,11 @@ public final class ShadowTools {
     private String runWithFeedback(String name, JSONObject a) throws Exception {
         boolean input = java.util.Arrays.asList("screen_tap", "screen_click", "screen_press", "screen_swipe",
                 "screen_drag", "screen_text", "screen_scroll", "screen_key").contains(name);
+        if (input && mode != null && display >= 0) {
+            JSONObject late = io.github.mangi.eta.agent.tool.GuiActionFeedback.beforeInput(
+                    sessionId, openedPackage, display, -1);
+            if (late != null) return late.toString();
+        }
         JSONObject blocked = feedbackGuard.before(name, a);
         if (blocked != null) return blocked.toString();
         if (!input || mode == null || display < 0) {
@@ -273,7 +278,6 @@ public final class ShadowTools {
             case "screen_drag": return eng("drag", a);
             case "screen_key": return eng("key", a);
             case "screen_input_state": return obs("input_state", new JSONObject(a.toString()).put("expectedPackage", openedPackage));
-            case "screen_back": return "{\"ok\":false,\"code\":\"BACKGROUND_ROUTE_REQUIRED\",\"operationMayHaveRun\":false,\"message\":\"后台返回需要本任务的运行时入口；本次未执行\"}";
             case "screen_shot": return eng("shot", a);
             case "screen_text": return obs("settext", a);
             case "screen_click": return obs("click2", a);
@@ -343,7 +347,7 @@ public final class ShadowTools {
         // Engine reports window readiness for both adoption and cold launch; a nonempty tree alone is insufficient.
         return launched.put("display", display)
                 .put("hint", "hidden".equals(mode)
-                        ? "app is on a hidden display; call screen_finish when done"
+                        ? "app is on a hidden display; call release_gui when the screen stage is done"
                         : "app is on the main screen").toString();
     }
 
@@ -388,6 +392,7 @@ public final class ShadowTools {
             // Only a close-out the engine accepted clears the handle: keeping it after a
             // failure is what lets the caller retry instead of losing the display.
             if (new JSONObject(out).optBoolean("ok", false)) {
+                io.github.mangi.eta.agent.tool.GuiActionFeedback.clearOwner(sessionId);
                 JSONObject finish = new JSONObject(out).optJSONObject("finish");
                 parked = finish != null && finish.optBoolean("parked", false);
                 if (parked) parkedHints.remember(openedPackage, sessionId);
@@ -424,11 +429,12 @@ public final class ShadowTools {
     }
 
     private void requireSession() {
-        if (mode == null || display < 0) throw new IllegalStateException("NO_SESSION: call screen_open first");
+        if (mode == null || display < 0) throw new IllegalStateException("NO_SESSION: use launch_app with execution_location=background first");
     }
 
     /** #1：引擎掉线或收尾后清掉本地会话句柄（旧虚拟屏已随引擎消失）。 */
     void resetSession() {
+        io.github.mangi.eta.agent.tool.GuiActionFeedback.clearOwner(sessionId);
         feedbackGuard.clear();
         activeScreens.remove(sessionId, this);
         parkedHints.forget(openedPackage, sessionId);
@@ -523,6 +529,7 @@ public final class ShadowTools {
     /** Called outside registry locks. The engine acknowledges cleanup before the lease is released. */
     public boolean closeSession(boolean keepFinished) {
         closed = true;
+        io.github.mangi.eta.agent.tool.GuiActionFeedback.clearOwner(sessionId);
         activeScreens.remove(sessionId, this);
         if (!parked) parkedHints.forget(openedPackage, sessionId);
         try {
@@ -632,6 +639,7 @@ public final class ShadowTools {
         String code = result.optString("code");
         if ("APP_TAKEN_OVER".equals(code)) {
             takenOver = true;
+            io.github.mangi.eta.agent.tool.GuiActionFeedback.clearOwner(sessionId);
             if (!closed) takeoverListener.run();
         }
         if ("STALE_OBSERVATION".equals(code) || "INVALID_OBSERVATION".equals(code)
