@@ -14,6 +14,14 @@ internal enum class PackageProfileInstallStage {
     COMPLETE,
 }
 
+internal enum class PackageProfileInstallStep {
+    PRECHECK,
+    SYSTEM_PACKAGES,
+    PROFILE_SETUP,
+    BROWSER_DOWNLOAD,
+    ACTIVATE_MARKER,
+}
+
 internal data class PackageProfileInstallProgress(
     val stage: PackageProfileInstallStage,
     val downloadedBytes: Long = 0,
@@ -27,7 +35,14 @@ internal sealed interface PackageProfileInstallResult {
     /** 依赖的 profile 尚未安装，按依赖链先装它。 */
     data class DependencyMissing(val profileId: String) : PackageProfileInstallResult
     data object Installed : PackageProfileInstallResult
-    data class Failed(val stage: PackageProfileInstallStage) : PackageProfileInstallResult
+    data class Failed(
+        val stage: PackageProfileInstallStage,
+        val step: PackageProfileInstallStep = PackageProfileInstallStep.PRECHECK,
+        val code: String = "INSTALL_FAILED",
+        val exitCode: Int? = null,
+        val timedOut: Boolean = false,
+        val elapsedMs: Long? = null,
+    ) : PackageProfileInstallResult
 }
 
 internal data class LinuxPackageSpec(
@@ -161,7 +176,8 @@ internal object LinuxPackageProfiles {
                 ),
                 setupScript = """
                     PLAYWRIGHT_BROWSERS_PATH=/opt/eta/web-browsers \
-                      /opt/eta/web-python/bin/python -m patchright install chromium
+                    PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=60000 \
+                      /opt/eta/web-python/bin/python -m patchright install --no-shell chromium
                 """.trimIndent(),
             ),
         ),
@@ -205,7 +221,9 @@ internal class LinuxPackageProfileInstaller(
         if (isReady()) return@withContext PackageProfileInstallResult.AlreadyReady
         onProgress(PackageProfileInstallProgress(PackageProfileInstallStage.CHECKING))
         if (!profile.supports(distribution)) {
-            return@withContext PackageProfileInstallResult.Failed(PackageProfileInstallStage.CHECKING)
+            return@withContext PackageProfileInstallResult.Failed(
+                PackageProfileInstallStage.CHECKING, code = "UNSUPPORTED_DISTRIBUTION",
+            )
         }
         if (!LinuxEnvironmentPaths.rootfsReady(rootfs.absolutePath) ||
             !File(rootfs, AlpineEnvironmentPaths.COMMON_TOOLS_MARKER).isFile
@@ -236,6 +254,8 @@ internal class LinuxPackageProfileInstaller(
             if (!installed) {
                 return@withContext PackageProfileInstallResult.Failed(
                     PackageProfileInstallStage.DOWNLOADING,
+                    step = PackageProfileInstallStep.PROFILE_SETUP,
+                    code = "MANAGED_TOOL_DOWNLOAD_FAILED",
                 )
             }
         }
@@ -244,51 +264,28 @@ internal class LinuxPackageProfileInstaller(
             LinuxDistribution.ALPINE -> "/usr/local/bin/eta-apk"
             LinuxDistribution.DEBIAN -> "/usr/local/bin/eta-apt"
         }
-        onProgress(PackageProfileInstallProgress(PackageProfileInstallStage.INSTALLING))
-        if (spec.packages.isNotEmpty()) {
-            val installResult = InstallerShellRunner.run(
-                command = "$packageHelper install ${spec.packages.joinToString(" ")}",
-                timeoutSeconds = INSTALL_TIMEOUT_SECONDS,
+        PackageProfileInstallCommands.run(profile, spec, packageHelper, onProgress) { step, command, timeout ->
+            InstallerShellRunner.run(
+                command = command,
+                timeoutSeconds = timeout,
                 environment = distribution.terminalEnvironment,
                 linuxRootfsPath = rootfs.absolutePath,
-            )
-            if (installResult.exitCode != 0) {
-                return@withContext PackageProfileInstallResult.Failed(
-                    PackageProfileInstallStage.INSTALLING,
+                captureTail = true,
+            ).also { result ->
+                val code = if (result.exitCode == 0 && !result.timedOut) "OK" else PackageProfileInstallDiagnostics.code(step, result)
+                AndroidAgentLogger.info(
+                    "Package profile distribution=${distribution.wireName} profile=${profile.id} step=$step " +
+                        "code=$code exitCode=${result.exitCode} timedOut=${result.timedOut} " +
+                        "elapsedMs=${result.elapsedMs} outputTruncated=${result.outputTruncated}",
                 )
             }
-        }
-
-        val activateCommand = buildString {
-            append("set -e\n")
-            spec.setupScript?.let { script -> append(script).append('\n') }
-            if (profile == LinuxPackageProfiles.KIMI) append("kimi --version >/dev/null\nkimi web --help >/dev/null\n")
-            append("cat > /").append(profile.markerName).append(" <<'ETA_PROFILE_EOF'\n")
-            append("profile=").append(profile.revision).append('\n')
-            append("ETA_PROFILE_EOF\n")
-            append("chmod 0644 /").append(profile.markerName).append(" || exit 71")
-        }
-        val result = InstallerShellRunner.run(
-            command = activateCommand,
-            timeoutSeconds = INSTALL_TIMEOUT_SECONDS,
-            environment = distribution.terminalEnvironment,
-            linuxRootfsPath = rootfs.absolutePath,
-        )
-        AndroidAgentLogger.info(
-            "Package profile action=activate distribution=${distribution.wireName} profile=${profile.id} " +
-                "outcome=${if (result.exitCode == 0) "succeeded" else "failed"} " +
-                "exitCode=${result.exitCode} outputChars=${result.output.length}",
-        )
-        if (result.exitCode != 0) {
-            return@withContext PackageProfileInstallResult.Failed(PackageProfileInstallStage.INSTALLING)
-        }
+        }?.let { return@withContext it }
 
         onProgress(PackageProfileInstallProgress(PackageProfileInstallStage.COMPLETE))
         PackageProfileInstallResult.Installed
     }
 
     companion object {
-        private const val INSTALL_TIMEOUT_SECONDS = 600L
         private val installMutex = Mutex()
     }
 }

@@ -689,10 +689,7 @@ private fun PackageProfileInstallResult.toMessage(
     }
     PackageProfileInstallResult.Installed ->
         context.getString(R.string.linux_profile_installed, profileTitle)
-    is PackageProfileInstallResult.Failed -> context.getString(
-        R.string.linux_profile_stage_failed,
-        PackageProfileInstallProgress(stage).summary(context, profileTitle),
-    )
+    is PackageProfileInstallResult.Failed -> linuxInstallFailureMessage(context, profileTitle, this)
 }
 
 private fun ApkAnalysisInstallResult.toMessage(context: Context): String = when (this) {

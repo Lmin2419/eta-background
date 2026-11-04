@@ -1,0 +1,24 @@
+<resources>
+    <string name="linux_install_failure_details">%1$s — %2$s failed\n%3$s\n%4$s\nLong-press to copy these diagnostics.</string>
+    <string name="linux_install_step_precheck">Environment check</string>
+    <string name="linux_install_step_packages">System dependencies</string>
+    <string name="linux_install_step_setup">Component setup</string>
+    <string name="linux_install_step_browser">Browser download or extraction</string>
+    <string name="linux_install_step_marker">Saving installation status</string>
+    <string name="linux_install_reason_timeout">This installation step exceeded its time limit. Completed components are retained; retry when the network is stable.</string>
+    <string name="linux_install_reason_network_timeout">The download connection timed out. Check access to the download service or try another network.</string>
+    <string name="linux_install_reason_dns">The download host could not be resolved. Check network and DNS access.</string>
+    <string name="linux_install_reason_tls">The secure connection could not be verified. Check system time and the network; certificate checks remain enabled.</string>
+    <string name="linux_install_reason_network">The network connection failed or was interrupted. Check access to the download service.</string>
+    <string name="linux_install_reason_denied">The download service denied the request. Repeated retries may not help.</string>
+    <string name="linux_install_reason_rate_limit">The download service is rate-limiting requests. Wait before retrying.</string>
+    <string name="linux_install_reason_not_found">The required download or dependency address was not found. Keep these diagnostics for troubleshooting.</string>
+    <string name="linux_install_reason_space">There is not enough space in the environment or temporary download directory. Free internal storage before retrying.</string>
+    <string name="linux_install_reason_busy">Another package operation holds the installation lock. Wait for it to finish; do not remove the lock file.</string>
+    <string name="linux_install_reason_apt">The package manager could not restore a consistent dependency state. Keep these diagnostics for troubleshooting.</string>
+    <string name="linux_install_reason_dependency">A required package, Python module, or native library is unavailable. Keep these diagnostics; downloading the browser again may not fix it.</string>
+    <string name="linux_install_reason_platform">The selected component does not support this environment or architecture.</string>
+    <string name="linux_install_reason_environment">The Linux installation command could not start. Check that the selected environment and its execution permissions are available.</string>
+    <string name="linux_install_reason_write">The installation directory or completion status could not be written. This installation was not marked complete.</string>
+    <string name="linux_install_reason_unknown">The cause is not yet known. Keep the stage and diagnostic code below for troubleshooting.</string>
+</resources>

@@ -1,0 +1,24 @@
+<resources>
+    <string name="linux_install_failure_details">%1$s · %2$s失敗\n%3$s\n%4$s\n可長按複製診斷資訊。</string>
+    <string name="linux_install_step_precheck">環境檢查</string>
+    <string name="linux_install_step_packages">系統相依套件安裝</string>
+    <string name="linux_install_step_setup">元件設定</string>
+    <string name="linux_install_step_browser">瀏覽器下載或解壓縮</string>
+    <string name="linux_install_step_marker">儲存安裝狀態</string>
+    <string name="linux_install_reason_timeout">此安裝步驟超過時間上限。已完成的元件會保留，網路穩定後可重試。</string>
+    <string name="linux_install_reason_network_timeout">下載連線逾時。請檢查下載服務是否可存取，或換一個網路後重試。</string>
+    <string name="linux_install_reason_dns">無法解析下載網域。請檢查網路與 DNS。</string>
+    <string name="linux_install_reason_tls">安全連線驗證失敗。請檢查系統時間和網路；憑證驗證保持開啟。</string>
+    <string name="linux_install_reason_network">網路連線失敗或中斷。請檢查下載服務是否可存取。</string>
+    <string name="linux_install_reason_denied">下載服務拒絕了請求，連續重試可能無效。</string>
+    <string name="linux_install_reason_rate_limit">下載服務限制了請求頻率，請稍後再試。</string>
+    <string name="linux_install_reason_not_found">所需下載或相依套件位址不存在，請保留診斷資訊以便排查。</string>
+    <string name="linux_install_reason_space">環境或暫存下載目錄空間不足，請先清理手機內部儲存空間。</string>
+    <string name="linux_install_reason_busy">其他安裝操作正在占用套件管理員，請等待它結束，不要刪除鎖定檔。</string>
+    <string name="linux_install_reason_apt">套件管理員未能恢復正常的相依狀態，請保留診斷資訊以便排查。</string>
+    <string name="linux_install_reason_dependency">所需的套件、Python 模組或動態函式庫無法使用。請保留診斷資訊，重複下載瀏覽器未必能解決。</string>
+    <string name="linux_install_reason_platform">目前環境或處理器架構不支援此元件。</string>
+    <string name="linux_install_reason_environment">Linux 安裝命令未能啟動，請檢查所選環境及其執行權限是否可用。</string>
+    <string name="linux_install_reason_write">無法寫入安裝目錄或完成狀態，本次沒有標記為安裝完成。</string>
+    <string name="linux_install_reason_unknown">原因尚未確定，請保留下方的失敗階段與診斷碼以便排查。</string>
+</resources>

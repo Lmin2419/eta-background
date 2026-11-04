@@ -3,7 +3,6 @@ package io.github.mangi.eta.agent.terminal
 import android.content.Context
 import android.os.Build
 import io.github.mangi.eta.core.AndroidAgentLogger
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -411,6 +410,9 @@ internal class AlpineEnvironmentInstaller(
 internal data class InstallerCommandResult(
     val exitCode: Int,
     val output: String,
+    val elapsedMs: Long? = null,
+    val timedOut: Boolean = false,
+    val outputTruncated: Boolean = false,
 )
 
 internal object InstallerShellRunner {
@@ -422,7 +424,10 @@ internal object InstallerShellRunner {
         environment: TerminalEnvironment,
         linuxRootfsPath: String? = null,
         identity: String? = null,
+        captureTail: Boolean = false,
     ): InstallerCommandResult = runInterruptible(Dispatchers.IO) {
+        val started = System.nanoTime()
+        fun elapsedMs() = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started).coerceAtLeast(0)
         val supervisor = ShellProcessSupervisor()
         val process = supervisor.startShellProcess(
             identity = identity ?: TerminalRuntime.defaultIdentity(environment, linuxRootfsPath),
@@ -430,8 +435,8 @@ internal object InstallerShellRunner {
             mergeStderr = true,
             environment = environment,
             linuxRootfsPath = linuxRootfsPath,
-        ) ?: return@runInterruptible InstallerCommandResult(exitCode = -1, output = "")
-        val output = ByteArrayOutputStream()
+        ) ?: return@runInterruptible InstallerCommandResult(exitCode = -1, output = "", elapsedMs = elapsedMs())
+        val output = InstallerOutputBuffer(MAX_OUTPUT_BYTES, captureTail)
         val reader = thread(name = "eta-alpine-installer-output", isDaemon = true) {
             runCatching {
                 process.inputStream.use { input ->
@@ -439,10 +444,7 @@ internal object InstallerShellRunner {
                     while (true) {
                         val count = input.read(buffer)
                         if (count < 0) break
-                        synchronized(output) {
-                            val remaining = (MAX_OUTPUT_BYTES - output.size()).coerceAtLeast(0)
-                            if (remaining > 0) output.write(buffer, 0, count.coerceAtMost(remaining))
-                        }
+                        output.append(buffer, count)
                     }
                 }
             }
@@ -453,10 +455,12 @@ internal object InstallerShellRunner {
             if (!finished) {
                 supervisor.terminateProcessTree(process)
                 reader.join(1_000)
-                InstallerCommandResult(exitCode = -2, output = output.text())
+                InstallerCommandResult(exitCode = -2, output = output.text(), elapsedMs = elapsedMs(),
+                    timedOut = true, outputTruncated = output.truncated())
             } else {
                 reader.join(1_000)
-                InstallerCommandResult(exitCode = process.exitValue(), output = output.text())
+                InstallerCommandResult(exitCode = process.exitValue(), output = output.text(), elapsedMs = elapsedMs(),
+                    outputTruncated = output.truncated())
             }
         } finally {
             if (process.isAlive) {
@@ -467,7 +471,4 @@ internal object InstallerShellRunner {
             supervisor.unregisterProcess(process)
         }
     }
-
-    private fun ByteArrayOutputStream.text(): String =
-        synchronized(this) { toByteArray().decodeToString().trimEnd() }
 }

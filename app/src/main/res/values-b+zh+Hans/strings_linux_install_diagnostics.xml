@@ -1,0 +1,24 @@
+<resources>
+    <string name="linux_install_failure_details">%1$s · %2$s失败\n%3$s\n%4$s\n可长按复制诊断信息。</string>
+    <string name="linux_install_step_precheck">环境检查</string>
+    <string name="linux_install_step_packages">系统依赖安装</string>
+    <string name="linux_install_step_setup">组件配置</string>
+    <string name="linux_install_step_browser">浏览器下载或解压</string>
+    <string name="linux_install_step_marker">保存安装状态</string>
+    <string name="linux_install_reason_timeout">此安装步骤超过时间上限。已完成的组件会保留，网络稳定后可重试。</string>
+    <string name="linux_install_reason_network_timeout">下载连接超时。请检查下载服务是否可访问，或换一个网络后重试。</string>
+    <string name="linux_install_reason_dns">无法解析下载域名。请检查网络与 DNS。</string>
+    <string name="linux_install_reason_tls">安全连接验证失败。请检查系统时间和网络；证书校验保持开启。</string>
+    <string name="linux_install_reason_network">网络连接失败或中断。请检查下载服务是否可访问。</string>
+    <string name="linux_install_reason_denied">下载服务拒绝了请求，连续重试可能无效。</string>
+    <string name="linux_install_reason_rate_limit">下载服务限制了请求频率，请稍后再试。</string>
+    <string name="linux_install_reason_not_found">所需下载或依赖地址不存在，请保留诊断信息以便排查。</string>
+    <string name="linux_install_reason_space">环境或临时下载目录空间不足，请先清理手机内部存储。</string>
+    <string name="linux_install_reason_busy">其他安装操作正在占用包管理器，请等待它结束，不要删除锁文件。</string>
+    <string name="linux_install_reason_apt">包管理器未能恢复正常的依赖状态，请保留诊断信息以便排查。</string>
+    <string name="linux_install_reason_dependency">所需的软件包、Python 模块或动态库不可用。请保留诊断信息，重复下载浏览器未必能解决。</string>
+    <string name="linux_install_reason_platform">当前环境或处理器架构不支持此组件。</string>
+    <string name="linux_install_reason_environment">Linux 安装命令未能启动，请检查所选环境及其运行权限是否可用。</string>
+    <string name="linux_install_reason_write">无法写入安装目录或完成状态，本次没有标记为安装完成。</string>
+    <string name="linux_install_reason_unknown">原因尚未确定，请保留下方的失败阶段与诊断码以便排查。</string>
+</resources>

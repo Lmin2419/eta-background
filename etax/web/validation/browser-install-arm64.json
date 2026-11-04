@@ -1,0 +1,56 @@
+{
+  "started_at_utc": "2026-11-04T08:46:27.702940+00:00",
+  "duration_seconds": 17.734,
+  "exit_code": 0,
+  "timed_out": false,
+  "patchright_version": "1.64.4",
+  "actual_execution_platform": "Linux x86_64 Debian 13",
+  "target_browser_platform": "debian13-arm64",
+  "scope": "Real pinned x86_64 driver CLI downloads and extracts official ARM64 browser artifacts; ARM64 Node/browser not executed.",
+  "tls_verification": "Defaults retained; inherited proxy and CA environment retained.",
+  "headless_shell_present": false,
+  "cache_total_bytes": 422426041,
+  "limitations": [
+    "PLAYWRIGHT_HOST_PLATFORM_OVERRIDE intentionally reports an unsupported/fallback platform warning; native Debian 13 ARM64 detection was inspected separately.",
+    "The x86_64 driver was executed, not the ARM64 wheel Node binary.",
+    "No ARM64 browser launch was performed. DEPENDENCIES_VALIDATED files produced by this cross-architecture CLI are not proof of ARM64 library or sandbox readiness.",
+    "Cloud network download success and elapsed time do not predict phone network connectivity or speed."
+  ],
+  "command": [
+    "python",
+    "-m",
+    "patchright",
+    "install",
+    "--no-shell",
+    "chromium"
+  ],
+  "connection_timeout_ms": 60000,
+  "overall_timeout_seconds": 600,
+  "cache_entries": [
+    {
+      "name": ".links",
+      "kind": "directory",
+      "file_count": 1,
+      "bytes": 83
+    },
+    {
+      "name": "chromium-1248",
+      "kind": "directory",
+      "file_count": 303,
+      "bytes": 418439600
+    },
+    {
+      "name": "ffmpeg-1013",
+      "kind": "directory",
+      "file_count": 4,
+      "bytes": 3986358
+    }
+  ],
+  "official_chrome_archive": {
+    "bytes": 199750508,
+    "sha256": "910a12fff6170202195f72ef3d353801c7063d301ab80b1f51b77d791fda60ce",
+    "source": "https://cdn.playwright.dev/builds/cft/156.0.8078.4/linux-arm64/chrome-linux-arm64.zip",
+    "observed_redirect": "https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux-arm64/chrome-linux-arm64.zip"
+  },
+  "reused_prior_archive": false
+}

@@ -13,6 +13,8 @@ Scrapling 的 HTTP 路径也导入 Patchright 类型，因此安装的依赖比�
 
 安装标记只代表依赖安装完成，不代表 ARM64、PRoot 或当前 ROM 已通过实际浏览器验证。浏览器不得通过 `--no-sandbox` 或忽略证书错误来假装可用。此版本保留用户设备验证门槛；云端 x86_64 测试不能替代手机结果。
 
+安装器已改为只下载实际使用的完整 Chromium 和 FFmpeg，不再额外下载 headless-shell；失败时显示具体阶段、诊断码及退出码。ARM64 下载检验、限制与验收见[安装修订](INSTALLATION_FIX.md)。
+
 ## 执行与资源
 
 - App 与专用 Linux 子进程通过 JSON 行通信，不开放监听端口；URL 放在 stdin，不拼接到 shell 命令。

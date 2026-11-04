@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.terminal
 
+import androidx.compose.foundation.text.selection.SelectionContainer
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -66,11 +68,13 @@ internal fun LinuxEnvironmentStatusCard(
                 )
             }
             message?.let {
-                Text(
-                    text = it,
-                    style = MiuixTheme.textStyles.footnote1,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                )
+                SelectionContainer {
+                    Text(
+                        text = it,
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                }
             }
             actionText?.let {
                 EtaTextButton(
