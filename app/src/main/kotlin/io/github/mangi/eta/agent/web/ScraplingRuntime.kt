@@ -36,6 +36,7 @@ internal class ScraplingRuntime(
     private val executionContext: TerminalExecutionContext,
     private val logger: AgentLogger,
     rootAvailable: () -> Boolean,
+    private val ownerCancelled: () -> Boolean = { false },
 ) : AutoCloseable {
     private val supervisor = ShellProcessSupervisor(rootAvailable = rootAvailable)
     private val closed = AtomicBoolean(false)
@@ -43,6 +44,7 @@ internal class ScraplingRuntime(
     @Volatile private var worker: Worker? = null
 
     fun read(request: WebFetchUpgradeRequest): WebFetchUpgradeResult {
+        ensureActive()
         WebHttpTransport.validateUrl(request.url)
         val heavy = request.preferredRoute != WebFetchRoute.HTTP_FINGERPRINT
         if (heavy && !installed(LinuxPackageProfiles.WEB_BROWSER)) {
@@ -76,6 +78,7 @@ internal class ScraplingRuntime(
 
     /** User-invoked diagnostic. A marker does not establish that the ABI/sandbox works. */
     fun probe(timeoutMillis: Long = 5_000, checkBrowser: Boolean = false): ScraplingCapabilities {
+        ensureActive()
         val browser = checkBrowser && installed(LinuxPackageProfiles.WEB_BROWSER)
         val response = exchange(
             JSONObject().put("action", "probe").put("browser", browser), timeoutMillis, heavy = browser,
@@ -225,6 +228,9 @@ internal class ScraplingRuntime(
     }
 
     private fun ensureActive() {
+        // The owner can finish while this lazy runtime is being constructed,
+        // before its close hook can see us. Check its lifetime independently.
+        if (ownerCancelled()) close()
         if (closed.get() || Thread.currentThread().isInterrupted) {
             throw WebRequestException("WEB_CANCELLED", "网页增强已取消")
         }

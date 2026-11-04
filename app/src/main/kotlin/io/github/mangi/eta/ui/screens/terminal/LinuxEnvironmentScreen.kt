@@ -48,6 +48,11 @@ import io.github.mangi.eta.agent.terminal.terminalEnvironment
 import io.github.mangi.eta.agent.terminal.TerminalExecutionContext
 import io.github.mangi.eta.agent.web.ScraplingRuntime
 import io.github.mangi.eta.agent.web.WebRequestException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.runInterruptible
 import io.github.mangi.eta.agent.tool.WebBrowserWork
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.data.repository.LinuxEnvironmentSettingsRepository
@@ -318,22 +323,27 @@ internal fun LinuxEnvironmentScreen(
         profileProgressSummary = context.getString(R.string.linux_web_checking)
         resultMessage = null
         launchInstallation {
-            resultMessage = withContext(Dispatchers.IO) {
+            val probeContext = currentCoroutineContext()
+            resultMessage = runInterruptible(Dispatchers.IO) {
                 try {
                     ScraplingRuntime(appContext, TerminalExecutionContext(
                         selectedDistribution.terminalEnvironment,
                         LinuxEnvironmentPaths.rootfsDir(appContext, selectedDistribution).absolutePath,
-                    ), AndroidAgentLogger, { capabilities.root.isGranted }).use { runtime ->
+                    ), AndroidAgentLogger, { capabilities.root.isGranted }, ownerCancelled = { !probeContext.isActive }).use { runtime ->
                         val result = if (target == InstallTarget.WEB_BROWSER) {
-                            WebBrowserWork.run(15_000, {}) { remaining -> runtime.probe(remaining, checkBrowser = true) }
+                            WebBrowserWork.run(15_000, { probeContext.ensureActive() }) { remaining -> runtime.probe(remaining, checkBrowser = true) }
                         } else runtime.probe()
                         context.getString(if (target == InstallTarget.WEB_BROWSER) {
                             if (result.browser) R.string.linux_web_browser_available else R.string.linux_web_browser_unavailable
                         } else R.string.linux_web_http_available)
                     }
+                } catch (failure: CancellationException) {
+                    throw failure
                 } catch (failure: WebRequestException) {
+                    probeContext.ensureActive()
                     context.getString(R.string.linux_web_check_failed, failure.code)
                 } catch (_: Exception) {
+                    probeContext.ensureActive()
                     context.getString(R.string.linux_web_check_failed, "SCRAPLING_UNAVAILABLE")
                 }
             }

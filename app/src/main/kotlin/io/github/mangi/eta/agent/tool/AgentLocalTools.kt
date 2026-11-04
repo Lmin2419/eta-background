@@ -163,7 +163,7 @@ internal class AgentLocalTools(
         linuxSharedMountsProvider = { SharedFolderMounts.current() },
     )
     private val scraplingRuntimeRef = lazy {
-        ScraplingRuntime(context, terminalExecutionContext, logger, rootAvailable)
+        ScraplingRuntime(context, terminalExecutionContext, logger, rootAvailable, ownerCancelled = closed::get)
     }
 
     private fun checkWebCancellation() {
