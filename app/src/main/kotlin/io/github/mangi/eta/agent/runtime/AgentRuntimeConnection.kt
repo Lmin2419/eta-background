@@ -45,6 +45,8 @@ internal object AgentRuntimeConnection {
     private var messenger: Messenger? = null
     private var bound = false
     private var binding = false
+    /** Whether this binding's queued bind() has run; a queued runnable can be lost. */
+    private var bindDispatched = false
     private var activeLeases = 0
     private var connectionLatch = CountDownLatch(0)
     private var bindStartedAt = 0L
@@ -71,6 +73,7 @@ internal object AgentRuntimeConnection {
                 messenger = null
                 // 普通断线由系统自动重连当前 binding；不要叠加第二次 bindService。
                 binding = true
+                bindDispatched = true
                 connectionLatch = CountDownLatch(1)
                 bindStartedAt = SystemClock.elapsedRealtime()
             }
@@ -101,9 +104,12 @@ internal object AgentRuntimeConnection {
 
             appContext = context.applicationContext
             logger = callLogger
-            shouldBind = !binding
-            if (shouldBind) {
+            // A bind() queued by an earlier caller may never run (its looper work was
+            // dropped); queue it again instead of waiting out the timeout on its latch.
+            shouldBind = !binding || !bindDispatched
+            if (!binding) {
                 binding = true
+                bindDispatched = false
                 connectionLatch = CountDownLatch(1)
                 bindStartedAt = SystemClock.elapsedRealtime()
             }
@@ -125,7 +131,12 @@ internal object AgentRuntimeConnection {
     }
 
     private fun bind() {
-        val context = synchronized(lock) { appContext } ?: return failBinding()
+        val context = synchronized(lock) {
+            // A re-queued bind() for a binding already dispatched or ended is a no-op.
+            if (!binding || bindDispatched) return
+            bindDispatched = true
+            appContext
+        } ?: return failBinding()
         val succeeded = runCatching {
             context.bindService(
                 AgentRuntimeWire.serviceIntent(),
