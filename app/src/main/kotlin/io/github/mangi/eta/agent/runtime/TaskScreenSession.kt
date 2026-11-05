@@ -727,7 +727,8 @@ internal class TaskScreenSession(
     private fun validateLiveSnapshot(snapshot: Observation, toolName: String): AgentModelClient.ToolResult? {
         // Boot.handle adds geometry to the dump response. Use it as the node-side
         // authority; never capture/replace a published screenshot frame during validation.
-        val current = backendResult("screen_dump", JSONObject().put("limit", snapshot.limit))
+        val nodeLimit = if (snapshot.treeRead) snapshot.limit else 0
+        val current = backendResult("screen_dump", JSONObject().put("limit", nodeLimit))
         if (!current.optBoolean("ok", false)) {
             invalidateObservation()
             return resultWithLocation(current, toolName)

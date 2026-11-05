@@ -3,7 +3,11 @@ package io.github.mangi.eta.agent.runtime
 import android.app.Application
 import android.app.Notification
 import android.app.NotificationManager
+import android.app.RemoteInput
+import android.content.Intent
+import android.os.Bundle
 import android.os.Looper
+import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.overlay.AgentOverlayStatus
 import io.github.mangi.eta.ui.MainActivity
 import org.junit.Assert.*
@@ -103,6 +107,51 @@ class AgentSystemNotificationTest {
             AgentExecutionService.updateTasks(service, emptyList())
             shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
             controller.destroy()
+            manager.cancelAll()
+        }
+    }
+
+    @Test fun rejectedReplyKeepsTheCompletedResultAndItsRetryAction() {
+        val host = Robolectric.buildService(AgentExecutionService::class.java).create()
+        val service = host.get()
+        val manager = service.getSystemService(NotificationManager::class.java)
+        val result = task("reply-feedback", AgentOverlayStatus.ResultReady)
+            .copy(completed = true, streamPreview = "查询成功")
+        val main = shadowOf(Looper.getMainLooper())
+        var dismiss: Intent? = null
+        try {
+            AgentExecutionService.acquire(service, "reply-feedback-test", onStop = {})
+            AgentExecutionService.completeTask(service, result)
+            main.idle()
+            val original = manager.activeNotifications.single()
+            dismiss = shadowOf(original.notification.deleteIntent).savedIntent
+            val reply = original.notification.actions.single { it.semanticAction == Notification.Action.SEMANTIC_ACTION_REPLY }
+            val intent = Intent(shadowOf(reply.actionIntent).savedIntent)
+            RemoteInput.addResultsToIntent(reply.remoteInputs, intent, Bundle().apply {
+                putCharSequence(AgentExecutionService.REPLY_TEXT, "继续处理")
+            })
+            shadowOf(service.application).declareActionUnbindable(AgentRuntimeWire.ACTION_BIND)
+            service.onStartCommand(intent, 0, 1)
+            main.idle()
+
+            assertEquals(result.copy(replyFailed = true), AgentExecutionService.task(result.runId))
+            val archived = result.copy(streamPreview = "归档后的查询结果")
+            AgentExecutionService.completeTask(service, archived)
+            main.idle()
+            val failedReply = manager.activeNotifications.single()
+            assertEquals(original.id, failedReply.id)
+            assertEquals(archived.copy(replyFailed = true), AgentExecutionService.task(result.runId))
+            val text = failedReply.notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString()
+            assertTrue(text.contains(service.getString(R.string.background_task_completed)))
+            assertTrue(text.contains(archived.streamPreview))
+            assertTrue(text.contains(service.getString(R.string.background_reply_failed)))
+            assertTrue(failedReply.notification.actions.any { it.semanticAction == Notification.Action.SEMANTIC_ACTION_REPLY })
+        } finally {
+            dismiss?.let { AgentExecutionService.onNotificationDismissed(service, it) }
+            AgentExecutionService.release("reply-feedback-test")
+            AgentExecutionService.updateTasks(service, emptyList())
+            main.idleFor(Duration.ofSeconds(1))
+            host.destroy()
             manager.cancelAll()
         }
     }

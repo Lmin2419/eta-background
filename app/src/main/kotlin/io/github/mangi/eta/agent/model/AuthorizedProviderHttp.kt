@@ -2,8 +2,10 @@ package io.github.mangi.eta.agent.model
 
 import io.github.mangi.eta.agent.runtime.AgentRunController
 import io.github.mangi.eta.agent.auth.CodexOAuth
+import io.github.mangi.eta.data.model.ProviderAuthModes
 import io.github.mangi.eta.data.provider.ProviderConnectionProfile
 import io.github.mangi.eta.data.repository.ProviderCredentialRepository
+import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -16,9 +18,44 @@ internal object AuthorizedProviderHttp {
         authMode: String,
         request: Request,
         controller: AgentRunController,
-        accessToken: (String, String, AgentRunController, String?) -> String =
-            { id, mode, run, rejected -> ProviderCredentialRepository.accessToken(id, mode, run, rejected) },
+        accessToken: (String, String, AgentRunController, String?) -> String = ::resolveAccessToken,
         consume: (Response) -> T,
+    ): T = executeCall(client, providerId, authMode, request, controller, accessToken) { response, _ ->
+        consume(response)
+    }
+
+    fun <T> executeStreaming(
+        client: OkHttpClient,
+        request: Request,
+        controller: AgentRunController,
+        onEvent: (ProviderEvent) -> Unit,
+        providerId: String = "",
+        authMode: String = ProviderAuthModes.API_KEY,
+        progressTimeoutMillis: Long = AgentHttpClient.MODEL_READ_TIMEOUT_MS,
+        consume: (Response, (ProviderEvent) -> Unit) -> T,
+    ): T = executeCall(client, providerId, authMode, request, controller, ::resolveAccessToken) { response, call ->
+        onEvent(ProviderEvent.ResponseHeaders(response.code))
+        if (response.isSuccessful) {
+            withProviderStreamProgress(controller, call::cancel, onEvent, progressTimeoutMillis) { report ->
+                consume(response, report)
+            }
+        } else {
+            consume(response, onEvent)
+        }
+    }
+
+    private fun resolveAccessToken(
+        id: String, mode: String, controller: AgentRunController, rejected: String?,
+    ): String = ProviderCredentialRepository.accessToken(id, mode, controller, rejected)
+
+    private fun <T> executeCall(
+        client: OkHttpClient,
+        providerId: String,
+        authMode: String,
+        request: Request,
+        controller: AgentRunController,
+        accessToken: (String, String, AgentRunController, String?) -> String,
+        consume: (Response, Call) -> T,
     ): T {
         val profile = ProviderConnectionProfile.forAuthMode(authMode)
         profile?.requireRequestTarget(request.url)
@@ -57,7 +94,7 @@ internal object AuthorizedProviderHttp {
                                 "OAUTH_UNAUTHORIZED", false, "订阅登录已失效，请重新登录服务商账户。",
                             )
                         }
-                        return consume(response)
+                        return consume(response, call)
                     }
                 }
             } catch (failure: Throwable) {

@@ -326,9 +326,7 @@ internal class AgentAppState(
     }
 
     private suspend fun reloadConversationsAfterBackup() {
-        val snapshot = withContext(Dispatchers.IO) {
-            AgentConversationStore.load(appContext)
-        }
+        val snapshot = AgentConversationStore.loadAsync(appContext)
         withContext(Dispatchers.Main.immediate) {
             conversationSelectionVersion += 1
             cancelHistoryPageLoad()
@@ -357,13 +355,13 @@ internal class AgentAppState(
     }
 
     /** 用 checkpoint、终态 outbox 与 active session 一次性对账，避免用进程存活推断 run 状态。 */
-    private suspend fun recoverRuntimeRuns() = runtimeReconcileMutex.withLock { recoverRuntimeRunsLocked() }
+    private suspend fun recoverRuntimeRuns() = withContext(Dispatchers.IO) {
+        runtimeReconcileMutex.withLock { recoverRuntimeRunsLocked() }
+    }
 
     private suspend fun recoverRuntimeRunsLocked() {
         val client = AgentRuntimeClient(appContext, AndroidAgentLogger)
-        val rawCheckpoints = withContext(Dispatchers.IO) {
-            AgentRunCheckpointStore.list(appContext)
-        }
+        val rawCheckpoints = AgentRunCheckpointStore.list(appContext)
         val checkpoints = rawCheckpoints.map { it.copy(handoff = AssistantRunRecovery.project(it.handoff)) }
         // These synchronous Binder waits must stop with the UI scope, not outlive it through
         // several binding timeouts. Interrupting a query does not cancel an executing task.
@@ -679,13 +677,8 @@ internal class AgentAppState(
         observationJob.start()
     }
 
-    private suspend fun importArchivedExternalRuns() {
-        val archivedRuns = withContext(Dispatchers.IO) {
-            AgentRunArchiveStore.list(appContext)
-                .filter { AgentExternalArchivePayload.from(it.handoff.payload) != null }
-        }
-        if (archivedRuns.isEmpty()) return
-
+    private suspend fun importArchivedExternalRuns() = withContext(Dispatchers.IO) {
+        val archivedRuns = AgentRunArchiveStore.list(appContext)
         for (archivedRun in archivedRuns) {
             val payload = AgentExternalArchivePayload.from(archivedRun.handoff.payload) ?: continue
             val conversationId = archiveConversationId(archivedRun.handoff.source, payload.conversationKey)
@@ -706,10 +699,8 @@ internal class AgentAppState(
 
     /** Notification replies must wait for assistant archives before selecting or focusing a chat. */
     suspend fun openConversationById(conversationId: String): Boolean {
-        withContext(Dispatchers.IO) {
-            recoverRuntimeRuns()
-            importArchivedExternalRuns()
-        }
+        recoverRuntimeRuns()
+        importArchivedExternalRuns()
         return withContext(Dispatchers.Main.immediate) {
             if (conversationsById[conversationId] == null) false
             else { selectConversation(conversationId); true }

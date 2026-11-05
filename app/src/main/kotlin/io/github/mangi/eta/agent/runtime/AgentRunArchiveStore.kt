@@ -8,6 +8,7 @@ import io.github.mangi.eta.data.db.EtaDatabase
 import io.github.mangi.eta.data.db.RuntimeArchiveEventEntity
 import io.github.mangi.eta.data.db.RuntimeArchiveRunEntity
 import io.github.mangi.eta.data.db.RuntimeArchiveRunWithEvents
+import io.github.mangi.eta.data.db.RuntimeRunDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
@@ -54,6 +55,12 @@ internal object AgentRunArchiveStore {
             EtaDatabase.get(appContext).runtimeRunDao().archivedRuns()
                 .mapNotNull { it.toDomain() }
         }
+    }
+
+    suspend fun readReplyRun(dao: RuntimeRunDao, archiveRunId: String): AgentRuntimeWire.CompletedRun? {
+        val row = dao.archivedReplyRow(archiveRunId) ?: return null
+        val restored = RuntimeArchiveRunWithEvents(dao.restoreArchivedRun(row), emptyList()).toDomain() ?: return null
+        return AgentRuntimeWire.CompletedRun(restored.handoff, restored.result, restored.createdAt)
     }
 
     fun remove(context: Context, runId: String) {

@@ -63,9 +63,11 @@ internal object AgentConversationStore {
     private val saveMutex = Mutex()
 
     fun load(context: Context): Snapshot =
-        runBlocking(Dispatchers.IO) {
-            loadSnapshot(context.applicationContext)
-        }
+        runBlocking { loadAsync(context) }
+
+    suspend fun loadAsync(context: Context): Snapshot = withContext(Dispatchers.IO) {
+        loadSnapshot(context.applicationContext)
+    }
 
     suspend fun save(
         context: Context,

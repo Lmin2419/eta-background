@@ -34,12 +34,13 @@ import io.github.mangi.eta.agent.overlay.AgentOverlayStatus
 import io.github.mangi.eta.agent.overlay.localizedText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 import java.util.UUID
 
@@ -47,6 +48,9 @@ import java.util.UUID
 internal class TaskPreviewActivity : ComponentActivity() {
     private val owner = UUID.randomUUID().toString()
     private val io = Mutex()
+    private val frameRequests = Channel<Unit>(Channel.CONFLATED)
+    private var frameGeneration = 0L
+    private var postInputFrameUntil = 0L
     private var runId = ""
     private var pkg = ""
     private var visible = false
@@ -146,7 +150,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
 
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
-        clearGesture(); geometry = null; freshFrame = true
+        clearGesture(); invalidateFrame(preservePostInputWait = true)
         if (::picture.isInitialized) resize(animate = false)
     }
 
@@ -183,11 +187,15 @@ internal class TaskPreviewActivity : ComponentActivity() {
         polling = lifecycleScope.launch {
             while (isActive && visible) {
                 if (!TaskPreviewRegistry.mainDisplayAvailable(this@TaskPreviewActivity)) { finish(); break }
+                if (postInputFrameUntil <= SystemClock.elapsedRealtime()) postInputFrameUntil = 0L
                 if (!busy && !closing && down == null) {
+                    // A request starting now already satisfies any queued wake.
+                    frameRequests.tryReceive()
+                    val generation = frameGeneration
                     val result = rpc("preview_frame", JSONObject().put("edge", if (expanded) 960 else 640)
-                        .put("since", if (freshFrame) "" else previewKey))
+                        .put("since", if (freshFrame && postInputFrameUntil == 0L) "" else previewKey))
                     if (!visible) break
-                    if (busy || closing || down != null) { freshFrame = true; continue }
+                    if (generation != frameGeneration || busy || closing || down != null) { freshFrame = true; continue }
                     if (result.optBoolean("ok") && !result.optBoolean("unchanged")) {
                         val encoded = result.optString("image")
                         val bitmap = withContext(Dispatchers.Default) {
@@ -198,7 +206,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
                         }
                         if (!visible) { bitmap?.recycle(); break }
                         if (busy || closing || down != null) { bitmap?.recycle(); freshFrame = true; continue }
-                        displayFrame(bitmap, result.optJSONObject("geometry"), result.optString("previewKey"))
+                        displayFrame(bitmap, result.optJSONObject("geometry"), result.optString("previewKey"), generation)
                     } else if (!result.optBoolean("ok")) {
                         geometry = null; freshFrame = true
                         val code = result.optString("code")
@@ -211,12 +219,29 @@ internal class TaskPreviewActivity : ComponentActivity() {
                     }
                     updateControls()
                 }
-                delay(if (expanded) 350 else 800)
+                val waitMs = if (postInputFrameUntil == 0L) framePollIntervalMs()
+                    else (postInputFrameUntil - SystemClock.elapsedRealtime()).coerceIn(1L, 120L)
+                withTimeoutOrNull(waitMs) { frameRequests.receive() }
             }
         }
     }
 
-    internal fun displayFrame(bitmap: Bitmap?, displayGeometry: JSONObject?, key: String) {
+    internal fun displayFrame(
+        bitmap: Bitmap?,
+        displayGeometry: JSONObject?,
+        key: String,
+        generation: Long = frameGeneration,
+    ) {
+        // An immediate RPC may still see the pre-input buffer. Ignore the size suffix in
+        // its key so expanding the window cannot turn that buffer into a new observation.
+        val waitingForChangedFrame = postInputFrameUntil > SystemClock.elapsedRealtime()
+        if (generation != frameGeneration ||
+            waitingForChangedFrame && (key.isBlank() || key.substringBeforeLast(':') == previewKey.substringBeforeLast(':'))
+        ) {
+            bitmap?.recycle()
+            return
+        }
+        postInputFrameUntil = 0L
         previewKey = key; freshFrame = false
         if (bitmap == null || !PreviewFrameContent.usable(bitmap)) {
             bitmap?.recycle(); clearFrame()
@@ -228,6 +253,15 @@ internal class TaskPreviewActivity : ComponentActivity() {
             if (wasMissing) hint.text = inputFeedback ?: if (manual) "可操作 · 上方可放大，关闭后 AI 保持暂停" else readOnlyHint()
         }
         updateControls()
+    }
+
+    private fun framePollIntervalMs(): Long = if (expanded) 350L else 800L
+
+    private fun invalidateFrame(preservePostInputWait: Boolean = false) {
+        frameGeneration++
+        if (!preservePostInputWait) postInputFrameUntil = 0L
+        geometry = null
+        freshFrame = true
     }
 
     private fun clearFrame() {
@@ -280,7 +314,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
             if (!manual) controller?.releaseManual(owner)
             busy = false
             if (manual) {
-                geometry = null; freshFrame = true; clearGesture()
+                invalidateFrame(); clearGesture()
                 if (!expanded) { expanded = true; resize(animate = true) }
             }
             hint.text = if (manual) "已接管，正在更新画面…" else if (!drained) "本任务已暂停，仍有操作未退出；稍后可再接管" else previewFailure(result)
@@ -306,7 +340,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
     }
 
     private fun finishRelease(resumeTask: Boolean) {
-        controller?.releaseManual(owner); manual = false; geometry = null; freshFrame = true; clearGesture()
+        controller?.releaseManual(owner); manual = false; invalidateFrame(); clearGesture()
         inputFeedback = null
         val active = TaskPreviewRegistry.controller(runId)?.isCancelled == false && AgentExecutionService.task(runId)?.completed != true
         if (resumeTask && active) AgentRuntimeService.dispatchNotificationAction(AgentExecutionService.ACTION_RESUME_RUN, runId)
@@ -409,18 +443,22 @@ internal class TaskPreviewActivity : ComponentActivity() {
         busy = true; updateControls()
         lifecycleScope.launch {
             val result = rpc("preview_input", args.put("action", action).put("expectedGeometry", observed))
-            acceptInputResult(result)
-            busy = false; updateControls()
+            if (visible && !closing) acceptInputResult(result)
         }
     }
 
     internal fun acceptInputResult(result: JSONObject) {
-        geometry = null; freshFrame = true // No replay, including unknown outcomes.
+        invalidateFrame() // No replay, including unknown outcomes.
         inputFeedback = if (result.optBoolean("ok")) null else previewFailure(result)
         inputFeedback?.let { hint.text = it }
         if (result.optString("code") in setOf("MANUAL_LEASE_EXPIRED", "PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER")) {
             manual = false; controller?.releaseManual(owner)
         }
+        // After the normal poll interval, allow a static page to re-establish geometry
+        // even if the operation caused no redraw.
+        if (previewKey.isNotBlank()) postInputFrameUntil = SystemClock.elapsedRealtime() + framePollIntervalMs()
+        busy = false; updateControls()
+        frameRequests.trySend(Unit)
         // A fresh preview is not an acknowledgement that an earlier input succeeded.
         // Keep its failure visible until the next user action or successful input.
     }

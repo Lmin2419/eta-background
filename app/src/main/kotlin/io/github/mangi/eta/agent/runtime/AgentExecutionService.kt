@@ -51,6 +51,7 @@ internal data class TaskNotificationState(
     val completed: Boolean = false,
     val targetPackage: String? = null,
     val runtimeAuthoritative: Boolean = false,
+    val replyFailed: Boolean = false,
 )
 
 /** One execution service; each task owns one card, including its final state. */
@@ -144,7 +145,7 @@ internal class AgentExecutionService : Service() {
         val original = cards[runId] ?: TaskNotificationState(runId, conversationId,
             getString(R.string.background_continue_instruction), AgentOverlayStatus.ResultReady, completed = true)
         if (!original.completed || original.conversationId != conversationId) { refreshNotification(); return }
-        cards[runId] = original
+        cards[runId] = original.copy(replyFailed = false)
         if (runId !in notificationIds) notificationIds[runId] = intent.getIntExtra(EXTRA_NOTIFICATION_ID, idFor(runId))
         val leaseId = "notification-reply:$runId"
         val connection = NotificationReplyConnection(this, runId, conversationId, text) { accepted ->
@@ -154,14 +155,19 @@ internal class AgentExecutionService : Service() {
                 while (repliedRuns.size > 32) repliedRuns.remove(repliedRuns.first())
                 removeCard(this, runId)
             } else {
-                completeTask(this, original.copy(status = AgentOverlayStatus.RunFailed,
-                    streamPreview = getString(R.string.background_reply_failed)))
+                // Reply admission can fail independently of the completed task. Use the latest
+                // result and leave a dismissed or reclaimed notification dismissed.
+                cards[runId]?.takeIf { it.completed && it.conversationId == conversationId }?.let {
+                    cards[runId] = it.copy(replyFailed = true)
+                    if (instance == null) publishCards(this, completedOnly = true)
+                }
             }
             release(leaseId)
         }
         replyConnections[runId] = connection
         // A notification reply is a user gesture. Hold the existing FGS only until Runtime admits it.
         leases.acquire(leaseId, allowBoundFallback = true, onStop = { mainHandler.post { connection.close() } })
+        if (original.replyFailed) refreshNotification()
         connection.start()
     }
 
@@ -287,7 +293,8 @@ internal class AgentExecutionService : Service() {
                 previous.streamPreview == task.streamPreview) return@onMain
             val firstCompletion = completedRuns.add(task.runId)
             while (completedRuns.size > 64) completedRuns.remove(completedRuns.first())
-            cards[task.runId] = task.copy(completed = true, paused = false)
+            val replyFailed = previous?.takeIf { it.conversationId == task.conversationId }?.replyFailed == true
+            cards[task.runId] = task.copy(completed = true, paused = false, replyFailed = replyFailed)
             idFor(task.runId)
             cards.values.filter { it.completed }.dropLast(3).map { it.runId }.forEach { removeCard(context, it) }
             mainHandler.removeCallbacks(refresh)
@@ -413,10 +420,11 @@ internal class AgentExecutionService : Service() {
                 AgentOverlayStatus.Stopped -> context.getString(R.string.task_completion_notice_stopped)
                 else -> context.getString(R.string.task_completion_notice_failed)
             }
+            val replyFeedback = if (task?.replyFailed == true) " · " + context.getString(R.string.background_reply_failed) else ""
             val builder = Notification.Builder(context, if (hasCompletionAlert) COMPLETION_CHANNEL else CHANNEL)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(task?.title?.take(60)?.takeIf(String::isNotBlank) ?: context.getString(R.string.execution_title))
-                .setContentText(label + task?.streamPreview?.takeIf(String::isNotBlank)?.let { " · $it" }.orEmpty())
+                .setContentText(label + replyFeedback + task?.streamPreview?.takeIf(String::isNotBlank)?.let { " · $it" }.orEmpty())
                 .setContentIntent(if (task?.targetPackage.isNullOrBlank()) destination(context, task, id)
                     else TaskPreviewActivity.pendingIntent(context, task, id))
                 // Keep the continue action available, including after an unsuccessful App handoff.

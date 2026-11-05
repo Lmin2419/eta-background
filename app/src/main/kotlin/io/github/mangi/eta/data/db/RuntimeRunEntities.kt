@@ -39,6 +39,17 @@ internal data class RuntimeResultHeader(
     @ColumnInfo(name = "created_at") val createdAt: Long,
 )
 
+/** Enough to match a notification reply to a conversation before restoring text chunks. */
+internal data class RuntimeReplyHeader(
+    @ColumnInfo(name = "row_id") val rowId: String,
+    val archived: Boolean,
+    @ColumnInfo(name = "run_id") val runId: String,
+    @ColumnInfo(name = "handoff_id") val handoffId: String,
+    @ColumnInfo(name = "handoff_source") val handoffSource: String,
+    @ColumnInfo(name = "handoff_payload") val handoffPayload: String,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+)
+
 @Entity(tableName = "runtime_archive_runs")
 internal data class RuntimeArchiveRunEntity(
     @PrimaryKey @ColumnInfo(name = "archive_run_id") val archiveRunId: String,

@@ -6,6 +6,7 @@ import io.github.mangi.eta.agent.model.AgentConversationCodec
 import io.github.mangi.eta.agent.model.AgentModelClient
 import io.github.mangi.eta.data.db.EtaDatabase
 import io.github.mangi.eta.data.db.RuntimeResultEntity
+import io.github.mangi.eta.data.db.RuntimeRunDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
@@ -56,8 +57,11 @@ internal object AgentRuntimeResultStore {
     }
 
     fun readOwned(context: Context, runId: String, owner: String): AgentRuntimeWire.CompletedRun? = runBlocking(Dispatchers.IO) {
-        EtaDatabase.get(context.applicationContext).runtimeRunDao().ownedResult(runId, owner)?.toDomain()
+        readOwned(EtaDatabase.get(context.applicationContext).runtimeRunDao(), runId, owner)
     }
+
+    suspend fun readOwned(dao: RuntimeRunDao, runId: String, owner: String): AgentRuntimeWire.CompletedRun? =
+        dao.ownedResult(runId, owner)?.toDomain()
 
     fun remove(context: Context, runId: String) {
         if (runId.isBlank()) return

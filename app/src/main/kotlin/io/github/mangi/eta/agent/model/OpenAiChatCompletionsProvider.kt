@@ -73,21 +73,21 @@ internal object OpenAiChatCompletionsProvider : AgentProviderClient {
 
         runController.throwIfCancelled()
         onEvent(ProviderEvent.RequestStarted)
-        return AuthorizedProviderHttp.execute(
+        return AuthorizedProviderHttp.executeStreaming(
             client = AgentHttpClient.modelClient(request.purpose),
             providerId = config.providerId,
             authMode = config.authMode,
             request = httpRequest,
             controller = runController,
-        ) { response ->
-            onEvent(ProviderEvent.ResponseHeaders(response.code))
+            onEvent = onEvent,
+        ) { response, report ->
             if (!response.isSuccessful) {
                 throw AgentModelFailure.http(response.code, response.peekBody(16_384).string())
             }
             val assistantMessage = readStreamingAssistantMessage(
-                response.body.byteStream(), runController, existingToolCallIds, onEvent,
+                response.body.byteStream(), runController, existingToolCallIds, report,
             )
-            onEvent(ProviderEvent.Completed(assistantMessage.optString("finish_reason").ifBlank { null }))
+            report(ProviderEvent.Completed(assistantMessage.optString("finish_reason").ifBlank { null }))
             ProviderResponse(assistantMessage)
         }
     }

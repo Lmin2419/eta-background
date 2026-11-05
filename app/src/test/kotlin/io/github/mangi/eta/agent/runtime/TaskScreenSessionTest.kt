@@ -278,6 +278,7 @@ class TaskScreenSessionTest {
         val tappedJson = JSONObject(tapped.content)
         assertTrue(tappedJson.getBoolean("ok"))
         assertEquals("background", tappedJson.getString("execution_location"))
+        assertEquals(listOf(10, 10), backend.calls.filter { it.name == "screen_dump" }.map { it.arguments.getInt("limit") })
         val tapCall = backend.calls.last { it.name == "screen_tap" }
         assertEquals(10, tapCall.arguments.getInt("x"))
         assertEquals(20, tapCall.arguments.getInt("y"))
@@ -611,6 +612,7 @@ class TaskScreenSessionTest {
             """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
         ))!!
         assertTrue(JSONObject(tapped.content).getBoolean("ok"))
+        assertEquals(0, backend.calls.single { it.name == "screen_dump" }.arguments.getInt("limit"))
         assertTrue(backend.calls.any { it.name == "screen_tap" })
     }
 
@@ -629,20 +631,25 @@ class TaskScreenSessionTest {
 
     @Test
     fun rotationChangeInvalidatesTheOldObservationEvenWhenWidthAndHeightMatch() {
-        val backend = FakeBackend()
-        val tools = session(backend)
-        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
-        val observed = JSONObject(
-            tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content,
-        )
-        val id = observed.getString("observation_id")
-        backend.dumpResult = dumpJson(rotation = 2)
-        val result = tools.execute(call(
-            "tap",
-            """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
-        ))!!
-        assertEquals("OBSERVATION_STALE", JSONObject(result.content).getString("code"))
-        assertFalse(backend.calls.any { it.name == "screen_tap" })
+        for (includeTree in listOf(true, false)) {
+            val backend = FakeBackend()
+            val tools = session(backend)
+            tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+            val observed = JSONObject(
+                tools.execute(call(
+                    "observe_screen",
+                    """{"include_ui_tree":$includeTree,"include_screenshot":true}""",
+                ))!!.content,
+            )
+            val id = observed.getString("observation_id")
+            backend.dumpResult = dumpJson(rotation = 2)
+            val result = tools.execute(call(
+                "tap",
+                """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
+            ))!!
+            assertEquals("OBSERVATION_STALE", JSONObject(result.content).getString("code"))
+            assertFalse(backend.calls.any { it.name == "screen_tap" })
+        }
     }
 
     @Test

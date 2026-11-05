@@ -1,6 +1,7 @@
 package io.github.mangi.eta.ui.app
 
 import android.content.Context
+import androidx.lifecycle.viewModelScope
 import io.github.mangi.eta.agent.model.AgentModelClient
 import io.github.mangi.eta.agent.runtime.AgentRuntimeWire
 import io.github.mangi.eta.data.db.EtaDatabase
@@ -10,8 +11,10 @@ import io.github.mangi.eta.ui.model.ConversationHistoryLoadState
 import io.github.mangi.eta.ui.model.UserMessageUi
 import io.github.mangi.eta.ui.model.AgentMessageUi
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
@@ -19,6 +22,8 @@ import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -90,6 +95,62 @@ class AgentAppStateConversationLoadingTest {
         awaitCondition { opened != null }
         assertFalse(opened == true)
         assertEquals(chat, state.conversationPaneState.selectedConversationId)
+    }
+
+    @Test
+    fun archiveDeepLinkRecoversWhenLaunchedFromMain() {
+        val source = AgentRuntimeWire.ETA_VOICE_HANDOFF_SOURCE
+        val handoff = AgentRuntimeWire.EntryHandoff("archive-run", source,
+            io.github.mangi.eta.agent.runtime.AgentExternalArchivePayload("User prompt", "archive", "Archived").toJson())
+        io.github.mangi.eta.agent.runtime.AgentRunArchiveStore.add(context,
+            io.github.mangi.eta.agent.runtime.AgentRunArchiveStore.ArchivedRun(
+                handoff, emptyList(), AgentRuntimeWire.RunResult("archive-run", true, "Result"), 1L))
+        val state = AgentAppState(context, scope)
+        val chat = io.github.mangi.eta.agent.runtime.AgentConversationIdentity.archiveConversationId(source, "archive")
+        val opened = CompletableDeferred<Boolean>()
+        scope.launch { opened.complete(state.openArchivedConversation(source, "archive")) }
+        awaitCondition { opened.isCompleted }
+        assertTrue(runBlocking { opened.await() })
+        awaitLoaded(state, chat)
+        assertTrue(state.homeState.messages.filterIsInstance<AgentMessageUi>().any { it.content == "Result" })
+    }
+
+    @Test
+    fun startupExposesNoWritableStateUntilTheSnapshotLoadsAndAllowsRetry() {
+        seed("saved" to conversation("saved"))
+        val snapshot = AgentConversationStore.load(context)
+        val attempts = listOf(
+            CompletableDeferred<AgentConversationStore.Snapshot>(),
+            CompletableDeferred<AgentConversationStore.Snapshot>(),
+        )
+        var loadCount = 0
+        val viewModel = AgentAppViewModel(RuntimeEnvironment.getApplication()) {
+            attempts[loadCount++].await()
+        }
+        val viewModelJob = checkNotNull(viewModel.viewModelScope.coroutineContext[Job])
+        try {
+            assertNull(viewModel.state)
+            viewModel.loadInitialConversations()
+            assertEquals(1, loadCount)
+            attempts[0].completeExceptionally(IllegalStateException("load failed"))
+            awaitCondition { viewModel.conversationStartupFailed }
+            assertNull(viewModel.state)
+
+            viewModel.loadInitialConversations()
+            assertFalse(viewModel.conversationStartupFailed)
+            assertNull(viewModel.state)
+            attempts[1].complete(snapshot)
+            awaitCondition { viewModel.state != null }
+            val restored = checkNotNull(viewModel.state)
+            assertEquals("saved", restored.conversationPaneState.selectedConversationId)
+            assertEquals(snapshot.conversationsById.getValue("saved").messages, restored.homeState.messages)
+            viewModel.loadInitialConversations()
+            assertSame(restored, viewModel.state)
+            assertEquals(2, loadCount)
+        } finally {
+            viewModel.viewModelScope.cancel()
+            awaitCondition { viewModelJob.isCompleted }
+        }
     }
 
     @Test

@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.KeyguardManager
 import android.content.Intent
 import android.hardware.display.DisplayManager
+import android.os.Looper
 import android.view.Display
 import android.view.WindowManager
 import android.graphics.Bitmap
@@ -11,6 +12,7 @@ import android.graphics.Color
 import android.widget.Button
 import android.widget.ImageView
 import io.github.mangi.eta.agent.model.AgentModelClient
+import kotlinx.coroutines.channels.ReceiveChannel
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,6 +22,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.RobolectricTestRunner
 import org.json.JSONObject
+import java.time.Duration
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
@@ -114,16 +117,34 @@ class TaskPreviewActivityTest {
             val g = JSONObject().put("displayId", 7).put("width", 1080).put("height", 2400).put("rotation", 0)
             fun nextFrame(key: String) = view.displayFrame(
                 Bitmap.createBitmap(108, 240, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }, g, key)
-            nextFrame("first")
+            nextFrame("7:1000:1:640")
+            val oldGeneration = field("frameGeneration").getLong(view)
+            val refreshRequests = field("frameRequests").get(view) as ReceiveChannel<*>
+            assertTrue(refreshRequests.tryReceive().isFailure)
             view.acceptInputResult(JSONObject().put("ok", false).put("code", "INPUT_NOT_READY"))
+            assertTrue(refreshRequests.tryReceive().isSuccess)
             val hint = field("hint").get(view) as android.widget.TextView
             val failure = hint.text.toString()
             assertTrue(failure.contains("目标窗口未就绪"))
             assertNull(field("geometry").get(view))
-            nextFrame("second")
+            val stale = Bitmap.createBitmap(108, 240, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }
+            view.displayFrame(stale, g, "pre-input", oldGeneration)
+            assertTrue(stale.isRecycled)
+            view.onConfigurationChanged(android.content.res.Configuration(view.resources.configuration).apply {
+                orientation = android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            })
+            val sameBuffer = Bitmap.createBitmap(108, 240, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }
+            view.displayFrame(sameBuffer, g, "7:1000:1:960")
+            assertTrue(sameBuffer.isRecycled)
+            assertNull(field("geometry").get(view))
+            assertFalse((field("back").get(view) as Button).isEnabled)
+            nextFrame("7:1001:2:640")
             assertEquals(failure, hint.text.toString())
+            assertTrue((field("back").get(view) as Button).isEnabled)
             view.acceptInputResult(JSONObject().put("ok", true))
-            nextFrame("third")
+            assertTrue(refreshRequests.tryReceive().isSuccess)
+            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(801))
+            nextFrame("7:1001:2:640") // A no-op input can leave the same buffer after the bounded wait.
             assertTrue(hint.text.startsWith("可操作"))
             view.displayFrame(null, null, "clear")
         } finally { activity.destroy() }

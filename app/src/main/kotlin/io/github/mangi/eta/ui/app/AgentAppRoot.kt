@@ -51,6 +51,7 @@ import io.github.mangi.eta.data.repository.RuntimeConfigRepository
 import io.github.mangi.eta.ui.AppearanceSettingsScreen
 import io.github.mangi.eta.ui.CommonTaskLaunchRequest
 import io.github.mangi.eta.ui.SettingsScreen
+import io.github.mangi.eta.ui.components.AgentConversationLoadState
 import io.github.mangi.eta.ui.components.MiuixDialogActions
 import io.github.mangi.eta.ui.model.AgentHomeAction
 import io.github.mangi.eta.ui.model.AgentMemoryAction
@@ -132,6 +133,16 @@ fun AgentAppRoot(
     val resources = LocalResources.current
     val uiScope = rememberCoroutineScope()
     val backStack = rememberNavBackStack<AppRoute>(AppRoute.Home)
+    val appViewModel = viewModel<AgentAppViewModel>()
+    val agentState = appViewModel.state
+    if (agentState == null) {
+        AgentConversationLoadState(
+            isLoading = !appViewModel.conversationStartupFailed,
+            failed = appViewModel.conversationStartupFailed,
+            onRetry = appViewModel::loadInitialConversations,
+        )
+        return
+    }
     LaunchedEffect(openSpeechSettings) {
         if (openSpeechSettings) {
             if (backStack.lastOrNull() != AppRoute.SpeechSettings) backStack.add(AppRoute.SpeechSettings)
@@ -146,8 +157,6 @@ fun AgentAppRoot(
     }
     val navigator = remember(backStack) { AgentNavigator(backStack) }
     var navigationResetKey by rememberSaveable { mutableIntStateOf(0) }
-    val appViewModel = viewModel<AgentAppViewModel>()
-    val agentState = appViewModel.state
     val runtimeActive by AgentRuntimeService.keepScreenOn.collectAsState()
     val view = LocalView.current
     val keepScreenOn = backStack.lastOrNull() == AppRoute.Home &&

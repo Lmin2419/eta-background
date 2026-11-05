@@ -8,16 +8,17 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-05 · `3.3.5` background build · versionCode `2026110501`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-05 · `3.3.5` background build · versionCode `2026110502`**, with engine `20261105-e49-parallel-observe`.
 
-This release merges every candidate from `etax-340-step1-foundation` into `main`: unified foreground/background tools, task preview and manual takeover, notification entry points, screen-off background execution, enhanced web reading, action feedback, saved tasks and native assistant setup. New in this build:
+This build improves conversation recovery, notification replies, model stream timeouts and manual takeover.
 
-- Faster observation: when `observe_screen` needs both the node tree and a screenshot, they are read in parallel. Input still never overlaps a capture.
-- A lost runtime bind request is re-sent immediately instead of stalling for 8 seconds.
-- The engine token is cached per process.
-- CI is a single workflow; tests run once and each push to `main` publishes a signed release.
+- Load saved conversations asynchronously with retry on failure, and recover externally opened tasks off the UI thread.
+- Preserve completed task results when a notification reply fails, and load only the matching conversation's required result bodies.
+- Skip unused node traversal before screenshot-based coordinate input while retaining window and geometry checks.
+- Time out model streams after five minutes without meaningful progress, preserving explicit pause and cancellation behavior.
+- Refresh the preview immediately after manual input, reject stale frames and retain a bounded wait for static pages.
 
-**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110501) (Chinese)
+**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110502) (Chinese)
 
 The APK keeps the previous signing certificate. ColorOS preview layout, IME behavior, deep-sleep networking and native long-press replacement still need device validation.
 

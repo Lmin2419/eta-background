@@ -56,28 +56,18 @@ internal object AnthropicMessagesProvider : AgentProviderClient {
             )
             .build()
 
-        val call = AgentHttpClient.modelClient(request.purpose).newCall(httpRequest)
-        val binding = runController.register { call.cancel() }
-        try {
-            runController.throwIfCancelled()
-            onEvent(ProviderEvent.RequestStarted)
-            call.execute().use { response ->
-                onEvent(ProviderEvent.ResponseHeaders(response.code))
-                runController.throwIfCancelled()
-                if (!response.isSuccessful) {
-                    val errorBody = response.peekBody(16_384).string()
-                    throw AgentModelFailure.http(response.code, errorBody)
-                }
-                val assistant = readStreamingAssistantMessage(response.body.byteStream(), runController, onEvent)
-                onEvent(ProviderEvent.Completed(assistant.optString("finish_reason").ifBlank { null }))
-                return ProviderResponse(assistant)
+        runController.throwIfCancelled()
+        onEvent(ProviderEvent.RequestStarted)
+        return AuthorizedProviderHttp.executeStreaming(
+            AgentHttpClient.modelClient(request.purpose), httpRequest, runController, onEvent,
+        ) { response, report ->
+            if (!response.isSuccessful) {
+                val errorBody = response.peekBody(16_384).string()
+                throw AgentModelFailure.http(response.code, errorBody)
             }
-        } catch (throwable: Throwable) {
-            runCatching { runController.throwIfCancelled() }
-                .getOrElse { interruption -> throw interruption }
-            throw throwable
-        } finally {
-            binding.close()
+            val assistant = readStreamingAssistantMessage(response.body.byteStream(), runController, report)
+            report(ProviderEvent.Completed(assistant.optString("finish_reason").ifBlank { null }))
+            ProviderResponse(assistant)
         }
     }
 

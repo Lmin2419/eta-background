@@ -39,6 +39,24 @@ internal interface RuntimeRunDao : ChunkedTextDao {
     suspend fun ownedResult(runId: String, owner: String): RuntimeResultEntity? =
         ownedResultRow(runId, owner)?.let { restoreRuntimeResult(it) }
 
+    @Query("""
+        SELECT run_id AS row_id, 0 AS archived, run_id, handoff_id, handoff_source, handoff_payload, created_at
+        FROM runtime_results
+        UNION ALL
+        SELECT archive_run_id AS row_id, 1 AS archived, run_id, handoff_id, handoff_source, handoff_payload, created_at
+        FROM runtime_archive_runs
+        ORDER BY archived, created_at
+    """)
+    suspend fun notificationReplyHeaders(): List<RuntimeReplyHeader>
+
+    @Query("""
+        SELECT archive_run_id, run_id, handoff_id, handoff_source, handoff_payload, dismiss_entry_surface,
+            ok, content, error, reasoning_content, transcript_json, context_snapshot_json, operation,
+            rewrite_target_message_id, '[]' AS user_image_previews_json, created_at
+        FROM runtime_archive_runs WHERE archive_run_id = :archiveRunId
+    """)
+    suspend fun archivedReplyRow(archiveRunId: String): RuntimeArchiveRunEntity?
+
     @Query("SELECT EXISTS(SELECT 1 FROM runtime_inflight_runs WHERE run_id = :runId)")
     suspend fun hasInFlightRun(runId: String): Boolean
 
