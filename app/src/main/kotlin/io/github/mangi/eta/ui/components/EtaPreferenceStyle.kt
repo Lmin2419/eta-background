@@ -13,10 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import io.github.mangi.eta.ui.app.LocalAppearanceSettings
+import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.CardColors
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
@@ -25,10 +24,10 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 internal object EtaPreferenceColors {
-    val Blue = Color(0xFF0080FF)
-    val Green = StatusSuccess
-    val Orange = Color(0xFFFF7700)
-    val Yellow = StatusWarning
+    val Blue: Color @Composable get() = EtaTheme.colors.tileBlue
+    val Green: Color @Composable get() = StatusSuccess
+    val Orange: Color @Composable get() = EtaTheme.colors.tileOrange
+    val Yellow: Color @Composable get() = StatusWarning
 }
 
 internal object EtaPreferenceDefaults {
@@ -43,14 +42,8 @@ internal object EtaPreferenceDefaults {
 
 @Composable
 internal fun EtaPreferenceTheme(content: @Composable () -> Unit) {
-    val colors = MiuixTheme.colorScheme
-    val appearance = LocalAppearanceSettings.current
-    val pageColors = if (!appearance.monetEnabled && colors.background.luminance() > 0.5f) {
-        colors.copy(background = Color(0xFFF0F1F2), primary = EtaPreferenceColors.Blue)
-    } else {
-        colors
-    }
-    MiuixTheme(colors = pageColors, content = content)
+    // AgentAppTheme owns the palette, including custom accents and dark mode.
+    content()
 }
 
 @Composable

@@ -1489,4 +1489,10 @@
     <string name="background_task_preparing">Preparing task</string>
     <string name="background_task_waiting_gui">Waiting for foreground control</string>
     <string name="background_preview_paused">Paused for manual control</string>
+    <string name="task_visual_running">Running</string>
+    <string name="task_visual_attention">Needs your attention</string>
+    <string name="task_visual_paused">Paused</string>
+    <string name="task_visual_success">Completed</string>
+    <string name="task_visual_failed">Not completed</string>
+    <string name="task_visual_queued">Queued</string>
 </resources>

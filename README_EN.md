@@ -8,19 +8,19 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-05 · `3.3.5` background build · versionCode `2026110502`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-05 · `3.3.5` background build · versionCode `2026110503`**, with engine `20261105-e49-parallel-observe`.
 
-This build improves conversation recovery, notification replies, model stream timeouts and manual takeover.
+This build implements stage 1 of the Quiet Flow UI design: tokens and theme foundations.
 
-- Load saved conversations asynchronously with retry on failure, and recover externally opened tasks off the UI thread.
-- Preserve completed task results when a notification reply fails, and load only the matching conversation's required result bodies.
-- Skip unused node traversal before screenshot-based coordinate input while retaining window and geometry checks.
-- Time out model streams after five minutes without meaningful progress, preserving explicit pause and cancellation behavior.
-- Refresh the preview immediately after manual input, reject stale frames and retain a bounded wait for static pages.
+- Apply Eta blue and neutral light/dark surfaces throughout the app and settings, preserving Monet, custom accents and the existing pure-black option.
+- Provide shared color, typography, spacing, shape, elevation and motion tokens for the later UI stages.
+- Adapt semantic status colors to the theme and introduce six-state rings with read-only mappings from existing task states.
+- Keep running-ring updates in drawing; dispose looping animations when hidden, offscreen, stopped or using reduced motion.
+- Preserve page layouts and feature entry points. Home, task center and system overlay redesigns belong to later stages.
 
-**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110502) (Chinese)
+**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110503) (Chinese)
 
-The APK keeps the previous signing certificate. ColorOS preview layout, IME behavior, deep-sleep networking and native long-press replacement still need device validation.
+The signed APK is published automatically after this version passes CI, using the existing certificate. Light/dark appearance and accent choices still require ColorOS device validation. See the [stage 1 verification record](etax/design/validation/stage-1.md) (Chinese).
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

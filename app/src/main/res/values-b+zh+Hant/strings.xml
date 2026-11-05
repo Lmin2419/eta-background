@@ -1397,4 +1397,10 @@
   <string name="tool_background_text_description">選擇可編輯輸入框，寫入後讀回核對，區分已提交與已確認的輸入結果。</string>
   <string name="tool_background_finish">保留頁面與接續</string>
   <string name="tool_background_finish_description">本輪結束後保留頁面，可在原通知繼續指令或開啟應用程式接手，不自動切換目前螢幕。</string>
+    <string name="task_visual_running">正在執行</string>
+    <string name="task_visual_attention">需要你處理</string>
+    <string name="task_visual_paused">已暫停</string>
+    <string name="task_visual_success">已完成</string>
+    <string name="task_visual_failed">未完成</string>
+    <string name="task_visual_queued">排隊中</string>
 </resources>

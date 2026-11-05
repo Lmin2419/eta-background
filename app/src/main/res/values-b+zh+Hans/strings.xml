@@ -1467,4 +1467,10 @@
   <string name="tool_background_text_description">选择可编辑输入框，写入后回读核对，区分已提交与已确认的输入结果。</string>
   <string name="tool_background_finish">保留页面与续接</string>
   <string name="tool_background_finish_description">本轮结束后保留页面，可在原通知继续指令或打开应用接管，不自动切换当前屏幕。</string>
+    <string name="task_visual_running">正在执行</string>
+    <string name="task_visual_attention">需要你处理</string>
+    <string name="task_visual_paused">已暂停</string>
+    <string name="task_visual_success">已完成</string>
+    <string name="task_visual_failed">未完成</string>
+    <string name="task_visual_queued">排队中</string>
 </resources>

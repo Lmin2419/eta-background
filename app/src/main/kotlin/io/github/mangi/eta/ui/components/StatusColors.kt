@@ -6,24 +6,20 @@ import androidx.compose.ui.res.stringResource
 import io.github.mangi.eta.R
 import io.github.mangi.eta.ui.model.PermissionStatusUi
 import io.github.mangi.eta.ui.model.RunStatusUi
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.model.toTaskVisualStatus
 
 // 语义状态色
-val StatusSuccess = Color(0xFF00BD13)
-val StatusWarning = Color(0xFFFFB200)
-val StatusError: Color @Composable get() = MiuixTheme.colorScheme.error
-val StatusRunning: Color @Composable get() = MiuixTheme.colorScheme.primary
-val StatusIdle: Color @Composable get() = MiuixTheme.colorScheme.onSurfaceVariantSummary
+val StatusSuccess: Color @Composable get() = EtaTheme.colors.success
+val StatusWarning: Color @Composable get() = EtaTheme.colors.attention
+val StatusError: Color @Composable get() = EtaTheme.colors.danger
+val StatusRunning: Color @Composable get() = EtaTheme.colors.running
+val StatusIdle: Color @Composable get() = EtaTheme.colors.textSecondary
 
 // ── RunStatusUi 映射 ──────────────────────────────────────────────────
 
 @Composable
-fun RunStatusUi.color(): Color = when (this) {
-    RunStatusUi.Running -> StatusRunning
-    RunStatusUi.Success -> StatusSuccess
-    RunStatusUi.Failed -> StatusError
-    RunStatusUi.Cancelled -> StatusIdle
-}
+fun RunStatusUi.color(): Color = toTaskVisualStatus().color()
 
 @Composable
 fun RunStatusUi.label(): String = stringResource(when (this) {

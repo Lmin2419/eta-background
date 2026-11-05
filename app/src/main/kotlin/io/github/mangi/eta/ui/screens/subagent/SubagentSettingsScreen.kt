@@ -487,6 +487,7 @@ private fun iconForProfile(name: String): ImageVector = when (name) {
     else -> Icons.Rounded.Hub
 }
 
+@Composable
 private fun tintForProfile(name: String) = when (name) {
     SubagentProfile.TYPE_EXPLORE -> EtaPreferenceColors.Blue
     SubagentProfile.TYPE_CODER -> EtaPreferenceColors.Green
