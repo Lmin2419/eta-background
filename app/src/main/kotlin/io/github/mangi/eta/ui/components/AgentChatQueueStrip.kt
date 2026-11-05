@@ -44,6 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
+import io.github.mangi.eta.ui.theme.EtaTheme
+import androidx.compose.material.icons.rounded.Schedule
 import io.github.mangi.eta.ui.model.QueuedMessageUi
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -53,7 +55,7 @@ import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val QueueContainerCornerRadius = 16.dp
-private val QueueActionSize = 28.dp
+private val QueueActionSize = 40.dp
 private val QueueExpandedMaxHeight = 148.dp
 private val WHITESPACE_REGEX = Regex("\\s+")
 
@@ -89,15 +91,7 @@ internal fun AgentChatQueueStrip(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .squircleSurface(
-                color = MiuixTheme.colorScheme.surfaceContainer,
-                cornerRadius = QueueContainerCornerRadius,
-            )
-            .squircleBorder(
-                width = 0.5.dp,
-                color = MiuixTheme.colorScheme.outline.copy(alpha = 0.55f),
-                cornerRadius = QueueContainerCornerRadius,
-            ),
+            .background(EtaTheme.colors.surfaceSunken, if (expanded) EtaTheme.shapes.radiusMd else EtaTheme.shapes.radiusFull),
     ) {
         Row(
             modifier = Modifier
@@ -118,23 +112,21 @@ internal fun AgentChatQueueStrip(
                     .padding(horizontal = 2.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(MiuixTheme.colorScheme.primary),
-                )
+                Icon(Icons.Rounded.Schedule, null, Modifier.size(16.dp), tint = EtaTheme.colors.textSecondary)
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = when {
                         first.immediateInterrupt -> stringResource(R.string.chat_queue_interrupting)
-                        hasMultiple -> stringResource(R.string.chat_queue_status_count, queuedMessages.size)
+                        hasMultiple -> stringResource(R.string.chat_queue_status)
                         else -> stringResource(R.string.chat_queue_status)
                     },
-                    style = MiuixTheme.textStyles.footnote1,
+                    style = EtaTheme.type.footnote,
                     fontWeight = FontWeight.Medium,
-                    color = MiuixTheme.colorScheme.primary,
+                    color = EtaTheme.colors.onAccentSoft,
                 )
+                if (hasMultiple) Text(queuedMessages.size.toString(),
+                    Modifier.padding(start = 6.dp).background(EtaTheme.colors.accentSoft, EtaTheme.shapes.radiusFull).padding(horizontal = 6.dp, vertical = 2.dp),
+                    style = EtaTheme.type.caption, color = EtaTheme.colors.onAccentSoft)
                 if (hasMultiple) {
                     Spacer(modifier = Modifier.width(2.dp))
                     Icon(
@@ -143,7 +135,7 @@ internal fun AgentChatQueueStrip(
                         modifier = Modifier
                             .size(14.dp)
                             .rotate(chevronRotation),
-                        tint = MiuixTheme.colorScheme.primary,
+                        tint = EtaTheme.colors.onAccentSoft,
                     )
                 }
             }
@@ -194,7 +186,7 @@ internal fun AgentChatQueueStrip(
                     ) {
                         Text(
                             text = "${index + 1}",
-                            style = MiuixTheme.textStyles.footnote2,
+                            style = EtaTheme.type.caption,
                             fontWeight = FontWeight.Medium,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
@@ -241,7 +233,7 @@ private fun QueuedMessagePreviewText(
     ) {
         Text(
             text = displayText,
-            style = MiuixTheme.textStyles.body2,
+            style = EtaTheme.type.footnote,
             color = MiuixTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -251,7 +243,7 @@ private fun QueuedMessagePreviewText(
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "+$attachmentCount",
-                style = MiuixTheme.textStyles.footnote2,
+                style = EtaTheme.type.caption,
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
         }
@@ -276,7 +268,7 @@ private fun QueuedMessageItemActions(
                     imageVector = if (isStreaming) Icons.Rounded.Bolt else Icons.Rounded.ArrowUpward,
                     contentDescription = stringResource(R.string.chat_queue_steer_now),
                     modifier = Modifier.size(15.dp),
-                    tint = MiuixTheme.colorScheme.primary,
+                    tint = EtaTheme.colors.onAccentSoft,
                 )
             }
         }

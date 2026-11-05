@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
+import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.agent.browser.BrowserSessionSnapshot
 import io.github.mangi.eta.agent.overlay.toolDisplayName
 import io.github.mangi.eta.agent.subagent.AgentSubagentToolCatalog
@@ -168,11 +169,11 @@ internal fun ToolActivityRow(
                     ShimmerText(
                         text = title,
                         active = running,
-                        style = MiuixTheme.textStyles.body2,
+                        style = EtaTheme.type.footnote,
                         color = if (running) {
-                            MiuixTheme.colorScheme.onSurface
+                            EtaTheme.colors.textPrimary
                         } else {
-                            MiuixTheme.colorScheme.onSurfaceVariantSummary
+                            EtaTheme.colors.textSecondary
                         },
                     )
                 }
@@ -180,14 +181,14 @@ internal fun ToolActivityRow(
                     Text(
                         text = subtitle,
                         style = if (message.isTerminalTool() && browserLine == null) {
-                            MiuixTheme.textStyles.footnote2.copy(fontFamily = FontFamily.Monospace)
+                            EtaTheme.type.mono
                         } else {
-                            MiuixTheme.textStyles.footnote2
+                            EtaTheme.type.caption.copy(fontFeatureSettings = "tnum")
                         },
                         color = if (failed) {
                             StatusError
                         } else {
-                            MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.75f)
+                            EtaTheme.colors.textTertiary
                         },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -198,8 +199,8 @@ internal fun ToolActivityRow(
             if (elapsedSeconds != null && elapsedSeconds >= RUNNING_TIMER_THRESHOLD_SECONDS) {
                 Text(
                     text = stringResource(R.string.tool_elapsed_seconds, elapsedSeconds),
-                    style = MiuixTheme.textStyles.footnote2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.75f),
+                    style = EtaTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+                    color = EtaTheme.colors.textTertiary,
                     modifier = Modifier.padding(start = 8.dp),
                 )
             }
@@ -263,21 +264,21 @@ internal fun ToolGroupRow(
                 ShimmerText(
                     text = title,
                     active = running,
-                    style = MiuixTheme.textStyles.body2,
+                    style = EtaTheme.type.footnote,
                     color = if (running) {
-                        MiuixTheme.colorScheme.onSurface
+                        EtaTheme.colors.textPrimary
                     } else {
-                        MiuixTheme.colorScheme.onSurfaceVariantSummary
+                        EtaTheme.colors.textSecondary
                     },
                 )
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
-                        style = MiuixTheme.textStyles.footnote2,
+                        style = EtaTheme.type.caption.copy(fontFeatureSettings = "tnum"),
                         color = if (!running && group.failedCount > 0) {
                             StatusError
                         } else {
-                            MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.75f)
+                            EtaTheme.colors.textTertiary
                         },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -339,17 +340,17 @@ private fun ToolActivityDetail(
                 Text(
                     text = result,
                     style = if (message.isTerminalTool()) {
-                        MiuixTheme.textStyles.footnote2.copy(fontFamily = FontFamily.Monospace)
+                        EtaTheme.type.mono
                     } else {
-                        MiuixTheme.textStyles.footnote2
+                        EtaTheme.type.caption.copy(fontFeatureSettings = "tnum")
                     },
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    color = EtaTheme.colors.textSecondary,
                     maxLines = MAX_RESULT_LINES,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .fillMaxWidth()
                         .squircleSurface(
-                            color = MiuixTheme.colorScheme.surfaceContainer,
+                            color = EtaTheme.colors.surfaceSunken,
                             cornerRadius = 10.dp,
                         )
                         .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -366,7 +367,7 @@ private fun ToolActivityDetail(
                     onClick = onOpenBrowser,
                     colors = ButtonDefaults.textButtonColorsPrimary(),
                     minHeight = 36.dp,
-                    textStyle = MiuixTheme.textStyles.body2,
+                    textStyle = EtaTheme.type.footnote,
                 )
             }
         }
@@ -397,9 +398,9 @@ private fun ToolActivityMessageUi.isTerminalTool(): Boolean =
 @Composable
 private fun ToolActivityStatusUi.dotColor() = when (this) {
     ToolActivityStatusUi.Running -> StatusRunning
-    ToolActivityStatusUi.Success -> MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.45f)
+    ToolActivityStatusUi.Success -> EtaTheme.colors.textSecondary.copy(alpha = 0.45f)
     ToolActivityStatusUi.Failed -> StatusError
-    ToolActivityStatusUi.Unknown -> MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.45f)
+    ToolActivityStatusUi.Unknown -> EtaTheme.colors.textSecondary.copy(alpha = 0.45f)
 }
 
 private const val RUNNING_TIMER_THRESHOLD_SECONDS = 3
@@ -432,7 +433,7 @@ private fun BrowserPagePreview(
         modifier = modifier
             .fillMaxWidth()
             .squircleSurface(
-                color = MiuixTheme.colorScheme.surfaceContainer,
+                color = EtaTheme.colors.surfaceSunken,
                 cornerRadius = 10.dp,
             ),
     ) {
@@ -449,8 +450,8 @@ private fun BrowserPagePreview(
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = snapshot.host.ifBlank { snapshot.displayUrl },
-                style = MiuixTheme.textStyles.footnote2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = EtaTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+                color = EtaTheme.colors.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -482,8 +483,8 @@ private fun BrowserPagePreview(
             if (snapshot.title.isNotBlank()) {
                 Text(
                     text = snapshot.title,
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurface,
+                    style = EtaTheme.type.footnote,
+                    color = EtaTheme.colors.textPrimary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -491,8 +492,8 @@ private fun BrowserPagePreview(
             if (snapshot.displayUrl.isNotBlank()) {
                 Text(
                     text = snapshot.displayUrl,
-                    style = MiuixTheme.textStyles.footnote2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.8f),
+                    style = EtaTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+                    color = EtaTheme.colors.textSecondary.copy(alpha = 0.8f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -538,8 +539,8 @@ private fun ToolCommandBlock(
         ) {
             Text(
                 text = context.ifBlank { stringResource(R.string.shell_command) },
-                style = MiuixTheme.textStyles.footnote2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = EtaTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+                color = EtaTheme.colors.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -563,7 +564,7 @@ private fun ToolCommandBlock(
                     tint = if (copied) {
                         MiuixTheme.colorScheme.primary
                     } else {
-                        MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.8f)
+                        EtaTheme.colors.textSecondary.copy(alpha = 0.8f)
                     },
                 )
             }
@@ -578,8 +579,8 @@ private fun ToolCommandBlock(
         SelectionContainer {
             Text(
                 text = command,
-                style = MiuixTheme.textStyles.footnote2.copy(fontFamily = FontFamily.Monospace),
-                color = MiuixTheme.colorScheme.onSurface,
+                style = EtaTheme.type.mono,
+                color = EtaTheme.colors.textPrimary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())

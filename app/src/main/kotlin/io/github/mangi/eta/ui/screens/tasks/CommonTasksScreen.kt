@@ -8,6 +8,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.material.icons.rounded.MoreHoriz
+import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.components.EtaSheet
+import io.github.mangi.eta.ui.components.EtaIconButton
+import io.github.mangi.eta.ui.components.EtaButtonKind
+import io.github.mangi.eta.ui.components.EtaButtonSize
+import top.yukonga.miuix.kmp.basic.Icon
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,6 +36,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
@@ -41,7 +61,7 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRun: (CommonTask) -> Unit) {
+internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRun: (CommonTask) -> Unit, embedded: Boolean = false) {
     val context = LocalContext.current
     val resources = LocalResources.current
     var editorOpen by rememberSaveable { mutableStateOf(false) }
@@ -52,6 +72,8 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
     var menuId by rememberSaveable { mutableStateOf<String?>(null) }
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
     val editable = !store.busy && !store.loadFailed
+    val listState = rememberLazyListState()
+    val collapsed by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
 
     fun edit(task: CommonTask?, copy: Boolean = false) {
         editId = if (copy) null else task?.id
@@ -71,16 +93,11 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
         }
     }
 
-    MiuixScaffoldPage(title = stringResource(R.string.common_tasks_title), onBack = onBack) {
+    val taskContent: LazyListScope.() -> Unit = {
         item(key = "description") {
             Text(stringResource(R.string.common_tasks_description),
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
-        }
-        item(key = "create") {
-            EtaButton(stringResource(R.string.common_tasks_create), onClick = { edit(null) },
-                enabled = editable && store.tasks.size < CommonTaskRepository.MAX_TASKS,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp))
+                style = EtaTheme.type.subhead, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
         if (store.loadFailed) {
             item(key = "error") {
@@ -97,16 +114,17 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
         items(store.tasks, key = { it.id }) { task ->
             EtaCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(task.name, style = MiuixTheme.textStyles.headline1)
-                    Text(task.instruction, style = MiuixTheme.textStyles.body2,
+                    Text(task.name, style = EtaTheme.type.headline)
+                    Text(task.instruction, style = EtaTheme.type.subhead,
                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        maxLines = 3, overflow = TextOverflow.Ellipsis)
+                        maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         EtaButton(stringResource(R.string.common_tasks_run), { onRun(task) },
-                            modifier = Modifier.weight(1f), enabled = editable,
-                            colors = ButtonDefaults.textButtonColorsPrimary())
-                        EtaButton(stringResource(R.string.common_tasks_manage), { menuId = task.id },
-                            modifier = Modifier.weight(1f), enabled = editable)
+                            enabled = editable, kind = EtaButtonKind.Tonal, size = EtaButtonSize.Small)
+                        Spacer(Modifier.weight(1f))
+                        EtaIconButton({ menuId = task.id }, enabled = editable) {
+                            Icon(Icons.Rounded.MoreHoriz, stringResource(R.string.common_tasks_manage))
+                        }
                     }
                 }
             }
@@ -119,8 +137,22 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
         }
     }
 
+    val createButton: @Composable () -> Unit = {
+        val createLabel = stringResource(R.string.common_tasks_create)
+        Box(Modifier.fillMaxSize()) {
+            EtaButton(if (collapsed) "+" else "+ " + stringResource(R.string.common_tasks_create), { edit(null) },
+                Modifier.align(Alignment.BottomEnd).padding(16.dp).semantics { contentDescription = createLabel }, enabled = editable && store.tasks.size < CommonTaskRepository.MAX_TASKS,
+                kind = EtaButtonKind.Primary, minHeight = 52.dp)
+        }
+    }
+    if (embedded) Box(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 96.dp), content = taskContent)
+        createButton()
+    } else MiuixScaffoldPage(title = stringResource(R.string.common_tasks_title), onBack = onBack, listState = listState,
+        overlay = createButton, content = { taskContent(); item { Spacer(Modifier.height(96.dp)) } })
+
     if (editorOpen) {
-        EtaWindowDialog(show = true, title = stringResource(if (editId == null) R.string.common_tasks_create else R.string.common_tasks_edit),
+        EtaSheet(show = true, title = stringResource(if (editId == null) R.string.common_tasks_create else R.string.common_tasks_edit),
             onDismissRequest = { if (!store.busy) editorOpen = false }) {
             Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -149,7 +181,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
     }
 
     store.tasks.firstOrNull { it.id == menuId }?.let { task ->
-        EtaWindowDialog(show = true, title = task.name, onDismissRequest = { menuId = null }) {
+        EtaSheet(show = true, title = task.name, onDismissRequest = { menuId = null }) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 EtaButton(stringResource(R.string.common_tasks_edit), { edit(task) }, Modifier.fillMaxWidth())
                 EtaButton(stringResource(R.string.common_tasks_copy), { edit(task, copy = true) }, Modifier.fillMaxWidth(),

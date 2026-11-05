@@ -118,44 +118,18 @@ internal fun AgentAttachmentPickerButton(
                 tint = MiuixTheme.colorScheme.onSurface,
             )
         }
-        WindowListPopup(
-            show = showPopup && popupAnchorTopPx > 0,
-            popupPositionProvider = remember(popupAnchorTopPx) {
-                InputPopupPositionProvider(popupAnchorTopPx)
-            },
-            alignment = PopupPositionProvider.Align.TopStart,
-            onDismissRequest = { showPopup = false },
-            maxHeight = popupMaxHeight,
-        ) {
-            val dismiss = LocalDismissState.current
-            val options = listOf(
-                stringResource(R.string.attachment_image),
-                stringResource(R.string.attachment_file),
-                stringResource(R.string.attachment_folder),
-                stringResource(R.string.attachment_enter_path),
-            )
-            ListPopupColumn {
-                options.forEachIndexed { index, option ->
-                    DropdownImpl(
-                        text = option,
-                        optionSize = options.size,
-                        isSelected = false,
-                        index = index,
-                        onSelectedIndexChange = {
-                            dismiss?.invoke()
-                            when (index) {
-                                0 -> photoPicker.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                                1 -> filePicker.launch(arrayOf("*/*"))
-                                2 -> folderPicker.launch(null)
-                                3 -> {
-                                    pathInput = ""
-                                    showPathDialog = true
-                                }
-                            }
-                        },
-                    )
+        EtaSheet(showPopup, title = stringResource(R.string.ui_add_attachment_dba9e8), onDismissRequest = { showPopup = false }) {
+            Column {
+                listOf(R.string.attachment_image, R.string.attachment_file, R.string.attachment_folder, R.string.attachment_enter_path).forEachIndexed { index, label ->
+                    EtaArrowPreference(stringResource(label), onClick = {
+                        showPopup = false
+                        when (index) {
+                            0 -> photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            1 -> filePicker.launch(arrayOf("*/*"))
+                            2 -> folderPicker.launch(null)
+                            3 -> { pathInput = ""; showPathDialog = true }
+                        }
+                    })
                 }
             }
         }

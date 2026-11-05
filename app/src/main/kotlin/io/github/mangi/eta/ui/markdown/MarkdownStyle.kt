@@ -9,7 +9,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import io.github.mangi.eta.ui.theme.EtaTheme
 
 /** 正文与思考共用同一套渲染器，只在字号、颜色与留白上区分层级。 */
 internal enum class MarkdownTone { Answer, Thinking }
@@ -54,48 +54,22 @@ internal class MarkdownStyle(
 
 @Composable
 internal fun rememberMarkdownStyle(tone: MarkdownTone): MarkdownStyle {
-    val colors = MiuixTheme.colorScheme
-    val textStyles = MiuixTheme.textStyles
-    return remember(tone, colors, textStyles) {
+    val colors = EtaTheme.colors
+    val type = EtaTheme.type
+    return remember(tone, colors, type) {
         val answer = tone == MarkdownTone.Answer
-        val textColor = if (answer) colors.onSurface else colors.onSurfaceVariantSummary
-        val body = (if (answer) textStyles.body1 else textStyles.body2).copy(
-            fontSize = if (answer) 16.sp else 14.sp,
-            lineHeight = if (answer) ANSWER_LINE_HEIGHT_SP.sp else THINKING_LINE_HEIGHT_SP.sp,
-            color = textColor,
-        )
-        // 聊天里的标题只是段落强调，不是页面标题：字号克制，层级主要靠字重区分。
-        val headings = if (answer) {
-            listOf(
-                body.copy(fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold),
-                body.copy(fontSize = 18.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold),
-                body.copy(fontSize = 17.sp, lineHeight = 25.sp, fontWeight = FontWeight.SemiBold),
-                body.copy(fontWeight = FontWeight.SemiBold),
-            )
-        } else {
-            listOf(body.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
-        }
+        val textColor = if (answer) colors.textPrimary else colors.textSecondary
+        val body = (if (answer) type.body else type.subhead.copy(lineHeight = THINKING_LINE_HEIGHT_SP.sp)).copy(color = textColor)
         MarkdownStyle(
-            tone = tone,
-            body = body,
-            headings = headings,
-            code = TextStyle(
-                fontFamily = FontFamily.Monospace,
-                fontSize = if (answer) 13.sp else 12.sp,
-                lineHeight = if (answer) 20.sp else 18.sp,
-                color = textColor,
-            ),
-            table = body.copy(fontSize = if (answer) 14.sp else 13.sp, lineHeight = if (answer) 21.sp else 19.sp),
-            textColor = textColor,
-            secondaryColor = colors.onSurfaceVariantSummary,
-            markerColor = if (answer) colors.onSurface.copy(alpha = 0.55f) else colors.onSurfaceVariantSummary,
-            dividerColor = colors.outline.copy(alpha = 0.6f),
-            codeBackground = colors.surfaceContainer,
-            tableHeaderBackground = colors.surfaceContainer,
-            inline = MarkdownInlineStyle(
-                linkColor = colors.primary,
-                codeBackground = colors.onSurface.copy(alpha = 0.07f),
-            ),
+            tone = tone, body = body,
+            headings = if (answer) listOf(type.markdownH1, type.markdownH2, type.markdownH3, body.copy(fontWeight = FontWeight.SemiBold))
+                .map { it.copy(color = textColor) } else listOf(body.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold)),
+            code = type.mono.copy(color = textColor, fontSize = if (answer) 13.sp else 12.sp, lineHeight = if (answer) 20.sp else 18.sp),
+            table = type.footnote.copy(color = textColor), textColor = textColor,
+            secondaryColor = colors.textSecondary, markerColor = colors.textTertiary,
+            dividerColor = colors.outline, codeBackground = colors.surfaceSunken,
+            tableHeaderBackground = colors.surfaceSunken,
+            inline = MarkdownInlineStyle(linkColor = colors.accent, codeBackground = colors.surfaceSunken),
         )
     }
 }

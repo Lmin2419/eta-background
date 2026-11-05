@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -41,6 +42,11 @@ import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.runtime.CompositionLocalProvider
+import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.theme.EtaElevation
+import io.github.mangi.eta.ui.theme.etaElevation
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -233,6 +239,10 @@ internal fun AgentChatBody(
         }
     }
 
+    val draftRequest = remember { mutableStateOf<ChatDraftRequest?>(null) }
+    val inlineEditor = messageEdit?.takeIf { edit -> messages.any { it.id == edit.targetMessageId && it is io.github.mangi.eta.ui.model.UserMessageUi } }
+        ?.let { ChatInlineEditor(it.targetMessageId, input, it.preserveFollowingMessages, { text -> keepBottomAnchored = true; onSubmit(text) }, onCancelMessageEdit) }
+    CompositionLocalProvider(LocalChatDraftRequest provides draftRequest, LocalChatInlineEditor provides inlineEditor) {
     SpeechPlaybackHost {
         SpeechAutoReadAloud(messages = messages, isStreaming = isStreaming)
         AgentChatScaffold(
@@ -290,7 +300,7 @@ internal fun AgentChatBody(
             onDeleteMessage = onDeleteMessage,
             onRegenerateMessage = onRegenerateMessage,
             onSelectReplyCandidate = onSelectReplyCandidate,
-            onSuggestionClick = onSuggestionClick,
+            onSuggestionClick = { prompt -> draftRequest.value = ChatDraftRequest(prompt, (draftRequest.value?.sequence ?: 0L) + 1L) },
             onRunTraceClick = onRunTraceClick,
             onOpenBrowser = onOpenBrowser,
             currentBrowserMessageId = currentBrowserMessageId,
@@ -302,6 +312,7 @@ internal fun AgentChatBody(
             modifier = modifier,
         )
     }
+}
 }
 
 @Composable
@@ -359,13 +370,6 @@ private fun AgentChatScaffold(
     onHistoryViewportChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val surfaceColor = MiuixTheme.colorScheme.surface
-    val frostEnabled = hasMessages && LocalBlurEnabled.current && isRuntimeShaderSupported()
-    val messageBackdrop = rememberLayerBackdrop {
-        // Backdrop 必须包含不透明底色，否则文字边缘模糊到透明区域时会出现黑边。
-        drawRect(surfaceColor)
-        drawContent()
-    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -377,8 +381,8 @@ private fun AgentChatScaffold(
             bottom = 0.dp,
         ),
         bottomBar = {
-            AgentChatBottomBar(
-                messageBackdrop = messageBackdrop.takeIf { frostEnabled },
+            if (LocalChatInlineEditor.current == null) AgentChatBottomBar(
+                messageBackdrop = null,
                 input = input,
                 modelPickerState = modelPickerState,
                 isCompacting = isCompacting,
@@ -411,7 +415,7 @@ private fun AgentChatScaffold(
                 onAttachFilePath = onAttachFilePath,
                 onRemoveFileReference = onRemoveFileReference,
                 onCancelMessageEdit = onCancelMessageEdit,
-            )
+            ) else Spacer(Modifier.height(12.dp).navigationBarsPadding().imePadding())
         },
     ) { innerPadding ->
         val bottomPadding = innerPadding.calculateBottomPadding()
@@ -447,8 +451,7 @@ private fun AgentChatScaffold(
                 onLoadEarlierMessages = onLoadEarlierMessages,
                 onHistoryViewportChanged = onHistoryViewportChanged,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .then(if (frostEnabled) Modifier.layerBackdrop(messageBackdrop) else Modifier),
+                    .fillMaxSize(),
             )
         }
     }
@@ -728,9 +731,9 @@ internal fun AgentConversationMessages(
     Box(modifier = modifier.clipToBounds()) {
         LazyColumn(
             state = scrollState,
-            verticalArrangement = Arrangement.Top,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
-                .fillMaxSize()
+                .align(Alignment.TopCenter).widthIn(max = 720.dp).fillMaxSize()
                 .scrollEndHaptic()
                 .nestedScroll(historyPaging.scrollConnection)
                 .overScrollVertical(),
@@ -749,12 +752,13 @@ internal fun AgentConversationMessages(
                     )
                 }
             }
-            items(
+            itemsIndexed(
                 items = timelineEntries,
-                key = { it.key },
-                contentType = { it.contentType() },
-            ) { entry ->
-                val itemModifier = Modifier.animateItem(
+                key = { _, entry -> entry.key },
+                contentType = { _, entry -> entry.contentType() },
+            ) { index, entry ->
+                val startsTurn = index > 0 && (entry as? AgentTimelineEntry.Message)?.message is io.github.mangi.eta.ui.model.UserMessageUi
+                val itemModifier = Modifier.padding(top = if (startsTurn) 12.dp else 0.dp).animateItem(
                     fadeInSpec = tween(durationMillis = 180),
                     placementSpec = null,
                     // 历史轮次被编辑、删除或重新生成时必须立即退出；退出动画会让已从
@@ -820,41 +824,45 @@ internal fun AgentConversationMessages(
             }
         }
 
+        val farFromBottom by remember(scrollState) { derivedStateOf {
+            val info = scrollState.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull()
+            if (last == null) false else {
+                val viewport = info.viewportEndOffset - info.viewportStartOffset
+                val average = info.visibleItemsInfo.map { it.size }.average().coerceAtLeast(1.0)
+                val remaining = (info.totalItemsCount - last.index - 1) * average + last.offset + last.size - info.viewportEndOffset
+                remaining > viewport
+            }
+        } }
+        val etaAccent = EtaTheme.colors.accent
         AnimatedVisibility(
-            visible = !keepBottomAnchored && !isAtBottom,
+            visible = !keepBottomAnchored && !isAtBottom && farFromBottom,
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = bottomInset + 12.dp),
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = bottomInset + 12.dp),
             enter = fadeIn(tween(160)) + scaleIn(tween(180), initialScale = 0.82f),
             exit = fadeOut(tween(100)) + scaleOut(tween(120), targetScale = 0.86f),
         ) {
             IconButton(
-                // 与输入框同一套浮起层次：消息背景接近按钮底色时仍能一眼认出。
-                modifier = Modifier
-                    .dropShadow(
-                        shape = CircleShape,
-                        shadow = Shadow(radius = 8.dp, color = Color.Black, alpha = 0.08f),
-                    )
-                    .squircleBorder(
-                        width = 0.5.dp,
-                        color = MiuixTheme.colorScheme.outline.copy(alpha = 0.55f),
-                        cornerRadius = IconButtonDefaults.CornerRadius,
-                    ),
+                modifier = Modifier.etaElevation(EtaElevation.E2, CircleShape).drawWithContent {
+                    drawContent()
+                    if (isStreaming) drawCircle(etaAccent, 3.dp.toPx(), androidx.compose.ui.geometry.Offset(size.width - 3.dp.toPx(), 3.dp.toPx()))
+                },
                 onClick = {
                     onBottomAnchorChanged(true)
                     coroutineScope.launch {
                         scrollState.animateScrollToItem(bottomItemIndex)
                     }
                 },
-                backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
-                minWidth = 40.dp,
-                minHeight = 40.dp,
+                backgroundColor = EtaTheme.colors.surfaceRaised,
+                minWidth = 36.dp,
+                minHeight = 36.dp,
             ) {
                 Icon(
                     imageVector = Icons.Rounded.ArrowDownward,
                     contentDescription = stringResource(R.string.ui_back_to_bottom_32282e),
-                    modifier = Modifier.size(18.dp),
-                    tint = MiuixTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(20.dp),
+                    tint = EtaTheme.colors.textPrimary,
                 )
             }
         }
@@ -1035,59 +1043,14 @@ private fun AgentChatBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .imePadding(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (messageBackdrop != null) {
-            val blurColors = BlurDefaults.blurColors(
-                blendColors = listOf(
-                    BlendColorEntry(MiuixTheme.colorScheme.surface.copy(alpha = 0.72f))
-                ),
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(ChatBottomFrostHeight)
-                    // DstIn 让真实磨砂在顶部透明、靠近输入框时逐渐变实，消除硬裁切线。
-                    .graphicsLayer {
-                        compositingStrategy = CompositingStrategy.Offscreen
-                    }
-                    .drawWithContent {
-                        drawContent()
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black),
-                            ),
-                            blendMode = BlendMode.DstIn,
-                        )
-                    }
-                    .textureBlur(
-                        backdrop = messageBackdrop,
-                        shape = RectangleShape,
-                        blurRadius = 20f,
-                        colors = blurColors,
-                    ),
-            )
-        } else {
-            // 空白主页沿用原来的轻微渐隐，不改变主页视觉。
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(16.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                MiuixTheme.colorScheme.surface,
-                            ),
-                        )
-                    ),
-            )
-        }
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(MiuixTheme.colorScheme.surface)
+                .widthIn(max = 720.dp).fillMaxWidth()
+                .background(EtaTheme.colors.canvas)
                 .navigationBarsPadding()
-                .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                .padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
         ) {
             AgentChatInputBar(
                 input = input,
@@ -1162,147 +1125,6 @@ internal fun shouldRequestInitialBottom(
 ): Boolean = isStreaming && keepBottomAnchored && !isUserDragging
 
 @Composable
-private fun EmptyChatState(
-    showSuggestions: Boolean,
-    onSuggestionClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val character = LocalRoleplayChat.current
-    val isCharacterConversation = character != null
-    val suggestions = listOf(
-        SuggestionItem(
-            title = stringResource(R.string.ui_analyze_current_screen_ebf08f),
-            icon = Icons.Rounded.DocumentScanner,
-            prompt = stringResource(R.string.suggestion_analyze_screen_prompt),
-        ),
-        SuggestionItem(
-            title = stringResource(R.string.ui_open_wechat_6b2c28),
-            icon = Icons.Rounded.RocketLaunch,
-            prompt = stringResource(R.string.suggestion_open_wechat_prompt),
-        ),
-        SuggestionItem(
-            title = stringResource(R.string.ui_browse_the_web_da7afb),
-            icon = Icons.Rounded.Language,
-            prompt = stringResource(R.string.suggestion_browse_web_prompt),
-        ),
-        SuggestionItem(
-            title = stringResource(R.string.ui_check_memory_pressure_2d9600),
-            icon = Icons.Rounded.Terminal,
-            prompt = stringResource(R.string.suggestion_memory_pressure_prompt),
-        ),
-    )
-
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(bottom = 56.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (character != null) {
-                CharacterAvatar(
-                    name = character.characterName,
-                    avatarPath = character.avatarPath,
-                    size = 88.dp,
-                    shape = CircleShape,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = character.characterName,
-                    style = MiuixTheme.textStyles.title2,
-                    color = MiuixTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.chat_character_story_start),
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                )
-            } else {
-                Text(
-                    text = stringResource(R.string.ui_how_can_i_help_you_e75391),
-                    style = MiuixTheme.textStyles.headline1,
-                    color = MiuixTheme.colorScheme.onSurface,
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            AnimatedVisibility(
-                visible = showSuggestions && !isCharacterConversation,
-                enter = fadeIn(
-                    animationSpec = tween(durationMillis = 220)
-                ) + slideInVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMediumLow,
-                    ),
-                    initialOffsetY = { it / 3 },
-                ),
-                exit = fadeOut(
-                    animationSpec = tween(durationMillis = 130)
-                ) + slideOutVertically(
-                    animationSpec = tween(durationMillis = 180),
-                    targetOffsetY = { it / 4 },
-                ),
-            ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    suggestions.chunked(2).forEach { rowItems ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            rowItems.forEach { item ->
-                                SuggestionCard(
-                                    item = item,
-                                    onClick = { onSuggestionClick(item.prompt) },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+private fun EmptyChatState(showSuggestions: Boolean, onSuggestionClick: (String) -> Unit, modifier: Modifier = Modifier) {
+    HomeEmptyState(showSuggestions, onSuggestionClick, modifier)
 }
-
-@Composable
-private fun SuggestionCard(
-    item: SuggestionItem,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .squircleSurface(color = MiuixTheme.colorScheme.surface, cornerRadius = 16.dp)
-            .squircleBorder(
-                width = 0.5.dp,
-                color = MiuixTheme.colorScheme.outline.copy(alpha = 0.5f),
-                cornerRadius = 16.dp,
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 14.dp),
-    ) {
-        Icon(
-            imageVector = item.icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = MiuixTheme.colorScheme.primary,
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(
-            text = item.title,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-private data class SuggestionItem(
-    val title: String,
-    val icon: ImageVector,
-    val prompt: String,
-)

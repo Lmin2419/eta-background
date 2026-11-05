@@ -85,6 +85,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.mangi.eta.R
+import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.model.TaskVisualStatus
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material.icons.rounded.Speed
+import io.github.mangi.eta.ui.voice.SpeechReadAloudMenuItem
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.rounded.MoreHoriz
+import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.foundation.layout.BoxWithConstraints
 import io.github.mangi.eta.agent.model.AgentFileReferencePromptCodec
 import io.github.mangi.eta.agent.runtime.RunPerformanceSummary
 import io.github.mangi.eta.agent.overlay.toolDisplayName
@@ -302,153 +315,57 @@ private fun UserMessageBubble(
 ) {
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
-    val tooltipState = rememberTooltipState(isPersistent = true)
+    var menu by remember(message.id) { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
-    LaunchedEffect(actionsEnabled) {
-        if (!actionsEnabled) tooltipState.dismiss()
-    }
-    LaunchedEffect(tooltipState) {
-        snapshotFlow { tooltipState.isVisible }.collect { visible ->
-            if (visible) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+    LaunchedEffect(actionsEnabled) { if (!actionsEnabled) menu = false }
+    val visiblePrompt = remember(message.content) { AgentFileReferencePromptCodec.parse(message.content) }
+    val editor = LocalChatInlineEditor.current?.takeIf { it.messageId == message.id }
+    val shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = if (isEditing) 20.dp else 8.dp)
+    BoxWithConstraints(modifier.fillMaxWidth().padding(horizontal = if (assistantOverlay) 16.dp else 20.dp, vertical = if (assistantOverlay) 4.dp else 0.dp)) {
+        Column(Modifier.align(Alignment.CenterEnd).widthIn(max = maxWidth * 0.85f), horizontalAlignment = Alignment.End) {
+            if (message.images.isNotEmpty()) Row(Modifier.horizontalScroll(rememberScrollState()).padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                message.images.forEach { url -> rememberDataUrlBitmap(url)?.let { bitmap ->
+                    Image(bitmap, stringResource(R.string.chat_image_attachment), Modifier.size(120.dp).clip(EtaTheme.shapes.radiusMd), contentScale = ContentScale.Crop)
+                } }
+            }
+            Column(Modifier.background(EtaTheme.colors.surfaceSunken, shape)
+                .then(if (isEditing) Modifier.border(1.dp, EtaTheme.colors.accent, shape) else Modifier)
+                .combinedClickable(enabled = actionsEnabled, onClick = {}, onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress); menu = true
+                }).padding(horizontal = 16.dp, vertical = 12.dp)) {
+                if (visiblePrompt.references.isNotEmpty()) SentFileReferenceFlow(visiblePrompt.references,
+                    Modifier.padding(bottom = if (visiblePrompt.request.isNotBlank()) 8.dp else 0.dp))
+                if (isEditing && editor != null) InlineUserMessageEditor(editor, message.images.isNotEmpty() || visiblePrompt.references.isNotEmpty())
+                else if (visiblePrompt.request.isNotBlank()) Text(visiblePrompt.request, style = EtaTheme.type.body, color = EtaTheme.colors.textPrimary)
+                if (message.isEdited) Text(stringResource(R.string.ui_edited_c36776), style = EtaTheme.type.caption,
+                    color = EtaTheme.colors.textTertiary, modifier = Modifier.padding(top = 4.dp))
+            }
         }
     }
-    val visiblePrompt = remember(message.content) {
-        AgentFileReferencePromptCodec.parse(message.content)
+    EtaSheet(menu, title = stringResource(R.string.eta_message_actions), onDismissRequest = { menu = false }) {
+        Column {
+            EtaArrowPreference(stringResource(R.string.ui_copy_4edd1d), onClick = {
+                clipboardManager.setText(AnnotatedString(message.content)); menu = false
+            })
+            EtaArrowPreference(stringResource(R.string.ui_edit_a7f814), onClick = { menu = false; onEdit() })
+            EtaArrowPreference(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() })
+        }
     }
-    val overlayBubbleColor = if (MiuixTheme.colorScheme.background.luminance() < 0.5f) {
-        Color(0xFF37393D)
-    } else {
-        Color(0xFFE5E7EA)
-    }
+}
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = if (assistantOverlay) 16.dp else 20.dp,
-                vertical = if (assistantOverlay) 4.dp else 8.dp,
-            ),
-        horizontalArrangement = Arrangement.End,
-    ) {
-        TooltipBox(
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                positioning = TooltipAnchorPosition.Below,
-            ),
-            tooltip = {
-                RichTooltip(insideMargin = PaddingValues(horizontal = 8.dp, vertical = 6.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                        MessageTooltipAction(
-                            icon = Icons.Rounded.ContentCopy,
-                            label = stringResource(R.string.ui_copy_4edd1d),
-                            onClick = {
-                                @Suppress("DEPRECATION")
-                                clipboardManager.setText(AnnotatedString(message.content))
-                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                                tooltipState.dismiss()
-                            },
-                        )
-                        MessageTooltipAction(
-                            icon = Icons.Rounded.Edit,
-                            label = stringResource(R.string.ui_edit_a7f814),
-                            onClick = {
-                                tooltipState.dismiss()
-                                onEdit()
-                            },
-                        )
-                        MessageTooltipAction(
-                            icon = Icons.Rounded.Delete,
-                            label = stringResource(R.string.ui_delete_3755f5),
-                            onClick = {
-                                tooltipState.dismiss()
-                                onDelete()
-                            },
-                        )
-                    }
-                }
-            },
-            state = tooltipState,
-            focusable = true,
-            enableUserInput = actionsEnabled,
-        ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = 320.dp)
-                    .then(
-                        if (assistantOverlay) {
-                            Modifier.background(overlayBubbleColor, RoundedCornerShape(10.dp))
-                        } else {
-                            Modifier.squircleSurface(
-                                color = MiuixTheme.colorScheme.surfaceContainerHigh,
-                                topStart = 20.dp,
-                                topEnd = 20.dp,
-                                // 描边只支持统一圆角，编辑态收起气泡尾角，让描边与填充贴合。
-                                bottomEnd = if (isEditing) 20.dp else 6.dp,
-                                bottomStart = 20.dp,
-                            )
-                        }
-                    )
-                    .then(
-                        if (isEditing) {
-                            Modifier.squircleBorder(
-                                width = 1.dp,
-                                color = MiuixTheme.colorScheme.primary,
-                                cornerRadius = 20.dp,
-                            )
-                        } else {
-                            Modifier
-                        }
-                    )
-                    .padding(
-                        horizontal = if (assistantOverlay) 12.dp else 16.dp,
-                        vertical = if (assistantOverlay) 8.dp else 12.dp,
-                    ),
-            ) {
-                if (message.images.isNotEmpty()) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    ) {
-                        message.images.forEach { dataUrl ->
-                            val bitmap = rememberDataUrlBitmap(dataUrl)
-                            if (bitmap != null) {
-                                Image(
-                                    bitmap = bitmap,
-                                    contentDescription = stringResource(R.string.chat_image_attachment),
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(RoundedCornerShape(12.dp)),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            }
-                        }
-                    }
-                }
-                if (visiblePrompt.references.isNotEmpty()) {
-                    SentFileReferenceFlow(
-                        references = visiblePrompt.references,
-                        modifier = Modifier.padding(
-                            bottom = if (visiblePrompt.request.isNotBlank()) 8.dp else 0.dp
-                        ),
-                    )
-                }
-                if (visiblePrompt.request.isNotBlank()) {
-                    SelectionContainer {
-                        Text(
-                            text = visiblePrompt.request,
-                            style = MiuixTheme.textStyles.body1,
-                            color = MiuixTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
-                if (message.isEdited) {
-                    Text(
-                        text = stringResource(R.string.ui_edited_c36776),
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
-            }
+@Composable
+private fun InlineUserMessageEditor(editor: ChatInlineEditor, hasAttachments: Boolean) {
+    var text by rememberSaveable(editor.messageId) { mutableStateOf(editor.initialText) }
+    val focus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    LaunchedEffect(editor.messageId) { focus.requestFocus(); keyboard?.show() }
+    Column {
+        top.yukonga.miuix.kmp.basic.TextField(text, { text = it }, modifier = Modifier.fillMaxWidth().focusRequester(focus),
+            minLines = 2, maxLines = 8, textStyle = EtaTheme.type.body)
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            EtaButton(stringResource(R.string.action_cancel), editor.onCancel, size = EtaButtonSize.Small, kind = EtaButtonKind.Secondary)
+            EtaButton(stringResource(if (editor.preserveFollowing) R.string.chat_save_message else R.string.eta_edit_resend),
+                { editor.onSubmit(text) }, enabled = text.isNotBlank() || hasAttachments, size = EtaButtonSize.Small)
         }
     }
 }
@@ -492,46 +409,13 @@ private fun ContextCompactionMarker(
     message: SystemNoticeMessageUi,
     modifier: Modifier = Modifier,
 ) {
-    val pulseAlpha = rememberActivePulse(active = message.running, label = "compaction_pulse")
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(percent = 50))
-                .background(MiuixTheme.colorScheme.surface)
-                .border(
-                    0.5.dp,
-                    MiuixTheme.colorScheme.outline.copy(alpha = 0.5f),
-                    RoundedCornerShape(percent = 50),
-                )
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Compress,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(12.dp)
-                    .graphicsLayer(alpha = if (message.running) pulseAlpha else 1f),
-                tint = if (message.running) {
-                    MiuixTheme.colorScheme.primary
-                } else {
-                    MiuixTheme.colorScheme.onSurfaceVariantSummary
-                },
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = message.detail?.takeIf(String::isNotBlank)
-                    ?: stringResource(R.string.context_compaction),
-                style = MiuixTheme.textStyles.footnote1,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+    Box(modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
+        Row(Modifier.background(EtaTheme.colors.surfaceSunken, EtaTheme.shapes.radiusFull).padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (message.running) StatusRing(TaskVisualStatus.Running, size = 12.dp)
+            else Icon(Icons.Rounded.Compress, null, Modifier.size(16.dp), tint = EtaTheme.colors.textTertiary)
+            Text(message.detail?.takeIf(String::isNotBlank) ?: stringResource(R.string.context_compaction),
+                style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -543,14 +427,15 @@ private fun RunPerformanceMarker(message: SystemNoticeMessageUi, modifier: Modif
     val summary = remember(message.detail) { RunPerformanceSummary.fromJson(message.detail) } ?: return
     var expanded by rememberSaveable(message.id) { mutableStateOf(false) }
     val chinese = stringResource(R.string.system_notice_run_performance).any { it.code in 0x4e00..0x9fff }
-    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp)) {
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                .clickable { expanded = !expanded }.padding(vertical = 10.dp),
+            modifier = Modifier.clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.surfaceSunken)
+                .clickable { expanded = !expanded }.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(summary.title(chinese), style = MiuixTheme.textStyles.footnote1,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary, modifier = Modifier.weight(1f))
+            Icon(Icons.Rounded.Speed, null, Modifier.padding(end = 6.dp).size(16.dp), tint = EtaTheme.colors.textTertiary)
+            Text(summary.title(chinese), style = EtaTheme.type.caption,
+                color = EtaTheme.colors.textTertiary, modifier = Modifier.weight(1f, fill = false))
             Icon(Icons.Rounded.ChevronRight, contentDescription = null,
                 modifier = Modifier.size(16.dp).graphicsLayer(rotationZ = if (expanded) 90f else 0f),
                 tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)
@@ -582,6 +467,9 @@ private fun AgentMessageBlock(
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
+    var menu by remember(message.id) { mutableStateOf(false) }
+    var selectingText by remember(message.id) { mutableStateOf(false) }
+    val export = LocalChatHomeShortcuts.current.onExportConversation
     var copied by remember(message.id) { mutableStateOf(false) }
     val keepStreamingMarkdown = remember(message.id) { message.isStreaming }
     DisposableEffect(retainedStreamingState) {
@@ -617,9 +505,11 @@ private fun AgentMessageBlock(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .combinedClickable(enabled = showMessageActions && messageActionsEnabled && revealComplete,
+                onClick = {}, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); selectingText = false; menu = true })
             .padding(
                 horizontal = if (assistantOverlay) 16.dp else 20.dp,
-                vertical = 8.dp,
+                vertical = if (assistantOverlay) 8.dp else 0.dp,
             ),
     ) {
         if (character != null) {
@@ -642,7 +532,7 @@ private fun AgentMessageBlock(
                 )
             }
             message.renderMarkdown -> {
-                SelectionContainer {
+                AnswerTextSelection(enabled = !showMessageActions) {
                     StaticMarkdown(
                         content = message.content,
                         tone = MarkdownTone.Answer,
@@ -652,7 +542,7 @@ private fun AgentMessageBlock(
                 }
             }
             message.content.isNotBlank() -> {
-                SelectionContainer {
+                AnswerTextSelection(enabled = !showMessageActions) {
                     Text(
                         text = message.content,
                         style = MiuixTheme.textStyles.body1,
@@ -675,64 +565,35 @@ private fun AgentMessageBlock(
             enter = fadeIn(tween(160)) + expandVertically(tween(160)),
             exit = fadeOut(tween(120)) + shrinkVertically(tween(120)),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    // 抵消按钮的居中留白，与工作过程标题图标共用左侧中心线。
-                    .offset(x = -AnswerActionCenterOffset)
-                    .padding(top = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                AnswerActionButton(
-                    icon = if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
-                    contentDescription = stringResource(
-                        if (copied) R.string.copy_copied else R.string.copy_answer,
-                    ),
-                    onClick = {
-                        @Suppress("DEPRECATION")
-                        clipboardManager.setText(AnnotatedString(message.content))
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (message.characterEditable && message.candidateCount > 1) CandidateSwitcher(
+                    message.selectedCandidate, message.candidateCount, messageActionsEnabled, onSelectCandidate)
+                AnswerActionButton(if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+                    stringResource(if (copied) R.string.copy_copied else R.string.copy_answer), {
+                        clipboardManager.setText(AnnotatedString(message.content)); copied = true
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        copied = true
-                    },
-                    tint = if (copied) MiuixTheme.colorScheme.primary else null,
-                )
+                    }, tint = if (copied) EtaTheme.colors.accent else null)
+                if (showMessageActions) AnswerActionButton(Icons.Rounded.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
                 if (allowSpeech) SpeechReadAloudButton(message.id, message.content)
-                if (showMessageActions) {
-                    if (message.characterEditable) {
-                        AnswerActionButton(
-                            icon = Icons.Rounded.Edit,
-                            contentDescription = stringResource(R.string.chat_edit_character_reply),
-                            onClick = onEdit,
-                            enabled = messageActionsEnabled,
-                        )
-                    }
-                    TooltipBox(text = stringResource(R.string.ui_regenerate_2e1905), enabled = messageActionsEnabled) {
-                        AnswerActionButton(
-                            icon = Icons.Rounded.Refresh,
-                            contentDescription = stringResource(R.string.ui_regenerate_reply_84a7d9),
-                            onClick = onRegenerate,
-                            enabled = messageActionsEnabled,
-                        )
-                    }
-                    TooltipBox(text = stringResource(R.string.ui_delete_3755f5), enabled = messageActionsEnabled) {
-                        AnswerActionButton(
-                            icon = Icons.Rounded.Delete,
-                            contentDescription = stringResource(R.string.ui_delete_this_conversation_3f351b),
-                            onClick = onDelete,
-                            enabled = messageActionsEnabled,
-                        )
-                    }
-                    if (message.characterEditable && message.candidateCount > 1) {
-                        Spacer(Modifier.weight(1f))
-                        CandidateSwitcher(
-                            selected = message.selectedCandidate,
-                            count = message.candidateCount,
-                            enabled = messageActionsEnabled,
-                            onSelect = onSelectCandidate,
-                        )
-                    }
-                }
+                if (showMessageActions) AnswerActionButton(Icons.Rounded.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; menu = true }, messageActionsEnabled)
             }
+        }
+    }
+    EtaSheet(menu, title = stringResource(R.string.eta_message_actions), onDismissRequest = { menu = false }) {
+        if (selectingText) SelectionContainer {
+            Text(message.content, style = EtaTheme.type.body, modifier = Modifier.fillMaxWidth()
+                .heightIn(max = 420.dp).verticalScroll(rememberScrollState()))
+        } else Column {
+            EtaArrowPreference(stringResource(R.string.eta_select_text), onClick = { selectingText = true })
+            EtaArrowPreference(stringResource(R.string.copy_answer), onClick = {
+                clipboardManager.setText(AnnotatedString(message.content)); copied = true; menu = false
+            })
+            if (allowSpeech) SpeechReadAloudMenuItem(message.id, message.content) { menu = false }
+            EtaArrowPreference(stringResource(R.string.ui_regenerate_reply_84a7d9), enabled = messageActionsEnabled,
+                onClick = { menu = false; onRegenerate() })
+            if (message.characterEditable) EtaArrowPreference(stringResource(R.string.chat_edit_character_reply), onClick = { menu = false; onEdit() })
+            EtaArrowPreference(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() })
+            EtaArrowPreference(stringResource(R.string.action_export), onClick = { menu = false; export() })
         }
     }
 }
@@ -786,7 +647,7 @@ private val ChatCardCorner = 12.dp
 private const val ChatCardOutlineAlpha = 0.5f
 
 /** 回答操作按钮的触控尺寸；行整体左移半个尺寸减去图标半宽，使图标落在工作过程图标的中心线上。 */
-internal val AnswerActionSize = 36.dp
+internal val AnswerActionSize = 40.dp
 private val AnswerActionCenterOffset = 11.dp
 
 /** 回答下方的轻量操作：图标显式着色，因此禁用态需要自己换成禁用色，否则看起来仍可点。 */
@@ -807,11 +668,11 @@ internal fun AnswerActionButton(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(18.dp),
             tint = when {
                 !enabled -> MiuixTheme.colorScheme.disabledOnSurface
                 tint != null -> tint
-                else -> MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.75f)
+                else -> EtaTheme.colors.textTertiary
             },
         )
     }
@@ -828,7 +689,7 @@ private fun CandidateSwitcher(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .clip(RoundedCornerShape(percent = 50))
-            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+            .background(EtaTheme.colors.surfaceSunken)
             .padding(horizontal = 2.dp),
     ) {
         AnswerActionButton(
@@ -840,7 +701,7 @@ private fun CandidateSwitcher(
         )
         Text(
             text = "${selected + 1}/$count",
-            style = MiuixTheme.textStyles.footnote1,
+            style = EtaTheme.type.caption.copy(fontFeatureSettings = "tnum"),
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             textAlign = TextAlign.Center,
             modifier = Modifier.widthIn(min = 28.dp),
@@ -1199,4 +1060,9 @@ private fun SuggestionChipsRow(
             }
         }
     }
+}
+
+@Composable
+private fun AnswerTextSelection(enabled: Boolean, content: @Composable () -> Unit) {
+    if (enabled) SelectionContainer(content = content) else content()
 }

@@ -20,7 +20,7 @@ import top.yukonga.miuix.kmp.basic.Text
 
 @Composable
 internal fun EtaChoiceChip(text: String, selected: Boolean, onClick: () -> Unit,
-    modifier: Modifier = Modifier, enabled: Boolean = true) {
+    modifier: Modifier = Modifier, enabled: Boolean = true, leadingIcon: androidx.compose.ui.graphics.vector.ImageVector? = null) {
     val colors = EtaTheme.colors
     val container by animateColorAsState(if (selected) colors.accentSoft else colors.surfaceSunken,
         tween(EtaTheme.motion.micro), label = "chipContainer")
@@ -29,7 +29,7 @@ internal fun EtaChoiceChip(text: String, selected: Boolean, onClick: () -> Unit,
         .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
         .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (selected) Icon(Icons.Rounded.Check, null, Modifier.size(16.dp), tint = colors.onAccentSoft)
+        if (leadingIcon != null || selected) Icon(leadingIcon ?: Icons.Rounded.Check, null, Modifier.size(16.dp), tint = if (selected) colors.onAccentSoft else colors.textSecondary)
         Text(text, style = EtaTheme.type.footnote, color = if (selected) colors.onAccentSoft else colors.textSecondary)
     }
 }

@@ -32,6 +32,9 @@ internal data class AgentModelOptionUi(
     val modelId: String,
     val displayName: String,
     val contextWindow: Int?,
+    val vision: Boolean = false,
+    val reasoning: Boolean = false,
+    val tools: Boolean = false,
 )
 
 @Immutable
@@ -106,6 +109,7 @@ internal object AgentModelPickerProjector {
             modelId = model.modelId,
             displayName = model.displayName.ifBlank { model.modelId },
             contextWindow = model.effectiveContextWindow,
+            vision = model.supportsVision, reasoning = model.supportsReasoning, tools = model.supportsTools,
         )
 }
 

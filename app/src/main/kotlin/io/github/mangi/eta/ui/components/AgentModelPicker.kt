@@ -356,11 +356,12 @@ private fun ModelProviderLabel(name: String, horizontalPadding: Dp = 20.dp) {
 }
 
 @Composable
-private fun ModelPickerRow(
+internal fun ModelPickerRow(
     model: AgentModelOptionUi,
     selected: Boolean,
     onClick: () -> Unit,
     horizontalPadding: Dp = 8.dp,
+    enabled: Boolean = true,
 ) {
     val contentColor = if (selected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurface
     Row(
@@ -368,18 +369,26 @@ private fun ModelPickerRow(
             .fillMaxWidth()
             .padding(horizontal = horizontalPadding)
             .squircleSurface(color = Color.Transparent, cornerRadius = 12.dp)
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = model.displayName,
-            style = MiuixTheme.textStyles.body2,
-            color = contentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
+        Column(Modifier.weight(1f)) {
+            Text(model.displayName, style = io.github.mangi.eta.ui.theme.EtaTheme.type.rowTitle,
+                color = if (enabled) contentColor else io.github.mangi.eta.ui.theme.EtaTheme.colors.textTertiary,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                listOfNotNull(
+                    R.string.eta_vision.takeIf { model.vision }, R.string.eta_reasoning.takeIf { model.reasoning },
+                    R.string.eta_tools.takeIf { model.tools },
+                ).forEach { label ->
+                    Text(stringResource(label), style = io.github.mangi.eta.ui.theme.EtaTheme.type.caption,
+                        color = io.github.mangi.eta.ui.theme.EtaTheme.colors.textTertiary,
+                        modifier = Modifier.background(io.github.mangi.eta.ui.theme.EtaTheme.colors.surfaceSunken,
+                            io.github.mangi.eta.ui.theme.EtaTheme.shapes.radiusFull).padding(horizontal = 6.dp, vertical = 2.dp))
+                }
+            }
+        }
         if (selected) {
             Spacer(modifier = Modifier.width(8.dp))
             Icon(

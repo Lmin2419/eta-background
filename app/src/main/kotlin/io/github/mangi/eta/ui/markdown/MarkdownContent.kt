@@ -60,6 +60,8 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
+import io.github.mangi.eta.ui.theme.EtaTheme
+import androidx.compose.foundation.layout.heightIn
 import io.github.mangi.eta.ui.components.StatusSuccess
 import io.github.mangi.eta.ui.components.StatusWarning
 import kotlinx.coroutines.delay
@@ -183,17 +185,17 @@ private fun MarkdownCodeBlock(block: MarkdownCode, scope: MarkdownRenderScope) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .squircleSurface(color = style.codeBackground, cornerRadius = 12.dp),
+            .squircleSurface(color = style.codeBackground, cornerRadius = 10.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 14.dp, end = 4.dp, top = 2.dp),
+                .heightIn(min = 32.dp).padding(start = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = block.language ?: stringResource(R.string.markdown_code_block),
-                style = MiuixTheme.textStyles.footnote2,
+                style = EtaTheme.type.caption,
                 color = style.secondaryColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -437,7 +439,7 @@ private fun MarkdownTableBlock(block: MarkdownTable, scope: MarkdownRenderScope)
         block.alignments.map { align -> style.table.copy(textAlign = align.textAlign) }
     }
     val headerStyles = remember(bodyStyles) {
-        bodyStyles.map { it.copy(fontWeight = FontWeight.SemiBold) }
+        bodyStyles.map { it.copy(fontWeight = FontWeight.Bold) }
     }
     var grid by remember { mutableStateOf(TableGrid.Empty) }
     val lineColor = style.dividerColor
@@ -454,13 +456,13 @@ private fun MarkdownTableBlock(block: MarkdownTable, scope: MarkdownRenderScope)
         ) {
             Layout(
                 modifier = Modifier
-                    .squircleBorder(width = 0.5.dp, color = lineColor, cornerRadius = 12.dp)
-                    .squircleClip(cornerRadius = 12.dp)
+                    .squircleBorder(width = 1.dp, color = lineColor, cornerRadius = 10.dp)
+                    .squircleClip(cornerRadius = 10.dp)
                     .drawBehind {
                         val current = grid
                         val headerHeight = current.rowHeights.firstOrNull() ?: return@drawBehind
                         drawRect(headerColor, size = Size(size.width, headerHeight.toFloat()))
-                        val stroke = 0.5.dp.toPx()
+                        val stroke = 1.dp.toPx()
                         var y = 0f
                         current.rowHeights.dropLast(1).forEach { height ->
                             y += height

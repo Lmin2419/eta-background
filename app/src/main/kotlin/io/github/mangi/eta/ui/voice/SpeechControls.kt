@@ -360,6 +360,19 @@ internal fun SpeechPlaybackErrors(controller: SpeechPlaybackController) {
 
 /** 朗读入口与相邻的消息操作共享同一套尺寸与弱化配色，播放中转为停止。 */
 @Composable
+internal fun SpeechReadAloudMenuItem(messageId: String, text: String, onInvoked: () -> Unit) {
+    val controller = LocalSpeechPlayback.current ?: return
+    if (!LocalSpeechPlaybackEnabled.current) return
+    val state by controller.state.collectAsState()
+    val active = state.messageId == messageId
+    io.github.mangi.eta.ui.components.EtaArrowPreference(
+        stringResource(if (active) R.string.speech_read_stop else R.string.speech_read_aloud), onClick = {
+            if (active) controller.stop() else controller.speak(messageId, text)
+            onInvoked()
+        })
+}
+
+@Composable
 internal fun SpeechReadAloudButton(messageId: String, text: String) {
     val controller = LocalSpeechPlayback.current ?: return
     if (!LocalSpeechPlaybackEnabled.current) return
@@ -375,11 +388,11 @@ internal fun SpeechReadAloudButton(messageId: String, text: String) {
             contentDescription = stringResource(
                 if (active) R.string.speech_read_stop else R.string.speech_read_aloud,
             ),
-            modifier = Modifier.size(if (active) 14.dp else 16.dp),
+            modifier = Modifier.size(18.dp),
             tint = if (active) {
                 MiuixTheme.colorScheme.primary
             } else {
-                MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.75f)
+                io.github.mangi.eta.ui.theme.EtaTheme.colors.textTertiary
             },
         )
     }

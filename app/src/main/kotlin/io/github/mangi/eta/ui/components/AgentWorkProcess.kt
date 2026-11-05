@@ -32,7 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Checklist
-import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -61,6 +61,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
+import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.model.TaskVisualStatus
 import io.github.mangi.eta.agent.overlay.toolDisplayName
 import io.github.mangi.eta.ui.markdown.StreamingMarkdownState
 import io.github.mangi.eta.ui.model.AgentChatMessageUi
@@ -103,7 +105,7 @@ internal fun AgentWorkProcess(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = if (assistantOverlay) 12.dp else 16.dp, vertical = 2.dp),
+            .padding(horizontal = if (assistantOverlay) 12.dp else 16.dp, vertical = if (assistantOverlay) 2.dp else 0.dp),
     ) {
         AgentWorkHeader(
             messages = messages,
@@ -161,7 +163,7 @@ private fun AgentWorkHeader(
             summary.toolCount,
         ) + " · " + runningTool.argumentsSummary.ifBlank { toolDisplayName(runningTool.toolName) }
         working -> stringResource(R.string.work_analyzing)
-        else -> workSummaryText(summary)
+        else -> stringResource(R.string.eta_work_process) + " · " + workSummaryText(summary)
     }
     Row(
         modifier = Modifier
@@ -172,27 +174,14 @@ private fun AgentWorkHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(modifier = Modifier.width(WorkGutterWidth), contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = when {
-                    runningTool != null -> iconForTool(runningTool.toolName)
-                    working -> Icons.Rounded.Lightbulb
-                    else -> Icons.Rounded.Checklist
-                },
-                contentDescription = null,
-                modifier = Modifier.size(15.dp),
-                tint = if (working) {
-                    MiuixTheme.colorScheme.primary
-                } else {
-                    MiuixTheme.colorScheme.onSurfaceVariantSummary
-                },
-            )
+            StatusRing(if (working) TaskVisualStatus.Running else if (summary.failedCount > 0) TaskVisualStatus.Failed else TaskVisualStatus.Success, size = 16.dp)
         }
         Spacer(modifier = Modifier.width(WorkGutterGap))
         ShimmerText(
             text = text,
             active = working,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            style = EtaTheme.type.footnote,
+            color = EtaTheme.colors.textSecondary,
             modifier = Modifier.weight(1f, fill = false),
         )
         ExpandChevron(
@@ -307,7 +296,7 @@ internal fun WorkTimelineNode(
     connectTop: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val lineColor = MiuixTheme.colorScheme.outline.copy(alpha = 0.6f)
+    val lineColor = EtaTheme.colors.outline
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -343,11 +332,11 @@ internal fun WorkTimelineNode(
 @Composable
 private fun WorkNodeBadge(icon: ImageVector, tone: WorkNodeTone) {
     val (background, tint) = when (tone) {
-        WorkNodeTone.Running -> MiuixTheme.colorScheme.primary.copy(alpha = 0.14f) to
-            MiuixTheme.colorScheme.primary
-        WorkNodeTone.Failed -> StatusError.copy(alpha = 0.12f) to StatusError
-        WorkNodeTone.Done -> MiuixTheme.colorScheme.surfaceContainer to
-            MiuixTheme.colorScheme.onSurfaceVariantSummary
+        WorkNodeTone.Running -> EtaTheme.colors.runningSoft to
+            EtaTheme.colors.running
+        WorkNodeTone.Failed -> EtaTheme.colors.dangerSoft to EtaTheme.colors.danger
+        WorkNodeTone.Done -> EtaTheme.colors.surfaceSunken to
+            EtaTheme.colors.textSecondary
     }
     val pulse = rememberDrawPhasePulse(active = tone == WorkNodeTone.Running)
     Box(
@@ -370,7 +359,7 @@ private fun WorkNodeBadge(icon: ImageVector, tone: WorkNodeTone) {
 /** 呼吸动画只返回 State，由调用方在 graphicsLayer 中读取，帧间不触发重组。 */
 @Composable
 internal fun rememberDrawPhasePulse(active: Boolean): State<Float>? {
-    if (!active) return null
+    if (!active || EtaTheme.motion.reduceMotion) return null
     val transition = rememberInfiniteTransition(label = "work_node_pulse")
     return transition.animateFloat(
         initialValue = 0.55f,
@@ -395,7 +384,7 @@ internal fun ShimmerText(
     color: Color,
     modifier: Modifier = Modifier,
 ) {
-    val shimmerModifier = if (active) {
+    val shimmerModifier = if (active && !EtaTheme.motion.reduceMotion) {
         val highlight = MiuixTheme.colorScheme.onSurface
         val transition = rememberInfiniteTransition(label = "work_shimmer")
         val progress = transition.animateFloat(
@@ -441,22 +430,22 @@ internal fun ExpandChevron(
     modifier: Modifier = Modifier,
 ) {
     val rotation by animateFloatAsState(
-        targetValue = if (expanded) 90f else 0f,
+        targetValue = if (expanded) 180f else 0f,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "expand_chevron",
     )
     Icon(
-        imageVector = Icons.Rounded.ChevronRight,
+        imageVector = Icons.Rounded.ExpandMore,
         contentDescription = contentDescription,
         modifier = modifier
-            .size(14.dp)
+            .size(16.dp)
             .graphicsLayer { rotationZ = rotation },
-        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
+        tint = EtaTheme.colors.textSecondary.copy(alpha = 0.6f),
     )
 }
 
 /** 时间线标题行与节点徽章共用的几何尺寸，保证图标中心与首行文字中线对齐。 */
 internal val WorkRowHeight: Dp = 32.dp
-internal val WorkGutterWidth: Dp = 22.dp
+internal val WorkGutterWidth: Dp = 24.dp
 internal val WorkGutterGap: Dp = 8.dp
 private val WorkNodeSize: Dp = 20.dp

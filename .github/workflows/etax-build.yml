@@ -86,6 +86,7 @@ jobs:
           path: |
             app/build/reports/eta-theme/*.png
             app/build/reports/eta-stage2/*.png
+            app/build/reports/eta-stage3/
           if-no-files-found: ignore
           retention-days: 30
 

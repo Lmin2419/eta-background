@@ -8,19 +8,19 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` background build · versionCode `2026110601`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` background build · versionCode `2026110602`**, with engine `20261105-e49-parallel-observe`.
 
-This build implements stage 2 of Quiet Flow: shared component styling.
+Quiet Flow stage 3 updates the home conversation. This release also includes the explicitly approved live task strip, task center and sidebar reorganization.
 
-- Apply the design tokens to cards, preference groups, icon tiles, switches, chips, buttons, empty states and dialogs.
-- Use solid top bars with a bottom divider, preserving collapsing headers, compact wide-screen headers and existing scroll state.
-- Add icon buttons, search fields, segmented controls, sheets, Toast and list groups; connect the provider, character and Subagent search and sheet surfaces.
-- Use Rounded icons and visibility-gated loading skeletons while preserving secondary-page entry points and business callbacks.
-- Add 15 behavior/rendering tests and a before/after source audit covering 31 secondary routes and their related overlays.
+- Move model selection to the top capsule, with conversation settings for models, automatic read-aloud, context compaction and export.
+- Unify microphone, send, stop and queue states. While running, tap to queue a draft or hold and release to interrupt and send; cancellation or moving outside does not send.
+- Examples fill the draft without sending; saved task cards use the existing execution path. Restyle messages, work steps, code, tables, queued messages and jump-to-bottom.
+- Keep sidebar search and conversation management; expose tasks, characters, terminal, browser and configured Kimi. The task center groups active, completed and saved tasks and polls thumbnails only while visible.
+- Preserve lazy conversation rendering, paging and streaming parse caches. A controlled 500-message native rendering comparison showed no regression; phone frame-rate verification remains pending.
 
-**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110601) (Chinese)
+**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110602) (Chinese)
 
-The signed APK is published automatically after CI, using the existing certificate. The [stage 2 verification record](etax/design/validation/stage-2.md) includes per-page comparisons and actual light/dark, large-text and wide-screen component renders. These samples do not replace ColorOS device and gesture validation.
+CI publishes the APK with the existing release certificate. The [stage 3 verification record](etax/design/validation/stage-3.md) contains source comparisons, test results, component renders and the device checklist. Desktop rendering measurements are not device FPS.
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

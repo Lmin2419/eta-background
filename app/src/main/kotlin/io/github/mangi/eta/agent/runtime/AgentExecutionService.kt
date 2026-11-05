@@ -5,6 +5,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.RemoteInput
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import android.app.Service
 import android.app.KeyguardManager
 import android.content.Context
@@ -52,6 +55,10 @@ internal data class TaskNotificationState(
     val targetPackage: String? = null,
     val runtimeAuthoritative: Boolean = false,
     val replyFailed: Boolean = false,
+    // Presentation metadata populated only in taskSnapshots; never stored in cards or sent to runtime.
+    val firstPublishedAtElapsedMs: Long? = null,
+    val completedAtElapsedMs: Long? = null,
+    val completedAtMillis: Long? = null,
 )
 
 /** One execution service; each task owns one card, including its final state. */
@@ -146,6 +153,7 @@ internal class AgentExecutionService : Service() {
             getString(R.string.background_continue_instruction), AgentOverlayStatus.ResultReady, completed = true)
         if (!original.completed || original.conversationId != conversationId) { refreshNotification(); return }
         cards[runId] = original.copy(replyFailed = false)
+        publishTaskSnapshots()
         if (runId !in notificationIds) notificationIds[runId] = intent.getIntExtra(EXTRA_NOTIFICATION_ID, idFor(runId))
         val leaseId = "notification-reply:$runId"
         val connection = NotificationReplyConnection(this, runId, conversationId, text) { accepted ->
@@ -159,6 +167,7 @@ internal class AgentExecutionService : Service() {
                 // result and leave a dismissed or reclaimed notification dismissed.
                 cards[runId]?.takeIf { it.completed && it.conversationId == conversationId }?.let {
                     cards[runId] = it.copy(replyFailed = true)
+                    publishTaskSnapshots()
                     if (instance == null) publishCards(this, completedOnly = true)
                 }
             }
@@ -211,6 +220,22 @@ internal class AgentExecutionService : Service() {
         private val mainHandler = Handler(Looper.getMainLooper())
         @Volatile private var instance: AgentExecutionService? = null
         private val cards = linkedMapOf<String, TaskNotificationState>()
+        private val mutableTaskSnapshots = MutableStateFlow<List<TaskNotificationState>>(emptyList())
+        /** Immutable, main-thread publication. UI observes; notification/runtime ownership is unchanged. */
+        internal val taskSnapshots: StateFlow<List<TaskNotificationState>> = mutableTaskSnapshots.asStateFlow()
+        private fun publishTaskSnapshots() {
+            val previous = mutableTaskSnapshots.value.associateBy { it.runId }
+            val elapsed = SystemClock.elapsedRealtime()
+            val wallTime = System.currentTimeMillis()
+            mutableTaskSnapshots.value = cards.values.map { card ->
+                val old = previous[card.runId]
+                card.copy(
+                    firstPublishedAtElapsedMs = old?.firstPublishedAtElapsedMs ?: elapsed.takeUnless { card.completed },
+                    completedAtElapsedMs = if (card.completed) old?.completedAtElapsedMs ?: elapsed else null,
+                    completedAtMillis = if (card.completed) old?.completedAtMillis ?: wallTime else null,
+                )
+            }
+        }
         private val notificationIds = mutableMapOf<String, Int>()
         private val posted = mutableMapOf<Int, TaskNotificationState>()
         private var phoneIcon: Icon? = null
@@ -262,6 +287,7 @@ internal class AgentExecutionService : Service() {
             completionJobs.remove(runId)?.cancel()
             completionAlertCards.remove(runId)
             cards.remove(runId)
+            publishTaskSnapshots()
             notificationIds.remove(runId)?.let { id ->
                 context.getSystemService(NotificationManager::class.java).cancel(id)
                 posted.remove(id)
@@ -281,6 +307,7 @@ internal class AgentExecutionService : Service() {
                     changed = true
                 }
             }
+            if (changed) publishTaskSnapshots()
             if (changed || snapshot.isEmpty()) scheduleRefresh()
         }
 
@@ -297,6 +324,7 @@ internal class AgentExecutionService : Service() {
             cards[task.runId] = task.copy(completed = true, paused = false, replyFailed = replyFailed)
             idFor(task.runId)
             cards.values.filter { it.completed }.dropLast(3).map { it.runId }.forEach { removeCard(context, it) }
+            publishTaskSnapshots()
             mainHandler.removeCallbacks(refresh)
             refreshPending = false
             val service = instance

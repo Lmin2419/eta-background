@@ -13,6 +13,9 @@ import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.animateTo
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,7 +59,7 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private object ConversationPaneMetrics {
-    val PaneMaxWidth = 340.dp
+    val PaneMaxWidth = 360.dp
     val PaneWidthFraction = 0.84f
     const val ChatScrimAlpha = 0.16f
     const val SettleDampingRatio = 1f
@@ -90,6 +93,21 @@ fun ConversationSidePaneScaffold(
     val navigationEventState = rememberNavigationEventState(NavigationEventInfo.None)
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        if (maxWidth >= 840.dp) {
+            val outline = io.github.mangi.eta.ui.theme.EtaTheme.colors.outline
+            Row(Modifier.fillMaxSize()) {
+                ConversationPanePanel(state, 320.dp, rememberLazyListState(), onSearchChange, onConversationSelected,
+                    onConversationRename, onConversationExport, onConversationDelete, onOpenSettings, onOpenModelProviders,
+                    onOpenTools, onOpenSkills, onOpenCharacters, onOpenPermissions,
+                    Modifier.drawWithContent {
+                        drawContent()
+                        drawLine(outline, androidx.compose.ui.geometry.Offset(size.width - 1.dp.toPx(), 0f),
+                            androidx.compose.ui.geometry.Offset(size.width - 1.dp.toPx(), size.height), 1.dp.toPx())
+                    })
+                Box(Modifier.weight(1f)) { content() }
+            }
+            return@BoxWithConstraints
+        }
         val density = LocalDensity.current
         val paneWidth = minOf(maxWidth * ConversationPaneMetrics.PaneWidthFraction, ConversationPaneMetrics.PaneMaxWidth)
         val paneWidthPx = with(density) { paneWidth.toPx() }

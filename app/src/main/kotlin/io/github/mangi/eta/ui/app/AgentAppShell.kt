@@ -27,6 +27,14 @@ import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.runtime.CompositionLocalProvider
+import io.github.mangi.eta.ui.components.LocalChatToast
+import io.github.mangi.eta.ui.components.LocalPaneWorkspace
+import io.github.mangi.eta.ui.components.PaneWorkspaceActions
+import io.github.mangi.eta.ui.components.EtaToast
+import io.github.mangi.eta.ui.components.HomeTaskPaneLayout
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -113,9 +121,16 @@ internal fun AgentAppShell(
     onOpenModelProviders: () -> Unit,
     modifier: Modifier = Modifier,
     homeCharacter: RoleplayChatUi? = null,
+    homeTopBar: (@Composable () -> Unit)? = null,
+    homeSidePanel: (@Composable () -> Unit)? = null,
+    onDismissHomeSidePanel: () -> Unit = {},
+    runningTaskCount: Int = 0,
+    permissionsPending: Int = 0,
+    showKimi: Boolean = false,
     onOpenCharacter: () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
+    var toast by remember { mutableStateOf<String?>(null) }
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberTopBarBackdrop()
     val topBarColor = topBarContainerColor(backdrop)
@@ -126,7 +141,8 @@ internal fun AgentAppShell(
                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
             ),
             topBar = {
-                if (currentRoute !is AppRoute.Settings) {
+                if (currentRoute is AppRoute.Home && homeTopBar != null) TopBarBackdrop(backdrop) { homeTopBar() }
+                else if (currentRoute !is AppRoute.Settings) {
                     TopBarBackdrop(backdrop) {
                         AgentTopBar(
                             route = currentRoute,
@@ -161,6 +177,11 @@ internal fun AgentAppShell(
         }
     }
 
+    CompositionLocalProvider(LocalChatToast provides { toast = it }, LocalPaneWorkspace provides PaneWorkspaceActions(
+        onNewConversation, onOpenCommonTasks, onOpenTerminal, onOpenBrowser,
+        onLaunchKimiWeb.takeIf { showKimi }, kimiWebLabel, canStopKimiWeb, onStopKimiWeb, onRefreshKimiWeb,
+        runningTaskCount, permissionsPending,
+    )) {
     Box(modifier = modifier.fillMaxSize()) {
         if (conversationPaneState != null && currentRoute is AppRoute.Home) {
             ConversationSidePaneScaffold(
@@ -181,11 +202,14 @@ internal fun AgentAppShell(
                 onOpenCharacters = onOpenCharacters,
                 onOpenPermissions = onOpenPermissions,
             ) {
-                pageContent()
+                HomeTaskPaneLayout(homeSidePanel, onDismissHomeSidePanel, isCurrentRoute, pageContent)
             }
         } else {
             pageContent()
         }
+        EtaToast(toast, { toast = null }, Modifier.align(Alignment.BottomCenter)
+            .navigationBarsPadding().imePadding().padding(bottom = 112.dp))
+    }
     }
 }
 
@@ -440,7 +464,7 @@ private fun titleForRoute(route: AppRoute?): String = when (route) {
     is AppRoute.Tools -> stringResource(R.string.route_tools)
     is AppRoute.WebToolsSettings -> stringResource(R.string.web_tools_settings_title)
     is AppRoute.Skills -> stringResource(R.string.route_skills)
-    is AppRoute.CommonTasks -> stringResource(R.string.common_tasks_title)
+    is AppRoute.CommonTasks, is AppRoute.Tasks -> stringResource(R.string.eta_tasks)
     is AppRoute.Subagents -> "Subagent"
     is AppRoute.Characters -> "角色"
     is AppRoute.CharacterDetail -> "角色详情"

@@ -25,6 +25,7 @@ class AgentNavigationRestorationTest {
         first.get().compose()
         first.get().backStack.add(AppRoute.Settings)
         first.get().backStack.add(AppRoute.ModelProviderDetail("provider"))
+        first.get().backStack.add(AppRoute.Tasks(tab = 2))
         val savedState = Bundle()
         first.pause().saveInstanceState(savedState).stop().destroy()
 
@@ -34,7 +35,7 @@ class AgentNavigationRestorationTest {
             restored.get().compose()
 
             assertEquals(
-                listOf(AppRoute.Home, AppRoute.Settings, AppRoute.ModelProviderDetail("provider")),
+                listOf(AppRoute.Home, AppRoute.Settings, AppRoute.ModelProviderDetail("provider"), AppRoute.Tasks(tab = 2)),
                 restored.get().backStack.toList(),
             )
         } finally {

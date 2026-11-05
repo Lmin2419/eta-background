@@ -28,6 +28,9 @@ sealed interface AppRoute : NavKey {
     data object CommonTasks : AppRoute
 
     @Serializable
+    data class Tasks(val tab: Int = -1) : AppRoute
+
+    @Serializable
     data object Subagents : AppRoute
 
     @Serializable

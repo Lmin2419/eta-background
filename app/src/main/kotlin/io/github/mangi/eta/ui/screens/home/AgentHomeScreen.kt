@@ -11,6 +11,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import io.github.mangi.eta.ui.components.ChatHomeShortcuts
+import io.github.mangi.eta.ui.components.LocalChatHomeShortcuts
 import io.github.mangi.eta.ui.components.AgentChatBody
 import io.github.mangi.eta.ui.components.AgentConversationLoadState
 import io.github.mangi.eta.ui.components.LocalRoleplayChat
@@ -35,6 +37,7 @@ internal fun AgentHomeScreen(
     modelPickerState: AgentModelPickerUiState,
     conversationKey: String?,
     onAction: (AgentHomeAction) -> Unit,
+    homeShortcuts: ChatHomeShortcuts = ChatHomeShortcuts(),
     isLoadingConversation: Boolean = false,
     conversationLoadFailed: Boolean = false,
     historyLoadState: ConversationHistoryLoadState = ConversationHistoryLoadState.Idle,
@@ -68,6 +71,7 @@ internal fun AgentHomeScreen(
                     BrowserSessionRegistry.get(conversationKey ?: BrowserSessionRegistry.MANUAL_SESSION_KEY)
                 }
                 CompositionLocalProvider(
+                    LocalChatHomeShortcuts provides homeShortcuts,
                     LocalRoleplayChat provides state.roleplayChatUi(),
                     LocalAgentBrowserSession provides browser,
                 ) {

@@ -51,6 +51,19 @@ import io.github.mangi.eta.data.repository.RuntimeConfigRepository
 import io.github.mangi.eta.ui.AppearanceSettingsScreen
 import io.github.mangi.eta.ui.CommonTaskLaunchRequest
 import io.github.mangi.eta.ui.SettingsScreen
+import io.github.mangi.eta.ui.components.HomeConversationTopBar
+import io.github.mangi.eta.ui.components.EtaAppOverlayHost
+import io.github.mangi.eta.ui.screens.tasks.TasksScreen
+import io.github.mangi.eta.agent.runtime.AgentExecutionService
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
+import io.github.mangi.eta.ui.components.ChatHomeShortcuts
+import io.github.mangi.eta.ui.model.latestContextUsage
+import io.github.mangi.eta.ui.model.PermissionStatusUi
+import io.github.mangi.eta.ui.model.ConversationModeUi
+import io.github.mangi.eta.data.repository.CommonTask
 import io.github.mangi.eta.ui.components.AgentConversationLoadState
 import io.github.mangi.eta.ui.components.MiuixDialogActions
 import io.github.mangi.eta.ui.model.AgentHomeAction
@@ -102,13 +115,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.nav.core.NavDisplay
 import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
 import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
 import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
-import top.yukonga.miuix.kmp.window.WindowDialog
+import io.github.mangi.eta.ui.components.EtaWindowDialog as WindowDialog
 
 /**
  * Agent App 根组件：持有本地导航栈，并把 Screen actions 交给 [AgentAppState]。
@@ -168,6 +180,14 @@ fun AgentAppRoot(
     val skills = appViewModel.skills
     val memory = appViewModel.memory
     val commonTasks = appViewModel.commonTasks
+    val shortcutPreferences = remember { context.getSharedPreferences("eta_home_ui", android.content.Context.MODE_PRIVATE) }
+    var recentTaskIds by remember { mutableStateOf(shortcutPreferences.getString("recent_tasks", "").orEmpty().split(',').filter(String::isNotBlank)) }
+    fun rememberTaskUse(id: String) {
+        recentTaskIds = (listOf(id) + recentTaskIds.filterNot { it == id }).take(20)
+        shortcutPreferences.edit().putString("recent_tasks", recentTaskIds.joinToString(",")).apply()
+    }
+    LaunchedEffect(Unit) { commonTasks.refresh() }
+
     val permissionHealth = appViewModel.permissionHealth
     val toolsState = remember { buildToolsState(context) }
     val characterStore = viewModel<CharacterLibraryViewModel>().store
@@ -193,6 +213,9 @@ fun AgentAppRoot(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    var tasksPanelOpen by rememberSaveable { mutableStateOf(false) }
+    val wideHome = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() >= 840.dp }
+    val taskCount by remember { AgentExecutionService.taskSnapshots.map { cards -> cards.count { !it.completed } }.distinctUntilChanged() }.collectAsState(0)
     var conversationPaneOpen by rememberSaveable { mutableStateOf(false) }
     var conversationRenameTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
     var conversationDeleteTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
@@ -249,6 +272,7 @@ fun AgentAppRoot(
         if (task == null) {
             Toast.makeText(context, R.string.common_tasks_missing, Toast.LENGTH_LONG).show()
         } else if (agentState.startCommonTask(task.id, task.instruction, request.requestId)) {
+            rememberTaskUse(task.id)
             requestExecutionNotifications()
             conversationPaneOpen = false
             navigator.popToHome()
@@ -300,6 +324,7 @@ fun AgentAppRoot(
     }
 
     fun selectConversation(conversationId: String) {
+        tasksPanelOpen = false
         focusManager.clearFocus()
         agentState.selectConversation(conversationId)
         navigator.popToHome()
@@ -307,6 +332,7 @@ fun AgentAppRoot(
     }
 
     fun createConversation() {
+        tasksPanelOpen = false
         focusManager.clearFocus()
         agentState.createConversation()
         navigator.popToHome()
@@ -318,6 +344,43 @@ fun AgentAppRoot(
         val sessionKey = agentState.conversationPaneState.selectedConversationId
             ?: BrowserSessionRegistry.MANUAL_SESSION_KEY
         context.startActivity(AgentBrowserActivity.createIntent(context, sessionKey))
+    }
+
+    fun runHomeTask(task: CommonTask) {
+        if ((navigator.current() == AppRoute.Home || navigator.current() is AppRoute.Tasks) && agentState.startCommonTask(task.id, task.instruction, UUID.randomUUID().toString())) {
+            rememberTaskUse(task.id)
+            tasksPanelOpen = false
+            requestExecutionNotifications()
+            conversationPaneOpen = false
+            navigator.popToHome()
+        }
+    }
+
+    fun openArchivedTask(source: String, key: String) {
+        uiScope.launch {
+            if (agentState.openArchivedConversation(source, key)) {
+                tasksPanelOpen = false
+                conversationPaneOpen = false
+                navigator.popToHome()
+            }
+        }
+    }
+
+    fun openTasks() {
+        conversationPaneOpen = false
+        if (wideHome && navigator.current() == AppRoute.Home) tasksPanelOpen = true else pushRoute(AppRoute.Tasks())
+    }
+    LaunchedEffect(wideHome) {
+        if (!wideHome && tasksPanelOpen) { tasksPanelOpen = false; pushRoute(AppRoute.Tasks()) }
+    }
+
+    fun exportCurrentConversation() {
+        val id = agentState.conversationPaneState.selectedConversationId ?: return
+        val target = agentState.conversationPaneState.conversations.firstOrNull { it.id == id }
+            ?: ConversationSummaryUi(id, resources.getString(R.string.conversation_export_default_name), "", "", mode = ConversationModeUi.Chat)
+        conversationExportTarget = target
+        conversationExportLauncher.launch(ConversationMarkdownExporter.defaultFileName(target.title.ifBlank { target.preview },
+            resources.getString(R.string.conversation_export_default_name)))
     }
 
     @Composable
@@ -335,7 +398,7 @@ fun AgentAppRoot(
             onDismissConversationPane = { conversationPaneOpen = false },
             onSearchConversations = { query -> agentState.updateSearchQuery(query) },
             onNewConversation = { createConversation() },
-            onOpenCommonTasks = { pushRoute(AppRoute.CommonTasks) },
+            onOpenCommonTasks = ::openTasks,
             onOpenTerminal = { pushRoute(AppRoute.Terminal) },
             onLaunchKimiWeb = {
                 requestExecutionNotifications()
@@ -380,6 +443,27 @@ fun AgentAppRoot(
             onOpenPermissions = { pushRoute(AppRoute.Permissions) },
             onOpenSettings = { pushRoute(AppRoute.Settings) },
             onOpenModelProviders = { pushRoute(AppRoute.ModelProviders) },
+            runningTaskCount = taskCount,
+            permissionsPending = permissionHealth.permissionHealthState.items.count { it.status != PermissionStatusUi.Available },
+            showKimi = appViewModel.kimiWebState.phase != KimiWebPhase.NOT_INSTALLED,
+            onDismissHomeSidePanel = { tasksPanelOpen = false },
+            homeSidePanel = if (route is AppRoute.Home && wideHome && tasksPanelOpen) ({
+                TasksScreen(commonTasks, { tasksPanelOpen = false }, ::runHomeTask, ::selectConversation,
+                    embedded = true, visible = backStack.lastOrNull() == AppRoute.Home, onArchivedConversation = ::openArchivedTask)
+            }) else null,
+            homeTopBar = if (route is AppRoute.Home) ({
+                val home = agentState.homeState
+                val models = agentState.modelPickerState
+                val usage = remember(home.messages, models.selectedModel) { latestContextUsage(home.messages, models.selectedModel) }
+                HomeConversationTopBar(models, home.isStreaming, home.isCompacting, usage,
+                    home.canCompactContext, home.isConversationLoaded && home.messages.isNotEmpty(),
+                    home.roleplayChatUi(), runningTaskCount = taskCount,
+                    onHistory = { conversationPaneOpen = true }, onNew = ::createConversation,
+                    onTasks = ::openTasks,
+                    onCharacter = { home.roleplay?.let { pushRoute(AppRoute.CharacterDetail(it.characterId)) } },
+                    onModel = agentState::selectModel, onCompact = agentState::compactCurrentContext,
+                    onExport = ::exportCurrentConversation, onManageModels = { pushRoute(AppRoute.ModelProviders) })
+            }) else null,
             homeCharacter = if (route is AppRoute.Home) agentState.homeState.roleplayChatUi() else null,
             onOpenCharacter = {
                 agentState.homeState.roleplay?.let { pushRoute(AppRoute.CharacterDetail(it.characterId)) }
@@ -403,6 +487,7 @@ fun AgentAppRoot(
     val swipeDismiss = swipeBackDirection.takeIf {
         LocalAppearanceSettings.current.swipeDismissEnabled
     }
+    EtaAppOverlayHost {
     key(navigationResetKey) {
         NavDisplay(
             backStack = backStack,
@@ -416,6 +501,15 @@ fun AgentAppRoot(
                     AgentHomeScreen(
                         state = agentState.homeState,
                         modelPickerState = agentState.modelPickerState,
+                        homeShortcuts = ChatHomeShortcuts(
+                            conversationId = agentState.conversationPaneState.selectedConversationId, onOpenTasks = ::openTasks,
+                            tasks = commonTasks.tasks.sortedWith(compareBy { task -> recentTaskIds.indexOf(task.id).takeIf { it >= 0 } ?: Int.MAX_VALUE }),
+                            missingSetupCount = if (agentState.conversationPaneState.conversations.all { it.preview.isBlank() || it.preview == resources.getString(R.string.conversation_preview_empty) })
+                                permissionHealth.permissionHealthState.items.count { it.id in setOf("root", "accessibility", "overlay", "notifications") && it.status != PermissionStatusUi.Available } else 0,
+                            onRunTask = ::runHomeTask, onOpenSettings = { pushRoute(AppRoute.Settings) },
+                            onExportConversation = ::exportCurrentConversation,
+                            onOpenSpeechSettings = { pushRoute(AppRoute.SpeechRecognition) },
+                        ),
                         conversationKey = agentState.conversationPaneState.selectedConversationId,
                         focusInputRequest = pendingComposeId?.takeIf { it == agentState.conversationPaneState.selectedConversationId },
                         onInputFocusHandled = { pendingComposeId = null },
@@ -532,14 +626,11 @@ fun AgentAppRoot(
                 )
             }
             entry<AppRoute.CommonTasks>(swipeDismiss = swipeDismiss) {
-                CommonTasksScreen(commonTasks, onBack = ::popRoute, onRun = { task ->
-                    if (navigator.current() == AppRoute.CommonTasks &&
-                        agentState.startCommonTask(task.id, task.instruction, UUID.randomUUID().toString())) {
-                        requestExecutionNotifications()
-                        conversationPaneOpen = false
-                        navigator.popToHome()
-                    }
-                })
+                LaunchedEffect(Unit) { navigator.replace(AppRoute.Tasks(tab = 2)) }
+            }
+            entry<AppRoute.Tasks>(swipeDismiss = swipeDismiss) { route ->
+                TasksScreen(commonTasks, ::popRoute, ::runHomeTask, { id -> selectConversation(id); navigator.popToHome() },
+                    initialTab = route.tab, visible = backStack.lastOrNull() == route, onArchivedConversation = ::openArchivedTask)
             }
             entry<AppRoute.Characters>(swipeDismiss = swipeDismiss) {
                 LaunchedEffect(backStack.lastOrNull() == AppRoute.Characters) {
@@ -826,20 +917,20 @@ fun AgentAppRoot(
             show = true,
             title = "角色",
             summary = notice,
-            cornerRadius = DialogDefaults.CornerRadius,
             onDismissRequest = characterStore::dismissNotice,
         ) {
-            top.yukonga.miuix.kmp.basic.TextButton(
+            io.github.mangi.eta.ui.components.EtaButton(
                 text = "知道了", onClick = characterStore::dismissNotice, modifier = Modifier.fillMaxWidth(),
             )
         }
+    }
+
     }
 
     conversationRenameTarget?.let { conversation ->
         var renameInput by remember(conversation.id) { mutableStateOf(conversation.title) }
         WindowDialog(
             show = true,
-            cornerRadius = DialogDefaults.CornerRadius,
             title = stringResource(R.string.conversation_rename_title),
             onDismissRequest = { conversationRenameTarget = null },
         ) {
@@ -868,7 +959,6 @@ fun AgentAppRoot(
     conversationDeleteTarget?.let { conversation ->
         WindowDialog(
             show = true,
-            cornerRadius = DialogDefaults.CornerRadius,
             title = stringResource(R.string.conversation_delete_title),
             summary = stringResource(if (conversation.isActiveRun) R.string.conversation_stop_and_delete_message else R.string.conversation_delete_message),
             onDismissRequest = { conversationDeleteTarget = null },
@@ -891,7 +981,6 @@ fun AgentAppRoot(
     messageDeleteTarget?.let { target ->
         WindowDialog(
             show = true,
-            cornerRadius = DialogDefaults.CornerRadius,
             title = stringResource(R.string.conversation_delete_message_title),
             summary = if (target.laterTurnCount == 0) {
                 stringResource(R.string.conversation_delete_message_body)
@@ -919,7 +1008,6 @@ fun AgentAppRoot(
     messageRegenerateTarget?.let { target ->
         WindowDialog(
             show = true,
-            cornerRadius = DialogDefaults.CornerRadius,
             title = stringResource(R.string.conversation_regenerate_title),
             summary = if (target.laterTurnCount == 0) {
                 stringResource(R.string.conversation_regenerate_current_turn)

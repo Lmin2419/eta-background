@@ -125,6 +125,11 @@ internal interface RuntimeRunDao : ChunkedTextDao {
     @Query("SELECT * FROM runtime_archive_runs ORDER BY created_at ASC")
     suspend fun archivedRunRows(): List<RuntimeArchiveRunWithEvents>
 
+    /** Task-center read only: bounded rows, without restoring transcript/image chunks. */
+    @Transaction
+    @Query("SELECT * FROM runtime_archive_runs ORDER BY created_at DESC LIMIT :limit")
+    suspend fun recentTaskArchiveRows(limit: Int): List<RuntimeArchiveRunWithEvents>
+
     @Transaction
     suspend fun archivedRuns(): List<RuntimeArchiveRunWithEvents> = archivedRunRows().map { stored ->
         stored.copy(run = restoreArchivedRun(stored.run), events = stored.events.map { event ->
