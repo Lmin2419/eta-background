@@ -97,11 +97,8 @@ jobs:
     timeout-minutes: 45
     outputs:
       has_key: ${{ steps.sign.outputs.has_key }}
-      apk_name: ${{ steps.apk.outputs.name }}
       apk_sha256: ${{ steps.apk.outputs.sha256 }}
       artifact_id: ${{ steps.upload.outputs.artifact-id }}
-      version_code: ${{ steps.apk.outputs.version_code }}
-      version_name: ${{ steps.apk.outputs.version_name }}
 
     steps:
       - name: 检出代码
@@ -226,10 +223,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ARTIFACT_ID: ${{ needs.build.outputs.artifact_id }}
-          APK_NAME: ${{ needs.build.outputs.apk_name }}
           APK_SHA256: ${{ needs.build.outputs.apk_sha256 }}
         run: |
           set -euo pipefail
+          # 文件名和版本号在本 job 内重新取得：job 输出含 Secret 片段（如证书别名）时会被 GitHub 整个丢弃。
+          APK_NAME="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .name)"
+          [[ -n "$APK_NAME" ]] || { echo "::error::取不到产物文件名"; exit 1; }
+          gradle="$(gh api "repos/$GITHUB_REPOSITORY/contents/app/build.gradle.kts?ref=$GITHUB_SHA" -H "Accept: application/vnd.github.raw")"
+          VERSION_CODE="$(sed -n 's/^ *versionCode *= *\([0-9][0-9]*\).*/\1/p' <<<"$gradle" | head -n 1)"
+          VERSION_NAME="$(sed -n 's/^ *versionName *= *"\([^"]*\)".*/\1/p' <<<"$gradle" | head -n 1)"
+          [[ -n "$VERSION_CODE" && -n "$VERSION_NAME" ]] || { echo "::error::取不到版本号"; exit 1; }
+          { echo "APK_NAME=$APK_NAME"; echo "VERSION_CODE=$VERSION_CODE"; echo "VERSION_NAME=$VERSION_NAME"; } >> "$GITHUB_ENV"
           f="$RUNNER_TEMP/download.bin"
           gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip" > "$f"
           # archive:false 的产物直接返回 APK 本身；万一被套了一层 zip，就取出里面的同名文件。
@@ -243,10 +247,7 @@ jobs:
       - name: 创建或更新预发布
         env:
           GH_TOKEN: ${{ github.token }}
-          APK_NAME: ${{ needs.build.outputs.apk_name }}
           APK_SHA256: ${{ needs.build.outputs.apk_sha256 }}
-          VERSION_CODE: ${{ needs.build.outputs.version_code }}
-          VERSION_NAME: ${{ needs.build.outputs.version_name }}
         run: |
           set -euo pipefail
           tag="etax-${VERSION_CODE}-${GITHUB_SHA::7}"
