@@ -32,7 +32,7 @@ import io.github.mangi.eta.ui.components.EtaSwitchPreference
 import io.github.mangi.eta.ui.components.EtaWindowSpinnerPreference
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.TextField
 
 @Composable
@@ -108,7 +108,7 @@ internal fun ProviderConnectionFields(
                 enabled = enabled,
                 visualTransformation = if (apiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    IconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
+                    EtaIconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
                         Icon(
                             imageVector = if (apiKeyVisible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
                             contentDescription = context.getString(if (apiKeyVisible) R.string.page_hide_bb0e7e else R.string.page_show_71b677),

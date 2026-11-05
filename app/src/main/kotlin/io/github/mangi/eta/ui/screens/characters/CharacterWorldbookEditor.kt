@@ -16,7 +16,7 @@ import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.EtaSwitch
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -110,7 +110,7 @@ internal fun LazyListScope.characterWorldbookEditor(
         }
     }
     item(key = "worldbook-add-entry") {
-        EtaTextButton(
+        EtaButton(
             text = "添加条目",
             enabled = enabled,
             modifier = Modifier
@@ -169,7 +169,7 @@ private fun CharacterWorldbookEntryEditor(
     CharacterTextField("插入顺序", entry.insertionOrder.toString(), { value ->
         value.toIntOrNull()?.takeIf { it >= 0 }?.let { onChange(entry.copy(insertionOrder = it)) }
     }, enabled, singleLine = true)
-    EtaTextButton(
+    EtaButton(
         text = "移除条目",
         enabled = enabled,
         onClick = onDelete,

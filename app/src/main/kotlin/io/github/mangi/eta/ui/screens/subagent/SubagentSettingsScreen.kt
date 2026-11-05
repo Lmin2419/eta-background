@@ -68,7 +68,7 @@ import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.EtaPreferenceIcon
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaWindowDialog
 import io.github.mangi.eta.ui.components.ListEmptyState
 import io.github.mangi.eta.ui.components.MiuixDialogActions
@@ -83,12 +83,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.InputField
+import io.github.mangi.eta.ui.components.EtaIconButton
+import io.github.mangi.eta.ui.components.EtaSearchField
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import io.github.mangi.eta.ui.components.EtaSheet
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -177,7 +176,7 @@ internal fun SubagentSettingsScreen(
         title = "Subagent",
         onBack = onBack,
         actions = {
-            IconButton(
+            EtaIconButton(
                 onClick = {
                     editorError = null
                     editorDraft = CustomSubagentDraft()
@@ -190,7 +189,7 @@ internal fun SubagentSettingsScreen(
             }
         },
         overlay = {
-            OverlayBottomSheet(
+            EtaSheet(
                 show = showModelSheet,
                 title = "Subagent 模型",
                 onDismissRequest = { showModelSheet = false },
@@ -212,7 +211,7 @@ internal fun SubagentSettingsScreen(
             }
 
             val currentProfile = inspectedProfile
-            OverlayBottomSheet(
+            EtaSheet(
                 show = currentProfile != null,
                 title = currentProfile?.name.orEmpty(),
                 onDismissRequest = { inspectedProfile = null },
@@ -364,7 +363,7 @@ internal fun SubagentSettingsScreen(
                     startAction = {
                         EtaPreferenceIcon(
                             icon = Icons.Rounded.Hub,
-                            tint = EtaPreferenceColors.Blue,
+                            tint = EtaPreferenceColors.Violet,
                         )
                     },
                     onCheckedChange = { checked ->
@@ -450,7 +449,7 @@ internal fun SubagentSettingsScreen(
                         summary = "可在对话中直接让 Eta 创建专属 Subagent（保存在 agents/<name>.md），或点击右上角 + 手动新建",
                         icon = Icons.Rounded.Extension,
                         action = {
-                            EtaTextButton(
+                            EtaButton(
                                 text = "新建 Subagent",
                                 onClick = {
                                     editorError = null
@@ -517,13 +516,11 @@ private fun SubagentModelPickerContent(
             .height(sheetHeight)
             .navigationBarsPadding(),
     ) {
-        InputField(
-            query = query,
-            onQueryChange = { query = it },
+        EtaSearchField(
+            value = query,
+            onValueChange = { query = it },
             onSearch = {},
-            expanded = false,
-            onExpandedChange = {},
-            label = "搜索模型或服务商",
+            placeholder = "搜索模型或服务商",
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -734,7 +731,7 @@ private fun SubagentProfileDetailContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (onDelete != null) {
-                    TextButton(
+                    EtaButton(
                         text = "删除",
                         onClick = onDelete,
                         colors = ButtonDefaults.textButtonColors(
@@ -744,7 +741,7 @@ private fun SubagentProfileDetailContent(
                     )
                 }
                 if (onEdit != null) {
-                    TextButton(
+                    EtaButton(
                         text = "编辑",
                         onClick = onEdit,
                         colors = ButtonDefaults.textButtonColorsPrimary(),

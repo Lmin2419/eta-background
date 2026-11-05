@@ -37,7 +37,7 @@ import io.github.mangi.eta.ui.components.EtaPreference
 import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupItem
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.ListEmptyState
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import io.github.mangi.eta.ui.model.formatCompactTokenCount
@@ -47,9 +47,9 @@ import java.util.Date
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
-import top.yukonga.miuix.kmp.basic.InputField
+import io.github.mangi.eta.ui.components.EtaSearchField
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
@@ -78,7 +78,7 @@ internal fun CommunityCatalogScreen(
         title = "从目录添加",
         onBack = onBack,
         actions = {
-            IconButton(
+            EtaIconButton(
                 onClick = store::refresh,
                 enabled = !store.loading && !store.refreshing,
             ) {
@@ -87,13 +87,11 @@ internal fun CommunityCatalogScreen(
         },
     ) {
         item(key = "search") {
-            InputField(
-                query = query,
-                onQueryChange = { query = it },
+            EtaSearchField(
+                value = query,
+                onValueChange = { query = it },
                 onSearch = {},
-                expanded = false,
-                onExpandedChange = {},
-                label = "搜索提供商",
+                placeholder = "搜索提供商",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -214,12 +212,12 @@ internal fun CommunityCatalogProviderScreen(
         title = provider?.name ?: "选择模型",
         onBack = onBack,
         actions = {
-            EtaTextButton(
+            EtaButton(
                 text = "导入（${selectedIds.size}）",
                 enabled = provider != null && selectedIds.isNotEmpty() && !importInFlight && !store.importing,
                 onClick = {
-                    val chosen = provider ?: return@EtaTextButton
-                    if (importInFlight) return@EtaTextButton
+                    val chosen = provider ?: return@EtaButton
+                    if (importInFlight) return@EtaButton
                     importInFlight = true
                     importError = null
                     scope.launch {
@@ -298,13 +296,11 @@ internal fun CommunityCatalogProviderScreen(
             }
         }
         item(key = "model_search") {
-            InputField(
-                query = query,
-                onQueryChange = { query = it },
+            EtaSearchField(
+                value = query,
+                onValueChange = { query = it },
                 onSearch = {},
-                expanded = false,
-                onExpandedChange = {},
-                label = "搜索模型名称或 ID",
+                placeholder = "搜索模型名称或 ID",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -315,14 +311,14 @@ internal fun CommunityCatalogProviderScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                EtaTextButton(
+                EtaButton(
                     text = "全选当前结果",
                     enabled = filteredModels.isNotEmpty() && !store.importing,
                     onClick = {
                         selectedIds = ArrayList((selectedIds + filteredModels.map { it.modelId }).distinct())
                     },
                 )
-                EtaTextButton(
+                EtaButton(
                     text = "清空已选",
                     enabled = selectedIds.isNotEmpty() && !store.importing,
                     onClick = { selectedIds = arrayListOf() },

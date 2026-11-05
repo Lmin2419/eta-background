@@ -100,8 +100,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.InputField
+import io.github.mangi.eta.ui.components.EtaIconButton
+import io.github.mangi.eta.ui.components.EtaSearchField
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
@@ -361,13 +361,11 @@ internal fun ProviderModelsTab(
             }
 
             item(key = "model_search", contentType = "search") {
-                InputField(
-                    query = modelSearchQuery,
-                    onQueryChange = { modelSearchQuery = it },
+                EtaSearchField(
+                    value = modelSearchQuery,
+                    onValueChange = { modelSearchQuery = it },
                     onSearch = {},
-                    expanded = false,
-                    onExpandedChange = {},
-                    label = stringResource(R.string.ui_search_model_df5586),
+                    placeholder = stringResource(R.string.ui_search_model_df5586),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
@@ -848,14 +846,14 @@ private fun ModelListItem(
             )
         } else {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onEdit, enabled = enabled) {
+                EtaIconButton(onClick = onEdit, enabled = enabled) {
                     Icon(
                         imageVector = Icons.Rounded.Tune,
                         contentDescription = stringResource(R.string.ui_edit_model_parameters_ba4864),
                         tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
                     )
                 }
-                IconButton(onClick = onSetCurrent, enabled = enabled) {
+                EtaIconButton(onClick = onSetCurrent, enabled = enabled) {
                     Icon(
                         imageVector = if (isSelected) Icons.Rounded.Check
                             else Icons.Rounded.RadioButtonUnchecked,

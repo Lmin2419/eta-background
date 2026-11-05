@@ -1,6 +1,12 @@
 package io.github.mangi.eta.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.UnfoldMore
+import io.github.mangi.eta.ui.theme.EtaTheme
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.DropdownColors
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -16,7 +22,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.DropdownArrowEndAction
 import top.yukonga.miuix.kmp.basic.DropdownDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
@@ -45,7 +50,7 @@ internal fun EtaDropdownPreference(
         if (!available) { expanded = false; holding = false }
     }
     val haptics = LocalHapticFeedback.current
-    val color = if (available) MiuixTheme.colorScheme.onSurfaceVariantActions
+    val color = if (available) EtaTheme.colors.textSecondary
         else MiuixTheme.colorScheme.disabledOnSurface
     val entry = DropdownEntry(items.mapIndexed { index, item ->
         item.copy(selected = index == selectedIndex, onClick = {
@@ -73,13 +78,13 @@ internal fun EtaDropdownPreference(
             Text(
                 text = value,
                 modifier = Modifier.weight(1f, fill = false).padding(end = 8.dp),
-                style = MiuixTheme.textStyles.body2,
+                style = EtaTheme.type.subhead,
                 color = color,
                 textAlign = TextAlign.End,
             )
         }
         Row {
-            DropdownArrowEndAction(actionColor = color)
+            Icon(Icons.Rounded.UnfoldMore, null, Modifier.size(20.dp), tint = color)
             if (useWindow) {
                 WindowDropdownPopup(
                     entry = entry,
@@ -87,7 +92,7 @@ internal fun EtaDropdownPreference(
                     onDismiss = { expanded = false },
                     onDismissFinished = { holding = false },
                     maxHeight = null,
-                    dropdownColors = DropdownDefaults.dropdownColors(),
+                    dropdownColors = etaDropdownColors(),
                 )
             } else {
                 OverlayDropdownPopup(
@@ -96,7 +101,7 @@ internal fun EtaDropdownPreference(
                     onDismiss = { expanded = false },
                     onDismissFinished = { holding = false },
                     maxHeight = null,
-                    dropdownColors = DropdownDefaults.dropdownColors(),
+                    dropdownColors = etaDropdownColors(),
                     renderInRootScaffold = true,
                 )
             }
@@ -133,3 +138,10 @@ internal fun EtaOverlayDropdownPreference(
     summary = summary, startAction = startAction, enabled = enabled, useWindow = false,
     onSelectedIndexChange = onSelectedIndexChange,
 )
+
+@Composable
+private fun etaDropdownColors(): DropdownColors {
+    val colors = EtaTheme.colors
+    return DropdownColors(colors.textPrimary, colors.textSecondary, colors.surfaceRaised,
+        colors.onAccentSoft, colors.onAccentSoft, colors.accentSoft, colors.accent)
+}

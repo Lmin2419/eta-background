@@ -1495,4 +1495,5 @@
     <string name="task_visual_success">Completed</string>
     <string name="task_visual_failed">Not completed</string>
     <string name="task_visual_queued">Queued</string>
+    <string name="eta_clear_search">Clear search</string>
 </resources>

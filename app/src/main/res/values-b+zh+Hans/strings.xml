@@ -1473,4 +1473,5 @@
     <string name="task_visual_success">已完成</string>
     <string name="task_visual_failed">未完成</string>
     <string name="task_visual_queued">排队中</string>
+    <string name="eta_clear_search">清除搜索</string>
 </resources>

@@ -41,7 +41,7 @@ fun AgentStatusCard(
             .padding(horizontal = 12.dp, vertical = 6.dp),
         onClick = onOpenRun,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 StatusIndicator(status = activeRun.status)
                 Spacer(modifier = Modifier.width(10.dp))

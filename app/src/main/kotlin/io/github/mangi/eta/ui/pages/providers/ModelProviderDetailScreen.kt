@@ -50,7 +50,7 @@ import io.github.mangi.eta.ui.components.EtaPreference
 import io.github.mangi.eta.ui.components.EtaPreferenceDefaults
 import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.MiuixDialogActions
 import io.github.mangi.eta.ui.components.MiuixPageBottomSpacer
 import io.github.mangi.eta.ui.components.MiuixScaffold
@@ -64,7 +64,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.TabRow
+import io.github.mangi.eta.ui.components.EtaSegmented
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -123,7 +123,7 @@ internal fun ModelProviderDetailScreen(
                 ) {
                     Text(stringResource(R.string.ui_provider_does_not_exist_83cee6))
                     Spacer(modifier = Modifier.height(12.dp))
-                    EtaTextButton(text = stringResource(R.string.ui_return_11d024), onClick = onBack)
+                    EtaButton(text = stringResource(R.string.ui_return_11d024), onClick = onBack)
                 }
             }
         }
@@ -149,10 +149,10 @@ internal fun ModelProviderDetailScreen(
                 .padding(top = paddingValues.calculateTopPadding()),
         ) {
             if (!isNew) {
-                TabRow(
-                    tabs = listOf(context.getString(R.string.page_configuration_d7d7ce), context.getString(R.string.page_model_98fd0c)),
-                    selectedTabIndex = currentTab,
-                    onTabSelected = { currentTab = it },
+                EtaSegmented(
+                    items = listOf(context.getString(R.string.page_configuration_d7d7ce), context.getString(R.string.page_model_98fd0c)),
+                    selectedIndex = currentTab,
+                    onSelectedIndexChange = { currentTab = it },
                     modifier = Modifier.padding(
                         horizontal = sidePadding + EtaPreferenceDefaults.SidePadding,
                         vertical = 8.dp,
@@ -338,7 +338,7 @@ private fun ProviderConfigTab(
                     .padding(top = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                EtaTextButton(
+                EtaButton(
                     text = when {
                         isWorking -> context.getString(R.string.page_saving_d70d42)
                         creationCommitted -> context.getString(R.string.page_created_62cfc5)
@@ -352,7 +352,7 @@ private fun ProviderConfigTab(
                         val validationError = validateProviderDraft(context, draft)
                         if (validationError != null) {
                             status = context.getString(R.string.provider_error, validationError)
-                            return@EtaTextButton
+                            return@EtaButton
                         }
                         scope.launch {
                             isWorking = true
@@ -427,8 +427,7 @@ private fun ProviderConfigTab(
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 14.dp),
+                            .fillMaxWidth(),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(

@@ -57,7 +57,7 @@ import io.github.mangi.eta.ui.components.EtaPreferenceDefaults
 import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaWindowDialog
 import io.github.mangi.eta.ui.components.MiuixDialogActions
 import io.github.mangi.eta.ui.components.MiuixScaffold
@@ -69,7 +69,7 @@ import io.github.mangi.eta.ui.model.AgentMemoryUiState
 import java.text.NumberFormat
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.squircle.squircleSurface
@@ -102,7 +102,7 @@ internal fun AgentMemoryScreen(
         title = stringResource(R.string.ui_memory_b55ff5),
         onBack = { onAction(AgentMemoryAction.NavigateBack) },
         actions = {
-            IconButton(
+            EtaIconButton(
                 onClick = { showClearDialog = true },
                 enabled = !state.isLoading && !state.isSaving && state.draft.isNotEmpty(),
             ) {
@@ -181,7 +181,7 @@ internal fun AgentMemoryScreen(
             summary = notice,
             onDismissRequest = { onAction(AgentMemoryAction.DismissNotice) },
         ) {
-            EtaTextButton(
+            EtaButton(
                 text = stringResource(R.string.ui_knew_cb63c6),
                 onClick = { onAction(AgentMemoryAction.DismissNotice) },
                 modifier = Modifier.fillMaxWidth(),
@@ -436,7 +436,7 @@ private fun MemorySaveBar(
                     maxLines = 2,
                 )
             }
-            EtaTextButton(
+            EtaButton(
                 text = stringResource(R.string.memory_discard),
                 enabled = !state.isSaving,
                 onClick = onDiscard,
@@ -444,7 +444,7 @@ private fun MemorySaveBar(
                 cornerRadius = 20.dp,
                 insideMargin = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             )
-            EtaTextButton(
+            EtaButton(
                 text = stringResource(if (state.isSaving) R.string.memory_saving else R.string.memory_save),
                 enabled = state.canSave,
                 onClick = onSave,

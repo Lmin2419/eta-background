@@ -8,19 +8,19 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-05 · `3.3.5` background build · versionCode `2026110503`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` background build · versionCode `2026110601`**, with engine `20261105-e49-parallel-observe`.
 
-This build implements stage 1 of the Quiet Flow UI design: tokens and theme foundations.
+This build implements stage 2 of Quiet Flow: shared component styling.
 
-- Apply Eta blue and neutral light/dark surfaces throughout the app and settings, preserving Monet, custom accents and the existing pure-black option.
-- Provide shared color, typography, spacing, shape, elevation and motion tokens for the later UI stages.
-- Adapt semantic status colors to the theme and introduce six-state rings with read-only mappings from existing task states.
-- Keep running-ring updates in drawing; dispose looping animations when hidden, offscreen, stopped or using reduced motion.
-- Preserve page layouts and feature entry points. Home, task center and system overlay redesigns belong to later stages.
+- Apply the design tokens to cards, preference groups, icon tiles, switches, chips, buttons, empty states and dialogs.
+- Use solid top bars with a bottom divider, preserving collapsing headers, compact wide-screen headers and existing scroll state.
+- Add icon buttons, search fields, segmented controls, sheets, Toast and list groups; connect the provider, character and Subagent search and sheet surfaces.
+- Use Rounded icons and visibility-gated loading skeletons while preserving secondary-page entry points and business callbacks.
+- Add 15 behavior/rendering tests and a before/after source audit covering 31 secondary routes and their related overlays.
 
-**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110503) (Chinese)
+**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110601) (Chinese)
 
-The signed APK is published automatically after this version passes CI, using the existing certificate. Light/dark appearance and accent choices still require ColorOS device validation. See the [stage 1 verification record](etax/design/validation/stage-1.md) (Chinese).
+The signed APK is published automatically after CI, using the existing certificate. The [stage 2 verification record](etax/design/validation/stage-2.md) includes per-page comparisons and actual light/dark, large-text and wide-screen component renders. These samples do not replace ColorOS device and gesture validation.
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

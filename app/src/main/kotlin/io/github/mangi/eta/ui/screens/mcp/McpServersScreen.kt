@@ -43,7 +43,7 @@ import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaWindowDialog
 import io.github.mangi.eta.ui.components.ListEmptyState
 import io.github.mangi.eta.ui.components.MiuixDialogActions
@@ -54,7 +54,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.BasicComponentColors
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -79,7 +79,7 @@ internal fun McpServersScreen(
         title = stringResource(R.string.route_mcp_servers),
         onBack = onBack,
         actions = {
-            IconButton(onClick = { showAdd = true }) {
+            EtaIconButton(onClick = { showAdd = true }) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
                     contentDescription = stringResource(R.string.mcp_add_server),
@@ -96,7 +96,7 @@ internal fun McpServersScreen(
                         summary = stringResource(R.string.mcp_empty_summary),
                         icon = Icons.Rounded.Hub,
                         action = {
-                            EtaTextButton(
+                            EtaButton(
                                 text = stringResource(R.string.mcp_add_server),
                                 onClick = { showAdd = true },
                             )
@@ -247,7 +247,7 @@ internal fun McpServerDetailScreen(
         title = server?.name ?: stringResource(R.string.route_mcp_server_detail),
         onBack = onBack,
         actions = {
-            IconButton(
+            EtaIconButton(
                 enabled = server != null && !working,
                 onClick = {
                     scope.launch {

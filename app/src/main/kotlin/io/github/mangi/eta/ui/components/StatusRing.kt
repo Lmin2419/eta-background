@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -81,6 +82,7 @@ fun StatusRing(
     size: Dp = 16.dp,
     visible: Boolean = true,
     contentDescription: String? = status.label(),
+    monochrome: Color? = null,
 ) {
     val motion = EtaTheme.motion
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
@@ -97,13 +99,13 @@ fun StatusRing(
     }) {
         Crossfade(targetState = status, animationSpec = tween(motion.short, easing = motion.standard),
             label = "eta_status") { drawnStatus ->
-            StatusGlyph(drawnStatus, animate && drawnStatus == status)
+            StatusGlyph(drawnStatus, animate && drawnStatus == status, monochrome)
         }
     }
 }
 
 @Composable
-private fun StatusGlyph(status: TaskVisualStatus, animate: Boolean) {
+private fun StatusGlyph(status: TaskVisualStatus, animate: Boolean, monochrome: Color?) {
     val colors = EtaTheme.colors
     val color = status.color()
     val motion = EtaTheme.motion
@@ -120,7 +122,7 @@ private fun StatusGlyph(status: TaskVisualStatus, animate: Boolean) {
         val arcSize = Size(radius * 2, radius * 2)
         val radians = Math.toRadians(colors.aurora.angleDegrees.toDouble())
         val direction = Offset(sin(radians).toFloat(), -cos(radians).toFloat()) * radius
-        val brush = Brush.linearGradient(*colors.aurora.stops,
+        val brush = monochrome?.let { SolidColor(it) } ?: Brush.linearGradient(*colors.aurora.stops,
             start = center - direction, end = center + direction)
         onDrawBehind {
             when (status) {

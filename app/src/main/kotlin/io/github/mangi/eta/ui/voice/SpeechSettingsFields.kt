@@ -26,13 +26,13 @@ import io.github.mangi.eta.R
 import io.github.mangi.eta.data.model.AsrProvider
 import io.github.mangi.eta.data.model.TtsProvider
 import io.github.mangi.eta.ui.components.EtaPreferenceDefaults
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.ListEmptyState
 import io.github.mangi.eta.ui.components.StatusError
 import io.github.mangi.eta.ui.components.StatusSuccess
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
@@ -117,7 +117,7 @@ internal fun SpeechField(
         visualTransformation = if (secret && !visible) PasswordVisualTransformation() else VisualTransformation.None,
         trailingIcon = if (secret) {
             {
-                IconButton(onClick = { visible = !visible }) {
+                EtaIconButton(onClick = { visible = !visible }) {
                     Icon(
                         imageVector = if (visible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
                         contentDescription = stringResource(
@@ -142,7 +142,7 @@ internal fun SpeechSaveBlock(store: SpeechSettingsStore, validate: () -> Unit) {
             .padding(top = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        EtaTextButton(
+        EtaButton(
             text = stringResource(if (store.saving) R.string.speech_saving else R.string.speech_save),
             enabled = store.loaded && !store.saving,
             modifier = Modifier.fillMaxWidth(),

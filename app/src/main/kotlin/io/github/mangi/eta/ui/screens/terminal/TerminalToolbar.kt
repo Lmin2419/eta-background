@@ -38,7 +38,7 @@ import io.github.mangi.eta.agent.terminal.TerminalEnvironment
 import io.github.mangi.eta.ui.app.displayName
 import io.github.mangi.eta.ui.components.StatusSuccess
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -158,7 +158,7 @@ private fun ToolbarIcon(
     badge: String? = null,
     dot: Boolean = false,
 ) {
-    IconButton(onClick = onClick, minWidth = 40.dp, minHeight = 40.dp) {
+    EtaIconButton(onClick = onClick, minWidth = 40.dp, minHeight = 40.dp) {
         Box {
             Icon(
                 imageVector = icon,
@@ -212,7 +212,7 @@ internal fun RowIconAction(
     onClick: () -> Unit,
     tint: Color = MiuixTheme.colorScheme.onSurfaceVariantActions,
 ) {
-    IconButton(onClick = onClick, minWidth = 36.dp, minHeight = 36.dp) {
+    EtaIconButton(onClick = onClick, minWidth = 36.dp, minHeight = 36.dp) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,

@@ -30,7 +30,7 @@ import io.github.mangi.eta.data.repository.CommonTaskRepository
 import io.github.mangi.eta.ui.CommonTaskShortcuts
 import io.github.mangi.eta.ui.app.CommonTasksStore
 import io.github.mangi.eta.ui.components.EtaCard
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaWindowDialog
 import io.github.mangi.eta.ui.components.ListEmptyState
 import io.github.mangi.eta.ui.components.MiuixDialogActions
@@ -78,7 +78,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
                 style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
         item(key = "create") {
-            EtaTextButton(stringResource(R.string.common_tasks_create), onClick = { edit(null) },
+            EtaButton(stringResource(R.string.common_tasks_create), onClick = { edit(null) },
                 enabled = editable && store.tasks.size < CommonTaskRepository.MAX_TASKS,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp))
         }
@@ -86,7 +86,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
             item(key = "error") {
                 ListEmptyState(title = stringResource(R.string.common_tasks_load_failed),
                     summary = stringResource(R.string.common_tasks_load_preserved), icon = Icons.Rounded.BookmarkBorder,
-                    action = { EtaTextButton(stringResource(R.string.common_tasks_retry), store::refresh, enabled = !store.busy) })
+                    action = { EtaButton(stringResource(R.string.common_tasks_retry), store::refresh, enabled = !store.busy) })
             }
         } else if (store.tasks.isEmpty()) {
             item(key = "empty") {
@@ -96,16 +96,16 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
         }
         items(store.tasks, key = { it.id }) { task ->
             EtaCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(task.name, style = MiuixTheme.textStyles.headline1)
                     Text(task.instruction, style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         maxLines = 3, overflow = TextOverflow.Ellipsis)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        EtaTextButton(stringResource(R.string.common_tasks_run), { onRun(task) },
+                        EtaButton(stringResource(R.string.common_tasks_run), { onRun(task) },
                             modifier = Modifier.weight(1f), enabled = editable,
                             colors = ButtonDefaults.textButtonColorsPrimary())
-                        EtaTextButton(stringResource(R.string.common_tasks_manage), { menuId = task.id },
+                        EtaButton(stringResource(R.string.common_tasks_manage), { menuId = task.id },
                             modifier = Modifier.weight(1f), enabled = editable)
                     }
                 }
@@ -151,16 +151,16 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
     store.tasks.firstOrNull { it.id == menuId }?.let { task ->
         EtaWindowDialog(show = true, title = task.name, onDismissRequest = { menuId = null }) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                EtaTextButton(stringResource(R.string.common_tasks_edit), { edit(task) }, Modifier.fillMaxWidth())
-                EtaTextButton(stringResource(R.string.common_tasks_copy), { edit(task, copy = true) }, Modifier.fillMaxWidth(),
+                EtaButton(stringResource(R.string.common_tasks_edit), { edit(task) }, Modifier.fillMaxWidth())
+                EtaButton(stringResource(R.string.common_tasks_copy), { edit(task, copy = true) }, Modifier.fillMaxWidth(),
                     enabled = store.tasks.size < CommonTaskRepository.MAX_TASKS)
-                EtaTextButton(stringResource(R.string.common_tasks_pin), {
+                EtaButton(stringResource(R.string.common_tasks_pin), {
                     menuId = null
                     val accepted = runCatching { CommonTaskShortcuts.requestPin(context, task) }.getOrDefault(false)
                     Toast.makeText(context, if (accepted) R.string.common_tasks_pin_requested else R.string.common_tasks_pin_unavailable,
                         Toast.LENGTH_LONG).show()
                 }, Modifier.fillMaxWidth())
-                EtaTextButton(stringResource(R.string.common_tasks_delete), { menuId = null; deleteId = task.id }, Modifier.fillMaxWidth())
+                EtaButton(stringResource(R.string.common_tasks_delete), { menuId = null; deleteId = task.id }, Modifier.fillMaxWidth())
             }
         }
     }

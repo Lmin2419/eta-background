@@ -29,7 +29,7 @@ import io.github.mangi.eta.ui.components.EtaPreferenceColors
 import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import io.github.mangi.eta.ui.components.EtaPreferenceIcon
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaWindowDialog
 
 @Composable
@@ -79,7 +79,7 @@ internal fun NativeAssistantPreference(context: Context) {
             }
             EtaArrowPreference(title = stringResource(R.string.native_assistant_refresh), enabled = !state.busy,
                 onClick = { NativeAssistantSettings.refresh(context) })
-            EtaTextButton(text = stringResource(R.string.action_close), onClick = { show = false })
+            EtaButton(text = stringResource(R.string.action_close), onClick = { show = false })
         }
     }
 }

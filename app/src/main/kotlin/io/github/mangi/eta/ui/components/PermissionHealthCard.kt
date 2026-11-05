@@ -39,7 +39,7 @@ fun PermissionHealthCard(
             .padding(horizontal = 12.dp, vertical = 6.dp),
         onClick = onOpenPermissions,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(R.string.ui_permission_health_3048bb),

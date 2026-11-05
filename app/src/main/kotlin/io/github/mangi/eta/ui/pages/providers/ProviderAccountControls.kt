@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.data.model.ProviderAuthModes
 import io.github.mangi.eta.ui.components.EtaPreference
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -71,24 +71,24 @@ internal fun ProviderAccountControls(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (state.isBusy) {
                 if (prompt != null) {
-                    EtaTextButton(text = "打开浏览器", onClick = onOpenBrowser, modifier = Modifier.weight(1f))
+                    EtaButton(text = "打开浏览器", onClick = onOpenBrowser, modifier = Modifier.weight(1f))
                 }
                 if (state.phase in setOf(ProviderLoginPhase.Saving, ProviderLoginPhase.Authorizing, ProviderLoginPhase.SyncingModels)) {
-                    EtaTextButton(text = "取消", onClick = onCancel, modifier = Modifier.weight(1f))
+                    EtaButton(text = "取消", onClick = onCancel, modifier = Modifier.weight(1f))
                 }
             } else {
                 if (needsLogin) {
-                    EtaTextButton(
+                    EtaButton(
                         text = if (loggedIn) "重新授权" else "使用 $brand 登录",
                         enabled = enabled,
                         onClick = onLogin,
                         modifier = Modifier.weight(1f),
                     )
                 } else if (authMode == ProviderAuthModes.OPENAI_CHATGPT) {
-                    EtaTextButton(text = "管理用量", enabled = enabled, onClick = onManageUsage, modifier = Modifier.weight(1f))
+                    EtaButton(text = "管理用量", enabled = enabled, onClick = onManageUsage, modifier = Modifier.weight(1f))
                 }
                 if (loggedIn) {
-                    EtaTextButton(text = "退出登录", enabled = enabled, onClick = onDisconnect, modifier = Modifier.weight(1f))
+                    EtaButton(text = "退出登录", enabled = enabled, onClick = onDisconnect, modifier = Modifier.weight(1f))
                 }
             }
         }

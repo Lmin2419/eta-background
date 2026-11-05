@@ -13,6 +13,9 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Checkbox
+import top.yukonga.miuix.kmp.basic.CheckboxDefaults
+import top.yukonga.miuix.kmp.basic.RadioButtonDefaults
+import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.RadioButton
 import top.yukonga.miuix.kmp.preference.CheckboxLocation
 
@@ -57,7 +60,9 @@ internal fun EtaRadioButtonPreference(
         startAction = startAction, bottomAction = bottomAction, enabled = enabled,
         interaction = Modifier.selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick),
     ) {
-        RadioButton(selected = selected, onClick = null, enabled = enabled, modifier = Modifier.clearAndSetSemantics {})
+        RadioButton(selected = selected, onClick = null, enabled = enabled, modifier = Modifier.clearAndSetSemantics {},
+            colors = RadioButtonDefaults.radioButtonColors(selectedColor = EtaTheme.colors.accent,
+                disabledSelectedColor = EtaTheme.colors.accent.copy(alpha = 0.38f)))
     }
 }
 
@@ -77,6 +82,13 @@ internal fun EtaCheckboxPreference(
         Checkbox(
             state = if (checked) ToggleableState.On else ToggleableState.Off,
             onClick = null, enabled = enabled, modifier = Modifier.clearAndSetSemantics {},
+            colors = CheckboxDefaults.checkboxColors(
+                checkedForegroundColor = EtaTheme.colors.onAccent,
+                checkedBackgroundColor = EtaTheme.colors.accent,
+                uncheckedBackgroundColor = EtaTheme.colors.outlineStrong,
+                disabledCheckedBackgroundColor = EtaTheme.colors.accent.copy(alpha = 0.38f),
+                disabledUncheckedBackgroundColor = EtaTheme.colors.outlineStrong.copy(alpha = 0.38f),
+            ),
         )
     }
     val leading: (@Composable () -> Unit)? = if (checkboxLocation == CheckboxLocation.Start) {

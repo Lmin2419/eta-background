@@ -26,7 +26,7 @@ import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.EtaPreferenceIcon
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaWindowDialog
 import io.github.mangi.eta.ui.components.ListEmptyState
 import io.github.mangi.eta.ui.components.MiuixDialogActions
@@ -98,7 +98,7 @@ fun AgentSkillsScreen(
                                 InfiniteProgressIndicator(size = 20.dp)
                             }
                         } else {
-                            EtaPreferenceIcon(Icons.Rounded.FolderZip, enabled = !operationPending, tint = EtaPreferenceColors.Orange)
+                            EtaPreferenceIcon(Icons.Rounded.FolderZip, enabled = !operationPending, tint = EtaPreferenceColors.Violet)
                         }
                     },
                     enabled = !operationPending,
@@ -166,7 +166,7 @@ fun AgentSkillsScreen(
                         EtaPreference(
                             title = skill.name,
                             summary = stringResource(R.string.ui_click_to_reinstall_dc60de),
-                            startAction = { EtaPreferenceIcon(iconForSkill(skill.id), enabled = !operationPending, tint = EtaPreferenceColors.Green) },
+                            startAction = { EtaPreferenceIcon(iconForSkill(skill.id), enabled = !operationPending, tint = EtaPreferenceColors.Violet) },
                             enabled = !operationPending,
                             onClick = {
                                 onAction(AgentSkillsAction.ReinstallBuiltin(skill.id))
@@ -194,7 +194,7 @@ fun AgentSkillsScreen(
                     summary = stringResource(R.string.skills_choose_package),
                     icon = Icons.Rounded.FolderZip,
                     action = {
-                        EtaTextButton(
+                        EtaButton(
                             text = stringResource(R.string.skills_import_zip),
                             enabled = !operationPending,
                             onClick = openZipPicker,
@@ -248,7 +248,7 @@ fun AgentSkillsScreen(
             summary = notice.message,
             onDismissRequest = { onAction(AgentSkillsAction.DismissNotice) },
         ) {
-            EtaTextButton(
+            EtaButton(
                 text = stringResource(R.string.ui_knew_cb63c6),
                 onClick = { onAction(AgentSkillsAction.DismissNotice) },
                 modifier = Modifier.fillMaxWidth(),

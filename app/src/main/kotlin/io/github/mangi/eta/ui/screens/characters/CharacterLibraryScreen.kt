@@ -18,7 +18,6 @@ import androidx.compose.material.icons.rounded.TheaterComedy
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.agent.roleplay.CharacterProfile
 import io.github.mangi.eta.ui.app.CharacterLibraryStore
@@ -27,16 +26,15 @@ import io.github.mangi.eta.ui.components.EtaPreferenceColors
 import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.EtaPreferenceIcon
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.ListEmptyState
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import io.github.mangi.eta.ui.navigation.AppRoute
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
-import top.yukonga.miuix.kmp.basic.InputField
-import top.yukonga.miuix.kmp.basic.SearchBar
+import io.github.mangi.eta.ui.components.EtaSearchField
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -63,35 +61,22 @@ internal fun CharacterLibraryScreen(
         title = "角色",
         onBack = onBack,
         actions = {
-            IconButton(onClick = importCard, enabled = !store.busy) {
+            EtaIconButton(onClick = importCard, enabled = !store.busy) {
                 Icon(Icons.Rounded.FileUpload, contentDescription = "导入角色卡")
             }
-            IconButton(onClick = createCharacter, enabled = !store.busy) {
+            EtaIconButton(onClick = createCharacter, enabled = !store.busy) {
                 Icon(Icons.Rounded.Add, contentDescription = "创建角色")
             }
         },
     ) {
         item(key = "search") {
-            SearchBar(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = CharacterCardPadding)
+            EtaSearchField(
+                value = store.query,
+                onValueChange = { store.query = it },
+                onSearch = { store.query = it },
+                placeholder = "搜索名称或标签",
+                modifier = Modifier.fillMaxWidth().padding(horizontal = CharacterCardPadding)
                     .padding(top = 4.dp, bottom = 12.dp),
-                // 去掉组件自带的横向内边距，让搜索框与下方卡片左右对齐。
-                insideMargin = DpSize(0.dp, 0.dp),
-                expanded = false,
-                onExpandedChange = {},
-                inputField = {
-                    InputField(
-                        query = store.query,
-                        onQueryChange = { store.query = it },
-                        onSearch = { store.query = it },
-                        expanded = false,
-                        onExpandedChange = {},
-                        label = "搜索名称或标签",
-                    )
-                },
-                content = {},
             )
         }
         when {
@@ -113,12 +98,12 @@ internal fun CharacterLibraryScreen(
                         icon = Icons.Rounded.TheaterComedy,
                         action = {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                EtaTextButton(
+                                EtaButton(
                                     text = "恢复默认角色",
                                     onClick = { store.restoreDefaultCharacter() },
                                     enabled = !store.busy,
                                 )
-                                EtaTextButton(
+                                EtaButton(
                                     text = "创建角色",
                                     onClick = createCharacter,
                                     colors = ButtonDefaults.textButtonColorsPrimary(),
@@ -176,7 +161,7 @@ internal fun CharacterLibraryScreen(
             EtaPreferenceGroup {
                 EtaArrowPreference(
                     title = "我的人设",
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Face, tint = EtaPreferenceColors.Blue) },
+                    startAction = { EtaPreferenceIcon(Icons.Rounded.Face, tint = EtaPreferenceColors.Pink) },
                     summary = "角色对你的称呼与你在故事中的身份",
                     onClick = { onNavigate(AppRoute.CharacterPersona) },
                 )

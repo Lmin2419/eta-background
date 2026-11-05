@@ -24,7 +24,7 @@ import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.terminal.TerminalEnvironment
 import io.github.mangi.eta.ui.app.displayName
 import io.github.mangi.eta.ui.components.EtaMonospace
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.StatusSuccess
 import io.github.mangi.eta.ui.components.EtaWindowDialog
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -80,7 +80,7 @@ internal fun SessionListDialog(
                 }
             }
         }
-        EtaTextButton(
+        EtaButton(
             text = stringResource(R.string.terminal_new_session),
             onClick = { onNew(); onDismiss() },
             colors = ButtonDefaults.textButtonColorsPrimary(),

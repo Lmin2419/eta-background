@@ -31,7 +31,7 @@ import io.github.mangi.eta.ui.model.actualToolName
 import io.github.mangi.eta.ui.model.toolCardAction
 import io.github.mangi.eta.ui.model.toolCardRequirement
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -66,7 +66,7 @@ internal fun ToolCard(
         icon = { EtaPreferenceIcon(icon = iconForTool(tool.id), tint = EtaPreferenceColors.Green) },
         action = if (action != null) {
             {
-                IconButton(onClick = { showDescription = true }) {
+                EtaIconButton(onClick = { showDescription = true }) {
                     Icon(
                         imageVector = Icons.Rounded.Info,
                         contentDescription = stringResource(R.string.ui_description_named, tool.title),

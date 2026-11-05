@@ -69,13 +69,13 @@ import io.github.mangi.eta.ui.model.SystemNoticeMessageUi
 import io.github.mangi.eta.ui.components.AnswerActionSize
 import io.github.mangi.eta.ui.components.ChatInputActionIconSize
 import io.github.mangi.eta.ui.components.ChatInputActionSize
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.StatusError
 import kotlin.math.sqrt
 import kotlin.random.Random
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -136,7 +136,7 @@ internal fun SpeechDictationButton(
 ) {
     val state by controller.state.collectAsState()
     val request = rememberSpeechPermission { if (enabled) controller.start() }
-    IconButton(
+    EtaIconButton(
         onClick = { if (state.active) controller.finish() else request() },
         enabled = enabled && state.phase != EtaSpeechPhase.RECOGNIZING,
         minWidth = ChatInputActionSize,
@@ -212,7 +212,7 @@ internal fun SpeechInputFeedback(controller: SpeechInputController) {
                         onClick = { openSpeechSettings(context) },
                     )
                 }
-                IconButton(onClick = controller::cancel, minWidth = 36.dp, minHeight = 36.dp) {
+                EtaIconButton(onClick = controller::cancel, minWidth = 36.dp, minHeight = 36.dp) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
                         contentDescription = stringResource(R.string.action_cancel),
@@ -267,7 +267,7 @@ private const val LEVEL_BAR_JITTER = 0.04f
 
 @Composable
 private fun SpeechFeedbackAction(text: String, primary: Boolean = false, onClick: () -> Unit) {
-    EtaTextButton(
+    EtaButton(
         text = text,
         onClick = onClick,
         minWidth = 0.dp,
@@ -365,7 +365,7 @@ internal fun SpeechReadAloudButton(messageId: String, text: String) {
     if (!LocalSpeechPlaybackEnabled.current) return
     val state by controller.state.collectAsState()
     val active = state.messageId == messageId
-    IconButton(
+    EtaIconButton(
         onClick = { if (active) controller.stop() else controller.speak(messageId, text) },
         minWidth = AnswerActionSize,
         minHeight = AnswerActionSize,

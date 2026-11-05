@@ -44,8 +44,8 @@ import io.github.mangi.eta.ui.navigation.AppRoute
 import io.github.mangi.eta.ui.navigation.NewProviderType
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.InputField
+import io.github.mangi.eta.ui.components.EtaIconButton
+import io.github.mangi.eta.ui.components.EtaSearchField
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -76,13 +76,11 @@ internal fun ModelProviderListScreen(
 
     MiuixScaffoldPage(title = stringResource(R.string.ui_model_provider_e8c7f5), onBack = onBack) {
         item(key = "search") {
-            InputField(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
+            EtaSearchField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
                 onSearch = {},
-                expanded = false,
-                onExpandedChange = {},
-                label = stringResource(R.string.ui_search_provider_74e049),
+                placeholder = stringResource(R.string.ui_search_provider_74e049),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = EtaPreferenceDefaults.SidePadding)
@@ -246,7 +244,7 @@ private fun ProviderListItem(
             }
         },
         endActions = {
-            IconButton(onClick = onSelect) {
+            EtaIconButton(onClick = onSelect) {
                 Icon(
                     imageVector = if (isSelected) Icons.Rounded.Check else Icons.Rounded.RadioButtonUnchecked,
                     contentDescription = if (isSelected) {

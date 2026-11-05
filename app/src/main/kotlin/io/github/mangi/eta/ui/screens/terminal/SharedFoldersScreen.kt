@@ -68,7 +68,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
@@ -155,7 +155,7 @@ internal fun SharedFoldersScreen(
                             color = if (missing) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         ),
                         endActions = {
-                            IconButton(onClick = { removeTarget = mount }) {
+                            EtaIconButton(onClick = { removeTarget = mount }) {
                                 Icon(
                                     imageVector = Icons.Rounded.DeleteOutline,
                                     contentDescription = stringResource(R.string.action_delete),
@@ -198,7 +198,7 @@ internal fun SharedFoldersScreen(
                         title = message,
                         titleColor = BasicComponentDefaults.titleColor(color = MiuixTheme.colorScheme.error),
                         endActions = {
-                            IconButton(onClick = { notice = null }) {
+                            EtaIconButton(onClick = { notice = null }) {
                                 Icon(
                                     imageVector = Icons.Rounded.Close,
                                     contentDescription = stringResource(R.string.action_close),

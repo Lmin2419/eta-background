@@ -3,6 +3,11 @@ package io.github.mangi.eta.ui.components
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import top.yukonga.miuix.kmp.squircle.LocalSquircleEnabled
+import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.theme.EtaElevation
+import io.github.mangi.eta.ui.theme.etaElevation
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Card
@@ -11,29 +16,31 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
 internal object EtaCardDefaults {
-    val CornerRadius = 24.dp
+    val CornerRadius = 20.dp
 }
 
 @Composable
 internal fun EtaCard(
     modifier: Modifier = Modifier,
-    insideMargin: PaddingValues = CardDefaults.InsideMargin,
+    insideMargin: PaddingValues = PaddingValues(16.dp),
     colors: CardColors = CardDefaults.defaultColors(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Card(
-        modifier = modifier,
-        cornerRadius = EtaCardDefaults.CornerRadius,
-        insideMargin = insideMargin,
-        colors = colors,
-        content = content,
-    )
+    CompositionLocalProvider(LocalSquircleEnabled provides false) {
+        Card(
+            modifier = modifier.etaElevation(EtaElevation.E1, EtaTheme.shapes.radiusLg),
+            cornerRadius = EtaCardDefaults.CornerRadius,
+            insideMargin = insideMargin,
+            colors = colors,
+            content = content,
+        )
+    }
 }
 
 @Composable
 internal fun EtaCard(
     modifier: Modifier = Modifier,
-    insideMargin: PaddingValues = CardDefaults.InsideMargin,
+    insideMargin: PaddingValues = PaddingValues(16.dp),
     colors: CardColors = CardDefaults.defaultColors(),
     pressFeedbackType: PressFeedbackType = PressFeedbackType.None,
     showIndication: Boolean = false,
@@ -42,16 +49,18 @@ internal fun EtaCard(
     onLongPress: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Card(
-        modifier = modifier,
-        cornerRadius = EtaCardDefaults.CornerRadius,
-        insideMargin = insideMargin,
-        colors = colors,
-        pressFeedbackType = pressFeedbackType,
-        showIndication = showIndication,
-        holdDownState = holdDownState,
-        onClick = onClick,
-        onLongPress = onLongPress,
-        content = content,
-    )
+    CompositionLocalProvider(LocalSquircleEnabled provides false) {
+        Card(
+            modifier = modifier.etaElevation(EtaElevation.E1, EtaTheme.shapes.radiusLg),
+            cornerRadius = EtaCardDefaults.CornerRadius,
+            insideMargin = insideMargin,
+            colors = colors,
+            pressFeedbackType = pressFeedbackType,
+            showIndication = showIndication,
+            holdDownState = holdDownState,
+            onClick = onClick,
+            onLongPress = onLongPress,
+            content = content,
+        )
+    }
 }

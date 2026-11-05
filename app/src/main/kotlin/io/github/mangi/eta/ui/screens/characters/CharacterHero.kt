@@ -45,11 +45,11 @@ import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.agent.roleplay.CharacterMacros
 import io.github.mangi.eta.agent.roleplay.CharacterProfile
 import io.github.mangi.eta.ui.components.CharacterAvatar
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.rememberCharacterImage
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.squircle.squircleBorder
 import top.yukonga.miuix.kmp.squircle.squircleClip
@@ -154,7 +154,7 @@ internal fun CharacterHero(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f, fill = false),
                 )
-                IconButton(onClick = onToggleFavorite, enabled = !busy, minWidth = 36.dp, minHeight = 36.dp) {
+                EtaIconButton(onClick = onToggleFavorite, enabled = !busy, minWidth = 36.dp, minHeight = 36.dp) {
                     Icon(
                         imageVector = if (card.favorite) Icons.Rounded.Star else Icons.Rounded.StarOutline,
                         contentDescription = if (card.favorite) "取消收藏" else "收藏",
@@ -212,7 +212,7 @@ internal fun CharacterHero(
                 )
             }
             Spacer(Modifier.height(20.dp))
-            EtaTextButton(
+            EtaButton(
                 text = "开始对话",
                 enabled = !busy,
                 onClick = onStart,

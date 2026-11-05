@@ -16,17 +16,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.mangi.eta.ui.layout.rememberIsWideScreen
 import io.github.mangi.eta.ui.layout.WidePageContent
 import io.github.mangi.eta.ui.layout.horizontalCutoutPadding
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 /**
- * Eta 二级列表页的统一骨架：手机折叠大标题、宽屏固定小标题、顶栏毛玻璃、横屏安全区、
+ * Eta 二级列表页的统一骨架：手机折叠大标题、宽屏固定小标题、纯色顶栏与底线、横屏安全区、
  * 宽屏内容居中、滚动边界触感与越界回弹均由此处统一提供。
  */
 @Composable
@@ -50,28 +50,17 @@ fun MiuixScaffoldPage(
             topBar = {
                 TopBarBackdrop(backdrop) {
                     // 页面自带主视觉（如角色详情）时用紧凑标题，避免大标题与主视觉重复。
-                    if (compactTitle) {
-                        SmallTopAppBar(
-                            title = title,
-                            color = topBarColor,
-                            navigationIcon = { MiuixBackButton(onClick = onBack) },
-                            actions = actions,
-                            scrollBehavior = scrollBehavior,
-                        )
-                    } else {
-                        AdaptiveTopAppBar(
-                            title = title,
-                            color = topBarColor,
-                            navigationIcon = { MiuixBackButton(onClick = onBack) },
-                            actions = actions,
-                            scrollBehavior = scrollBehavior,
-                        )
-                    }
+                    AdaptiveTopAppBar(
+                        title = title, color = topBarColor, compact = compactTitle,
+                        navigationIcon = { MiuixBackButton(onClick = onBack) },
+                        actions = actions, scrollBehavior = scrollBehavior,
+                    )
                 }
             },
         ) { innerPadding ->
-            WidePageContent { sidePadding ->
-                // 保留 MiuixTheme 注入的默认越界工厂，让短内容页也能回弹到顶栏采样区。
+            WidePageContent { centeredPadding ->
+                val sidePadding = centeredPadding + if (rememberIsWideScreen()) 8.dp else 0.dp
+                // 保留 MiuixTheme 注入的默认越界工厂，保留短内容页的回弹行为。
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
@@ -134,7 +123,8 @@ fun MiuixScaffold(
             },
         ) { paddingValues ->
             Box(modifier = Modifier.fillMaxSize().captureForTopBar(backdrop)) {
-                WidePageContent { sidePadding ->
+                WidePageContent { centeredPadding ->
+                val sidePadding = centeredPadding + if (rememberIsWideScreen()) 8.dp else 0.dp
                     content(paddingValues, scrollBehavior, sidePadding)
                 }
             }

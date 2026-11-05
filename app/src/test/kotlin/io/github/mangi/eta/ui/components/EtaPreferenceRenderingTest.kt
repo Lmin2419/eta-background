@@ -74,7 +74,7 @@ class EtaPreferenceRenderingTest {
                 assertNotNull(actionBounds)
                 val title = requireNotNull(titleBounds)
                 val action = requireNotNull(actionBounds)
-                assertEquals(if (hasIcon) 56f else 16f, title.left, 0.5f)
+                assertEquals(if (hasIcon) 60f else 16f, title.left, 0.5f)
                 assertTrue(action.left > title.right)
                 assertEquals(304f, action.right, 0.5f)
             }

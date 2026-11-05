@@ -21,7 +21,7 @@ import io.github.mangi.eta.ui.components.EtaPreference
 import io.github.mangi.eta.ui.components.EtaPreferenceDefaults
 import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import io.github.mangi.eta.ui.components.EtaPreferenceGroup
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaWindowSpinnerPreference
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.DropdownItem
@@ -77,7 +77,7 @@ internal fun LinuxEnvironmentStatusCard(
                 }
             }
             actionText?.let {
-                EtaTextButton(
+                EtaButton(
                     text = it,
                     enabled = actionEnabled,
                     onClick = onAction,

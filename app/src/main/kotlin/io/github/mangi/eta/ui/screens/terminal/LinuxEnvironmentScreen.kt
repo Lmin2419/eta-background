@@ -71,7 +71,7 @@ import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.EtaPreferenceIcon
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import io.github.mangi.eta.ui.navigation.AppRoute
 import kotlinx.coroutines.Dispatchers
@@ -447,7 +447,7 @@ internal fun LinuxEnvironmentScreen(
                     EtaArrowPreference(
                         title = stringResource(R.string.linux_files_entry_title),
                         summary = stringResource(R.string.linux_files_entry_summary),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.Description, tint = EtaPreferenceColors.Blue) },
+                        startAction = { EtaPreferenceIcon(Icons.Rounded.Description, tint = EtaPreferenceColors.Slate) },
                         onClick = { onNavigate(AppRoute.LinuxFiles(selectedDistribution.wireName)) },
                     )
                 }
@@ -494,7 +494,7 @@ internal fun LinuxEnvironmentScreen(
                             },
                             endActions = {
                                 if (isKimi && kimiWebRunning) {
-                                    EtaTextButton(
+                                    EtaButton(
                                         text = stringResource(R.string.action_stop),
                                         enabled = !kimiWebLaunching && !requiresRoot,
                                         onClick = {
@@ -505,7 +505,7 @@ internal fun LinuxEnvironmentScreen(
                                         },
                                     )
                                 }
-                                EtaTextButton(
+                                EtaButton(
                                     text = when {
                                         isKimi && ready -> stringResource(
                                             if (kimiWebLaunching) {
@@ -529,13 +529,13 @@ internal fun LinuxEnvironmentScreen(
                                     onClick = {
                                         if (isWeb && ready) {
                                             checkWebEnhancement(profileUi.target)
-                                            return@EtaTextButton
+                                            return@EtaButton
                                         }
                                         if (isKimi && ready) {
                                             launchKimiWeb()
-                                            return@EtaTextButton
+                                            return@EtaButton
                                         }
-                                        if (busyTarget != null || ready) return@EtaTextButton
+                                        if (busyTarget != null || ready) return@EtaButton
                                         busyTarget = profileUi.target
                                         resultMessage = null
                                         val profileTitle = context.getString(profileUi.titleRes)
@@ -566,7 +566,7 @@ internal fun LinuxEnvironmentScreen(
                             context.getString(R.string.linux_apk_tools_summary)
                         },
                         endActions = {
-                            EtaTextButton(
+                            EtaButton(
                                 text = when {
                                     apkAnalysisReady -> context.getString(R.string.linux_installed)
                                     busyTarget == InstallTarget.APK_ANALYSIS -> context.getString(R.string.linux_installing)
@@ -574,7 +574,7 @@ internal fun LinuxEnvironmentScreen(
                                 },
                                 enabled = busyTarget == null && !requiresRoot && !apkAnalysisReady,
                                 onClick = {
-                                    if (busyTarget != null || apkAnalysisReady) return@EtaTextButton
+                                    if (busyTarget != null || apkAnalysisReady) return@EtaButton
                                     busyTarget = InstallTarget.APK_ANALYSIS
                                     resultMessage = null
                                     launchInstallation {

@@ -319,7 +319,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.AutoMirrored.Rounded.MenuBook,
-                                tint = EtaPreferenceColors.Orange,
+                                tint = EtaPreferenceColors.Violet,
                             )
                         },
                         onClick = { onNavigate(AppRoute.Memory) },
@@ -331,7 +331,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.Hub,
-                                tint = EtaPreferenceColors.Blue,
+                                tint = EtaPreferenceColors.Violet,
                             )
                         },
                         onClick = { onNavigate(AppRoute.Subagents) },
@@ -343,7 +343,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.ImportContacts,
-                                tint = EtaPreferenceColors.Green,
+                                tint = EtaPreferenceColors.Violet,
                             )
                         },
                         onClick = { onNavigate(AppRoute.Skills) },
@@ -355,7 +355,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.AccountTree,
-                                tint = EtaPreferenceColors.Blue,
+                                tint = EtaPreferenceColors.Teal,
                             )
                         },
                         onClick = { onNavigate(AppRoute.McpServers) },
@@ -367,7 +367,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.SportsBar,
-                                tint = EtaPreferenceColors.Orange,
+                                tint = EtaPreferenceColors.Pink,
                             )
                         },
                         onClick = { onNavigate(AppRoute.Characters) },
@@ -381,7 +381,7 @@ private fun SettingsPageContent(
                 EtaPreferenceGroup {
                     EtaArrowPreference(
                         title = stringResource(R.string.settings_tools_list),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.Dashboard, tint = EtaPreferenceColors.Green) },
+                        startAction = { EtaPreferenceIcon(Icons.Rounded.Dashboard, tint = EtaPreferenceColors.Indigo) },
                         onClick = { onNavigate(AppRoute.Tools) },
                     )
 
@@ -401,7 +401,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.TravelExplore,
-                                tint = EtaPreferenceColors.Blue,
+                                tint = EtaPreferenceColors.Teal,
                             )
                         },
                         onClick = { onNavigate(AppRoute.WebToolsSettings) },
@@ -444,7 +444,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.ui_enable_terminal_file_tools_18bb43),
                         key = Prefs.Keys.AGENT_TERMINAL_TOOLS,
                         icon = Icons.Rounded.Terminal,
-                        iconTint = EtaPreferenceColors.Green,
+                        iconTint = EtaPreferenceColors.Slate,
                     )
 
                     EtaPreferenceDivider()
@@ -453,7 +453,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.Inventory2,
-                                tint = EtaPreferenceColors.Orange,
+                                tint = EtaPreferenceColors.Slate,
                             )
                         },
                         onClick = { onNavigate(AppRoute.LinuxEnvironment) },
@@ -465,7 +465,7 @@ private fun SettingsPageContent(
                 EtaPreferenceGroup {
                     EtaArrowPreference(
                         title = stringResource(R.string.capability_enhancements),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.Security, tint = EtaPreferenceColors.Blue) },
+                        startAction = { EtaPreferenceIcon(Icons.Rounded.Security, tint = EtaPreferenceColors.Green) },
                         onClick = { onNavigate(AppRoute.SystemEnhance) },
                     )
                 }
@@ -664,7 +664,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.Palette,
-                                tint = EtaPreferenceColors.Orange,
+                                tint = EtaPreferenceColors.Pink,
                             )
                         },
                         onClick = { onNavigate(AppRoute.AppearanceSettings) },
@@ -685,7 +685,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.Description,
-                                tint = EtaPreferenceColors.Blue,
+                                tint = EtaPreferenceColors.Slate,
                             )
                         },
                         onClick = { onNavigate(AppRoute.DataBackup) },
@@ -729,7 +729,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.AccessibilityNew,
-                                tint = EtaPreferenceColors.Blue,
+                                tint = EtaPreferenceColors.Green,
                             )
                         },
                         endActions = {
@@ -790,7 +790,7 @@ private fun SettingsPageContent(
                             startAction = {
                                 EtaPreferenceIcon(
                                     icon = Icons.Rounded.VerifiedUser,
-                                    tint = EtaPreferenceColors.Blue,
+                                    tint = EtaPreferenceColors.Green,
                                     enabled = prefs != null && !accessibilityProtectionPending,
                                 )
                             },
@@ -808,7 +808,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.background_notifications_title),
                         summary = stringResource(if (taskNotificationsEnabled) R.string.background_notifications_enabled
                             else R.string.background_notifications_disabled),
-                        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.Info, tint = EtaPreferenceColors.Blue) },
+                        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.Info, tint = EtaPreferenceColors.Slate) },
                         onClick = { context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                             .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)) },
                     )
@@ -816,7 +816,7 @@ private fun SettingsPageContent(
                     EtaArrowPreference(
                         title = stringResource(R.string.background_diagnostics_title),
                         summary = stringResource(R.string.background_diagnostics_summary),
-                        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.BugReport, tint = EtaPreferenceColors.Orange) },
+                        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.BugReport, tint = EtaPreferenceColors.Slate) },
                         enabled = !exportingDiagnostics,
                         onClick = { exportDiagnostics.launch("Etax-diagnostics-${System.currentTimeMillis()}.json") },
                     )
@@ -827,7 +827,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.Info,
-                                tint = EtaPreferenceColors.Blue,
+                                tint = EtaPreferenceColors.Slate,
                             )
                         },
                     )
@@ -843,7 +843,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.SystemUpdate,
-                                tint = EtaPreferenceColors.Green,
+                                tint = EtaPreferenceColors.Slate,
                                 enabled = !checkingUpdate,
                             )
                         },
@@ -857,7 +857,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.BugReport,
-                                tint = EtaPreferenceColors.Orange,
+                                tint = EtaPreferenceColors.Slate,
                             )
                         },
                         onClick = { openUrl("https://github.com/Mangi-11/Eta/issues") },
@@ -870,7 +870,7 @@ private fun SettingsPageContent(
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Rounded.Code,
-                                tint = EtaPreferenceColors.Blue,
+                                tint = EtaPreferenceColors.Slate,
                             )
                         },
                         onClick = { openUrl("https://github.com/Mangi-11/Eta") },

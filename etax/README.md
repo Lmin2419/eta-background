@@ -53,6 +53,24 @@
 
 ## 版本更新记录
 
+<a id="release-2026110601"></a>
+
+### 2026110601 ·「静流」UI 阶段 2：公共组件换装（3.3.5 后台版）
+
+按 [UI 实施计划](design/04-implementation-plan.md) 完成第二阶段。基于已验收的阶段 1 `65daec0`，引擎继续使用 `20261105-e49-parallel-observe`，未修改运行时、数据流、任务/通知调度和工具协议。
+
+- 卡片改 20dp 圆角与 16dp 内距；列表行改为 32dp 分类底块 + 12dp 间距、56/64dp 起的行高和 60dp 对齐分隔线；深色使用 token 边线。
+- `EtaTextButton` 迁为 `EtaButton`，支持 Primary/Tonal/Secondary/Ghost/Destructive/Small、加载与按压状态，保留显式配色与回调；开关改 52×32，选择/状态胶囊、空态、组标题同步换装。
+- 新增 `EtaIconButton`、`EtaIconTile`、`EtaSearchField`、`EtaSegmented`、`EtaSheet`、`EtaToast`、`EtaListGroup`；统一 Rounded 图标和返回按钮。已有系统 Toast 与通知不迁移。
+- 顶栏纯色加底线，停止模糊采样；手机折叠、宽屏紧凑模式、列表状态、安全区、回弹与触感保留。
+- 服务商/模型/目录/角色/Subagent 搜索框，工具/服务商页签，远程导入及 Subagent 面板接入新样式；保留选择集合、筛选状态及关闭生命周期。
+- 对话框换左对齐标题与右对齐动作，大字体时动作换行；加载骨架只在可见、前台生命周期且未减少动画时呼吸。
+- 新增 15 项 Robolectric 行为和渲染测试；提交同一 fixture 的换装前后浅/深/200% 字体截图，另有新组件、弹层及宽屏样例，CI 上传渲染产物。
+
+[阶段 2 验证记录](design/validation/stage-2.md) 逐个列出 31 个二级路由和相关弹层的前后对照、回调核对、自动化结果与真机待验项。C4 的危险操作使用 `dangerSoft/danger` 配对；Sheet 拖拽判定沿用原宿主，优先满足“只换外观不改交互”。首页、任务中心、设置重组和系统浮层继续按后续阶段实施。
+
+签名与发布结果见 [Etax Build](https://github.com/Lmin2419/eta-background/actions/workflows/etax-build.yml)，本版自动标签为 `etax-2026110601-<提交号>`。该提交 CI 全绿后交付阶段 2。
+
 <a id="release-2026110503"></a>
 
 ### 2026110503 ·「静流」UI 阶段 1：设计 token 与主题（3.3.5 后台版）

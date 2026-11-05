@@ -18,10 +18,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ShortText
+import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.AddComment
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Language
@@ -214,7 +214,7 @@ private fun AgentTopBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onOpenConversationPane) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.ShortText,
+                        imageVector = Icons.AutoMirrored.Rounded.ShortText,
                         modifier = Modifier.size(24.dp),
                         contentDescription = stringResource(R.string.action_conversation_history),
                     )
@@ -292,7 +292,7 @@ private fun TopBarOverflowMenu(
     Box {
         IconButton(onClick = { onRefreshKimiWeb(); showMenu = true }) {
             Icon(
-                imageVector = Icons.Outlined.MoreHoriz,
+                imageVector = Icons.Rounded.MoreHoriz,
                 modifier = Modifier.size(24.dp),
                 contentDescription = stringResource(R.string.action_more),
             )

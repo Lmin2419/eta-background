@@ -26,7 +26,7 @@ import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.EtaPreferenceIcon
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import io.github.mangi.eta.ui.components.StatusError
 import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
@@ -201,7 +201,7 @@ private fun SpeechRecognitionTestSection(store: SpeechSettingsStore) {
                 onClick = { if (state.active) store.recognition.finish() else request() },
                 endActions = {
                     if (state.active) {
-                        EtaTextButton(
+                        EtaButton(
                             text = stringResource(R.string.action_cancel),
                             onClick = { store.recognition.cancel() },
                             minWidth = 0.dp,
@@ -210,7 +210,7 @@ private fun SpeechRecognitionTestSection(store: SpeechSettingsStore) {
                             insideMargin = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                         )
                     } else if (state.downloadAvailable) {
-                        EtaTextButton(
+                        EtaButton(
                             text = stringResource(R.string.voice_download_model),
                             onClick = { store.recognition.downloadModel() },
                             minWidth = 0.dp,

@@ -32,14 +32,13 @@ import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.data.model.Model
 import io.github.mangi.eta.data.repository.RemoteModelCatalog
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.model.ModelSearchQuery
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Checkbox
-import top.yukonga.miuix.kmp.basic.InputField
+import io.github.mangi.eta.ui.components.EtaSearchField
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import io.github.mangi.eta.ui.components.EtaSheet
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -59,7 +58,7 @@ internal fun RemoteModelImportSheet(
     onDismissRequest: () -> Unit,
     onConfirm: (RemoteModelImport, Set<String>) -> Unit,
 ) {
-    OverlayBottomSheet(
+    EtaSheet(
         show = pending != null,
         title = stringResource(R.string.remote_model_import_title),
         onDismissRequest = onDismissRequest,
@@ -114,7 +113,7 @@ private fun RemoteModelImportContent(
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(
+            EtaButton(
                 text = stringResource(
                     if (allVisibleSelected) R.string.page_select_none_ba20eb else R.string.page_select_all_3e44b2,
                 ),
@@ -129,13 +128,11 @@ private fun RemoteModelImportContent(
                 insideMargin = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
             )
         }
-        InputField(
-            query = query,
-            onQueryChange = { query = it },
+        EtaSearchField(
+            value = query,
+            onValueChange = { query = it },
             onSearch = {},
-            expanded = false,
-            onExpandedChange = {},
-            label = stringResource(R.string.ui_search_model_df5586),
+            placeholder = stringResource(R.string.ui_search_model_df5586),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -171,7 +168,7 @@ private fun RemoteModelImportContent(
                 )
             }
         }
-        EtaTextButton(
+        EtaButton(
             text = when {
                 selected.isNotEmpty() -> stringResource(R.string.remote_model_import_confirm, selected.size)
                 else -> stringResource(R.string.remote_model_import_pick_hint)

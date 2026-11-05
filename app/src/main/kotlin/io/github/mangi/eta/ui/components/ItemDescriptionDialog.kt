@@ -32,7 +32,7 @@ internal fun ItemDescriptionDialog(
                 modifier = Modifier.fillMaxWidth().weight(1f, fill = false)
                     .verticalScroll(rememberScrollState()),
             )
-            EtaTextButton(
+            EtaButton(
                 text = stringResource(R.string.action_close),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),

@@ -60,14 +60,14 @@ import io.github.mangi.eta.agent.terminal.isLinux
 import io.github.mangi.eta.ui.app.TerminalBlockUi
 import io.github.mangi.eta.ui.app.UserTerminalStore
 import io.github.mangi.eta.ui.components.EtaMonospace
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.ansiPlainText
 import io.github.mangi.eta.ui.components.ansiToAnnotatedString
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.DropdownImpl
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
@@ -440,7 +440,7 @@ private fun InputPanel(
             textStyle = MiuixTheme.textStyles.body2.copy(fontFamily = EtaMonospace),
             trailingIcon = {
                 val stopMode = running && !canSend
-                IconButton(
+                EtaIconButton(
                     onClick = if (stopMode) onStop else onSubmit,
                     enabled = stopMode || canSend,
                     minWidth = 36.dp,
@@ -529,7 +529,7 @@ internal fun TerminalPlaceholder(
             modifier = Modifier.padding(top = 14.dp),
         )
         if (actionText != null && onAction != null) {
-            EtaTextButton(
+            EtaButton(
                 text = actionText,
                 onClick = onAction,
                 colors = ButtonDefaults.textButtonColorsPrimary(),
@@ -537,7 +537,7 @@ internal fun TerminalPlaceholder(
             )
         }
         if (secondaryActionText != null && onSecondaryAction != null) {
-            EtaTextButton(
+            EtaButton(
                 text = secondaryActionText,
                 onClick = onSecondaryAction,
                 modifier = Modifier.padding(top = 8.dp),

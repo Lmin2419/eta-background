@@ -21,11 +21,11 @@ import io.github.mangi.eta.ui.components.EtaArrowPreference
 import io.github.mangi.eta.ui.components.EtaCard
 import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -46,7 +46,7 @@ internal fun CharacterEditorScreen(
         onBack = onBack,
         modifier = Modifier.imePadding(),
         actions = {
-            IconButton(
+            EtaIconButton(
                 onClick = { store.saveEditor(onSaved) },
                 enabled = !store.busy && store.draftName.isNotBlank(),
             ) {
@@ -79,7 +79,7 @@ internal fun CharacterEditorScreen(
                     maxLines = 14,
                     modifier = Modifier.weight(1f).padding(vertical = 4.dp),
                 )
-                IconButton(
+                EtaIconButton(
                     onClick = {
                         store.updateDraft { it.withEdits(alternateGreetings = it.alternateGreetings.filterIndexed { i, _ -> i != index }) }
                     },
@@ -96,7 +96,7 @@ internal fun CharacterEditorScreen(
             }
         }
         item(key = "add-greeting") {
-            EtaTextButton(
+            EtaButton(
                 "添加备用开场白",
                 onClick = { store.updateDraft { it.withEdits(alternateGreetings = it.alternateGreetings + "") } },
                 enabled = !store.busy,
@@ -132,7 +132,7 @@ internal fun CharacterEditorScreen(
             item(key = "compatibility") { CharacterPageMessage("角色卡中的第三方脚本与扩展界面不会执行，相关数据会保留在导出的角色卡中。") }
         }
         item(key = "save") {
-            EtaTextButton(
+            EtaButton(
                 text = if (store.busy) "正在处理…" else "保存角色",
                 onClick = { store.saveEditor(onSaved) },
                 enabled = !store.busy && store.draftName.isNotBlank(),

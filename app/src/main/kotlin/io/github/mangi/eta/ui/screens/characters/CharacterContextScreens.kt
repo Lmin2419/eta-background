@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.ui.app.CharacterLibraryStore
-import io.github.mangi.eta.ui.components.EtaTextButton
+import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 
@@ -20,7 +20,7 @@ internal fun CharacterPersonaScreen(store: CharacterLibraryStore, onBack: () -> 
         item(key = "name") { CharacterTextField("称呼", store.personaDraft.name, { store.updatePersona(name = it) }, !store.busy, singleLine = true) }
         item(key = "persona") { CharacterTextField("身份与关系", store.personaDraft.description, { store.updatePersona(description = it) }, !store.busy, minLines = 6) }
         item(key = "save") {
-            EtaTextButton("保存人设", onClick = { store.savePersona(onBack) }, enabled = !store.busy,
+            EtaButton("保存人设", onClick = { store.savePersona(onBack) }, enabled = !store.busy,
                 modifier = Modifier.fillMaxWidth().padding(16.dp), colors = ButtonDefaults.textButtonColorsPrimary())
         }
     }
@@ -35,8 +35,8 @@ internal fun CharacterMemoryScreen(id: String, store: CharacterLibraryStore, onB
         }
         item(key = "actions") {
             Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                EtaTextButton("重新载入", onClick = { store.loadMemory(id, force = true) }, enabled = !store.busy, modifier = Modifier.weight(1f))
-                EtaTextButton("保存记忆", onClick = { store.saveMemory(id) }, enabled = !store.busy, modifier = Modifier.weight(1f), colors = ButtonDefaults.textButtonColorsPrimary())
+                EtaButton("重新载入", onClick = { store.loadMemory(id, force = true) }, enabled = !store.busy, modifier = Modifier.weight(1f))
+                EtaButton("保存记忆", onClick = { store.saveMemory(id) }, enabled = !store.busy, modifier = Modifier.weight(1f), colors = ButtonDefaults.textButtonColorsPrimary())
             }
         }
     }

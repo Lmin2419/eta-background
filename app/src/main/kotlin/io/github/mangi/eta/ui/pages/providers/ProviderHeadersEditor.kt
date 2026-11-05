@@ -30,7 +30,7 @@ import io.github.mangi.eta.ui.components.EtaPreference
 import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
+import io.github.mangi.eta.ui.components.EtaIconButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -123,7 +123,7 @@ private fun ProviderHeaderRow(
                 singleLine = true,
                 visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    IconButton(onClick = { visible = !visible }) {
+                    EtaIconButton(onClick = { visible = !visible }) {
                         Icon(
                             imageVector = if (visible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
                             contentDescription = if (visible) {
@@ -137,7 +137,7 @@ private fun ProviderHeaderRow(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        IconButton(onClick = onRemove) {
+        EtaIconButton(onClick = onRemove) {
             Icon(
                 imageVector = Icons.Rounded.Delete,
                 contentDescription = stringResource(R.string.ui_delete_3755f5),

@@ -34,7 +34,7 @@ import io.github.mangi.eta.ui.model.AgentToolsAction
 import io.github.mangi.eta.ui.model.AgentToolsUiState
 import io.github.mangi.eta.ui.model.ToolItemUi
 import io.github.mangi.eta.ui.model.projectToolGroups
-import top.yukonga.miuix.kmp.basic.TabRow
+import io.github.mangi.eta.ui.components.EtaSegmented
 
 private object ToolsMetrics {
     val GridHorizontalPadding = 16.dp
@@ -59,10 +59,10 @@ fun AgentToolsScreen(
         listState = if (showAll) allListState else currentListState,
     ) {
         item(key = "capability-view") {
-            TabRow(
-                tabs = listOf(stringResource(R.string.capability_current_device), stringResource(R.string.capability_all)),
-                selectedTabIndex = if (showAll) 1 else 0,
-                onTabSelected = { showAll = it == 1 },
+            EtaSegmented(
+                items = listOf(stringResource(R.string.capability_current_device), stringResource(R.string.capability_all)),
+                selectedIndex = if (showAll) 1 else 0,
+                onSelectedIndexChange = { showAll = it == 1 },
                 modifier = Modifier.padding(horizontal = EtaPreferenceDefaults.SidePadding, vertical = 8.dp),
             )
         }

@@ -37,6 +37,9 @@ data class EtaColors(
     val paused: Color get() = textSecondary
     val pausedSoft: Color get() = surfaceSunken
     val onStatus: Color get() = Color.White
+    val toastBackground: Color get() = if (isDark) Color(0xFFECEDF2) else Color(0xFF1E2027)
+    val toastForeground: Color get() = if (isDark) Color(0xFF15161A) else Color(0xFFECEDF2)
+    val toastAction: Color get() = if (isDark) Color(0xFF3240D9) else Color(0xFFB9C0FF)
     val shadow: Color get() = Color(0xFF101220)
     val tileBlue: Color get() = Color(0xFF3B82F6)
     val tileIndigo: Color get() = Color(0xFF4B5BFF)

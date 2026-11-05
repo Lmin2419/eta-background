@@ -45,7 +45,7 @@ internal fun SkillSwitchRow(
     var showDescription by remember(skill.id) { mutableStateOf(false) }
     val description = skill.description.ifBlank { stringResource(R.string.skills_no_description) }
     EtaPreference(
-        startAction = { EtaPreferenceIcon(iconForSkill(skill.id), enabled = enabled, tint = EtaPreferenceColors.Green) },
+        startAction = { EtaPreferenceIcon(iconForSkill(skill.id), enabled = enabled, tint = EtaPreferenceColors.Violet) },
         endActions = {
             OverlayIconDropdownMenu(
                 modifier = Modifier.align(Alignment.CenterVertically),

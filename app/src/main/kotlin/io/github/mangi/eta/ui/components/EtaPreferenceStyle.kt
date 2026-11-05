@@ -1,16 +1,11 @@
 package io.github.mangi.eta.ui.components
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.rounded.Extension
-import androidx.compose.material.icons.rounded.TheaterComedy
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.CompositionLocalProvider
+import top.yukonga.miuix.kmp.squircle.LocalSquircleEnabled
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -19,31 +14,42 @@ import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.CardColors
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 internal object EtaPreferenceColors {
     val Blue: Color @Composable get() = EtaTheme.colors.tileBlue
-    val Green: Color @Composable get() = StatusSuccess
+    val Green: Color @Composable get() = EtaTheme.colors.tileGreen
     val Orange: Color @Composable get() = EtaTheme.colors.tileOrange
-    val Yellow: Color @Composable get() = StatusWarning
+    val Yellow: Color @Composable get() = EtaTheme.colors.tileOrange
+    val Indigo: Color @Composable get() = EtaTheme.colors.tileIndigo
+    val Violet: Color @Composable get() = EtaTheme.colors.tileViolet
+    val Pink: Color @Composable get() = EtaTheme.colors.tilePink
+    val Teal: Color @Composable get() = EtaTheme.colors.tileTeal
+    val Slate: Color @Composable get() = EtaTheme.colors.tileSlate
 }
 
 internal object EtaPreferenceDefaults {
     val SidePadding = 16.dp
-    val GroupSpacing = 16.dp
-    val IconSize = 24.dp
-    val IconTextGap = 16.dp
+    val GroupSpacing = 24.dp
+    val IconSize = 32.dp
+    val IconTextGap = 12.dp
     val ContentStart = SidePadding + IconSize + IconTextGap
     fun contentStart(hasLeading: Boolean) = if (hasLeading) ContentStart else SidePadding
-    val RowMinHeight = 52.dp
+    val RowMinHeight = 56.dp
 }
 
 @Composable
 internal fun EtaPreferenceTheme(content: @Composable () -> Unit) {
-    // AgentAppTheme owns the palette, including custom accents and dark mode.
-    content()
+    // Scope typography to preferences; retain AgentAppTheme's palette and density.
+    val type = EtaTheme.type
+    MiuixTheme(colors = MiuixTheme.colorScheme, textStyles = MiuixTheme.textStyles.copy(
+        body1 = type.rowTitle, body2 = type.subhead, button = type.rowTitle,
+        footnote1 = type.footnote, footnote2 = type.caption, subtitle = type.caption,
+        title1 = type.title1, title2 = type.title2, title3 = type.topBarTitle, title4 = type.title2,
+    )) {
+        CompositionLocalProvider(LocalSquircleEnabled provides false, content = content)
+    }
 }
 
 @Composable
@@ -53,16 +59,16 @@ internal fun EtaPreferenceGroup(
     colors: CardColors = CardDefaults.defaultColors(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    EtaCard(modifier = modifier, insideMargin = insideMargin, colors = colors, content = content)
+    EtaListGroup(modifier = modifier, insideMargin = insideMargin, colors = colors, content = content)
 }
 
 @Composable
 internal fun EtaPreferenceGroupTitle(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        style = MiuixTheme.textStyles.subtitle,
-        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-        modifier = modifier.padding(start = 32.dp, end = 32.dp, top = 4.dp, bottom = 8.dp),
+        style = EtaTheme.type.caption,
+        color = EtaTheme.colors.textTertiary,
+        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
     )
 }
 
@@ -70,29 +76,17 @@ internal fun EtaPreferenceGroupTitle(text: String, modifier: Modifier = Modifier
 internal fun EtaPreferenceIcon(
     icon: ImageVector,
     modifier: Modifier = Modifier,
-    tint: Color = MiuixTheme.colorScheme.onBackground,
+    tint: Color = EtaTheme.colors.tileSlate,
     enabled: Boolean = true,
 ) {
-    // 满幅轮廓稍作光学校正，但所有图标都占相同宽度，保证正文和分割线对齐。
-    val glyphSize = when (icon) {
-        Icons.Rounded.Extension, Icons.Rounded.TheaterComedy, Icons.AutoMirrored.Rounded.MenuBook -> 22.dp
-        else -> EtaPreferenceDefaults.IconSize
-    }
-    Box(modifier.size(EtaPreferenceDefaults.IconSize), contentAlignment = Alignment.Center) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(glyphSize),
-            tint = if (enabled) tint else MiuixTheme.colorScheme.disabledOnSurface,
-        )
-    }
+    EtaIconTile(icon = icon, modifier = modifier, tint = tint, enabled = enabled)
 }
 
 @Composable
 internal fun EtaPreferenceDivider(hasLeading: Boolean = true, modifier: Modifier = Modifier) {
     HorizontalDivider(
         modifier = modifier.padding(start = EtaPreferenceDefaults.contentStart(hasLeading), end = EtaPreferenceDefaults.SidePadding),
-        thickness = 0.33.dp,
-        color = MiuixTheme.colorScheme.onBackground.copy(alpha = 0.1f),
+        thickness = 1.dp,
+        color = EtaTheme.colors.outline,
     )
 }
