@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>任务中心</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding-top: 44px; background: #F4F5F8; font-family: 'Noto Sans SC', system-ui, sans-serif; color: #15161A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 56px; display: flex; align-items: center; padding: 0 4px">
+    <button type="button" aria-label="返回" style="width: 48px; height: 48px; border: none; background: transparent; color: #15161A; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+  </div>
+  <h1 style="margin: 0; padding: 0 16px; font-size: 26px; line-height: 34px; font-weight: 600">任务</h1>
+
+  <div style="margin: 16px 16px 0; height: 36px; border-radius: 999px; background: #ECEEF3; padding: 3px; box-sizing: border-box; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
+    <button type="button" style="border: none; border-radius: 999px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(16,18,32,.08); font-family: inherit; font-size: 14px; font-weight: 500; color: #15161A">进行中 · 2</button>
+    <button type="button" style="border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #575A66">已完成</button>
+    <button type="button" style="border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 14px; color: #575A66">常用</button>
+  </div>
+
+  <div style="flex-grow: 1; padding: 16px 16px 0; display: flex; flex-direction: column; gap: 12px; overflow: hidden">
+
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 16px; border: 1.5px solid #F2B266; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span style="width: 24px; height: 24px; border-radius: 7px; background: #E1251B; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">京</span>
+        <span style="flex-grow: 1; font-size: 16px; font-weight: 500">京东 · 每日签到</span>
+        <span style="height: 24px; padding: 0 10px; border-radius: 999px; background: #FFF1DF; color: #B45F00; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #F08C00"></span>需要你</span>
+      </div>
+      <div style="display: flex; gap: 14px">
+        <div style="width: 72px; height: 156px; border-radius: 10px; border: 1px solid #E2E4EA; flex-shrink: 0; overflow: hidden; background: #FFFFFF; display: flex; flex-direction: column">
+          <div style="height: 24px; background: #E1251B"></div>
+          <div style="margin: 30px 10px 0; height: 46px; border-radius: 6px; background: #ECEEF3"></div>
+          <div style="margin: 8px 10px 0; height: 14px; border-radius: 4px; background: #F2B266"></div>
+        </div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <span style="font-size: 15px; line-height: 22px; font-weight: 500">需要你完成滑块验证</span>
+          <span style="font-size: 13px; line-height: 18px; color: #6F7280; font-variant-numeric: tabular-nums">第 5 步 · 已暂停 32秒</span>
+          <span style="flex-grow: 1"></span>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <button type="button" style="height: 32px; padding: 0 14px; border: none; border-radius: 999px; background: #4B5BFF; color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600">接管处理</button>
+            <button type="button" style="height: 32px; padding: 0 14px; border: none; border-radius: 999px; background: #FDE8E8; color: #D33636; font-family: inherit; font-size: 13px; font-weight: 600">停止</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 16px; box-shadow: 0 1px 2px rgba(16,18,32,.06); display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span style="width: 24px; height: 24px; border-radius: 7px; background: #FFD400; color: #15161A; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">美</span>
+        <span style="flex-grow: 1; font-size: 16px; font-weight: 500">美团 · 点咖啡</span>
+        <span style="height: 24px; padding: 0 10px; border-radius: 999px; background: #E9EBFF; color: #3240D9; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 50%; border: 2px solid #4B5BFF; border-right-color: transparent; box-sizing: border-box"></span>运行中</span>
+      </div>
+      <div style="display: flex; gap: 14px">
+        <div style="width: 72px; height: 156px; border-radius: 10px; border: 1px solid #E2E4EA; flex-shrink: 0; overflow: hidden; background: #FFFFFF; display: flex; flex-direction: column">
+          <div style="height: 28px; background: #FFD400"></div>
+          <div style="margin: 8px 8px 0; height: 40px; border-radius: 6px; background: #ECEEF3"></div>
+          <div style="margin: 6px 8px 0; height: 40px; border-radius: 6px; background: #ECEEF3"></div>
+          <span style="flex-grow: 1"></span>
+          <div style="margin: 0 8px 8px; height: 16px; border-radius: 999px; background: #FFD400"></div>
+        </div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <span style="font-size: 15px; line-height: 22px; font-weight: 500">正在点击“提交订单”</span>
+          <span style="font-size: 13px; line-height: 18px; color: #6F7280; font-variant-numeric: tabular-nums">第 4 步 · 48秒</span>
+          <span style="flex-grow: 1"></span>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <button type="button" style="height: 32px; padding: 0 14px; border: none; border-radius: 999px; background: #E9EBFF; color: #3240D9; font-family: inherit; font-size: 13px; font-weight: 600">查看</button>
+            <button type="button" style="height: 32px; padding: 0 14px; border: 1px solid #CDD0D9; border-radius: 999px; background: transparent; color: #15161A; font-family: inherit; font-size: 13px; font-weight: 600">暂停</button>
+            <button type="button" style="height: 32px; padding: 0 14px; border: none; border-radius: 999px; background: #FDE8E8; color: #D33636; font-family: inherit; font-size: 13px; font-weight: 600">停止</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.2px; color: #6F7280; padding: 8px 4px 0">最近完成</span>
+    <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 64px">
+        <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#1E8E4E"></circle><path d="M6 10.2l2.6 2.6L14 7.4" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span style="flex-grow: 1; display: flex; flex-direction: column"><span style="font-size: 15px; line-height: 22px; font-weight: 500">查回家路线</span><span style="font-size: 13px; line-height: 18px; color: #6F7280">高德地图 · 14:32 · 用时 41秒</span></span>
+        <button type="button" style="height: 32px; padding: 0 12px; border: 1px solid #CDD0D9; border-radius: 999px; background: transparent; color: #15161A; font-family: inherit; font-size: 13px; font-weight: 600">打开 App</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

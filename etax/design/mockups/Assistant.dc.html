@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>电源键助手面板</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; font-family: 'Noto Sans SC', system-ui, sans-serif; background: #FFFFFF; color: #15161A">
+
+  <div style="position: absolute; inset: 0; padding: 60px 20px 0; display: flex; flex-direction: column; gap: 14px">
+    <div style="height: 22px; width: 180px; border-radius: 6px; background: #ECEEF3"></div>
+    <div style="height: 160px; border-radius: 14px; background: linear-gradient(135deg, #DDE6F7, #F3E3EC)"></div>
+    <div style="height: 12px; width: 92%; border-radius: 999px; background: #ECEEF3"></div>
+    <div style="height: 12px; width: 84%; border-radius: 999px; background: #ECEEF3"></div>
+    <div style="height: 12px; width: 88%; border-radius: 999px; background: #ECEEF3"></div>
+    <div style="height: 12px; width: 60%; border-radius: 999px; background: #ECEEF3"></div>
+  </div>
+  <div style="position: absolute; inset: 0; background: rgba(11,12,16,.28)"></div>
+  <div style="position: absolute; inset: 0; border-radius: 40px; box-shadow: inset 0 0 0 3px rgba(173,184,255,.9), inset 0 0 28px 6px rgba(242,123,222,.35), inset 0 -40px 60px -20px rgba(255,201,154,.55), inset 0 40px 60px -30px rgba(113,190,255,.5)"></div>
+
+  <div style="position: absolute; left: 8px; right: 8px; bottom: 24px; background: #FFFFFF; border-radius: 28px; box-shadow: 0 16px 48px rgba(16,18,32,.18); padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 14px">
+    <span style="align-self: center; width: 36px; height: 4px; border-radius: 999px; background: #CDD0D9"></span>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap">
+      <button type="button" style="height: 32px; padding: 0 12px; border: none; border-radius: 999px; background: #ECEEF3; color: #575A66; font-family: inherit; font-size: 13px">总结这个页面</button>
+      <button type="button" style="height: 32px; padding: 0 12px; border: none; border-radius: 999px; background: #ECEEF3; color: #575A66; font-family: inherit; font-size: 13px">分享给微信好友</button>
+      <button type="button" style="height: 32px; padding: 0 12px; border: none; border-radius: 999px; background: #ECEEF3; color: #575A66; font-family: inherit; font-size: 13px">翻译</button>
+    </div>
+
+    <div style="align-self: flex-end; max-width: 88%; background: #ECEEF3; border-radius: 20px 20px 8px 20px; padding: 10px 14px; font-size: 15px; line-height: 24px">把这篇文章发给小王，<span style="color: #6F7280">顺便说一句晚上</span></div>
+
+    <div style="display: flex; align-items: center; justify-content: center; gap: 3px; height: 28px" aria-hidden="true">
+      <span style="width: 3px; height: 8px; border-radius: 999px; background: #71BEFF"></span>
+      <span style="width: 3px; height: 16px; border-radius: 999px; background: #8FBBFF"></span>
+      <span style="width: 3px; height: 24px; border-radius: 999px; background: #ADB8FF"></span>
+      <span style="width: 3px; height: 14px; border-radius: 999px; background: #C29CF2"></span>
+      <span style="width: 3px; height: 26px; border-radius: 999px; background: #D98AE8"></span>
+      <span style="width: 3px; height: 18px; border-radius: 999px; background: #F27BDE"></span>
+      <span style="width: 3px; height: 22px; border-radius: 999px; background: #F79BC8"></span>
+      <span style="width: 3px; height: 12px; border-radius: 999px; background: #FBB3B1"></span>
+      <span style="width: 3px; height: 18px; border-radius: 999px; background: #FFC99A"></span>
+      <span style="width: 3px; height: 8px; border-radius: 999px; background: #FFC99A"></span>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 12px">
+      <button type="button" aria-label="切换到键盘" style="width: 48px; height: 48px; border: none; border-radius: 999px; background: #ECEEF3; color: #575A66; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"></rect><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"></path></svg></button>
+      <button type="button" aria-label="正在聆听，点按结束" style="width: 72px; height: 72px; border: none; border-radius: 999px; background: linear-gradient(135deg, #71BEFF, #ADB8FF 40%, #F27BDE 75%, #FFC99A); padding: 4px; display: flex; align-items: center; justify-content: center">
+        <span style="width: 64px; height: 64px; border-radius: 999px; background: #4B5BFF; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></span>
+      </button>
+      <button type="button" aria-label="打开 ETA 会话" style="width: 48px; height: 48px; border: none; border-radius: 999px; background: #ECEEF3; color: #575A66; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 18.5V7a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H8z"></path></svg></button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

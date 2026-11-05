@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>设置</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding-top: 44px; background: #F4F5F8; font-family: 'Noto Sans SC', system-ui, sans-serif; color: #15161A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 56px; display: flex; align-items: center; padding: 0 4px">
+    <button type="button" aria-label="返回" style="width: 48px; height: 48px; border: none; background: transparent; color: #15161A; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+  </div>
+  <h1 style="margin: 0; padding: 0 16px; font-size: 26px; line-height: 34px; font-weight: 600">设置</h1>
+
+  <div style="padding: 16px 16px 0; display: flex; flex-direction: column; gap: 0">
+
+    <button type="button" style="border: none; background: #FFFFFF; border-radius: 20px; padding: 16px; font-family: inherit; text-align: left; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 2px rgba(16,18,32,.06)">
+      <span style="display: flex; align-items: center; gap: 8px; width: 100%">
+        <span style="font-size: 17px; font-weight: 600; color: #15161A; flex-grow: 1">后台操作就绪</span>
+        <span style="height: 24px; padding: 0 10px; border-radius: 999px; background: #FFF1DF; color: #B45F00; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center">还差 1 项</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6F7280" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </span>
+      <span style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; width: 100%">
+        <span style="display: flex; flex-direction: column; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#1E8E4E"></circle><path d="M6 10.2l2.6 2.6L14 7.4" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="font-size: 12px; color: #575A66">Root</span></span>
+        <span style="display: flex; flex-direction: column; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#1E8E4E"></circle><path d="M6 10.2l2.6 2.6L14 7.4" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="font-size: 12px; color: #575A66">无障碍</span></span>
+        <span style="display: flex; flex-direction: column; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F08C00"></circle><path d="M10 5.5v5.5M10 14v.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"></path></svg><span style="font-size: 12px; color: #B45F00; font-weight: 500">悬浮窗</span></span>
+        <span style="display: flex; flex-direction: column; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#1E8E4E"></circle><path d="M6 10.2l2.6 2.6L14 7.4" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="font-size: 12px; color: #575A66">通知</span></span>
+        <span style="display: flex; flex-direction: column; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#1E8E4E"></circle><path d="M6 10.2l2.6 2.6L14 7.4" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="font-size: 12px; color: #575A66">引擎 e49</span></span>
+      </span>
+    </button>
+
+    <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.2px; color: #6F7280; padding: 24px 16px 8px">模型与对话</span>
+    <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 56px">
+        <span style="width: 32px; height: 32px; border-radius: 10px; background: rgba(59,130,246,.12); color: #3B82F6; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"></path><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"></path></svg></span>
+        <span style="font-size: 16px; font-weight: 500; flex-grow: 1">模型服务商</span><span style="font-size: 14px; color: #6F7280">3 个</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6F7280" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+      <div style="height: 1px; background: #E2E4EA; margin-left: 60px"></div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 64px">
+        <span style="width: 32px; height: 32px; border-radius: 10px; background: rgba(59,130,246,.12); color: #3B82F6; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"></path></svg></span>
+        <span style="display: flex; flex-direction: column; flex-grow: 1"><span style="font-size: 16px; line-height: 22px; font-weight: 500">默认深度思考</span><span style="font-size: 14px; line-height: 20px; color: #575A66">新对话默认使用深度思考</span></span>
+        <span style="width: 52px; height: 32px; border-radius: 999px; background: #4B5BFF; position: relative; flex-shrink: 0"><span style="position: absolute; right: 3px; top: 3px; width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span>
+      </div>
+      <div style="height: 1px; background: #E2E4EA; margin-left: 60px"></div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 56px">
+        <span style="width: 32px; height: 32px; border-radius: 10px; background: rgba(139,92,246,.12); color: #8B5CF6; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4.5a3 3 0 0 0-3 3v.2A3 3 0 0 0 4.5 13 3 3 0 0 0 7 17.5 3 3 0 0 0 12 19V6a2.5 2.5 0 0 0-3-1.5z"></path><path d="M15 4.5a3 3 0 0 1 3 3v.2a3 3 0 0 1 1.5 5.3 3 3 0 0 1-2.5 4.5A3 3 0 0 1 12 19"></path></svg></span>
+        <span style="font-size: 16px; font-weight: 500; flex-grow: 1">记忆</span><span style="font-size: 14px; color: #6F7280">已开启</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6F7280" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
+
+    <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.2px; color: #6F7280; padding: 24px 16px 8px">后台执行</span>
+    <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 64px">
+        <span style="width: 32px; height: 32px; border-radius: 10px; background: rgba(75,91,255,.12); color: #4B5BFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg></span>
+        <span style="display: flex; flex-direction: column; flex-grow: 1"><span style="font-size: 16px; line-height: 22px; font-weight: 500">完成提示</span><span style="font-size: 14px; line-height: 20px; color: #575A66">任务结束时弹出顶部横幅</span></span>
+        <span style="width: 52px; height: 32px; border-radius: 999px; background: #4B5BFF; position: relative; flex-shrink: 0"><span style="position: absolute; right: 3px; top: 3px; width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span>
+      </div>
+      <div style="height: 1px; background: #E2E4EA; margin-left: 60px"></div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 56px">
+        <span style="width: 32px; height: 32px; border-radius: 10px; background: rgba(75,91,255,.12); color: #4B5BFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"></path></svg></span>
+        <span style="font-size: 16px; font-weight: 500; flex-grow: 1">后台诊断</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6F7280" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
+
+    <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.2px; color: #6F7280; padding: 24px 16px 8px">系统助手</span>
+    <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 64px">
+        <span style="width: 32px; height: 32px; border-radius: 10px; background: rgba(240,140,0,.12); color: #F08C00; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"></path><path d="M7.5 6.5a7 7 0 1 0 9 0"></path></svg></span>
+        <span style="display: flex; flex-direction: column; flex-grow: 1"><span style="font-size: 16px; line-height: 22px; font-weight: 500">长按电源键</span><span style="font-size: 14px; line-height: 20px; color: #575A66">唤起 Eta 助手面板</span></span>
+        <span style="width: 52px; height: 32px; border-radius: 999px; background: #4B5BFF; position: relative; flex-shrink: 0"><span style="position: absolute; right: 3px; top: 3px; width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

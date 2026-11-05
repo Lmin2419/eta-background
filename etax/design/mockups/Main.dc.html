@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>设计语言「静流」</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1800px; height: 1200px; box-sizing: border-box; padding: 56px 64px; background: #F4F5F8; font-family: 'Noto Sans SC', system-ui, sans-serif; color: #15161A; display: flex; flex-direction: column; gap: 36px">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 20px">
+      <div style="width: 64px; height: 64px; border-radius: 20px; background: #16171C; display: flex; align-items: center; justify-content: center">
+        <span style="font-size: 40px; font-weight: 600; line-height: 1; background: linear-gradient(100deg, #71BEFF 0%, #ADB8FF 35%, #F27BDE 70%, #FFC99A 100%); -webkit-background-clip: text; background-clip: text; color: transparent">η</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-size: 34px; line-height: 42px; font-weight: 600">静流 · Eta 后台版设计语言</h1>
+        <p style="margin: 0; font-size: 16px; line-height: 24px; color: #575A66">界面安静，AI 在动。中性底色 + 一个品牌蓝；流光只出现在 AI 正在工作的地方。</p>
+      </div>
+    </div>
+    <p style="margin: 0; font-size: 13px; color: #6F7280">数值以 etax/design/01-design-language.md 为准</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: start">
+
+    <div style="display: flex; flex-direction: column; gap: 24px">
+
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 1px 2px rgba(16,18,32,.06)">
+        <h2 style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 600">颜色 · 浅色</h2>
+        <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #F4F5F8; border: 1px solid #E2E4EA"></div><span style="font-size: 12px; font-weight: 500">canvas</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#F4F5F8</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #FFFFFF; border: 1px solid #E2E4EA"></div><span style="font-size: 12px; font-weight: 500">surface</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#FFFFFF</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #ECEEF3"></div><span style="font-size: 12px; font-weight: 500">sunken</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#ECEEF3</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #E2E4EA"></div><span style="font-size: 12px; font-weight: 500">outline</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#E2E4EA</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #CDD0D9"></div><span style="font-size: 12px; font-weight: 500">outline强</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#CDD0D9</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #15161A"></div><span style="font-size: 12px; font-weight: 500">文字 1</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#15161A</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #575A66"></div><span style="font-size: 12px; font-weight: 500">文字 2</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#575A66</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #6F7280"></div><span style="font-size: 12px; font-weight: 500">文字 3</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#6F7280</span></div>
+        </div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; line-height: 24px; font-weight: 600">颜色 · 深色</h2>
+        <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #0D0E12"></div><span style="font-size: 12px; font-weight: 500">canvas</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#0D0E12</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #16171C"></div><span style="font-size: 12px; font-weight: 500">surface</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#16171C</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #1E2027"></div><span style="font-size: 12px; font-weight: 500">raised</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#1E2027</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #23252D"></div><span style="font-size: 12px; font-weight: 500">sunken</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#23252D</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #2A2C35"></div><span style="font-size: 12px; font-weight: 500">outline</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#2A2C35</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #ECEDF2; border: 1px solid #E2E4EA"></div><span style="font-size: 12px; font-weight: 500">文字 1</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#ECEDF2</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #A6A9B6"></div><span style="font-size: 12px; font-weight: 500">文字 2</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#A6A9B6</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #80838F"></div><span style="font-size: 12px; font-weight: 500">文字 3</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#80838F</span></div>
+        </div>
+        <h2 style="margin: 4px 0 0; font-size: 17px; line-height: 24px; font-weight: 600">品牌与状态</h2>
+        <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #4B5BFF"></div><span style="font-size: 12px; font-weight: 500">accent Eta 蓝</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#4B5BFF</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #E9EBFF"></div><span style="font-size: 12px; font-weight: 500">accentSoft</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#E9EBFF</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #FFF1DF; display: flex; align-items: center; justify-content: center; color: #B45F00; font-size: 13px; font-weight: 600">需要你</div><span style="font-size: 12px; font-weight: 500">attention</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#B45F00</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #E3F5EA; display: flex; align-items: center; justify-content: center; color: #1E8E4E; font-size: 13px; font-weight: 600">已完成</div><span style="font-size: 12px; font-weight: 500">success</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#1E8E4E</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #FDE8E8; display: flex; align-items: center; justify-content: center; color: #D33636; font-size: 13px; font-weight: 600">未完成</div><span style="font-size: 12px; font-weight: 500">danger</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#D33636</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><div style="height: 52px; border-radius: 14px; background: #ECEEF3; display: flex; align-items: center; justify-content: center; color: #575A66; font-size: 13px; font-weight: 600">已暂停</div><span style="font-size: 12px; font-weight: 500">paused</span><span style="font-size: 11px; color: #6F7280; font-family: 'JetBrains Mono', monospace">#575A66</span></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px">
+          <div style="flex-grow: 1; height: 14px; border-radius: 999px; background: linear-gradient(100deg, #71BEFF 0%, #ADB8FF 35%, #F27BDE 70%, #FFC99A 100%)"></div>
+          <span style="font-size: 13px; color: #575A66">流光 Aurora · 只用于 AI 正在工作</span>
+        </div>
+      </div>
+
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(16,18,32,.06)">
+        <h2 style="margin: 0 0 6px; font-size: 17px; line-height: 24px; font-weight: 600">字体 · 系统字体（ColorOS 上为 OPPO Sans）</h2>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">display 30/38</span><span style="font-size: 30px; line-height: 38px; font-weight: 600">下午好</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">title1 26/34</span><span style="font-size: 26px; line-height: 34px; font-weight: 600">任务中心</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">title2 20/28</span><span style="font-size: 20px; line-height: 28px; font-weight: 600">对话设置</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">headline 17/24</span><span style="font-size: 17px; line-height: 24px; font-weight: 600">后台执行</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">body 16/26</span><span style="font-size: 16px; line-height: 26px">我已在后台打开美团，正在为你挑选附近评分最高的咖啡店。</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">rowTitle 16/22</span><span style="font-size: 16px; line-height: 22px; font-weight: 500">长按电源键唤起</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">subhead 14/20</span><span style="font-size: 14px; line-height: 20px; color: #575A66">允许 AI 在虚拟屏里打开并操作 App</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">footnote 13/18</span><span style="font-size: 13px; line-height: 18px; color: #575A66">工作过程 · 8 步 · 1分12秒</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">caption 12/16</span><span style="font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.2px; color: #6F7280">今天</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 150px; flex-shrink: 0; font-size: 12px; color: #6F7280; font-family: 'JetBrains Mono', monospace">mono 13/20</span><span style="font-size: 13px; line-height: 20px; font-family: 'JetBrains Mono', monospace">am start -n com.sankuai.meituan/.MainActivity</span></div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 24px">
+
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 2px rgba(16,18,32,.06)">
+        <h2 style="margin: 0 0 10px; font-size: 17px; line-height: 24px; font-weight: 600">状态语言 · App、通知、浮窗、预览窗完全一致</h2>
+        <div style="display: flex; align-items: center; gap: 16px; height: 52px; border-bottom: 1px solid #E2E4EA">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><defs><linearGradient id="mR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#71BEFF"></stop><stop offset=".4" stop-color="#ADB8FF"></stop><stop offset=".75" stop-color="#F27BDE"></stop><stop offset="1" stop-color="#FFC99A"></stop></linearGradient></defs><circle cx="10" cy="10" r="8" fill="none" stroke="#E9EBFF" stroke-width="2.2"></circle><path d="M10 2 A8 8 0 1 1 2 10" fill="none" stroke="url(#mR)" stroke-width="2.2" stroke-linecap="round"></path></svg>
+          <span style="width: 84px; font-size: 15px; font-weight: 600">运行中</span><span style="font-size: 14px; color: #575A66; flex-grow: 1">旋转弧线 + 流光</span><span style="font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #E9EBFF; color: #3240D9">正在点击“提交订单”</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; height: 52px; border-bottom: 1px solid #E2E4EA">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F08C00"></circle><path d="M10 5.5v5.5M10 14v.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"></path></svg>
+          <span style="width: 84px; font-size: 15px; font-weight: 600">需要你</span><span style="font-size: 14px; color: #575A66; flex-grow: 1">实心圆 + 感叹号</span><span style="font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #FFF1DF; color: #B45F00">需要你输入验证码</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; height: 52px; border-bottom: 1px solid #E2E4EA">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="#575A66" stroke-width="1.8"></circle><path d="M8 7v6M12 7v6" stroke="#575A66" stroke-width="1.8" stroke-linecap="round"></path></svg>
+          <span style="width: 84px; font-size: 15px; font-weight: 600">已暂停</span><span style="font-size: 14px; color: #575A66; flex-grow: 1">空心环 + 两竖线</span><span style="font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #ECEEF3; color: #575A66">已暂停 · 你在操作</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; height: 52px; border-bottom: 1px solid #E2E4EA">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#1E8E4E"></circle><path d="M6 10.2l2.6 2.6L14 7.4" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <span style="width: 84px; font-size: 15px; font-weight: 600">已完成</span><span style="font-size: 14px; color: #575A66; flex-grow: 1">实心圆 + 对勾</span><span style="font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #E3F5EA; color: #1E8E4E">已完成 · 用时 2分13秒</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; height: 52px; border-bottom: 1px solid #E2E4EA">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#D33636"></circle><path d="M7 7l6 6M13 7l-6 6" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"></path></svg>
+          <span style="width: 84px; font-size: 15px; font-weight: 600">未完成</span><span style="font-size: 14px; color: #575A66; flex-grow: 1">实心圆 + 叉</span><span style="font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #FDE8E8; color: #D33636">未完成 · 应用未安装</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; height: 52px">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="#6F7280" stroke-width="1.8" stroke-dasharray="3 3"></circle></svg>
+          <span style="width: 84px; font-size: 15px; font-weight: 600">排队中</span><span style="font-size: 14px; color: #575A66; flex-grow: 1">虚线圆环</span><span style="font-size: 13px; padding: 3px 10px; border-radius: 999px; background: #ECEEF3; color: #575A66">排队中 · 前面 1 个</span>
+        </div>
+      </div>
+
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 1px 2px rgba(16,18,32,.06)">
+        <h2 style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 600">圆角与层级</h2>
+        <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><div style="width: 56px; height: 56px; background: #E9EBFF; border-radius: 6px"></div><span style="font-size: 12px; color: #575A66">6 代码</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><div style="width: 56px; height: 56px; background: #E9EBFF; border-radius: 10px"></div><span style="font-size: 12px; color: #575A66">10 图标块</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><div style="width: 56px; height: 56px; background: #E9EBFF; border-radius: 14px"></div><span style="font-size: 12px; color: #575A66">14 建议卡</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><div style="width: 56px; height: 56px; background: #E9EBFF; border-radius: 20px"></div><span style="font-size: 12px; color: #575A66">20 卡片</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><div style="width: 56px; height: 56px; background: #E9EBFF; border-radius: 28px 28px 8px 8px"></div><span style="font-size: 12px; color: #575A66">28 面板</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><div style="width: 56px; height: 56px; background: #E9EBFF; border-radius: 999px"></div><span style="font-size: 12px; color: #575A66">全圆 按钮</span></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 12px; background: #F4F5F8; border-radius: 14px">
+          <div style="height: 64px; background: #FFFFFF; border-radius: 14px; box-shadow: 0 1px 2px rgba(16,18,32,.06); display: flex; align-items: center; justify-content: center; font-size: 13px; color: #575A66">e1 卡片</div>
+          <div style="height: 64px; background: #FFFFFF; border-radius: 14px; box-shadow: 0 6px 24px rgba(16,18,32,.10), 0 1px 3px rgba(16,18,32,.06); display: flex; align-items: center; justify-content: center; font-size: 13px; color: #575A66">e2 输入栏 · 菜单</div>
+          <div style="height: 64px; background: #FFFFFF; border-radius: 14px; box-shadow: 0 16px 48px rgba(16,18,32,.18); display: flex; align-items: center; justify-content: center; font-size: 13px; color: #575A66">e3 面板 · 浮窗</div>
+        </div>
+      </div>
+
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 1px 2px rgba(16,18,32,.06)">
+        <h2 style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 600">组件</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+          <button type="button" style="height: 48px; padding: 0 22px; border: none; border-radius: 999px; background: #4B5BFF; color: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 500">接管</button>
+          <button type="button" style="height: 48px; padding: 0 22px; border: none; border-radius: 999px; background: #E9EBFF; color: #3240D9; font-family: inherit; font-size: 16px; font-weight: 500">运行</button>
+          <button type="button" style="height: 48px; padding: 0 22px; border: 1px solid #CDD0D9; border-radius: 999px; background: transparent; color: #15161A; font-family: inherit; font-size: 16px; font-weight: 500">暂停</button>
+          <button type="button" style="height: 48px; padding: 0 14px; border: none; border-radius: 999px; background: transparent; color: #4B5BFF; font-family: inherit; font-size: 16px; font-weight: 500">取消</button>
+          <button type="button" style="height: 48px; padding: 0 22px; border: none; border-radius: 999px; background: #FDE8E8; color: #D33636; font-family: inherit; font-size: 16px; font-weight: 500">停止</button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+          <span style="height: 32px; padding: 0 14px; border-radius: 999px; background: #E9EBFF; color: #3240D9; font-size: 14px; display: inline-flex; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"></path></svg>深度</span>
+          <span style="height: 32px; padding: 0 14px; border-radius: 999px; background: #ECEEF3; color: #575A66; font-size: 14px; display: inline-flex; align-items: center">快速</span>
+          <span style="height: 32px; padding: 0 14px; border-radius: 999px; background: #ECEEF3; color: #575A66; font-size: 14px; display: inline-flex; align-items: center">标准</span>
+          <span style="width: 1px; height: 20px; background: #E2E4EA"></span>
+          <span style="height: 24px; padding: 0 10px; border-radius: 999px; background: #E9EBFF; color: #3240D9; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 50%; border: 2px solid #4B5BFF; border-right-color: transparent; box-sizing: border-box"></span>运行中</span>
+          <span style="height: 24px; padding: 0 10px; border-radius: 999px; background: #FFF1DF; color: #B45F00; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #F08C00"></span>需要你</span>
+          <span style="height: 24px; padding: 0 10px; border-radius: 999px; background: #E3F5EA; color: #1E8E4E; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #1E8E4E"></span>已完成</span>
+        </div>
+        <div style="background: #F4F5F8; border-radius: 14px; padding: 12px">
+          <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 64px">
+              <span style="width: 32px; height: 32px; border-radius: 10px; background: rgba(240,140,0,.12); color: #F08C00; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"></path><path d="M7.5 6.5a7 7 0 1 0 9 0"></path></svg></span>
+              <span style="display: flex; flex-direction: column; flex-grow: 1"><span style="font-size: 16px; line-height: 22px; font-weight: 500">长按电源键</span><span style="font-size: 14px; line-height: 20px; color: #575A66">唤起 Eta 助手面板</span></span>
+              <span style="width: 52px; height: 32px; border-radius: 999px; background: #4B5BFF; position: relative; flex-shrink: 0"><span style="position: absolute; right: 3px; top: 3px; width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF"></span></span>
+            </div>
+            <div style="height: 1px; background: #E2E4EA; margin-left: 60px"></div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px; min-height: 56px">
+              <span style="width: 32px; height: 32px; border-radius: 10px; background: rgba(59,130,246,.12); color: #3B82F6; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"></path><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"></path></svg></span>
+              <span style="font-size: 16px; line-height: 22px; font-weight: 500; flex-grow: 1">模型服务商</span>
+              <span style="font-size: 14px; color: #6F7280">3 个</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6F7280" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1800,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>顶部胶囊与任务通知</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 48px 16px 0; background: #E4E6EC; font-family: 'Noto Sans SC', system-ui, sans-serif; color: #15161A; display: flex; flex-direction: column; gap: 10px; overflow: hidden">
+
+  <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.2px; color: #575A66; padding: 0 4px">顶部胶囊 · 收起</span>
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+    <div style="height: 40px; border-radius: 999px; background: rgba(22,23,28,.94); color: #ECEDF2; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 12px">
+      <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><defs><linearGradient id="nfR1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#71BEFF"></stop><stop offset=".4" stop-color="#ADB8FF"></stop><stop offset=".75" stop-color="#F27BDE"></stop><stop offset="1" stop-color="#FFC99A"></stop></linearGradient></defs><circle cx="10" cy="10" r="8" fill="none" stroke="#2F3240" stroke-width="2.4"></circle><path d="M10 2 A8 8 0 1 1 2 10" fill="none" stroke="url(#nfR1)" stroke-width="2.4" stroke-linecap="round"></path></svg>
+      <span style="font-size: 13px">正在点击“提交订单”</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A6A9B6" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+    </div>
+    <div style="height: 40px; border-radius: 999px; background: #3A2A12; color: #FFD9A3; display: flex; align-items: center; gap: 8px; padding: 0 14px 0 12px">
+      <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#FFB14A"></circle><path d="M10 5.5v5.5M10 14v.4" stroke="#3A2A12" stroke-width="2" stroke-linecap="round"></path></svg>
+      <span style="font-size: 13px">需要你处理 · 点此查看</span>
+    </div>
+  </div>
+
+  <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.2px; color: #575A66; padding: 6px 4px 0">顶部胶囊 · 展开</span>
+  <div style="background: rgba(22,23,28,.96); border-radius: 20px; padding: 14px 14px 10px; color: #ECEDF2; display: flex; flex-direction: column; gap: 6px">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><defs><linearGradient id="nfR2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#71BEFF"></stop><stop offset=".4" stop-color="#ADB8FF"></stop><stop offset=".75" stop-color="#F27BDE"></stop><stop offset="1" stop-color="#FFC99A"></stop></linearGradient></defs><circle cx="10" cy="10" r="8" fill="none" stroke="#2F3240" stroke-width="2.4"></circle><path d="M10 2 A8 8 0 1 1 2 10" fill="none" stroke="url(#nfR2)" stroke-width="2.4" stroke-linecap="round"></path></svg>
+      <span style="font-size: 14px; font-weight: 500; flex-grow: 1">美团 · 正在点击“提交订单”</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A6A9B6" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg>
+    </div>
+    <span style="font-size: 12px; line-height: 16px; color: #80838F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">…规格已确认，地址选择公司，下一步提交后停在支付页</span>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 6px">
+      <button type="button" style="height: 40px; border: none; border-radius: 999px; background: #23252D; color: #ECEDF2; font-family: inherit; font-size: 13px; font-weight: 500">查看</button>
+      <button type="button" style="height: 40px; border: none; border-radius: 999px; background: #23252D; color: #ECEDF2; font-family: inherit; font-size: 13px; font-weight: 500">暂停</button>
+      <button type="button" style="height: 40px; border: none; border-radius: 999px; background: #3A1717; color: #FF7A7A; font-family: inherit; font-size: 13px; font-weight: 500">停止</button>
+    </div>
+  </div>
+
+  <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.2px; color: #575A66; padding: 6px 4px 0">任务通知</span>
+
+  <div style="background: #FFFFFF; border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 6px"><span style="width: 18px; height: 18px; border-radius: 50%; background: #4B5BFF; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">η</span><span style="font-size: 12px; color: #6F7280">Eta 后台版 · 现在</span></div>
+    <span style="font-size: 15px; font-weight: 600">美团 · 点咖啡</span>
+    <span style="font-size: 14px; color: #575A66">正在点击“提交订单” · 第 4 步</span>
+    <div style="height: 4px; border-radius: 999px; background: #E9EBFF; margin: 6px 0 2px; overflow: hidden"><div style="width: 55%; height: 4px; border-radius: 999px; background: #4B5BFF"></div></div>
+    <div style="display: flex; gap: 20px; padding-top: 4px"><span style="font-size: 14px; font-weight: 600; color: #4B5BFF">查看</span><span style="font-size: 14px; font-weight: 600; color: #4B5BFF">暂停</span><span style="font-size: 14px; font-weight: 600; color: #4B5BFF">停止</span></div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 6px"><span style="width: 18px; height: 18px; border-radius: 50%; background: #4B5BFF; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">η</span><span style="font-size: 12px; color: #6F7280">Eta 后台版 · 2 分钟前</span></div>
+    <span style="font-size: 15px; font-weight: 600">京东 · 每日签到</span>
+    <span style="font-size: 14px; color: #B45F00">需要你完成滑块验证</span>
+    <div style="display: flex; gap: 20px; padding-top: 6px"><span style="font-size: 14px; font-weight: 600; color: #4B5BFF">查看</span><span style="font-size: 14px; font-weight: 600; color: #4B5BFF">继续</span><span style="font-size: 14px; font-weight: 600; color: #4B5BFF">停止</span></div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 6px"><span style="width: 18px; height: 18px; border-radius: 50%; background: #4B5BFF; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">η</span><span style="font-size: 12px; color: #6F7280">Eta 后台版 · 14:32</span></div>
+    <span style="font-size: 15px; font-weight: 600">高德地图 · 查回家路线</span>
+    <span style="font-size: 14px; color: #575A66">已完成 · 用时 41秒 · 预计 32 分钟到家</span>
+    <div style="display: flex; gap: 20px; padding-top: 6px"><span style="font-size: 14px; font-weight: 600; color: #4B5BFF">打开会话</span><span style="font-size: 14px; font-weight: 600; color: #4B5BFF">打开 App</span><span style="font-size: 14px; font-weight: 600; color: #4B5BFF">继续指令</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

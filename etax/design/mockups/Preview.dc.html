@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>任务预览窗 · 接管中</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; font-family: 'Noto Sans SC', system-ui, sans-serif; background: linear-gradient(160deg, #B9C6E4 0%, #D9CFE6 55%, #EBD8D8 100%)">
+
+  <div style="position: absolute; left: 28px; right: 28px; top: 470px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 22px">
+    <span style="aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,.55)"></span>
+    <span style="aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,.55)"></span>
+    <span style="aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,.55)"></span>
+    <span style="aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,.55)"></span>
+    <span style="aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,.55)"></span>
+    <span style="aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,.55)"></span>
+    <span style="aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,.55)"></span>
+    <span style="aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,.55)"></span>
+  </div>
+  <div style="position: absolute; inset: 0; background: rgba(11,12,16,.18)"></div>
+
+  <div style="position: absolute; left: 16px; right: 16px; top: 56px; background: #16171C; border: 1px solid #2A2C35; border-radius: 28px; box-shadow: 0 16px 48px rgba(16,18,32,.30); padding: 6px 14px 14px; display: flex; flex-direction: column; color: #ECEDF2">
+
+    <div style="height: 52px; display: flex; align-items: center; gap: 8px">
+      <span style="width: 24px; height: 24px; border-radius: 7px; background: #E1251B; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">京</span>
+      <span style="font-size: 16px; font-weight: 500">京东</span>
+      <span style="height: 24px; padding: 0 10px; border-radius: 999px; background: #23252D; color: #A6A9B6; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px"><svg width="10" height="10" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="#A6A9B6" stroke-width="2.4"></circle><path d="M8 7v6M12 7v6" stroke="#A6A9B6" stroke-width="2.4" stroke-linecap="round"></path></svg>已暂停 · 你在操作</span>
+      <span style="flex-grow: 1"></span>
+      <button type="button" aria-label="缩小" style="width: 40px; height: 40px; border: none; border-radius: 999px; background: transparent; color: #A6A9B6; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"></path></svg></button>
+      <button type="button" aria-label="关闭" style="width: 40px; height: 40px; border: none; border-radius: 999px; background: transparent; color: #A6A9B6; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    </div>
+
+    <div style="height: 470px; border-radius: 16px; background: #0D0E12; border: 2px solid #8C97FF; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden">
+      <div style="width: 210px; height: 466px; background: #FFFFFF; position: relative; display: flex; flex-direction: column">
+        <div style="height: 64px; background: #E1251B; display: flex; align-items: flex-end; padding: 0 12px 10px; color: #FFFFFF; font-size: 13px; font-weight: 600">签到领京豆</div>
+        <div style="margin: 40px 18px 0; height: 120px; border-radius: 10px; background: #ECEEF3; position: relative">
+          <div style="position: absolute; left: 14px; top: 34px; width: 46px; height: 46px; border-radius: 8px; background: #CDD0D9"></div>
+          <div style="position: absolute; right: 30px; top: 34px; width: 46px; height: 46px; border-radius: 8px; border: 2px dashed #CDD0D9"></div>
+        </div>
+        <div style="margin: 14px 18px 0; height: 34px; border-radius: 999px; background: #ECEEF3; position: relative">
+          <div style="position: absolute; left: 3px; top: 3px; width: 54px; height: 28px; border-radius: 999px; background: #E1251B"></div>
+        </div>
+        <span style="margin: 10px 18px 0; font-size: 10px; color: #6F7280">拖动滑块完成拼图</span>
+        <div style="position: absolute; left: 29px; top: 296px; width: 38px; height: 38px; border-radius: 50%; background: rgba(140,151,255,.30); border: 1.5px solid #8C97FF"></div>
+        <div style="position: absolute; left: 66px; top: 314px; width: 60px; height: 2px; border-radius: 999px; background: linear-gradient(90deg, rgba(140,151,255,.9), rgba(140,151,255,0))"></div>
+      </div>
+    </div>
+
+    <p style="margin: 10px 4px 0; font-size: 13px; line-height: 18px; color: #A6A9B6">点击、滑动画面即可操作 · 完成后点“交还 AI”</p>
+
+    <div style="display: flex; gap: 8px; margin-top: 12px">
+      <button type="button" style="flex-grow: 1; height: 48px; border: none; border-radius: 999px; background: #8C97FF; color: #0B0E2A; font-family: inherit; font-size: 16px; font-weight: 600">交还 AI</button>
+      <button type="button" aria-label="返回键" style="width: 48px; height: 48px; border: 1px solid #3A3D48; border-radius: 999px; background: transparent; color: #ECEDF2; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
