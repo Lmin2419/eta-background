@@ -66,9 +66,15 @@ class BackgroundScreenConcurrentObservationTest {
             val results = tools.executeConcurrently(observation).map { JSONObject(it!!) }
             assertTrue(results[0].getBoolean("ok"))
             assertEquals("STALE_SCREEN", results[1].getString("code"))
-            assertEquals(1, connection.releases.get())
-            val after = JSONObject(tools.execute("screen_dump", "{}")!!)
+            // Cleanup runs on the maintenance thread; wait until it has released the binding.
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
+            var after = JSONObject(tools.execute("screen_dump", "{}")!!)
+            while (after.optString("code") == "CLEANUP_PENDING" && System.nanoTime() < deadline) {
+                Thread.sleep(10)
+                after = JSONObject(tools.execute("screen_dump", "{}")!!)
+            }
             assertEquals("NO_SESSION", after.getString("code"))
+            assertEquals(1, connection.releases.get())
         } finally { tools.close() }
     }
 
