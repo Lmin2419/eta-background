@@ -151,7 +151,9 @@ class VDriveWorker implements VDrive.Worker {
         final java.util.concurrent.CountDownLatch finished = new java.util.concurrent.CountDownLatch(1);
         volatile JSONObject result;
         volatile boolean expired;
-        PendingCommand(long id) { this.id = id; }
+        /** A capture changes nothing on screen, so a node read may validate geometry meanwhile. */
+        final boolean readOnly;
+        PendingCommand(long id, boolean readOnly) { this.id = id; this.readOnly = readOnly; }
     }
     private final java.util.concurrent.atomic.AtomicReference<PendingCommand> pendingCommand = new java.util.concurrent.atomic.AtomicReference<>();
     private final java.util.concurrent.atomic.AtomicBoolean heartbeatPending = new java.util.concurrent.atomic.AtomicBoolean();
@@ -374,7 +376,8 @@ class VDriveWorker implements VDrive.Worker {
     }
     public JSONObject observationGuard(boolean mutating) {
         PendingCommand pending = pendingCommand.get();
-        if (pending != null) return busyCommand(pending);
+        // observe_screen reads nodes and captures in parallel; only an input must wait for the capture.
+        if (pending != null && (mutating || !pending.readOnly || pending.expired)) return busyCommand(pending);
         return mutating && observationRequired ? observeAfterTimeout() : null;
     }
     public void observationAccepted() {
@@ -700,7 +703,7 @@ class VDriveWorker implements VDrive.Worker {
             }
         }
         if (retired) return fail("SESSION_CLOSED", "screen session has been released");
-        final PendingCommand ticket = new PendingCommand(id);
+        final PendingCommand ticket = new PendingCommand(id, isReadOnlyCommand(payload));
         if (!pendingCommand.compareAndSet(null, ticket)) {
             PendingCommand pending = pendingCommand.get();
             return pending == null ? fail("COMMAND_BUSY", "worker is finishing its previous command; retry observation") : busyCommand(pending);
@@ -793,6 +796,16 @@ class VDriveWorker implements VDrive.Worker {
                 || "swipe".equals(command) || "text".equals(command) || "key".equals(command)
                 || "click2".equals(command) || "tapnode".equals(command) || "settext".equals(command)
                 || "scroll".equals(command);
+    }
+
+    /** Commands that only read the display; currently just the screenshot. */
+    static boolean isReadOnlyCommand(String payload) {
+        if (payload == null) return false;
+        try {
+            return "shot".equals(new org.json.JSONObject(payload).optString("cmd", ""));
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     /** True only when the JSON command itself is "cancel", not when it is quoted inside. */

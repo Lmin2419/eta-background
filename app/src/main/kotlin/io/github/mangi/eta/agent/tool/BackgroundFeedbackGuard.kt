@@ -3,7 +3,8 @@ package io.github.mangi.eta.agent.tool
 import android.os.SystemClock
 import org.json.JSONObject
 
-/** One instance per ShadowTools binding; legacy and native tools share the same budget. */
+/** One instance per ShadowTools binding; legacy and native tools share the same budget.
+ * Synchronized because observe_screen records its node read and capture concurrently. */
 class BackgroundFeedbackGuard {
     private val guard = ActionRepeatGuard(SystemClock::uptimeMillis)
     private var dump: JSONObject? = null
@@ -11,7 +12,7 @@ class BackgroundFeedbackGuard {
     private var pendingTarget: String? = null
     private var pendingState = ""
 
-    fun before(name: String, args: JSONObject): JSONObject? {
+    @Synchronized fun before(name: String, args: JSONObject): JSONObject? {
         pendingTarget = target(name, args)
         pendingState = state()
         return if (guard.blocked(pendingTarget, pendingState)) JSONObject().put("ok", false)
@@ -19,7 +20,7 @@ class BackgroundFeedbackGuard {
             .put("message", "同一目标已提交两次但未确认结果，本次未执行。请查看短提示、输入状态和最终结果，勿换成坐标/长按重复提交。") else null
     }
 
-    fun record(name: String, result: JSONObject) {
+    @Synchronized fun record(name: String, result: JSONObject) {
         if (name == "screen_dump" && result.optBoolean("ok") && result.has("nodes")) dump = JSONObject(result.toString())
         if (name == "screen_shot" && result.optBoolean("ok")) shot = JSONObject(result.toString())
         if (name == "screen_finish") { if (result.optBoolean("ok")) clear(); return }
@@ -32,7 +33,7 @@ class BackgroundFeedbackGuard {
         guard.record(pendingTarget, pendingState, result.optBoolean("ok") || result.optBoolean("operationMayHaveRun"), changed)
     }
 
-    fun clear() { guard.clear(); dump = null; shot = null; pendingTarget = null }
+    @Synchronized fun clear() { guard.clear(); dump = null; shot = null; pendingTarget = null }
 
     private fun state(): String {
         val current = dump ?: return ""

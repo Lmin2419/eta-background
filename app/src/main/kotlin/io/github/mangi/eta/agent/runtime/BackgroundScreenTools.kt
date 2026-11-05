@@ -18,6 +18,10 @@ internal interface ScreenToolConnection {
 /** One run's existing background-screen executor; never a process-wide current screen. */
 internal interface ScreenToolBackend {
     fun execute(name: String, arguments: String): String?
+
+    /** Read-only calls that may run at the same time; results keep the order of [calls]. */
+    fun executeConcurrently(calls: List<Pair<String, String>>): List<String?> =
+        calls.map { (name, arguments) -> execute(name, arguments) }
 }
 
 private class ShadowScreenConnection(id: String) : ScreenToolConnection {
@@ -110,6 +114,38 @@ internal class BackgroundScreenTools(
 
     @Synchronized override fun execute(name: String, arguments: String): String? {
         return try { BackgroundRecoveryPolicy.decorate(name, executeInternal(name, arguments)) } finally { phase(null) }
+    }
+
+    /**
+     * observe_screen's node read and capture: one admission, the same post-processing as
+     * [execute], but the two calls run together. Root admits a node read while only a capture
+     * is executing; any edge case (no binding, cleanup, takeover) takes the sequential path.
+     */
+    @Synchronized override fun executeConcurrently(calls: List<Pair<String, String>>): List<String?> {
+        val current = synchronized(lock) { binding }
+        if (calls.size != 2 || calls.any { it.first !in CONCURRENT_OBSERVATION_TOOLS } ||
+            current == null || current.closing.get() || takeoverPending.get()) {
+            return calls.map { (name, arguments) -> execute(name, arguments) }
+        }
+        return try {
+            controller.throwIfCancelled()
+            val observationGeneration = controller.resumeGeneration
+            val results = controller.withScreenOperation {
+                val second = observationPool.submit(java.util.concurrent.Callable {
+                    current.tools.execute(calls[1].first, calls[1].second)
+                })
+                val first = current.tools.execute(calls[0].first, calls[0].second)
+                val other = try { second.get() } catch (failure: java.util.concurrent.ExecutionException) {
+                    throw failure.cause ?: failure
+                }
+                listOf(first, other)
+            }
+            calls.indices.map { index ->
+                val name = calls[index].first
+                afterCall(name, current, observationGeneration, results[index])
+                BackgroundRecoveryPolicy.decorate(name, results[index])
+            }
+        } finally { phase(null) }
     }
 
     private fun executeInternal(name: String, arguments: String): String? {
@@ -212,22 +248,25 @@ internal class BackgroundScreenTools(
             if (name in MUTATING_TOOLS && observationGeneration != controller.resumeGeneration)
                 """{"ok":false,"code":"OBSERVE_AFTER_RESUME","error":"暂停期间页面可能变化，请重新观察；本次操作未执行。","operationMayHaveRun":false}"""
             else current.tools.execute(name, arguments)
-        }.also { result ->
-            val response = runCatching { JSONObject(result.orEmpty()) }.getOrNull()
-            if (response?.optString("code") == "APP_TAKEN_OVER") pauseForTakeover(current)
-            if (response?.optString("code") in LOST_SESSION_CODES ||
-                (name == "screen_state" && response?.has("sessionValid") == true && !response.optBoolean("sessionValid"))) {
-                // Release this binding only, and never replay an input whose outcome is unknown.
-                cleanup(current, keepFinished = false)
-            }
-            if (name in OBSERVATION_TOOLS && runCatching { JSONObject(result.orEmpty()).optBoolean("ok") }.getOrDefault(false)) {
-                observedGeneration = observationGeneration
-            }
-            if (name == "screen_finish" && runCatching { JSONObject(result.orEmpty()).optBoolean("ok") }.getOrDefault(false)) {
-                // Release ownership at the tool's confirmed finish, not only when the model
-                // eventually finishes replying. The same run can then open the next app.
-                cleanup(current, keepFinished = true)
-            }
+        }.also { result -> afterCall(name, current, observationGeneration, result) }
+    }
+
+    /** Shared by single and concurrent calls: never replays an input whose outcome is unknown. */
+    private fun afterCall(name: String, current: Binding, observationGeneration: Long, result: String?) {
+        val response = runCatching { JSONObject(result.orEmpty()) }.getOrNull()
+        if (response?.optString("code") == "APP_TAKEN_OVER") pauseForTakeover(current)
+        if (response?.optString("code") in LOST_SESSION_CODES ||
+            (name == "screen_state" && response?.has("sessionValid") == true && !response.optBoolean("sessionValid"))) {
+            // Release this binding only, and never replay an input whose outcome is unknown.
+            cleanup(current, keepFinished = false)
+        }
+        if (name in OBSERVATION_TOOLS && runCatching { JSONObject(result.orEmpty()).optBoolean("ok") }.getOrDefault(false)) {
+            observedGeneration = observationGeneration
+        }
+        if (name == "screen_finish" && runCatching { JSONObject(result.orEmpty()).optBoolean("ok") }.getOrDefault(false)) {
+            // Release ownership at the tool's confirmed finish, not only when the model
+            // eventually finishes replying. The same run can then open the next app.
+            cleanup(current, keepFinished = true)
         }
     }
 
@@ -262,6 +301,10 @@ internal class BackgroundScreenTools(
         private val LOST_SESSION_CODES = setOf("NO_SESSION", "SESSION_CLOSED", "STALE_SCREEN", "SYSTEM_RESTARTED")
         internal val MUTATING_TOOLS = setOf("screen_tap", "screen_click", "screen_press", "screen_swipe", "screen_drag", "screen_scroll", "screen_text", "screen_key")
         private val OBSERVATION_TOOLS = setOf("screen_dump", "screen_list", "screen_shot")
+        private val CONCURRENT_OBSERVATION_TOOLS = setOf("screen_dump", "screen_shot")
+        private val observationPool = java.util.concurrent.Executors.newCachedThreadPool { runnable ->
+            Thread(runnable, "eta-screen-observe").apply { isDaemon = true }
+        }
         private val sharedLeases = ScreenLeaseRegistry()
         private val maintenance = java.util.concurrent.Executors.newScheduledThreadPool(3) { runnable ->
             Thread(runnable, "eta-screen-maintenance").apply { isDaemon = true }

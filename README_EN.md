@@ -8,27 +8,20 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-10-30 · `3.3.5+etax.4637961` · versionCode `2026103003`**, with engine `20261030-e40-takeover`.
+**2026-11-05 · `3.3.5` background build · versionCode `2026110501`**, with engine `20261105-e49-parallel-observe`.
 
-When an active background app actually moves to the foreground, ETA pauses only its owning run, blocks old-screen input and prevents that session from pulling the app back. Merely viewing its Recents thumbnail does not trigger takeover. Resume manually and observe again before further input.
+This release merges every candidate from `etax-340-step1-foundation` into `main`: unified foreground/background tools, task preview and manual takeover, notification entry points, screen-off background execution, enhanced web reading, action feedback, saved tasks and native assistant setup. New in this build:
 
-This build also includes capture-allocation rollback, foreground-window handoff confirmation and timeout isolation. Completion banners, all three notification actions, inline continuation and search fixes remain available. Screen-off development remains paused.
+- Faster observation: when `observe_screen` needs both the node tree and a screenshot, they are read in parallel. Input still never overlaps a capture.
+- A lost runtime bind request is re-sent immediately instead of stalling for 8 seconds.
+- The engine token is cached per process.
+- CI is a single workflow; tests run once and each push to `main` publishes a signed release.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/actions/runs/41096466829/artifacts/12998081108)** · [Exact source 4637961](https://github.com/Lmin2419/eta-background/tree/4637961bc55fe546da17fda33f2dc274fdc65e20) · [Changelog and checksums](etax/README.md#release-2026103003)
+**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110501) (Chinese)
 
-Local and CI checks report 2,108 tests: 2,107 passed, 1 skipped, no failures or errors. Eight deployment tests and twelve integration checks passed; lint reported no errors. The APK retains the previous signing certificate and CI verified its embedded engine assets. **The device-wide cold-start blank-screen cause remains unproven and requires device testing; this release does not claim to have eliminated it.** Downloading requires a GitHub login; the artifact expires on **2026-11-29 (UTC)**.
+The APK keeps the previous signing certificate. ColorOS preview layout, IME behavior, deep-sleep networking and native long-press replacement still need device validation.
 
-## Integration candidate: task controls, efficiency and saved tasks
-
-The e47 candidate (`20261103-e47-recovery`) closes and exits a resident engine after system-service connection loss. Deployment recognizes owned engines despite thread-name changes and IPv6 sockets, rechecks process identity before signalling, and leaves unknown port owners untouched. Recovery diagnostics distinguish port conflicts and connection loss from Root failure. See [recovery and validation](etax/ENGINE_RECOVERY.md). This engine change does not fix the reported ColorOS power-key replacement failure.
-
-A new unpublished PMA110 adapter follows the actual native long-press broadcast and assistant policy found in the official `PMA110_17.0.0.106` firmware. Activation checks the framework hash, backs up the original values and reuses ETA's voice service; it does not inject hooks, reboot, or disable the OEM app. Previous assistant backups survive the upgrade. On-device wake behavior remains unverified. See [firmware evidence, restoration and validation](etax/NATIVE_ASSISTANT.md).
-
-The unpublished `etax-340-step1-foundation` candidate retains the e45 preview/control fixes and adds bounded data-reading guidance, fixed-window notification paging, a compact measured execution summary, and local **Saved tasks**. Save a name and instruction from the home menu, run it in a fresh ordinary conversation using the current model, or request a desktop shortcut. Notification replies still continue their original conversation.
-
-Measurements reuse runtime events and existing conversation storage; they add no model request or background service. Notification counts describe retained notification records, not complete chat history. Speedups, ColorOS transitions and launcher shortcuts still need device validation. The official test download above is unchanged. See [implementation and validation notes](etax/EFFICIENCY_AND_COMMON_TASKS.md) (Chinese).
-
-The 2026-11-02 action-feedback candidate listens before input, returns transient text and bounded historical image evidence, checks settled input values, and limits repeated submissions to the same identifiable target across node/coordinate/long-press APIs. It applies to foreground and background tools without app-specific code. See [implementation and device-test limits](etax/ACTION_FEEDBACK.md); device validation is still pending.
+> Development baseline: `main` is the latest version. New work starts from `main`.
 
 ## What this branch adds
 
@@ -70,7 +63,3 @@ Credit to **蛮吉 (Mangi-11)** and the [Eta contributors](https://github.com/Ma
 This project retains **[PolyForm Noncommercial 1.0.0](LICENSE)** and the upstream copyright notice. It is source-available under a noncommercial license, not MIT/Apache or OSI-defined open source. Third-party components retain their own licenses.
 
 Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
-
-## Background navigation candidate
-
-The 2026-11-03 candidate adds task-bound `screen_back`, input admission after an unready launch, structured recovery guidance, and a four-second cap on whole-page idle waits. Text waits retain their own timeout. Engine e46 is unchanged; ColorOS device acceptance is pending. See [behavior and acceptance steps](etax/BACKGROUND_NAVIGATION.md).

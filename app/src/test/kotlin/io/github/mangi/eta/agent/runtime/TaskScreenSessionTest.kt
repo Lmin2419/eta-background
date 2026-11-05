@@ -130,6 +130,18 @@ class TaskScreenSessionTest {
         assertEquals(1, backend.names().count { it == "screen_tap" })
     }
 
+    @Test fun observationWithAScreenshotReadsNodesAndCapturesTogether() {
+        val backend = FakeBackend()
+        val tools = session(backend)
+        tools.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
+        val withImage = JSONObject(tools.execute(call("observe_screen", """{"include_screenshot":true}"""))!!.content)
+        assertTrue(withImage.getBoolean("ok"))
+        assertEquals(listOf(listOf("screen_dump", "screen_shot")), backend.batches)
+        // A tree-only observation has nothing to run alongside and stays a single call.
+        assertTrue(JSONObject(tools.execute(call("observe_screen", "{}"))!!.content).getBoolean("ok"))
+        assertEquals(1, backend.batches.size)
+    }
+
     private data class Call(val name: String, val arguments: JSONObject)
 
     private class FakeBackend : ScreenToolBackend {
@@ -143,6 +155,12 @@ class TaskScreenSessionTest {
         @Volatile var keyResult = """{"ok":true}"""
         @Volatile var waitResult = """{"ok":true,"found":true}"""
         @Volatile var onExecute: ((String) -> Unit)? = null
+        val batches = CopyOnWriteArrayList<List<String>>()
+
+        override fun executeConcurrently(calls: List<Pair<String, String>>): List<String?> {
+            batches += calls.map { it.first }
+            return calls.map { (name, arguments) -> execute(name, arguments) }
+        }
 
         override fun execute(name: String, arguments: String): String? {
             val json = runCatching { JSONObject(arguments) }.getOrDefault(JSONObject())

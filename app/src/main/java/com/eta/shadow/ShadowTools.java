@@ -37,8 +37,9 @@ public final class ShadowTools {
     public ShadowTools(String sessionId) { this(sessionId, null); }
     ShadowTools(String sessionId, LineTransport transport) { this.sessionId = sessionId; this.transport = transport; }
     private volatile int display = -1;
-    private JSONObject observedGeometry;
-    private JSONObject lastRejection;
+    // observe_screen reads nodes and captures on two threads; both may record geometry.
+    private volatile JSONObject observedGeometry;
+    private volatile JSONObject lastRejection;
     private final io.github.mangi.eta.agent.tool.BackgroundFeedbackGuard feedbackGuard =
             new io.github.mangi.eta.agent.tool.BackgroundFeedbackGuard();
 

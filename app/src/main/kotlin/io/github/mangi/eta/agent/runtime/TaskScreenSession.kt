@@ -264,8 +264,15 @@ internal class TaskScreenSession(
         // tree observation must use that geometry and must not capture an image.
         var dump: JSONObject? = null
         var displayGeometry: Geometry? = null
+        val dumpArgs = JSONObject().put("limit", maxNodes)
+        val shotArgs = JSONObject().put("scale", 0.5)
+        // The node read goes to the observer and the capture to Root; when both are wanted they
+        // run together. The geometry checks below still reject a pair from different screens.
+        val concurrent = if (options.includeUiTree && options.includeScreenshot) {
+            backendResults(listOf("screen_dump" to dumpArgs, "screen_shot" to shotArgs))
+        } else null
         if (options.includeUiTree) {
-            dump = backendResult("screen_dump", JSONObject().put("limit", maxNodes))
+            dump = concurrent?.get(0) ?: backendResult("screen_dump", dumpArgs)
             if (!dump.optBoolean("ok", false)) {
                 invalidateObservation()
                 return resultWithLocation(requireNotNull(dump), "observe_screen")
@@ -289,7 +296,7 @@ internal class TaskScreenSession(
         var screenshotGeometry: Geometry? = null
         var screenshotError: String? = null
         if (options.includeScreenshot) {
-            shot = backendResult("screen_shot", JSONObject().put("scale", 0.5))
+            shot = concurrent?.get(1) ?: backendResult("screen_shot", shotArgs)
             if (!shot.optBoolean("ok", false)) {
                 val backendFailure = shot
                 screenshotError = shot.optString("error").ifBlank { shot.optString("code", "SCREENSHOT_FAILED") }
@@ -829,11 +836,15 @@ internal class TaskScreenSession(
         return Pair((x * scaleX).roundToInt(), (y * scaleY).roundToInt())
     }
 
-    private fun backendResult(name: String, args: JSONObject): JSONObject {
-        val raw = backend.execute(name, args.toString())
-            ?: return JSONObject().put("ok", false)
-                .put("code", "BACKGROUND_TOOL_UNAVAILABLE")
-                .put("error", "后台屏幕后端没有返回结果")
+    private fun backendResult(name: String, args: JSONObject): JSONObject = parseBackend(backend.execute(name, args.toString()))
+
+    private fun backendResults(calls: List<Pair<String, JSONObject>>): List<JSONObject> =
+        backend.executeConcurrently(calls.map { (name, args) -> name to args.toString() }).map(::parseBackend)
+
+    private fun parseBackend(raw: String?): JSONObject {
+        raw ?: return JSONObject().put("ok", false)
+            .put("code", "BACKGROUND_TOOL_UNAVAILABLE")
+            .put("error", "后台屏幕后端没有返回结果")
         return parseJson(raw) ?: JSONObject().put("ok", false)
             .put("code", "BACKGROUND_TOOL_UNAVAILABLE")
             .put("error", raw.take(300))
