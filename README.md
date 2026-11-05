@@ -104,7 +104,7 @@ e46 返修候选补充前台截图坐标生命周期与键盘/窗口变化校验
 | 3.3.4 早期版 | [etax-3.3.4](https://github.com/Lmin2419/eta-background/tree/etax-3.3.4) | 后台引擎源码化、通知与电源键入口接线。 |
 | 3.3.3 早期版 | [etax-3.3.3](https://github.com/Lmin2419/eta-background/tree/etax-3.3.3) | 初版后台扩展及 Root 引擎内嵌、自启。 |
 
-在 [Actions → Etax Build](https://github.com/Lmin2419/eta-background/actions/workflows/etax-build.yml) 的成功构建中下载 APK。Actions 附件需要登录且会过期；长期分发可由维护者上传到本仓库 Releases。自行构建与签名见[构建说明](.github/RELEASING.md)。官方 Eta 的安装包不包含本分支的后台扩展。
+在本仓库 [Releases](https://github.com/Lmin2419/eta-background/releases) 下载 APK：`main` 上每次签名构建成功后自动发布，链接长期有效。分支测试包见 [Actions → Etax Build](https://github.com/Lmin2419/eta-background/actions/workflows/etax-build.yml)，附件需要登录且 30 天后过期。自行构建与签名见[构建说明](.github/RELEASING.md)。官方 Eta 的安装包不包含本分支的后台扩展。
 
 ## 源码与测试
 

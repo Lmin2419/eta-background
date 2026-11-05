@@ -1,11 +1,24 @@
 name: Etax Build
 
-# 后台版唯一的签名构建入口；PR 检查不读取签名 Secrets。
+# 后台版唯一的 CI。三个 job 从上往下依次执行：
+#   check   每次推送都跑：接线、引擎部署测试、全量单元测试、lint
+#   build   check 通过后，仅 main / etax-* / 手动运行：Release 构建、签名、上传 APK
+#   release build 成功后，仅 main 且用自有证书签名：发布 GitHub 预发布
+# 测试只在 check 里跑一次。不需要 pull_request 触发：PR 的源分支推送时已经测过，
+# PR 页面会显示该提交的检查结果。
 on:
   push:
-    branches:
-      - main
-      - "etax-*"
+    branches-ignore:
+      - "harmony/**"
+    # 只改说明文档或鸿蒙移植时不重建 Android。不能写成 **/*.md：
+    # app/src/main/assets/builtin_skills/*/SKILL.md 会打进 APK。
+    paths-ignore:
+      - "docs/**"
+      - "harmony-agent/**"
+      - "HARMONY.md"
+      - "README.md"
+      - "README_EN.md"
+      - "etax/README.md"
   workflow_dispatch:
 
 permissions:
@@ -16,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: 从源码构建 Etax APK
+  check:
+    name: 测试与 Lint
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -75,6 +88,32 @@ jobs:
             app/build/reports/lint-results-debug.*
           if-no-files-found: ignore
           retention-days: 7
+
+  build:
+    name: 签名构建 APK
+    needs: check
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/etax-') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      has_key: ${{ steps.sign.outputs.has_key }}
+      apk_name: ${{ steps.apk.outputs.name }}
+      apk_sha256: ${{ steps.apk.outputs.sha256 }}
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+      version_code: ${{ steps.apk.outputs.version_code }}
+      version_name: ${{ steps.apk.outputs.version_name }}
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: 配置构建环境
+        uses: ./.github/actions/setup-build
+
+      - name: 从源码编译 root 引擎并内嵌
+        run: bash etax/embed_engine.sh
 
       - name: 还原签名证书
         id: sign
@@ -154,12 +193,75 @@ jobs:
               print("Signed APK engine pair verified:", apk.read("assets/vdrive.version").decode().strip())
           PY
           sha256sum "$apk"
-          echo "path=$apk" >> "$GITHUB_OUTPUT"
+          {
+            echo "path=$apk"
+            echo "name=$(basename "$apk")"
+            echo "sha256=$(sha256sum "$apk" | cut -d' ' -f1)"
+            echo "version_code=$(sed -n 's/^ *versionCode *= *\([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -n 1)"
+            echo "version_name=$(sed -n 's/^ *versionName *= *"\([^"]*\)".*/\1/p' app/build.gradle.kts | head -n 1)"
+          } >> "$GITHUB_OUTPUT"
 
       - name: 上传 APK
+        id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           path: ${{ steps.apk.outputs.path }}
           archive: false
           if-no-files-found: error
           retention-days: 30
+
+  # 只有这个 job 能写 Release；check / build 仍是只读令牌。临时证书包从不发布。
+  release:
+    name: 发布 GitHub Release
+    needs: build
+    if: github.ref == 'refs/heads/main' && needs.build.outputs.has_key == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+
+    steps:
+      - name: 取回已签名 APK 并核对摘要
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ needs.build.outputs.artifact_id }}
+          APK_NAME: ${{ needs.build.outputs.apk_name }}
+          APK_SHA256: ${{ needs.build.outputs.apk_sha256 }}
+        run: |
+          set -euo pipefail
+          f="$RUNNER_TEMP/download.bin"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip" > "$f"
+          # archive:false 的产物直接返回 APK 本身；万一被套了一层 zip，就取出里面的同名文件。
+          if [[ "$(sha256sum "$f" | cut -d' ' -f1)" != "$APK_SHA256" ]] && unzip -l "$f" "$APK_NAME" >/dev/null 2>&1; then
+            unzip -p "$f" "$APK_NAME" > "$f.apk" && mv -f "$f.apk" "$f"
+          fi
+          got="$(sha256sum "$f" | cut -d' ' -f1)"
+          [[ "$got" == "$APK_SHA256" ]] || { echo "::error::取回的 APK 摘要不符：$got，构建时为 $APK_SHA256"; exit 1; }
+          mv -f "$f" "$RUNNER_TEMP/$APK_NAME"
+
+      - name: 创建或更新预发布
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APK_NAME: ${{ needs.build.outputs.apk_name }}
+          APK_SHA256: ${{ needs.build.outputs.apk_sha256 }}
+          VERSION_CODE: ${{ needs.build.outputs.version_code }}
+          VERSION_NAME: ${{ needs.build.outputs.version_name }}
+        run: |
+          set -euo pipefail
+          tag="etax-${VERSION_CODE}-${GITHUB_SHA::7}"
+          file="$RUNNER_TEMP/$APK_NAME"
+          if gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            # 重跑同一提交：只替换附件
+            gh release upload "$tag" "$file" --clobber -R "$GITHUB_REPOSITORY"
+          else
+            notes="Eta 后台版 ${VERSION_NAME}（versionCode ${VERSION_CODE}），源码 ${GITHUB_SHA}。
+
+          自动发布的测试包，真机验证前标为「预发布」；验证通过后可在本页编辑取消预发布。版本说明见 [etax/README.md](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_SHA}/etax/README.md)。
+
+          APK SHA-256: \`${APK_SHA256}\`
+          构建记录: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            gh release create "$tag" "$file" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --prerelease --title "Eta 后台版 ${VERSION_NAME} (${VERSION_CODE}) · ${GITHUB_SHA::7}" --notes "$notes"
+          fi
+          echo "已发布：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${tag}"

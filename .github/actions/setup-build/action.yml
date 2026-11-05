@@ -1,5 +1,5 @@
 name: 配置 Eta 构建环境
-description: 安装 JDK、Gradle 与 Android SDK，供 PR Check 和 Etax Build 共用
+description: 安装 JDK、Gradle 与 Android SDK，供 Etax Build 的检查与签名构建共用
 
 runs:
   using: composite

@@ -20,10 +20,17 @@ bash etax/embed_engine.sh
 
 ## GitHub Actions
 
-- **Etax Build**：推送到 `main`、`etax-*` 分支或手动运行时触发。接线与引擎编译通过后，依次运行全量单元测试、lint、Release 构建、签名及包名检查，最后上传 APK，保留 30 天。
-- **PR Check**：检查面向 `main` 的 PR，编译相同的内嵌引擎，运行单元测试、lint 和 Debug 构建；不读取发布签名 Secrets。失败报告保留 7 天。外部分支首次运行的审批取决于仓库 Actions 设置。
+唯一的工作流是 **Etax Build**（`.github/workflows/etax-build.yml`），推送到除 `harmony/**` 以外的任意分支或手动运行时触发。只改 `docs/`、`harmony-agent/`、`HARMONY.md` 或各 README 的推送不触发构建。三个 job 依次执行：
 
-单元测试先于 lint 执行，减少 CPU 竞争对 UI 时序测试的影响。只有检查通过的构建才进入签名打包。可在仓库分支规则中将 `Lint / Test / Debug Build` 设为必需检查。
+| Job | 何时运行 | 内容 |
+| --- | --- | --- |
+| `check`（测试与 Lint） | 每次触发 | 接线检查、引擎部署测试、引擎编译内嵌、全量单元测试、lint；失败报告保留 7 天 |
+| `build`（签名构建 APK） | `check` 通过后，仅 `main`、`etax-*` 或手动运行 | Release 构建、签名、包名与引擎配对检查，上传 APK，保留 30 天 |
+| `release`（发布 GitHub Release） | `build` 成功后，仅 `main` 且使用发布证书 | 核对 APK 摘要后发布为预发布，标签为 `etax-<versionCode>-<短提交号>` |
+
+测试只在 `check` 里跑一次；PR 页面显示其源分支提交的检查结果，因此不再单独设置 PR 工作流。单元测试先于 lint 执行，减少 CPU 竞争对 UI 时序测试的影响。如需在分支规则中设置必需检查，选择 `测试与 Lint`。
+
+自动发布的 Release 默认标为预发布；真机验证通过后在 Release 页面取消预发布即可。临时证书构建不会发布。
 
 ## 签名
 
