@@ -132,7 +132,7 @@ class GeminiProviderConfigurationTest {
         EtaBackupRepository.export(context, output)
         val raw = output.toString(Charsets.UTF_8.name())
         val document = Json.decodeFromString<EtaBackupDocument>(raw)
-        assertEquals(4, document.schemaVersion)
+        assertEquals(5, document.schemaVersion)
         assertTrue(document.schemaVersion > 3)
         assertEquals(ProviderTypes.GEMINI, document.providers.single { it.provider.id == source.id }.provider.type)
         ProviderRepository.deleteProvider(source.id)

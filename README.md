@@ -6,13 +6,13 @@
 
 ## 最新测试版本
 
-**2026-11-06 · `3.3.5` 后台版 · versionCode `2026110608`**，配套引擎为 `20261105-e49-parallel-observe`。
+**2026-11-06 · `3.3.5` 后台版 · versionCode `2026110609`**，配套引擎为 `20261105-e49-parallel-observe`。
 
 本版完成阶段 5.5b 会话批量管理：长按进入多选，支持当前搜索结果全选、统一停止后批量删除、归档与 3 秒撤销、已归档子页。搜索包含归档会话；打开后发送新消息或从通知继续指令，会自动取消归档。
 
 Room 从 23 升至 24，新增可空归档时间；备份格式升至 5，旧备份缺少归档字段时按未归档恢复。阶段 5.5a 的输入区渐变修正已包含。
 
-**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110608) · [迁移 / 备份 / 手势验证与手机清单](etax/design/validation/stage-5.5b.md)
+**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110609) · [迁移 / 备份 / 手势验证与手机清单](etax/design/validation/stage-5.5b.md)
 
 本阶段单独提交、发版；CI 三项全绿后继续阶段 6 系统浮层。
 

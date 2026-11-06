@@ -4,7 +4,7 @@
 
 - 前置阶段 5.5a：`1e7349b` / `2026110607`；[CI 42159524168](https://github.com/Lmin2419/eta-background/actions/runs/42159524168) 三项 success，2533 测试、0 失败 / 错误、1 个原有跳过，Lint 461 warning / 1 hint / 0 error，13 项引擎部署回归通过。
 - [5.5a 签名发布](https://github.com/Lmin2419/eta-background/releases/tag/etax-2026110607-1e7349b) 的 APK SHA-256：`17510466b9ae790cebb20c4e88baad959dda516132d4d3bdaa8ba6096ee7780c`，与 CI 验签日志一致。
-- 本阶段在上述发布完成后从最新 main 开始，按 03 S2.5 / 04 阶段 5.5b 实现；单独提交、版本 `2026110608` / `3.3.5`。引擎仍为 `20261105-e49-parallel-observe`。
+- 本阶段在上述发布完成后从最新 main 开始，按 03 S2.5 / 04 阶段 5.5b 实现；单独提交、版本 `2026110609` / `3.3.5`。引擎仍为 `20261105-e49-parallel-observe`。
 - 用户明确要求的归档、批量删除、Room 和备份兼容属于本阶段必要的数据层改动；不启动阶段 6，直到本提交 CI 三项成功。
 
 ## S2.5 逐项对照
@@ -32,11 +32,15 @@
 
 ## 实际验证
 
+首次提交 `a69026a` / `2026110608` 的 [CI 42165595110](https://github.com/Lmin2419/eta-background/actions/runs/42165595110) 跑完 2550 项测试：1 失败、1 个原有跳过。唯一失败是 `GeminiProviderConfigurationTest.backupUsesNewVersionAndRestoresTheNativeType` 的旧格式版本断言仍为 4；已更新为 5，继续验证 Gemini 类型和配置恢复，没有跳过或削弱测试。首次 CI 未进入签名发布，0608 没有 APK；修正提交按版本规则递增到 0609，生产逻辑不变。阶段 6 仍等待修正后的全量 CI。
+
 | 检查 | 结果 |
 | --- | --- |
 | 定向回归 | 79 项，0 失败 / 错误 / 跳过：迁移 2、备份 2、会话状态 22、增量持久化 12、会话存储 18、真实手指多选 9、侧栏 / 任务展示 9、侧栏运动 4、首页真实拖动 1 |
 | 资源读取修正 | Lint 发现 4 处 LocalContext 获取文案，已改用 LocalResources 配置感知读取；相关 18 项界面测试重跑通过，未增加抑制项 |
-| Lint / APK | lintDebug 与 assembleDebug 成功；456 warning、1 hint、0 error/fatal；APK versionCode 核对为 2026110608 |
+| 备份版本断言修正 | Gemini 配置 5 项与归档备份 2 项本地通过；覆盖格式 5、原生服务商类型和配置保留。生产逻辑与 0608 相同，仅修正旧断言、版本和说明 |
+| 本机备份扩展检查 | Windows 扩展检查 28 项中 4 个旧记忆文件用例读回为空（EtaBackupRepositoryTest 3、EtaBackupStreamingTest 1）；初次 Linux CI 的 2550 项仅 Gemini 版本断言失败，未报告这 4 个失败。未屏蔽用例或修改记忆代码，最终仍要求修正后的 Linux 全量 CI 全绿 |
+| Lint / APK | lintDebug 与 assembleDebug 成功；456 warning、1 hint、0 error/fatal；APK versionCode 核对为 2026110609 |
 | 接线与格式 | 12 项 etax/check_hooks.sh 全通过；git diff --check 通过；引擎源码和 BUILD 未改 |
 | 截图 | 浅色、深色、200% 已检查；归档 / 删除文字完整、选择数和更多入口可见；选中勾选使用 onStatus 白色 token |
 
