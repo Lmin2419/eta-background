@@ -382,6 +382,7 @@ private fun AgentChatScaffold(
         ),
         bottomBar = {
             if (LocalChatInlineEditor.current == null) AgentChatBottomBar(
+                showFade = hasMessages,
                 messageBackdrop = null,
                 input = input,
                 modelPickerState = modelPickerState,
@@ -1005,6 +1006,7 @@ internal fun resolveFinalResultMessageIds(
 
 @Composable
 private fun AgentChatBottomBar(
+    showFade: Boolean,
     messageBackdrop: LayerBackdrop?,
     input: String,
     modelPickerState: AgentModelPickerUiState,
@@ -1039,61 +1041,46 @@ private fun AgentChatBottomBar(
     onRemoveFileReference: (String) -> Unit,
     onCancelMessageEdit: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .imePadding(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 720.dp).fillMaxWidth()
-                .background(EtaTheme.colors.canvas)
-                .navigationBarsPadding()
-                .padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
-        ) {
-            AgentChatInputBar(
-                input = input,
-                modelPickerState = modelPickerState,
-                isCompacting = isCompacting,
-                contextUsage = contextUsage,
-                showContextUsage = showContextUsage,
-                isStreaming = isStreaming,
-                reasoningEffort = reasoningEffort,
-                availableReasoningEfforts = availableReasoningEfforts,
-                pendingImages = pendingImages,
-                pendingFileReferences = pendingFileReferences,
-                queuedMessages = queuedMessages,
-                inputSyncVersion = inputSyncVersion,
-                focusInputRequest = focusInputRequest,
-                onInputFocusHandled = onInputFocusHandled,
-                isEditingMessage = messageEdit != null,
-                editHasLaterTurns = messageEdit?.hasLaterTurns == true,
-                preserveFollowingMessages = messageEdit?.preserveFollowingMessages == true,
-                onSubmit = onSubmit,
-                onInterruptAndSubmit = onInterruptAndSubmit,
-                onSteerQueuedMessage = onSteerQueuedMessage,
-                onRecallQueuedMessage = onRecallQueuedMessage,
-                onRemoveQueuedMessage = onRemoveQueuedMessage,
-                onReasoningEffortChange = onReasoningEffortChange,
-                onCompactContext = onCompactContext,
-                canCompactContext = canCompactContext,
-                onModelSelected = onModelSelected,
-                onStop = onStop,
-                onAttachImage = onAttachImage,
-                onRemoveImage = onRemoveImage,
-                onAttachFiles = onAttachFiles,
-                onAttachFolder = onAttachFolder,
-                onAttachFilePath = onAttachFilePath,
-                onRemoveFileReference = onRemoveFileReference,
-                onCancelMessageEdit = onCancelMessageEdit,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+    ChatComposerSurface(showFade = showFade) {
+        AgentChatInputBar(
+            input = input,
+            modelPickerState = modelPickerState,
+            isCompacting = isCompacting,
+            contextUsage = contextUsage,
+            showContextUsage = showContextUsage,
+            isStreaming = isStreaming,
+            reasoningEffort = reasoningEffort,
+            availableReasoningEfforts = availableReasoningEfforts,
+            pendingImages = pendingImages,
+            pendingFileReferences = pendingFileReferences,
+            queuedMessages = queuedMessages,
+            inputSyncVersion = inputSyncVersion,
+            focusInputRequest = focusInputRequest,
+            onInputFocusHandled = onInputFocusHandled,
+            isEditingMessage = messageEdit != null,
+            editHasLaterTurns = messageEdit?.hasLaterTurns == true,
+            preserveFollowingMessages = messageEdit?.preserveFollowingMessages == true,
+            onSubmit = onSubmit,
+            onInterruptAndSubmit = onInterruptAndSubmit,
+            onSteerQueuedMessage = onSteerQueuedMessage,
+            onRecallQueuedMessage = onRecallQueuedMessage,
+            onRemoveQueuedMessage = onRemoveQueuedMessage,
+            onReasoningEffortChange = onReasoningEffortChange,
+            onCompactContext = onCompactContext,
+            canCompactContext = canCompactContext,
+            onModelSelected = onModelSelected,
+            onStop = onStop,
+            onAttachImage = onAttachImage,
+            onRemoveImage = onRemoveImage,
+            onAttachFiles = onAttachFiles,
+            onAttachFolder = onAttachFolder,
+            onAttachFilePath = onAttachFilePath,
+            onRemoveFileReference = onRemoveFileReference,
+            onCancelMessageEdit = onCancelMessageEdit,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
-
-private val ChatBottomFrostHeight = 24.dp
 
 private const val BOTTOM_FOLLOW_RESPONSE_SECONDS = 0.085f
 private const val BOTTOM_FOLLOW_MAX_FRAME_SECONDS = 0.05f

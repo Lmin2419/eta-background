@@ -80,6 +80,7 @@ import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.window.WindowListPopup
 
 /**
@@ -140,6 +141,7 @@ internal fun AgentAppShell(
     val pageContent: @Composable () -> Unit = {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            containerColor = if (currentRoute is AppRoute.Home) EtaTheme.colors.canvas else MiuixTheme.colorScheme.surface,
             contentWindowInsets = WindowInsets.safeDrawing.only(
                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
             ),
