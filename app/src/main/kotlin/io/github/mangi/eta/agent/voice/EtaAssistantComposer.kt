@@ -1,7 +1,9 @@
 package io.github.mangi.eta.agent.voice
 
+import io.github.mangi.eta.ui.theme.EtaMotion
 
-import androidx.compose.animation.AnimatedContent
+
+import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import io.github.mangi.eta.ui.components.EtaIconButton
@@ -109,7 +111,7 @@ internal fun AssistantComposer(
             // 按住说话期间保持输入栏：切换布局会移除正被按住的按钮，松手事件随之丢失。
             targetState = recognitionEnabled && speech.active && !speech.holdToTalk && state.messages.isEmpty(),
             transitionSpec = {
-                fadeIn(tween(250)) togetherWith fadeOut(tween(160)) using
+                fadeIn(tween(EtaMotion.Default.medium, easing = EtaMotion.Default.emphasizedDecelerate)) togetherWith fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) using
                     SizeTransform(clip = false)
             },
             contentAlignment = Alignment.BottomCenter,
@@ -187,7 +189,7 @@ private fun AssistantInputBar(
     val inputHighlighted = textFocused || keyboardVisible
     val inputBorder by animateColorAsState(
         targetValue = themeColors.outlineStrong.copy(alpha = if (inputHighlighted) 1f else 0.55f),
-        animationSpec = tween(180, easing = LinearOutSlowInEasing),
+        animationSpec = tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard),
         label = "assistant_input_border",
     )
     val inputShape = RoundedCornerShape(20.dp)
@@ -407,7 +409,7 @@ private fun AssistantVoiceEntry(
     val controls = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(400)
-        controls.animateTo(1f, tween(180))
+        controls.animateTo(1f, tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard))
     }
     val colors = EtaTheme.colors
     Column(Modifier.fillMaxWidth()) {

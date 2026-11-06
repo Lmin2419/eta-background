@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.theme.EtaMotion
+
 import io.github.mangi.eta.ui.voice.rememberSpeechPermission
 import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.theme.EtaElevation
@@ -8,8 +10,8 @@ import androidx.compose.foundation.layout.heightIn
 import io.github.mangi.eta.ui.voice.SpeechInputFeedback
 import io.github.mangi.eta.ui.voice.rememberSpeechInput
 import androidx.compose.ui.text.TextRange
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -231,8 +233,8 @@ internal fun AgentChatInputBar(
         if (recognitionEnabled) SpeechInputFeedback(dictation)
         AnimatedVisibility(
             visible = queuedMessages.isNotEmpty(),
-            enter = fadeIn(tween(160)),
-            exit = fadeOut(tween(100)) + shrinkVertically(tween(150)),
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
+            exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
         ) {
             AgentChatQueueStrip(
                 queuedMessages = queuedMessages,
@@ -245,8 +247,8 @@ internal fun AgentChatInputBar(
         }
         AnimatedVisibility(
             visible = isEditingMessage,
-            enter = fadeIn(tween(160)),
-            exit = fadeOut(tween(100)) + shrinkVertically(tween(140)),
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
+            exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
         ) {
             Text(
                 text = if (preserveFollowingMessages) {
@@ -283,8 +285,8 @@ internal fun AgentChatInputBar(
             ) {
         AnimatedVisibility(
             visible = pendingFileReferences.isNotEmpty(),
-            enter = fadeIn(tween(160)),
-            exit = fadeOut(tween(100)) + shrinkVertically(tween(160)),
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
+            exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
         ) {
             PendingFileReferenceStrip(
                 references = pendingFileReferences,
@@ -295,8 +297,8 @@ internal fun AgentChatInputBar(
 
         AnimatedVisibility(
             visible = pendingImages.isNotEmpty(),
-            enter = fadeIn(tween(160)),
-            exit = fadeOut(tween(100)) + shrinkVertically(tween(160)),
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
+            exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
         ) {
             PendingImageStrip(
                 images = pendingImages,
@@ -466,7 +468,7 @@ private fun ThinkingEffortChip(
         } else {
             MiuixTheme.colorScheme.onSurfaceVariantSummary
         },
-        animationSpec = tween(durationMillis = 160),
+        animationSpec = tween(EtaTheme.motion.short, easing = EtaTheme.motion.standard),
         label = "thinking_content",
     )
     Box(modifier = modifier) {

@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.terminal
 
+import io.github.mangi.eta.ui.components.etaAnimateItem
+
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -193,7 +195,7 @@ internal fun SharedFoldersScreen(
         // 失败提示紧贴列表出现，比页脚说明更靠前，进出带动画避免列表跳动。
         notice?.let { message ->
             item(key = "notice-card") {
-                EtaPreferenceGroup(modifier = Modifier.animateItem().padding(horizontal = EtaPreferenceDefaults.SidePadding).padding(bottom = EtaPreferenceDefaults.GroupSpacing)) {
+                EtaPreferenceGroup(modifier = etaAnimateItem().padding(horizontal = EtaPreferenceDefaults.SidePadding).padding(bottom = EtaPreferenceDefaults.GroupSpacing)) {
                     EtaPreference(
                         title = message,
                         titleColor = BasicComponentDefaults.titleColor(color = MiuixTheme.colorScheme.error),
@@ -216,7 +218,7 @@ internal fun SharedFoldersScreen(
                 text = stringResource(R.string.shared_folders_footer),
                 style = MiuixTheme.textStyles.footnote1,
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                modifier = Modifier.animateItem().padding(horizontal = 32.dp),
+                modifier = etaAnimateItem().padding(horizontal = 32.dp),
             )
         }
     }

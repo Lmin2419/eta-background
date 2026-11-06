@@ -496,6 +496,7 @@ fun AgentAppRoot(
     key(navigationResetKey) {
         NavDisplay(
             backStack = backStack,
+            transition = io.github.mangi.eta.ui.navigation.rememberEtaNavigationTransition(),
             onBack = { popRoute() },
             effects = NavDisplayEffects(
                 cornerClipRadius = rememberNavSystemCornerRadius(),

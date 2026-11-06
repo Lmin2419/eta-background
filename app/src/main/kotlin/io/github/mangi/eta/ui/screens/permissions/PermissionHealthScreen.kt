@@ -90,7 +90,7 @@ private fun PermissionItemCard(item: PermissionHealthItemUi, checking: Boolean, 
                 Text(statusLabel,
                     Modifier.background(if (available) EtaTheme.colors.successSoft else EtaTheme.colors.attentionSoft, EtaTheme.shapes.radiusFull)
                         .padding(horizontal = 8.dp, vertical = 4.dp),
-                    style = EtaTheme.type.caption, color = if (available) EtaTheme.colors.success else EtaTheme.colors.attention)
+                    style = EtaTheme.type.caption, color = if (available) EtaTheme.colors.successText else EtaTheme.colors.attentionText)
             }
             Text(summary, style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary)
             // Available rows retain the old tap-to-system-settings action, without a redundant enable button.

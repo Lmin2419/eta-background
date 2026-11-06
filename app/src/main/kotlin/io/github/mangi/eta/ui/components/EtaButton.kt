@@ -52,7 +52,7 @@ internal fun EtaButton(
         EtaButtonKind.Tonal -> palette.accentSoft to palette.onAccentSoft
         EtaButtonKind.Secondary -> Color.Transparent to palette.textPrimary
         EtaButtonKind.Ghost -> Color.Transparent to palette.accent
-        EtaButtonKind.Destructive -> palette.dangerSoft to palette.danger
+        EtaButtonKind.Destructive -> palette.dangerSoft to palette.dangerText
     }
     val container = colors?.let { if (enabled) it.color else it.disabledColor }
         ?: background.copy(alpha = background.alpha * if (enabled) 1f else 0.38f)
@@ -61,8 +61,8 @@ internal fun EtaButton(
     val source = interactionSource ?: remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
     val motion = EtaTheme.motion
-    val scale = animateFloatAsState(if (pressed && enabled) 0.97f else 1f,
-        tween(motion.micro), label = "buttonPress")
+    val scale = animateFloatAsState(if (pressed && enabled && !motion.reduceMotion) 0.97f else 1f,
+        tween(motion.micro, easing = motion.standard), label = "buttonPress")
     val shape = RoundedCornerShape(cornerRadius)
     val small = size == EtaButtonSize.Small
     val height = if (small && minHeight == EtaControlDefaults.ButtonMinHeight) 32.dp else minHeight

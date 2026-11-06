@@ -57,16 +57,22 @@ internal fun EtaAssistantEdgeGlow(
     onEntranceFinished: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
     var firstWakeComplete by remember { mutableStateOf(false) }
     val entranceFinished by rememberUpdatedState(onEntranceFinished)
     val opacity = animateFloatAsState(
         targetValue = if (active || !firstWakeComplete) 1f else 0f,
-        animationSpec = tween(if (active || !firstWakeComplete) 110 else 220),
+        animationSpec = tween(if (active || !firstWakeComplete) motion.micro else motion.short, easing = motion.standard),
         label = "assistant_edge_glow",
     )
     var seconds by remember { mutableFloatStateOf(0f) }
     val clock = remember { longArrayOf(0L) }
-    LaunchedEffect(active) {
+    LaunchedEffect(active, motion.reduceMotion) {
+        if (motion.reduceMotion) {
+            seconds = entranceDurationSeconds
+            if (!firstWakeComplete) { firstWakeComplete = true; entranceFinished() }
+            return@LaunchedEffect
+        }
         if (!active && firstWakeComplete) return@LaunchedEffect
         while (isActive) {
             withFrameNanos { now ->

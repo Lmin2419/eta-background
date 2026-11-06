@@ -48,6 +48,6 @@ internal fun EtaColors.toMiuixColors(base: Colors): Colors = base.copy(
     surfaceContainerHigh = surfaceRaised, onSurfaceContainerHigh = textSecondary,
     surfaceContainerHighest = surfaceSunken, onSurfaceContainerHighest = textPrimary,
     outline = outlineStrong, dividerLine = outline, windowDimming = scrim,
-    error = danger, onError = onStatus, errorContainer = dangerSoft, onErrorContainer = danger,
+    error = danger, onError = statusGlyph, errorContainer = dangerSoft, onErrorContainer = dangerText,
     sliderKeyPoint = outlineStrong, sliderKeyPointForeground = accent, sliderBackground = surfaceSunken,
 )

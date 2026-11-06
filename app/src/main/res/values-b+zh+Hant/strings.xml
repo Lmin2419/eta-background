@@ -1542,4 +1542,5 @@
   <string name="voice_suggestion_help">頁面如何操作</string>
   <string name="voice_suggestion_highlights">找出重點資訊</string>
   <string name="preview_manual_hint">點擊畫面即可操作</string>
+    <string name="eta_accessibility_background_running">背景執行中</string>
 </resources>

@@ -1612,4 +1612,5 @@
   <string name="voice_suggestion_help">页面怎么操作</string>
   <string name="voice_suggestion_highlights">找出重点信息</string>
   <string name="preview_manual_hint">点击画面即可操作</string>
+    <string name="eta_accessibility_background_running">后台执行中</string>
 </resources>

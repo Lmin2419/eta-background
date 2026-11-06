@@ -1,6 +1,8 @@
 package io.github.mangi.eta.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.theme.EtaMotion
+
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -83,7 +85,7 @@ internal fun AgentChatQueueStrip(
     }
     val chevronRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
-        animationSpec = tween(durationMillis = 180),
+        animationSpec = if (io.github.mangi.eta.ui.theme.EtaTheme.motion.reduceMotion) androidx.compose.animation.core.snap() else tween(io.github.mangi.eta.ui.theme.EtaTheme.motion.micro, easing = io.github.mangi.eta.ui.theme.EtaTheme.motion.standard),
         label = "queue_chevron",
     )
     val first = queuedMessages.first()
@@ -160,8 +162,8 @@ internal fun AgentChatQueueStrip(
 
         AnimatedVisibility(
             visible = expanded && hasMultiple,
-            enter = fadeIn(tween(150)) + expandVertically(tween(180)),
-            exit = fadeOut(tween(110)) + shrinkVertically(tween(150)),
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + expandVertically(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
+            exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
         ) {
             Column(
                 modifier = Modifier

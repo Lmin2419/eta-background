@@ -6,6 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import io.github.mangi.eta.ui.theme.EtaElevation
+import io.github.mangi.eta.ui.theme.etaElevation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
@@ -71,19 +77,33 @@ internal fun EtaPreviewWindow(ui: PreviewPresentation, picture: TaskPreviewImage
         PreviewMode.Completed -> TaskVisualStatus.Success
         PreviewMode.Incomplete -> TaskVisualStatus.Failed
     }
-    Column(Modifier.fillMaxSize().shadow(16.dp, EtaTheme.shapes.radiusXl)
+    Column(Modifier.fillMaxSize().etaElevation(EtaElevation.E3, EtaTheme.shapes.radiusXl)
         .clip(EtaTheme.shapes.radiusXl).background(colors.surface)
         .border(1.dp, colors.outline, EtaTheme.shapes.radiusXl).padding(horizontal = 12.dp, vertical = 8.dp)) {
         Row(Modifier.fillMaxWidth().heightIn(min = 52.dp), verticalAlignment = Alignment.CenterVertically) {
             AndroidView(factory = { context -> ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER } },
                 update = { it.setImageDrawable(ui.appIcon) }, modifier = Modifier.size(24.dp))
-            Column(Modifier.weight(1f).padding(start = 6.dp)) {
+            val statusLabel = if (controls.mode == PreviewMode.Manual) stringResource(R.string.preview_manual_status) else status.label()
+            // Measure the single-line status first: app name yields space before the status does.
+            Layout(modifier = Modifier.weight(1f).padding(start = 6.dp)
+                .clearAndSetSemantics { contentDescription = listOf(ui.appName, statusLabel, ui.step).filter { it.isNotBlank() }.joinToString(", ") }, content = {
                 Text(ui.appName, color = colors.textPrimary, style = EtaTheme.type.footnote,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    StatusRing(status, size = 12.dp)
-                    Text(if (controls.mode == PreviewMode.Manual) stringResource(R.string.preview_manual_status) else status.label(),
-                        color = status.color(), style = EtaTheme.type.caption, maxLines = 2)
+                    maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
+                Row(Modifier.background(status.backgroundColor(), CircleShape).padding(horizontal = 6.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    StatusRing(status, size = 12.dp, contentDescription = null)
+                    Text(statusLabel, Modifier.weight(1f, fill = false).testTag("preview_status"),
+                        color = status.textColor(), style = EtaTheme.type.caption,
+                        maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
+                }
+            }) { children, constraints ->
+                val chip = children[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
+                val nameWidth = (constraints.maxWidth - chip.width - 4.dp.roundToPx()).coerceAtLeast(0)
+                val name = children[0].measure(constraints.copy(minWidth = 0, maxWidth = nameWidth, minHeight = 0))
+                val height = maxOf(name.height, chip.height)
+                layout(constraints.maxWidth, height) {
+                    name.placeRelative(0, (height - name.height) / 2)
+                    chip.placeRelative(constraints.maxWidth - chip.width, (height - chip.height) / 2)
                 }
             }
             EtaIconButton(onClick = onZoom, enabled = controls.zoomEnabled, modifier = Modifier.testTag("preview_zoom")) {
@@ -113,26 +133,24 @@ internal fun EtaPreviewWindow(ui: PreviewPresentation, picture: TaskPreviewImage
         }
         Text(hint, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("preview_hint"),
             color = if (ui.inputFailed || controls.mode == PreviewMode.Incomplete) colors.danger else colors.textSecondary,
-            style = EtaTheme.type.footnote, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            style = EtaTheme.type.footnote, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             EtaButton(previewActionLabel(controls.primary, controls.mode), { onAction(controls.primary) },
-                enabled = controls.primaryEnabled, kind = EtaButtonKind.Primary, size = EtaButtonSize.Small,
-                minHeight = 48.dp, minWidth = 0.dp, modifier = Modifier.testTag("preview_primary"))
-            if (controls.mode == PreviewMode.Handoff) StatusRing(TaskVisualStatus.Running, modifier = Modifier.padding(12.dp))
+                enabled = controls.primaryEnabled, kind = EtaButtonKind.Primary, size = EtaButtonSize.Regular,
+                loading = controls.mode == PreviewMode.Handoff, minHeight = 48.dp, minWidth = 0.dp,
+                modifier = Modifier.weight(1f).testTag("preview_primary"))
             controls.secondary.forEach { action ->
-                if (action == PreviewAction.Back) EtaIconButton({ onAction(action) }, enabled = controls.secondaryEnabled) {
-                    Icon(Icons.Rounded.ArrowBack, previewActionLabel(action, controls.mode), tint = colors.textPrimary)
-                } else EtaButton(previewActionLabel(action, controls.mode), { onAction(action) },
-                    enabled = controls.secondaryEnabled, size = EtaButtonSize.Small, minHeight = 48.dp, minWidth = 0.dp,
-                    modifier = Modifier.testTag("preview_secondary"))
+                PreviewSecondaryAction(action, controls.mode, controls.secondaryEnabled) { onAction(action) }
             }
-            // Preserve the existing ability to operate a completed app without relaunching it.
-            if (ui.canOperateCompleted) EtaButton(stringResource(R.string.preview_operate_page), { onAction(PreviewAction.TakeOver) },
-                kind = EtaButtonKind.Ghost, size = EtaButtonSize.Small, minHeight = 48.dp, minWidth = 0.dp)
-            if (ui.canOpenCompletedWithoutFrame) EtaButton(stringResource(R.string.background_open_app), { onAction(PreviewAction.OpenApp) },
-                size = EtaButtonSize.Small, minHeight = 48.dp, minWidth = 0.dp)
-            if (ui.canResumeWithoutFrame) EtaButton(stringResource(R.string.overlay_resume), { onAction(PreviewAction.Resume) },
-                size = EtaButtonSize.Small, minHeight = 48.dp, minWidth = 0.dp)
+        }
+        // Legacy recovery/operate actions remain reachable without stealing the main action's width.
+        if (ui.canOperateCompleted || ui.canOpenCompletedWithoutFrame || ui.canResumeWithoutFrame) {
+            FlowRow(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (ui.canOperateCompleted) PreviewSecondaryAction(PreviewAction.TakeOver, controls.mode, true,
+                    label = stringResource(R.string.preview_operate_page)) { onAction(PreviewAction.TakeOver) }
+                if (ui.canOpenCompletedWithoutFrame) PreviewSecondaryAction(PreviewAction.OpenApp, controls.mode, true) { onAction(PreviewAction.OpenApp) }
+                if (ui.canResumeWithoutFrame) PreviewSecondaryAction(PreviewAction.Resume, controls.mode, true) { onAction(PreviewAction.Resume) }
+            }
         }
     }
 }
@@ -149,3 +167,23 @@ internal fun previewActionLabel(action: PreviewAction, mode: PreviewMode): Strin
     PreviewAction.OpenConversation -> R.string.overlay_open_conversation
     PreviewAction.Wait -> R.string.preview_wait
 })
+
+@Composable
+private fun PreviewSecondaryAction(action: PreviewAction, mode: PreviewMode, enabled: Boolean,
+    label: String = previewActionLabel(action, mode), onClick: () -> Unit) {
+    val icon = when (action) {
+        PreviewAction.TakeOver -> Icons.Rounded.TouchApp
+        PreviewAction.Pause -> Icons.Rounded.Pause
+        PreviewAction.Resume -> Icons.Rounded.PlayArrow
+        PreviewAction.ReturnToAi -> Icons.Rounded.SmartToy
+        PreviewAction.Back -> Icons.Rounded.ArrowBack
+        PreviewAction.OpenApp -> Icons.Rounded.OpenInNew
+        PreviewAction.Close -> Icons.Rounded.Close
+        PreviewAction.OpenConversation -> Icons.Rounded.ChatBubbleOutline
+        PreviewAction.Wait -> Icons.Rounded.HourglassEmpty
+    }
+    EtaIconButton(onClick, enabled = enabled,
+        modifier = Modifier.size(48.dp).border(1.dp, EtaTheme.colors.outlineStrong, CircleShape).testTag("preview_secondary")) {
+        Icon(icon, label, tint = EtaTheme.colors.textPrimary, modifier = Modifier.size(24.dp))
+    }
+}

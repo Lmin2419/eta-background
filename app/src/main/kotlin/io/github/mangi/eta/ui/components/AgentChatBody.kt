@@ -1,6 +1,8 @@
 package io.github.mangi.eta.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.theme.EtaMotion
+
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -760,7 +762,7 @@ internal fun AgentConversationMessages(
             ) { index, entry ->
                 val startsTurn = index > 0 && (entry as? AgentTimelineEntry.Message)?.message is io.github.mangi.eta.ui.model.UserMessageUi
                 val itemModifier = Modifier.padding(top = if (startsTurn) 12.dp else 0.dp).animateItem(
-                    fadeInSpec = tween(durationMillis = 180),
+                    fadeInSpec = tween(durationMillis = io.github.mangi.eta.ui.theme.EtaTheme.motion.medium, easing = io.github.mangi.eta.ui.theme.EtaTheme.motion.emphasizedDecelerate),
                     placementSpec = null,
                     // 历史轮次被编辑、删除或重新生成时必须立即退出；退出动画会让已从
                     // 状态中裁掉的旧消息继续绘制，并与同位置的新流式消息短暂重叠。
@@ -841,8 +843,8 @@ internal fun AgentConversationMessages(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = bottomInset + 12.dp),
-            enter = fadeIn(tween(160)) + scaleIn(tween(180), initialScale = 0.82f),
-            exit = fadeOut(tween(100)) + scaleOut(tween(120), targetScale = 0.86f),
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + scaleIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard), initialScale = 0.82f),
+            exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + scaleOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate), targetScale = 0.86f),
         ) {
             IconButton(
                 modifier = Modifier.etaElevation(EtaElevation.E2, CircleShape).drawWithContent {

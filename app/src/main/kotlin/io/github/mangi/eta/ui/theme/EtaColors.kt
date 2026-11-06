@@ -32,6 +32,10 @@ data class EtaColors(
     val danger: Color,
     val dangerSoft: Color,
 ) {
+    val attentionText: Color get() = if (isDark) attention else Color(0xFFA85700)
+    val successText: Color get() = if (isDark) success else Color(0xFF157A40)
+    val dangerText: Color get() = if (isDark) danger else Color(0xFFC22E2E)
+    val statusGlyph: Color get() = if (isDark) Color(0xFF15161A) else Color.White
     val running: Color get() = accent
     val runningSoft: Color get() = accentSoft
     val paused: Color get() = textSecondary
@@ -75,7 +79,7 @@ fun lightEtaColors() = EtaColors(
     canvas = Color(0xFFF4F5F8), surface = Color.White,
     surfaceRaised = Color.White, surfaceSunken = Color(0xFFECEEF3),
     outline = Color(0xFFE2E4EA), outlineStrong = Color(0xFFCDD0D9),
-    textPrimary = Color(0xFF15161A), textSecondary = Color(0xFF575A66), textTertiary = Color(0xFF6F7280),
+    textPrimary = Color(0xFF15161A), textSecondary = Color(0xFF575A66), textTertiary = Color(0xFF686B78),
     scrim = Color(0xFF0B0C10).copy(alpha = 0.40f), pressed = Color(0xFF14162A).copy(alpha = 0.08f),
     accent = Color(0xFF4B5BFF), onAccent = Color.White,
     accentSoft = Color(0xFFE9EBFF), onAccentSoft = Color(0xFF3240D9),
@@ -89,7 +93,7 @@ fun darkEtaColors() = EtaColors(
     canvas = Color(0xFF0D0E12), surface = Color(0xFF16171C),
     surfaceRaised = Color(0xFF1E2027), surfaceSunken = Color(0xFF23252D),
     outline = Color(0xFF2A2C35), outlineStrong = Color(0xFF3A3D48),
-    textPrimary = Color(0xFFECEDF2), textSecondary = Color(0xFFA6A9B6), textTertiary = Color(0xFF80838F),
+    textPrimary = Color(0xFFECEDF2), textSecondary = Color(0xFFA6A9B6), textTertiary = Color(0xFF8A8D99),
     scrim = Color.Black.copy(alpha = 0.56f), pressed = Color.White.copy(alpha = 0.08f),
     accent = Color(0xFF8C97FF), onAccent = Color(0xFF0B0E2A),
     accentSoft = Color(0xFF262A52), onAccentSoft = Color(0xFFB9C0FF),

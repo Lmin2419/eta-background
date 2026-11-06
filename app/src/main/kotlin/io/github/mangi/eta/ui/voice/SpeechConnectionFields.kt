@@ -1,6 +1,6 @@
 package io.github.mangi.eta.ui.voice
 
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons

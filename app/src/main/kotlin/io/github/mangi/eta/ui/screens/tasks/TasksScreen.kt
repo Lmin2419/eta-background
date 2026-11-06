@@ -13,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -20,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -94,15 +97,22 @@ internal fun ActiveTaskCard(task: TaskNotificationState, visible: Boolean, onCon
     val context = LocalContext.current
     val status = task.toTaskVisualStatus()
     val paused = task.paused || status == TaskVisualStatus.Paused
+    val accessibleSummary = taskAccessibilitySummary(task)
     var confirmStop by remember(task.runId) { mutableStateOf(false) }
     val background = TaskPreviewRegistry.isBackground(task.runId)
     EtaCard(Modifier.fillMaxWidth().then(if (status == TaskVisualStatus.Attention)
         Modifier.border(1.5.dp, EtaTheme.colors.attention, EtaTheme.shapes.radiusMd) else Modifier), insideMargin = PaddingValues(16.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (LocalDensity.current.fontScale < 1.5f) Row(Modifier.clearAndSetSemantics { contentDescription = accessibleSummary }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TaskApplicationIcon(task.targetPackage, Modifier.size(24.dp))
                 Text(task.title, Modifier.weight(1f), style = EtaTheme.type.rowTitle, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 TaskStatusLabel(status)
+            } else Column(Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = accessibleSummary }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TaskApplicationIcon(task.targetPackage, Modifier.size(24.dp))
+                    Text(task.title, Modifier.weight(1f), style = EtaTheme.type.rowTitle, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+                Box(Modifier.padding(start = 32.dp)) { TaskStatusLabel(status) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (background) TaskThumbnail(task, visible, Modifier.size(72.dp, 156.dp))
@@ -135,7 +145,7 @@ internal fun TaskStatusLabel(status: TaskVisualStatus) {
     Row(Modifier.background(status.backgroundColor(), EtaTheme.shapes.radiusFull).padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         StatusRing(status, size = 12.dp)
-        Text(status.label(), style = EtaTheme.type.caption, color = status.color())
+        Text(status.label(), style = EtaTheme.type.caption, color = status.textColor())
     }
 }
 

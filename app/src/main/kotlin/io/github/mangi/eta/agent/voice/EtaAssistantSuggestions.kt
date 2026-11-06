@@ -1,6 +1,6 @@
 package io.github.mangi.eta.agent.voice
 
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement

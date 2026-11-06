@@ -1,6 +1,6 @@
 package io.github.mangi.eta.ui.components
 
-import androidx.compose.animation.Crossfade
+import io.github.mangi.eta.ui.components.EtaCrossfade as Crossfade
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -50,6 +50,15 @@ fun TaskVisualStatus.color(): Color = when (this) {
     TaskVisualStatus.Success -> EtaTheme.colors.success
     TaskVisualStatus.Failed -> EtaTheme.colors.danger
     TaskVisualStatus.Queued -> EtaTheme.colors.textTertiary
+}
+
+@Composable
+fun TaskVisualStatus.textColor(): Color = when (this) {
+    TaskVisualStatus.Attention -> EtaTheme.colors.attentionText
+    TaskVisualStatus.Success -> EtaTheme.colors.successText
+    TaskVisualStatus.Failed -> EtaTheme.colors.dangerText
+    TaskVisualStatus.Running -> EtaTheme.colors.onAccentSoft
+    else -> color()
 }
 
 @Composable
@@ -146,16 +155,16 @@ private fun StatusGlyph(status: TaskVisualStatus, animate: Boolean, monochrome: 
                     drawCircle(color, radius + stroke / 2f)
                     when (status) {
                         TaskVisualStatus.Attention -> {
-                            glyphLine(colors.onStatus, stroke, 0.5f, 0.27f, 0.5f, 0.53f)
-                            drawCircle(colors.onStatus, stroke / 2f, Offset(size.width * 0.5f, size.height * 0.72f))
+                            glyphLine(colors.statusGlyph, stroke, 0.5f, 0.27f, 0.5f, 0.53f)
+                            drawCircle(colors.statusGlyph, stroke / 2f, Offset(size.width * 0.5f, size.height * 0.72f))
                         }
                         TaskVisualStatus.Success -> {
-                            glyphLine(colors.onStatus, stroke, 0.27f, 0.50f, 0.44f, 0.67f)
-                            glyphLine(colors.onStatus, stroke, 0.44f, 0.67f, 0.74f, 0.34f)
+                            glyphLine(colors.statusGlyph, stroke, 0.27f, 0.50f, 0.44f, 0.67f)
+                            glyphLine(colors.statusGlyph, stroke, 0.44f, 0.67f, 0.74f, 0.34f)
                         }
                         TaskVisualStatus.Failed -> {
-                            glyphLine(colors.onStatus, stroke, 0.34f, 0.34f, 0.66f, 0.66f)
-                            glyphLine(colors.onStatus, stroke, 0.66f, 0.34f, 0.34f, 0.66f)
+                            glyphLine(colors.statusGlyph, stroke, 0.34f, 0.34f, 0.66f, 0.66f)
+                            glyphLine(colors.statusGlyph, stroke, 0.66f, 0.34f, 0.34f, 0.66f)
                         }
                     }
                 }

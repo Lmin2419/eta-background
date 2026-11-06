@@ -96,7 +96,7 @@ class EtaThemeTest {
                     assertEquals(mode == AppearanceThemeMode.DARK, palette.isDark)
                     assertEquals(palette.canvas, host.miuix!!.background)
                     assertEquals(palette.accent, host.miuix!!.primary)
-                    assertEquals(palette.success, host.success)
+                    assertEquals(palette.successText, host.success)
                     val default = if (palette.isDark) darkEtaColors() else lightEtaColors()
                     if (!monet && accent == AppearanceAccentColor.SYSTEM) assertEquals(default, palette)
                     if (accent == AppearanceAccentColor.GREEN) assertNotEquals(default.accent, palette.accent)

@@ -1,7 +1,7 @@
 package io.github.mangi.eta.ui.screens.memory
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaCrossfade as Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn

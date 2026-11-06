@@ -1,6 +1,8 @@
 package io.github.mangi.eta.ui.screens.terminal
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import io.github.mangi.eta.ui.theme.EtaTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -122,6 +124,7 @@ private fun EnvironmentSegments(
             val isSelected = option == selected
             val background by animateColorAsState(
                 targetValue = if (isSelected) colors.surface else Color.Transparent,
+                animationSpec = tween(EtaTheme.motion.micro, easing = EtaTheme.motion.standard),
                 label = "segmentBackground",
             )
             Box(

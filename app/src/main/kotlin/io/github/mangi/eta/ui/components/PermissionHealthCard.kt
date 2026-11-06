@@ -30,7 +30,7 @@ fun PermissionHealthCard(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.eta_background_ready), Modifier.weight(1f), style = EtaTheme.type.headline)
                 Text(stringResource(if (checking) R.string.eta_ready_checking else if (pending == 0) R.string.eta_permissions_ready else R.string.eta_ready_pending, pending),
-                    style = EtaTheme.type.footnote, color = if (pending == 0) EtaTheme.colors.success else EtaTheme.colors.attention)
+                    style = EtaTheme.type.footnote, color = if (pending == 0) EtaTheme.colors.successText else EtaTheme.colors.attentionText)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 items.forEach { item ->

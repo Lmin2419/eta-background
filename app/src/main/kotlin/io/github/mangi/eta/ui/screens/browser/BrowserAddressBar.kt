@@ -1,7 +1,9 @@
 package io.github.mangi.eta.ui.screens.browser
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import io.github.mangi.eta.ui.theme.EtaMotion
+
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaCrossfade as Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -192,7 +194,7 @@ private fun BrowserRefreshButton(
     val description = stringResource(if (loading) R.string.browser_stop_loading else R.string.browser_refresh)
     val tint by animateColorAsState(
         targetValue = if (enabled) MiuixTheme.colorScheme.onSurface else MiuixTheme.colorScheme.disabledOnSecondaryVariant,
-        animationSpec = tween(180),
+        animationSpec = tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard),
         label = "browser_refresh_tint",
     )
     IconButton(
@@ -203,7 +205,7 @@ private fun BrowserRefreshButton(
         // 只交叉淡化图标，点击区域和地址框宽度不参与加载状态切换。
         Crossfade(
             targetState = loading,
-            animationSpec = tween(180),
+            animationSpec = tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard),
             modifier = Modifier.size(20.dp),
             label = "browser_refresh_icon",
         ) { isLoading ->

@@ -1,6 +1,7 @@
 package io.github.mangi.eta.ui.components
 
 import androidx.compose.animation.*
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

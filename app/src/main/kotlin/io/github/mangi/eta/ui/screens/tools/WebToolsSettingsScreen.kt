@@ -1,7 +1,8 @@
 package io.github.mangi.eta.ui.screens.tools
 
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -139,7 +140,7 @@ private fun DeepSeekWebSection(store: WebToolsSettingsStore) {
     val settings = store.settings
     val credentials = store.credentials
     var advanced by rememberSaveable { mutableStateOf(false) }
-    val chevronRotation by animateFloatAsState(if (advanced) 180f else 0f)
+    val chevronRotation by animateFloatAsState(if (advanced) 180f else 0f, animationSpec = if (io.github.mangi.eta.ui.theme.EtaTheme.motion.reduceMotion) androidx.compose.animation.core.snap() else tween(io.github.mangi.eta.ui.theme.EtaTheme.motion.micro, easing = io.github.mangi.eta.ui.theme.EtaTheme.motion.standard))
     val linked = store.hasProviderDeepSeekKey && credentials.deepSeekApiKey.isBlank()
 
     Column {
@@ -202,7 +203,7 @@ private fun CustomSearchSection(store: WebToolsSettingsStore) {
     val config = settings.customSearch
     val credentials = store.credentials
     var advanced by rememberSaveable { mutableStateOf(false) }
-    val chevronRotation by animateFloatAsState(if (advanced) 180f else 0f)
+    val chevronRotation by animateFloatAsState(if (advanced) 180f else 0f, animationSpec = if (io.github.mangi.eta.ui.theme.EtaTheme.motion.reduceMotion) androidx.compose.animation.core.snap() else tween(io.github.mangi.eta.ui.theme.EtaTheme.motion.micro, easing = io.github.mangi.eta.ui.theme.EtaTheme.motion.standard))
 
     Column {
         EtaPreferenceGroupTitle(stringResource(R.string.web_tools_group_custom_search))
@@ -310,7 +311,7 @@ private fun CustomFetchSection(store: WebToolsSettingsStore) {
     val config = settings.customFetch
     val credentials = store.credentials
     var advanced by rememberSaveable { mutableStateOf(false) }
-    val chevronRotation by animateFloatAsState(if (advanced) 180f else 0f)
+    val chevronRotation by animateFloatAsState(if (advanced) 180f else 0f, animationSpec = if (io.github.mangi.eta.ui.theme.EtaTheme.motion.reduceMotion) androidx.compose.animation.core.snap() else tween(io.github.mangi.eta.ui.theme.EtaTheme.motion.micro, easing = io.github.mangi.eta.ui.theme.EtaTheme.motion.standard))
 
     Column {
         EtaPreferenceGroupTitle(stringResource(R.string.web_tools_group_custom_fetch))

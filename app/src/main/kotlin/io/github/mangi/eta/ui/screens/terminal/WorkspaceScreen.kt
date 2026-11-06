@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.terminal
 
+import io.github.mangi.eta.ui.components.etaAnimateItem
+
 import android.content.Intent
 import android.net.Uri
 import android.os.Environment
@@ -168,7 +170,7 @@ internal fun WorkspaceScreen(onBack: () -> Unit) {
         }
         message?.let { current ->
             item(key = "message") {
-                EtaPreferenceGroup(modifier = Modifier.animateItem().padding(horizontal = EtaPreferenceDefaults.SidePadding).padding(bottom = EtaPreferenceDefaults.GroupSpacing)) {
+                EtaPreferenceGroup(modifier = etaAnimateItem().padding(horizontal = EtaPreferenceDefaults.SidePadding).padding(bottom = EtaPreferenceDefaults.GroupSpacing)) {
                     EtaPreference(
                         title = current.text,
                         titleColor = BasicComponentDefaults.titleColor(

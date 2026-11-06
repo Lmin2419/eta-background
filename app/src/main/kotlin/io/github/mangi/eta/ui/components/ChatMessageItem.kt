@@ -1,8 +1,10 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.theme.EtaMotion
+
 import android.graphics.BitmapFactory
 import android.util.Base64
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -149,7 +151,8 @@ internal fun decodeDataUrlBitmap(dataUrl: String): ImageBitmap? {
  */
 @Composable
 fun AITypingIndicator(modifier: Modifier = Modifier) {
-    val infiniteTransition = rememberInfiniteTransition(label = "dots")
+    val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
+    val infiniteTransition = if (motion.reduceMotion) null else rememberInfiniteTransition(label = "dots")
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -157,7 +160,7 @@ fun AITypingIndicator(modifier: Modifier = Modifier) {
     ) {
         repeat(3) { index ->
             val delay = index * 150
-            val alpha by infiniteTransition.animateFloat(
+            val alpha = infiniteTransition?.animateFloat(
                 initialValue = 0.3f,
                 targetValue = 1f,
                 animationSpec = infiniteRepeatable(
@@ -169,7 +172,7 @@ fun AITypingIndicator(modifier: Modifier = Modifier) {
             Box(
                 modifier = Modifier
                     .size(6.dp)
-                    .graphicsLayer(alpha = alpha)
+                    .graphicsLayer { this.alpha = alpha?.value ?: 1f }
                     .background(MiuixTheme.colorScheme.onSurfaceVariantSummary, CircleShape)
             )
         }
@@ -185,7 +188,7 @@ internal fun rememberActivePulse(
     active: Boolean,
     label: String,
 ): Float {
-    if (!active) return 1f
+    if (!active || io.github.mangi.eta.ui.theme.EtaTheme.motion.reduceMotion) return 1f
     val transition = rememberInfiniteTransition(label = label)
     val alpha by transition.animateFloat(
         initialValue = 0.58f,
@@ -562,8 +565,8 @@ private fun AgentMessageBlock(
                 !message.isStreaming &&
                 message.content.isNotBlank() &&
                 revealComplete,
-            enter = fadeIn(tween(160)) + expandVertically(tween(160)),
-            exit = fadeOut(tween(120)) + shrinkVertically(tween(120)),
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + expandVertically(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
+            exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
         ) {
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (message.characterEditable && message.candidateCount > 1) CandidateSwitcher(

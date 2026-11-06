@@ -10,9 +10,9 @@ import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.model.toTaskVisualStatus
 
 // 语义状态色
-val StatusSuccess: Color @Composable get() = EtaTheme.colors.success
-val StatusWarning: Color @Composable get() = EtaTheme.colors.attention
-val StatusError: Color @Composable get() = EtaTheme.colors.danger
+val StatusSuccess: Color @Composable get() = EtaTheme.colors.successText
+val StatusWarning: Color @Composable get() = EtaTheme.colors.attentionText
+val StatusError: Color @Composable get() = EtaTheme.colors.dangerText
 val StatusRunning: Color @Composable get() = EtaTheme.colors.running
 val StatusIdle: Color @Composable get() = EtaTheme.colors.textSecondary
 

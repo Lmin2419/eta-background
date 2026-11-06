@@ -31,6 +31,7 @@ data class EtaMotion(val reduceMotion: Boolean = false) {
     val auroraMillis: Int get() = 2_400
 
     companion object {
+        val Default = EtaMotion()
         private val Standard = CubicBezierEasing(0.2f, 0f, 0f, 1f)
         private val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
         private val Accelerate = CubicBezierEasing(0.3f, 0f, 1f, 1f)

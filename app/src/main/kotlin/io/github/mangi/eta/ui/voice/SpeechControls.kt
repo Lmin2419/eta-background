@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.voice
 
+import io.github.mangi.eta.ui.theme.EtaMotion
+
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -7,7 +9,7 @@ import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -165,8 +167,8 @@ internal fun SpeechInputFeedback(controller: SpeechInputController) {
     val context = LocalContext.current
     AnimatedVisibility(
         visible = state.active || state.error != null,
-        enter = fadeIn(tween(160)) + expandVertically(tween(160)),
-        exit = fadeOut(tween(100)) + shrinkVertically(tween(140)),
+        enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + expandVertically(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
+        exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
     ) {
         Row(
             modifier = Modifier

@@ -1,6 +1,8 @@
 package io.github.mangi.eta.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.theme.EtaMotion
+
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -115,13 +117,13 @@ internal fun AgentWorkProcess(
         )
         AnimatedVisibility(
             visible = bodyVisible,
-            enter = fadeIn(tween(160)) + expandVertically(
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + expandVertically(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
                     stiffness = Spring.StiffnessMediumLow,
                 ),
             ),
-            exit = fadeOut(tween(120)) + shrinkVertically(
+            exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
                     stiffness = Spring.StiffnessMediumLow,
@@ -391,7 +393,7 @@ internal fun ShimmerText(
             initialValue = 0f,
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(1_600, easing = LinearEasing),
+                animation = tween(EtaTheme.motion.auroraMillis, easing = LinearEasing),
             ),
             label = "work_shimmer_progress",
         )
@@ -431,7 +433,7 @@ internal fun ExpandChevron(
 ) {
     val rotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = if (EtaTheme.motion.reduceMotion) androidx.compose.animation.core.snap() else tween(EtaTheme.motion.micro, easing = EtaTheme.motion.standard),
         label = "expand_chevron",
     )
     Icon(

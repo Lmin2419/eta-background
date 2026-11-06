@@ -1,5 +1,7 @@
 package io.github.mangi.eta.agent.overlay
 
+import io.github.mangi.eta.ui.theme.EtaMotion
+
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.rounded.ExpandMore
@@ -8,6 +10,7 @@ import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import io.github.mangi.eta.ui.components.StatusRing
+import io.github.mangi.eta.ui.components.label
 import io.github.mangi.eta.ui.components.EtaIconButton
 import io.github.mangi.eta.ui.model.TaskVisualStatus
 import io.github.mangi.eta.ui.model.toTaskVisualStatus
@@ -16,8 +19,8 @@ import io.github.mangi.eta.ui.theme.darkEtaColors
 import io.github.mangi.eta.ui.theme.toMiuixColors
 import top.yukonga.miuix.kmp.theme.darkColorScheme
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -68,7 +71,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
+import io.github.mangi.eta.ui.theme.EtaElevation
+import io.github.mangi.eta.ui.theme.etaElevation
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -150,12 +154,13 @@ internal fun AgentOverlayCapsule(
     }
 
     // 为 Agent 手势让路：离开时快速上移收小淡出，回来时用弹簧落回，只改绘制层不触发重排。
+    val motion = EtaTheme.motion
     val clearance by animateFloatAsState(
         targetValue = if (yielded) 1f else 0f,
-        animationSpec = if (yielded) {
-            tween(durationMillis = 180, easing = FastOutLinearInEasing)
+        animationSpec = if (motion.reduceMotion) tween(motion.short, easing = motion.standard) else if (yielded) {
+            tween(motion.exitDuration(260), easing = motion.accelerate)
         } else {
-            spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)
+            spring(dampingRatio = motion.dampingRatio, stiffness = motion.stiffness)
         },
         label = "capsule_clearance",
     )
@@ -168,19 +173,20 @@ internal fun AgentOverlayCapsule(
     val shape = if (expanded) EtaTheme.shapes.radiusLg else EtaTheme.shapes.radiusFull
     val statusText = if (attention) stringResource(R.string.overlay_attention_prompt) else state.status.localizedText()
     val expandDescription = stringResource(R.string.overlay_capsule_toggle, statusText)
+    val statusDescription = visualStatus.label()
     // 展开进度只驱动绘制层的透明度与位移，不参与测量；控制区用 AnimatedVisibility 只在两端各测一次。
     val expansion by animateFloatAsState(
         targetValue = if (expanded) 1f else 0f,
-        animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow),
+        animationSpec = if (motion.reduceMotion) androidx.compose.animation.core.snap() else spring(motion.dampingRatio, motion.stiffness),
         label = "capsule_expansion",
         finishedListener = { value -> if (value == 0f) onCollapsedSettled() },
     )
 
     AnimatedVisibility(
         visible = visible,
-        enter = slideInVertically(spring(Spring.DampingRatioLowBouncy, Spring.StiffnessMediumLow)) { -it } +
-            fadeIn(tween(160)),
-        exit = slideOutVertically(tween(160)) { -it } + fadeOut(tween(140)),
+        enter = slideInVertically(spring(EtaMotion.Default.dampingRatio, EtaMotion.Default.stiffness)) { -it } +
+            fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
+        exit = slideOutVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) { -it } + fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
     ) {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
             Column(
@@ -191,15 +197,15 @@ internal fun AgentOverlayCapsule(
                         // 点击时轻微回弹，展开后保持原尺寸；只改绘制层，不触发重新布局。
                         val press = 1f - 0.03f * (1f - expansion) * expansion * 4f
                         val shrink = 1f - 0.08f * clearance
-                        scaleX = press * shrink
-                        scaleY = press * shrink
-                        translationY = -12.dp.toPx() * clearance
+                        scaleX = if (motion.reduceMotion) 1f else press * shrink
+                        scaleY = if (motion.reduceMotion) 1f else press * shrink
+                        translationY = if (motion.reduceMotion) 0f else -12.dp.toPx() * clearance
                         alpha = 1f - clearance
                         transformOrigin = TransformOrigin(0.5f, 0f)
                     }
-                    .shadow(16.dp, shape)
+                    .etaElevation(EtaElevation.E3, shape)
                     .clip(shape)
-                    .background(if (attention) Color(0xFF3A2A12) else palette.surface.copy(alpha = 0.92f))
+                    .background(if (attention) palette.attentionSoft else palette.surface.copy(alpha = 0.92f))
                     .border(1.dp, palette.outline, shape),
             ) {
                 Row(
@@ -210,7 +216,7 @@ internal fun AgentOverlayCapsule(
                             indication = null,
                             onClick = onToggleExpanded,
                         )
-                        .semantics { contentDescription = expandDescription }
+                        .semantics { contentDescription = listOfNotNull(tasks.firstOrNull { it.id == selectedTaskId }?.title, statusDescription, expandDescription).joinToString(", ") }
                         .heightIn(min = 40.dp).padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -220,8 +226,8 @@ internal fun AgentOverlayCapsule(
                     AnimatedContent(
                         targetState = statusText,
                         transitionSpec = {
-                            (slideInVertically(tween(220)) { it / 2 } + fadeIn(tween(220))) togetherWith
-                                (slideOutVertically(tween(180)) { -it / 2 } + fadeOut(tween(160))) using
+                            (slideInVertically(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) { it / 2 } + fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard))) togetherWith
+                                (slideOutVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) { -it / 2 } + fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate))) using
                                 SizeTransform(clip = true) { _, _ -> snap() }
                         },
                         label = "capsule_status",
@@ -243,15 +249,15 @@ internal fun AgentOverlayCapsule(
 
                 AnimatedVisibility(
                     visible = expanded,
-                    enter = expandVertically(spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow), clip = true) +
-                        fadeIn(tween(180, delayMillis = 40)),
-                    exit = shrinkVertically(spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMedium), clip = true) +
-                        fadeOut(tween(90)),
+                    enter = expandVertically(spring(EtaMotion.Default.dampingRatio, EtaMotion.Default.stiffness), clip = true) +
+                        fadeIn(tween(EtaMotion.Default.short, delayMillis = 40, easing = EtaMotion.Default.standard)),
+                    exit = shrinkVertically(spring(EtaMotion.Default.dampingRatio, EtaMotion.Default.stiffness), clip = true) +
+                        fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
                 ) {
                     Column(
                         modifier = Modifier
                             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
-                            .graphicsLayer { translationY = (1f - expansion) * -6.dp.toPx() },
+                            .graphicsLayer { translationY = if (motion.reduceMotion) 0f else (1f - expansion) * -6.dp.toPx() },
                     ) {
                         ThoughtLine(thought = (if (state.status == AgentOverlayStatus.GeneratingAnswer) state.detailText.takeLast(96) else state.thought)
                             .takeIf { state.phase == AgentOverlayPhase.RUNNING }.orEmpty())
@@ -332,7 +338,7 @@ internal fun AgentOverlayCapsule(
 @Composable
 private fun ThoughtLine(thought: String) {
     val shown = thought.isNotBlank()
-    val alpha by animateFloatAsState(if (shown) 1f else 0f, tween(220), label = "thought_alpha")
+    val alpha by animateFloatAsState(if (shown) 1f else 0f, tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard), label = "thought_alpha")
     var lastThought by remember { mutableStateOf("") }
     if (shown) lastThought = thought
     Text(

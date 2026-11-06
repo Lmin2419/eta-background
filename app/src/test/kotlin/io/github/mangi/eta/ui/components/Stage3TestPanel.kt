@@ -26,7 +26,7 @@ import org.robolectric.Shadows.shadowOf
 import top.yukonga.miuix.kmp.squircle.LocalSquircleEnabled
 
 /** Uses the same native rendering and frame clock for the before/after comparison. */
-internal class Stage3TestPanel(activity: ComponentActivity, dark: Boolean = false, fontScale: Float = 1f, content: @Composable () -> Unit) {
+internal class Stage3TestPanel(activity: ComponentActivity, dark: Boolean = false, fontScale: Float = 1f, reduceMotion: Boolean = true, content: @Composable () -> Unit) {
     private val clock = BroadcastFrameClock()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate + clock)
     private val recomposer = Recomposer(scope.coroutineContext)
@@ -36,7 +36,7 @@ internal class Stage3TestPanel(activity: ComponentActivity, dark: Boolean = fals
         view.setParentCompositionContext(recomposer)
         view.setContent {
             AgentAppTheme(AppearanceSettings(themeMode = if (dark) io.github.mangi.eta.data.model.AppearanceThemeMode.DARK else io.github.mangi.eta.data.model.AppearanceThemeMode.LIGHT), false) {
-                EtaTheme(colors = EtaTheme.colors, motion = EtaMotion(true)) {
+                EtaTheme(colors = EtaTheme.colors, motion = EtaMotion(reduceMotion)) {
                     CompositionLocalProvider(LocalSquircleEnabled provides false,
                         androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(androidx.compose.ui.platform.LocalDensity.current.density, fontScale)) {
                         Box(Modifier.fillMaxSize()) { content() }

@@ -1,6 +1,6 @@
 package io.github.mangi.eta.ui.components
 
-import androidx.compose.animation.AnimatedContent
+import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -17,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -72,6 +74,7 @@ internal fun ConversationLiveTasks(conversationId: String?, onOpenTasks: () -> U
         if (tasks.size == 1 || expanded) tasks.forEach { task -> key(task.runId) {
             val status = task.toTaskVisualStatus()
             val paused = task.paused || status == TaskVisualStatus.Paused
+            val accessibleSummary = io.github.mangi.eta.ui.screens.tasks.taskAccessibilitySummary(task)
             Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).etaElevation(EtaElevation.E2, EtaTheme.shapes.radiusLg)
                 .background(if (status == TaskVisualStatus.Attention) EtaTheme.colors.attentionSoft else EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusLg)
                 .clickable { openTaskPreview(context, task) }
@@ -80,7 +83,7 @@ internal fun ConversationLiveTasks(conversationId: String?, onOpenTasks: () -> U
                     TaskApplicationIcon(task.targetPackage, Modifier.size(28.dp))
                     StatusRing(status, Modifier.align(Alignment.BottomEnd), size = 12.dp)
                 }
-                Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                Column(Modifier.weight(1f).padding(horizontal = 8.dp).clearAndSetSemantics { contentDescription = accessibleSummary }) {
                     Text(task.title, style = EtaTheme.type.footnote, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     val step = if (task.status == AgentOverlayStatus.PreviewPaused || task.status == AgentOverlayStatus.AppTakeoverPaused)
@@ -89,7 +92,7 @@ internal fun ConversationLiveTasks(conversationId: String?, onOpenTasks: () -> U
                     AnimatedContent(step, Modifier.weight(1f), transitionSpec = {
                         (fadeIn(tween(duration)) + slideInVertically(tween(duration)) { it / 3 }) togetherWith fadeOut(tween(duration))
                     }, label = "liveTaskStep") { text ->
-                        Text(text, style = EtaTheme.type.caption, color = status.color(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(text, style = EtaTheme.type.caption, color = status.textColor(), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     TaskElapsedText(task)
                     }

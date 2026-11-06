@@ -27,7 +27,7 @@ internal fun EtaSegmented(
     if (items.isEmpty()) return
     val motion = EtaTheme.motion
     val position = animateFloatAsState(selectedIndex.coerceIn(items.indices).toFloat(),
-        if (motion.reduceMotion) tween(motion.medium) else spring(dampingRatio = motion.dampingRatio, stiffness = motion.stiffness),
+        if (motion.reduceMotion) androidx.compose.animation.core.snap() else spring(dampingRatio = motion.dampingRatio, stiffness = motion.stiffness),
         label = "segmentPosition")
     val shape = EtaTheme.shapes.radiusFull
     Layout(modifier = modifier.fillMaxWidth().heightIn(min = 36.dp).clip(shape)

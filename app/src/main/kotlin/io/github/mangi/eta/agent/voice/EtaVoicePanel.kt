@@ -52,7 +52,9 @@ import androidx.compose.ui.unit.sp
 import io.github.mangi.eta.ui.markdown.LocalMarkdownBodyStyle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import io.github.mangi.eta.ui.theme.EtaElevation
+import io.github.mangi.eta.ui.theme.etaElevation
+import io.github.mangi.eta.ui.components.EtaBrandMark
 import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.theme.EtaColors
 import io.github.mangi.eta.ui.model.UserMessageUi
@@ -182,23 +184,23 @@ internal fun EtaVoicePanel(
     val scrimProgress = remember { Animatable(0f) }
     val contentVisible = recognitionEnabled != null && (recognitionEnabled || entranceComplete)
     val contentReady by rememberUpdatedState(onContentReady)
-    val textEntryOffsetPx = with(density) { if (recognitionEnabled == false) 16.dp.toPx() else 0f }
+    val textEntryOffsetPx = with(density) { if (!motion.reduceMotion && recognitionEnabled == false) 16.dp.toPx() else 0f }
     val exitProgress = remember { Animatable(1f) }
     val exitFinished by rememberUpdatedState(onExitFinished)
     val screenHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp
-    val exitOffsetPx = with(density) { (if (handoffRunning) -screenHeight * 0.65f else 28.dp).toPx() }
+    val exitOffsetPx = with(density) { (if (motion.reduceMotion) 0.dp else if (handoffRunning) -screenHeight * 0.65f else 28.dp).toPx() }
     LaunchedEffect(exitRequested) {
         if (exitRequested) {
             keyboard?.hide()
-            exitProgress.animateTo(0f, tween(if (handoffRunning) motion.long else motion.duration(ASSISTANT_EXIT_DURATION_MS), easing = motion.standard))
+            exitProgress.animateTo(0f, tween(if (handoffRunning) motion.long else motion.exitDuration(380), easing = motion.accelerate))
             exitFinished()
         }
     }
 
     LaunchedEffect(exitRequested) {
         if (exitRequested) return@LaunchedEffect
-        delay(180)
-        scrimProgress.animateTo(1f, tween(280, easing = LinearOutSlowInEasing))
+        if (!motion.reduceMotion) delay(motion.short.toLong())
+        scrimProgress.animateTo(1f, tween(motion.medium, easing = motion.emphasizedDecelerate))
     }
 
     LaunchedEffect(contentVisible, exitRequested) {
@@ -206,13 +208,13 @@ internal fun EtaVoicePanel(
         coroutineScope {
             launch {
                 entryAlpha.animateTo(1f, tween(
-                    durationMillis = if (recognitionEnabled == false) 360 else 220,
-                    easing = FastOutSlowInEasing,
+                    durationMillis = motion.long,
+                    easing = motion.emphasizedDecelerate,
                 ))
             }
             launch {
                 entryProgress.animateTo(1f,
-                    spring(dampingRatio = motion.dampingRatio, stiffness = motion.stiffness))
+                    if (motion.reduceMotion) androidx.compose.animation.core.snap() else spring(dampingRatio = motion.dampingRatio, stiffness = motion.stiffness))
             }
         }
         // 焦点会主动唤起 IME；必须等显现和位移都结束，不能在仍透明时交出输入焦点。
@@ -252,7 +254,7 @@ internal fun EtaVoicePanel(
                     alpha = entryAlpha.value
                     translationY = (1f - entryProgress.value) * textEntryOffsetPx +
                         (1f - exitProgress.value) * exitOffsetPx
-                    if (handoffRunning && exitRequested) {
+                    if (handoffRunning && exitRequested && !motion.reduceMotion) {
                         scaleX = 0.4f + 0.6f * exitProgress.value
                         scaleY = 0.4f + 0.6f * exitProgress.value
                     }
@@ -375,29 +377,20 @@ private fun BoxScope.AssistantPanel(
     } else {
         0f
     }
+    val motion = EtaTheme.motion
     val height = remember { Animatable(targetHeightPx) }
     val animatedHeightPx = height.value
     LaunchedEffect(targetHeightPx, draggedHeightPx == null, settleSequence) {
         if (draggedHeightPx != null) return@LaunchedEffect
-        height.animateTo(targetHeightPx, when {
-            !autoExpandSuppressed &&
-                abs(settledHeightPx - baseContentHeightPx) > autoSettleTolerancePx ->
-                folmeSpring(damping = 1f, response = 0.72f)
-            autoExpandSuppressed -> folmeSpring(damping = 1f, response = 0.38f)
-            else -> folmeSpring(damping = 1f, response = 0.50f)
-        })
+        height.animateTo(targetHeightPx, if (motion.reduceMotion) androidx.compose.animation.core.snap()
+            else spring(dampingRatio = motion.dampingRatio, stiffness = motion.stiffness))
     }
-    val sheetBackgroundAlpha = animateFloatAsState(
-        targetValue = if (hasMessages) 1f else 0f,
-        animationSpec = tween(durationMillis = 160, easing = LinearOutSlowInEasing),
-        label = "assistant_sheet_background",
-    )
     val messageRevealProgress = animateFloatAsState(
         targetValue = if (hasMessages) 1f else 0f,
         animationSpec = if (hasMessages) {
-            tween(durationMillis = 180, delayMillis = 50, easing = LinearOutSlowInEasing)
+            tween(motion.medium, easing = motion.emphasizedDecelerate)
         } else {
-            tween(durationMillis = 100, easing = FastOutSlowInEasing)
+            tween(motion.micro, easing = motion.standard)
         },
         label = "assistant_message_reveal",
     )
@@ -634,7 +627,7 @@ private fun BoxScope.AssistantPanel(
         }
     }
 
-    val messageRevealOffsetPx = with(density) { 12.dp.toPx() }
+    val messageRevealOffsetPx = with(density) { if (motion.reduceMotion) 0f else 8.dp.toPx() }
     val sheetShape = EtaTheme.shapes.radiusXl
     Column(
         modifier = Modifier
@@ -644,7 +637,7 @@ private fun BoxScope.AssistantPanel(
             .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars).only(WindowInsetsSides.Bottom))
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .offset(y = with(density) { sheetTranslationPx.toDp() })
-            .shadow(16.dp, sheetShape)
+            .etaElevation(EtaElevation.E3, sheetShape)
             .clip(sheetShape)
             .drawBehind {
                 drawRect(
@@ -659,7 +652,8 @@ private fun BoxScope.AssistantPanel(
                 shape = sheetShape,
             ),
     ) {
-        if (!hasMessages) Box(Modifier.fillMaxWidth().height(20.dp), contentAlignment = Alignment.Center) {
+        if (!hasMessages) Box(Modifier.fillMaxWidth().height(40.dp), contentAlignment = Alignment.Center) {
+            EtaBrandMark(Modifier.align(Alignment.CenterStart).padding(start = 16.dp).size(24.dp))
             Box(Modifier.size(36.dp, 4.dp).clip(CircleShape).background(colors.tertiary))
         }
         Column(
@@ -755,12 +749,12 @@ private fun DragHandle(
     // 把手是接管的唯一入口：拉到阈值时变宽并染成主色，配合触觉反馈提示松手进入本体。
     val handleWidth by animateDpAsState(
         targetValue = if (handoffReady) 52.dp else 36.dp,
-        animationSpec = tween(160),
+        animationSpec = if (EtaTheme.motion.reduceMotion) androidx.compose.animation.core.snap() else tween(EtaTheme.motion.micro, easing = EtaTheme.motion.standard),
         label = "assistant_handle_width",
     )
     val handleColor by animateColorAsState(
         targetValue = if (handoffReady) MiuixTheme.colorScheme.primary else colors.tertiary,
-        animationSpec = tween(160),
+        animationSpec = tween(EtaTheme.motion.micro, easing = EtaTheme.motion.standard),
         label = "assistant_handle_color",
     )
     Box(
@@ -770,6 +764,7 @@ private fun DragHandle(
             .testTag("eta_assistant_drag_handle"),
         contentAlignment = Alignment.Center,
     ) {
+        EtaBrandMark(Modifier.align(Alignment.CenterStart).padding(start = 16.dp).size(24.dp))
         Box(
             modifier = Modifier
                 .size(width = handleWidth, height = 4.dp)

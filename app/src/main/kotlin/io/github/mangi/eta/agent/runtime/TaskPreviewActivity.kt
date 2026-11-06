@@ -110,8 +110,8 @@ internal class TaskPreviewActivity : ComponentActivity() {
         root = findViewById(android.R.id.content)
         resize(animate = false)
         root.alpha = 0f
-        root.translationY = -dp(16).toFloat()
-        root.animate().alpha(1f).translationY(0f).setDuration(380).setInterpolator(DecelerateInterpolator()).start()
+        root.translationY = if (ValueAnimator.areAnimatorsEnabled()) -dp(16).toFloat() else 0f
+        root.animate().alpha(1f).translationY(0f).setDuration(if (ValueAnimator.areAnimatorsEnabled()) 380 else 120).setInterpolator(android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f)).start()
         updateControls()
     }
 

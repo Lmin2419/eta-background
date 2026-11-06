@@ -103,13 +103,18 @@ class TaskAndSidebarPresentationTest {
         captureWidePanel(840, true)
     }
 
-    private fun captureWidePanel(widthDp: Int, overlay: Boolean) {
+    @Test @Config(qualifiers = "w900dp-h411dp-xhdpi")
+    fun landscapeDarkTaskPanelStaysInsideTheConversationArea() {
+        captureWidePanel(900, true, dark = true)
+    }
+
+    private fun captureWidePanel(widthDp: Int, overlay: Boolean, dark: Boolean = false) {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         val store = CommonTasksStore(controller.get(), scope)
         var shown by mutableStateOf(true)
         var chatWidth = 0
-        val panel = Stage3TestPanel(controller.get()) {
+        val panel = Stage3TestPanel(controller.get(), dark = dark) {
             EtaAppOverlayHost {
                 ConversationSidePaneScaffold(ConversationPaneUiState(emptyList(), null, ""), false, true,
                     {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}) {

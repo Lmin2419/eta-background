@@ -1,7 +1,7 @@
 package io.github.mangi.eta.ui.components
 
 import android.os.SystemClock
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

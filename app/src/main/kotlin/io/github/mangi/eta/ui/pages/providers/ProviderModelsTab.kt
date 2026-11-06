@@ -2,7 +2,9 @@
 
 package io.github.mangi.eta.ui.pages.providers
 
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.theme.EtaMotion
+
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
@@ -794,7 +796,7 @@ private fun ModelListItem(
         } else {
             Color.Transparent
         },
-        animationSpec = tween(durationMillis = 160),
+        animationSpec = tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard),
         label = "model_row_tint",
     )
     Row(

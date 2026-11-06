@@ -1634,4 +1634,5 @@
   <string name="voice_suggestion_help">How to use this page</string>
   <string name="voice_suggestion_highlights">Find highlights</string>
   <string name="preview_manual_hint">Touch the preview to control the app</string>
+    <string name="eta_accessibility_background_running">Running in background</string>
 </resources>

@@ -62,8 +62,6 @@ private object ConversationPaneMetrics {
     val PaneMaxWidth = 360.dp
     val PaneWidthFraction = 0.84f
     const val ChatScrimAlpha = 0.16f
-    const val SettleDampingRatio = 1f
-    const val SettleStiffness = 146f
     const val SettleVisibilityThresholdPx = 0.5f
     const val SettlePositionThresholdFraction = 0.5f
 }
@@ -123,10 +121,11 @@ fun ConversationSidePaneScaffold(
                 anchors = anchors,
             )
         }
-        val settleAnimation = remember {
-            spring<Float>(
-                dampingRatio = ConversationPaneMetrics.SettleDampingRatio,
-                stiffness = ConversationPaneMetrics.SettleStiffness,
+        val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
+        val settleAnimation = remember(motion) {
+            if (motion.reduceMotion) androidx.compose.animation.core.snap<Float>() else spring<Float>(
+                dampingRatio = motion.dampingRatio,
+                stiffness = motion.stiffness,
                 visibilityThreshold = ConversationPaneMetrics.SettleVisibilityThresholdPx,
             )
         }

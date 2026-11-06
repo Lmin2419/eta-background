@@ -8,17 +8,17 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` background build · versionCode `2026110611`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` background build · versionCode `2026110612`**, with engine `20261105-e49-parallel-observe`.
 
-New icons: the launcher icon is an aurora η on deep ink; the themed icon and status-bar notification icon are a one-colour η; the background-task large icon is a phone outline with the aurora η. The stage 6 changes below are included.
+Stage 7 finishes the UI refresh: the preview primary button fills the available width, secondary actions are 48dp outlined circles, and the status pill stays on one line. Home and the assistant now reuse the brand vector. All launcher, themed, notification and task vectors from `df427d4` remain unchanged.
 
-Stage 6 refreshes system surfaces: a Compose task preview with seven control states, a fixed dark status capsule, and a system-themed assistant panel with a 64dp microphone, aurora feedback and the latest three conversation rounds. The preview retains its original touch, coordinate, frame polling and manual-lease logic.
+App-owned transitions use the design motion tokens. Remove animations enables fades of at most 120ms and static glow/status indicators. Task accessibility summaries, 200% text layouts, contrast, dark mode, landscape and tablet layouts have been checked, including real pointer gesture tests.
 
-Notifications use app/task titles, known step counts, elapsed time and the first result sentence. Active tasks expose View, Pause/Resume and Stop; completed-task actions remain available. Stages 5.5a and 5.5b, including conversation batches, archive undo and Room 24 migration, are included.
+Previously accepted settings, conversation batches, archive undo, Room 24 and system surfaces are included. Preview image gestures/geometry, engine, task scheduling and persistence are unchanged. The validation record lists each page and intentional design deviations.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110611) · [Stage 6 validation and phone checklist](etax/design/validation/stage-6.md) (Chinese)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110612) · [Stage 7 validation and final phone checklist](etax/design/validation/stage-7.md) (Chinese)
 
-This stage has its own commit and release. Delivery requires all CI jobs to pass; work stops after stage 6.
+Implementation of stages 1–7 is complete. This stage has its own commit and release; delivery requires all CI jobs to pass before final phone acceptance.
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

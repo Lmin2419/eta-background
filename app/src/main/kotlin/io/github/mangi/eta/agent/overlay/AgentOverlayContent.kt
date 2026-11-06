@@ -1,6 +1,8 @@
 package io.github.mangi.eta.agent.overlay
 
-import androidx.compose.animation.AnimatedVisibility
+import io.github.mangi.eta.ui.theme.EtaMotion
+
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.LinearEasing
@@ -69,7 +71,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
+import io.github.mangi.eta.ui.theme.EtaElevation
+import io.github.mangi.eta.ui.theme.etaElevation
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -135,21 +138,22 @@ internal data class ScreenCornerRadii(val topLeft: Float, val topRight: Float, v
 internal fun AgentOverlayGlow(state: AgentOverlayState, corners: ScreenCornerRadii) {
     val phase = state.phase
     if (phase != AgentOverlayPhase.RUNNING && phase != AgentOverlayPhase.PAUSED) return
+    val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
     val running = phase == AgentOverlayPhase.RUNNING
     val pausedAccent = overlayPhaseAccent(AgentOverlayPhase.PAUSED)
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { shown = true }
-    val reveal by animateFloatAsState(if (shown) 1f else 0f, tween(420), label = "edge_reveal")
+    val reveal by animateFloatAsState(if (shown) 1f else 0f, tween(motion.long, easing = motion.emphasizedDecelerate), label = "edge_reveal")
 
-    val rotation = if (running) {
+    val rotation = if (running && !motion.reduceMotion) {
         val transition = rememberInfiniteTransition(label = "edge_light")
         transition.animateFloat(
             initialValue = 0f,
             targetValue = 360f,
-            animationSpec = infiniteRepeatable(tween(4200, easing = LinearEasing), RepeatMode.Restart),
+            animationSpec = infiniteRepeatable(tween(motion.auroraMillis, easing = LinearEasing), RepeatMode.Restart),
             label = "edge_rotation",
-        ).value
-    } else 0f
+        )
+    } else null
 
     Box(
         modifier = Modifier.fillMaxSize().drawBehind {
@@ -177,7 +181,7 @@ internal fun AgentOverlayGlow(state: AgentOverlayState, corners: ScreenCornerRad
                 val shader = android.graphics.SweepGradient(
                     size.width / 2f, size.height / 2f, EdgeLightColors.map { it.toArgb() }.toIntArray(), null,
                 ).apply {
-                    setLocalMatrix(android.graphics.Matrix().apply { setRotate(rotation, size.width / 2f, size.height / 2f) })
+                    setLocalMatrix(android.graphics.Matrix().apply { setRotate(rotation?.value ?: 0f, size.width / 2f, size.height / 2f) })
                 }
                 // 外层柔光与内层亮线共用同一个旋转渐变，光带看起来是一体流动的。
                 val halo = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
@@ -293,6 +297,7 @@ internal fun AgentResultCard(
     onClose: () -> Unit,
     onOpenEta: () -> Unit,
 ) {
+    val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
     val scope = rememberCoroutineScope()
@@ -301,7 +306,7 @@ internal fun AgentResultCard(
         visible = false
         // 等退场动画结束再移除窗口，避免卡片被瞬间抽走。
         scope.launch {
-            delay(ResultCardExitMs.toLong())
+            delay(motion.exitDuration(380).toLong())
             onClose()
         }
     }
@@ -325,7 +330,7 @@ internal fun AgentResultCard(
     }
     val settledOffset by animateFloatAsState(
         targetValue = dragOffset,
-        animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMedium),
+        animationSpec = if (motion.reduceMotion) androidx.compose.animation.core.snap() else spring(motion.dampingRatio, motion.stiffness),
         label = "result_drag",
     )
     val dismissThreshold = with(density) { 96.dp.toPx() }
@@ -338,9 +343,9 @@ internal fun AgentResultCard(
     ) {
         AnimatedVisibility(
             visible = visible,
-            enter = slideInVertically(spring(Spring.DampingRatioLowBouncy, Spring.StiffnessMediumLow)) { it } +
-                fadeIn(tween(200)),
-            exit = slideOutVertically(tween(ResultCardExitMs)) { it } + fadeOut(tween(ResultCardExitMs)),
+            enter = slideInVertically(spring(EtaMotion.Default.dampingRatio, EtaMotion.Default.stiffness)) { it } +
+                fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
+            exit = slideOutVertically(tween(motion.exitDuration(380), easing = motion.accelerate)) { it } + fadeOut(tween(motion.exitDuration(380), easing = motion.accelerate)),
             modifier = Modifier.align(Alignment.BottomCenter),
         ) {
             Column(
@@ -348,7 +353,7 @@ internal fun AgentResultCard(
                     .fillMaxWidth()
                     .heightIn(max = 420.dp)
                     .graphicsLayer { translationY = settledOffset }
-                    .shadow(16.dp, RoundedCornerShape(ResultCardCorner), ambientColor = Color.Black.copy(alpha = 0.18f))
+                    .etaElevation(EtaElevation.E3, RoundedCornerShape(ResultCardCorner))
                     .clip(RoundedCornerShape(ResultCardCorner))
                     .background(MiuixTheme.colorScheme.surface)
                     .pointerInput(Unit) {
@@ -488,5 +493,4 @@ private fun ResultCardActions(content: String, onOpenEta: () -> Unit, onDone: ()
 }
 
 private val ResultCardCorner = 28.dp
-private const val ResultCardExitMs = 200
 private const val ResultCardAutoDismissMs = 8_000L

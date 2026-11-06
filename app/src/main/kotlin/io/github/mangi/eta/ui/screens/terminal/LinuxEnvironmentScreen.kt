@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.terminal
 
+import io.github.mangi.eta.ui.components.etaAnimateItem
+
 import android.content.Context
 import android.text.format.Formatter
 import androidx.annotation.StringRes
@@ -456,12 +458,11 @@ internal fun LinuxEnvironmentScreen(
 
         if (selectedToolsReady) {
             item(key = "optional-tools-title") {
-                EtaPreferenceGroupTitle(stringResource(R.string.ui_optional_tools_3097d6), modifier = Modifier.animateItem())
+                EtaPreferenceGroupTitle(stringResource(R.string.ui_optional_tools_3097d6), modifier = etaAnimateItem())
             }
             item(key = "optional-tools-card") {
                 EtaPreferenceGroup(
-                    modifier = Modifier
-                        .animateItem()
+                    modifier = etaAnimateItem()
                         .padding(horizontal = EtaPreferenceDefaults.SidePadding)
                         .padding(bottom = EtaPreferenceDefaults.GroupSpacing),
                 ) {

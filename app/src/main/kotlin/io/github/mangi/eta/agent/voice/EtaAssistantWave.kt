@@ -109,7 +109,7 @@ private fun MicrophoneWave(active: Boolean, level: () -> Float, modifier: Modifi
     val colors = listOf(aurora.blue, aurora.indigo, aurora.pink, aurora.peach)
     Canvas(modifier) {
         if (!active) return@Canvas
-        val amplitude = level().coerceIn(0f, 1f)
+        val amplitude = if (motion.reduceMotion) 0.4f else level().coerceIn(0f, 1f)
         val radius = size.minDimension * 0.43f
         repeat(32) { index ->
             val angle = index * kotlin.math.PI * 2 / 32

@@ -144,7 +144,7 @@ internal fun ConversationSelectionMarker(selected: Boolean) {
     val colors = EtaTheme.colors
     val scale by animateFloatAsState(
         targetValue = if (selected) 1f else 0.9f,
-        animationSpec = tween(durationMillis = EtaTheme.motion.short),
+        animationSpec = if (EtaTheme.motion.reduceMotion) androidx.compose.animation.core.snap() else tween(durationMillis = EtaTheme.motion.short, easing = EtaTheme.motion.standard),
         label = "conversationSelectionMarkerScale",
     )
     Box(
@@ -162,7 +162,7 @@ internal fun ConversationSelectionMarker(selected: Boolean) {
             Icon(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = null,
-                tint = colors.onStatus,
+                tint = colors.onAccent,
                 modifier = Modifier.size(14.dp).graphicsLayer { scaleX = scale; scaleY = scale },
             )
         }

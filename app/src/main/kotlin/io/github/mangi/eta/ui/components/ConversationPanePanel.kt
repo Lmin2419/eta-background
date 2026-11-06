@@ -1,6 +1,8 @@
 package io.github.mangi.eta.ui.components
 
 import androidx.compose.animation.*
+import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
+import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.ui.platform.LocalResources
@@ -79,7 +81,7 @@ internal fun ConversationPanePanel(
     var toastVersion by remember { mutableIntStateOf(0) }
     var undo by remember { mutableStateOf<ConversationArchiveChange?>(null) }
     val selecting = selectedIds.isNotEmpty()
-    val shortMotion = EtaTheme.motion.short
+    val motion = EtaTheme.motion
     val visibleConversations = remember(state.conversations, state.searchQuery, archived) {
         state.conversations.filter { if (state.searchQuery.isNotBlank()) true else (it.archivedAt != null) == archived }
     }
@@ -94,7 +96,7 @@ internal fun ConversationPanePanel(
     val groups = remember(visibleConversations, today) { visibleConversations.groupBy { conversationSection(it, today) }.toSortedMap() }
     Column(modifier.width(width).fillMaxHeight().background(EtaTheme.colors.surface)
         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))) {
-        AnimatedContent(selecting, transitionSpec = { fadeIn(tween(shortMotion)) togetherWith fadeOut(tween(shortMotion)) }, label = "selectionToolbar") { mode ->
+        AnimatedContent(selecting, transitionSpec = { fadeIn(tween(motion.short, easing = motion.standard)) togetherWith fadeOut(tween(motion.exitDuration(180), easing = motion.accelerate)) }, label = "selectionToolbar") { mode ->
             if (mode) ConversationSelectionHeader(selectedIds.size, visibleIds.isNotEmpty() && selectedIds.containsAll(visibleIds),
                 { selectedIds = emptySet() }, { selectedIds = if (selectedIds.containsAll(visibleIds)) emptySet() else visibleIds })
             else if (archived) Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -105,8 +107,8 @@ internal fun ConversationPanePanel(
                 EtaIconButton(workspace.onNew) { Icon(Icons.Rounded.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
             }
         }
-        AnimatedVisibility(!selecting && !archived, enter = expandVertically(tween(EtaTheme.motion.medium)) + fadeIn(),
-            exit = shrinkVertically(tween(EtaTheme.motion.medium)) + fadeOut()) {
+        AnimatedVisibility(!selecting && !archived, enter = expandVertically(tween(motion.medium, easing = motion.emphasizedDecelerate)) + fadeIn(tween(motion.medium, easing = motion.emphasizedDecelerate)),
+            exit = shrinkVertically(tween(motion.exitDuration(260), easing = motion.accelerate)) + fadeOut(tween(motion.exitDuration(260), easing = motion.accelerate))) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
                 val entryWidth = (width - 32.dp) / 4
                 WorkspaceEntry(Icons.Rounded.TaskAlt, stringResource(R.string.eta_tasks), EtaTheme.colors.tileIndigo, entryWidth, workspace.onTasks, count = workspace.runningCount)
@@ -147,7 +149,7 @@ internal fun ConversationPanePanel(
                 actionLabel = if (undo != null) stringResource(R.string.eta_undo) else null,
                 onAction = undo?.let { change -> { management.unarchive(change.ids, change.archivedAt); undo = null; toast = null } })
         }
-        AnimatedContent(selecting, transitionSpec = { fadeIn(tween(shortMotion)) togetherWith fadeOut(tween(shortMotion)) }, label = "selectionActions") { mode ->
+        AnimatedContent(selecting, transitionSpec = { fadeIn(tween(motion.short, easing = motion.standard)) togetherWith fadeOut(tween(motion.exitDuration(180), easing = motion.accelerate)) }, label = "selectionActions") { mode ->
         if (mode) ConversationSelectionBar(archived,
             onArchive = {
                 val ids = selectedIds
