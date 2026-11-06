@@ -8,9 +8,11 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` background build · versionCode `2026110602`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` background build · versionCode `2026110603`**, with engine `20261105-e49-parallel-observe`.
 
-Quiet Flow stage 3 updates the home conversation. This release also includes the explicitly approved live task strip, task center and sidebar reorganization.
+This build fixes a stage 3 device-test finding: the home conversation could scroll back to older messages, but an upward finger drag never scrolled forward again. The page still carried the old top bar's collapsing scroll handler, which nothing measured, so it consumed every upward drag. It is now attached only where that top bar is used, with a real finger-drag regression test.
+
+Quiet Flow stage 3 itself updates the home conversation. This release also includes the explicitly approved live task strip, task center and sidebar reorganization.
 
 - Move model selection to the top capsule, with conversation settings for models, automatic read-aloud, context compaction and export.
 - Unify microphone, send, stop and queue states. While running, tap to queue a draft or hold and release to interrupt and send; cancellation or moving outside does not send.
@@ -18,7 +20,7 @@ Quiet Flow stage 3 updates the home conversation. This release also includes the
 - Keep sidebar search and conversation management; expose tasks, characters, terminal, browser and configured Kimi. The task center groups active, completed and saved tasks and polls thumbnails only while visible.
 - Preserve lazy conversation rendering, paging and streaming parse caches. A controlled 500-message native rendering comparison showed no regression; phone frame-rate verification remains pending.
 
-**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110602) (Chinese)
+**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110603) (Chinese)
 
 CI publishes the APK with the existing release certificate. The [stage 3 verification record](etax/design/validation/stage-3.md) contains source comparisons, test results, component renders and the device checklist. Desktop rendering measurements are not device FPS.
 

@@ -132,6 +132,9 @@ internal fun AgentAppShell(
 ) {
     var toast by remember { mutableStateOf<String?>(null) }
     val scrollBehavior = MiuixScrollBehavior()
+    // Only the shell's Miuix bar measures this behaviour. Without that measurement its collapse
+    // range is unbounded and it would swallow every upward drag of the page beneath it.
+    val usesShellTopBar = currentRoute !is AppRoute.Settings && !(currentRoute is AppRoute.Home && homeTopBar != null)
     val backdrop = rememberTopBarBackdrop()
     val topBarColor = topBarContainerColor(backdrop)
     val pageContent: @Composable () -> Unit = {
@@ -170,7 +173,7 @@ internal fun AgentAppShell(
                 modifier = Modifier
                     .fillMaxSize()
                     .captureForTopBar(backdrop)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    .then(if (usesShellTopBar) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier),
             ) {
                 content(padding)
             }
