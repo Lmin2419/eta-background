@@ -113,6 +113,25 @@ internal object AgentModelPickerProjector {
         )
 }
 
+/**
+ * Short label for the top-bar pill. A name the user set is shown as written. A raw model id
+ * loses its organisation path and date snapshot, which are long but rarely tell models apart.
+ */
+internal val AgentModelOptionUi.pillName: String
+    get() = compactModelName(displayName, modelId)
+
+internal fun compactModelName(displayName: String, modelId: String): String {
+    val name = displayName.trim()
+    if (name.isEmpty() || name != modelId.trim()) return name
+    val compact = name.substringAfterLast('/')
+        .replace(ModelDateSuffix, "")
+        .removeSuffix("-latest")
+        .trim('-', '_', '@', ':', ' ')
+    return compact.ifBlank { name }
+}
+
+private val ModelDateSuffix = Regex("""[-_@]((19|20)\d{2}-\d{2}-\d{2}|(19|20)\d{6})$""")
+
 internal val AgentModelPickerUiState.modelCount: Int
     get() = providerGroups.sumOf { it.models.size }
 

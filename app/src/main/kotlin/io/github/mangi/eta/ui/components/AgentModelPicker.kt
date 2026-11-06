@@ -374,9 +374,10 @@ internal fun ModelPickerRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
+            // The picker is where the full name is read, so long ids wrap instead of being cut.
             Text(model.displayName, style = io.github.mangi.eta.ui.theme.EtaTheme.type.rowTitle,
                 color = if (enabled) contentColor else io.github.mangi.eta.ui.theme.EtaTheme.colors.textTertiary,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 listOfNotNull(
                     R.string.eta_vision.takeIf { model.vision }, R.string.eta_reasoning.takeIf { model.reasoning },

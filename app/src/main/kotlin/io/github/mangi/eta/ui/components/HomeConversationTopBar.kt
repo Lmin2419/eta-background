@@ -90,16 +90,19 @@ internal fun HomeConversationTopBar(
 internal fun ModelPill(state: AgentModelPickerUiState, locked: Boolean, iconOnly: Boolean = false, onClick: () -> Unit) {
     val model = state.selectedModel
     val current = model?.displayName ?: stringResource(R.string.model_not_selected)
+    val shown = model?.pillName ?: current
     Row(Modifier.heightIn(min = 36.dp).clip(EtaTheme.shapes.radiusFull)
         .background(EtaTheme.colors.surfaceSunken).clickable(role = Role.Button, onClick = onClick)
         .semantics { contentDescription = current }
         .padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         ModelBrandMark(model?.modelId, model?.providerSourceType, 16.dp)
-        if (!iconOnly) Text(current.take(14) + if (current.length > 14) "…" else "",
+        // Use the whole space between the top-bar buttons; when it still does not fit, keep both
+        // the model family and its version/size, which sit at the two ends of the name.
+        if (!iconOnly) Text(shown,
             modifier = Modifier.weight(1f, fill = false), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp),
             color = if (locked) EtaTheme.colors.textTertiary else EtaTheme.colors.textPrimary,
-            maxLines = 1, overflow = TextOverflow.Ellipsis)
+            maxLines = 1, overflow = TextOverflow.MiddleEllipsis)
         Icon(Icons.Rounded.ExpandMore, null, Modifier.size(16.dp), tint = EtaTheme.colors.textTertiary)
     }
 }
