@@ -543,7 +543,7 @@ internal class AgentExecutionService : Service() {
                 is AgentOverlayStatus.HostedToolRunning -> R.string.task_short_running
                 AgentOverlayStatus.Reasoning, AgentOverlayStatus.WaitingForModel -> R.string.task_short_thinking
                 AgentOverlayStatus.GeneratingAnswer -> R.string.task_short_answering
-                AgentOverlayStatus.Paused, AgentOverlayStatus.ScreenOffPaused -> R.string.task_short_paused
+                AgentOverlayStatus.Paused -> R.string.task_short_paused
                 AgentOverlayStatus.PreviewPaused, AgentOverlayStatus.AppTakeoverPaused -> R.string.task_short_in_control
                 AgentOverlayStatus.ContinuationUnavailable -> R.string.task_short_needs_you
                 AgentOverlayStatus.ResultReady, AgentOverlayStatus.Stopping, AgentOverlayStatus.Finishing -> R.string.task_short_finishing

@@ -25,7 +25,6 @@ internal fun RuntimeRunRegistry.Run.presentationStatus(): AgentOverlayStatus {
         AgentRuntimeWire.RunPhase.Paused -> when {
             session.controller.pausedForPreview -> AgentOverlayStatus.PreviewPaused
             session.controller.pausedForAppTakeover -> AgentOverlayStatus.AppTakeoverPaused
-            pausedForScreenOff -> AgentOverlayStatus.ScreenOffPaused
             else -> AgentOverlayStatus.Paused
         }
         AgentRuntimeWire.RunPhase.Queued -> AgentOverlayStatus.Queued

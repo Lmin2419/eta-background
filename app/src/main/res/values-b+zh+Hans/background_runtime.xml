@@ -29,5 +29,4 @@
     <string name="background_diagnostics_saved">诊断文件已保存</string>
     <string name="background_diagnostics_failed">诊断文件保存失败</string>
     <string name="background_task_queued">等待执行</string>
-    <string name="background_screen_off_paused">已息屏暂停，解锁后继续</string>
 </resources>

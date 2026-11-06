@@ -38,7 +38,7 @@ class RuntimeRunRegistryTest {
         assertEquals(null, registry.claimNext(ready))
     }
 
-    @Test fun screenOffPausedQueueWaitsForManualResume() {
+    @Test fun manuallyPausedQueueWaitsForManualResume() {
         val registry = RuntimeRunRegistry()
         val a = registry.accept("a", "ca")
         a.session.controller.pause()

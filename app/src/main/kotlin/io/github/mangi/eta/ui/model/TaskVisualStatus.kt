@@ -32,7 +32,7 @@ internal fun AgentOverlayStatus.toTaskVisualStatus(): TaskVisualStatus = when (t
     AgentOverlayStatus.ResultReady -> TaskVisualStatus.Success
     AgentOverlayStatus.RunFailed, AgentOverlayStatus.Stopped -> TaskVisualStatus.Failed
     AgentOverlayStatus.Paused, AgentOverlayStatus.PreviewPaused,
-    AgentOverlayStatus.ScreenOffPaused, AgentOverlayStatus.AppTakeoverPaused -> TaskVisualStatus.Paused
+    AgentOverlayStatus.AppTakeoverPaused -> TaskVisualStatus.Paused
     AgentOverlayStatus.Queued, AgentOverlayStatus.WaitingForGui -> TaskVisualStatus.Queued
     AgentOverlayStatus.ContinuationUnavailable -> TaskVisualStatus.Attention
     AgentOverlayStatus.Preparing, AgentOverlayStatus.Reasoning,

@@ -47,7 +47,30 @@
 
 ## 8b · 息屏行为
 
-下一独立提交完成 S11，并在本节补充失败基线、锁屏保护、手动暂停、后台任务与发布验证结果。
+8a 提交 `4d0bd9e`。8b 只移除 ACTION_SCREEN_OFF 中的自动暂停循环，以及 pausedForScreenOff / ScreenOffPaused 的属性、投影、三语文案和测试引用；保留隐藏 ambient 窗口、刷新状态、主屏锁定拒绝和显式继续的全部原有守卫。
+
+先改写原 physicalScreenOff 测试，新预期在旧实现失败（[记录](stage-8/before/screen-off-test.xml)：「Power key must not pause the task」）；删除暂停分支后，息屏、亮屏任务均保持运行。对应回归 **36 项通过，0 失败、0 跳过**：
+
+- 主屏曾执行前台操作的任务，息屏也不暂停、不取消；息屏移除流光/胶囊，亮屏 ambient 状态回到 Running。
+- 手动暂停和持有接管 lease 的任务经过息屏/亮屏仍暂停。原队列测试改名为 manuallyPausedQueueWaitsForManualResume，仍测试手动暂停语义。
+- 后台虚拟屏息屏期间真实 TaskScreenSession 路由仍调用 screen_dump 后端；正在打开后台应用的任务也不暂停。
+- Stage8ScreenGuardTest 反射调用现有执行器编译出的 beforeToolExecution 回调（按类型签名查找，不依赖 lambda 序号），在「屏幕关闭 / 锁屏 / 两者同时」三种组合下，对 tap / type_text / swipe / launch_app / open_uri 均取得 SCREEN_LOCKED；web_search / fetch_url 均 Allow，无实际输入、Root RPC 或网络请求。
+- 上述回调运行后任务控制器不暂停、不取消，也没有取得 GUI 所有权；执行器源码与 ab061cf **逐字节一致**。
+- 息屏广播前后最新 WakeLock 实例相同；未新增锁、电池保活、权限或 keepScreenOn 策略。
+
+## 构建与发布门禁
+
+versionCode 仅递增一次至 **2026110615**，versionName 仍为 3.3.5，Root 引擎仍为 20261105-e49-parallel-observe。两次本地提交完成后一次推送 main，触发同一条 [Etax Build](https://github.com/Lmin2419/eta-background/actions/workflows/etax-build.yml) 流水线；交付必须同时满足「测试与 Lint / 签名构建 / 发布」三项成功，且 [Release](https://github.com/Lmin2419/eta-background/releases) 存在本版本签名 APK。CI 的 test-results / lint / workflow 日志是最终平台独立证据，不把本地截图或上一版通过视作本版 CI。
+
+最终本地相关回归 **118 项通过、0 失败、0 跳过**，包含全部阶段 8 用例、通知三类测试、预览状态机、窗口、TaskScreenSession、任务投影和运行时息屏/恢复。额外的「界面可见接管/暂停提示」测试先失败后通过，失败记录见 [visible-hint-test.xml](stage-8/before/visible-hint-test.xml)；两个界面提示资源现在引用同一份新提示目录。旧通知测试同步断言 task_short_thinking，仍保留原测试的推广通知和终端会话释放检查。
+
+Linux 首次完整 CI 跑完 **2598 项**，唯一失败为旧 LocaleResourcesTest 仍期待品牌与中文之间的空格；按 S10.7 同步简繁两条预期后，LocaleResourcesTest + Stage8CopyTest **5 项通过**，修正折回 8a，最终仍为两次提交。首次 CI 记录见 [42231569916](https://github.com/Lmin2419/eta-background/actions/runs/42231569916)；最终以修正后的提交对应流水线及 Release 为准。
+
+第二轮 Linux 检查 [42233949156](https://github.com/Lmin2419/eta-background/actions/runs/42233949156) 已通过 **2598 项 / 0 失败 / 0 错误 / 1 项既有环境跳过**；Lint 0 Error、479 Warning、1 Hint，引擎 13 项通过。发布前边界复核确认 WaitingForGui 在既有任务投影中属于 Queued，短标签同步为「排队中 / 排隊中 / Queued」，避免误称需要用户操作；先失败后修复记录见 [gui-queued-test.xml](stage-8/before/gui-queued-test.xml)，通知回归 **17 项通过**。该候选发布已主动取消，最终仍以此修正后的两次提交统一构建发布。
+
+本机 Windows 全套测试尝试遇到文件路径/描述符/POSIX 权限失败，并在 BackgroundTerminalJobsTest 的 FileDescriptor.close0 原生管道关闭处卡住（线程栈确认后终止该次执行）。没有删除、跳过或放宽这些测试，也没有为 Windows 改业务代码；完整套件由 Linux CI 验证。上述 118 项是实际完成的相关回归，不冒充全仓通过。
+
+接线检查 **12/12**；Root 引擎从源码重新编译并内嵌成功，内容与基线一致。本地 `:app:lintDebug` **通过**，0 Error / 0 Fatal；466 条 Warning、1 条 Hint，均不阻断构建。
 
 ## 委派与范围
 

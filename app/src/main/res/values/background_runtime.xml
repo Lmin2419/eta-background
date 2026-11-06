@@ -29,5 +29,4 @@
     <string name="background_diagnostics_saved">Diagnostics saved</string>
     <string name="background_diagnostics_failed">Could not save diagnostics</string>
     <string name="background_task_queued">Waiting to run</string>
-    <string name="background_screen_off_paused">Paused while screen is off; unlock to resume</string>
 </resources>

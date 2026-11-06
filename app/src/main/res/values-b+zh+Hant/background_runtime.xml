@@ -29,5 +29,4 @@
     <string name="background_diagnostics_saved">診斷檔案已儲存</string>
     <string name="background_diagnostics_failed">診斷檔案儲存失敗</string>
     <string name="background_task_queued">等待執行</string>
-    <string name="background_screen_off_paused">已熄屏暫停，解鎖後繼續</string>
 </resources>

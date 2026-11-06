@@ -145,11 +145,14 @@ class AgentRuntimeScreenOnTest {
         val display = service.getSystemService(android.hardware.display.DisplayManager::class.java).getDisplay(0)
         val run = service.registerRun("background-off", ownsGui = false)
         val other = service.registerRun("manual-off", ownsGui = false)
+        val takeover = service.registerRun("takeover-off", ownsGui = false)
+        assertTrue(takeover.session.controller.acquireManual("power-test"))
+        val backgroundCalls = mutableListOf<String>()
         val opening = service.registerRun("opening-off", ownsGui = false)
         opening.hasExecutedForegroundTool = true
         opening.backgroundScreenPhase = BackgroundScreenPhase.OpeningApp
         val screen = TaskScreenSession(run.runId, run.session.controller,
-            object : ScreenToolBackend { override fun execute(name: String, arguments: String): String = """{"ok":true,"mode":"hidden","displayId":7}""" },
+            object : ScreenToolBackend { override fun execute(name: String, arguments: String): String { backgroundCalls += name; return """{"ok":true,"mode":"hidden","displayId":7}""" } },
             { io.github.mangi.eta.agent.model.AgentModelClient.ToolResult("{}") })
         screen.execute(io.github.mangi.eta.agent.model.AgentModelClient.ToolCall(id = "open", name = "launch_app", argumentsJson = """{"package_name":"app.one","execution_location":"background"}"""))
         TaskPreviewRegistry.register(run.runId, run.session.controller, screen)
@@ -162,12 +165,18 @@ class AgentRuntimeScreenOnTest {
             assertFalse(run.session.controller.isPaused)
             assertFalse(opening.session.controller.isPaused)
             assertTrue(other.session.controller.isPaused)
+            assertTrue(takeover.session.controller.isPaused)
             assertFalse(TaskPreviewRegistry.mainDisplayAvailable(service))
+            screen.execute(AgentModelClient.ToolCall("observe-off", "observe_screen", "{}"))
+            assertTrue("background observation still reaches its own backend", "screen_dump" in backgroundCalls)
+            assertFalse(run.session.controller.isPaused)
             shadowOf(display).setState(android.view.Display.STATE_ON)
             service.field<android.content.BroadcastReceiver>("screenReceiver").onReceive(service,
                 android.content.Intent(android.content.Intent.ACTION_SCREEN_ON))
             assertTrue(other.session.controller.isPaused)
+            assertTrue(takeover.session.controller.isPaused)
         } finally {
+            takeover.session.controller.releaseManual("power-test")
             TaskPreviewRegistry.unregister(run.runId)
             shadowOf(display).setState(android.view.Display.STATE_ON)
             host.destroy()
@@ -175,26 +184,28 @@ class AgentRuntimeScreenOnTest {
     }
 
     @Test
-    fun physicalScreenOffPausesRunAndScreenOnRequiresManualResume() {
+    fun physicalScreenOffKeepsRunActiveAndScreenOnShowsCurrentState() {
         val controller = Robolectric.buildService(AgentRuntimeService::class.java).create()
         val service = controller.get()
         val display = service.getSystemService(android.hardware.display.DisplayManager::class.java).getDisplay(0)
         try {
             val run = service.registerRun("screen-off", ownsGui = false)
             run.hasExecutedForegroundTool = true
+            val wakeLockBefore = org.robolectric.shadows.ShadowPowerManager.getLatestWakeLock()
             // Another display may keep global power interactive while the phone's screen is off.
             shadowOf(service.getSystemService(android.os.PowerManager::class.java)).setIsInteractive(true)
             shadowOf(display).setState(android.view.Display.STATE_OFF)
             org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(true)
             service.field<android.content.BroadcastReceiver>("screenReceiver").onReceive(service, android.content.Intent(android.content.Intent.ACTION_SCREEN_OFF))
+            org.junit.Assert.assertSame(wakeLockBefore, org.robolectric.shadows.ShadowPowerManager.getLatestWakeLock())
             assertFalse(run.session.controller.isCancelled)
-            assertTrue(run.session.controller.isPaused)
+            assertFalse("Power key must not pause the task", run.session.controller.isPaused)
             org.junit.Assert.assertNull(service.field<ComposeView?>("glowView"))
             org.junit.Assert.assertNull(service.field<ComposeView?>("capsuleView"))
             shadowOf(display).setState(android.view.Display.STATE_ON)
             service.field<android.content.BroadcastReceiver>("screenReceiver").onReceive(service, android.content.Intent(android.content.Intent.ACTION_SCREEN_ON))
-            assertTrue(run.session.controller.isPaused)
-            service.invoke("requestResume")
+            assertFalse("Power key must not pause the task", run.session.controller.isPaused)
+            assertEquals(AgentOverlayPhase.RUNNING, service.field<MutableState<AgentOverlayState>>("ambientState").value.phase)
             assertFalse(run.session.controller.isPaused)
         } finally {
             shadowOf(display).setState(android.view.Display.STATE_ON)

@@ -50,11 +50,13 @@ class Stage8CopyTest {
                 AgentOverlayStatus.RunningTool("click"), AgentOverlayStatus.HostedToolRunning("search")) + BackgroundScreenPhase.entries.map { AgentOverlayStatus.BackgroundScreen(it) }),
             "Thinking" to listOf(AgentOverlayStatus.Reasoning, AgentOverlayStatus.WaitingForModel),
             "Answering" to listOf(AgentOverlayStatus.GeneratingAnswer),
-            "Paused" to listOf(AgentOverlayStatus.Paused, AgentOverlayStatus.ScreenOffPaused),
+            "Paused" to listOf(AgentOverlayStatus.Paused),
             "In control" to listOf(AgentOverlayStatus.PreviewPaused, AgentOverlayStatus.AppTakeoverPaused),
             "Needs you" to listOf(AgentOverlayStatus.ContinuationUnavailable),
             "Finishing" to listOf(AgentOverlayStatus.ResultReady, AgentOverlayStatus.Stopping, AgentOverlayStatus.Finishing),
             "Stopped" to listOf(AgentOverlayStatus.Stopped), "Failed" to listOf(AgentOverlayStatus.RunFailed))
+        assertEquals("every sealed status must have a test case", AgentOverlayStatus::class.java.declaredClasses
+            .filter { AgentOverlayStatus::class.java.isAssignableFrom(it) }.toSet(), groups.flatMap { it.second }.map { it.javaClass }.toSet())
         val translations = mapOf("zh-CN" to listOf("排队中", "执行中", "思考中", "回答中", "已暂停", "你在操作", "需要你", "收尾中", "已停止", "未完成"),
             "zh-TW" to listOf("排隊中", "執行中", "思考中", "回答中", "已暫停", "你在操作", "需要你", "收尾中", "已停止", "未完成"))
         val builder = AgentExecutionService.Companion::class.java.getDeclaredMethod("notification", Context::class.java,

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2026-11-06T13:45:35.432Z" hostname="DESKTOP-C7GT9VI" time="4.78">
+  <testcase name="physicalScreenOffKeepsRunActiveAndScreenOnShowsCurrentState" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="4.164">
+    <failure message="java.lang.AssertionError: Power key must not pause the task" />
+  </testcase>
+  </testsuite>

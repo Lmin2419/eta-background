@@ -31,7 +31,6 @@ internal class RuntimeRunRegistry(private val capacity: Int = MAX_ACTIVE_RUNS) {
             private set
         @Volatile var queued: Boolean = true
             internal set
-        var pausedForScreenOff: Boolean = false
         @Volatile var guiStatus: GuiControlStatus? = null
         var overlayState: AgentOverlayState = AgentOverlayState.Initial
         var backgroundScreenPhase: BackgroundScreenPhase? = null

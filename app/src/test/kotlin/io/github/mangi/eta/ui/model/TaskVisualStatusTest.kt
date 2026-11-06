@@ -25,7 +25,7 @@ class TaskVisualStatusTest {
 
     @Test fun notificationPauseAndQueueAreDistinctFromProgress() {
         val pausedStatuses = listOf(AgentOverlayStatus.Paused, AgentOverlayStatus.PreviewPaused,
-            AgentOverlayStatus.ScreenOffPaused, AgentOverlayStatus.AppTakeoverPaused)
+            AgentOverlayStatus.AppTakeoverPaused)
         pausedStatuses.forEach { assertEquals(it.toString(), TaskVisualStatus.Paused, card(it).toTaskVisualStatus()) }
         listOf(AgentOverlayStatus.Queued, AgentOverlayStatus.WaitingForGui).forEach {
             assertEquals(TaskVisualStatus.Queued, card(it).toTaskVisualStatus())

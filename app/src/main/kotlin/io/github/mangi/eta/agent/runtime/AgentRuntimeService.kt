@@ -126,13 +126,6 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private val screenReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-                runs.all().filterNot { it.session.isTerminal }.forEach { run ->
-                    if (!run.session.controller.isPaused && !TaskPreviewRegistry.isBackground(run.runId) &&
-                        run.backgroundScreenPhase == null && run.hasExecutedForegroundTool) {
-                        run.pausedForScreenOff = true
-                        requestPause(run.runId)
-                    }
-                }
                 removeAmbientWindows()
             }
             publishExecutionState() // Screen-on never resumes work without the user's action.
@@ -981,7 +974,6 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private fun requestResume() {
         if (!isMainDisplayOn() || getSystemService(android.app.KeyguardManager::class.java).isKeyguardLocked) return
         val run = displayedRun?.takeIf { runs.contains(it) }
-        run?.pausedForScreenOff = false
         if (run == null || run.session.controller.isCancelled || guiControl.state.value.ownerRunId == run.runId) guiControl.resumeForUser()
         // A preview pauses the run directly. Retaining a GUI lease does not imply
         // GuiControlCoordinator owns that pause, so both authorities must be resumed.
