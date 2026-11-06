@@ -7,6 +7,7 @@
 | 位置 | 修改 | 保持的行为 |
 | --- | --- | --- |
 | `AgentOverlayContent.kt` | 旧 `7AB8FF/B59CFF/FF9EC7/FFC98A` 流光改为 `EtaAurora.honey/peach/rose/lavender`，尾部重复 honey 保持环形接缝连续；运行/暂停/完成/失败统一为 `running/paused/success/danger` | 触摸、窗口几何、动画时序、状态机和操作回调不变 |
+| `AgentRuntimeService.createOverlayComposeView` | 补上原来缺少的 Eta 主题，并让 Miuix 使用同一套暖色 palette | 原宿主只有 Miuix，深色时新 token 会读到浅色默认值；仅改 Composition 主题提供，窗口、生命周期、触摸及任务处理不变。语音服务原有 `AgentAppTheme` 已提供 Eta 主题，无需改动 |
 | `EtaSpeechFeedback.kt` | 冷灰 `34363B/F2F3F5` 改为 `surfaceSunken`；错误 `B42318/FF9E99` 改为 `dangerText`，普通文字为 `textPrimary` | 继续使用现有状态和重试/设置入口；dangerText 是已有的可读文字 token，浅色 `C22E2E`、深色 `FF7A7A` |
 | 收藏按钮 | 原固定金色改为 `accent`，圆底改为不透明 `surfaceRaised`，未收藏图标为 `textSecondary`；角色详情复用的 `FavoriteColor` 同步 | 保留按钮大小、收藏动作、角色身份与照片，不让焦糖色落在任意深浅照片上失去对比 |
 | Markdown | 无 Composition 的默认链接/行内代码底改为浅色主题的 `accent/surfaceSunken`；Important 提示色改为 `attentionText` | 实际页面仍通过 `rememberMarkdownStyle` 传入当前主题，切换深色时走原有样式缓存键；没有更改解析、导出或内容 |
@@ -74,6 +75,7 @@
 
 - 相关回归 **65 项全部通过、0 跳过**，包含品牌渲染、阶段 6/7、设置、授权、Markdown 解析/缓存/导出及对比度。
 - 授权测试额外验证中文 HTML title、UTF-8 字节长度，保留状态校验、错误回调、一次性关闭与绑定测试。
+- 新增 `AgentRuntimeOverlayThemeTest` 直接调用真实服务的浮层工厂，不套测试页面的应用主题：修复前浅色失败于 Miuix/Eta surface 不一致，深色失败于回退浅色 token；补齐主题后两项均通过，用于防止组件截图掩盖宿主主题漏接。同步回归服务保留/息屏、品牌/阶段 6 及语言资源，**28 项全部通过、0 跳过**，随后 Lint 与 Debug 构建再次通过。
 - 设置持久化原用例另行连续执行 **3 次全部通过**；最终 Markdown 提示色补齐后再跑上述相关范围。
 - 接线 **12/12** 通过；引擎重新编译内嵌成功，BUILD 保持 `20261105-e49-parallel-observe`。Linux 引擎部署与全量单测交由 CI，不能用 Windows 定向测试冒充全量通过。
 

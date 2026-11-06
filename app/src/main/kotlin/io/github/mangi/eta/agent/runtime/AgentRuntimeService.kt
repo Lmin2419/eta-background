@@ -75,6 +75,10 @@ import top.yukonga.miuix.kmp.squircle.LocalSquircleEnabled
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.darkColorScheme
 import top.yukonga.miuix.kmp.theme.lightColorScheme
+import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.theme.darkEtaColors
+import io.github.mangi.eta.ui.theme.lightEtaColors
+import io.github.mangi.eta.ui.theme.toMiuixColors
 
 /**
  * 模块进程内的通用 Agent Runtime。
@@ -1456,11 +1460,15 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             setViewTreeLifecycleOwner(this@AgentRuntimeService)
             setViewTreeSavedStateRegistryOwner(this@AgentRuntimeService)
             setContent {
-                MiuixTheme(colors = if (isNightMode()) darkColorScheme() else lightColorScheme()) {
-                    // 部分 ROM 会给 TYPE_ACCESSIBILITY_OVERLAY 分配软件 Canvas；Miuix 的
-                    // RuntimeShader 只检查系统版本，因此系统浮层统一使用其普通圆角回退。
-                    CompositionLocalProvider(LocalSquircleEnabled provides false) {
-                        content()
+                val dark = isNightMode()
+                val palette = if (dark) darkEtaColors() else lightEtaColors()
+                MiuixTheme(colors = palette.toMiuixColors(if (dark) darkColorScheme() else lightColorScheme())) {
+                    EtaTheme(palette) {
+                        // 部分 ROM 会给 TYPE_ACCESSIBILITY_OVERLAY 分配软件 Canvas；Miuix 的
+                        // RuntimeShader 只检查系统版本，因此系统浮层统一使用其普通圆角回退。
+                        CompositionLocalProvider(LocalSquircleEnabled provides false) {
+                            content()
+                        }
                     }
                 }
             }
