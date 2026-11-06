@@ -6,13 +6,15 @@
 
 ## 最新测试版本
 
-**2026-11-06 · `3.3.5` 后台版 · versionCode `2026110610`**，引擎仍为 `20261105-e49-parallel-observe`。
+**2026-11-06 · `3.3.5` 后台版 · versionCode `2026110611`**，引擎仍为 `20261105-e49-parallel-observe`。
+
+新图标：桌面图标换成深墨底上的流光 η，主题图标、状态栏通知图标为单色 η，后台任务通知大图标为手机轮廓 + 流光 η。以下阶段 6 内容同样包含在本版中。
 
 阶段 6 系统级浮层：任务预览窗改为 Compose，按运行、暂停、接管、需要你、交接、完成、不可用七种状态呈现操作；原预览触摸、坐标换算、帧轮询与控制权逻辑保留。顶部胶囊采用固定深色和 StatusRing，电源键助手采用跟随系统主题的浮起面板、64dp 麦克风、最近三轮对话及 aurora 声波。
 
 通知统一应用名、任务名、步数、耗时与结果首句；运行中操作顺序为「查看、暂停/继续、停止」，完成后的三个操作保留。包含阶段 5.5a 输入区衔接和 5.5b 会话批量管理、归档及 Room 24 迁移。
 
-**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110610) · [阶段 6 验证与手机清单](etax/design/validation/stage-6.md)
+**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110611) · [阶段 6 验证与手机清单](etax/design/validation/stage-6.md)
 
 本阶段独立提交、独立发版；CI 全绿后交付手机验收，停在阶段 6。
 

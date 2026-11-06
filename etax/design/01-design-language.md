@@ -173,7 +173,12 @@ Compose 实现：`Modifier.shadow(elevation, shape, ambientColor, spotColor)` �
 - 只用 material-icons-extended 的 **Rounded** 家族（现有代码混用 Outlined/Rounded，统一为 Rounded；`ShortText`、`MoreHoriz` 等也换成 Rounded 版本）。
 - 尺寸：顶栏 24，列表/菜单 20，行内/徽章 16。
 - 图标颜色默认 `textSecondary`；选中或主操作用 `accent`；危险操作用 `danger`。
-- 品牌标志「η」：用文字字形 η（系统字体 SemiBold）绘制在流光渐变中，作为空状态标志和助手头像；不新增图片资源。
+- 品牌标志「η」：一笔写成的 η，圆头圆角，描边用流光渐变（与边缘流光同色）。矢量资源：
+  - `ic_eta_mark`：App 内品牌标志（空状态、助手头像），无底色；
+  - `ic_launcher_background` / `ic_launcher_foreground` / `ic_launcher_monochrome`：桌面图标（深墨底 + 流光 η；主题图标为单色 η）；
+  - `ic_notification`：状态栏与通知按钮小图标，单色 η，系统按 alpha 着色；
+  - `ic_task_phone`：后台任务通知大图标与预览窗占位，手机轮廓 + 流光 η，屏幕区域透明。
+  minSdk 33 只用自适应图标，`mipmap-*dpi` 位图已删除。改图标只改这几个矢量，路径保持同一套 η 骨架；`BrandIconRenderingTest` 会把它们按桌面遮罩、主题色、状态栏着色画成预览图（`build/reports/eta-icons/`）。
 
 ## 10. 文案语气
 

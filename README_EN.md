@@ -8,13 +8,15 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` background build · versionCode `2026110610`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` background build · versionCode `2026110611`**, with engine `20261105-e49-parallel-observe`.
+
+New icons: the launcher icon is an aurora η on deep ink; the themed icon and status-bar notification icon are a one-colour η; the background-task large icon is a phone outline with the aurora η. The stage 6 changes below are included.
 
 Stage 6 refreshes system surfaces: a Compose task preview with seven control states, a fixed dark status capsule, and a system-themed assistant panel with a 64dp microphone, aurora feedback and the latest three conversation rounds. The preview retains its original touch, coordinate, frame polling and manual-lease logic.
 
 Notifications use app/task titles, known step counts, elapsed time and the first result sentence. Active tasks expose View, Pause/Resume and Stop; completed-task actions remain available. Stages 5.5a and 5.5b, including conversation batches, archive undo and Room 24 migration, are included.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110610) · [Stage 6 validation and phone checklist](etax/design/validation/stage-6.md) (Chinese)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110611) · [Stage 6 validation and phone checklist](etax/design/validation/stage-6.md) (Chinese)
 
 This stage has its own commit and release. Delivery requires all CI jobs to pass; work stops after stage 6.
 
