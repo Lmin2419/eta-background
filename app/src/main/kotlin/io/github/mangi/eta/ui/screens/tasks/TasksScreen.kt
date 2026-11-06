@@ -140,9 +140,16 @@ internal fun TaskStatusLabel(status: TaskVisualStatus) {
 }
 
 @Composable
-private fun CompletedTaskRow(task: CompletedTaskUi, onConversation: (String) -> Unit, onArchivedConversation: (String, String) -> Unit) {
+internal fun CompletedTaskRow(task: CompletedTaskUi, onConversation: (String) -> Unit, onArchivedConversation: (String, String) -> Unit) {
     val context = LocalContext.current
     val intent = remember(task.targetPackage) { task.targetPackage?.let { context.packageManager.getLaunchIntentForPackage(it) } }
+    val applicationName by produceState<String?>(null, task.targetPackage) {
+        value = withContext(Dispatchers.IO) {
+            task.targetPackage?.let { pkg -> runCatching {
+                context.packageManager.getApplicationInfo(pkg, 0).loadLabel(context.packageManager).toString()
+            }.getOrNull() }
+        }
+    }
     Row(Modifier.fillMaxWidth().clip(EtaTheme.shapes.radiusMd).clickable(enabled = task.conversationId != null || task.archiveConversationKey != null) {
         if (task.conversationId != null) onConversation(task.conversationId)
         else if (task.archiveSource != null && task.archiveConversationKey != null) onArchivedConversation(task.archiveSource, task.archiveConversationKey)
@@ -150,8 +157,10 @@ private fun CompletedTaskRow(task: CompletedTaskUi, onConversation: (String) -> 
         StatusRing(task.status)
         Column(Modifier.weight(1f)) {
             Text(task.title, style = EtaTheme.type.rowTitle, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            val detail = listOfNotNull(task.completedAt?.let { DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(it)) },
-                task.durationMs?.let { "${it / 60000}:${(it / 1000 % 60).toString().padStart(2, '0')}" }).joinToString(" · ")
+            val duration = task.durationMs?.let {
+                stringResource(R.string.eta_task_elapsed, "${it / 60000}:${(it / 1000 % 60).toString().padStart(2, '0')}")
+            }
+            val detail = listOfNotNull(applicationName, task.completedAt?.let { DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(it)) }, duration).joinToString(" · ")
             Text(detail.ifBlank { task.status.label() }, style = EtaTheme.type.footnote, color = EtaTheme.colors.textTertiary)
         }
         if (intent != null) EtaButton(stringResource(R.string.eta_open_app), { context.startActivity(intent) }, kind = EtaButtonKind.Secondary, size = EtaButtonSize.Small)

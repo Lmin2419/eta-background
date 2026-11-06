@@ -74,12 +74,13 @@ internal fun ConversationLiveTasks(conversationId: String?, onOpenTasks: () -> U
             val paused = task.paused || status == TaskVisualStatus.Paused
             Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).etaElevation(EtaElevation.E2, EtaTheme.shapes.radiusLg)
                 .background(if (status == TaskVisualStatus.Attention) EtaTheme.colors.attentionSoft else EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusLg)
+                .clickable { openTaskPreview(context, task) }
                 .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(32.dp)) {
                     TaskApplicationIcon(task.targetPackage, Modifier.size(28.dp))
                     StatusRing(status, Modifier.align(Alignment.BottomEnd), size = 12.dp)
                 }
-                Column(Modifier.weight(1f).padding(horizontal = 8.dp).clickable { openTaskPreview(context, task) }) {
+                Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                     Text(task.title, style = EtaTheme.type.footnote, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     val step = if (task.status == AgentOverlayStatus.PreviewPaused || task.status == AgentOverlayStatus.AppTakeoverPaused)

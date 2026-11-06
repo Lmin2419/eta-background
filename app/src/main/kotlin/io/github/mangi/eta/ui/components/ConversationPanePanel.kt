@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.mangi.eta.R
+import io.github.mangi.eta.agent.runtime.AgentExecutionService
+import io.github.mangi.eta.agent.runtime.TaskNotificationState
 import io.github.mangi.eta.ui.model.*
 import io.github.mangi.eta.ui.theme.EtaTheme
 import java.time.Instant
@@ -53,6 +55,8 @@ internal fun ConversationPanePanel(
     onOpenCharacters: () -> Unit, onOpenPermissions: () -> Unit, modifier: Modifier = Modifier,
 ) {
     val workspace = LocalPaneWorkspace.current
+    val snapshots by AgentExecutionService.taskSnapshots.collectAsState()
+    val taskStatuses = remember(snapshots) { conversationTaskStatuses(snapshots) }
     val today = LocalDate.now()
     val groups = remember(state.conversations, today) { state.conversations.groupBy { conversationSection(it, today) }.toSortedMap() }
     Column(modifier.width(width).fillMaxHeight().background(EtaTheme.colors.surface)
@@ -83,6 +87,7 @@ internal fun ConversationPanePanel(
                 }
                 items(conversations, key = { it.id }) { conversation ->
                     ConversationTextRow(conversation, state.selectedConversationId == conversation.id, state.searchQuery,
+                        taskStatuses[conversation.id] ?: TaskVisualStatus.Running.takeIf { conversation.isActiveRun },
                         { onConversationSelected(conversation.id) }, { onConversationRename(conversation) },
                         { onConversationExport(conversation) }, { onConversationDelete(conversation) })
                 }
@@ -113,6 +118,14 @@ internal fun conversationSection(conversation: ConversationSummaryUi, today: Loc
     return when { !date.isBefore(today) -> 1; date == today.minusDays(1) -> 2; !date.isBefore(today.minusDays(7)) -> 3; else -> 4 }
 }
 
+/** Same snapshot/status mapping as the task center; attention wins when a chat has two runs. */
+internal fun conversationTaskStatuses(tasks: List<TaskNotificationState>): Map<String, TaskVisualStatus> =
+    tasks.filter { !it.completed && it.conversationId != null }.groupBy { it.conversationId!! }.mapValues { (_, runs) ->
+        val states = runs.map { it.toTaskVisualStatus() }
+        states.firstOrNull { it == TaskVisualStatus.Attention }
+            ?: states.firstOrNull { it == TaskVisualStatus.Running } ?: states.first()
+    }
+
 @Composable
 private fun WorkspaceEntry(icon: ImageVector, label: String, tint: Color, width: Dp, onClick: () -> Unit,
     count: Int = 0, onLongClick: (() -> Unit)? = null) {
@@ -134,7 +147,7 @@ private fun WorkspaceEntry(icon: ImageVector, label: String, tint: Color, width:
 }
 
 @Composable
-private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: Boolean, query: String,
+private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: Boolean, query: String, taskStatus: TaskVisualStatus?,
     onClick: () -> Unit, onRename: () -> Unit, onExport: () -> Unit, onDelete: () -> Unit) {
     var menu by remember(conversation.id) { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -151,7 +164,7 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
         .background(if (selected) colors.accentSoft else Color.Transparent)
         .combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); menu = true })
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (conversation.isActiveRun) StatusRing(TaskVisualStatus.Running, size = 12.dp)
+        if (taskStatus != null) StatusRing(taskStatus, size = 12.dp)
         Text(markedTitle, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp), color = if (selected) colors.onAccentSoft else colors.textPrimary,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(conversation.timeLabel, style = EtaTheme.type.caption, color = colors.textTertiary, maxLines = 1)

@@ -8,6 +8,9 @@ import io.github.mangi.eta.ui.model.AgentContextUsageUi
 import io.github.mangi.eta.ui.model.AgentModelOptionUi
 import io.github.mangi.eta.ui.model.AgentModelPickerUiState
 import io.github.mangi.eta.ui.model.compactModelName
+import io.github.mangi.eta.data.datastore.SettingsDataStore
+import org.junit.Before
+import org.robolectric.RuntimeEnvironment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -21,6 +24,8 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [36], application = Application::class, qualifiers = "w411dp-h896dp-xhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ModelPillNameTest {
+    @Before fun init() { SettingsDataStore.init(RuntimeEnvironment.getApplication()) }
+
     @Test fun rawModelIdsDropTheirPathAndSnapshotDate() {
         assertEquals("DeepSeek-V3.1-Terminus", compactModelName("deepseek-ai/DeepSeek-V3.1-Terminus", "deepseek-ai/DeepSeek-V3.1-Terminus"))
         assertEquals("claude-sonnet-4-5", compactModelName("claude-sonnet-4-5-20250929", "claude-sonnet-4-5-20250929"))

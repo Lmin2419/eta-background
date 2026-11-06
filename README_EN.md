@@ -8,21 +8,15 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` background build · versionCode `2026110604`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` background build · versionCode `2026110605`**, with engine `20261105-e49-parallel-observe`.
 
-This build fixes a stage 3 device-test finding: the home conversation could scroll back to older messages, but an upward finger drag never scrolled forward again. The page still carried the old top bar's collapsing scroll handler, which nothing measured, so it consumed every upward drag. It is now attached only where that top bar is used, with a real finger-drag regression test. It also shows long model names in the top-bar capsule: organisation prefixes and snapshot dates are dropped, the capsule uses the full free width, and a name that still does not fit is shortened in the middle so its family and version both stay visible.
+Quiet Flow stage 4 closes the remaining details in the sidebar, task center and live task strip already delivered in stage 3: attention status in the sidebar, application names and elapsed labels in completed rows, tapping the whole live strip body, and a circular collapsed create button for saved tasks.
 
-Quiet Flow stage 3 itself updates the home conversation. This release also includes the explicitly approved live task strip, task center and sidebar reorganization.
+The home finger-scroll and long model-name fixes from `2026110604` remain intact. Real MotionEvent drags cover sidebar opening/scrolling/closing, thumbnail polling stopping offscreen and resuming onscreen, and the collapsed create button. Runtime, engine and notification scheduling are unchanged.
 
-- Move model selection to the top capsule, with conversation settings for models, automatic read-aloud, context compaction and export.
-- Unify microphone, send, stop and queue states. While running, tap to queue a draft or hold and release to interrupt and send; cancellation or moving outside does not send.
-- Examples fill the draft without sending; saved task cards use the existing execution path. Restyle messages, work steps, code, tables, queued messages and jump-to-bottom.
-- Keep sidebar search and conversation management; expose tasks, characters, terminal, browser and configured Kimi. The task center groups active, completed and saved tasks and polls thumbnails only while visible.
-- Preserve lazy conversation rendering, paging and streaming parse caches. A controlled 500-message native rendering comparison showed no regression; phone frame-rate verification remains pending.
+**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110605) · [Stage 4 verification](etax/design/validation/stage-4.md) (Chinese)
 
-**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110604) (Chinese)
-
-CI publishes the APK with the existing release certificate. The [stage 3 verification record](etax/design/validation/stage-3.md) contains source comparisons, test results, component renders and the device checklist. Desktop rendering measurements are not device FPS.
+CI publishes with the existing release certificate. The user has accepted stage 3 on device; this release's additional details retain a separate device checklist.
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

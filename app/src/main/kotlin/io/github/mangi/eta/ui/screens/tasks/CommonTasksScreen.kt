@@ -16,6 +16,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.material.icons.rounded.Add
+import io.github.mangi.eta.ui.theme.EtaElevation
+import io.github.mangi.eta.ui.theme.etaElevation
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.derivedStateOf
@@ -73,7 +82,9 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
     val editable = !store.busy && !store.loadFailed
     val listState = rememberLazyListState()
-    val collapsed by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+    val collapsed by remember { derivedStateOf {
+        listState.isScrollInProgress || listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
+    } }
 
     fun edit(task: CommonTask?, copy: Boolean = false) {
         editId = if (copy) null else task?.id
@@ -140,9 +151,19 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
     val createButton: @Composable () -> Unit = {
         val createLabel = stringResource(R.string.common_tasks_create)
         Box(Modifier.fillMaxSize()) {
-            EtaButton(if (collapsed) "+" else "+ " + stringResource(R.string.common_tasks_create), { edit(null) },
-                Modifier.align(Alignment.BottomEnd).padding(16.dp).semantics { contentDescription = createLabel }, enabled = editable && store.tasks.size < CommonTaskRepository.MAX_TASKS,
-                kind = EtaButtonKind.Primary, minHeight = 52.dp)
+            val enabled = editable && store.tasks.size < CommonTaskRepository.MAX_TASKS
+            Row(Modifier.align(Alignment.BottomEnd).padding(16.dp)
+                .etaElevation(EtaElevation.E2, EtaTheme.shapes.radiusFull)
+                .clip(EtaTheme.shapes.radiusFull)
+                .background(EtaTheme.colors.accent.copy(alpha = if (enabled) 1f else .38f))
+                .clickable(enabled = enabled, role = Role.Button) { edit(null) }
+                .semantics { contentDescription = createLabel }
+                .heightIn(min = 52.dp).widthIn(min = 52.dp)
+                .padding(horizontal = if (collapsed) 14.dp else 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.Add, null, Modifier.size(24.dp), tint = EtaTheme.colors.onAccent)
+                if (!collapsed) Text(createLabel, style = EtaTheme.type.rowTitle, color = EtaTheme.colors.onAccent)
+            }
         }
     }
     if (embedded) Box(Modifier.fillMaxSize()) {
