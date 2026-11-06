@@ -1,6 +1,8 @@
-# 01 · 设计语言「静流」
+# 01 · 设计语言「静流」· 胖小胖配色
 
-> 一句话：**界面安静，AI 在动。** 平时只有中性色和一个品牌蓝；只有 AI 正在工作的地方才出现流光渐变和动效。用户扫一眼就知道哪里在跑、哪里要他处理。
+> 一句话：**界面安静，AI 在动。** 平时只有暖白中性色和一个焦糖主色；只有 AI 正在工作的地方才出现暖色流光和动效。
+>
+> 2026-11-06 起 App 更名 **胖小胖**，采用配色 B「蜂蜜焦糖」（与金渐层猫图标统一）。下表为现行数值；原冷色「静流」数值已废弃。用户扫一眼就知道哪里在跑、哪里要他处理。
 
 ## 1. 设计原则
 
@@ -19,17 +21,17 @@
 
 | Token | 用途 | 浅色 | 深色 |
 | --- | --- | --- | --- |
-| `canvas` | 页面底色 | `#F4F5F8` | `#0D0E12` |
-| `surface` | 卡片、分组列表、侧栏 | `#FFFFFF` | `#16171C` |
-| `surfaceRaised` | 输入栏、弹层、底部面板、浮窗 | `#FFFFFF` | `#1E2027` |
-| `surfaceSunken` | 用户气泡、输入框、代码块、搜索框 | `#ECEEF3` | `#23252D` |
-| `outline` | 1px 分隔线、卡片描边 | `#E2E4EA` | `#2A2C35` |
-| `outlineStrong` | 输入框聚焦前描边、次要按钮描边 | `#CDD0D9` | `#3A3D48` |
-| `textPrimary` | 正文、标题 | `#15161A` | `#ECEDF2` |
-| `textSecondary` | 摘要、说明 | `#575A66` | `#A6A9B6` |
-| `textTertiary` | 时间、占位、页脚 | `#6F7280` | `#80838F` |
-| `scrim` | 遮罩 | `#0B0C10` 40% | `#000000` 56% |
-| `pressed` | 按压叠加层 | `#14162A` 8% | `#FFFFFF` 8% |
+| `canvas` | 页面底色 | `#FBF6EE` | `#12100D` |
+| `surface` | 卡片、分组列表、侧栏 | `#FFFFFF` | `#1B1814` |
+| `surfaceRaised` | 输入栏、弹层、底部面板、浮窗 | `#FFFFFF` | `#24201B` |
+| `surfaceSunken` | 用户气泡、输入框、代码块、搜索框 | `#F4EBDD` | `#2B261F` |
+| `outline` | 1px 分隔线、卡片描边 | `#EADFCD` | `#362F27` |
+| `outlineStrong` | 输入框聚焦前描边、次要按钮描边 | `#D9CBB5` | `#4A4136` |
+| `textPrimary` | 正文、标题 | `#201A12` | `#F3EDE4` |
+| `textSecondary` | 摘要、说明 | `#5E5347` | `#BDB2A4` |
+| `textTertiary` | 时间、占位、页脚 | `#6E6254` | `#9C9082` |
+| `scrim` | 遮罩 | `#1A120A` 40% | `#000000` 56% |
+| `pressed` | 按压叠加层 | `#2A1A08` 8% | `#FFFFFF` 8% |
 
 对比度已核对：`textTertiary` 在 `surface` / `canvas` 上 ≥ 4.5:1；`textSecondary` ≥ 6:1。
 
@@ -37,29 +39,29 @@
 
 | Token | 浅色 | 深色 | 说明 |
 | --- | --- | --- | --- |
-| `accent` | `#4B5BFF` | `#8C97FF` | 品牌蓝「Eta 蓝」，主按钮、链接、选中、运行中 |
-| `onAccent` | `#FFFFFF` | `#0B0E2A` | 主按钮上的文字和图标 |
-| `accentSoft` | `#E9EBFF` | `#262A52` | 浅色按钮、选中行、品牌徽章底 |
-| `onAccentSoft` | `#3240D9` | `#B9C0FF` | `accentSoft` 上的文字 |
+| `accent` | `#B25A0E` | `#F0A65A` | 焦糖色（深色模式为蜂蜜色），主按钮、链接、选中、运行中 |
+| `onAccent` | `#FFFFFF` | `#2A1600` | 主按钮上的文字和图标 |
+| `accentSoft` | `#FCEAD5` | `#3D2B17` | 浅色按钮、选中行、品牌徽章底 |
+| `onAccentSoft` | `#8A4507` | `#F8C894` | `accentSoft` 上的文字 |
 
-**Monet / 自选强调色：** 外观设置里开启动态取色或选了其他强调色时，`accent` / `accentSoft` / `onAccentSoft` 用 Miuix `ThemeController` 生成的 primary 系列替换；其余 token 不变。默认值（未开 Monet、强调色为「系统」）改为上表的 Eta 蓝。
+**Monet / 自选强调色：** 外观设置里开启动态取色或选了其他强调色时，`accent` / `accentSoft` / `onAccentSoft` 用 Miuix `ThemeController` 生成的 primary 系列替换；其余 token 不变。默认值（未开 Monet、强调色为「系统」）为上表的焦糖色。
 
 ### 2.3 流光渐变（Aurora）
 
-只用于「AI 正在工作」：运行中的状态环、电源键唤醒的边缘光、输入栏发送瞬间、空状态的 η 标志、AI 运行中的进度条。**不得用作卡片或页面背景。**
+只用于「AI 正在工作」：运行中的状态环、电源键唤醒的边缘光与声波、输入栏发送瞬间、AI 运行中的进度条。**不得用作卡片或页面背景。**
 
 ```
-aurora = linear-gradient(100°, #71BEFF 0%, #ADB8FF 35%, #F27BDE 70%, #FFC99A 100%)
+aurora = linear-gradient(100°, #FFC861 0%, #FF9F7A 35%, #F27BA8 70%, #B9A3FF 100%)   // 蜂蜜 → 蜜桃 → 玫瑰 → 淡紫
 ```
 
-色值沿用现有 `EtaAssistantEdgeGlow` 的流光色，统一后两处一致。动画：渐变沿方向平移，一圈 2.4s，线性循环；「减少动画」时静止。
+代码中为 `EtaAurora.honey / peach / rose / lavender`，边缘光与声波都引用它。动画：渐变沿方向平移，一圈 2.4s，线性循环；「减少动画」时静止。
 
 ### 2.4 状态色
 
 | Token | 前景（浅/深） | 底（浅/深） | 用于 |
 | --- | --- | --- | --- |
 | `running` | 同 `accent` | 同 `accentSoft` | 运行中 |
-| `attention` | `#B45F00` / `#FFB14A` | `#FFF1DF` / `#3A2A12` | 需要你处理（接管、确认、验证码、权限缺失） |
+| `attention` | `#6D46DB` / `#B8A2FF` | `#EFEAFF` / `#2A2342` | 需要你处理（接管、确认、验证码、权限缺失）。用紫色，避免与焦糖主色混淆 |
 | `paused` | 同 `textSecondary` | 同 `surfaceSunken` | 已暂停 |
 | `success` | `#1E8E4E` / `#5CD08A` | `#E3F5EA` / `#13301F` | 完成 |
 | `danger` | `#D33636` / `#FF7A7A` | `#FDE8E8` / `#3A1717` | 失败、删除、停止 |
@@ -73,7 +75,7 @@ aurora = linear-gradient(100°, #71BEFF 0%, #ADB8FF 35%, #F27BDE 70%, #FFC99A 10
 | Token | 色值 | 类别 |
 | --- | --- | --- |
 | `tileBlue` | `#3B82F6` | 模型、对话 |
-| `tileIndigo` | `#4B5BFF` | 后台执行、任务 |
+| `tileCaramel` | `#D27A2C` | 后台执行、任务 |
 | `tileViolet` | `#8B5CF6` | Skills、Subagent、记忆 |
 | `tilePink` | `#E0569B` | 角色、外观 |
 | `tileOrange` | `#F08C00` | 系统助手、电源键 |
@@ -173,12 +175,13 @@ Compose 实现：`Modifier.shadow(elevation, shape, ambientColor, spotColor)` �
 - 只用 material-icons-extended 的 **Rounded** 家族（现有代码混用 Outlined/Rounded，统一为 Rounded；`ShortText`、`MoreHoriz` 等也换成 Rounded 版本）。
 - 尺寸：顶栏 24，列表/菜单 20，行内/徽章 16。
 - 图标颜色默认 `textSecondary`；选中或主操作用 `accent`；危险操作用 `danger`。
-- 品牌标志「η」：一笔写成的 η，圆头圆角，描边用流光渐变（与边缘流光同色）。矢量资源：
-  - `ic_eta_mark`：App 内品牌标志（空状态、助手头像），无底色；
-  - `ic_launcher_background` / `ic_launcher_foreground` / `ic_launcher_monochrome`：桌面图标（深墨底 + 流光 η；主题图标为单色 η）；
-  - `ic_notification`：状态栏与通知按钮小图标，单色 η，系统按 alpha 着色；
-  - `ic_task_phone`：后台任务通知大图标与预览窗占位，手机轮廓 + 流光 η，屏幕区域透明。
-  minSdk 33 只用自适应图标，`mipmap-*dpi` 位图已删除。改图标只改这几个矢量，路径保持同一套 η 骨架；`BrandIconRenderingTest` 会把它们按桌面遮罩、主题色、状态栏着色画成预览图（`build/reports/eta-icons/`）。
+- 品牌形象「胖小胖」：照着用户家的金渐层画的动漫猫头——圆脸长毛、小圆耳、琥珀金毛色（两眼间深金纹）、奶油色围脖、薄荷绿大眼 + 粗黑眼线 + 竖瞳、嘴角下撇、头微歪。源文件 `etax/design/brand/pangxiaopang.svg`，改猫只改这个 SVG，再运行 `python3 etax/design/brand/svg2vector.py` 生成矢量。资源：
+  - `ic_launcher_foreground`（生成）+ `ic_launcher_background`（蜂蜜蜜桃渐变底）：桌面图标，猫脸铺满可见区；
+  - `ic_eta_mark`（生成）：App 内品牌标志（空状态、助手头像），无底色，资源名沿用；
+  - `ic_launcher_monochrome` / `ic_notification`：单色猫头剪影（小圆耳 + 圆脸 + 眼睛镂空），主题图标与状态栏用，系统按 alpha 着色；
+  - `ic_task_phone`：后台任务通知大图标与预览窗占位，手机轮廓 + 猫头剪影，屏幕区域透明。
+  minSdk 33 只用自适应图标，无 `mipmap-*dpi` 位图。`BrandIconRenderingTest` 会把它们按桌面遮罩、主题色、状态栏着色画成预览图（`build/reports/eta-icons/`）。
+- 名称：用户可见处一律「胖小胖」（三种语言相同）；包名 `io.github.mangi.etax`、内部代码名、备份文件格式不变；关于页保留对上游 Eta 的致谢。
 
 ## 10. 文案语气
 

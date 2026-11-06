@@ -21,7 +21,7 @@ internal object AgentDeviceToolCatalog {
         tools
             .put(function(
                 "inspect_app",
-                "读取当前 Android 用户中指定应用的版本、UID、安装来源与路径、启用状态和请求权限，不要求应用具有桌面入口。只支持 Eta 所属用户，不跨工作资料查询。权限列表按 permission_offset/permission_limit 分页。",
+                "读取当前 Android 用户中指定应用的版本、UID、安装来源与路径、启用状态和请求权限，不要求应用具有桌面入口。只支持胖小胖所属用户，不跨工作资料查询。权限列表按 permission_offset/permission_limit 分页。",
                 properties(
                     "package_name" to string("精确 Android 包名", 255),
                     "user_id" to userId(),
@@ -127,7 +127,7 @@ internal object AgentDeviceToolCatalog {
             .put(
                 function(
                     "search_notification_history",
-                    "检索 Eta 授权后保留的最近 7 天通知，可按固定时间区间分页。count 是本页数，total_matches 是保留的匹配通知数；通知会合并、漏发或覆盖，不等于聊天消息总数。原始结果不写入持久会话。",
+                    "检索胖小胖授权后保留的最近 7 天通知，可按固定时间区间分页。count 是本页数，total_matches 是保留的匹配通知数；通知会合并、漏发或覆盖，不等于聊天消息总数。原始结果不写入持久会话。",
                     properties(
                         "query" to string("可选标题或正文关键词", 200),
                         "package_name" to string("可选精确包名", 255),
@@ -241,7 +241,7 @@ internal object AgentDeviceToolCatalog {
             .put(
                 function(
                     "set_setting",
-                    "修改一个 Android Settings 值，并读回验证。user_id 默认 Eta 所属用户；global 命名空间影响设备。仅 verified=true 表示已确认目标值，未确认时不要直接重放。",
+                    "修改一个 Android Settings 值，并读回验证。user_id 默认胖小胖所属用户；global 命名空间影响设备。仅 verified=true 表示已确认目标值，未确认时不要直接重放。",
                     properties(
                         "namespace" to enumString("设置命名空间", "system", "secure", "global"),
                         "key" to string("精确设置键", 200),
@@ -266,7 +266,7 @@ internal object AgentDeviceToolCatalog {
             .put(
                 function(
                     "app_state_control",
-                    "停止 Eta 所属 Android 用户中的一个精确包名，并读回 stopped 状态。仅 verified=true 表示目标状态已确认；不跨用户执行。冻结、解冻应用需用户在系统设置中操作，本工具不提供。",
+                    "停止胖小胖所属 Android 用户中的一个精确包名，并读回 stopped 状态。仅 verified=true 表示目标状态已确认；不跨用户执行。冻结、解冻应用需用户在系统设置中操作，本工具不提供。",
                     properties(
                         "package_name" to string("精确 Android 包名", 255),
                         "action" to enumString("动作", "force_stop"),
@@ -329,7 +329,7 @@ internal object AgentDeviceToolCatalog {
         JSONObject().put("type", "boolean").put("description", description)
 
     private fun userId(): JSONObject =
-        integer("Android 用户编号，默认 Eta 所属用户；其他用户或工作资料返回 USER_SCOPE_UNSUPPORTED", 0, Int.MAX_VALUE)
+        integer("Android 用户编号，默认胖小胖所属用户；其他用户或工作资料返回 USER_SCOPE_UNSUPPORTED", 0, Int.MAX_VALUE)
 
     private fun integer(description: String, minimum: Int, maximum: Int): JSONObject =
         JSONObject()

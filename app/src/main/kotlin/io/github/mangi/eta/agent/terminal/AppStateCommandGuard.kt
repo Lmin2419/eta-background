@@ -18,5 +18,5 @@ internal object AppStateCommandGuard {
     }
     fun rejection(): String = JSONObject().put("ok", false).put("code", "APP_STATE_MANUAL_ONLY")
         .put("command_accepted", false)
-        .put("message", "应用冻结、解冻和启用状态需由用户在系统设置中修改；ETA 不通过终端自动修改。").toString()
+        .put("message", "应用冻结、解冻和启用状态需由用户在系统设置中修改；胖小胖不通过终端自动修改。").toString()
 }

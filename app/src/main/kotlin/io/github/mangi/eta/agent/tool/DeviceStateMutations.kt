@@ -61,7 +61,7 @@ internal class DeviceStateMutations(
         if (action == "freeze" || action == "unfreeze") {
             com.eta.shadow.EngineJournal.record(context, "application_state", "${action}_blocked")
             return DeviceToolContract.failure("APP_STATE_MANUAL_ONLY",
-                "ETA 不自动冻结或解冻应用。请由用户在系统应用设置中调整；不得改用终端绕过。应用打不开时先检查引擎和应用状态。")
+                "胖小胖不自动冻结或解冻应用。请由用户在系统应用设置中调整；不得改用终端绕过。应用打不开时先检查引擎和应用状态。")
                 .put("package_name", packageName).put("action", action).put("command_accepted", false).toString()
         }
         val command = when (action) {

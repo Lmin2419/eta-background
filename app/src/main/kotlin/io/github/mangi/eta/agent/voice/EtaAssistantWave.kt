@@ -106,7 +106,7 @@ private fun MicrophoneWave(active: Boolean, level: () -> Float, modifier: Modifi
         }
     }
     val aurora = io.github.mangi.eta.ui.theme.EtaAurora
-    val colors = listOf(aurora.blue, aurora.indigo, aurora.pink, aurora.peach)
+    val colors = listOf(aurora.honey, aurora.peach, aurora.rose, aurora.lavender)
     Canvas(modifier) {
         if (!active) return@Canvas
         val amplitude = if (motion.reduceMotion) 0.4f else level().coerceIn(0f, 1f)

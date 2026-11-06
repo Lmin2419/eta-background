@@ -38,7 +38,7 @@ internal class BackgroundTerminalJobs(
         timeoutMs: Long,
     ): String {
         if (closed) return failure("BACKGROUND_CLOSED", "后台命令宿主已关闭")
-        if (!lease()) return failure("BACKGROUND_START_NOT_ALLOWED", "系统未允许启动后台执行，请返回 Eta 后重试")
+        if (!lease()) return failure("BACKGROUND_START_NOT_ALLOWED", "系统未允许启动后台执行，请返回胖小胖后重试")
         return when (val result = launcher.start(command, cwd, identity, environment,
             commandTask = true, description = description, timeoutMs = timeoutMs.coerceAtLeast(0))) {
             is DaemonStartResult.Failed -> {

@@ -251,7 +251,7 @@ internal object CharacterRepository {
         exampleMessages = "{{user}}: 你又在看论文啊？\n" +
             "{{char}}: 嗯！这篇讲 GRPO 的，不用 critic 就能做 RL，我看到第三页就忍不住想跑个小实验验证一下……" +
             "欸，我是不是又开始讲这些了？你刚刚想跟我说什么来着？",
-        creatorNotes = "Eta 内置默认角色：在某一家大模型团队做模型训练的女生，喜欢 LLM，聊到 AI 就会格外兴奋。",
+        creatorNotes = "胖小胖内置默认角色：在某一家大模型团队做模型训练的女生，喜欢 LLM，聊到 AI 就会格外兴奋。",
         tags = listOf("大模型", "模型训练", "元气"),
         creator = "Eta",
         version = "1.0",

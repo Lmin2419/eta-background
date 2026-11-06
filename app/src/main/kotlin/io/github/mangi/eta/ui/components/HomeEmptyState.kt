@@ -102,7 +102,7 @@ private fun HomeSuggestionCard(card: HomeSuggestion, modifier: Modifier) {
         .heightIn(min = 88.dp).clip(EtaTheme.shapes.radiusMd).background(EtaTheme.colors.surface)
         .clickable(role = Role.Button, interactionSource = source, indication = null, onClick = card.onClick).padding(14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        EtaIconTile(card.icon, tint = EtaTheme.colors.tileIndigo)
+        EtaIconTile(card.icon, tint = EtaTheme.colors.tileCaramel)
         Column(Modifier.weight(1f)) {
             Text(card.title, style = EtaTheme.type.rowTitle, color = EtaTheme.colors.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(card.summary, style = EtaTheme.type.footnote, color = EtaTheme.colors.textTertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)

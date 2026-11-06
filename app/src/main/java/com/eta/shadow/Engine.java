@@ -127,7 +127,7 @@ public final class Engine {
         if ("DEPLOY_BUSY".equals(r)) return "另一次后台引擎部署尚未结束，请稍后重试。";
         if ("PORT_BUSY".equals(r)) return "后台引擎端口 8733 仍被占用，恢复已中止并限制重试频率。"
                 + "这不代表没有 Root；无法确认归属的占用进程不会被终止，请导出诊断查看部署结果。";
-        if ("SYSTEM_RESTARTED".equals(r)) return "后台引擎与 Android 系统服务的连接已失效，正在按退避策略恢复 ETA 引擎。"
+        if ("SYSTEM_RESTARTED".equals(r)) return "后台引擎与 Android 系统服务的连接已失效，正在按退避策略恢复胖小胖引擎。"
                 + "这不代表没有 Root，也不需要重启手机；恢复后请重新打开后台屏幕，不要重放结果不确定的点击。";
         if ("STARTING".equals(r)) return "后台引擎正在恢复，请稍后检查状态；不要重复提交可能已执行的操作。";
         if ("PAIR_MISMATCH".equals(r)) return "运行中的后台引擎与当前 APK 不匹配，正在尝试部署配套引擎，请稍后检查状态。";

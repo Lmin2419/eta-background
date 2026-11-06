@@ -104,9 +104,9 @@ public final class ShadowSettings {
     }
 
     public static String observerFixHint() {
-        return "后台操作不可用：Eta 的无障碍观察服务没有连上（127.0.0.1:" + OBSERVER_PORT + "）。"
-                + "修复方法：到系统设置 → 无障碍 → 把 Eta 的服务关掉再打开，然后重试。"
-                + "注意每次覆盖安装 Eta 后这个开关都会被系统重置。";
+        return "后台操作不可用：胖小胖的无障碍观察服务没有连上（127.0.0.1:" + OBSERVER_PORT + "）。"
+                + "修复方法：到系统设置 → 无障碍 → 把胖小胖的服务关掉再打开，然后重试。"
+                + "注意每次覆盖安装胖小胖后这个开关都会被系统重置。";
     }
 
     /** Human readable state, also returned by screen_state. */

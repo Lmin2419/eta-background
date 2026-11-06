@@ -26,7 +26,7 @@ internal class LoopbackAuthorizationReceiver(port: Int = CodexOAuth.CALLBACK_POR
                         val target = readRequest(socket)
                         val result = validateCallback(target, state)
                         try {
-                            respond(socket, "200 OK", "授权已返回，请回到 Eta 完成登录。")
+                            respond(socket, "200 OK", "授权已返回，请回到胖小胖完成登录。")
                         } catch (_: java.io.IOException) {
                             // 浏览器可能在回调后立即关闭标签页，已验证的授权码仍交给 Eta 换码。
                             controller.throwIfCancelled()
@@ -34,7 +34,7 @@ internal class LoopbackAuthorizationReceiver(port: Int = CodexOAuth.CALLBACK_POR
                         return result
                     } catch (error: ProviderAuthException) {
                         try {
-                            respond(socket, "400 Bad Request", "授权未完成，请回到 Eta 重试。")
+                            respond(socket, "400 Bad Request", "授权未完成，请回到胖小胖重试。")
                         } catch (_: java.io.IOException) {
                             controller.throwIfCancelled()
                         }

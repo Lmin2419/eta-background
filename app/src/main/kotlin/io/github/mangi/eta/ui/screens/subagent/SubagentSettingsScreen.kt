@@ -446,7 +446,7 @@ internal fun SubagentSettingsScreen(
                 if (customProfiles.isEmpty()) {
                     ListEmptyState(
                         title = "暂无自定义 Subagent",
-                        summary = "可在对话中直接让 Eta 创建专属 Subagent（保存在 agents/<name>.md），或点击右上角 + 手动新建",
+                        summary = "可在对话中直接让胖小胖创建专属 Subagent（保存在 agents/<name>.md），或点击右上角 + 手动新建",
                         icon = Icons.Rounded.Extension,
                         action = {
                             EtaButton(

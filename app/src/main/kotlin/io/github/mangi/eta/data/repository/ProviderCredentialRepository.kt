@@ -41,5 +41,5 @@ internal object ProviderCredentialRepository {
     fun forget(providerId: String) = sessions().forget(providerId)
 
     private fun sessions(): ProviderCredentialSessions = sessions
-        ?: throw ProviderAuthException("oauth_not_initialized", "登录服务尚未就绪，请重新打开 Eta")
+        ?: throw ProviderAuthException("oauth_not_initialized", "登录服务尚未就绪，请重新打开胖小胖")
 }

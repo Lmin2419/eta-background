@@ -110,14 +110,14 @@ internal object AgentPromptBuilder {
                     "收键盘前检查 keyboard.visible；BACK 是导航返回键，键盘未显示或状态未知时不要把它当作收键盘动作。" +
                     "after 足够时直接用，不要例行调用 observe_screen 或 wait；LATE_ACTION_FEEDBACK 表示旧动作有迟到反馈且本次未执行，先核对反馈并重新观察再决定下一步。" +
                     "读取或汇总屏幕信息而 after 不够、需截图、节点过期、结果不确定或需确认最终结果时才重观察；后续操作依赖特定文本或应用出现才用 wait_for_text/wait_for_package。" +
-                    "屏幕观察与 GUI 操作前会确认 Eta 无障碍服务；只有系统保护后端可用时才会请求有限重绑。" +
+                    "屏幕观察与 GUI 操作前会确认胖小胖无障碍服务；只有系统保护后端可用时才会请求有限重绑。" +
                     "若工具返回 ACCESSIBILITY_UNAVAILABLE、ACCESSIBILITY_PROTECTION_UNAVAILABLE 或 ACCESSIBILITY_REPAIR_TIMEOUT，说明动作未执行，" +
                     "不要改用坐标或 Shell 重放 GUI 动作。"
             )
         )
         if (config.terminalTools) {
             messages.put(systemMessage(
-                "Eta 内置文件与终端工具，共用本次运行身份与工作区；已知路径直接使用。" +
+                "胖小胖内置文件与终端工具，共用本次运行身份与工作区；已知路径直接使用。" +
                     "terminal 只需 command，结束后回收进程，不要用 & 起后台进程；action=open/session_id 复用 Shell，会话内 cd 改目录。" +
                     "回复后继续的命令用 terminal_job（start/list/read/wait/stop），仅依赖结果才 wait；完成有通知，日志可分页。跨任务服务用 terminal_daemon；系统回收、重启仍会终止，以实际状态为准。" +
                     "environment=android 操作 Android 宿主系统与设备（pm/am/dumpsys/settings/appops/wm/input/logcat 等、Android 进程和已授权的应用私有目录），提供 Toybox/Root BusyBox，没有完整 Linux 开发环境；" +
@@ -185,7 +185,7 @@ internal object AgentPromptBuilder {
         } else {
             "Root 授权尚未确认；这不代表设备不支持 Root。"
         }) +
-            "identity=user 是显式选择 Eta App 身份，不代表终端没有 Root 通道。" +
+            "identity=user 是显式选择胖小胖 App 身份，不代表终端没有 Root 通道。" +
             "用户说明已授权、授权状态发生变化或需要确认 Root 时，调用 terminal(action=check_root) 实际验证；" +
             "它执行固定的 su -c 'id -u'，可能显示系统授权请求，结果会说明最近一次检测的状态。成功后的新命令默认使用 Root；既有会话与后台任务保持创建时的身份。" +
             "不得根据 su 文件大小、是否为符号链接或 ro.build.type 推断 Root 真伪；结论以实际检测和工具结果为准。"

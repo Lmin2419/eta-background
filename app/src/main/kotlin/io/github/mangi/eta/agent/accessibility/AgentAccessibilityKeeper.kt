@@ -54,7 +54,7 @@ object AgentAccessibilityKeeper {
         if (!protectionAvailable() || !protectionEnabled()) {
             return AccessibilityEnableResult.failure(
                 code = "ACCESSIBILITY_UNAVAILABLE",
-                message = "Eta 无障碍服务未连接；请在系统设置中开启 Eta 无障碍服务",
+                message = "胖小胖无障碍服务未连接；请在系统设置中开启胖小胖无障碍服务",
                 recoveryRequested = false,
             )
         }
@@ -68,7 +68,7 @@ object AgentAccessibilityKeeper {
         if (!awaitServiceBinding()) {
             return AccessibilityEnableResult.failure(
                 code = "ACCESSIBILITY_REPAIR_TIMEOUT",
-                message = "Eta 无障碍服务未在恢复时限内连接；本次 GUI 操作未执行",
+                message = "胖小胖无障碍服务未在恢复时限内连接；本次 GUI 操作未执行",
                 recoveryRequested = true,
             )
         }

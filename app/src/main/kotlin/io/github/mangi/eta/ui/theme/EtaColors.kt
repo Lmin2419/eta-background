@@ -32,7 +32,7 @@ data class EtaColors(
     val danger: Color,
     val dangerSoft: Color,
 ) {
-    val attentionText: Color get() = if (isDark) attention else Color(0xFFA85700)
+    val attentionText: Color get() = if (isDark) attention else Color(0xFF5A35C8)
     val successText: Color get() = if (isDark) success else Color(0xFF157A40)
     val dangerText: Color get() = if (isDark) danger else Color(0xFFC22E2E)
     val statusGlyph: Color get() = if (isDark) Color(0xFF15161A) else Color.White
@@ -41,12 +41,12 @@ data class EtaColors(
     val paused: Color get() = textSecondary
     val pausedSoft: Color get() = surfaceSunken
     val onStatus: Color get() = Color.White
-    val toastBackground: Color get() = if (isDark) Color(0xFFECEDF2) else Color(0xFF1E2027)
-    val toastForeground: Color get() = if (isDark) Color(0xFF15161A) else Color(0xFFECEDF2)
-    val toastAction: Color get() = if (isDark) Color(0xFF3240D9) else Color(0xFFB9C0FF)
+    val toastBackground: Color get() = if (isDark) Color(0xFFF3EDE4) else Color(0xFF2A241D)
+    val toastForeground: Color get() = if (isDark) Color(0xFF201A12) else Color(0xFFF3EDE4)
+    val toastAction: Color get() = if (isDark) Color(0xFF8A4507) else Color(0xFFF8C894)
     val shadow: Color get() = Color(0xFF101220)
     val tileBlue: Color get() = Color(0xFF3B82F6)
-    val tileIndigo: Color get() = Color(0xFF4B5BFF)
+    val tileCaramel: Color get() = Color(0xFFD27A2C)
     val tileViolet: Color get() = Color(0xFF8B5CF6)
     val tilePink: Color get() = Color(0xFFE0569B)
     val tileOrange: Color get() = Color(0xFFF08C00)
@@ -65,39 +65,41 @@ data class EtaColors(
         copy(accent = primary, accentSoft = soft, onAccentSoft = onSoft, onAccent = onPrimary)
 }
 
+/** 胖小胖 warm aurora: honey → peach → rose → lavender. Only for "AI is working". */
 object EtaAurora {
-    val blue = Color(0xFF71BEFF)
-    val indigo = Color(0xFFADB8FF)
-    val pink = Color(0xFFF27BDE)
-    val peach = Color(0xFFFFC99A)
-    val stops get() = arrayOf(0f to blue, 0.35f to indigo, 0.70f to pink, 1f to peach)
+    val honey = Color(0xFFFFC861)
+    val peach = Color(0xFFFF9F7A)
+    val rose = Color(0xFFF27BA8)
+    val lavender = Color(0xFFB9A3FF)
+    val stops get() = arrayOf(0f to honey, 0.35f to peach, 0.70f to rose, 1f to lavender)
     const val angleDegrees = 100f
 }
 
 fun lightEtaColors() = EtaColors(
     isDark = false,
-    canvas = Color(0xFFF4F5F8), surface = Color.White,
-    surfaceRaised = Color.White, surfaceSunken = Color(0xFFECEEF3),
-    outline = Color(0xFFE2E4EA), outlineStrong = Color(0xFFCDD0D9),
-    textPrimary = Color(0xFF15161A), textSecondary = Color(0xFF575A66), textTertiary = Color(0xFF686B78),
-    scrim = Color(0xFF0B0C10).copy(alpha = 0.40f), pressed = Color(0xFF14162A).copy(alpha = 0.08f),
-    accent = Color(0xFF4B5BFF), onAccent = Color.White,
-    accentSoft = Color(0xFFE9EBFF), onAccentSoft = Color(0xFF3240D9),
-    attention = Color(0xFFB45F00), attentionSoft = Color(0xFFFFF1DF),
+    canvas = Color(0xFFFBF6EE), surface = Color.White,
+    surfaceRaised = Color.White, surfaceSunken = Color(0xFFF4EBDD),
+    outline = Color(0xFFEADFCD), outlineStrong = Color(0xFFD9CBB5),
+    textPrimary = Color(0xFF201A12), textSecondary = Color(0xFF5E5347), textTertiary = Color(0xFF6E6254),
+    scrim = Color(0xFF1A120A).copy(alpha = 0.40f), pressed = Color(0xFF2A1A08).copy(alpha = 0.08f),
+    accent = Color(0xFFB25A0E), onAccent = Color.White,
+    accentSoft = Color(0xFFFCEAD5), onAccentSoft = Color(0xFF8A4507),
+    // "Needs you" is violet so it never reads as the caramel accent.
+    attention = Color(0xFF6D46DB), attentionSoft = Color(0xFFEFEAFF),
     success = Color(0xFF1E8E4E), successSoft = Color(0xFFE3F5EA),
     danger = Color(0xFFD33636), dangerSoft = Color(0xFFFDE8E8),
 )
 
 fun darkEtaColors() = EtaColors(
     isDark = true,
-    canvas = Color(0xFF0D0E12), surface = Color(0xFF16171C),
-    surfaceRaised = Color(0xFF1E2027), surfaceSunken = Color(0xFF23252D),
-    outline = Color(0xFF2A2C35), outlineStrong = Color(0xFF3A3D48),
-    textPrimary = Color(0xFFECEDF2), textSecondary = Color(0xFFA6A9B6), textTertiary = Color(0xFF8A8D99),
+    canvas = Color(0xFF12100D), surface = Color(0xFF1B1814),
+    surfaceRaised = Color(0xFF24201B), surfaceSunken = Color(0xFF2B261F),
+    outline = Color(0xFF362F27), outlineStrong = Color(0xFF4A4136),
+    textPrimary = Color(0xFFF3EDE4), textSecondary = Color(0xFFBDB2A4), textTertiary = Color(0xFF9C9082),
     scrim = Color.Black.copy(alpha = 0.56f), pressed = Color.White.copy(alpha = 0.08f),
-    accent = Color(0xFF8C97FF), onAccent = Color(0xFF0B0E2A),
-    accentSoft = Color(0xFF262A52), onAccentSoft = Color(0xFFB9C0FF),
-    attention = Color(0xFFFFB14A), attentionSoft = Color(0xFF3A2A12),
+    accent = Color(0xFFF0A65A), onAccent = Color(0xFF2A1600),
+    accentSoft = Color(0xFF3D2B17), onAccentSoft = Color(0xFFF8C894),
+    attention = Color(0xFFB8A2FF), attentionSoft = Color(0xFF2A2342),
     success = Color(0xFF5CD08A), successSoft = Color(0xFF13301F),
     danger = Color(0xFFFF7A7A), dangerSoft = Color(0xFF3A1717),
 )

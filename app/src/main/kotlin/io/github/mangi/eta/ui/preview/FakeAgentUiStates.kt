@@ -27,7 +27,7 @@ internal object FakeAgentUiStates {
         conversations = listOf(
             ConversationSummaryUi(
                 id = "c-001",
-                title = "让 Eta 操作手机",
+                title = "让胖小胖操作手机",
                 preview = "准备接管屏幕与工具，等待下一步任务",
                 timeLabel = "现在",
                 mode = ConversationModeUi.PhoneAgent,

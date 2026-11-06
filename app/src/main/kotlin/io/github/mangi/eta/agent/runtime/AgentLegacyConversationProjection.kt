@@ -11,7 +11,7 @@ internal object AgentLegacyConversationProjection {
     const val DRAIN_CHARS = 16_000
     private val json = Json { encodeDefaults = false }
     private const val COMPACTION_NOTICE =
-        "[Eta 上下文提示：此前部分 assistant/tool 记录因跨进程或持久化容量上限已压缩，请勿假定缺失步骤未执行。]"
+        "[胖小胖上下文提示：此前部分 assistant/tool 记录因跨进程或持久化容量上限已压缩，请勿假定缺失步骤未执行。]"
 
     fun encode(
         messages: List<AgentModelClient.ConversationMessage>,

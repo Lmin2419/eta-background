@@ -26,9 +26,10 @@ class TaskPhoneIconTest {
             drawable.setBounds(0, 0, 96, 144)
             drawable.colorFilter = BlendModeColorFilter(Color.WHITE, BlendMode.SRC_IN)
             drawable.draw(Canvas(bitmap))
-            assertEquals("Screen gap must survive system tint", 0, Color.alpha(bitmap.getPixel(48, 60)))
+            assertEquals("Screen gap must survive system tint", 0, Color.alpha(bitmap.getPixel(48, 114)))
             assertEquals(Color.WHITE, bitmap.getPixel(9, 72)) // phone border
-            assertEquals(Color.WHITE, bitmap.getPixel(36, 48)) // app cell
+            assertEquals(Color.WHITE, bitmap.getPixel(48, 81)) // cat head on the screen
+            assertEquals("Eye cut-out keeps the cat readable once tinted", 0, Color.alpha(bitmap.getPixel(40, 73)))
             assertEquals(0, Color.alpha(bitmap.getPixel(0, 0)))
             var filled = 0
             for (y in 0 until bitmap.height) for (x in 0 until bitmap.width) {

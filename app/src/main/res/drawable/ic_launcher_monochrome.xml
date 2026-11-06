@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Themed-icon layer: the same η, one colour; the launcher tints it. -->
+<!-- Themed-icon layer: 胖小胖 cat-head silhouette (small round ears, round face, eye cut-outs). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <group
-        android:pivotX="54"
-        android:pivotY="54.25"
-        android:scaleX="0.8"
-        android:scaleY="0.8">
+        android:scaleX="2.6"
+        android:scaleY="2.6"
+        android:translateX="22.8"
+        android:translateY="20.46">
         <path
-            android:pathData="M40.25,36 Q44.75,35.5 44.75,41 L44.75,63 M44.75,46 C44.75,39 49.75,34.5 56.25,34.5 C63.25,34.5 67.75,39 67.75,46.5 L67.75,74"
-            android:strokeColor="#FFFFFFFF"
-            android:strokeWidth="8.5"
-            android:strokeLineCap="round"
-            android:strokeLineJoin="round"
-            android:fillColor="#00000000" />
+            android:fillColor="#FFFFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M4.2,10.2 C3.9,8.2 4.4,6.4 5.6,5.4 C6.9,5.6 8.1,6.3 8.9,7.2 C9.9,6.9 10.9,6.8 12,6.8 C13.1,6.8 14.1,6.9 15.1,7.2 C15.9,6.3 17.1,5.6 18.4,5.4 C19.6,6.4 20.1,8.2 19.8,10.2 C21,11.3 21.6,12.7 21.6,14.2 C21.6,17.9 17.3,20.4 12,20.4 C6.7,20.4 2.4,17.9 2.4,14.2 C2.4,12.7 3,11.3 4.2,10.2 Z M7.2,13.4 a1.7,1.8 0 1,0 3.4,0 a1.7,1.8 0 1,0 -3.4,0 Z M13.4,13.4 a1.7,1.8 0 1,0 3.4,0 a1.7,1.8 0 1,0 -3.4,0 Z" />
     </group>
 </vector>

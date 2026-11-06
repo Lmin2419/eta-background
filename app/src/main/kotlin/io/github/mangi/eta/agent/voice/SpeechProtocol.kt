@@ -18,7 +18,7 @@ internal class SpeechFailure(val code: SpeechErrorCode, val userMessage: String)
 internal fun Throwable.speechFailure(): SpeechFailure = when (this) {
     is SpeechFailure -> this
     is SpeechCredentialsUnavailable -> SpeechFailure(SpeechErrorCode.CREDENTIALS, "语音凭据无法解密，请重新填写并保存")
-    is SecurityException -> SpeechFailure(SpeechErrorCode.PERMISSION, "请允许 Eta 使用麦克风")
+    is SecurityException -> SpeechFailure(SpeechErrorCode.PERMISSION, "请允许胖小胖使用麦克风")
     is kotlinx.coroutines.TimeoutCancellationException -> SpeechFailure(SpeechErrorCode.TIMEOUT, "语音服务响应超时，请重试")
     is IOException -> SpeechFailure(SpeechErrorCode.NETWORK, "无法连接语音服务，请检查网络")
     else -> SpeechFailure(SpeechErrorCode.PROTOCOL, "语音服务返回了无法处理的数据")

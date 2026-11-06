@@ -35,7 +35,7 @@ internal class AgentImageTools(
             val staged = copyAsApp(source, sourceKind, temporaryFile)
             if (!staged) {
                 if (!rootAvailable()) {
-                    return sensitive(error("IMAGE_ACCESS_DENIED", "Eta 无法读取此图片；请先通过文件选择器导入或授予读取权限"))
+                    return sensitive(error("IMAGE_ACCESS_DENIED", "胖小胖无法读取此图片；请先通过文件选择器导入或授予读取权限"))
                 }
                 val copyResult = root.execute(
                     imageCopyCommand(source, sourceKind, temporaryFile),
@@ -110,7 +110,7 @@ internal class AgentImageTools(
     private fun copyFailure(result: BoundedRootCommandExecutor.Result): String = when (result.exitCode) {
         21 -> error("IMAGE_SOURCE_UNAVAILABLE", "图片源文件不存在或当前不可读")
         22 -> error("IMAGE_TOO_LARGE", "图片超过大小限制")
-        23 -> error("IMAGE_STAGE_FAILED", "Root 无法将图片复制到 Eta 临时缓存")
+        23 -> error("IMAGE_STAGE_FAILED", "Root 无法将图片复制到胖小胖临时缓存")
         else -> error("IMAGE_UNAVAILABLE", "图片读取失败")
     }
 

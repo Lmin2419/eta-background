@@ -111,7 +111,7 @@ internal fun ConversationPanePanel(
             exit = shrinkVertically(tween(motion.exitDuration(260), easing = motion.accelerate)) + fadeOut(tween(motion.exitDuration(260), easing = motion.accelerate))) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
                 val entryWidth = (width - 32.dp) / 4
-                WorkspaceEntry(Icons.Rounded.TaskAlt, stringResource(R.string.eta_tasks), EtaTheme.colors.tileIndigo, entryWidth, workspace.onTasks, count = workspace.runningCount)
+                WorkspaceEntry(Icons.Rounded.TaskAlt, stringResource(R.string.eta_tasks), EtaTheme.colors.tileCaramel, entryWidth, workspace.onTasks, count = workspace.runningCount)
                 WorkspaceEntry(Icons.Rounded.PeopleAlt, stringResource(R.string.eta_characters), EtaTheme.colors.tilePink, entryWidth, onOpenCharacters)
                 WorkspaceEntry(Icons.Rounded.Terminal, stringResource(R.string.route_terminal), EtaTheme.colors.tileSlate, entryWidth, workspace.onTerminal)
                 WorkspaceEntry(Icons.Rounded.Language, stringResource(R.string.eta_browser), EtaTheme.colors.tileTeal, entryWidth, workspace.onBrowser)

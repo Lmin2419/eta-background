@@ -1,14 +1,16 @@
-# Eta 后台版 — Eta Background Edition
+# 胖小胖 (Pangxiaopang) — Eta Background Edition
 
 [简体中文](README.md) · [English](README_EN.md) · [Version history and source map](etax/README.md) · [Build instructions](.github/RELEASING.md)
 
-A derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮吉 / Mangi-11](https://github.com/Mangi-11)**, based on upstream v3.3.5. This repository maintains background virtual-display automation and related task, notification and lifecycle extensions. It is an independent distribution. The internal project name remains `Etax`; its Android package is `io.github.mangi.etax`.
+胖小胖 (formerly "Eta 后台版") is a derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮吉 / Mangi-11](https://github.com/Mangi-11)**, based on upstream v3.3.5. From 2026-11-06 the app is shown as 胖小胖 with a golden-shaded cat icon. This repository maintains background virtual-display automation and related task, notification and lifecycle extensions. It is an independent distribution. The internal project name remains `Etax`; its Android package is `io.github.mangi.etax`.
 
 A development candidate adds built-in Root configuration for the system assistant, with a durable backup, read-back checks, user-confirmed power-key wake and restoration. It does not depend on Vector or inject into system_server. Physical power-key routing on ColorOS remains unverified; this is not a fix claim for the earlier soft reboot. [Implementation and acceptance](etax/NATIVE_ASSISTANT.md).
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` background build · versionCode `2026110612`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` 胖小胖 · versionCode `2026110613`**, with engine `20261105-e49-parallel-observe`.
+
+The app is renamed 胖小胖 with a golden-shaded cat icon (launcher, themed icon, status bar, task icon, in-app mark), and the UI moves to the warm "honey caramel" palette: warm white grounds, a caramel accent, a warm aurora, and violet for "needs you". Package name and signing key are unchanged, so it installs over the previous build with data kept.
 
 Stage 7 finishes the UI refresh: the preview primary button fills the available width, secondary actions are 48dp outlined circles, and the status pill stays on one line. Home and the assistant now reuse the brand vector. All launcher, themed, notification and task vectors from `df427d4` remain unchanged.
 
@@ -16,7 +18,7 @@ App-owned transitions use the design motion tokens. Remove animations enables fa
 
 Previously accepted settings, conversation batches, archive undo, Room 24 and system surfaces are included. Preview image gestures/geometry, engine, task scheduling and persistence are unchanged. The validation record lists each page and intentional design deviations.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110612) · [Stage 7 validation and final phone checklist](etax/design/validation/stage-7.md) (Chinese)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110613) · [Stage 7 validation and final phone checklist](etax/design/validation/stage-7.md) (Chinese)
 
 Implementation of stages 1–7 is complete. This stage has its own commit and release; delivery requires all CI jobs to pass before final phone acceptance.
 

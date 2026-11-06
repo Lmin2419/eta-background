@@ -464,7 +464,7 @@ internal class LinuxApkAnalysisInstaller(
             #!/bin/sh
             case "${'$'}{1:-}" in
               b|build)
-                echo "APKTOOL_BUILD_UNAVAILABLE: Eta APK 分析档案暂不包含 ARM64 AAPT2，仅支持解码与检查。" >&2
+                echo "APKTOOL_BUILD_UNAVAILABLE: 胖小胖 APK 分析档案暂不包含 ARM64 AAPT2，仅支持解码与检查。" >&2
                 exit 64
                 ;;
             esac

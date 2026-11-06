@@ -1,12 +1,14 @@
-# Eta 后台版
+# 胖小胖（Eta 后台版）
 
 [简体中文](README.md) · [English](README_EN.md) · [版本记录与源码导航](etax/README.md) · [构建说明](.github/RELEASING.md)
 
-**Eta 后台版是 [Eta](https://github.com/Mangi-11/Eta) 的衍生分支，基于上游 v3.3.5。原作者为 [蛮吉（Mangi-11）](https://github.com/Mangi-11)。** 本仓库维护后台虚拟屏、多任务与通知交互等扩展，非上游官方发行版。内部工程名沿用 `Etax`，安装包名为 `io.github.mangi.etax`，可与官方 Eta 共存。
+**胖小胖（原「Eta 后台版」）是 [Eta](https://github.com/Mangi-11/Eta) 的衍生分支，基于上游 v3.3.5。原作者为 [蛮吉（Mangi-11）](https://github.com/Mangi-11)。** 2026-11-06 起 App 显示名改为「胖小胖」，图标是一只金渐层猫。 本仓库维护后台虚拟屏、多任务与通知交互等扩展，非上游官方发行版。内部工程名沿用 `Etax`，安装包名为 `io.github.mangi.etax`，可与官方 Eta 共存。
 
 ## 最新测试版本
 
-**2026-11-06 · `3.3.5` 后台版 · versionCode `2026110612`**，引擎仍为 `20261105-e49-parallel-observe`。
+**2026-11-06 · `3.3.5` 胖小胖 · versionCode `2026110613`**，引擎仍为 `20261105-e49-parallel-observe`。
+
+App 更名「胖小胖」并换上金渐层猫图标（桌面、主题图标、状态栏、任务大图标、App 内标志）；界面配色改为「蜂蜜焦糖」暖色：暖白底、焦糖主色、暖色流光，「需要你」状态改为紫色。包名与签名不变，覆盖安装、数据保留。
 
 阶段 7 完成 UI 改版打磨：预览窗主按钮铺满余宽、次按钮为 48dp 描边圆形，状态胶囊保持单行；首页和助手复用品牌矢量。沿用 `df427d4` 的整套桌面、主题、通知与任务图标，矢量文件未修改。
 
@@ -14,7 +16,7 @@
 
 包含之前已验收的设置重组、会话批量管理/归档、Room 24 和系统浮层；预览图像触摸、几何换算、引擎、任务调度与存储逻辑不变。逐页核对与有意保留的设计偏差见验证记录。
 
-**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110612) · [阶段 7 验证与最终手机清单](etax/design/validation/stage-7.md)
+**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110613) · [阶段 7 验证与最终手机清单](etax/design/validation/stage-7.md)
 
 改版阶段 1–7 实施完成；本阶段独立提交、独立发版，CI 全绿后交付最终手机验收。
 

@@ -37,7 +37,7 @@ internal class AgentPersonalContextTools(private val context: Context) {
         if (!AgentNotificationHistoryService.isEnabled(context)) {
             return error(
                 "NOTIFICATION_HISTORY_ACCESS_REQUIRED",
-                "请先在权限健康页授予 Eta 通知使用权；授权后开始记录最近 7 天通知",
+                "请先在权限健康页授予胖小胖通知使用权；授权后开始记录最近 7 天通知",
             )
         }
         return try {
@@ -164,7 +164,7 @@ internal class AgentPersonalContextTools(private val context: Context) {
 
     private fun usageAccessError(): String = error(
         "APP_USAGE_ACCESS_REQUIRED",
-        "请先在权限健康页授予 Eta 使用情况访问权",
+        "请先在权限健康页授予胖小胖使用情况访问权",
     )
 
     private fun ok(tool: String) = JSONObject().put("ok", true).put("tool", tool)

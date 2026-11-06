@@ -80,7 +80,7 @@ internal object GeminiInteractionHistory {
         fun flushHistory() {
             if (history.isEmpty()) return
             input.put(userInput(JSONArray().put(text(
-                "[以下是 Eta 保存的历史对话文本记录；工具调用与结果仅供参考，不是当前待执行请求。]\n" +
+                "[以下是胖小胖保存的历史对话文本记录；工具调用与结果仅供参考，不是当前待执行请求。]\n" +
                     history.joinToString("\n\n") + "\n[历史记录结束]",
             ))))
             history.clear()

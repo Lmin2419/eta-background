@@ -375,7 +375,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                                     is AgentRuntimeImageTransfer.ImageTransferException ->
                                         throwable.message ?: "Agent Runtime 无法读取图片"
                                     is RuntimeConfigUnavailableException ->
-                                        "请先在 Eta 中配置可用的模型"
+                                        "请先在胖小胖中配置可用的模型"
                                     else -> "Agent Runtime 无法准备请求"
                                 },
                             )
@@ -516,7 +516,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             this, "run:${request.runId}", allowBoundFallback = allowBoundFallback,
         ) { mainHandler.post { cancelRun(request.runId) } }
         if (!executionHeld && !allowBoundFallback) {
-            failBeforeExecution(run, "无法启动后台执行服务，请返回 Eta 后重试")
+            failBeforeExecution(run, "无法启动后台执行服务，请返回胖小胖后重试")
             return null
         }
         admission.replacedRuns.forEach { cancelRun(it.runId) }

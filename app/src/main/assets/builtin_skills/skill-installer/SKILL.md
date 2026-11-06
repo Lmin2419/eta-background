@@ -5,7 +5,7 @@ description: 从受信任的 curated 目录或公共 GitHub 仓库发现并安�
 
 # Skill Installer
 
-为 Eta 安装 Skills 时使用此工作流。安装来源仅限 `openai/skills` 的公开 curated 目录和公共 GitHub 仓库；不处理 Token、私有仓库或其他下载站。
+为胖小胖安装 Skills 时使用此工作流。安装来源仅限 `openai/skills` 的公开 curated 目录和公共 GitHub 仓库；不处理 Token、私有仓库或其他下载站。
 
 ## 执行边界
 
@@ -29,4 +29,4 @@ description: 从受信任的 curated 目录或公共 GitHub 仓库发现并安�
 - 不为安装流程开启终端、文件或 Root 工具。
 - 不把 GitHub 页面名称当成候选路径；以检查工具返回的仓库相对路径为准。
 - 不尝试绕过大小、路径、格式、重复项或来源限制。
-- 本地 ZIP 由用户在 Eta 的 Skills 页面选择导入，AI 工具不读取任意本地路径。
+- 本地 ZIP 由用户在胖小胖的 Skills 页面选择导入，AI 工具不读取任意本地路径。

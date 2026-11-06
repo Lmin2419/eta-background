@@ -164,7 +164,7 @@ class AgentPromptBuilderTest {
             rootAvailable = true,
             executionContext = TerminalExecutionContext(TerminalEnvironment.DEBIAN, null, "/eta/workspace"),
         )
-        val terminalPrompt = messages.systemContents().single { it.contains("Eta 内置文件与终端工具") }
+        val terminalPrompt = messages.systemContents().single { it.contains("胖小胖内置文件与终端工具") }
         assertTrue(terminalPrompt.contains("environment=android 操作 Android 宿主系统与设备"))
         assertTrue(terminalPrompt.contains("environment=linux 使用设置中选定的完整 Linux 发行版"))
         assertTrue(terminalPrompt.contains("凡涉及代码开发、git 拉取/提交/diff"))

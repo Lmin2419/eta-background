@@ -144,7 +144,7 @@ internal object AgentToolRequirements {
         val properties = function.getJSONObject("parameters").optJSONObject("properties")
         if (function.getString("name") in AgentFileToolCatalog.names + AgentTerminalToolCatalog.names) {
             properties?.optJSONObject("identity")?.put("enum", JSONArray().put("user"))
-                ?.put("description", "显式选择宿主身份；当前可用 user（Eta App UID）。省略时沿用本次运行的默认身份。")
+                ?.put("description", "显式选择宿主身份；当前可用 user（胖小胖 App UID）。省略时沿用本次运行的默认身份。")
         }
         when (function.getString("name")) {
             "read_image" -> properties?.getJSONObject("path")?.put("description",

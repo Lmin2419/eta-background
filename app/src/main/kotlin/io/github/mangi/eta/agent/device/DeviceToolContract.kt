@@ -15,7 +15,7 @@ internal object DeviceToolContract {
             return failure("INVALID_ARGUMENT", "user_id 必须是非负整数")
         }
         if (requested.toInt() == userId) return null
-        return failure("USER_SCOPE_UNSUPPORTED", "此工具只支持 Eta 所属的 Android 用户，不自动跨用户或工作资料执行")
+        return failure("USER_SCOPE_UNSUPPORTED", "此工具只支持胖小胖所属的 Android 用户，不自动跨用户或工作资料执行")
             .put("user_id", userId)
             .put("requested_user_id", requested.toInt())
     }

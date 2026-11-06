@@ -22,7 +22,7 @@ internal object EtaPreferenceColors {
     val Green: Color @Composable get() = EtaTheme.colors.tileGreen
     val Orange: Color @Composable get() = EtaTheme.colors.tileOrange
     val Yellow: Color @Composable get() = EtaTheme.colors.tileOrange
-    val Indigo: Color @Composable get() = EtaTheme.colors.tileIndigo
+    val Indigo: Color @Composable get() = EtaTheme.colors.tileCaramel
     val Violet: Color @Composable get() = EtaTheme.colors.tileViolet
     val Pink: Color @Composable get() = EtaTheme.colors.tilePink
     val Teal: Color @Composable get() = EtaTheme.colors.tileTeal
