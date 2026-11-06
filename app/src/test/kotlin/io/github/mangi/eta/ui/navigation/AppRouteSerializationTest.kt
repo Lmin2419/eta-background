@@ -37,6 +37,7 @@ class AppRouteSerializationTest {
             AppRoute.Permissions,
             AppRoute.SystemEnhance,
             AppRoute.Settings,
+            AppRoute.AssistantSettings,
             AppRoute.AppearanceSettings,
             AppRoute.SpeechSettings,
             AppRoute.SpeechRecognition,

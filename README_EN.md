@@ -8,15 +8,15 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` background build · versionCode `2026110605`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` background build · versionCode `2026110606`**, with engine `20261105-e49-parallel-observe`.
 
-Quiet Flow stage 4 closes the remaining details in the sidebar, task center and live task strip already delivered in stage 3: attention status in the sidebar, application names and elapsed labels in completed rows, tapping the whole live strip body, and a circular collapsed create button for saved tasks.
+Stage 5 regroups settings into eight sections below a five-item background readiness card, adds More assistant settings, and restyles the permissions page. All 42 previous settings remain reachable. Language stays under Personalization, and completion alerts share the existing Appearance preference. Engine checks only read status.
 
-The home finger-scroll and long model-name fixes from `2026110604` remain intact. Real MotionEvent drags cover sidebar opening/scrolling/closing, thumbnail polling stopping offscreen and resuming onscreen, and the collapsed create button. Runtime, engine and notification scheduling are unchanged.
+Stage 4 was released separately after all CI jobs passed. Its closeout fixes and the home finger-scroll / long model-name fixes from `2026110604` remain intact. Runtime, engine and notification scheduling are unchanged.
 
-**[Download the signed test APK (GitHub Releases)](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110605) · [Stage 4 verification](etax/design/validation/stage-4.md) (Chinese)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110606) · [Stage 5 verification and 42-item checklist](etax/design/validation/stage-5.md) · [Stage 4 audit](etax/design/validation/stage-4.md) (Chinese)
 
-CI publishes with the existing release certificate. The user has accepted stage 3 on device; this release's additional details retain a separate device checklist.
+CI publishes with the existing release certificate after all checks pass. Stage 3 is accepted on device; the new settings and permissions changes have a separate phone checklist.
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

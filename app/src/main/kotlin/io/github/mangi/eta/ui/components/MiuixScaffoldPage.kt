@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,7 @@ import io.github.mangi.eta.ui.layout.horizontalCutoutPadding
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
@@ -38,6 +40,7 @@ fun MiuixScaffoldPage(
     overlay: @Composable () -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
     compactTitle: Boolean = false,
+    containerColor: Color = MiuixTheme.colorScheme.surface,
     content: LazyListScope.() -> Unit,
 ) {
     EtaPreferenceTheme {
@@ -47,6 +50,7 @@ fun MiuixScaffoldPage(
 
         Scaffold(
             modifier = modifier.fillMaxSize(),
+            containerColor = containerColor,
             topBar = {
                 TopBarBackdrop(backdrop) {
                     // 页面自带主视觉（如角色详情）时用紧凑标题，避免大标题与主视觉重复。

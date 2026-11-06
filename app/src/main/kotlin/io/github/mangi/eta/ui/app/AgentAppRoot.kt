@@ -791,11 +791,16 @@ fun AgentAppRoot(
                 WorkspaceScreen(onBack = ::popRoute)
             }
             entry<AppRoute.Settings>(swipeDismiss = swipeDismiss) {
+                LaunchedEffect(Unit) { permissionHealth.refreshPermissionHealth() }
                 SettingsScreen(
                     context = context,
                     onNavigate = { route -> pushRoute(route) },
-                    onBack = ::popRoute
+                    onBack = ::popRoute,
+                    permissionHealthState = permissionHealth.permissionHealthState,
                 )
+            }
+            entry<AppRoute.AssistantSettings>(swipeDismiss = swipeDismiss) {
+                io.github.mangi.eta.ui.AssistantSettingsScreen(context, { route -> pushRoute(route) }, ::popRoute)
             }
             entry<AppRoute.SpeechSettings>(swipeDismiss = swipeDismiss) {
                 SpeechSettingsScreen(
