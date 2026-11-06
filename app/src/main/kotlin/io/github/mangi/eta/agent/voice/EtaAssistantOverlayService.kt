@@ -323,7 +323,7 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
             val appearance by AppearanceSettingsRepository.settingsFlow()
                 .collectAsState(initial = AppearanceSettings())
             AgentAppTheme(
-                appearance = appearance,
+                appearance = appearance.copy(themeMode = io.github.mangi.eta.data.model.AppearanceThemeMode.SYSTEM),
                 applyInterfaceScale = false,
             ) {
                 // ColorOS 在 Overlay 窗口切换期间可能短暂使用软件画布；RuntimeShader

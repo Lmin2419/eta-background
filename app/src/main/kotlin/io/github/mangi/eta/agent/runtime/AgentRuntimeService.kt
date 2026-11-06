@@ -1,5 +1,8 @@
 package io.github.mangi.eta.agent.runtime
 
+import io.github.mangi.eta.agent.overlay.localizedText
+import io.github.mangi.eta.R
+
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import android.app.Service
@@ -461,7 +464,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                         mainHandler.post {
                             AgentExecutionService.completeTask(this, notificationState(finished).copy(
                                 completed = true, status = finished.presentationStatus(),
-                                streamPreview = (if (result.ok) result.content else result.error.orEmpty()).takeLast(240)))
+                                streamPreview = (if (result.ok) result.content else result.error.orEmpty()).notificationFirstSentence()))
                         }
                     }
                     AgentExecutionService.release("run:${request.runId}")
@@ -1175,6 +1178,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         val snapshots = active.map(::notificationState)
         taskStates.value = snapshots
         AgentExecutionService.updateTasks(this, snapshots)
+        if (!capsuleExpanded.value) setCapsuleWindowHeight(CAPSULE_COLLAPSED_HEIGHT_DP)
     }
 
     private fun taskStatus(run: RuntimeRunRegistry.Run) = run.presentationStatus()
@@ -1187,6 +1191,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             run.overlayState.detailText.takeLast(80) else run.overlayState.thought.takeLast(80),
         paused = run.session.controller.isPaused,
         targetPackage = run.lastBackgroundApp,
+        step = run.overlayState.round.takeIf { it > 0 },
     )
 
     private fun selectOverlayTask(id: String) {
@@ -1270,6 +1275,13 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                 selectedTaskId = controlRunId,
                 onSelectTask = ::selectOverlayTask,
                 onOpenConversation = { openEtaFromResult(displayedRun) },
+                onOpenPreview = {
+                    val card = controlRunId?.let(AgentExecutionService::task)
+                    if (card?.targetPackage.isNullOrBlank()) openEtaFromResult(displayedRun)
+                    else startActivity(Intent(this, TaskPreviewActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtra("run_id", card.runId)
+                        .putExtra("package", card.targetPackage))
+                },
             )
         }
         val capsuleLp = capsuleLayoutParams()
@@ -1323,9 +1335,14 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         val wm = windowManager ?: return
         val capsule = capsuleView ?: return
         val lp = capsuleParams ?: return
-        val height = dpToPx(heightDp)
-        if (lp.height == height) return
+        val fontScale = resources.configuration.fontScale.coerceAtLeast(1f)
+        val height = minOf(resources.displayMetrics.heightPixels - statusBarHeightPx(),
+            dpToPx(if (heightDp == CAPSULE_COLLAPSED_HEIGHT_DP) maxOf(heightDp, kotlin.math.ceil(18f * fontScale + 28f).toInt())
+                else kotlin.math.ceil(heightDp * fontScale).toInt()))
+        val width = capsuleWidthPx(heightDp != CAPSULE_COLLAPSED_HEIGHT_DP)
+        if (lp.height == height && lp.width == width) return
         lp.height = height
+        lp.width = width
         runCatching { wm.updateViewLayout(capsule, lp) }.onFailure { throwable ->
             AndroidAgentLogger.warnThrottled("runtime_capsule_resize_failed") {
                 "Agent runtime capsule resize failed: type=${throwable.safeLogType()}"
@@ -1455,9 +1472,19 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
      * 但窗口内透明区域同样会吞掉触摸（包括 Agent 自己注入的点击），所以高度只在需要时扩大：
      * 展开前先扩到目标档，收起动画结束后再缩回，见 [setCapsuleWindowHeight]。
      */
+    private fun capsuleWidthPx(expanded: Boolean): Int {
+        val available = (resources.displayMetrics.widthPixels - dpToPx(32)).coerceAtLeast(1)
+        if (expanded) return minOf(available, dpToPx(360))
+        val paint = android.graphics.Paint().apply { textSize = 13f * resources.displayMetrics.scaledDensity }
+        val statusLabel = if (state.value.status == AgentOverlayStatus.ContinuationUnavailable)
+            getString(R.string.overlay_attention_prompt) else state.value.status.localizedText(resources)
+        val label = if (taskItems.value.size > 1) getString(R.string.overlay_task_count, taskItems.value.size, statusLabel) else statusLabel
+        return (paint.measureText(label).toInt() + dpToPx(88)).coerceIn(dpToPx(160), dpToPx(300)).coerceAtMost(available)
+    }
+
     private fun capsuleLayoutParams(): WindowManager.LayoutParams =
         WindowManager.LayoutParams(
-            dpToPx(CAPSULE_WINDOW_WIDTH_DP),
+            capsuleWidthPx(expanded = false),
             dpToPx(CAPSULE_COLLAPSED_HEIGHT_DP),
             overlayType(),
             WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED or
@@ -1710,8 +1737,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         private const val RESULT_REVIEW_DELAY_MS = 120_000L
         private const val RESULT_CARD_HEIGHT_RATIO = 0.5f
         private const val RESULT_OPEN_REQUEST_CODE = 1108
-        private const val CAPSULE_WINDOW_WIDTH_DP = 272
-        private const val CAPSULE_COLLAPSED_HEIGHT_DP = 68
+        private const val CAPSULE_COLLAPSED_HEIGHT_DP = 52
         private const val CAPSULE_CONTROLS_HEIGHT_DP = 280
         private const val CAPSULE_SUPPLEMENT_HEIGHT_DP = 260
         /** 注入点击只是一个点，目标控件常贴着胶囊边缘，判定范围向外多留一点。 */

@@ -14,6 +14,8 @@ import io.github.mangi.eta.ui.theme.EtaTheme
 /** 正文与思考共用同一套渲染器，只在字号、颜色与留白上区分层级。 */
 internal enum class MarkdownTone { Answer, Thinking }
 
+internal val LocalMarkdownBodyStyle = androidx.compose.runtime.staticCompositionLocalOf<TextStyle?> { null }
+
 /**
  * 一次渲染所需的全部样式。按主题与语气整体记忆，块级组件只读取不再推导，
  * 避免每个段落各自拼一遍 TextStyle。
@@ -56,10 +58,11 @@ internal class MarkdownStyle(
 internal fun rememberMarkdownStyle(tone: MarkdownTone): MarkdownStyle {
     val colors = EtaTheme.colors
     val type = EtaTheme.type
-    return remember(tone, colors, type) {
+    val bodyOverride = LocalMarkdownBodyStyle.current
+    return remember(tone, colors, type, bodyOverride) {
         val answer = tone == MarkdownTone.Answer
         val textColor = if (answer) colors.textPrimary else colors.textSecondary
-        val body = (if (answer) type.body else type.subhead.copy(lineHeight = THINKING_LINE_HEIGHT_SP.sp)).copy(color = textColor)
+        val body = (if (answer) bodyOverride ?: type.body else type.subhead.copy(lineHeight = THINKING_LINE_HEIGHT_SP.sp)).copy(color = textColor)
         MarkdownStyle(
             tone = tone, body = body,
             headings = if (answer) listOf(type.markdownH1, type.markdownH2, type.markdownH3, body.copy(fontWeight = FontWeight.SemiBold))

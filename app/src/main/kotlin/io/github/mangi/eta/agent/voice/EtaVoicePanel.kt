@@ -46,8 +46,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.sp
+import io.github.mangi.eta.ui.markdown.LocalMarkdownBodyStyle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.theme.EtaColors
+import io.github.mangi.eta.ui.model.UserMessageUi
+import androidx.compose.animation.core.spring
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -114,38 +123,23 @@ internal data class EtaVoicePanelColors(
     val scrim: Color,
 )
 
+internal fun etaVoicePanelColors(palette: EtaColors) = EtaVoicePanelColors(
+    content = palette.surfaceRaised, input = palette.surface, focusedInput = palette.surface,
+    inputPrimary = palette.textPrimary, inputSecondary = palette.textSecondary,
+    inputTertiary = palette.textTertiary, tertiary = palette.textTertiary,
+    panelStroke = palette.outline, chipStroke = palette.outline, scrim = palette.scrim,
+)
+
 @Composable
 private fun rememberEtaVoicePanelColors(): EtaVoicePanelColors {
-    val dark = MiuixTheme.colorScheme.background.luminance() < 0.5f
-    return remember(dark) {
-        if (dark) {
-            EtaVoicePanelColors(
-                content = Color(0xFF1E1E1E),
-                input = Color(0xFF34363B),
-                focusedInput = Color(0xFF42444A),
-                inputPrimary = Color(0xE6FFFFFF),
-                inputSecondary = Color(0x8AFFFFFF),
-                inputTertiary = Color(0x4DFFFFFF),
-                tertiary = Color(0x40FFFFFF),
-                panelStroke = Color(0x0AFFFFFF),
-                chipStroke = Color(0x21FFFFFF),
-                scrim = Color(0x52000000),
-            )
-        } else {
-            EtaVoicePanelColors(
-                content = Color(0xFFF0F1F2),
-                input = Color(0xFFF4F5F7),
-                focusedInput = Color.White,
-                inputPrimary = Color(0xE6000000),
-                inputSecondary = Color(0x8A000000),
-                inputTertiary = Color(0x42000000),
-                tertiary = Color(0x29000000),
-                panelStroke = Color.White,
-                chipStroke = Color(0x14000000),
-                scrim = Color(0x30000000),
-            )
-        }
-    }
+    val palette = EtaTheme.colors
+    return remember(palette) { etaVoicePanelColors(palette) }
+}
+
+/** Presentation-only slice; the full conversation remains available through Open conversation. */
+internal fun recentAssistantRounds(messages: List<AgentChatMessageUi>): List<AgentChatMessageUi> {
+    val start = messages.indices.filter { messages[it] is UserMessageUi }.takeLast(3).firstOrNull() ?: 0
+    return messages.subList(start, messages.size)
 }
 
 @Composable
@@ -178,8 +172,11 @@ internal fun EtaVoicePanel(
     onOpenConversation: () -> Unit,
 ) {
     val colors = rememberEtaVoicePanelColors()
+    val motion = EtaTheme.motion
+    val recentState = remember(state) { state.copy(messages = recentAssistantRounds(state.messages)) }
     val keyboard = LocalSoftwareKeyboardController.current
     val density = LocalDensity.current
+    var composerHeightPx by remember(density) { mutableIntStateOf(with(density) { 160.dp.roundToPx() }) }
     val entryProgress = remember { Animatable(0f) }
     val entryAlpha = remember { Animatable(0f) }
     val scrimProgress = remember { Animatable(0f) }
@@ -188,11 +185,12 @@ internal fun EtaVoicePanel(
     val textEntryOffsetPx = with(density) { if (recognitionEnabled == false) 16.dp.toPx() else 0f }
     val exitProgress = remember { Animatable(1f) }
     val exitFinished by rememberUpdatedState(onExitFinished)
-    val exitOffsetPx = with(density) { (if (handoffRunning) (-12).dp else 28.dp).toPx() }
+    val screenHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp
+    val exitOffsetPx = with(density) { (if (handoffRunning) -screenHeight * 0.65f else 28.dp).toPx() }
     LaunchedEffect(exitRequested) {
         if (exitRequested) {
             keyboard?.hide()
-            exitProgress.animateTo(0f, tween(ASSISTANT_EXIT_DURATION_MS, easing = FastOutSlowInEasing))
+            exitProgress.animateTo(0f, tween(if (handoffRunning) motion.long else motion.duration(ASSISTANT_EXIT_DURATION_MS), easing = motion.standard))
             exitFinished()
         }
     }
@@ -214,8 +212,7 @@ internal fun EtaVoicePanel(
             }
             launch {
                 entryProgress.animateTo(1f,
-                    if (recognitionEnabled == false) folmeSpring(damping = 1f, response = 0.50f)
-                    else tween(220, easing = LinearOutSlowInEasing))
+                    spring(dampingRatio = motion.dampingRatio, stiffness = motion.stiffness))
             }
         }
         // 焦点会主动唤起 IME；必须等显现和位移都结束，不能在仍透明时交出输入焦点。
@@ -246,11 +243,7 @@ internal fun EtaVoicePanel(
             // Text entry must not wait for an animation that the user has disabled.
             if (!entranceComplete) onEntranceFinished()
         }
-        EtaAssistantWave(
-            active = (speech.active || !entranceComplete) && !exitRequested,
-            level = speechLevel,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
+
 
         if (contentVisible) BoxWithConstraints(
             modifier = Modifier
@@ -259,6 +252,10 @@ internal fun EtaVoicePanel(
                     alpha = entryAlpha.value
                     translationY = (1f - entryProgress.value) * textEntryOffsetPx +
                         (1f - exitProgress.value) * exitOffsetPx
+                    if (handoffRunning && exitRequested) {
+                        scaleX = 0.4f + 0.6f * exitProgress.value
+                        scaleY = 0.4f + 0.6f * exitProgress.value
+                    }
                 },
         ) {
             val imeInsets = WindowInsets.ime
@@ -271,10 +268,12 @@ internal fun EtaVoicePanel(
             val imeOverlap = if (state.messages.isEmpty()) 0
                 else (imeInsets.getBottom(density) - navigationBottom).coerceAtLeast(0)
             val maxContentHeightPx = with(density) {
-                (maxHeight - 88.dp).toPx() - statusTop - navigationBottom
+                (maxHeight - 16.dp).toPx() - statusTop - navigationBottom - composerHeightPx
             }.coerceAtLeast(with(density) { 220.dp.toPx() })
             AssistantPanel(
-                state = state,
+                state = recentState,
+                speechLevel = speechLevel,
+                onComposerMeasured = { composerHeightPx = it },
                 input = input,
                 speech = speech,
                 recognitionEnabled = recognitionEnabled == true,
@@ -317,6 +316,8 @@ internal fun EtaVoicePanel(
 @Composable
 private fun BoxScope.AssistantPanel(
     state: EtaVoiceUiState,
+    speechLevel: () -> Float,
+    onComposerMeasured: (Int) -> Unit,
     input: String,
     speech: EtaSpeechState,
     recognitionEnabled: Boolean,
@@ -634,28 +635,33 @@ private fun BoxScope.AssistantPanel(
     }
 
     val messageRevealOffsetPx = with(density) { 12.dp.toPx() }
-    val sheetShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+    val sheetShape = EtaTheme.shapes.radiusXl
     Column(
         modifier = Modifier
             .align(Alignment.BottomCenter)
             .fillMaxWidth()
             // IME 已由系统逐帧插值；布局阶段直接消费，避免组合阶段旧值或二次动画造成追赶。
             .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars).only(WindowInsetsSides.Bottom))
+            .padding(horizontal = 8.dp, vertical = 8.dp)
             .offset(y = with(density) { sheetTranslationPx.toDp() })
+            .shadow(16.dp, sheetShape)
             .clip(sheetShape)
             .drawBehind {
                 drawRect(
                     colors.content.copy(
-                        alpha = colors.content.alpha * sheetBackgroundAlpha.value,
+                        alpha = colors.content.alpha,
                     ),
                 )
             }
             .border(
-                width = 1.6.dp,
-                color = colors.panelStroke.copy(alpha = colors.panelStroke.alpha * sheetBackgroundAlpha.value),
+                width = 1.dp,
+                color = colors.panelStroke,
                 shape = sheetShape,
             ),
     ) {
+        if (!hasMessages) Box(Modifier.fillMaxWidth().height(20.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(36.dp, 4.dp).clip(CircleShape).background(colors.tertiary))
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -687,6 +693,7 @@ private fun BoxScope.AssistantPanel(
                     },
             ) {
                 if (hasMessages) {
+                    CompositionLocalProvider(LocalMarkdownBodyStyle provides EtaTheme.type.body.copy(fontSize = 15.sp, lineHeight = 24.sp)) {
                     AgentConversationMessages(
                         visibleMessages = state.messages,
                         scrollState = listState,
@@ -697,16 +704,20 @@ private fun BoxScope.AssistantPanel(
                         assistantOverlay = true,
                         modifier = Modifier.fillMaxSize(),
                     )
+                    }
                 }
             }
         }
         EtaAssistantSuggestions(
             onSuggestionClick = onSuggestionClick,
             colors = colors,
-            visible = !hasMessages,
+            visible = !hasMessages && state.phase == EtaVoicePhase.READY && !speech.active,
         )
         AssistantComposer(
             state = state,
+            speechLevel = speechLevel,
+            canOpenConversation = canOpenConversation,
+            onOpenConversation = onOpenConversation,
             input = input,
             speech = speech,
             recognitionEnabled = recognitionEnabled,
@@ -724,7 +735,7 @@ private fun BoxScope.AssistantPanel(
             onSubmit = onSubmit,
             onStop = onStop,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth().onSizeChanged { onComposerMeasured(it.height) }
                 .padding(
                     start = 16.dp,
                     end = 16.dp,

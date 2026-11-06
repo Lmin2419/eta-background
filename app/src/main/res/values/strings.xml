@@ -1607,4 +1607,31 @@
   <string name="eta_delete_count_body">%1$d conversations and their messages will be deleted. This cannot be undone.</string>
   <string name="eta_delete_running_body">%1$d conversations have active tasks. Stop the tasks before deleting.</string>
   <string name="eta_deleted_count">Deleted %1$d conversations</string>
+
+  <!-- Stage 6 system surfaces -->
+  <string name="preview_manual_status">Paused · You control</string>
+  <string name="preview_expand">Expand preview</string>
+  <string name="preview_collapse">Shrink preview</string>
+  <string name="preview_wait">Waiting for the current operation…</string>
+  <string name="preview_paused_hint">Task paused</string>
+  <string name="preview_operate_page">Operate page</string>
+  <string name="preview_handle">Take over to handle</string>
+  <string name="preview_takeover">Take over</string>
+  <string name="preview_return_ai">Return to AI</string>
+  <string name="preview_back">Back key</string>
+  <string name="task_notice_running">%1$s</string>
+  <string name="task_notice_attention">Needs you</string>
+  <string name="task_notice_paused">Paused</string>
+  <string name="task_notice_success">Done</string>
+  <string name="task_notice_failed">Not finished</string>
+  <string name="task_notice_queued">Queued</string>
+  <string name="task_notice_step">Step %1$d</string>
+  <string name="task_notice_duration">Time %1$s</string>
+  <string name="task_notice_reply_failed">Reply not sent</string>
+  <string name="task_notice_view">View</string>
+  <string name="overlay_attention_prompt">Needs you · Tap to view</string>
+  <string name="voice_suggestion_summary">Summarize this screen</string>
+  <string name="voice_suggestion_help">How to use this page</string>
+  <string name="voice_suggestion_highlights">Find highlights</string>
+  <string name="preview_manual_hint">Touch the preview to control the app</string>
 </resources>

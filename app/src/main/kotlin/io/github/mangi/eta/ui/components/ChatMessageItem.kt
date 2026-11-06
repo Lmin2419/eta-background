@@ -336,7 +336,7 @@ private fun UserMessageBubble(
                 if (visiblePrompt.references.isNotEmpty()) SentFileReferenceFlow(visiblePrompt.references,
                     Modifier.padding(bottom = if (visiblePrompt.request.isNotBlank()) 8.dp else 0.dp))
                 if (isEditing && editor != null) InlineUserMessageEditor(editor, message.images.isNotEmpty() || visiblePrompt.references.isNotEmpty())
-                else if (visiblePrompt.request.isNotBlank()) Text(visiblePrompt.request, style = EtaTheme.type.body, color = EtaTheme.colors.textPrimary)
+                else if (visiblePrompt.request.isNotBlank()) Text(visiblePrompt.request, style = if (assistantOverlay) EtaTheme.type.body.copy(fontSize = 15.sp, lineHeight = 24.sp) else EtaTheme.type.body, color = EtaTheme.colors.textPrimary)
                 if (message.isEdited) Text(stringResource(R.string.ui_edited_c36776), style = EtaTheme.type.caption,
                     color = EtaTheme.colors.textTertiary, modifier = Modifier.padding(top = 4.dp))
             }
@@ -545,7 +545,7 @@ private fun AgentMessageBlock(
                 AnswerTextSelection(enabled = !showMessageActions) {
                     Text(
                         text = message.content,
-                        style = MiuixTheme.textStyles.body1,
+                        style = if (assistantOverlay) EtaTheme.type.body.copy(fontSize = 15.sp, lineHeight = 24.sp) else MiuixTheme.textStyles.body1,
                         color = MiuixTheme.colorScheme.onSurface,
                     )
                 }

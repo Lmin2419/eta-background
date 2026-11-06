@@ -1585,4 +1585,31 @@
   <string name="eta_delete_count_body">将删除 %1$d 个对话及其消息，此操作无法撤销。</string>
   <string name="eta_delete_running_body">其中 %1$d 个对话正在执行任务，将先停止任务再删除。</string>
   <string name="eta_deleted_count">已删除 %1$d 个对话</string>
+
+  <!-- Stage 6 system surfaces -->
+  <string name="preview_manual_status">已暂停 · 你在操作</string>
+  <string name="preview_expand">放大预览</string>
+  <string name="preview_collapse">缩小预览</string>
+  <string name="preview_wait">等待当前操作结束…</string>
+  <string name="preview_paused_hint">任务已暂停</string>
+  <string name="preview_operate_page">操作页面</string>
+  <string name="preview_handle">接管处理</string>
+  <string name="preview_takeover">接管</string>
+  <string name="preview_return_ai">交还 AI</string>
+  <string name="preview_back">返回键</string>
+  <string name="task_notice_running">%1$s</string>
+  <string name="task_notice_attention">需要你</string>
+  <string name="task_notice_paused">已暂停</string>
+  <string name="task_notice_success">已完成</string>
+  <string name="task_notice_failed">未完成</string>
+  <string name="task_notice_queued">排队中</string>
+  <string name="task_notice_step">第 %1$d 步</string>
+  <string name="task_notice_duration">用时 %1$s</string>
+  <string name="task_notice_reply_failed">回复未发送</string>
+  <string name="task_notice_view">查看</string>
+  <string name="overlay_attention_prompt">需要你处理 · 点此查看</string>
+  <string name="voice_suggestion_summary">总结当前屏幕</string>
+  <string name="voice_suggestion_help">页面怎么操作</string>
+  <string name="voice_suggestion_highlights">找出重点信息</string>
+  <string name="preview_manual_hint">点击画面即可操作</string>
 </resources>

@@ -53,7 +53,7 @@ class TaskPreviewActivityTest {
             assertEquals(0L, controller.resumeGeneration)
             val image = Bitmap.createBitmap(108, 240, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }
             view.displayFrame(image, JSONObject().put("displayId", 7).put("width", 1080).put("height", 2400).put("rotation", 0), "read-only")
-            val hint = TaskPreviewActivity::class.java.getDeclaredField("hint").apply { isAccessible = true }.get(view) as android.widget.TextView
+            val hint = view.previewUi.hint
             assertTrue(hint.text.startsWith("AI 正在执行"))
             controller.pause()
             TaskPreviewActivity::class.java.getDeclaredMethod("updateControls").apply { isAccessible = true }.invoke(view)
@@ -88,16 +88,16 @@ class TaskPreviewActivityTest {
             val blank = Bitmap.createBitmap(108, 240, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
             view.displayFrame(blank, geometry, "blank")
             assertNull((field("picture").get(view) as ImageView).drawable)
-            assertFalse((field("take").get(view) as Button).isEnabled)
+            assertFalse(view.previewUi.controls.primaryEnabled && view.previewUi.controls.primary == PreviewAction.TakeOver)
             assertTrue(blank.isRecycled)
             val real = Bitmap.createBitmap(108, 240, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }
             view.displayFrame(real, geometry, "real")
-            assertTrue((field("take").get(view) as Button).isEnabled)
+            assertTrue(view.previewUi.controls.primaryEnabled && view.previewUi.controls.primary == PreviewAction.TakeOver)
             field("manual").setBoolean(view, true)
-            val zoom = field("zoom").get(view) as Button
-            assertTrue(zoom.isEnabled); assertTrue(zoom.performClick())
+            assertTrue(view.previewUi.controls.zoomEnabled)
+            TaskPreviewActivity::class.java.getDeclaredMethod("toggleSize").apply { isAccessible = true }.invoke(view)
             assertTrue(field("expanded").getBoolean(view))
-            assertEquals("缩小", zoom.text.toString())
+            assertTrue(view.previewUi.expanded)
             assertTrue(field("manual").getBoolean(view))
             view.displayFrame(null, null, "clear")
             assertTrue(real.isRecycled)
@@ -123,7 +123,7 @@ class TaskPreviewActivityTest {
             assertTrue(refreshRequests.tryReceive().isFailure)
             view.acceptInputResult(JSONObject().put("ok", false).put("code", "INPUT_NOT_READY"))
             assertTrue(refreshRequests.tryReceive().isSuccess)
-            val hint = field("hint").get(view) as android.widget.TextView
+            val hint = view.previewUi.hint
             val failure = hint.text.toString()
             assertTrue(failure.contains("目标窗口未就绪"))
             assertNull(field("geometry").get(view))
@@ -137,10 +137,10 @@ class TaskPreviewActivityTest {
             view.displayFrame(sameBuffer, g, "7:1000:1:960")
             assertTrue(sameBuffer.isRecycled)
             assertNull(field("geometry").get(view))
-            assertFalse((field("back").get(view) as Button).isEnabled)
+            assertFalse(view.previewUi.controls.secondaryEnabled && PreviewAction.Back in view.previewUi.controls.secondary)
             nextFrame("7:1001:2:640")
             assertEquals(failure, hint.text.toString())
-            assertTrue((field("back").get(view) as Button).isEnabled)
+            assertTrue(view.previewUi.controls.secondaryEnabled && PreviewAction.Back in view.previewUi.controls.secondary)
             view.acceptInputResult(JSONObject().put("ok", true))
             assertTrue(refreshRequests.tryReceive().isSuccess)
             shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(801))

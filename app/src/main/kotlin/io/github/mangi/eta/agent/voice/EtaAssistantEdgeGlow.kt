@@ -1,5 +1,7 @@
 package io.github.mangi.eta.agent.voice
 
+import io.github.mangi.eta.ui.theme.EtaAurora
+
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -35,17 +37,17 @@ private val edgeArrivalSeconds = ASSISTANT_EDGE_ARRIVAL_MS / 1000f
 private val bottomRevealEndSeconds = edgeArrivalSeconds + BOTTOM_REVEAL_SECONDS
 private val entranceDurationSeconds = max(POWER_HALO_END_SECONDS, bottomRevealEndSeconds)
 private val haloEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
-private val powerWashColor = Color(0xFF9BB2D2).copy(alpha = 0.36f)
-private val edgeTrailColors = listOf(Color.Transparent, Color(0xFF9CAEE8), Color(0xFFFFC99A))
-private val edgeCoreColors = listOf(Color.Transparent, Color(0xFFDAE5FF), Color(0xFFFFF7E3))
-private val edgeHeadColors = listOf(Color(0xFFFFF7E3), Color(0xFFFFC99A), Color.Transparent)
+private val powerWashColor = EtaAurora.blue.copy(alpha = 0.36f)
+private val edgeTrailColors = listOf(Color.Transparent, EtaAurora.indigo, EtaAurora.peach)
+private val edgeCoreColors = listOf(Color.Transparent, EtaAurora.blue, EtaAurora.peach)
+private val edgeHeadColors = listOf(EtaAurora.peach, EtaAurora.peach, Color.Transparent)
 private val bottomGlowColors = listOf(
-    listOf(Color(0xFF71BEFF).copy(alpha = 0.68f), Color.Transparent),
-    listOf(Color(0xFFFFFAF0).copy(alpha = 0.68f), Color.Transparent),
-    listOf(Color(0xFFF27BDE).copy(alpha = 0.68f), Color.Transparent),
+    listOf(EtaAurora.blue.copy(alpha = 0.68f), Color.Transparent),
+    listOf(EtaAurora.indigo.copy(alpha = 0.68f), Color.Transparent),
+    listOf(EtaAurora.pink.copy(alpha = 0.68f), Color.Transparent),
 )
 private val bottomLineColors = listOf(
-    Color(0xFF8CCBFF), Color(0xFFFFF7E8), Color(0xFFFF8CCB), Color(0xFFADB8FF),
+    EtaAurora.blue, EtaAurora.peach, EtaAurora.pink, EtaAurora.indigo,
 )
 
 /** 初次唤醒从电源键位置沿屏幕边缘进入；后续手动切回语音只恢复底部光效。 */

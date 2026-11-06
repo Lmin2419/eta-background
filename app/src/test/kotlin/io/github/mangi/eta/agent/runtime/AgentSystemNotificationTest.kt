@@ -22,7 +22,7 @@ import java.time.Duration
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36, 37], application = Application::class)
 class AgentSystemNotificationTest {
-    @Test fun runningBackgroundCardHasASeparateConversationAction() {
+    @Test fun runningBackgroundCardUsesViewPauseStopOrder() {
         val host = Robolectric.buildService(AgentExecutionService::class.java).create()
         val service = host.get()
         val manager = service.getSystemService(NotificationManager::class.java)
@@ -33,15 +33,17 @@ class AgentSystemNotificationTest {
             shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
             val card = manager.activeNotifications.single().notification
             assertEquals(TaskPreviewActivity::class.java.name, shadowOf(card.contentIntent).savedIntent.component?.className)
-            val openChat = card.actions.single { it.title == service.getString(io.github.mangi.eta.R.string.overlay_open_conversation) }
-            assertNotEquals(card.contentIntent, openChat.actionIntent)
-            openChat.actionIntent.send()
+            assertEquals(listOf(R.string.task_notice_view, R.string.overlay_pause, R.string.overlay_stop_task).map(service::getString),
+                card.actions.map { it.title.toString() })
+            val view = card.actions[0]
+            assertEquals(card.contentIntent, view.actionIntent)
+            view.actionIntent.send()
             val intent = shadowOf(service.application).nextStartedActivity
-            assertEquals(MainActivity::class.java.name, intent.component?.className)
-            assertEquals("chat-running-chat", intent.getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
+            assertEquals(TaskPreviewActivity::class.java.name, intent.component?.className)
+            assertEquals(task.runId, intent.getStringExtra("run_id"))
             assertEquals(task, AgentExecutionService.task(task.runId))
             assertEquals(listOf(AgentExecutionService.ACTION_PAUSE_RUN, AgentExecutionService.ACTION_STOP_RUN),
-                card.actions.take(2).map { shadowOf(it.actionIntent).savedIntent.action })
+                card.actions.drop(1).map { shadowOf(it.actionIntent).savedIntent.action })
         } finally {
             AgentExecutionService.release("running-chat")
             AgentExecutionService.updateTasks(service, emptyList())
@@ -142,9 +144,9 @@ class AgentSystemNotificationTest {
             assertEquals(original.id, failedReply.id)
             assertEquals(archived.copy(replyFailed = true), AgentExecutionService.task(result.runId))
             val text = failedReply.notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString()
-            assertTrue(text.contains(service.getString(R.string.background_task_completed)))
+            assertTrue(text.contains(service.getString(R.string.task_notice_success)))
             assertTrue(text.contains(archived.streamPreview))
-            assertTrue(text.contains(service.getString(R.string.background_reply_failed)))
+            assertTrue(text.contains(service.getString(R.string.task_notice_reply_failed)))
             assertTrue(failedReply.notification.actions.any { it.semanticAction == Notification.Action.SEMANTIC_ACTION_REPLY })
         } finally {
             dismiss?.let { AgentExecutionService.onNotificationDismissed(service, it) }
@@ -183,8 +185,8 @@ class AgentSystemNotificationTest {
                     assertEquals(chat != "chat-b", card.hasPromotableCharacteristics())
                 }
                 assertEquals(3, card.actions.size)
-                assertTrue(card.actions.take(2).all { shadowOf(it.actionIntent).savedIntent.getStringExtra("run_id") == chat!!.removePrefix("chat-") })
-                assertEquals(chat, shadowOf(card.actions[2].actionIntent).savedIntent.getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
+                assertTrue(card.actions.drop(1).all { shadowOf(it.actionIntent).savedIntent.getStringExtra("run_id") == chat!!.removePrefix("chat-") })
+                assertEquals(chat, shadowOf(card.actions[0].actionIntent).savedIntent.getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
                 assertFalse(card.actions.any { shadowOf(it.actionIntent).savedIntent.action == AgentExecutionService.ACTION_NEXT_TASK })
             }
             val firstDestination = cards.getValue("chat-a").notification.contentIntent
@@ -193,7 +195,7 @@ class AgentSystemNotificationTest {
             assertSame(cards.getValue("chat-a").notification,
                 manager.activeNotifications.single { it.id == cards.getValue("chat-a").id }.notification)
             assertEquals(AgentExecutionService.ACTION_RESUME_RUN,
-                shadowOf(cards.getValue("chat-b").notification.actions[0].actionIntent).savedIntent.action)
+                shadowOf(cards.getValue("chat-b").notification.actions[1].actionIntent).savedIntent.action)
             // Completion updates A in place immediately while B and C keep running.
             AgentExecutionService.completeTask(service, a.copy(completed = true, status = AgentOverlayStatus.ResultReady))
             shadowOf(Looper.getMainLooper()).idle()
@@ -208,7 +210,8 @@ class AgentSystemNotificationTest {
             assertEquals("chat-c", shadowOf(shadowOf(service).lastForegroundNotification.contentIntent)
                 .savedIntent.getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
             val remainingC = manager.activeNotifications.single { it.id == cards.getValue("chat-c").id }
-            assertTrue(remainingC.notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("新进度"))
+            assertEquals(taskNotificationCopy(service.resources, c.copy(streamPreview = "新进度"), null).body,
+                remainingC.notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         } finally {
             AgentExecutionService.release("test-native")
             AgentExecutionService.updateTasks(service, emptyList())

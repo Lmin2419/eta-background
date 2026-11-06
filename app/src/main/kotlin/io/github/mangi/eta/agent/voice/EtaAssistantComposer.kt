@@ -1,6 +1,12 @@
 package io.github.mangi.eta.agent.voice
 
+
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
+import io.github.mangi.eta.ui.components.EtaIconButton
+import io.github.mangi.eta.ui.theme.EtaTheme
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
@@ -10,7 +16,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -91,10 +99,11 @@ internal fun AssistantComposer(
     onSubmit: () -> Unit,
     onStop: () -> Unit,
     modifier: Modifier = Modifier,
+    speechLevel: () -> Float = { 0f },
+    canOpenConversation: Boolean = false,
+    onOpenConversation: () -> Unit = {},
 ) {
-    Column(
-        modifier = modifier,
-    ) {
+    Column(modifier = modifier) {
         if (recognitionEnabled) EtaSpeechFeedback(speech, onDownloadModel, onOpenSpeechSettings)
         AnimatedContent(
             // 按住说话期间保持输入栏：切换布局会移除正被按住的按钮，松手事件随之丢失。
@@ -107,7 +116,7 @@ internal fun AssistantComposer(
             label = "assistant_input_mode",
         ) { voiceMode ->
             if (voiceMode) {
-                AssistantVoiceEntry(speech, input, onKeyboard, onFinishSpeech, onCancelSpeech)
+                AssistantVoiceEntry(speech, input, onKeyboard, onFinishSpeech, onCancelSpeech, speechLevel, canOpenConversation, onOpenConversation)
             } else {
                 AssistantInputBar(
                     state = state,
@@ -124,6 +133,10 @@ internal fun AssistantComposer(
                     onInputChange = onInputChange,
                     onSubmit = onSubmit,
                     onStop = onStop,
+                    onKeyboard = onKeyboard,
+                    speechLevel = speechLevel,
+                    canOpenConversation = canOpenConversation,
+                    onOpenConversation = onOpenConversation,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -147,8 +160,15 @@ private fun AssistantInputBar(
     onInputChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onStop: () -> Unit,
+    onKeyboard: () -> Unit,
+    speechLevel: () -> Float = { 0f },
+    canOpenConversation: Boolean = false,
+    onOpenConversation: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val themeColors = EtaTheme.colors
+    val accent = themeColors.accent
+    val onAccent = themeColors.onAccent
     val canSubmit = input.isNotBlank() && state.phase != EtaVoicePhase.PROCESSING
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -165,23 +185,16 @@ private fun AssistantInputBar(
     }
     var textFocused by remember { mutableStateOf(false) }
     val inputHighlighted = textFocused || keyboardVisible
-    val inputBackground by animateColorAsState(
-        targetValue = if (inputHighlighted) colors.focusedInput else colors.input,
-        animationSpec = tween(180, easing = LinearOutSlowInEasing),
-        label = "assistant_input_background",
-    )
     val inputBorder by animateColorAsState(
-        targetValue = colors.inputPrimary.copy(alpha = if (inputHighlighted) 0.35f else 0.12f),
+        targetValue = themeColors.outlineStrong.copy(alpha = if (inputHighlighted) 1f else 0.55f),
         animationSpec = tween(180, easing = LinearOutSlowInEasing),
         label = "assistant_input_border",
     )
-    val contentColor = colors.inputPrimary
-    val hintColor = colors.inputTertiary
-    val inputShape = RoundedCornerShape(24.dp)
+    val inputShape = RoundedCornerShape(20.dp)
     val trailingIcon = when {
-        speech.active || state.phase == EtaVoicePhase.PROCESSING -> R.drawable.ic_assistant_stop
-        canSubmit || !recognitionEnabled -> R.drawable.ic_assistant_send
-        else -> R.drawable.ic_assistant_voice
+        speech.active || state.phase == EtaVoicePhase.PROCESSING -> Icons.Rounded.Stop
+        canSubmit || !recognitionEnabled -> Icons.Rounded.Send
+        else -> Icons.Rounded.Mic
     }
     val trailingDescription = when {
         speech.phase == EtaSpeechPhase.RECOGNIZING -> R.string.action_stop
@@ -197,76 +210,109 @@ private fun AssistantInputBar(
         canSubmit || !recognitionEnabled -> onSubmit
         else -> { { onMicrophone(false) } }
     }
-    Row(
-        modifier = modifier
-            .heightIn(min = 50.dp)
-            .clip(inputShape)
-            .background(inputBackground)
-            .border(
-                if (inputHighlighted) 1.2.dp else 0.75.dp,
-                inputBorder,
-                inputShape,
-            )
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {},
-            )
-            .padding(horizontal = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        BasicTextField(
-            value = input,
-            onValueChange = onInputChange,
+    Column(modifier = modifier) {
+        Box(
             modifier = Modifier
-                .weight(1f)
-                .padding(start = 14.dp, end = 2.dp, top = 6.dp, bottom = 6.dp)
-                .onFocusChanged {
-                    if (it.isFocused && !textFocused) onInputFocus()
-                    textFocused = it.isFocused
-                }
-                .focusRequester(focusRequester),
-            enabled = inputEnabled,
-            textStyle = TextStyle(
-                color = contentColor,
-                fontSize = 16.sp,
-                lineHeight = 24.sp,
-            ),
-            cursorBrush = SolidColor(contentColor),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-            keyboardActions = KeyboardActions(onSend = { if (canSubmit) onSubmit() }),
-            maxLines = 4,
-            minLines = 1,
-            decorationBox = { innerTextField ->
-                Box(contentAlignment = Alignment.CenterStart) {
-                    if (input.isEmpty()) {
-                        Text(
-                            text = stringResource(
-                                if (speech.holdToTalk) R.string.voice_release_to_send else R.string.voice_input_hint,
-                            ),
-                            color = hintColor,
-                            fontSize = 16.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                .fillMaxWidth()
+                .clip(inputShape)
+                .background(themeColors.surface)
+                .border(1.dp, inputBorder, inputShape)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {},
+                )
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+        ) {
+            BasicTextField(
+                value = input,
+                onValueChange = onInputChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged {
+                        if (it.isFocused && !textFocused) onInputFocus()
+                        textFocused = it.isFocused
                     }
-                    innerTextField()
-                }
-            },
-        )
-        AssistantTrailingButton(
-            iconRes = trailingIcon,
-            contentDescription = stringResource(trailingDescription),
-            tint = contentColor,
-            enabled = speech.active || recognitionEnabled || canSubmit || state.phase == EtaVoicePhase.PROCESSING,
-            holdToTalkAvailable = recognitionEnabled && !speech.active && !canSubmit && state.phase != EtaVoicePhase.PROCESSING,
-            onClick = trailingAction,
-            onHoldStart = { onMicrophone(true) },
-            onHoldEnd = onFinishSpeech,
-            onHoldCancel = onCancelSpeech,
-        )
+                    .focusRequester(focusRequester),
+                enabled = inputEnabled,
+                textStyle = TextStyle(
+                    color = themeColors.textPrimary,
+                    fontSize = 15.sp,
+                    lineHeight = 24.sp,
+                ),
+                cursorBrush = SolidColor(themeColors.textPrimary),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = { if (canSubmit) onSubmit() }),
+                maxLines = 4,
+                minLines = 1,
+                decorationBox = { innerTextField ->
+                    Box(contentAlignment = Alignment.CenterStart) {
+                        if (input.isEmpty()) {
+                            Text(
+                                text = stringResource(
+                                    if (speech.holdToTalk) R.string.voice_release_to_send else R.string.voice_input_hint,
+                                ),
+                                color = themeColors.textTertiary,
+                                fontSize = 15.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        innerTextField()
+                    }
+                },
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            EtaIconButton(
+                onClick = onKeyboard,
+                modifier = Modifier.size(44.dp),
+                enabled = true,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Keyboard,
+                    contentDescription = stringResource(R.string.voice_use_keyboard),
+                    tint = themeColors.textPrimary,
+                )
+            }
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                EtaAssistantWave(speech.active, speechLevel, Modifier.size(80.dp), ring = true)
+                AssistantTrailingButton(
+                    modifier = Modifier.background(accent, CircleShape),
+                    iconRes = trailingIcon,
+                    contentDescription = stringResource(trailingDescription),
+                    tint = onAccent,
+                    enabled = speech.active || recognitionEnabled || canSubmit || state.phase == EtaVoicePhase.PROCESSING,
+                    holdToTalkAvailable = recognitionEnabled && !speech.active && !canSubmit && state.phase != EtaVoicePhase.PROCESSING,
+                    onClick = trailingAction,
+                    onHoldStart = { onMicrophone(true) },
+                    onHoldEnd = onFinishSpeech,
+                    onHoldCancel = onCancelSpeech,
+                )
+            }
+            EtaIconButton(
+                onClick = onOpenConversation,
+                modifier = Modifier.size(44.dp),
+                enabled = canOpenConversation,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.OpenInNew,
+                    contentDescription = stringResource(R.string.overlay_open_conversation),
+                    tint = themeColors.textPrimary,
+                )
+            }
+        }
     }
 }
+
 
 /**
  * 输入栏尾部按钮。空闲时长按进入按住说话：松手发送，手指移出按钮取消；
@@ -274,7 +320,7 @@ private fun AssistantInputBar(
  */
 @Composable
 private fun AssistantTrailingButton(
-    iconRes: Int,
+    iconRes: androidx.compose.ui.graphics.vector.ImageVector,
     contentDescription: String,
     tint: Color,
     enabled: Boolean,
@@ -283,6 +329,7 @@ private fun AssistantTrailingButton(
     onHoldStart: () -> Unit,
     onHoldEnd: () -> Unit,
     onHoldCancel: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
     val currentClick by rememberUpdatedState(onClick)
@@ -292,8 +339,8 @@ private fun AssistantTrailingButton(
     val currentHoldCancel by rememberUpdatedState(onHoldCancel)
     var pressed by remember { mutableStateOf(false) }
     Box(
-        modifier = Modifier
-            .size(40.dp)
+        modifier = modifier
+            .size(64.dp)
             .graphicsLayer {
                 val scale = if (pressed) 0.9f else 1f
                 scaleX = scale
@@ -308,31 +355,42 @@ private fun AssistantTrailingButton(
             }
             .pointerInput(enabled) {
                 if (!enabled) return@pointerInput
-                var holding = false
-                detectTapGestures(
-                    onPress = {
+                awaitEachGesture {
+                    var holding = false
+                    try {
+                        val down = awaitFirstDown()
+                        down.consume()
                         pressed = true
-                        val released = tryAwaitRelease()
+                        // Pair distinguishes an actual cancellation (null Up) from timeout.
+                        val early = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                            waitForUpOrCancellation() to true
+                        }
+                        if (early != null) {
+                            early.first?.let { it.consume(); currentClick() }
+                        } else {
+                            if (currentHoldAvailable) {
+                                holding = true
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                currentHoldStart()
+                            }
+                            val up = waitForUpOrCancellation()
+                            if (up != null && holding) {
+                                up.consume()
+                                holding = false
+                                currentHoldEnd()
+                            }
+                        }
+                    } finally {
                         pressed = false
-                        if (holding) {
-                            holding = false
-                            if (released) currentHoldEnd() else currentHoldCancel()
-                        }
-                    },
-                    onLongPress = {
-                        if (currentHoldAvailable) {
-                            holding = true
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            currentHoldStart()
-                        }
-                    },
-                    onTap = { currentClick() },
-                )
+                        // Native CANCEL, an out-of-bounds move, disable or detach never sends.
+                        if (holding) currentHoldCancel()
+                    }
+                }
             },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(iconRes),
+            imageVector = iconRes,
             contentDescription = contentDescription,
             modifier = Modifier.size(24.dp),
             tint = if (enabled) tint else tint.copy(alpha = 0.4f),
@@ -342,90 +400,41 @@ private fun AssistantTrailingButton(
 
 @Composable
 private fun AssistantVoiceEntry(
-    speech: EtaSpeechState,
-    input: String,
-    onKeyboard: () -> Unit,
-    onFinishSpeech: () -> Unit,
-    onCancelSpeech: () -> Unit,
+    speech: EtaSpeechState, input: String, onKeyboard: () -> Unit,
+    onFinishSpeech: () -> Unit, onCancelSpeech: () -> Unit, speechLevel: () -> Float,
+    canOpenConversation: Boolean, onOpenConversation: () -> Unit,
 ) {
     val controls = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(400)
         controls.animateTo(1f, tween(180))
     }
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-        Text(
-            text = input.ifBlank {
-                stringResource(
-                    if (speech.phase == EtaSpeechPhase.RECOGNIZING) {
-                        R.string.voice_recognizing
-                    } else {
-                        R.string.voice_listening
-                    },
-                )
-            },
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.White,
-            style = TextStyle(
-                shadow = Shadow(
-                    color = Color.Black.copy(alpha = 0.55f),
-                    offset = Offset(0f, 1.5f),
-                    blurRadius = 3f,
-                ),
-            ),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f).heightIn(min = 40.dp).padding(start = 6.dp, end = 14.dp, top = 8.dp),
-        )
-        AssistantRoundButton(
-            iconRes = R.drawable.ic_assistant_keyboard_float,
-            contentDescription = stringResource(R.string.voice_use_keyboard),
-            progress = controls.value,
-            enabled = controls.value >= 0.5f,
-            onClick = onKeyboard,
-        )
-        Spacer(Modifier.width(12.dp))
-        AssistantRoundButton(
-            iconRes = R.drawable.ic_assistant_stop,
-            contentDescription = stringResource(
-                if (speech.phase == EtaSpeechPhase.RECOGNIZING) R.string.action_stop else R.string.voice_finish_speech,
-            ),
-            progress = controls.value,
-            // The square remains actionable while waiting for recognition/refinement.
-            // Finishing recording and cancelling a pending result are distinct actions.
-            enabled = controls.value >= 0.5f,
-            onClick = if (speech.phase == EtaSpeechPhase.RECOGNIZING) onCancelSpeech else onFinishSpeech,
-        )
-    }
-}
-
-@Composable
-private fun AssistantRoundButton(
-    iconRes: Int,
-    contentDescription: String,
-    progress: Float,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .graphicsLayer {
-                alpha = progress
-                scaleX = 0.8f + progress * 0.2f
-                scaleY = 0.8f + progress * 0.2f
+    val colors = EtaTheme.colors
+    Column(Modifier.fillMaxWidth()) {
+        Text(input.ifBlank { stringResource(if (speech.phase == EtaSpeechPhase.RECOGNIZING)
+            R.string.voice_recognizing else R.string.voice_listening) },
+            color = colors.textPrimary, fontSize = 15.sp, lineHeight = 24.sp,
+            maxLines = 2, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            EtaIconButton(onKeyboard, enabled = controls.value >= 0.5f) {
+                Icon(Icons.Rounded.Keyboard, stringResource(R.string.voice_use_keyboard), tint = colors.textPrimary)
             }
-            .clip(CircleShape)
-            .background(Color(0xFFF4F5F7))
-            .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = contentDescription,
-            tint = Color(0xE6000000),
-            modifier = Modifier.size(22.dp),
-        )
+            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                EtaAssistantWave(speech.active, speechLevel, Modifier.size(80.dp), ring = true)
+                EtaIconButton(
+                    onClick = if (speech.phase == EtaSpeechPhase.RECOGNIZING) onCancelSpeech else onFinishSpeech,
+                    enabled = controls.value >= 0.5f,
+                    modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.accent)
+                        .graphicsLayer { alpha = controls.value },
+                ) {
+                    Icon(Icons.Rounded.Stop, stringResource(if (speech.phase == EtaSpeechPhase.RECOGNIZING)
+                        R.string.action_stop else R.string.voice_finish_speech), tint = colors.onAccent)
+                }
+            }
+            EtaIconButton(onOpenConversation, enabled = canOpenConversation && controls.value >= 0.5f) {
+                Icon(Icons.Rounded.OpenInNew, stringResource(R.string.overlay_open_conversation), tint = colors.textPrimary)
+            }
+        }
     }
 }

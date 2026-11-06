@@ -1,5 +1,21 @@
 package io.github.mangi.eta.agent.overlay
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import io.github.mangi.eta.ui.components.StatusRing
+import io.github.mangi.eta.ui.components.EtaIconButton
+import io.github.mangi.eta.ui.model.TaskVisualStatus
+import io.github.mangi.eta.ui.model.toTaskVisualStatus
+import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.theme.darkEtaColors
+import io.github.mangi.eta.ui.theme.toMiuixColors
+import top.yukonga.miuix.kmp.theme.darkColorScheme
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -33,7 +49,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -100,7 +115,11 @@ internal fun AgentOverlayCapsule(
     selectedTaskId: String? = null,
     onSelectTask: (String) -> Unit = {},
     onOpenConversation: () -> Unit = {},
+    onOpenPreview: () -> Unit = onOpenConversation,
 ) {
+    val palette = remember { darkEtaColors() }
+    MiuixTheme(colors = palette.toMiuixColors(darkColorScheme())) {
+    EtaTheme(palette) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
     var supplementMode by remember { mutableStateOf(false) }
@@ -140,8 +159,14 @@ internal fun AgentOverlayCapsule(
         },
         label = "capsule_clearance",
     )
-    val accent by animateColorAsState(overlayPhaseAccent(state.phase), tween(240), label = "capsule_accent")
-    val statusText = state.status.localizedText()
+    val visualStatus = state.status.toTaskVisualStatus()
+    val attention = visualStatus == TaskVisualStatus.Attention
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(attention, selectedTaskId) {
+        if (attention) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+    }
+    val shape = if (expanded) EtaTheme.shapes.radiusLg else EtaTheme.shapes.radiusFull
+    val statusText = if (attention) stringResource(R.string.overlay_attention_prompt) else state.status.localizedText()
     val expandDescription = stringResource(R.string.overlay_capsule_toggle, statusText)
     // 展开进度只驱动绘制层的透明度与位移，不参与测量；控制区用 AnimatedVisibility 只在两端各测一次。
     val expansion by animateFloatAsState(
@@ -160,8 +185,8 @@ internal fun AgentOverlayCapsule(
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                    .width(CapsuleWidth)
+                    .padding(vertical = 6.dp)
+                    .fillMaxWidth()
                     .graphicsLayer {
                         // 点击时轻微回弹，展开后保持原尺寸；只改绘制层，不触发重新布局。
                         val press = 1f - 0.03f * (1f - expansion) * expansion * 4f
@@ -172,9 +197,10 @@ internal fun AgentOverlayCapsule(
                         alpha = 1f - clearance
                         transformOrigin = TransformOrigin(0.5f, 0f)
                     }
-                    .shadow(10.dp, RoundedCornerShape(CapsuleCorner), ambientColor = accent, spotColor = accent)
-                    .clip(RoundedCornerShape(CapsuleCorner))
-                    .background(MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f)),
+                    .shadow(16.dp, shape)
+                    .clip(shape)
+                    .background(if (attention) Color(0xFF3A2A12) else palette.surface.copy(alpha = 0.92f))
+                    .border(1.dp, palette.outline, shape),
             ) {
                 Row(
                     modifier = Modifier
@@ -185,10 +211,10 @@ internal fun AgentOverlayCapsule(
                             onClick = onToggleExpanded,
                         )
                         .semantics { contentDescription = expandDescription }
-                        .padding(start = 12.dp, end = 16.dp, top = 9.dp, bottom = 9.dp),
+                        .heightIn(min = 40.dp).padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    PhaseIndicator(phase = state.phase, accent = accent)
+                    StatusRing(status = visualStatus, size = 16.dp)
                     Spacer(Modifier.width(9.dp))
                     Column(modifier = Modifier.weight(1f)) {
                     AnimatedContent(
@@ -209,9 +235,10 @@ internal fun AgentOverlayCapsule(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    ThoughtLine(thought = (if (state.status == AgentOverlayStatus.GeneratingAnswer) state.detailText.takeLast(96) else state.thought)
-                        .takeIf { state.phase == AgentOverlayPhase.RUNNING }.orEmpty())
+
                     }
+                    Icon(if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                        contentDescription = null, tint = palette.textPrimary, modifier = Modifier.size(18.dp))
                 }
 
                 AnimatedVisibility(
@@ -226,6 +253,8 @@ internal fun AgentOverlayCapsule(
                             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
                             .graphicsLayer { translationY = (1f - expansion) * -6.dp.toPx() },
                     ) {
+                        ThoughtLine(thought = (if (state.status == AgentOverlayStatus.GeneratingAnswer) state.detailText.takeLast(96) else state.thought)
+                            .takeIf { state.phase == AgentOverlayPhase.RUNNING }.orEmpty())
                         if (supplementMode) {
                             OverlaySupplementInput(
                                 value = supplementText,
@@ -247,17 +276,21 @@ internal fun AgentOverlayCapsule(
                                     )
                                 }
                             }
-                            Text(stringResource(R.string.overlay_open_conversation), modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenConversation)
-                                .padding(vertical = 8.dp), color = MiuixTheme.colorScheme.primary, fontSize = 12.sp)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.overlay_open_conversation), modifier = Modifier.clickable(onClick = onOpenConversation)
+                                    .padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
+                                Text(stringResource(R.string.overlay_supplement), modifier = Modifier.clickable { setSupplementMode(true) }
+                                    .padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
+                            }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
                             ) {
                                 CapsuleAction(
-                                    icon = Icons.Rounded.Edit,
-                                    label = stringResource(R.string.overlay_supplement),
+                                    icon = Icons.Rounded.Visibility,
+                                    label = stringResource(R.string.task_notice_view),
                                     tint = MiuixTheme.colorScheme.onSurface,
-                                    onClick = { setSupplementMode(true) },
+                                    onClick = onOpenPreview,
                                 )
                                 if (state.phase == AgentOverlayPhase.RUNNING) {
                                     CapsuleAction(
@@ -287,60 +320,11 @@ internal fun AgentOverlayCapsule(
             }
         }
     }
-}
-
-/** 运行中是旋转的弧形光点，暂停为静止空心环，结束为实心点；只在运行时持有帧动画。 */
-@Composable
-private fun PhaseIndicator(phase: AgentOverlayPhase, accent: Color) {
-    val size = 14.dp
-    if (phase != AgentOverlayPhase.RUNNING) {
-        Box(
-            modifier = Modifier
-                .size(size)
-                .drawBehind {
-                    val radius = this.size.minDimension / 2f
-                    if (phase == AgentOverlayPhase.PAUSED) {
-                        drawCircle(accent, radius * 0.78f, style = androidx.compose.ui.graphics.drawscope.Stroke(radius * 0.32f))
-                    } else {
-                        drawCircle(accent, radius * 0.6f)
-                    }
-                },
-        )
-        return
     }
-    val transition = rememberInfiniteTransition(label = "capsule_indicator")
-    val rotation by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(1100, easing = androidx.compose.animation.core.LinearEasing)),
-        label = "capsule_indicator_rotation",
-    )
-    val breathe by transition.animateFloat(
-        initialValue = 0.55f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
-        label = "capsule_indicator_breathe",
-    )
-    Box(
-        modifier = Modifier
-            .size(size)
-            .graphicsLayer { rotationZ = rotation }
-            .drawBehind {
-                val radius = this.size.minDimension / 2f
-                val center = Offset(radius, radius)
-                drawCircle(accent.copy(alpha = 0.18f), radius)
-                drawArc(
-                    brush = Brush.sweepGradient(listOf(Color.Transparent, accent), center),
-                    startAngle = 0f,
-                    sweepAngle = 300f,
-                    useCenter = false,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(radius * 0.34f, cap = androidx.compose.ui.graphics.StrokeCap.Round),
-                )
-                drawCircle(accent.copy(alpha = breathe), radius * 0.26f, center)
-            },
-    )
+    }
 }
 
+// The fixed dark palette also applies to supplemental controls.
 /**
  * 思考尾句：单行、从左侧裁掉旧内容，让最新的字始终可见。
  * 流式增量只改文字，不做逐字动画；行的出现与消失用高度不变的淡入淡出，避免胶囊上下跳动。
@@ -367,16 +351,10 @@ private fun ThoughtLine(thought: String) {
 
 @Composable
 private fun CapsuleAction(icon: ImageVector, label: String, tint: Color, onClick: () -> Unit) {
-    IconButton(
-        onClick = onClick,
-        backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
-        minWidth = 40.dp,
-        minHeight = 34.dp,
-        cornerRadius = 17.dp,
-    ) {
-        Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(17.dp), tint = tint)
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        EtaIconButton(onClick = onClick) {
+            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(20.dp), tint = tint)
+        }
+        Text(label, color = tint, style = EtaTheme.type.caption)
     }
 }
-
-private val CapsuleCorner = 22.dp
-private val CapsuleWidth = 248.dp

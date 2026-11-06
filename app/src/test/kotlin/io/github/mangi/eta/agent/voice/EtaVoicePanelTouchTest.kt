@@ -273,6 +273,33 @@ class EtaVoicePanelTouchTest {
             assertEquals(0, panel.keyboardShows)
         }
 
+    @Test fun microphoneLongPressSurvivesListeningRecompositionAndSendsOnlyOnRelease() = withPanel { panel ->
+        panel.holdMicrophone(cancel = false)
+        assertEquals(1, panel.microphoneStarts)
+        assertEquals(listOf(true), panel.microphoneHolds)
+        assertEquals(1, panel.speechFinishes)
+        assertEquals(0, panel.speechCancels)
+        assertEquals(0, panel.taskStops)
+    }
+
+    @Test fun microphoneLongPressCancelledByWindowDoesNotSend() = withPanel { panel ->
+        panel.holdMicrophone(cancel = true)
+        assertEquals(1, panel.microphoneStarts)
+        assertEquals(0, panel.speechFinishes)
+        assertEquals(1, panel.speechCancels)
+        panel.tapDescription(R.string.voice_tap_to_speak)
+        assertEquals(listOf(true, false), panel.microphoneHolds)
+        assertEquals(0, panel.speechFinishes)
+        assertEquals(1, panel.speechCancels)
+    }
+
+    @Test fun microphoneLongPressMovedOutsideDoesNotSend() = withPanel { panel ->
+        panel.holdMicrophone(cancel = true, moveOutside = true)
+        assertEquals(1, panel.microphoneStarts)
+        assertEquals(0, panel.speechFinishes)
+        assertEquals(1, panel.speechCancels)
+    }
+
     private fun withPanel(
         recognitionEnabled: Boolean = true,
         initialFrames: Int = 180,
@@ -315,6 +342,7 @@ class EtaVoicePanelTouchTest {
         private var inputActivated = false
         var keyboardShows = 0
         var microphoneStarts = 0
+        val microphoneHolds = mutableListOf<Boolean>()
         private val keyboard = object : SoftwareKeyboardController {
             override fun show() { keyboardShows++ }
             override fun hide() = Unit
@@ -354,7 +382,10 @@ class EtaVoicePanelTouchTest {
                                 if (!this.recognitionEnabled.value && !inputActivated) inputFocusRequestKey.value++
                             },
                             onInputFocus = { inputActivated = true },
-                            onMicrophone = { microphoneStarts++ },
+                            onMicrophone = { hold ->
+                                microphoneStarts++; microphoneHolds += hold
+                                speech.value = EtaSpeechState(phase = EtaSpeechPhase.LISTENING, holdToTalk = hold)
+                            },
                             onCancelSpeech = { speechCancels++; speech.value = EtaSpeechState() },
                             onFinishSpeech = {
                                 speechFinishes++
@@ -464,6 +495,31 @@ class EtaVoicePanelTouchTest {
                 try { root().view.dispatchTouchEvent(event) } finally { event.recycle() }
                 shadowOf(android.os.Looper.getMainLooper()).idleFor(Duration.ofMillis(16))
             }
+            advance()
+        }
+
+        fun holdMicrophone(cancel: Boolean, moveOutside: Boolean = false) {
+            val description = activity.getString(R.string.voice_tap_to_speak)
+            fun find(node: SemanticsNode): SemanticsNode? =
+                if (node.config.getOrNull(SemanticsProperties.ContentDescription)?.contains(description) == true) node
+                else node.children.firstNotNullOfOrNull(::find)
+            val point = requireNotNull(find(root().semanticsOwner.unmergedRootSemanticsNode)).boundsInRoot.center
+            val down = SystemClock.uptimeMillis()
+            fun send(action: Int, x: Float = point.x) {
+                val event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, x, point.y, 0)
+                try { root().view.dispatchTouchEvent(event) } finally { event.recycle() }
+                advance(1)
+            }
+            send(MotionEvent.ACTION_DOWN)
+            advance(45)
+            assertEquals(1, microphoneStarts)
+            assertEquals(0, speechFinishes)
+            if (cancel) {
+                if (moveOutside) {
+                    send(MotionEvent.ACTION_MOVE, point.x + dp(100f))
+                    send(MotionEvent.ACTION_UP, point.x + dp(100f))
+                } else send(MotionEvent.ACTION_CANCEL)
+            } else send(MotionEvent.ACTION_UP)
             advance()
         }
 

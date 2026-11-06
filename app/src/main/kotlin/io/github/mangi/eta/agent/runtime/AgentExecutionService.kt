@@ -1,5 +1,6 @@
 package io.github.mangi.eta.agent.runtime
 
+import androidx.compose.ui.graphics.toArgb
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -55,10 +56,11 @@ internal data class TaskNotificationState(
     val targetPackage: String? = null,
     val runtimeAuthoritative: Boolean = false,
     val replyFailed: Boolean = false,
-    // Presentation metadata populated only in taskSnapshots; never stored in cards or sent to runtime.
+    // Presentation timestamps populated only in taskSnapshots; never stored in cards or sent to runtime.
     val firstPublishedAtElapsedMs: Long? = null,
     val completedAtElapsedMs: Long? = null,
     val completedAtMillis: Long? = null,
+    val step: Int? = null, // Read-only display step; never drives runtime progress.
 )
 
 /** One execution service; each task owns one card, including its final state. */
@@ -380,7 +382,7 @@ internal class AgentExecutionService : Service() {
             if (previous.completed || previous.runtimeAuthoritative) return@onMain // Only the session terminal commit completes runtime cards.
             completeTask(context, previous.copy(conversationId = conversationId,
                 status = if (status == "已完成") AgentOverlayStatus.ResultReady else AgentOverlayStatus.RunFailed,
-                streamPreview = text.takeLast(240)))
+                streamPreview = text.notificationFirstSentence()))
         }
 
         private fun scheduleRefresh() {
@@ -448,11 +450,19 @@ internal class AgentExecutionService : Service() {
                 AgentOverlayStatus.Stopped -> context.getString(R.string.task_completion_notice_stopped)
                 else -> context.getString(R.string.task_completion_notice_failed)
             }
-            val replyFeedback = if (task?.replyFailed == true) " · " + context.getString(R.string.background_reply_failed) else ""
+            val snapshot = task?.let { card -> taskSnapshots.value.firstOrNull { it.runId == card.runId } }
+            val elapsed = snapshot?.completedAtElapsedMs?.let { end ->
+                snapshot.firstPublishedAtElapsedMs?.let { start -> (end - start).coerceAtLeast(0L) }
+            }
+            val appName = task?.targetPackage?.let { pkg -> runCatching {
+                context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(pkg, 0)).toString()
+            }.getOrNull() }
+            val copy = task?.let { taskNotificationCopy(context.resources, it, appName, it.step, elapsed) }
             val builder = Notification.Builder(context, if (hasCompletionAlert) COMPLETION_CHANNEL else CHANNEL)
                 .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(task?.title?.take(60)?.takeIf(String::isNotBlank) ?: context.getString(R.string.execution_title))
-                .setContentText(label + replyFeedback + task?.streamPreview?.takeIf(String::isNotBlank)?.let { " · $it" }.orEmpty())
+                .setColor(io.github.mangi.eta.ui.theme.lightEtaColors().accent.toArgb())
+                .setContentTitle(copy?.title?.takeIf(String::isNotBlank) ?: context.getString(R.string.execution_title))
+                .setContentText(copy?.body ?: label)
                 .setContentIntent(if (task?.targetPackage.isNullOrBlank()) destination(context, task, id)
                     else TaskPreviewActivity.pendingIntent(context, task, id))
                 // Keep the continue action available, including after an unsuccessful App handoff.
@@ -468,15 +478,14 @@ internal class AgentExecutionService : Service() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             }
             if (task != null && !completed) {
+                builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, R.drawable.ic_notification),
+                    context.getString(R.string.task_notice_view), if (task.targetPackage.isNullOrBlank()) destination(context, task, id)
+                    else TaskPreviewActivity.pendingIntent(context, task, id)).build())
                 builder.addAction(runAction(context, task.runId,
                     if (task.paused) ACTION_RESUME_RUN else ACTION_PAUSE_RUN,
                     if (task.paused) R.string.overlay_resume else R.string.overlay_pause,
                     if (task.paused) android.R.drawable.ic_media_play else android.R.drawable.ic_media_pause))
                 builder.addAction(runAction(context, task.runId, ACTION_STOP_RUN, R.string.overlay_stop_task, R.drawable.ic_assistant_stop))
-                if (!task.conversationId.isNullOrBlank()) {
-                    builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, R.drawable.ic_notification),
-                        context.getString(R.string.overlay_open_conversation), conversationIntent(context, task.conversationId)).build())
-                }
             } else if (completed) {
                 if (!task.conversationId.isNullOrBlank()) {
                     builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, R.drawable.ic_notification),
@@ -506,7 +515,8 @@ internal class AgentExecutionService : Service() {
             }
             if (task != null && usesSystemTaskSurface()) {
                 builder.setStyle(Notification.ProgressStyle().setProgressIndeterminate(progressing)
-                    .setProgressSegments(listOf(Notification.ProgressStyle.Segment(100))).setProgress(if (completed) 100 else 0))
+                    .setProgressSegments(listOf(Notification.ProgressStyle.Segment(maxOf(100, (task.step ?: 0) + 1))))
+                    .setProgress(if (completed) maxOf(100, (task.step ?: 0) + 1) else task.step?.coerceAtLeast(0) ?: 0))
                     .setShortCriticalText(completionLabel?.take(7) ?: if (completed) label.take(7) else shortText(context, task.status))
                 if (progressing) builder.extras.putBoolean("android.requestPromotedOngoing", true)
             }

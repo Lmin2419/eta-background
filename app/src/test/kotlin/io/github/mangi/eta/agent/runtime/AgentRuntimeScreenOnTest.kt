@@ -369,10 +369,10 @@ class AgentRuntimeScreenOnTest {
         val panel = Robolectric.buildActivity(TaskPreviewActivity::class.java,
             android.content.Intent(app, TaskPreviewActivity::class.java).putExtra("run_id", run.runId).putExtra("package", "app.moved")).create()
         try {
-            val resume = TaskPreviewActivity::class.java.getDeclaredField("resume").apply { isAccessible = true }
-                .get(panel.get()) as android.widget.Button
-            assertTrue(resume.isEnabled)
-            resume.performClick()
+            val preview = panel.get()
+            assertEquals(PreviewAction.Resume, preview.previewUi.controls.primary)
+            assertTrue(preview.previewUi.controls.primaryEnabled)
+            preview.performPreviewAction(PreviewAction.Resume)
             val deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2)
             while (c.isPaused && System.nanoTime() < deadline) {
                 shadowOf(Looper.getMainLooper()).idle(); Thread.sleep(1)
@@ -381,7 +381,7 @@ class AgentRuntimeScreenOnTest {
             // A read-only viewer still cannot release another viewer's manual lease.
             assertTrue(c.acquireManual("another-viewer"))
             TaskPreviewActivity::class.java.getDeclaredMethod("updateControls").apply { isAccessible = true }.invoke(panel.get())
-            resume.performClick(); shadowOf(Looper.getMainLooper()).idle()
+            preview.performPreviewAction(PreviewAction.Resume); shadowOf(Looper.getMainLooper()).idle()
             assertTrue(c.isPaused)
             c.releaseManual("another-viewer")
         } finally { TaskPreviewRegistry.unregister(run.runId); panel.destroy(); host.destroy() }

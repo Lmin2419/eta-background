@@ -32,7 +32,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 @Composable
-internal fun EtaAssistantWave(active: Boolean, level: () -> Float, modifier: Modifier = Modifier) {
+internal fun EtaAssistantWave(active: Boolean, level: () -> Float, modifier: Modifier = Modifier, ring: Boolean = false) {
+    if (ring) {
+        MicrophoneWave(active, level, modifier)
+        return
+    }
     val context = LocalContext.current
     val effect by produceState<EtaWaveEffect?>(null) {
         value = withContext(Dispatchers.IO) {
@@ -87,6 +91,37 @@ internal fun EtaAssistantWave(active: Boolean, level: () -> Float, modifier: Mod
                     AndroidAgentLogger.warn("Eta assistant wave draw failed: type=${error.javaClass.simpleName}")
                 }
             }
+        }
+    }
+}
+
+/** The same voice feedback surface in its microphone-sized form. No shader or bitmap is needed. */
+@Composable
+private fun MicrophoneWave(active: Boolean, level: () -> Float, modifier: Modifier) {
+    val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
+    var phase by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(active, motion.reduceMotion) {
+        if (active && !motion.reduceMotion) while (isActive) {
+            withFrameNanos { phase = (it % 2_400_000_000L) / 2_400_000_000f }
+        }
+    }
+    val aurora = io.github.mangi.eta.ui.theme.EtaAurora
+    val colors = listOf(aurora.blue, aurora.indigo, aurora.pink, aurora.peach)
+    Canvas(modifier) {
+        if (!active) return@Canvas
+        val amplitude = level().coerceIn(0f, 1f)
+        val radius = size.minDimension * 0.43f
+        repeat(32) { index ->
+            val angle = index * kotlin.math.PI * 2 / 32
+            val movement = if (motion.reduceMotion) 0.4f else
+                ((kotlin.math.sin(angle * 3 + phase * kotlin.math.PI * 2) + 1) / 2).toFloat()
+            val length = 2.dp.toPx() + amplitude * movement * 5.dp.toPx()
+            val x = kotlin.math.cos(angle).toFloat()
+            val y = kotlin.math.sin(angle).toFloat()
+            drawLine(colors[index / 8],
+                androidx.compose.ui.geometry.Offset(center.x + x * radius, center.y + y * radius),
+                androidx.compose.ui.geometry.Offset(center.x + x * (radius + length), center.y + y * (radius + length)),
+                strokeWidth = 2.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
         }
     }
 }
