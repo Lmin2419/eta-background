@@ -2,9 +2,9 @@
 <resources>
     <string name="execution_next_task">切換任務</string>
     <string name="execution_chip_tasks">%1$d 個任務</string>
-    <string name="overlay_stop_task">停止目前任務</string>
+    <string name="overlay_stop_task">停止任務</string>
     <string name="overlay_task_count">%1$d 個任務 · %2$s</string>
-    <string name="overlay_open_conversation">開啟胖小胖會話</string>
+    <string name="overlay_open_conversation">開啟會話</string>
     <string name="background_reply_failed">未能傳送，請等待本會話任務結束，或開啟胖小胖檢查記錄和模型設定後重試。</string>
   <string name="conversation_stop_and_delete">停止任務並刪除</string>
   <string name="conversation_stop_and_delete_message">此對話的任務將先停止，結果儲存後刪除對話。</string>
@@ -1517,11 +1517,11 @@
   <string name="eta_deleted_count">已刪除 %1$d 個對話</string>
 
   <!-- Stage 6 system surfaces -->
-  <string name="preview_manual_status">已暫停 · 你在操作</string>
+  <string name="preview_manual_status">你在操作</string>
   <string name="preview_expand">放大預覽</string>
   <string name="preview_collapse">縮小預覽</string>
-  <string name="preview_wait">等待目前操作結束…</string>
-  <string name="preview_paused_hint">任務已暫停</string>
+  <string name="preview_wait">正在交接…</string>
+  <string name="preview_paused_hint">@string/preview_hint_read_only_paused</string>
   <string name="preview_operate_page">操作頁面</string>
   <string name="preview_handle">接管處理</string>
   <string name="preview_takeover">接管</string>
@@ -1541,6 +1541,6 @@
   <string name="voice_suggestion_summary">總結目前畫面</string>
   <string name="voice_suggestion_help">頁面如何操作</string>
   <string name="voice_suggestion_highlights">找出重點資訊</string>
-  <string name="preview_manual_hint">點擊畫面即可操作</string>
+  <string name="preview_manual_hint">@string/preview_hint_manual_ready</string>
     <string name="eta_accessibility_background_running">背景執行中</string>
 </resources>

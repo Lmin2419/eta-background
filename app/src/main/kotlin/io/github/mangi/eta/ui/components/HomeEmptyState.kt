@@ -81,8 +81,8 @@ internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> U
                         HomeSuggestion(stringResource(title), text, icon) { onFillDraft(text) }
                     }
                     cards.chunked(if (singleColumn) 1 else 2).forEach { pair ->
-                        Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            pair.forEach { card -> HomeSuggestionCard(card, Modifier.weight(1f)) }
+                        Row(Modifier.fillMaxWidth().padding(bottom = 12.dp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            pair.forEach { card -> HomeSuggestionCard(card, Modifier.weight(1f).fillMaxHeight()) }
                         }
                     }
                 }
@@ -105,7 +105,7 @@ private fun HomeSuggestionCard(card: HomeSuggestion, modifier: Modifier) {
         EtaIconTile(card.icon, tint = EtaTheme.colors.tileCaramel)
         Column(Modifier.weight(1f)) {
             Text(card.title, style = EtaTheme.type.rowTitle, color = EtaTheme.colors.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(card.summary, style = EtaTheme.type.footnote, color = EtaTheme.colors.textTertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(card.summary, style = EtaTheme.type.footnote, color = EtaTheme.colors.textTertiary, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }

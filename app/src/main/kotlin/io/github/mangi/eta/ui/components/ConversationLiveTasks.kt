@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -62,10 +63,10 @@ internal fun ConversationLiveTasks(conversationId: String?, onOpenTasks: () -> U
     Column(modifier.fillMaxWidth().padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (tasks.size > 1) Row(Modifier.fillMaxWidth().clip(EtaTheme.shapes.radiusMd).clickable { expanded = !expanded }.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.width((24 + 16 * (minOf(tasks.size, 3) - 1)).dp).height(28.dp)) {
+            Box(Modifier.width((32 + 16 * (minOf(tasks.size, 3) - 1)).dp).height(32.dp)) {
                 tasks.take(3).forEachIndexed { index, task ->
-                    TaskApplicationIcon(task.targetPackage, Modifier.offset(x = (index * 16).dp).size(28.dp)
-                        .background(EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusFull))
+                    TaskApplicationIcon(task.targetPackage, Modifier.offset(x = (index * 16).dp).size(32.dp)
+                        .background(EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusFull).padding(2.dp))
                 }
             }
             Text(stringResource(R.string.eta_background_tasks_count, tasks.size), Modifier.weight(1f).padding(start = 8.dp), style = EtaTheme.type.footnote)
@@ -73,15 +74,18 @@ internal fun ConversationLiveTasks(conversationId: String?, onOpenTasks: () -> U
         }
         if (tasks.size == 1 || expanded) tasks.forEach { task -> key(task.runId) {
             val status = task.toTaskVisualStatus()
+            val stripColor = if (status == TaskVisualStatus.Attention) EtaTheme.colors.attentionSoft else EtaTheme.colors.surfaceRaised
             val paused = task.paused || status == TaskVisualStatus.Paused
             val accessibleSummary = io.github.mangi.eta.ui.screens.tasks.taskAccessibilitySummary(task)
             Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).etaElevation(EtaElevation.E2, EtaTheme.shapes.radiusLg)
-                .background(if (status == TaskVisualStatus.Attention) EtaTheme.colors.attentionSoft else EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusLg)
+                .background(stripColor, EtaTheme.shapes.radiusLg)
                 .clickable { openTaskPreview(context, task) }
                 .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(32.dp)) {
+                Box(Modifier.width(40.dp).height(28.dp)) {
                     TaskApplicationIcon(task.targetPackage, Modifier.size(28.dp))
-                    StatusRing(status, Modifier.align(Alignment.BottomEnd), size = 12.dp)
+                    Box(Modifier.offset(x = 24.dp, y = 24.dp).size(16.dp).background(stripColor, CircleShape), contentAlignment = Alignment.Center) {
+                        StatusRing(status, size = 12.dp)
+                    }
                 }
                 Column(Modifier.weight(1f).padding(horizontal = 8.dp).clearAndSetSemantics { contentDescription = accessibleSummary }) {
                     Text(task.title, style = EtaTheme.type.footnote, maxLines = 1, overflow = TextOverflow.Ellipsis)

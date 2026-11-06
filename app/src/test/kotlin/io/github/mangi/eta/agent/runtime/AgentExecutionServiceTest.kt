@@ -39,7 +39,7 @@ class AgentExecutionServiceTest {
             assertEquals(Build.VERSION.SDK_INT >= 36, notification.extras.getBoolean("android.requestPromotedOngoing"))
             if (Build.VERSION.SDK_INT >= 36) {
                 assertEquals(Notification.ProgressStyle::class.java.name, notification.extras.getString(Notification.EXTRA_TEMPLATE))
-                assertEquals(context.getString(R.string.overlay_reasoning), notification.extras.getString("android.shortCriticalText"))
+                assertEquals(context.getString(R.string.task_short_thinking), notification.extras.getString("android.shortCriticalText"))
             }
 
             AgentExecutionService.updateTasks(context, emptyList())

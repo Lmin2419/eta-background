@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="io.github.mangi.eta.agent.runtime.TaskPreviewActivityTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2026-11-06T13:25:59.678Z" hostname="DESKTOP-C7GT9VI" time="1.064">
+  <testcase name="s10_9_localizedHintTextCannotPreventStatusRefresh" classname="io.github.mangi.eta.agent.runtime.TaskPreviewActivityTest" time="1.058">
+    <failure message="java.lang.AssertionError: hint type must survive translated copy: A translated read-only hint with no Chinese prefix" />
+  </testcase>
+  </testsuite>

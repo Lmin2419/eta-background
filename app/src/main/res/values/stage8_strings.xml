@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="preview_hint_connecting">Connecting…</string>
+    <string name="preview_hint_waiting_frame">Waiting for a frame…</string>
+    <string name="preview_hint_command_pending">Last step is still running…</string>
+    <string name="preview_hint_frame_unavailable">No frame yet. Controls unavailable.</string>
+    <string name="preview_hint_manual_ready">Tap to control. Closing keeps AI paused.</string>
+    <string name="preview_hint_connection_lost">Disconnected. Your action may not have worked.</string>
+    <string name="preview_hint_acquiring">Pausing after this step…</string>
+    <string name="preview_hint_acquired">You have control. Updating…</string>
+    <string name="preview_hint_takeover_pending">Last step is running. Try “Take over” later.</string>
+    <string name="preview_hint_released_active">Control returned. Resuming AI…</string>
+    <string name="preview_hint_released_inactive">Control ended. Use “Continue task” in the notification.</string>
+    <string name="preview_hint_task_draining">Finishing up. Try “Take over” later.</string>
+    <string name="preview_hint_command_busy">Last step is running. Tap was not sent.</string>
+    <string name="preview_hint_refreshing">Updating the frame. Try again shortly.</string>
+    <string name="preview_hint_other_owner">Another window controls this page.</string>
+    <string name="preview_hint_moved_manual">App is on the main screen. Tap “Return to AI” when done.</string>
+    <string name="preview_hint_page_released">Page released. Use “Open app” in the notification.</string>
+    <string name="preview_hint_input_not_ready">Window is not ready. Tap was not sent.</string>
+    <string name="preview_hint_lease_expired">Control expired. Tap “Take over” again.</string>
+    <string name="preview_hint_failure">Cannot take control yet. Try again shortly.</string>
+    <string name="preview_hint_read_only_completed">Task ended. Control this page or “Open app”.</string>
+    <string name="preview_hint_read_only_paused">Paused. Tap “Resume” to continue.</string>
+    <string name="preview_hint_read_only_running">AI is working. Tap “Take over” to control.</string>
+    <string name="preview_hint_read_only_plain">Tap the frame to enlarge.</string>
+    <string name="task_short_queued">Queued</string>
+    <string name="task_short_running">Running</string>
+    <string name="task_short_thinking">Thinking</string>
+    <string name="task_short_answering">Answering</string>
+    <string name="task_short_paused">Paused</string>
+    <string name="task_short_in_control">In control</string>
+    <string name="task_short_needs_you">Needs you</string>
+    <string name="task_short_finishing">Finishing</string>
+    <string name="task_short_done">Done</string>
+    <string name="task_short_stopped">Stopped</string>
+    <string name="task_short_failed">Failed</string>
+    <string name="preview_image_description">Background app preview. Tap to enlarge in read-only mode; use the zoom button while in control.</string>
+    <string name="preview_return_ai_reminder">You have control. Tap “Return to AI” in the preview.</string>
+    <string name="search_no_browser">No browser can open this link</string>
+    <string name="search_open_failed">Cannot open this link right now</string>
+    <string name="eta_ready_accessibility_full">Accessibility</string>
+    <string name="eta_ready_notifications_full">Notifications</string>
+</resources>

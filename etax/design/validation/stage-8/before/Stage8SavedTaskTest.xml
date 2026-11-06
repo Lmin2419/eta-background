@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="io.github.mangi.eta.ui.components.Stage8SavedTaskTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2026-11-06T13:26:01.413Z" hostname="DESKTOP-C7GT9VI" time="7.367">
+  <testcase name="s10_4_savedTaskButtonsAlignAndLastMenuClearsCreateButton" classname="io.github.mangi.eta.ui.components.Stage8SavedTaskTest" time="7.295">
+    <failure message="java.lang.AssertionError: run/menu vertical center differences=[8.0, 8.0] dp" />
+  </testcase>
+  </testsuite>

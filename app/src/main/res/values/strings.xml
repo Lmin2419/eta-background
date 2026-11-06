@@ -4,7 +4,7 @@
     <string name="execution_chip_tasks">%1$d tasks</string>
     <string name="overlay_stop_task">Stop task</string>
     <string name="overlay_task_count">%1$d tasks · %2$s</string>
-    <string name="overlay_open_conversation">Open 胖小胖 conversation</string>
+    <string name="overlay_open_conversation">Open chat</string>
     <string name="background_reply_failed">Could not send. Wait for this conversation to finish or open 胖小胖 to check its history and model, then retry.</string>
     <string name="conversation_stop_and_delete">Stop task and delete</string>
     <string name="conversation_stop_and_delete_message">The task in this conversation will stop first. The conversation will be deleted after its results are saved.</string>
@@ -1488,7 +1488,7 @@
     <string name="appearance_runtime_glow_summary">Show screen edge lighting during assistant wake and task execution. Changes take effect immediately.</string>
     <string name="background_task_preparing">Preparing task</string>
     <string name="background_task_waiting_gui">Waiting for foreground control</string>
-    <string name="background_preview_paused">Paused for manual control</string>
+    <string name="background_preview_paused">You\'re in control</string>
     <string name="task_visual_running">Running</string>
     <string name="task_visual_attention">Needs your attention</string>
     <string name="task_visual_paused">Paused</string>
@@ -1571,9 +1571,9 @@
   <string name="eta_auto_assistant_summary">Use system enhancements to change the default digital assistant.</string>
   <string name="eta_background_ready">Background readiness</string>
   <string name="eta_ready_root">Root</string>
-  <string name="eta_ready_accessibility">Accessibility</string>
+  <string name="eta_ready_accessibility">A11y</string>
   <string name="eta_ready_overlay">Overlay</string>
-  <string name="eta_ready_notifications">Notifications</string>
+  <string name="eta_ready_notifications">Alerts</string>
   <string name="eta_ready_engine">Engine</string>
   <string name="eta_ready_checking">Checking</string>
   <string name="eta_ready_pending">%1$d remaining</string>
@@ -1609,11 +1609,11 @@
   <string name="eta_deleted_count">Deleted %1$d conversations</string>
 
   <!-- Stage 6 system surfaces -->
-  <string name="preview_manual_status">Paused · You control</string>
+  <string name="preview_manual_status">You\'re in control</string>
   <string name="preview_expand">Expand preview</string>
   <string name="preview_collapse">Shrink preview</string>
-  <string name="preview_wait">Waiting for the current operation…</string>
-  <string name="preview_paused_hint">Task paused</string>
+  <string name="preview_wait">Handing over…</string>
+  <string name="preview_paused_hint">@string/preview_hint_read_only_paused</string>
   <string name="preview_operate_page">Operate page</string>
   <string name="preview_handle">Take over to handle</string>
   <string name="preview_takeover">Take over</string>
@@ -1633,6 +1633,6 @@
   <string name="voice_suggestion_summary">Summarize this screen</string>
   <string name="voice_suggestion_help">How to use this page</string>
   <string name="voice_suggestion_highlights">Find highlights</string>
-  <string name="preview_manual_hint">Touch the preview to control the app</string>
+  <string name="preview_manual_hint">@string/preview_hint_manual_ready</string>
     <string name="eta_accessibility_background_running">Running in background</string>
 </resources>

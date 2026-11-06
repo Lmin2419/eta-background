@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="io.github.mangi.eta.agent.runtime.TaskPreviewActivityTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-06T13:28:03.400Z" hostname="DESKTOP-C7GT9VI" time="5.314">
+  <testcase name="manualControlHasAnIndependentExpandButtonAndBlankFramesCannotReceiveInput" classname="io.github.mangi.eta.agent.runtime.TaskPreviewActivityTest" time="4.527" />
+  <testcase name="lockedPhoneRejectsPreviewBeforeCreatingOrReadingAnImage" classname="io.github.mangi.eta.agent.runtime.TaskPreviewActivityTest" time="0.039" />
+  <testcase name="openingAndExpandingPreviewDoesNotTakeControlOrRequestImeFocus" classname="io.github.mangi.eta.agent.runtime.TaskPreviewActivityTest" time="0.052" />
+  <testcase name="aFreshFrameDoesNotEraseThePreviousInputFailure" classname="io.github.mangi.eta.agent.runtime.TaskPreviewActivityTest" time="0.053" />
+  <testcase name="s10_9_localizedHintTextCannotPreventStatusRefresh" classname="io.github.mangi.eta.agent.runtime.TaskPreviewActivityTest" time="0.033" />
+  </testsuite>

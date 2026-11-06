@@ -66,7 +66,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
     private var resizing = false
     private var closing = false
     private var freshFrame = true
-    private var inputFeedback: String? = null
+    private var inputFeedback: PreviewHintMessage? = null
     private var downInView: Pair<Float, Float>? = null
     private var controller: AgentRunController? = null
     private var frame: Bitmap? = null
@@ -88,12 +88,13 @@ internal class TaskPreviewActivity : ComponentActivity() {
         runId = intent.getStringExtra("run_id").orEmpty()
         pkg = intent.getStringExtra("package").orEmpty()
         if (runId.isBlank() || pkg.isBlank() || !TaskPreviewRegistry.mainDisplayAvailable(this)) { finish(); return }
+        showHint(hintMessage(PreviewHintType.Connecting))
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
         window.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
         window.attributes = window.attributes.apply { y = dp(56); dimAmount = .18f }
         picture = TaskPreviewImageView(this).apply {
             scaleType = ImageView.ScaleType.FIT_CENTER
-            contentDescription = "后台应用预览；只读时点击放大，接管后使用上方放大按钮"
+            contentDescription = getString(R.string.preview_image_description)
             setBackgroundColor(Color.rgb(30, 33, 45))
             setOnClickListener { if (!manual) toggleSize() }
             setOnTouchListener { _, event -> touch(event) }
@@ -191,11 +192,11 @@ internal class TaskPreviewActivity : ComponentActivity() {
                         geometry = null; freshFrame = true
                         val code = result.optString("code")
                         if (code !in setOf("COMMAND_BUSY", "COMMAND_DRAINING")) clearFrame()
-                        hint.text = when (code) {
-                            "NO_FRAME", "FRAME_GEOMETRY_CHANGED" -> "等待可用画面 · 暂以手机图标显示"
-                            "COMMAND_BUSY", "COMMAND_DRAINING" -> "操作尚未结束，等待画面更新…"
+                        showHint(when (code) {
+                            "NO_FRAME", "FRAME_GEOMETRY_CHANGED" -> hintMessage(PreviewHintType.WaitingFrame)
+                            "COMMAND_BUSY", "COMMAND_DRAINING" -> hintMessage(PreviewHintType.CommandPending)
                             else -> previewFailure(result)
-                        }
+                        })
                     }
                     updateControls()
                 }
@@ -225,13 +226,13 @@ internal class TaskPreviewActivity : ComponentActivity() {
         previewKey = key; freshFrame = false
         if (bitmap == null || !PreviewFrameContent.usable(bitmap)) {
             bitmap?.recycle(); clearFrame()
-            hint.text = "暂未取得可用画面 · 手机图标为占位，不可点击操作"
+            showHint(hintMessage(PreviewHintType.FrameUnavailable))
         } else {
             val wasMissing = geometry == null
             geometry = displayGeometry
             previewUi.frameUnavailable = displayGeometry == null
             val old = frame; frame = bitmap; picture.setImageBitmap(bitmap); old?.recycle()
-            if (wasMissing) hint.text = inputFeedback ?: if (manual) "可操作 · 上方可放大，关闭后 AI 保持暂停" else readOnlyHint()
+            if (wasMissing) showHint(inputFeedback ?: if (manual) hintMessage(PreviewHintType.ManualReady) else readOnlyHint())
         }
         updateControls()
     }
@@ -280,7 +281,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
         withContext(Dispatchers.IO) {
             runCatching { JSONObject(ShadowTools.preview(runId, pkg, owner, command, args.toString())) }
                 .getOrElse { JSONObject().put("ok", false).put("code", "PREVIEW_CONNECTION_LOST")
-                    .put("message", "连接中断；输入结果可能未知，请重新观察，不会自动重试输入") }
+                    .put("message", getString(R.string.preview_hint_connection_lost)) }
         }
     }
 
@@ -288,7 +289,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
         if (busy || resizing || closing || manual || geometry == null) return
         inputFeedback = null
         previewUi.handoffPending = true
-        busy = true; updateControls(); hint.text = "正在暂停此任务并等待操作结束…"
+        busy = true; updateControls(); showHint(hintMessage(PreviewHintType.Acquiring))
         lifecycleScope.launch {
             controller = TaskPreviewRegistry.controller(runId)?.takeUnless { it.isCancelled || AgentExecutionService.task(runId)?.completed == true }
             val drained = withContext(Dispatchers.IO) { controller?.acquireManual(owner) ?: true }
@@ -301,7 +302,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
                 invalidateFrame(); clearGesture()
                 if (!expanded) { expanded = true; resize(animate = true) }
             }
-            hint.text = if (manual) "已接管，正在更新画面…" else if (!drained) "本任务已暂停，仍有操作未退出；稍后可再接管" else previewFailure(result)
+            showHint(if (manual) hintMessage(PreviewHintType.Acquired) else if (!drained) hintMessage(PreviewHintType.TakeoverPending) else previewFailure(result))
             updateControls()
         }
     }
@@ -319,7 +320,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
             val result = rpc("preview_release")
             if (result.optBoolean("ok")) {
                 finishRelease(resumeTask)
-            } else hint.text = previewFailure(result)
+            } else showHint(previewFailure(result))
             previewUi.handoffPending = false
             busy = false; updateControls()
         }
@@ -330,7 +331,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
         inputFeedback = null
         val active = TaskPreviewRegistry.controller(runId)?.isCancelled == false && AgentExecutionService.task(runId)?.completed != true
         if (resumeTask && active) AgentRuntimeService.dispatchNotificationAction(AgentExecutionService.ACTION_RESUME_RUN, runId)
-        hint.text = if (active) "已交还控制权 · 等待任务恢复" else "接管结束 · 继续任务请使用通知中的“继续指令”"
+        showHint(if (active) hintMessage(PreviewHintType.ReleasedActive) else hintMessage(PreviewHintType.ReleasedInactive))
         updateControls()
     }
 
@@ -345,21 +346,29 @@ internal class TaskPreviewActivity : ComponentActivity() {
                     .putExtra(CompletedAppActivity.EXTRA_RUN_ID, runId).putExtra(CompletedAppActivity.EXTRA_PACKAGE, pkg),
                     ActivityOptions.makeCustomAnimation(this@TaskPreviewActivity, android.R.anim.fade_in, android.R.anim.fade_out).toBundle())
                 finish()
-            } else { hint.text = previewFailure(result); busy = false; updateControls() }
+            } else { showHint(previewFailure(result)); busy = false; updateControls() }
         }
     }
 
-    private fun previewFailure(result: JSONObject): String = when (result.optString("code")) {
-        "TASK_NOT_SETTLED" -> "结果已返回，后台页面仍在收尾；请稍后接管"
-        "INPUT_DRAIN_PENDING", "COMMAND_BUSY", "COMMAND_DRAINING" -> "上一操作尚未结束；本次未输入，请稍后再试"
-        "PREVIEW_OBSERVATION_REQUIRED", "STALE_OBSERVATION" -> "正在更新画面，更新后可继续操作"
-        "MANUAL_CONTROL" -> "另一个预览窗口正在控制此页面，请先结束那里的接管"
+    private fun hintMessage(type: PreviewHintType, text: String? = null) = PreviewHintMessage(type, text ?: getString(type.resourceId))
+
+    private fun showHint(message: PreviewHintMessage) {
+        hint.type = message.type
+        hint.text = message.text
+    }
+
+    private fun previewFailure(result: JSONObject): PreviewHintMessage = when (result.optString("code")) {
+        "PREVIEW_CONNECTION_LOST" -> hintMessage(PreviewHintType.ConnectionLost)
+        "TASK_NOT_SETTLED" -> hintMessage(PreviewHintType.TaskDraining)
+        "INPUT_DRAIN_PENDING", "COMMAND_BUSY", "COMMAND_DRAINING" -> hintMessage(PreviewHintType.CommandBusy)
+        "PREVIEW_OBSERVATION_REQUIRED", "STALE_OBSERVATION" -> hintMessage(PreviewHintType.Refreshing)
+        "MANUAL_CONTROL" -> hintMessage(PreviewHintType.OtherOwner)
         "PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER" -> if (TaskPreviewRegistry.controller(runId)?.isPaused == true)
-            "应用已移至主屏或旧屏已释放 · 完成手动操作后可点“让 AI 继续”"
-            else "此页面已交还或回收，可从通知打开 App 或继续指令"
-        "INPUT_NOT_READY" -> "目标窗口未就绪，本次未输入；可在主屏完成操作后让 AI 继续"
-        "MANUAL_LEASE_EXPIRED" -> "接管已过期，请重新点击接管"
-        else -> result.optString("message").ifBlank { "暂时无法接管，请刷新画面后重试" }
+            hintMessage(PreviewHintType.MovedManual)
+            else hintMessage(PreviewHintType.PageReleased)
+        "INPUT_NOT_READY" -> hintMessage(PreviewHintType.InputNotReady)
+        "MANUAL_LEASE_EXPIRED" -> hintMessage(PreviewHintType.LeaseExpired)
+        else -> hintMessage(PreviewHintType.Failure, result.optString("message").takeIf { it.isNotBlank() })
     }
 
     private fun updateControls() {
@@ -380,8 +389,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
         previewUi.result = card?.streamPreview.orEmpty().notificationFirstSentence()
         previewUi.failureReason = if (status == TaskVisualStatus.Failed) previewUi.result else ""
         if (!manual && !busy && geometry != null &&
-            (hint.text.startsWith("只读预览") || hint.text.startsWith("AI 正在") ||
-                hint.text.startsWith("任务已暂停") || hint.text.startsWith("已交还控制权"))) hint.text = readOnlyHint()
+            hint.type.refreshesWithStatus) showHint(readOnlyHint())
     }
 
     internal fun performPreviewAction(action: PreviewAction) {
@@ -402,11 +410,11 @@ internal class TaskPreviewActivity : ComponentActivity() {
         }
     }
 
-    private fun readOnlyHint(): String = when {
-        AgentExecutionService.task(runId)?.completed == true -> "只读预览 · 任务已结束，可操作页面或打开 App"
-        TaskPreviewRegistry.controller(runId)?.isPaused == true -> "任务已暂停 · 点击“让 AI 继续”恢复"
-        TaskPreviewRegistry.controller(runId) != null -> "AI 正在执行 · 预览只读，手动操作请点“接管”"
-        else -> "只读预览 · 点击画面或上方按钮放大"
+    private fun readOnlyHint(): PreviewHintMessage = when {
+        AgentExecutionService.task(runId)?.completed == true -> hintMessage(PreviewHintType.ReadOnlyCompleted)
+        TaskPreviewRegistry.controller(runId)?.isPaused == true -> hintMessage(PreviewHintType.ReadOnlyPaused)
+        TaskPreviewRegistry.controller(runId) != null -> hintMessage(PreviewHintType.ReadOnlyRunning)
+        else -> hintMessage(PreviewHintType.ReadOnlyPlain)
     }
 
     private fun touch(event: MotionEvent): Boolean {
@@ -459,7 +467,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
     internal fun acceptInputResult(result: JSONObject) {
         invalidateFrame() // No replay, including unknown outcomes.
         inputFeedback = if (result.optBoolean("ok")) null else previewFailure(result)
-        inputFeedback?.let { hint.text = it }
+        inputFeedback?.let(::showHint)
         if (result.optString("code") in setOf("MANUAL_LEASE_EXPIRED", "PREVIEW_UNAVAILABLE", "APP_TAKEN_OVER")) {
             manual = false; controller?.releaseManual(owner)
         }

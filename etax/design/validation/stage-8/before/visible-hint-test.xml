@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="io.github.mangi.eta.ui.components.Stage8LayoutTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2026-11-06T13:53:03.687Z" hostname="DESKTOP-C7GT9VI" time="9.157">
+  <testcase name="s10_9_visibleManualAndPausedHintsUseTheLocalizedHintCatalog" classname="io.github.mangi.eta.ui.components.Stage8LayoutTest" time="8.313">
+    <failure message="java.lang.AssertionError" />
+  </testcase>
+  </testsuite>

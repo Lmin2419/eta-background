@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="io.github.mangi.eta.agent.runtime.Stage8CopyTest" tests="3" skipped="0" failures="1" errors="0" timestamp="2026-11-06T14:47:40.433Z" hostname="DESKTOP-C7GT9VI" time="10.72">
+  <testcase name="s10_7_settingsUseTheInstalledAppNameWithoutAnOldEditionOrChineseSpaces" classname="io.github.mangi.eta.agent.runtime.Stage8CopyTest" time="8.957" />
+  <testcase name="s10_10_everyStatusAndCompletionUsesAWholeDedicatedShortLabel" classname="io.github.mangi.eta.agent.runtime.Stage8CopyTest" time="0.458">
+    <failure message="org.junit.ComparisonFailure: zh-CN WaitingForGui expected:&lt;[排队中]&gt; but was:&lt;[需要你]&gt;" />
+  </testcase>
+  <testcase name="s10_8_allFiveResourcesMatchTheThreeLanguageTable" classname="io.github.mangi.eta.agent.runtime.Stage8CopyTest" time="0.065" />
+  </testsuite>

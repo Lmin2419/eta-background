@@ -2,9 +2,9 @@
 <resources>
     <string name="background_app_takeover_paused">App moved out of background · task paused</string>
     <string name="web_tools_overview_resilient_note">Built-in search uses Bing first and tries DuckDuckGo on failure, with a 10-second network timeout per source. DeepSeek and custom search keep using your selected configuration.</string>
-    <string name="overlay_settings_choose_app">Choose 胖小胖 Background in the system overlay permission list.</string>
+    <string name="overlay_settings_choose_app">Choose 胖小胖 in the system overlay permission list.</string>
     <string name="overlay_settings_app_details">Open permissions in this app information page to manage display over other apps.</string>
-    <string name="overlay_settings_unavailable">Could not open system settings. Open Settings → Apps → 胖小胖 Background to manage overlay permission.</string>
+    <string name="overlay_settings_unavailable">Could not open system settings. Open Settings → Apps → 胖小胖 to manage overlay permission.</string>
     <string name="appearance_task_completion_alerts">Task completion pop-up</string>
     <string name="appearance_task_completion_alerts_summary">Show a native top banner when a task finishes, stops, or fails. Turning this off keeps task notifications. Allow banners in system notification settings.</string>
     <string name="task_completion_channel">Task completion alerts</string>

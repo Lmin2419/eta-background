@@ -3,6 +3,7 @@ package io.github.mangi.eta.agent.overlay
 import io.github.mangi.eta.ui.theme.EtaMotion
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.ExpandLess
@@ -276,7 +277,7 @@ internal fun AgentOverlayCapsule(
                                 tasks.forEach { task ->
                                     Text(
                                         text = (if (task.id == selectedTaskId) "● " else "○ ") + task.title,
-                                        modifier = Modifier.fillMaxWidth().clickable { onSelectTask(task.id) }.padding(vertical = 7.dp),
+                                        modifier = Modifier.fillMaxWidth().clickable { onSelectTask(task.id) }.heightIn(min = 48.dp).wrapContentHeight().padding(vertical = 7.dp),
                                         maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 12.sp,
                                         color = MiuixTheme.colorScheme.onSurface,
                                     )
@@ -284,9 +285,9 @@ internal fun AgentOverlayCapsule(
                             }
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(stringResource(R.string.overlay_open_conversation), modifier = Modifier.clickable(onClick = onOpenConversation)
-                                    .padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
+                                    .heightIn(min = 48.dp).wrapContentHeight().padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
                                 Text(stringResource(R.string.overlay_supplement), modifier = Modifier.clickable { setSupplementMode(true) }
-                                    .padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
+                                    .heightIn(min = 48.dp).wrapContentHeight().padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),

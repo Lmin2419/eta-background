@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="io.github.mangi.eta.ui.components.Stage8LayoutTest" tests="8" skipped="0" failures="6" errors="0" timestamp="2026-11-06T13:23:28.928Z" hostname="DESKTOP-C7GT9VI" time="33.26">
+  <testcase name="s10_1_hintReservesTwoLinesWithoutMovingThePicture" classname="io.github.mangi.eta.ui.components.Stage8LayoutTest" time="27.094">
+    <failure message="java.lang.AssertionError: hint must permit two lines expected:&lt;2&gt; but was:&lt;1&gt;" />
+  </testcase>
+  <testcase name="s10_2_badgeCoversAtMostFourByFourOnSquareAndNoneOnCircle" classname="io.github.mangi.eta.ui.components.Stage8LayoutTest" time="2.283">
+    <failure message="java.lang.AssertionError: circle=true covered=21.5 dp²" />
+  </testcase>
+  <testcase name="previewMatrixBeforeAndAfterEvidence" classname="io.github.mangi.eta.ui.components.Stage8LayoutTest" time="1.116" />
+  <testcase name="s10_6_expandedCapsuleLinksAndTaskRowsHave48dpTargets" classname="io.github.mangi.eta.ui.components.Stage8LayoutTest" time="0.449">
+    <failure message="java.lang.AssertionError: ● 任务一 target 32.0dp" />
+  </testcase>
+  <testcase name="s10_1_previewNamesKeepUsefulCharactersAndButtonsKeep48dp" classname="io.github.mangi.eta.ui.components.Stage8LayoutTest" time="0.123">
+    <failure message="java.lang.AssertionError: 223/1.0 visible end=0" />
+  </testcase>
+  <testcase name="componentBeforeAndAfterEvidence" classname="io.github.mangi.eta.ui.components.Stage8LayoutTest" time="0.917" />
+  <testcase name="s10_5_englishReadinessHasShortSingleLineLabelsAndFullSpokenNames" classname="io.github.mangi.eta.ui.components.Stage8LayoutTest" time="0.098">
+    <failure message="java.lang.AssertionError" />
+  </testcase>
+  <testcase name="s10_3_allFourSuggestionSummariesAreCompleteAndRowsAreEqualHeight" classname="io.github.mangi.eta.ui.components.Stage8LayoutTest" time="0.116">
+    <failure message="java.lang.AssertionError: full preset summary: [在后台帮我点一杯咖啡]" />
+  </testcase>
+  </testsuite>

@@ -7,7 +7,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import io.github.mangi.eta.ui.theme.EtaElevation
@@ -20,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -43,7 +44,10 @@ internal val PreviewResizeInterpolator = android.animation.TimeInterpolator { fr
     (response(fraction * duration) / response(duration)).toFloat()
 }
 
-internal class PreviewHint { var text by mutableStateOf("正在连接画面…") }
+internal class PreviewHint {
+    var type = PreviewHintType.Connecting
+    var text by mutableStateOf("")
+}
 
 internal class PreviewPresentation {
     val hint = PreviewHint()
@@ -84,26 +88,15 @@ internal fun EtaPreviewWindow(ui: PreviewPresentation, picture: TaskPreviewImage
             AndroidView(factory = { context -> ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER } },
                 update = { it.setImageDrawable(ui.appIcon) }, modifier = Modifier.size(24.dp))
             val statusLabel = if (controls.mode == PreviewMode.Manual) stringResource(R.string.preview_manual_status) else status.label()
-            // Measure the single-line status first: app name yields space before the status does.
-            Layout(modifier = Modifier.weight(1f).padding(start = 6.dp)
-                .clearAndSetSemantics { contentDescription = listOf(ui.appName, statusLabel, ui.step).filter { it.isNotBlank() }.joinToString(", ") }, content = {
+            Column(Modifier.weight(1f).padding(start = 6.dp)
+                .clearAndSetSemantics { contentDescription = listOf(ui.appName, statusLabel, ui.step).filter { it.isNotBlank() }.joinToString(", ") }) {
                 Text(ui.appName, color = colors.textPrimary, style = EtaTheme.type.footnote,
                     maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
-                Row(Modifier.background(status.backgroundColor(), CircleShape).padding(horizontal = 6.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    StatusRing(status, size = 12.dp, contentDescription = null)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    StatusRing(status, size = 10.dp, contentDescription = null)
                     Text(statusLabel, Modifier.weight(1f, fill = false).testTag("preview_status"),
                         color = status.textColor(), style = EtaTheme.type.caption,
                         maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
-                }
-            }) { children, constraints ->
-                val chip = children[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
-                val nameWidth = (constraints.maxWidth - chip.width - 4.dp.roundToPx()).coerceAtLeast(0)
-                val name = children[0].measure(constraints.copy(minWidth = 0, maxWidth = nameWidth, minHeight = 0))
-                val height = maxOf(name.height, chip.height)
-                layout(constraints.maxWidth, height) {
-                    name.placeRelative(0, (height - name.height) / 2)
-                    chip.placeRelative(constraints.maxWidth - chip.width, (height - chip.height) / 2)
                 }
             }
             EtaIconButton(onClick = onZoom, enabled = controls.zoomEnabled, modifier = Modifier.testTag("preview_zoom")) {
@@ -131,9 +124,17 @@ internal fun EtaPreviewWindow(ui: PreviewPresentation, picture: TaskPreviewImage
             controls.mode == PreviewMode.Running && !ui.frameUnavailable -> ui.step.ifBlank { ui.hint.text }
             else -> ui.hint.text
         }
-        Text(hint, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("preview_hint"),
-            color = if (ui.inputFailed || controls.mode == PreviewMode.Incomplete) colors.danger else colors.textSecondary,
-            style = EtaTheme.type.footnote, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Measure two localized lines once per font configuration. Fallback CJK font metrics
+        // differ from the Latin metrics used by minLines, so minLines alone can still jump.
+        val lineSample = stringResource(PreviewHintType.ManualReady.resourceId)
+        val hintHeight = with(LocalDensity.current) {
+            rememberTextMeasurer().measure("$lineSample\n$lineSample", style = EtaTheme.type.footnote).size.height.toDp()
+        }
+        Box(Modifier.fillMaxWidth().height(hintHeight + 20.dp).testTag("preview_hint_area")) {
+            Text(hint, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("preview_hint"),
+                color = if (ui.inputFailed || controls.mode == PreviewMode.Incomplete) colors.danger else colors.textSecondary,
+                style = EtaTheme.type.footnote, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             EtaButton(previewActionLabel(controls.primary, controls.mode), { onAction(controls.primary) },
                 enabled = controls.primaryEnabled, kind = EtaButtonKind.Primary, size = EtaButtonSize.Regular,

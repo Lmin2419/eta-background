@@ -2,9 +2,9 @@
 <resources>
     <string name="background_app_takeover_paused">应用已移出后台，任务已暂停</string>
     <string name="web_tools_overview_resilient_note">内置搜索优先使用必应，失败时尝试 DuckDuckGo；每个来源的网络超时预算为 10 秒。DeepSeek 和自定义接口按所选配置执行。</string>
-    <string name="overlay_settings_choose_app">请在系统悬浮窗权限列表中选择 胖小胖。</string>
+    <string name="overlay_settings_choose_app">请在系统悬浮窗权限列表中选择胖小胖。</string>
     <string name="overlay_settings_app_details">已打开应用信息，请在权限设置中管理悬浮窗权限。</string>
-    <string name="overlay_settings_unavailable">无法打开系统设置，请手动进入系统设置 → 应用 → 胖小胖 后台版管理悬浮窗权限。</string>
+    <string name="overlay_settings_unavailable">无法打开系统设置，请手动进入系统设置 → 应用 → 胖小胖管理悬浮窗权限。</string>
     <string name="appearance_task_completion_alerts">任务完成时弹出提示</string>
     <string name="appearance_task_completion_alerts_summary">任务完成、停止或失败时从顶部弹出原生通知。关闭后仍保留任务通知。需在系统通知设置中允许横幅。</string>
     <string name="task_completion_channel">任务完成提示</string>

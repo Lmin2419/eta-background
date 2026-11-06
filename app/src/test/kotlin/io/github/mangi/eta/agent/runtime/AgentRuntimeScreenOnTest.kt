@@ -336,7 +336,7 @@ class AgentRuntimeScreenOnTest {
             assertTrue(run.session.controller.isPaused)
             assertTrue(service.field<GuiControlCoordinator>("guiControl").state.value.userPaused)
             assertFalse(run.overlayState.status == AgentOverlayStatus.Continuing)
-            assertEquals("仍在手动接管，请在预览窗口点“让 AI 继续”", org.robolectric.shadows.ShadowToast.getTextOfLatestToast())
+            assertEquals(service.getString(io.github.mangi.eta.R.string.preview_return_ai_reminder), org.robolectric.shadows.ShadowToast.getTextOfLatestToast())
             run.session.controller.releaseManual("preview-owner")
             service.invoke("requestResume")
             assertFalse(run.session.controller.isPaused)

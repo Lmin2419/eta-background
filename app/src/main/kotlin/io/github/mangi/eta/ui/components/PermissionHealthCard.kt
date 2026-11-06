@@ -35,6 +35,11 @@ fun PermissionHealthCard(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 items.forEach { item ->
                     val title = stringResource(item.title)
+                    val spokenTitle = stringResource(when (item.id) {
+                        "accessibility" -> R.string.eta_ready_accessibility_full
+                        "notifications" -> R.string.eta_ready_notifications_full
+                        else -> item.title
+                    })
                     val status = if (item.checking) TaskVisualStatus.Queued else if (item.status == PermissionStatusUi.Available) TaskVisualStatus.Success else TaskVisualStatus.Attention
                     val description = when {
                         item.checking -> stringResource(R.string.eta_ready_checking)
@@ -42,8 +47,8 @@ fun PermissionHealthCard(
                         else -> item.status.label()
                     }
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        StatusRing(status, size = 16.dp, contentDescription = "$title: $description")
-                        Text(title, style = EtaTheme.type.caption, color = EtaTheme.colors.textSecondary, textAlign = TextAlign.Center)
+                        StatusRing(status, size = 16.dp, contentDescription = "$spokenTitle: $description")
+                        Text(title, Modifier.fillMaxWidth(), maxLines = 1, softWrap = false, style = EtaTheme.type.caption, color = EtaTheme.colors.textSecondary, textAlign = TextAlign.Center)
                     }
                 }
             }

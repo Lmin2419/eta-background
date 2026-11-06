@@ -517,7 +517,7 @@ internal class AgentExecutionService : Service() {
                 builder.setStyle(Notification.ProgressStyle().setProgressIndeterminate(progressing)
                     .setProgressSegments(listOf(Notification.ProgressStyle.Segment(maxOf(100, (task.step ?: 0) + 1))))
                     .setProgress(if (completed) maxOf(100, (task.step ?: 0) + 1) else task.step?.coerceAtLeast(0) ?: 0))
-                    .setShortCriticalText(completionLabel?.take(7) ?: if (completed) label.take(7) else shortText(context, task.status))
+                    .setShortCriticalText(shortText(context, task.status, completed))
                 if (progressing) builder.extras.putBoolean("android.requestPromotedOngoing", true)
             }
             return builder.build()
@@ -531,16 +531,25 @@ internal class AgentExecutionService : Service() {
             return Notification.Action.Builder(Icon.createWithResource(context, icon), context.getString(label), pending).build()
         }
 
-        private fun shortText(context: Context, status: AgentOverlayStatus): String = when (status) {
-            AgentOverlayStatus.Queued -> context.getString(R.string.background_task_queued).take(7)
-            AgentOverlayStatus.ScreenOffPaused -> context.getString(R.string.overlay_paused)
-            is AgentOverlayStatus.BackgroundScreen, AgentOverlayStatus.WaitingForModel -> status.localizedText(context.resources).take(7)
-            is AgentOverlayStatus.RunningTool, is AgentOverlayStatus.HostedToolRunning -> context.getString(R.string.execution_chip_running)
-            AgentOverlayStatus.Paused -> context.getString(R.string.overlay_paused)
-            AgentOverlayStatus.Stopping -> context.getString(R.string.overlay_stopping)
-            AgentOverlayStatus.GeneratingAnswer -> context.getString(R.string.execution_chip_answering)
-            else -> context.getString(R.string.overlay_reasoning)
-        }
+        private fun shortText(context: Context, status: AgentOverlayStatus, completed: Boolean): String = context.getString(
+            if (completed) when (status) {
+                AgentOverlayStatus.ResultReady -> R.string.task_short_done
+                AgentOverlayStatus.Stopped -> R.string.task_short_stopped
+                else -> R.string.task_short_failed
+            } else when (status) {
+                AgentOverlayStatus.Queued, AgentOverlayStatus.WaitingForGui -> R.string.task_short_queued
+                AgentOverlayStatus.Preparing, AgentOverlayStatus.SupplementReceived, AgentOverlayStatus.Continuing,
+                is AgentOverlayStatus.BackgroundScreen, is AgentOverlayStatus.RunningTool,
+                is AgentOverlayStatus.HostedToolRunning -> R.string.task_short_running
+                AgentOverlayStatus.Reasoning, AgentOverlayStatus.WaitingForModel -> R.string.task_short_thinking
+                AgentOverlayStatus.GeneratingAnswer -> R.string.task_short_answering
+                AgentOverlayStatus.Paused, AgentOverlayStatus.ScreenOffPaused -> R.string.task_short_paused
+                AgentOverlayStatus.PreviewPaused, AgentOverlayStatus.AppTakeoverPaused -> R.string.task_short_in_control
+                AgentOverlayStatus.ContinuationUnavailable -> R.string.task_short_needs_you
+                AgentOverlayStatus.ResultReady, AgentOverlayStatus.Stopping, AgentOverlayStatus.Finishing -> R.string.task_short_finishing
+                AgentOverlayStatus.Stopped -> R.string.task_short_stopped
+                AgentOverlayStatus.RunFailed -> R.string.task_short_failed
+            })
 
         fun acquire(context: Context, id: String, allowBoundFallback: Boolean = false, onStop: () -> Unit): Boolean {
             if (instance?.startRejected == true) return false

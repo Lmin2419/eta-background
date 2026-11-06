@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="preview_hint_connecting">正在连接画面…</string>
+    <string name="preview_hint_waiting_frame">正在等待画面…</string>
+    <string name="preview_hint_command_pending">上一步还没结束，稍等…</string>
+    <string name="preview_hint_frame_unavailable">暂时拿不到画面，先不能操作</string>
+    <string name="preview_hint_manual_ready">点画面即可操作，关窗后 AI 仍暂停</string>
+    <string name="preview_hint_connection_lost">连接断了，刚才的操作可能没生效</string>
+    <string name="preview_hint_acquiring">正在暂停，等这一步结束…</string>
+    <string name="preview_hint_acquired">已接管，正在更新画面…</string>
+    <string name="preview_hint_takeover_pending">上一步还没结束，稍后再「接管」</string>
+    <string name="preview_hint_released_active">已交还 AI，正在恢复…</string>
+    <string name="preview_hint_released_inactive">接管已结束，可在通知点「继续指令」</string>
+    <string name="preview_hint_task_draining">任务正在收尾，稍后再「接管」</string>
+    <string name="preview_hint_command_busy">上一步还没结束，这次没点上</string>
+    <string name="preview_hint_refreshing">画面更新中，稍后再点</string>
+    <string name="preview_hint_other_owner">另一个窗口正在接管这个页面</string>
+    <string name="preview_hint_moved_manual">应用已回到主屏，操作完点「交还 AI」</string>
+    <string name="preview_hint_page_released">这个页面已释放，可在通知里「打开 App」</string>
+    <string name="preview_hint_input_not_ready">窗口还没准备好，这次没点上</string>
+    <string name="preview_hint_lease_expired">接管已失效，请重新点「接管」</string>
+    <string name="preview_hint_failure">暂时接管不了，稍后再试</string>
+    <string name="preview_hint_read_only_completed">任务已结束，可操作页面或「打开 App」</string>
+    <string name="preview_hint_read_only_paused">已暂停，点「继续」恢复</string>
+    <string name="preview_hint_read_only_running">AI 正在操作，想自己来就点「接管」</string>
+    <string name="preview_hint_read_only_plain">点画面可放大</string>
+    <string name="task_short_queued">排队中</string>
+    <string name="task_short_running">执行中</string>
+    <string name="task_short_thinking">思考中</string>
+    <string name="task_short_answering">回答中</string>
+    <string name="task_short_paused">已暂停</string>
+    <string name="task_short_in_control">你在操作</string>
+    <string name="task_short_needs_you">需要你</string>
+    <string name="task_short_finishing">收尾中</string>
+    <string name="task_short_done">已完成</string>
+    <string name="task_short_stopped">已停止</string>
+    <string name="task_short_failed">未完成</string>
+    <string name="preview_image_description">后台应用预览；只读时点击放大，接管后使用上方放大按钮</string>
+    <string name="preview_return_ai_reminder">你还在接管，请在预览窗点「交还 AI」</string>
+    <string name="search_no_browser">没有可打开链接的浏览器</string>
+    <string name="search_open_failed">当前无法打开链接</string>
+    <string name="eta_ready_accessibility_full">无障碍</string>
+    <string name="eta_ready_notifications_full">通知</string>
+</resources>

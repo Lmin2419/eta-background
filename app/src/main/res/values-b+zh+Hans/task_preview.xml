@@ -1,5 +1,5 @@
 <resources>
     <string name="background_task_preparing">正在准备任务</string>
     <string name="background_task_waiting_gui">等待前台操作权</string>
-    <string name="background_preview_paused">已暂停，等待你交还控制权</string>
+    <string name="background_preview_paused">你在操作</string>
 </resources>

@@ -989,7 +989,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         if (run != null && !run.session.isTerminal && run.session.controller.resume()) {
             run.overlayState = run.overlayState.copy(phase = AgentOverlayPhase.RUNNING, status = AgentOverlayStatus.Continuing)
         } else if (run?.session?.controller?.let { !it.isCancelled && it.isPaused && it.pausedForPreview } == true) {
-            android.widget.Toast.makeText(this, "仍在手动接管，请在预览窗口点“让 AI 继续”", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(this, getString(io.github.mangi.eta.R.string.preview_return_ai_reminder), android.widget.Toast.LENGTH_SHORT).show()
         }
         drainPendingRuns()
         updateKeepScreenOn()

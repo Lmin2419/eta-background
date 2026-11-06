@@ -129,7 +129,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
                     Text(task.instruction, style = EtaTheme.type.subhead,
                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         EtaButton(stringResource(R.string.common_tasks_run), { onRun(task) },
                             enabled = editable, kind = EtaButtonKind.Tonal, size = EtaButtonSize.Small)
                         Spacer(Modifier.weight(1f))
