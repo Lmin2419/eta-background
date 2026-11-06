@@ -63,7 +63,7 @@ class TaskAndSidebarPresentationTest {
         assertEquals(0, conversationSection(summary(8, true), today))
     }
 
-    @Test fun sidebarEntriesAndLongPressMenuStayReachable() {
+    @Test fun sidebarEntriesAndSelectionMoreMenuStayReachable() {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val actions = mutableListOf<String>()
         val row = ConversationSummaryUi("chat", "Conversation", "", "Today", mode = ConversationModeUi.Chat)
@@ -82,9 +82,12 @@ class TaskAndSidebarPresentationTest {
             panel.click(panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { it.text == title } == true })
             assertEquals(listOf("tasks"), actions)
             panel.capture("sidebar-light")
-            var menuTarget: SemanticsNode? = panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == row.title } == true }
-            while (menuTarget?.config?.getOrNull(SemanticsActions.OnLongClick) == null) menuTarget = menuTarget?.parent ?: error("Missing row long-press")
-            menuTarget.config[SemanticsActions.OnLongClick].action!!.invoke(); panel.advance(40)
+            val target = panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == row.title } == true }.boundsInRoot.center
+            val down = android.os.SystemClock.uptimeMillis()
+            panel.touch(android.view.MotionEvent.ACTION_DOWN, target.x, target.y, down); panel.advance(45)
+            panel.touch(android.view.MotionEvent.ACTION_UP, target.x, target.y, down); panel.advance(30)
+            val more = panel.nodes().first { it.config.getOrNull(SemanticsProperties.ContentDescription)?.contains(controller.get().getString(R.string.eta_more)) == true }.boundsInRoot.center
+            panel.tapFinger(more.x, more.y); panel.advance(30)
             panel.capture("sidebar-menu-light")
             assertTrue("Sidebar sheets must have a visible host", panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == controller.get().getString(R.string.action_rename) } == true })
         } finally { panel.close(); controller.pause().stop().destroy() }

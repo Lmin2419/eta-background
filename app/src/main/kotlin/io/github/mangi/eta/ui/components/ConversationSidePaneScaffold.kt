@@ -240,6 +240,7 @@ fun ConversationSidePaneScaffold(
                 content = {
                     ConversationPanePanel(
                         state = state,
+                        active = isRevealed && backHandlerEnabled && sceneLifecycleState == Lifecycle.State.RESUMED,
                         width = paneWidth,
                         listState = panelListState,
                         onSearchChange = onSearchChange,

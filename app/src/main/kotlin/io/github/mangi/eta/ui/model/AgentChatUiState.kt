@@ -32,6 +32,7 @@ internal data class AgentChatUiState(
     val roleplayOriginalContents: Map<String, String> = emptyMap(),
     /** 会话最近一次发送使用的本地 Model.id；null 表示尚未绑定，跟随默认模型。 */
     val modelId: String? = null,
+    val archivedAt: Long? = null,
     /** 未打开的会话仅保留侧栏预览，不能把占位状态写回消息和上下文。 */
     val isConversationLoaded: Boolean = true,
     /** 当前展示窗口首条消息的持久化 sort_index，保存只更新这一位置之后的后缀。 */

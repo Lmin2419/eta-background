@@ -1590,4 +1590,21 @@
   <string name="eta_permission_apps_summary">Find and open apps installed on the device.</string>
   <string name="eta_permission_open_summary">Review system access and status for this item.</string>
   <string name="eta_engine_not_ready">Not ready</string>
+  <string name="eta_selection_count">%1$d selected</string>
+  <string name="eta_select_all">Select all</string>
+  <string name="eta_deselect_all">Deselect all</string>
+  <string name="eta_archive">Archive</string>
+  <string name="eta_unarchive">Unarchive</string>
+  <string name="eta_more">More</string>
+  <string name="eta_archived">Archived</string>
+  <string name="eta_archived_count">Archived · %1$d</string>
+  <string name="eta_archive_done">Archived %1$d conversations</string>
+  <string name="eta_archived_skipped">Archived %1$d; skipped %2$d with active tasks</string>
+  <string name="eta_unarchived_count">Unarchived %1$d conversations</string>
+  <string name="eta_undo">Undo</string>
+  <string name="eta_single_only">Available with one conversation selected</string>
+  <string name="eta_delete_count_title">Delete %1$d conversations?</string>
+  <string name="eta_delete_count_body">%1$d conversations and their messages will be deleted. This cannot be undone.</string>
+  <string name="eta_delete_running_body">%1$d conversations have active tasks. Stop the tasks before deleting.</string>
+  <string name="eta_deleted_count">Deleted %1$d conversations</string>
 </resources>

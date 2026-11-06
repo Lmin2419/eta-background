@@ -7,6 +7,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import io.github.mangi.eta.data.model.ReasoningEffort
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 
 @Serializable
 @Entity(tableName = "conversations")
@@ -24,9 +25,11 @@ internal data class ConversationEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     /** 会话最近使用的本地 Model.id；null 表示跟随默认模型。 */
     @ColumnInfo(name = "model_id") val modelId: String? = null,
+    @ColumnInfo(name = "archived_at") @SerialName("archived_at") val archivedAt: Long? = null,
 )
 
 internal data class ConversationMetadata(
+    @ColumnInfo(name = "archived_at") val archivedAt: Long? = null,
     val id: String,
     val title: String,
     @ColumnInfo(name = "thinking_enabled") val thinkingEnabled: Boolean,
@@ -41,6 +44,7 @@ internal data class ConversationMetadata(
 
 /** 会话侧栏只读取定长预览，不读取上下文、角色卡与修订正文。 */
 internal data class ConversationIndexRow(
+    @ColumnInfo(name = "archived_at") val archivedAt: Long? = null,
     val id: String,
     val title: String,
     @ColumnInfo(name = "reasoning_effort") val reasoningEffort: String,
@@ -55,6 +59,7 @@ internal data class ConversationIndexRow(
 )
 
 internal data class ConversationIdentity(
+    @ColumnInfo(name = "archived_at") val archivedAt: Long? = null,
     val id: String,
     val title: String,
     @ColumnInfo(name = "created_at") val createdAt: Long,

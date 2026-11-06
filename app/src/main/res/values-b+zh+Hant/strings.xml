@@ -1498,4 +1498,21 @@
   <string name="eta_permission_apps_summary">用於尋找並開啟裝置上已安裝的應用程式。</string>
   <string name="eta_permission_open_summary">查看此項的系統授權與狀態。</string>
   <string name="eta_engine_not_ready">未就緒</string>
+  <string name="eta_selection_count">已選 %1$d 個</string>
+  <string name="eta_select_all">全選</string>
+  <string name="eta_deselect_all">取消全選</string>
+  <string name="eta_archive">封存</string>
+  <string name="eta_unarchive">取消封存</string>
+  <string name="eta_more">更多</string>
+  <string name="eta_archived">已封存</string>
+  <string name="eta_archived_count">已封存 · %1$d</string>
+  <string name="eta_archive_done">已封存 %1$d 個對話</string>
+  <string name="eta_archived_skipped">已封存 %1$d 個，%2$d 個正在執行工作未封存</string>
+  <string name="eta_unarchived_count">已取消封存 %1$d 個對話</string>
+  <string name="eta_undo">復原</string>
+  <string name="eta_single_only">僅單選時可用</string>
+  <string name="eta_delete_count_title">刪除 %1$d 個對話？</string>
+  <string name="eta_delete_count_body">將刪除 %1$d 個對話及其訊息，此操作無法復原。</string>
+  <string name="eta_delete_running_body">其中 %1$d 個對話正在執行工作，將先停止工作再刪除。</string>
+  <string name="eta_deleted_count">已刪除 %1$d 個對話</string>
 </resources>

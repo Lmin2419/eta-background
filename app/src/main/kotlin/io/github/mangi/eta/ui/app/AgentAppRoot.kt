@@ -434,6 +434,11 @@ fun AgentAppRoot(
                     ),
                 )
             },
+            paneManagement = io.github.mangi.eta.ui.components.PaneManagementActions(
+                delete = agentState::deleteConversations,
+                archive = agentState::archiveConversations,
+                unarchive = agentState::unarchiveConversations,
+            ),
             onConversationDelete = { conversation ->
                 conversationDeleteTarget = conversation
             },

@@ -8,15 +8,15 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` background build · versionCode `2026110607`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` background build · versionCode `2026110608`**, with engine `20261105-e49-parallel-observe`.
 
-Stage 5.5a follows the S1.9 clarification in `a00607f`: the entire home screen uses canvas, with a 24dp transparent-to-canvas transition above the composer and solid canvas below it. The transition sits above live task and queue strips; message padding includes the full composer height.
+Stage 5.5b adds long-press conversation selection, filtered select-all, batch deletion after active tasks settle, archiving with a three-second undo, and an archived subpage. Search includes archived conversations; sending a new message, including a notification continuation, unarchives the conversation.
 
-The input card keeps its light shadow or dark outline. Sending, queuing, keyboard and scrolling behavior remain unchanged. Stage 5 has passed device acceptance.
+Room migrates from 23 to 24 with a nullable archive timestamp. Backup format 5 preserves it and accepts older backups without the field. The stage 5.5a composer transition is included.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110607) · [Light / dark / 200% screenshots and validation](etax/design/validation/stage-5.5a.md) (Chinese)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110608) · [Migration, backup, gesture validation and phone checklist](etax/design/validation/stage-5.5b.md) (Chinese)
 
-This stage has its own commit and release. Stage 5.5b starts after all CI jobs pass.
+This stage has its own commit and release. Stage 6 starts after all CI jobs pass.
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

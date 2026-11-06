@@ -22,7 +22,7 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36])
 class EtaDatabaseMigrationTest {
     @Test
-    fun migration6To23PreservesDataAndMovesCompleteConversationContext() {
+    fun migration6To24PreservesDataAndMovesCompleteConversationContext() {
         val context = RuntimeEnvironment.getApplication() as Context
         val databaseName = "migration-${UUID.randomUUID()}.db"
         createVersion6Database(context, databaseName)
@@ -57,6 +57,7 @@ class EtaDatabaseMigrationTest {
                 EtaDatabase.MIGRATION_20_21,
                 EtaDatabase.MIGRATION_21_22,
                 EtaDatabase.MIGRATION_22_23,
+                EtaDatabase.MIGRATION_23_24,
             )
             .build()
         try {
@@ -118,6 +119,7 @@ class EtaDatabaseMigrationTest {
             assertEquals(emptyList<CharacterEntity>(), runBlocking(Dispatchers.IO) { database.characterDao().characters() })
             assertEquals("off", conversations.first { it.id == "conv-1" }.reasoningEffort)
             assertEquals(null, conversations.first { it.id == "conv-1" }.modelId)
+            conversations.forEach { assertEquals(null, it.archivedAt) }
             assertEquals("default", conversations.first { it.id == "conv-enabled" }.reasoningEffort)
             assertEquals(null, runBlocking(Dispatchers.IO) { database.conversationDao().state() })
             assertEquals(listOf("built-in", "manual"), provider.models.map { it.modelId })
@@ -139,6 +141,63 @@ class EtaDatabaseMigrationTest {
             database.close()
             context.deleteDatabase(databaseName)
         }
+    }
+
+    @Test
+    fun migration23To24PreservesEveryExistingTableAndAddsNullableArchive() {
+        val context = RuntimeEnvironment.getApplication() as Context
+        val name = "archive-migration-${UUID.randomUUID()}.db"
+        createVersion6Database(context, name)
+        val migrations = listOf(EtaDatabase.MIGRATION_6_7, EtaDatabase.MIGRATION_7_8,
+            EtaDatabase.MIGRATION_8_9, EtaDatabase.MIGRATION_9_10, EtaDatabase.MIGRATION_10_11,
+            EtaDatabase.MIGRATION_11_12, EtaDatabase.MIGRATION_12_13, EtaDatabase.MIGRATION_13_14,
+            EtaDatabase.MIGRATION_14_15, EtaDatabase.MIGRATION_15_16, EtaDatabase.MIGRATION_16_17,
+            EtaDatabase.MIGRATION_17_18, EtaDatabase.MIGRATION_18_19, EtaDatabase.MIGRATION_19_20,
+            EtaDatabase.MIGRATION_20_21, EtaDatabase.MIGRATION_21_22, EtaDatabase.MIGRATION_22_23)
+        val helper = FrameworkSQLiteOpenHelperFactory().create(SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name(name).callback(object : SupportSQLiteOpenHelper.Callback(23) {
+                override fun onCreate(db: SupportSQLiteDatabase) = error("Must open the existing database")
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                    assertEquals(6, oldVersion); assertEquals(23, newVersion)
+                    migrations.forEach { it.migrate(db) }
+                }
+            }).build())
+        fun snapshot(db: SupportSQLiteDatabase): Map<String, List<List<String?>>> {
+            val tables = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' " +
+                "AND name NOT IN ('android_metadata','room_master_table') ORDER BY name").use { cursor ->
+                buildList { while (cursor.moveToNext()) add(cursor.getString(0)) }
+            }
+            return tables.associateWith { table ->
+                db.query("SELECT * FROM $table ORDER BY rowid").use { cursor ->
+                    val columns = cursor.columnNames.indices.filter { cursor.columnNames[it] != "archived_at" }
+                    buildList { while (cursor.moveToNext()) add(columns.map { if (cursor.isNull(it)) null else cursor.getString(it) }) }
+                }
+            }
+        }
+        val before = helper.use {
+            val db = it.writableDatabase
+            db.execSQL("UPDATE conversations SET model_id='retained-model' WHERE id='conv-1'")
+            db.execSQL("INSERT INTO conversation_state(id,selected_conversation_id) VALUES('main','conv-1')")
+            assertEquals(23, db.version)
+            snapshot(db)
+        }
+        val db = Room.databaseBuilder(context, EtaDatabase::class.java, name)
+            .addMigrations(EtaDatabase.MIGRATION_23_24).build()
+        try {
+            val migrated = db.openHelper.writableDatabase // Room validates the entire v24 schema.
+            assertEquals(24, migrated.version)
+            assertEquals(before, snapshot(migrated))
+            runBlocking(Dispatchers.IO) {
+                val dao = db.conversationDao()
+                dao.conversationEntities().forEach { assertEquals(null, it.archivedAt) }
+                dao.conversations().forEach { assertEquals(null, it.archivedAt) }
+                dao.conversationIndex().forEach { assertEquals(null, it.archivedAt) }
+                dao.updateArchivedAt("conv-1", 1234L)
+                assertEquals(1234L, dao.conversation("conv-1")?.archivedAt)
+                assertEquals("retained-model", dao.conversation("conv-1")?.modelId)
+                assertEquals("conv-1", dao.state()?.selectedConversationId)
+            }
+        } finally { db.close(); context.deleteDatabase(name) }
     }
 
     private fun createVersion6Database(

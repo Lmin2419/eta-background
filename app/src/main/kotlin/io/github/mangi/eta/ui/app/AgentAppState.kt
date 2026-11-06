@@ -62,6 +62,7 @@ import io.github.mangi.eta.ui.model.AgentModelPickerUiState
 import io.github.mangi.eta.ui.model.ConversationModeUi
 import io.github.mangi.eta.ui.model.ConversationPaneUiState
 import io.github.mangi.eta.ui.model.ConversationSummaryUi
+import io.github.mangi.eta.ui.model.ConversationArchiveChange
 import io.github.mangi.eta.ui.model.ConversationHistoryLoadState
 import io.github.mangi.eta.ui.model.MessageEditUiState
 import io.github.mangi.eta.ui.model.PendingFileReferenceUi
@@ -109,6 +110,9 @@ internal class AgentAppState(
     private val runMessageProjector = AgentRunMessageProjector()
     private val runStore = AgentRunStore(scope) { runId, event -> applyRunEvent(runId, event) }
     private val pendingConversationDeletes = mutableSetOf<String>()
+    private class DeleteBatch(val ids: MutableSet<String>, val waiting: MutableSet<String>, val onComplete: (Int) -> Unit)
+    private val conversationDeleteBatches = mutableListOf<DeleteBatch>()
+    private var lastArchiveTimestamp = 0L
     private val persistenceLock = Any()
     private var persistenceJob: Job? = null
     // 导入期间暂停保存：旧状态的增量保存会删除刚导入的会话；导入成功后整体重载，失败时数据库已回滚。
@@ -433,7 +437,7 @@ internal class AgentAppState(
                             !AgentRuntimeHistoryReducer.wasApplied(existing, runId)) {
                             val id = payload.promptMessageId(runId)
                             if (existing.messages.none { it.id == id }) {
-                                updateConversation(payload.conversationId, existing.copy(messages = existing.messages +
+                                updateConversation(payload.conversationId, existing.copy(archivedAt = null, messages = existing.messages +
                                     UserMessageUi(id = id, content = supplement.text)))
                             }
                         }
@@ -443,7 +447,7 @@ internal class AgentAppState(
                     val existing = conversationsById[id] ?: emptyChatState(defaultThinkingEnabled)
                     if (!AgentRuntimeHistoryReducer.wasApplied(existing, runId) &&
                         existing.messages.none { it.id == "user-$runId" }) {
-                        updateConversation(id, AssistantConversationSeed.apply(existing, runId, external.userText))
+                        updateConversation(id, AssistantConversationSeed.apply(existing, runId, external.userText).copy(archivedAt = null))
                         if (conversationTitles[id].isNullOrBlank()) {
                             conversationTitles = conversationTitles + (id to external.title)
                         }
@@ -503,7 +507,7 @@ internal class AgentAppState(
                         acknowledgeAfterSave += runId
                         return@forEach
                     }
-                    updateConversation(conversationId, recovery.state)
+                    updateConversation(conversationId, unarchiveOnNewUserMessage(state, recovery.state))
                     acknowledgeAfterSave += runId
                     stateChanged = true
                 }
@@ -757,6 +761,7 @@ internal class AgentAppState(
         updateConversation(
             conversationId,
             existingState.copy(
+                archivedAt = null,
                 input = "",
                 isStreaming = true,
                 thinkingEnabled = archivedEffort.enablesReasoning,
@@ -853,7 +858,9 @@ internal class AgentAppState(
         }
     }
 
-    fun selectConversation(conversationId: String) {
+    fun selectConversation(conversationId: String) = selectConversationInternal(conversationId, persistSelection = true)
+
+    private fun selectConversationInternal(conversationId: String, persistSelection: Boolean) {
         if (homeState.messageEdit != null) cancelMessageEdit()
         val state = conversationsById[conversationId] ?: return
         val selectionVersion = ++conversationSelectionVersion
@@ -881,7 +888,7 @@ internal class AgentAppState(
                         ), Toast.LENGTH_SHORT).show()
                     }
                 }
-                persistConversations()
+                if (persistSelection) persistConversations()
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
@@ -907,6 +914,7 @@ internal class AgentAppState(
                     ?: return@withLock false
                 val current = conversationsById[conversationId] ?: return@withLock false
                 val restored = loaded.copy(
+                    archivedAt = current.archivedAt,
                     input = current.input,
                     pendingImages = current.pendingImages,
                     pendingFileReferences = current.pendingFileReferences,
@@ -917,6 +925,7 @@ internal class AgentAppState(
                 )
                 val latest = conversationsById[conversationId] ?: return@withLock false
                 updateConversation(conversationId, restored.copy(
+                    archivedAt = latest.archivedAt,
                     input = latest.input,
                     pendingImages = latest.pendingImages,
                     pendingFileReferences = latest.pendingFileReferences,
@@ -1125,49 +1134,98 @@ internal class AgentAppState(
         persistConversations()
     }
 
-    fun deleteConversation(conversationId: String) {
-        val runId = runStore.activeRunId(conversationId)
-        if (runId != null) {
-            pendingConversationDeletes.add(conversationId)
-            stopRun(runId)
-            return
-        }
-        deleteSettledConversation(conversationId)
+    fun deleteConversation(conversationId: String) = deleteConversations(setOf(conversationId))
+
+    /** Register the whole batch before stopping any run: settlement can call back immediately. */
+    fun deleteConversations(ids: Set<String>, onComplete: (Int) -> Unit = {}) {
+        val targets = ids.filterTo(linkedSetOf()) { it in conversationsById && it !in pendingConversationDeletes }
+        if (targets.isEmpty()) { onComplete(0); return }
+        val runs = targets.mapNotNull { id -> runStore.activeRunId(id)?.let { id to it } }.toMap()
+        conversationDeleteBatches += DeleteBatch(targets, runs.keys.toMutableSet(), onComplete)
+        pendingConversationDeletes += targets
+        runs.values.forEach(::stopRun)
+        drainConversationDeletes()
     }
 
     private fun deleteSettledConversation(conversationId: String) {
-        pendingConversationDeletes.remove(conversationId)
-        BrowserSessionRegistry.requestRemove(conversationId)
-        val wasSelected = selectedConversationId == conversationId
-        conversationsById = conversationsById - conversationId
-        conversationTitles = conversationTitles - conversationId
-        conversationUpdatedAt = conversationUpdatedAt - conversationId
-        if (wasSelected) {
-            conversationSelectionVersion += 1
-            cancelHistoryPageLoad()
-            conversationSelectionJob?.cancel()
-            isLoadingConversation = false
-            conversationLoadFailed = false
-            fileAttachmentOwnerVersion += 1
-            val nextId = conversationsById.keys.firstOrNull()
-            if (nextId != null) {
-                selectedConversationId = nextId
-                homeState = conversationsById.getValue(nextId)
-            } else {
-                selectedConversationId = null
-                homeState = emptyChatState(defaultThinkingEnabled)
+        conversationDeleteBatches.forEach { it.waiting.remove(conversationId) }
+        drainConversationDeletes()
+    }
+
+    private fun drainConversationDeletes() {
+        val ready = conversationDeleteBatches.filter { it.waiting.isEmpty() }
+        conversationDeleteBatches.removeAll(ready.toSet())
+        ready.forEach { batch ->
+            val ids = batch.ids.intersect(conversationsById.keys)
+            pendingConversationDeletes.removeAll(batch.ids)
+            if (ids.isEmpty()) { batch.onComplete(0); return@forEach }
+            ids.forEach(BrowserSessionRegistry::requestRemove)
+            conversationsById = conversationsById - ids
+            conversationTitles = conversationTitles - ids
+            conversationUpdatedAt = conversationUpdatedAt - ids
+            if (selectedConversationId in ids) selectNextManagedConversation()
+            refreshConversationSummaries()
+            val saved = persistConversations()
+            scope.launch {
+                if (saved.await()) batch.onComplete(ids.size)
+                else Toast.makeText(appContext, R.string.conversation_delete_save_failed, Toast.LENGTH_LONG).show()
             }
-            if (nextId != null) selectConversation(nextId) else refreshConversationModel()
         }
-        conversationPaneState = conversationPaneState.copy(selectedConversationId = selectedConversationId)
-        refreshConversationSummaries()
-        persistConversations()
+    }
+
+    private fun selectNextManagedConversation() {
+        conversationSelectionVersion += 1
+        cancelHistoryPageLoad()
+        conversationSelectionJob?.cancel()
+        isLoadingConversation = false
+        conversationLoadFailed = false
+        fileAttachmentOwnerVersion += 1
+        val nextId = conversationsById.keys.firstOrNull {
+            conversationsById[it]?.archivedAt == null && it !in pendingConversationDeletes
+        }
+        selectedConversationId = nextId
+        homeState = nextId?.let(conversationsById::getValue) ?: emptyChatState(defaultThinkingEnabled)
+        if (nextId != null) selectConversationInternal(nextId, persistSelection = false) else refreshConversationModel()
     }
 
     private fun abortPendingConversationDelete(conversationId: String) {
         if (pendingConversationDeletes.remove(conversationId)) {
+            conversationDeleteBatches.forEach { it.ids.remove(conversationId); it.waiting.remove(conversationId) }
             Toast.makeText(appContext, R.string.conversation_delete_save_failed, Toast.LENGTH_LONG).show()
+            drainConversationDeletes()
         }
+    }
+
+    fun archiveConversations(ids: Set<String>): ConversationArchiveChange {
+        val targets = ids.intersect(conversationsById.keys).filterTo(linkedSetOf()) { conversationsById[it]?.archivedAt == null }
+        val eligible = targets.filterTo(linkedSetOf()) { id ->
+            id !in pendingConversationDeletes && runStore.activeRunId(id) == null &&
+                conversationsById[id]?.isStreaming != true && id !in runtimeTaskStatuses
+        }
+        val timestamp = maxOf(System.currentTimeMillis(), lastArchiveTimestamp + 1).also { lastArchiveTimestamp = it }
+        if (eligible.isNotEmpty()) {
+            conversationsById = conversationsById.mapValues { (id, state) ->
+                if (id in eligible) state.copy(archivedAt = timestamp) else state
+            }
+            if (selectedConversationId in eligible) selectNextManagedConversation()
+            refreshConversationSummaries()
+            persistConversations()
+        }
+        return ConversationArchiveChange(eligible, targets.size - eligible.size, timestamp)
+    }
+
+    fun unarchiveConversations(ids: Set<String>, expectedArchivedAt: Long? = null): Int {
+        val targets = ids.filterTo(linkedSetOf()) { id ->
+            id !in pendingConversationDeletes && conversationsById[id]?.archivedAt?.let {
+                expectedArchivedAt == null || it == expectedArchivedAt
+            } == true
+        }
+        if (targets.isEmpty()) return 0
+        conversationsById = conversationsById.mapValues { (id, state) -> if (id in targets) state.copy(archivedAt = null) else state }
+        selectedConversationId?.let { conversationsById[it]?.let { state -> homeState = state } }
+        refreshConversationSummaries()
+        persistConversations()
+        return targets.size
     }
 
     fun renameConversation(conversationId: String, title: String) {
@@ -1655,6 +1713,7 @@ internal class AgentAppState(
             conversationId,
             state.copy(
                 modelId = runModelId,
+                archivedAt = if (userHistoryMessage != null) null else state.archivedAt,
                 isStreaming = true,
                 history = if (operation == AgentRuntimeWire.OP_REWRITE_REPLY) state.history else history + listOfNotNull(userHistoryMessage),
                 journal = state.journal.ifEmpty { state.history } + listOfNotNull(userHistoryMessage),
@@ -2214,6 +2273,8 @@ internal class AgentAppState(
         text: String,
         persist: Boolean = true,
     ) {
+        val conversationId = conversationIdForRun(runId) ?: return
+        val before = conversationsById[conversationId] ?: return
         updateMessages(runId) { messages ->
             AgentPendingResultRecovery.mergeSupplements(
                 runId = runId,
@@ -2227,8 +2288,18 @@ internal class AgentAppState(
                 messages = messages,
             )
         }
+        conversationsById[conversationId]?.let { after ->
+            val updated = unarchiveOnNewUserMessage(before, after)
+            if (updated !== after) updateConversation(conversationId, updated, updateTimestamp = false)
+        }
         refreshConversationSummaries()
         if (persist) persistConversations()
+    }
+
+    private fun unarchiveOnNewUserMessage(before: AgentChatHomeUiState, after: AgentChatHomeUiState): AgentChatHomeUiState {
+        if (before.archivedAt == null) return after
+        val known = before.messages.filterIsInstance<UserMessageUi>().mapTo(hashSetOf()) { it.id }
+        return if (after.messages.any { it is UserMessageUi && it.id !in known }) after.copy(archivedAt = null) else after
     }
 
     private fun updateMessages(
@@ -2363,6 +2434,7 @@ internal class AgentAppState(
                         } ?: appContext.getString(R.string.time_recent)
                     },
                     updatedAtMillis = conversationUpdatedAt[id] ?: 0L,
+                    archivedAt = state.archivedAt,
                     mode = ConversationModeUi.Chat,
                     characterName = state.roleplay?.characterName ?: state.conversationCharacterName,
                     characterAvatarPath = state.roleplay?.avatarPath ?: state.conversationCharacterAvatarPath,

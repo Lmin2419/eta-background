@@ -128,6 +128,7 @@ internal fun AgentAppShell(
     runningTaskCount: Int = 0,
     permissionsPending: Int = 0,
     showKimi: Boolean = false,
+    paneManagement: io.github.mangi.eta.ui.components.PaneManagementActions = io.github.mangi.eta.ui.components.PaneManagementActions(),
     onOpenCharacter: () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -182,7 +183,7 @@ internal fun AgentAppShell(
         }
     }
 
-    CompositionLocalProvider(LocalChatToast provides { toast = it }, LocalPaneWorkspace provides PaneWorkspaceActions(
+    CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalPaneManagement provides paneManagement, LocalChatToast provides { toast = it }, LocalPaneWorkspace provides PaneWorkspaceActions(
         onNewConversation, onOpenCommonTasks, onOpenTerminal, onOpenBrowser,
         onLaunchKimiWeb.takeIf { showKimi }, kimiWebLabel, canStopKimiWeb, onStopKimiWeb, onRefreshKimiWeb,
         runningTaskCount, permissionsPending,

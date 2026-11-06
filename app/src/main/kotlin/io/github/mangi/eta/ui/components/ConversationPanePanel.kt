@@ -1,6 +1,13 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.semantics.*
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -40,6 +47,13 @@ internal data class PaneWorkspaceActions(
     val onStopKimi: () -> Unit = {}, val onRefreshKimi: () -> Unit = {},
     val runningCount: Int = 0, val permissionsPending: Int = 0,
 )
+internal data class PaneManagementActions(
+    val delete: (Set<String>, (Int) -> Unit) -> Unit = { _, _ -> },
+    val archive: (Set<String>) -> ConversationArchiveChange = { ConversationArchiveChange(emptySet(), 0, 0) },
+    val unarchive: (Set<String>, Long?) -> Int = { _, _ -> 0 },
+)
+internal val LocalPaneManagement = staticCompositionLocalOf { PaneManagementActions() }
+
 internal val LocalPaneWorkspace = staticCompositionLocalOf { PaneWorkspaceActions() }
 
 @Composable
@@ -52,31 +66,60 @@ internal fun ConversationPanePanel(
     onConversationRename: (ConversationSummaryUi) -> Unit, onConversationExport: (ConversationSummaryUi) -> Unit,
     onConversationDelete: (ConversationSummaryUi) -> Unit, onOpenSettings: () -> Unit,
     onOpenModelProviders: () -> Unit, onOpenTools: () -> Unit, onOpenSkills: () -> Unit,
-    onOpenCharacters: () -> Unit, onOpenPermissions: () -> Unit, modifier: Modifier = Modifier,
+    onOpenCharacters: () -> Unit, onOpenPermissions: () -> Unit, modifier: Modifier = Modifier, active: Boolean = true,
 ) {
     val workspace = LocalPaneWorkspace.current
+    val management = LocalPaneManagement.current
+    val resources = LocalResources.current
+    var archived by remember { mutableStateOf(false) }
+    var selectedIds by remember { mutableStateOf(emptySet<String>()) }
+    var showMore by remember { mutableStateOf(false) }
+    var deleteTarget by remember { mutableStateOf(emptySet<String>()) }
+    var toast by remember { mutableStateOf<String?>(null) }
+    var toastVersion by remember { mutableIntStateOf(0) }
+    var undo by remember { mutableStateOf<ConversationArchiveChange?>(null) }
+    val selecting = selectedIds.isNotEmpty()
+    val shortMotion = EtaTheme.motion.short
+    val visibleConversations = remember(state.conversations, state.searchQuery, archived) {
+        state.conversations.filter { if (state.searchQuery.isNotBlank()) true else (it.archivedAt != null) == archived }
+    }
+    val visibleIds = remember(visibleConversations) { visibleConversations.mapTo(linkedSetOf()) { it.id } }
+    LaunchedEffect(visibleIds) { selectedIds = selectedIds.intersect(visibleIds) }
+    LaunchedEffect(active) { if (!active) { selectedIds = emptySet(); showMore = false; deleteTarget = emptySet() } }
+    NavigationBackHandler(rememberNavigationEventState(NavigationEventInfo.None), isBackEnabled = active && (selecting || archived),
+        onBackCompleted = { if (selecting) selectedIds = emptySet() else { archived = false; onSearchChange("") } })
     val snapshots by AgentExecutionService.taskSnapshots.collectAsState()
     val taskStatuses = remember(snapshots) { conversationTaskStatuses(snapshots) }
     val today = LocalDate.now()
-    val groups = remember(state.conversations, today) { state.conversations.groupBy { conversationSection(it, today) }.toSortedMap() }
+    val groups = remember(visibleConversations, today) { visibleConversations.groupBy { conversationSection(it, today) }.toSortedMap() }
     Column(modifier.width(width).fillMaxHeight().background(EtaTheme.colors.surface)
         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))) {
-        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            EtaSearchField(state.searchQuery, onSearchChange, stringResource(R.string.conversation_search_hint), Modifier.weight(1f))
-            EtaIconButton(workspace.onNew) { Icon(Icons.Rounded.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
+        AnimatedContent(selecting, transitionSpec = { fadeIn(tween(shortMotion)) togetherWith fadeOut(tween(shortMotion)) }, label = "selectionToolbar") { mode ->
+            if (mode) ConversationSelectionHeader(selectedIds.size, visibleIds.isNotEmpty() && selectedIds.containsAll(visibleIds),
+                { selectedIds = emptySet() }, { selectedIds = if (selectedIds.containsAll(visibleIds)) emptySet() else visibleIds })
+            else if (archived) Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                EtaIconButton({ archived = false; onSearchChange("") }) { Icon(Icons.Rounded.ChevronLeft, stringResource(R.string.action_back)) }
+                Text(stringResource(R.string.eta_archived), style = EtaTheme.type.headline)
+            } else Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                EtaSearchField(state.searchQuery, onSearchChange, stringResource(R.string.conversation_search_hint), Modifier.weight(1f))
+                EtaIconButton(workspace.onNew) { Icon(Icons.Rounded.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
+            }
         }
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
-            val entryWidth = (width - 32.dp) / 4
-            WorkspaceEntry(Icons.Rounded.TaskAlt, stringResource(R.string.eta_tasks), EtaTheme.colors.tileIndigo, entryWidth, workspace.onTasks, count = workspace.runningCount)
-            WorkspaceEntry(Icons.Rounded.PeopleAlt, stringResource(R.string.eta_characters), EtaTheme.colors.tilePink, entryWidth, onOpenCharacters)
-            WorkspaceEntry(Icons.Rounded.Terminal, stringResource(R.string.route_terminal), EtaTheme.colors.tileSlate, entryWidth, workspace.onTerminal)
-            WorkspaceEntry(Icons.Rounded.Language, stringResource(R.string.eta_browser), EtaTheme.colors.tileTeal, entryWidth, workspace.onBrowser)
-            workspace.onKimi?.let { launch -> WorkspaceEntry(Icons.Rounded.Code, workspace.kimiLabel, EtaTheme.colors.tileSlate, entryWidth, launch,
-                onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null) }
+        AnimatedVisibility(!selecting && !archived, enter = expandVertically(tween(EtaTheme.motion.medium)) + fadeIn(),
+            exit = shrinkVertically(tween(EtaTheme.motion.medium)) + fadeOut()) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                val entryWidth = (width - 32.dp) / 4
+                WorkspaceEntry(Icons.Rounded.TaskAlt, stringResource(R.string.eta_tasks), EtaTheme.colors.tileIndigo, entryWidth, workspace.onTasks, count = workspace.runningCount)
+                WorkspaceEntry(Icons.Rounded.PeopleAlt, stringResource(R.string.eta_characters), EtaTheme.colors.tilePink, entryWidth, onOpenCharacters)
+                WorkspaceEntry(Icons.Rounded.Terminal, stringResource(R.string.route_terminal), EtaTheme.colors.tileSlate, entryWidth, workspace.onTerminal)
+                WorkspaceEntry(Icons.Rounded.Language, stringResource(R.string.eta_browser), EtaTheme.colors.tileTeal, entryWidth, workspace.onBrowser)
+                workspace.onKimi?.let { launch -> WorkspaceEntry(Icons.Rounded.Code, workspace.kimiLabel, EtaTheme.colors.tileSlate, entryWidth, launch,
+                    onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null) }
+            }
         }
         LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (state.conversations.isEmpty()) item {
+            if (visibleConversations.isEmpty()) item {
                 ListEmptyState(stringResource(if (state.searchQuery.isBlank()) R.string.conversation_empty else R.string.conversation_no_results), icon = Icons.Rounded.Search)
             }
             groups.forEach { (section, conversations) ->
@@ -86,13 +129,40 @@ internal fun ConversationPanePanel(
                         Modifier.padding(top = 12.dp, bottom = 6.dp), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
                 }
                 items(conversations, key = { it.id }) { conversation ->
-                    ConversationTextRow(conversation, state.selectedConversationId == conversation.id, state.searchQuery,
-                        taskStatuses[conversation.id] ?: TaskVisualStatus.Running.takeIf { conversation.isActiveRun },
-                        { onConversationSelected(conversation.id) }, { onConversationRename(conversation) },
-                        { onConversationExport(conversation) }, { onConversationDelete(conversation) })
+                    ConversationTextRow(conversation, if (selecting) conversation.id in selectedIds else state.selectedConversationId == conversation.id, state.searchQuery,
+                        taskStatuses[conversation.id] ?: TaskVisualStatus.Running.takeIf { conversation.isActiveRun }, selecting,
+                        { if (selecting) selectedIds = if (conversation.id in selectedIds) selectedIds - conversation.id else selectedIds + conversation.id
+                          else onConversationSelected(conversation.id) },
+                        { selectedIds = selectedIds + conversation.id })
                 }
             }
         }
+        val archiveCount = state.conversations.count { it.archivedAt != null }
+        if (!archived && !selecting && state.searchQuery.isBlank() && archiveCount > 0) {
+            EtaArrowPreference(stringResource(R.string.eta_archived_count, archiveCount),
+                onClick = { archived = true; onSearchChange("") })
+        }
+        key(toastVersion) {
+            EtaToast(toast, { toast = null; undo = null }, Modifier.padding(horizontal = 12.dp),
+                actionLabel = if (undo != null) stringResource(R.string.eta_undo) else null,
+                onAction = undo?.let { change -> { management.unarchive(change.ids, change.archivedAt); undo = null; toast = null } })
+        }
+        AnimatedContent(selecting, transitionSpec = { fadeIn(tween(shortMotion)) togetherWith fadeOut(tween(shortMotion)) }, label = "selectionActions") { mode ->
+        if (mode) ConversationSelectionBar(archived,
+            onArchive = {
+                val ids = selectedIds
+                selectedIds = emptySet(); toastVersion++
+                if (archived) {
+                    undo = null
+                    toast = resources.getString(R.string.eta_unarchived_count, management.unarchive(ids, null))
+                } else {
+                    val change = management.archive(ids)
+                    undo = change.takeIf { it.ids.isNotEmpty() }
+                    toast = if (change.skipped > 0) resources.getString(R.string.eta_archived_skipped, change.ids.size, change.skipped)
+                        else resources.getString(R.string.eta_archive_done, change.ids.size)
+                }
+            }, onDelete = { deleteTarget = selectedIds }, onMore = { showMore = true })
+        else {
         Box(Modifier.fillMaxWidth().height(1.dp).background(EtaTheme.colors.outline))
         Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onOpenSettings).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -107,6 +177,29 @@ internal fun ConversationPanePanel(
                 Text(if (workspace.permissionsPending > 0) stringResource(R.string.eta_permissions_pending, workspace.permissionsPending) else stringResource(R.string.eta_permissions_ready),
                     Modifier.padding(start = 8.dp), style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary)
             }
+        }
+        }
+    }
+    }
+    EtaSheet(showMore, title = stringResource(R.string.eta_more), onDismissRequest = { showMore = false }) {
+        val target = visibleConversations.singleOrNull { it.id in selectedIds }
+        Column {
+            if (target == null) Text(stringResource(R.string.eta_single_only), Modifier.padding(16.dp), style = EtaTheme.type.footnote, color = EtaTheme.colors.textSecondary)
+            EtaArrowPreference(stringResource(R.string.action_rename), enabled = target != null, onClick = { target?.let(onConversationRename); showMore = false })
+            EtaArrowPreference(stringResource(R.string.action_export), enabled = target != null, onClick = { target?.let(onConversationExport); showMore = false })
+        }
+    }
+    if (deleteTarget.isNotEmpty()) {
+        val running = state.conversations.count { it.id in deleteTarget && (it.isActiveRun || taskStatuses[it.id] != null) }
+        EtaWindowDialog(true, title = stringResource(R.string.eta_delete_count_title, deleteTarget.size),
+            summary = stringResource(R.string.eta_delete_count_body, deleteTarget.size) +
+                if (running > 0) "\n" + stringResource(R.string.eta_delete_running_body, running) else "",
+            onDismissRequest = { deleteTarget = emptySet() }) {
+            MiuixDialogActions(confirmText = stringResource(if (running > 0) R.string.conversation_stop_and_delete else R.string.action_delete), destructive = true,
+                onCancel = { deleteTarget = emptySet() }, onConfirm = {
+                    val ids = deleteTarget; deleteTarget = emptySet(); selectedIds = emptySet(); undo = null
+                    management.delete(ids) { count -> toastVersion++; toast = resources.getString(R.string.eta_deleted_count, count) }
+                })
         }
     }
 }
@@ -148,8 +241,7 @@ private fun WorkspaceEntry(icon: ImageVector, label: String, tint: Color, width:
 
 @Composable
 private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: Boolean, query: String, taskStatus: TaskVisualStatus?,
-    onClick: () -> Unit, onRename: () -> Unit, onExport: () -> Unit, onDelete: () -> Unit) {
-    var menu by remember(conversation.id) { mutableStateOf(false) }
+    selecting: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     val haptic = LocalHapticFeedback.current
     val colors = EtaTheme.colors
     val title = conversation.title.ifBlank { conversation.preview }
@@ -160,20 +252,19 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
             while (index >= 0) { addStyle(SpanStyle(color = colors.accent), index, index + query.length); index = title.indexOf(query, index + query.length, ignoreCase = true) }
         }
     } }
+    val background by animateColorAsState(if (selected) colors.accentSoft else Color.Transparent, tween(EtaTheme.motion.short), label = "selectedConversation")
     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
-        .background(if (selected) colors.accentSoft else Color.Transparent)
-        .combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); menu = true })
+        .semantics { if (selecting) { this.selected = selected; role = Role.Checkbox } }
+        .background(background)
+        .combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (taskStatus != null) StatusRing(taskStatus, size = 12.dp)
+        if (selecting) ConversationSelectionMarker(selected) else if (taskStatus != null) StatusRing(taskStatus, size = 12.dp)
         Text(markedTitle, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp), color = if (selected) colors.onAccentSoft else colors.textPrimary,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (selecting && taskStatus != null) StatusRing(taskStatus, size = 12.dp)
+        if (conversation.archivedAt != null && query.isNotBlank()) Text(stringResource(R.string.eta_archived),
+            Modifier.background(colors.surfaceRaised, EtaTheme.shapes.radiusFull).padding(horizontal = 6.dp, vertical = 2.dp),
+            style = EtaTheme.type.caption, color = colors.textSecondary)
         Text(conversation.timeLabel, style = EtaTheme.type.caption, color = colors.textTertiary, maxLines = 1)
-    }
-    EtaSheet(menu, title = title, onDismissRequest = { menu = false }) {
-        Column {
-            EtaArrowPreference(stringResource(R.string.action_rename), onClick = { menu = false; onRename() })
-            EtaArrowPreference(stringResource(R.string.action_export), onClick = { menu = false; onExport() })
-            EtaArrowPreference(stringResource(R.string.action_delete), onClick = { menu = false; onDelete() })
-        }
     }
 }

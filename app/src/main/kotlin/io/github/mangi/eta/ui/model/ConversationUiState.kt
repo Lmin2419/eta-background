@@ -18,6 +18,7 @@ data class ConversationSummaryUi(
     val updatedAtMillis: Long = 0L,
     val mode: ConversationModeUi,
     val isPinned: Boolean = false,
+    val archivedAt: Long? = null,
     val isActiveRun: Boolean = false,
     val runStatus: String? = null,
     val characterName: String? = null,

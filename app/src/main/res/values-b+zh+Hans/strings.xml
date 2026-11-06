@@ -1568,4 +1568,21 @@
   <string name="eta_permission_apps_summary">用于查找并打开设备上已安装的应用。</string>
   <string name="eta_permission_open_summary">查看此项的系统授权与状态。</string>
   <string name="eta_engine_not_ready">未就绪</string>
+  <string name="eta_selection_count">已选 %1$d 个</string>
+  <string name="eta_select_all">全选</string>
+  <string name="eta_deselect_all">取消全选</string>
+  <string name="eta_archive">归档</string>
+  <string name="eta_unarchive">取消归档</string>
+  <string name="eta_more">更多</string>
+  <string name="eta_archived">已归档</string>
+  <string name="eta_archived_count">已归档 · %1$d</string>
+  <string name="eta_archive_done">已归档 %1$d 个对话</string>
+  <string name="eta_archived_skipped">已归档 %1$d 个，%2$d 个正在执行任务未归档</string>
+  <string name="eta_unarchived_count">已取消归档 %1$d 个对话</string>
+  <string name="eta_undo">撤销</string>
+  <string name="eta_single_only">仅单选时可用</string>
+  <string name="eta_delete_count_title">删除 %1$d 个对话？</string>
+  <string name="eta_delete_count_body">将删除 %1$d 个对话及其消息，此操作无法撤销。</string>
+  <string name="eta_delete_running_body">其中 %1$d 个对话正在执行任务，将先停止任务再删除。</string>
+  <string name="eta_deleted_count">已删除 %1$d 个对话</string>
 </resources>

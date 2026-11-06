@@ -102,6 +102,7 @@ internal object AgentConversationStore {
                                 if (row.title != state.title || row.updatedAt != state.updatedAt) {
                                     dao.updateConversationTitle(id, state.title, state.updatedAt)
                                 }
+                                if (row.archivedAt != state.archivedAt) dao.updateArchivedAt(id, state.archivedAt)
                                 continue
                             }
                             val old = previous[id].takeIf { id in stored && it?.isConversationLoaded == true }
@@ -116,7 +117,7 @@ internal object AgentConversationStore {
                                     revisionsJson = if (state.roleplay == null) "" else json.encodeToString(state.roleplayMessages),
                                     createdAt = stored[id]?.createdAt ?: state.updatedAt.takeIf { it != 0L } ?: System.currentTimeMillis(),
                                     updatedAt = state.updatedAt.takeIf { it != 0L } ?: System.currentTimeMillis(),
-                                    modelId = state.modelId,
+                                    modelId = state.modelId, archivedAt = state.archivedAt,
                                 )
                                 phase = "write_metadata"
                                 dao.insertConversations(listOf(row))
@@ -168,7 +169,7 @@ internal object AgentConversationStore {
                         }
                         phase = "write_selection"
                         val selected = selectedConversationId?.takeIf { it in current }
-                            ?: current.maxByOrNull { it.value.updatedAt }?.key
+                            ?: current.filterValues { it.archivedAt == null }.maxByOrNull { it.value.updatedAt }?.key
                         if (selected == null) dao.deleteState()
                         else dao.insertState(ConversationStateEntity(selectedConversationId = selected))
                     }
@@ -211,7 +212,7 @@ internal object AgentConversationStore {
                     ).toMessageOrNull()
                 }),
                 input = "", isStreaming = false, thinkingEnabled = effort.enablesReasoning,
-                reasoningEffort = effort, modelId = conversation.modelId, isConversationLoaded = false,
+                reasoningEffort = effort, modelId = conversation.modelId, archivedAt = conversation.archivedAt, isConversationLoaded = false,
                 conversationCharacterName = character?.first, conversationCharacterAvatarPath = character?.second,
             )
             titles[conversation.id] = conversation.title.takeUnless { it == LEGACY_UNNAMED_TITLE }.orEmpty()
@@ -220,8 +221,8 @@ internal object AgentConversationStore {
 
         val selected = dao.state()?.selectedConversationId
             ?.takeIf { it in states }
-            ?: states.keys.first()
-        val loaded = loadConversation(context, selected)
+            ?: states.entries.firstOrNull { it.value.archivedAt == null }?.key
+        val loaded = selected?.let { loadConversation(context, it) }
         if (loaded != null) states[selected] = loaded
         val unaligned = if (loaded != null &&
             dao.nextMessageIndex(selected) != loaded.messageStartIndex + loaded.messages.size
@@ -265,7 +266,7 @@ internal object AgentConversationStore {
                 input = "", isStreaming = false,
                 thinkingEnabled = conversation.reasoningEffortValue.enablesReasoning,
                 reasoningEffort = conversation.reasoningEffortValue,
-                modelId = conversation.modelId,
+                modelId = conversation.modelId, archivedAt = conversation.archivedAt,
                 messageStartIndex = page.startIndex,
                 hasEarlierMessages = page.hasEarlierMessages,
             )

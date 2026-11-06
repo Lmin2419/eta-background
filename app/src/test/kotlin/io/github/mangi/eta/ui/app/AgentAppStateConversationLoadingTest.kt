@@ -58,7 +58,7 @@ class AgentAppStateConversationLoadingTest {
 
     @Test
     fun notificationReplyPromptIsVisibleFromCheckpointBeforeAResultExists() {
-        seed("first" to conversation("first"))
+        seed("first" to conversation("first").copy(archivedAt = 42L))
         val payload = io.github.mangi.eta.agent.runtime.AgentUiHandoffPayload("first",
             promptSupplement = io.github.mangi.eta.agent.runtime.AgentUiHandoffPayload.Supplement(1, "收左边的菜", 1))
         val request = AgentRuntimeWire.RunRequest("inline-running", "收左边的菜",
@@ -68,6 +68,7 @@ class AgentAppStateConversationLoadingTest {
         assertTrue(io.github.mangi.eta.agent.runtime.AgentRunCheckpointStore.start(context, request))
         val state = AgentAppState(context, scope)
         awaitCondition { state.homeState.messages.filterIsInstance<UserMessageUi>().any { it.content == "收左边的菜" } }
+        assertNull(state.homeState.archivedAt)
         state.refreshRuntimeResults()
         awaitCondition { !state.isLoadingEarlierMessages }
         assertEquals(1, state.homeState.messages.filterIsInstance<UserMessageUi>().count { it.content == "收左边的菜" })
@@ -412,6 +413,113 @@ class AgentAppStateConversationLoadingTest {
         assertEquals("run-a", runs.activeRunId("first"))
         awaitCondition { runs.observedRunIds == setOf("run-a") }
         state.completeRunForTest("run-a", "前台任务完成")
+    }
+
+    @Test
+    fun bulkDeletePublishesOneListAndPersistsOnceIncludingSelectionChange() {
+        seed("first" to conversation("first"), "second" to conversation("second"), "third" to conversation("third"))
+        val state = AgentAppState(context, scope)
+        awaitLoaded(state, "first")
+        awaitPersistence(state)
+        val db = EtaDatabase.get(context).openHelper.writableDatabase
+        db.execSQL("CREATE TABLE selection_write_audit (value INTEGER)")
+        db.execSQL("CREATE TRIGGER count_selection_insert AFTER INSERT ON conversation_state BEGIN INSERT INTO selection_write_audit VALUES(1); END")
+        db.execSQL("CREATE TRIGGER count_selection_update AFTER UPDATE ON conversation_state BEGIN INSERT INTO selection_write_audit VALUES(1); END")
+        var deleted: Int? = null
+        state.deleteConversations(setOf("first", "second", "missing")) { deleted = it }
+        assertEquals(listOf("third"), state.conversationPaneState.conversations.map { it.id })
+        awaitCondition { deleted != null }
+        awaitLoaded(state, "third")
+        awaitPersistence(state)
+        assertEquals(2, deleted)
+        val writes = db.query("SELECT COUNT(*) FROM selection_write_audit").use { it.moveToFirst(); it.getInt(0) }
+        assertEquals("A batch and its replacement selection share one persistence", 1, writes)
+        assertEquals(listOf("third"), runBlocking { EtaDatabase.get(context).conversationDao().conversations().map { it.id } })
+    }
+
+    @Test
+    fun bulkDeleteStopsBothRunsAndWaitsForAllSettlementsWithoutResurrection() {
+        seed("first" to conversation("first"), "second" to conversation("second"), "third" to conversation("third"))
+        val state = AgentAppState(context, scope)
+        awaitLoaded(state, "first")
+        state.registerRunForTest("bulk-a", "first")
+        state.selectConversation("second"); awaitLoaded(state, "second")
+        state.registerRunForTest("bulk-b", "second")
+        var deleted: Int? = null
+        state.deleteConversations(setOf("first", "second")) { deleted = it }
+        val runs = state.runStoreForTest()
+        assertTrue(runs.isStopRequested("bulk-a")); assertTrue(runs.isStopRequested("bulk-b"))
+        state.completeRunForTest("bulk-a", "已停止甲")
+        awaitCondition { runs.activeRunId("first") == null }
+        assertEquals(3, state.conversationPaneState.conversations.size)
+        assertNull(deleted)
+        state.completeRunForTest("bulk-b", "已停止乙")
+        awaitCondition { deleted != null }
+        assertEquals(2, deleted)
+        state.completeRunForTest("bulk-a", "迟到的甲")
+        state.completeRunForTest("bulk-b", "迟到的乙")
+        awaitPersistence(state)
+        assertEquals(setOf("third"), AgentConversationStore.load(context).conversationsById.keys)
+    }
+
+    @Test
+    fun archiveSkipsRunningPersistsUnloadedRowsAndUndoCannotOverwriteNewerArchive() {
+        seed("first" to conversation("first"), "second" to conversation("second"), "third" to conversation("third"))
+        val state = AgentAppState(context, scope)
+        awaitLoaded(state, "first")
+        state.registerRunForTest("archive-running", "first")
+        val change = state.archiveConversations(setOf("first", "second", "third"))
+        assertEquals(setOf("second", "third"), change.ids); assertEquals(1, change.skipped)
+        assertEquals("first", state.conversationPaneState.selectedConversationId)
+        awaitPersistence(state)
+        assertEquals(change.archivedAt, runBlocking { EtaDatabase.get(context).conversationDao().conversation("second") }?.archivedAt)
+        assertEquals(change.archivedAt, AgentConversationStore.load(context).conversationsById["third"]?.archivedAt)
+        state.updateSearchQuery("second")
+        assertEquals("second", state.conversationPaneState.conversations.single().id)
+        assertEquals(change.archivedAt, state.conversationPaneState.conversations.single().archivedAt)
+        assertEquals(1, state.unarchiveConversations(setOf("second"), change.archivedAt))
+        val newer = state.archiveConversations(setOf("second"))
+        assertTrue(newer.archivedAt > change.archivedAt)
+        assertEquals(1, state.unarchiveConversations(change.ids, change.archivedAt))
+        awaitPersistence(state)
+        assertEquals(newer.archivedAt, runBlocking { EtaDatabase.get(context).conversationDao().conversation("second") }?.archivedAt)
+        assertNull(runBlocking { EtaDatabase.get(context).conversationDao().conversation("third") }?.archivedAt)
+        state.completeRunForTest("archive-running", "完成")
+    }
+
+    @Test
+    fun archivingCurrentConversationSwitchesAndAllArchivedRestartHasEmptySelection() {
+        seed("first" to conversation("first"), "second" to conversation("second"))
+        val state = AgentAppState(context, scope)
+        awaitLoaded(state, "first")
+        state.archiveConversations(setOf("first"))
+        awaitLoaded(state, "second")
+        state.archiveConversations(setOf("second"))
+        assertNull(state.conversationPaneState.selectedConversationId)
+        awaitPersistence(state)
+        val restored = AgentConversationStore.load(context)
+        assertNull(restored.selectedConversationId)
+        assertEquals(2, restored.conversationsById.size)
+        assertTrue(restored.conversationsById.values.all { it.archivedAt != null })
+    }
+
+    @Test
+    fun openingArchiveKeepsItArchivedButSendingMessageUnarchivesDurably() {
+        seed("first" to conversation("first").copy(archivedAt = 42L))
+        val state = AgentAppState(context, scope)
+        awaitLoaded(state, "first")
+        assertEquals(42L, state.homeState.archivedAt)
+        state.sendCurrentMessage("新消息取消归档")
+        assertNull(state.homeState.archivedAt)
+        awaitPersistence(state)
+        assertNull(runBlocking { EtaDatabase.get(context).conversationDao().conversation("first") }?.archivedAt)
+    }
+
+    private fun awaitPersistence(state: AgentAppState) {
+        awaitCondition {
+            val job = AgentAppState::class.java.getDeclaredField("persistenceJob").apply { isAccessible = true }.get(state) as? Job
+            job == null || job.isCompleted
+        }
     }
 
     private fun AgentAppState.runStoreForTest(): AgentRunStore =
