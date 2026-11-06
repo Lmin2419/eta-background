@@ -48,17 +48,18 @@ internal object PreviewWindowMapper {
             primaryEnabled = canInteract, secondaryEnabled = frameInteractive, zoomEnabled = canInteract
         )
 
-        if (s.visualStatus == TaskVisualStatus.Success && !s.frameUnavailable) return PreviewWindowState(
-            PreviewMode.Completed, PreviewAction.OpenApp, listOf(PreviewAction.Close),
-            primaryEnabled = canInteract, secondaryEnabled = canInteract, zoomEnabled = canInteract
-        )
-
-        if (s.visualStatus == TaskVisualStatus.Failed || s.frameUnavailable) {
-            val sec = if (s.hasConversation) listOf(PreviewAction.OpenConversation) else emptyList()
+        // A missing frame changes page actions, never the task's outcome.
+        if (s.visualStatus == TaskVisualStatus.Success || s.visualStatus == TaskVisualStatus.Failed) {
+            val actions = buildList {
+                if (s.hasConversation) add(PreviewAction.OpenConversation)
+                add(PreviewAction.OpenApp)
+                if (s.frameAvailable) add(PreviewAction.TakeOver)
+            }
             return PreviewWindowState(
-                PreviewMode.Incomplete, PreviewAction.Close, sec,
+                if (s.visualStatus == TaskVisualStatus.Success) PreviewMode.Completed else PreviewMode.Incomplete,
+                actions.first(), actions.drop(1),
                 primaryEnabled = canInteract,
-                secondaryEnabled = canInteract && sec.isNotEmpty(),
+                secondaryEnabled = canInteract && actions.size > 1,
                 zoomEnabled = canInteract
             )
         }

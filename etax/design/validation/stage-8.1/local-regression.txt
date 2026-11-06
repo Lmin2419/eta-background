@@ -1,0 +1,13 @@
+{'tests': 84, 'failures': 0, 'errors': 0, 'skipped': 0}
+io.github.mangi.eta.agent.runtime.AgentExecutionServiceTest: 4
+io.github.mangi.eta.agent.runtime.AgentSystemNotificationTest: 10
+io.github.mangi.eta.agent.runtime.PreviewWindowMapperTest: 4
+io.github.mangi.eta.agent.runtime.Stage6SurfacesTest: 3
+io.github.mangi.eta.agent.runtime.Stage81NotificationTest: 12
+io.github.mangi.eta.agent.runtime.Stage81PreviewMapperTest: 7
+io.github.mangi.eta.agent.runtime.TaskCompletionNotificationTest: 14
+io.github.mangi.eta.agent.runtime.TaskPreviewActivityTest: 5
+io.github.mangi.eta.agent.runtime.TaskPreviewControlTest: 2
+io.github.mangi.eta.agent.runtime.TaskPreviewImageViewTest: 3
+io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest: 9
+io.github.mangi.eta.ui.components.Stage8LayoutTest: 11

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-11-06T15:57:22.016Z" hostname="DESKTOP-C7GT9VI" time="0.259">
+  <properties/>
+  <testcase name="allCompletedOutcomesOpenTheConversationAndKeepThreeIndependentActions[33]" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.076"/>
+  <testcase name="completionWithoutTargetKeepsItsConversationFallback[33]" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.01"/>
+  <testcase name="runningWithConversationStillOpensPreview[33]" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.034"/>
+  <testcase name="completionWithoutConversationKeepsItsPreviewFallback[33]" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.015"/>
+  <testcase name="allCompletedOutcomesOpenTheConversationAndKeepThreeIndependentActions[36]" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.021"/>
+  <testcase name="completionWithoutTargetKeepsItsConversationFallback[36]" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.017"/>
+  <testcase name="runningWithConversationStillOpensPreview[36]" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.012"/>
+  <testcase name="completionWithoutConversationKeepsItsPreviewFallback[36]" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.014"/>
+  <testcase name="allCompletedOutcomesOpenTheConversationAndKeepThreeIndependentActions" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.016"/>
+  <testcase name="completionWithoutTargetKeepsItsConversationFallback" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.011"/>
+  <testcase name="runningWithConversationStillOpensPreview" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.01"/>
+  <testcase name="completionWithoutConversationKeepsItsPreviewFallback" classname="io.github.mangi.eta.agent.runtime.Stage81NotificationTest" time="0.015"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

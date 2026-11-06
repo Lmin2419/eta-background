@@ -463,8 +463,11 @@ internal class AgentExecutionService : Service() {
                 .setColor(io.github.mangi.eta.ui.theme.lightEtaColors().accent.toArgb())
                 .setContentTitle(copy?.title?.takeIf(String::isNotBlank) ?: context.getString(R.string.execution_title))
                 .setContentText(copy?.body ?: label)
-                .setContentIntent(if (task?.targetPackage.isNullOrBlank()) destination(context, task, id)
-                    else TaskPreviewActivity.pendingIntent(context, task, id))
+                .setContentIntent(when {
+                    completed && !task.conversationId.isNullOrBlank() -> conversationIntent(context, task.conversationId)
+                    task?.targetPackage.isNullOrBlank() -> destination(context, task, id)
+                    else -> TaskPreviewActivity.pendingIntent(context, task, id)
+                })
                 // Keep the continue action available, including after an unsuccessful App handoff.
                 .setOngoing(!completed).setAutoCancel(completed && task.targetPackage.isNullOrBlank()).setOnlyAlertOnce(!alert)
                 .setVisibility(Notification.VISIBILITY_PRIVATE)

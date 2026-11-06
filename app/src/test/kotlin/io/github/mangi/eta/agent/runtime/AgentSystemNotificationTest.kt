@@ -52,7 +52,7 @@ class AgentSystemNotificationTest {
         }
     }
 
-    @Test fun completedCardPreviewsAndItsExplicitOpenAppActionHandsOff() {
+    @Test fun completedCardOpensConversationAndItsExplicitOpenAppActionHandsOff() {
         val controller = Robolectric.buildService(AgentExecutionService::class.java).create()
         val service = controller.get()
         val manager = service.getSystemService(NotificationManager::class.java)
@@ -76,12 +76,12 @@ class AgentSystemNotificationTest {
             val finished = manager.activeNotifications.single()
             assertEquals(original.id, finished.id)
             val destination = shadowOf(finished.notification.contentIntent).savedIntent
-            assertEquals(TaskPreviewActivity::class.java.name, destination.component?.className)
-            assertEquals(target, destination.getStringExtra("package"))
-            assertEquals("app-click", destination.getStringExtra(CompletedAppActivity.EXTRA_RUN_ID))
+            assertEquals(MainActivity::class.java.name, destination.component?.className)
+            assertEquals(MainActivity.ACTION_OPEN_CONVERSATION_ID, destination.action)
+            assertEquals("chat-app-click", destination.getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
             assertNull(shadowOf(service.application).nextStartedActivity)
             finished.notification.contentIntent.send()
-            assertEquals(TaskPreviewActivity::class.java.name, shadowOf(service.application).nextStartedActivity.component?.className)
+            assertEquals(MainActivity::class.java.name, shadowOf(service.application).nextStartedActivity.component?.className)
             assertEquals(3, finished.notification.actions.size)
             assertFalse(finished.notification.contentIntent == finished.notification.actions[1].actionIntent)
             assertEquals(CompletedAppActivity::class.java.name, shadowOf(finished.notification.actions[1].actionIntent).savedIntent.component?.className)

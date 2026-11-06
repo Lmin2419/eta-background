@@ -24,6 +24,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.mangi.eta.R
 import io.github.mangi.eta.ui.components.*
@@ -61,9 +62,7 @@ internal class PreviewPresentation {
     var handoffPending by mutableStateOf(false)
     var frameUnavailable by mutableStateOf(false)
     var frameReady by mutableStateOf(false)
-    var canOperateCompleted by mutableStateOf(false)
-    var canOpenCompletedWithoutFrame by mutableStateOf(false)
-    var canResumeWithoutFrame by mutableStateOf(false)
+    var taskStopped by mutableStateOf(false)
     var step by mutableStateOf("")
     var result by mutableStateOf("")
     var failureReason by mutableStateOf("")
@@ -74,6 +73,8 @@ internal fun EtaPreviewWindow(ui: PreviewPresentation, picture: TaskPreviewImage
     onAction: (PreviewAction) -> Unit, onZoom: () -> Unit, onClose: () -> Unit) {
     val colors = EtaTheme.colors
     val controls = ui.controls
+    val terminal = controls.mode == PreviewMode.Completed || controls.mode == PreviewMode.Incomplete
+    val pageReleased = terminal && ui.frameUnavailable && !ui.frameReady
     val status = when (controls.mode) {
         PreviewMode.Running, PreviewMode.Handoff -> TaskVisualStatus.Running
         PreviewMode.Manual, PreviewMode.Paused -> TaskVisualStatus.Paused
@@ -87,7 +88,11 @@ internal fun EtaPreviewWindow(ui: PreviewPresentation, picture: TaskPreviewImage
         Row(Modifier.fillMaxWidth().heightIn(min = 52.dp), verticalAlignment = Alignment.CenterVertically) {
             AndroidView(factory = { context -> ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER } },
                 update = { it.setImageDrawable(ui.appIcon) }, modifier = Modifier.size(24.dp))
-            val statusLabel = if (controls.mode == PreviewMode.Manual) stringResource(R.string.preview_manual_status) else status.label()
+            val statusLabel = when {
+                controls.mode == PreviewMode.Manual -> stringResource(R.string.preview_manual_status)
+                terminal && ui.taskStopped -> stringResource(R.string.task_short_stopped)
+                else -> status.label()
+            }
             Column(Modifier.weight(1f).padding(start = 6.dp)
                 .clearAndSetSemantics { contentDescription = listOf(ui.appName, statusLabel, ui.step).filter { it.isNotBlank() }.joinToString(", ") }) {
                 Text(ui.appName, color = colors.textPrimary, style = EtaTheme.type.footnote,
@@ -112,15 +117,23 @@ internal fun EtaPreviewWindow(ui: PreviewPresentation, picture: TaskPreviewImage
             .border(if (ui.manual) 2.dp else 1.dp, if (ui.manual) colors.accent else colors.outline, RoundedCornerShape(16.dp))) {
             // This is the very same view, listener and FIT_CENTER geometry as before Compose.
             AndroidView(factory = { picture }, modifier = Modifier.fillMaxSize().testTag("preview_frame"))
+            if (pageReleased) {
+                Text(stringResource(R.string.preview_page_released),
+                    Modifier.align(Alignment.BottomCenter).padding(16.dp).testTag("preview_page_released"),
+                    color = colors.textTertiary, style = EtaTheme.type.footnote, maxLines = 1)
+            }
         }
         val hint = when {
             ui.inputFailed -> ui.hint.text
             controls.mode == PreviewMode.Manual && ui.frameReady -> stringResource(R.string.preview_manual_hint)
             controls.mode == PreviewMode.Handoff -> stringResource(R.string.preview_wait)
             controls.mode == PreviewMode.Paused -> stringResource(R.string.preview_paused_hint)
-            controls.mode == PreviewMode.Completed -> ui.result.ifBlank { ui.hint.text }
+            controls.mode == PreviewMode.Completed -> ui.result.ifBlank { if (pageReleased) status.label() else ui.hint.text }
             controls.mode == PreviewMode.NeedsAttention -> ui.result.ifBlank { ui.step.ifBlank { ui.hint.text } }
-            controls.mode == PreviewMode.Incomplete -> ui.failureReason.ifBlank { ui.hint.text }
+            controls.mode == PreviewMode.Incomplete -> ui.failureReason.ifBlank {
+                if (ui.taskStopped) stringResource(R.string.task_short_stopped) else if (pageReleased) status.label() else ui.hint.text
+            }
+            controls.mode == PreviewMode.Running && !ui.frameReady -> stringResource(PreviewHintType.WaitingFrame.resourceId)
             controls.mode == PreviewMode.Running && !ui.frameUnavailable -> ui.step.ifBlank { ui.hint.text }
             else -> ui.hint.text
         }
@@ -135,22 +148,28 @@ internal fun EtaPreviewWindow(ui: PreviewPresentation, picture: TaskPreviewImage
                 color = if (ui.inputFailed || controls.mode == PreviewMode.Incomplete) colors.danger else colors.textSecondary,
                 style = EtaTheme.type.footnote, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            EtaButton(previewActionLabel(controls.primary, controls.mode), { onAction(controls.primary) },
-                enabled = controls.primaryEnabled, kind = EtaButtonKind.Primary, size = EtaButtonSize.Regular,
-                loading = controls.mode == PreviewMode.Handoff, minHeight = 48.dp, minWidth = 0.dp,
-                modifier = Modifier.weight(1f).testTag("preview_primary"))
-            controls.secondary.forEach { action ->
-                PreviewSecondaryAction(action, controls.mode, controls.secondaryEnabled) { onAction(action) }
-            }
-        }
-        // Legacy recovery/operate actions remain reachable without stealing the main action's width.
-        if (ui.canOperateCompleted || ui.canOpenCompletedWithoutFrame || ui.canResumeWithoutFrame) {
-            FlowRow(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (ui.canOperateCompleted) PreviewSecondaryAction(PreviewAction.TakeOver, controls.mode, true,
-                    label = stringResource(R.string.preview_operate_page)) { onAction(PreviewAction.TakeOver) }
-                if (ui.canOpenCompletedWithoutFrame) PreviewSecondaryAction(PreviewAction.OpenApp, controls.mode, true) { onAction(PreviewAction.OpenApp) }
-                if (ui.canResumeWithoutFrame) PreviewSecondaryAction(PreviewAction.Resume, controls.mode, true) { onAction(PreviewAction.Resume) }
+        Row(Modifier.fillMaxWidth().testTag("preview_actions"), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (terminal) {
+                (listOf(controls.primary) + controls.secondary).forEach { action ->
+                    val enabled = if (action == controls.primary) controls.primaryEnabled else controls.secondaryEnabled
+                    if (action == PreviewAction.TakeOver) {
+                        PreviewSecondaryAction(action, controls.mode, enabled, size = 40.dp,
+                            label = stringResource(R.string.preview_operate_page)) { onAction(action) }
+                    } else {
+                        EtaButton(previewActionLabel(action, controls.mode), { onAction(action) },
+                            enabled = enabled, kind = EtaButtonKind.Tonal, size = EtaButtonSize.Small,
+                            minHeight = 40.dp, minWidth = 0.dp, insideMargin = PaddingValues(horizontal = 4.dp),
+                            modifier = Modifier.weight(1f).height(40.dp).testTag("preview_terminal_${action.name}"))
+                    }
+                }
+            } else {
+                EtaButton(previewActionLabel(controls.primary, controls.mode), { onAction(controls.primary) },
+                    enabled = controls.primaryEnabled, kind = EtaButtonKind.Primary, size = EtaButtonSize.Regular,
+                    loading = controls.mode == PreviewMode.Handoff, minHeight = 48.dp, minWidth = 0.dp,
+                    modifier = Modifier.weight(1f).testTag("preview_primary"))
+                controls.secondary.forEach { action ->
+                    PreviewSecondaryAction(action, controls.mode, controls.secondaryEnabled) { onAction(action) }
+                }
             }
         }
     }
@@ -171,7 +190,7 @@ internal fun previewActionLabel(action: PreviewAction, mode: PreviewMode): Strin
 
 @Composable
 private fun PreviewSecondaryAction(action: PreviewAction, mode: PreviewMode, enabled: Boolean,
-    label: String = previewActionLabel(action, mode), onClick: () -> Unit) {
+    label: String = previewActionLabel(action, mode), size: Dp = 48.dp, onClick: () -> Unit) {
     val icon = when (action) {
         PreviewAction.TakeOver -> Icons.Rounded.TouchApp
         PreviewAction.Pause -> Icons.Rounded.Pause
@@ -184,7 +203,7 @@ private fun PreviewSecondaryAction(action: PreviewAction, mode: PreviewMode, ena
         PreviewAction.Wait -> Icons.Rounded.HourglassEmpty
     }
     EtaIconButton(onClick, enabled = enabled,
-        modifier = Modifier.size(48.dp).border(1.dp, EtaTheme.colors.outlineStrong, CircleShape).testTag("preview_secondary")) {
+        modifier = Modifier.size(size).border(1.dp, EtaTheme.colors.outlineStrong, CircleShape).testTag("preview_secondary")) {
         Icon(icon, label, tint = EtaTheme.colors.textPrimary, modifier = Modifier.size(24.dp))
     }
 }

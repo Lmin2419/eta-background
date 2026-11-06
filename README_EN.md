@@ -8,15 +8,15 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` 胖小胖 · versionCode `2026110615`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` 胖小胖 · versionCode `2026110616`**, with engine `20261105-e49-parallel-observe`.
 
-Stage 8 follows `ab061cf`: two-line preview headers and a stable two-line hint area, padded task badges outside app icons, complete suggestion summaries, aligned saved-task controls, short English readiness labels, and 48dp capsule targets. Notification actions and preview hints are localized and shortened; status chips use complete dedicated labels.
+Stage 8.1 follows `ed0c2e8`: missing frames no longer turn successful or running tasks into failed tasks. Terminal previews use one row of equal-width, 40dp tonal “Open chat” and “Open app” buttons, with “Control page” available when the page remains. Released pages show a neutral placeholder; running tasks retain their status while waiting for a frame.
 
-Turning the screen off no longer pauses tasks. Main-screen input remains blocked while the display is off or locked; background virtual-screen and non-GUI work can continue. Manually paused or controlled tasks never resume automatically. No wake lock or keep-alive was added. Cat assets, colors, package identifiers, backup/export formats and upstream credits are unchanged.
+Completed notification bodies open the result conversation when available. Running notifications and existing task preview entries are unchanged, as are frame fetching, manual control, return control and App handoff logic.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110615) · [Stage 8 screenshots and phone checklist](etax/design/validation/stage-8.md) (Chinese)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110616) · [Stage 8.1 screenshots and phone checklist](etax/design/validation/stage-8.1.md) (Chinese)
 
-Delivery requires passing checks, a signed build and a published Release for this version. Notification layout and the three screen-off scenarios still require phone acceptance.
+Delivery requires passing checks, signed build and Release publication. System notification display and window operation still need phone acceptance.
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

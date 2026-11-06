@@ -1,0 +1,16 @@
+TaskPreviewImageView.kt: unchanged; SHA-256 (LF) 870a45d5df86c3513e92ba69162b6b6d855c09d4c8501de0552bded5f71f7418
+CompletedAppActivity.kt: unchanged; SHA-256 (LF) 9c02bbf79330dc73ae40b936a3eb8a4e7a4e0550eb0d3dc900b3fa231dd40abf
+TaskPreviewRegistry.kt: unchanged; SHA-256 (LF) b15c1069ce35ff5701af372271f7203b6a36bb1fd4bf28c3d28e22447baac758
+TaskScreenSession.kt: unchanged; SHA-256 (LF) 8baf6745438ec9280de10be9c4d5afe66d74948c85895e28e2915bb17f97b646
+AgentRuntimeRunExecutor.kt: unchanged; SHA-256 (LF) d71e36692a9936d7ebe7a6db10600a55410cc5891eefd3908a65bbf8edbd9796
+
+TaskPreviewActivity diff (only presentation wiring):
+diff --git a/app/src/main/kotlin/io/github/mangi/eta/agent/runtime/TaskPreviewActivity.kt b/app/src/main/kotlin/io/github/mangi/eta/agent/runtime/TaskPreviewActivity.kt
+index 248b39f..94bba69 100644
+--- a/app/src/main/kotlin/io/github/mangi/eta/agent/runtime/TaskPreviewActivity.kt
++++ b/app/src/main/kotlin/io/github/mangi/eta/agent/runtime/TaskPreviewActivity.kt
+@@ -385,3 +385 @@ internal class TaskPreviewActivity : ComponentActivity() {
+-        previewUi.canOperateCompleted = card?.completed == true && !manual && geometry != null && !busy && !closing && !resizing
+-        previewUi.canOpenCompletedWithoutFrame = card?.completed == true && previewUi.frameUnavailable && !manual && !busy && !closing
+-        previewUi.canResumeWithoutFrame = paused && card?.completed != true && previewUi.frameUnavailable && !manual && !busy && !closing
++        previewUi.taskStopped = card?.status == AgentOverlayStatus.Stopped

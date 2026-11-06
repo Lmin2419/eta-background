@@ -13,16 +13,16 @@ class PreviewWindowMapperTest {
             base.copy(visualStatus = TaskVisualStatus.Paused) to Triple(PreviewMode.Paused, PreviewAction.Resume, PreviewAction.TakeOver),
             base.copy(manual = true) to Triple(PreviewMode.Manual, PreviewAction.ReturnToAi, PreviewAction.Back),
             base.copy(visualStatus = TaskVisualStatus.Attention) to Triple(PreviewMode.NeedsAttention, PreviewAction.TakeOver, PreviewAction.Pause),
-            base.copy(visualStatus = TaskVisualStatus.Success) to Triple(PreviewMode.Completed, PreviewAction.OpenApp, PreviewAction.Close),
-            base.copy(visualStatus = TaskVisualStatus.Failed) to Triple(PreviewMode.Incomplete, PreviewAction.Close, PreviewAction.OpenConversation),
-            base.copy(frameUnavailable = true, frameAvailable = false) to Triple(PreviewMode.Incomplete, PreviewAction.Close, PreviewAction.OpenConversation),
+            base.copy(visualStatus = TaskVisualStatus.Success) to Triple(PreviewMode.Completed, PreviewAction.OpenConversation, PreviewAction.OpenApp),
+            base.copy(visualStatus = TaskVisualStatus.Failed) to Triple(PreviewMode.Incomplete, PreviewAction.OpenConversation, PreviewAction.OpenApp),
+            base.copy(frameUnavailable = true, frameAvailable = false) to Triple(PreviewMode.Running, PreviewAction.TakeOver, PreviewAction.Pause),
         )
         cases.forEach { (input, expected) ->
             val actual = PreviewWindowMapper.map(input)
             assertEquals(expected.first, actual.mode)
             assertEquals(expected.second, actual.primary)
-            assertEquals(listOf(expected.third), actual.secondary)
-            assertTrue(actual.primaryEnabled)
+            assertEquals(listOf(expected.third) + if (actual.mode in listOf(PreviewMode.Completed, PreviewMode.Incomplete)) listOf(PreviewAction.TakeOver) else emptyList(), actual.secondary)
+            assertEquals(input.frameAvailable, actual.primaryEnabled)
             assertTrue(actual.secondaryEnabled)
         }
         val waiting = PreviewWindowMapper.map(base.copy(handoffPending = true, manual = true))
@@ -51,7 +51,8 @@ class PreviewWindowMapperTest {
             assertFalse(controls.primaryEnabled); assertFalse(controls.secondaryEnabled); assertFalse(controls.zoomEnabled)
         }
         val noConversation = PreviewWindowMapper.map(base.copy(visualStatus = TaskVisualStatus.Failed, hasConversation = false))
-        assertTrue(noConversation.secondary.isEmpty()); assertFalse(noConversation.secondaryEnabled)
+        assertEquals(PreviewAction.OpenApp, noConversation.primary)
+        assertEquals(listOf(PreviewAction.TakeOver), noConversation.secondary); assertTrue(noConversation.secondaryEnabled)
     }
 
     @Test fun pausedControllerOverridesNonterminalAttentionButNeverATerminalResult() {
@@ -59,7 +60,7 @@ class PreviewWindowMapperTest {
         assertEquals(TaskVisualStatus.Paused, previewVisualStatus(card, true))
         assertEquals(TaskVisualStatus.Attention, previewVisualStatus(card.copy(completed = true), true))
         assertEquals(TaskVisualStatus.Success, previewVisualStatus(card.copy(status = io.github.mangi.eta.agent.overlay.AgentOverlayStatus.ResultReady), true))
-        assertEquals(PreviewMode.Incomplete, PreviewWindowMapper.map(base.copy(visualStatus = TaskVisualStatus.Success,
+        assertEquals(PreviewMode.Completed, PreviewWindowMapper.map(base.copy(visualStatus = TaskVisualStatus.Success,
             frameUnavailable = true, frameAvailable = false)).mode)
     }
 }

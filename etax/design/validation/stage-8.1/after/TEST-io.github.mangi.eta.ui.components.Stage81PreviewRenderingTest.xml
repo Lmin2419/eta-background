@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-06T15:56:58.835Z" hostname="DESKTOP-C7GT9VI" time="10.575">
+  <properties/>
+  <testcase name="failureWithPage" classname="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" time="7.209"/>
+  <testcase name="successWithPage" classname="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" time="0.263"/>
+  <testcase name="failureWithoutPage" classname="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" time="0.184"/>
+  <testcase name="successWithoutPage" classname="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" time="0.198"/>
+  <testcase name="noConversationUsesOneFullWidthTonalButton" classname="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" time="0.151"/>
+  <testcase name="stoppedKeepsItsOwnLabelAndTerminalButtons" classname="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" time="0.167"/>
+  <testcase name="taskEndingInTheOpenWindowOnlyChangesItsPresentation" classname="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" time="0.161"/>
+  <testcase name="screenshotMatrix" classname="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" time="1.396"/>
+  <testcase name="runningWithoutFrame" classname="io.github.mangi.eta.ui.components.Stage81PreviewRenderingTest" time="0.169"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

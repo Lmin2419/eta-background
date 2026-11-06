@@ -382,9 +382,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
         previewUi.manual = manual
         previewUi.frameReady = geometry != null
         previewUi.inputFailed = inputFeedback != null
-        previewUi.canOperateCompleted = card?.completed == true && !manual && geometry != null && !busy && !closing && !resizing
-        previewUi.canOpenCompletedWithoutFrame = card?.completed == true && previewUi.frameUnavailable && !manual && !busy && !closing
-        previewUi.canResumeWithoutFrame = paused && card?.completed != true && previewUi.frameUnavailable && !manual && !busy && !closing
+        previewUi.taskStopped = card?.status == AgentOverlayStatus.Stopped
         previewUi.step = card?.status?.localizedText(resources).orEmpty()
         previewUi.result = card?.streamPreview.orEmpty().notificationFirstSentence()
         previewUi.failureReason = if (status == TaskVisualStatus.Failed) previewUi.result else ""
