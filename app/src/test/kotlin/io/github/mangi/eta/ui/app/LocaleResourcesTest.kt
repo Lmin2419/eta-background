@@ -39,9 +39,9 @@ class LocaleResourcesTest {
         assertEquals("当前设备", localizedString("zh-CN", R.string.capability_current_device))
         assertEquals("目前裝置", localizedString("zh-TW", R.string.capability_current_device))
         assertEquals("Current device", localizedString("fr-FR", R.string.capability_current_device))
-        assertEquals("Eta is running", localizedString("en-US", R.string.execution_title))
-        assertEquals("Eta 正在运行", localizedString("zh-CN", R.string.execution_title))
-        assertEquals("Eta 正在執行", localizedString("zh-TW", R.string.execution_title))
+        assertEquals("胖小胖 is running", localizedString("en-US", R.string.execution_title))
+        assertEquals("胖小胖 正在运行", localizedString("zh-CN", R.string.execution_title))
+        assertEquals("胖小胖 正在執行", localizedString("zh-TW", R.string.execution_title))
         assertEquals("Environment configuration", localizedString("en-US", R.string.linux_environment_configuration))
         assertEquals("环境配置", localizedString("zh-CN", R.string.linux_environment_configuration))
         assertEquals("環境設定", localizedString("zh-TW", R.string.linux_environment_configuration))
@@ -52,11 +52,11 @@ class LocaleResourcesTest {
         assertEquals("模型请求重试", localizedString("zh-CN", R.string.system_notice_model_retry))
         assertEquals("模型請求重試", localizedString("zh-TW", R.string.system_notice_model_retry))
         assertEquals(
-            "1 task is running. Return to Eta to check progress.",
+            "1 task is running. Return to 胖小胖 to check progress.",
             localizedQuantity("en-US", R.plurals.execution_summary, 1),
         )
         assertEquals(
-            "2 tasks are running. Return to Eta to check progress.",
+            "2 tasks are running. Return to 胖小胖 to check progress.",
             localizedQuantity("en-US", R.plurals.execution_summary, 2),
         )
         assertEquals(

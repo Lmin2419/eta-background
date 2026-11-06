@@ -79,9 +79,11 @@
 
 本地 `lintDebug` / `assembleDebug` 成功：**0 error/fatal、463 warning、1 hint**，未增加抑制。实际 Debug APK 读取到包名 `io.github.mangi.etax`、versionCode `2026110614`，默认/简繁体系统应用 label 和启动 Activity label 均为「胖小胖」。10 个品牌源文件/生成资源与基线逐字节相同；修改资源的 key、属性与格式占位符不变，User-Agent 和日志无差异。
 
+首轮远端 [42211294479](https://github.com/Lmin2419/eta-background/actions/runs/42211294479) 执行 **2578 项，2 失败、1 个既有跳过**：`LocaleResourcesTest` 的通知标题/复数文案断言仍期待旧 Eta，现已同步新名称并本地复测通过；未修改的 `RootShellTerminalControllerCancellationTest.completedBackgroundJobCleansGrandchildProcess` 返回 `PROCESS_START_FAILED / 无法启动后台命令`，保留测试并随下一轮全量重跑，不以改动终端业务或跳过测试掩盖失败。该轮设置的 5 项全部通过，其中指定持久化用例耗时 0.246s；引擎部署与内嵌通过。此失败运行不算发布通过。
+
 远端 `check`、`build`、`release` 必须全部成功，Release 的 versionCode、源码提交、签名和 APK SHA-256 对应后才交付。提交时远端运行尚未生成，最终交付附本版的直接 [Etax Build](https://github.com/Lmin2419/eta-background/actions/workflows/etax-build.yml?query=branch%3Amain) 与 [Release](https://github.com/Lmin2419/eta-background/releases) 链接。
 
-委派通过 Tencent 的 coding / quick / review，分别用于等待策略、角色颜色分类和厂商命令边界复核；主会话核对实际文件、修正建议并运行测试。配置主模型分别为 `cn:glm-5.3`、`cn:deepseek-v4.1-flash`、`cn:deepseek-v4-pro`。三次均返回有效答案，工具没有返回成功响应的实际路由模型/备用切换元数据，因此不虚构备用调用记录。
+委派通过 Tencent 的 coding / quick / review，分别用于等待策略、角色颜色分类和厂商命令边界复核；另用 quick 辅助检查首轮 CI 的进程启动失败。主会话核对实际文件、筛选建议并运行测试，未采纳把 Linux 主机等同于应用 Linux backend 的推断。配置主模型分别为 `cn:glm-5.3`、`cn:deepseek-v4.1-flash`、`cn:deepseek-v4-pro`。四次均返回答案，工具没有返回成功响应的实际路由模型/备用切换元数据，因此不虚构备用调用记录。
 
 ## 手机验收清单
 
