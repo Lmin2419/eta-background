@@ -96,25 +96,21 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-// Miuix 未提供语义 success 色，沿用项目既有值；失败色走主题 error
-private val SuccessColor = Color(0xFF34C759)
-
-
 @Composable
 internal fun overlayPhaseAccent(phase: AgentOverlayPhase): Color = when (phase) {
-    AgentOverlayPhase.RUNNING -> MiuixTheme.colorScheme.primary
-    AgentOverlayPhase.PAUSED -> Color(0xFFFF9F0A)
-    AgentOverlayPhase.FINISHED -> SuccessColor
-    AgentOverlayPhase.FAILED -> MiuixTheme.colorScheme.error
+    AgentOverlayPhase.RUNNING -> io.github.mangi.eta.ui.theme.EtaTheme.colors.running
+    AgentOverlayPhase.PAUSED -> io.github.mangi.eta.ui.theme.EtaTheme.colors.paused
+    AgentOverlayPhase.FINISHED -> io.github.mangi.eta.ui.theme.EtaTheme.colors.success
+    AgentOverlayPhase.FAILED -> io.github.mangi.eta.ui.theme.EtaTheme.colors.danger
 }
 
-// 边缘流光取主题强调色与相邻冷暖色，避免高饱和彩虹在浅色页面上喧宾夺主。
+// 与助手和状态环共用品牌流光；末尾回到蜂蜜色使环形渐变无接缝。
 private val EdgeLightColors = listOf(
-    Color(0xFF7AB8FF),
-    Color(0xFFB59CFF),
-    Color(0xFFFF9EC7),
-    Color(0xFFFFC98A),
-    Color(0xFF7AB8FF),
+    io.github.mangi.eta.ui.theme.EtaAurora.honey,
+    io.github.mangi.eta.ui.theme.EtaAurora.peach,
+    io.github.mangi.eta.ui.theme.EtaAurora.rose,
+    io.github.mangi.eta.ui.theme.EtaAurora.lavender,
+    io.github.mangi.eta.ui.theme.EtaAurora.honey,
 )
 
 /**

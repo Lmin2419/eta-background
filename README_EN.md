@@ -8,19 +8,17 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` 胖小胖 · versionCode `2026110613`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-06 · `3.3.5` 胖小胖 · versionCode `2026110614`**, with engine `20261105-e49-parallel-observe`.
 
-The app is renamed 胖小胖 with a golden-shaded cat icon (launcher, themed icon, status bar, task icon, in-app mark), and the UI moves to the warm "honey caramel" palette: warm white grounds, a caramel accent, a warm aurora, and violet for "needs you". Package name and signing key are unchanged, so it installs over the previous build with data kept.
+Brand follow-up to `33b6d1c`: task glows and status colors, speech feedback, favorite controls and Markdown UI colors now use the Honey Caramel theme tokens. The authorization page, notification/permission/assistant messages in all three languages, launcher label and system assistant labels now use 胖小胖. The cat source and generated vectors are unchanged; 24dp rendering was checked in both themes.
 
-Stage 7 finishes the UI refresh: the preview primary button fills the available width, secondary actions are 48dp outlined circles, and the status pill stays on one line. Home and the assistant now reuse the brand vector. All launcher, themed, notification and task vectors from `df427d4` remain unchanged.
+The settings regression keeps real taps and scrolling, advances UI callbacks while waiting for the exact persisted DataStore value, and reads it back again. Package and internal identifiers, backup/export formats and filenames, User-Agent, logs, upstream credits and links remain unchanged. The vendor battery command retains `--es title Eta`; the validation record explains why.
 
-App-owned transitions use the design motion tokens. Remove animations enables fades of at most 120ms and static glow/status indicators. Task accessibility summaries, 200% text layouts, contrast, dark mode, landscape and tablet layouts have been checked, including real pointer gesture tests.
+This follows the completed stages 1–7 and the `2026110613` cat branding without refactoring interaction, touch, geometry, task or storage behavior.
 
-Previously accepted settings, conversation batches, archive undo, Room 24 and system surfaces are included. Preview image gestures/geometry, engine, task scheduling and persistence are unchanged. The validation record lists each page and intentional design deviations.
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110614) · [Brand validation and phone checklist](etax/design/validation/brand.md) (Chinese)
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110613) · [Stage 7 validation and final phone checklist](etax/design/validation/stage-7.md) (Chinese)
-
-Implementation of stages 1–7 is complete. This stage has its own commit and release; delivery requires all CI jobs to pass before final phone acceptance.
+Delivery requires passing checks, a signed build and a published Release for this version. Automated renders do not replace phone acceptance.
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

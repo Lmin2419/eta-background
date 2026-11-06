@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.agent.roleplay.CharacterProfile
 import io.github.mangi.eta.ui.components.CharacterAvatar
+import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.squircle.squircleBorder
@@ -91,14 +92,14 @@ internal fun CharacterPortraitCard(
             Box(
                 modifier = Modifier
                     .size(28.dp)
-                    .background(Color.Black.copy(alpha = 0.28f), CircleShape),
+                    .background(EtaTheme.colors.surfaceRaised, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = if (card.favorite) Icons.Rounded.Star else Icons.Rounded.StarOutline,
                     contentDescription = if (card.favorite) "取消收藏" else "收藏",
                     modifier = Modifier.size(16.dp),
-                    tint = if (card.favorite) FavoriteColor else Color.White,
+                    tint = if (card.favorite) FavoriteColor else EtaTheme.colors.textSecondary,
                 )
             }
         }
@@ -141,8 +142,9 @@ private fun PortraitTag(text: String) {
     )
 }
 
-/** 收藏星标的暖金色，固定值保证落在任意头像上都可辨认。 */
-internal val FavoriteColor = Color(0xFFFFC94D)
+/** 收藏属于界面选择状态；照片遮罩与角色身份色独立保留。 */
+internal val FavoriteColor: Color
+    @Composable get() = EtaTheme.colors.accent
 
 /**
  * 网格末尾的新建卡：与角色卡同尺寸的描边占位，上半区新建、下方导入两个入口，

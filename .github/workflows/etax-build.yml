@@ -268,13 +268,13 @@ jobs:
             # 重跑同一提交：只替换附件
             gh release upload "$tag" "$file" --clobber -R "$GITHUB_REPOSITORY"
           else
-            notes="Eta 后台版 ${VERSION_NAME}（versionCode ${VERSION_CODE}），源码 ${GITHUB_SHA}。
+            notes="胖小胖 ${VERSION_NAME}（versionCode ${VERSION_CODE}），源码 ${GITHUB_SHA}。
 
           自动发布的测试包，真机验证前标为「预发布」；验证通过后可在本页编辑取消预发布。版本说明见 [etax/README.md](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_SHA}/etax/README.md)。
 
           APK SHA-256: \`${APK_SHA256}\`
           构建记录: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             gh release create "$tag" "$file" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              --prerelease --title "Eta 后台版 ${VERSION_NAME} (${VERSION_CODE}) · ${GITHUB_SHA::7}" --notes "$notes"
+              --prerelease --title "胖小胖 ${VERSION_NAME} (${VERSION_CODE}) · ${GITHUB_SHA::7}" --notes "$notes"
           fi
           echo "已发布：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${tag}"

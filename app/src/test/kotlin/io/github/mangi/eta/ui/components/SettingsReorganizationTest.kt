@@ -23,6 +23,11 @@ import io.github.mangi.eta.ui.app.LocalAppearanceSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -227,13 +232,25 @@ class SettingsReorganizationTest {
             assertEquals(!thinkingBefore, prefs.getBoolean(Prefs.Keys.AGENT_THINKING_ENABLED, thinkingBefore))
             val completion = context.getString(R.string.appearance_task_completion_alerts)
             assertTrue(panel.scrollDownUntil({ completion in panel.visibleTexts() }))
-            assertTrue(panel.tapText(completion))
-            val after = kotlinx.coroutines.runBlocking {
-                kotlinx.coroutines.withTimeout(3_000) {
-                    AppearanceSettingsRepository.settingsFlow().first { it.taskCompletionAlertsEnabled != before.taskCompletionAlertsEnabled }
+            val expected = before.copy(taskCompletionAlertsEnabled = !before.taskCompletionAlertsEnabled)
+            val observer = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+            try {
+                val written = observer.async { AppearanceSettingsRepository.settingsFlow().first { it == expected } }
+                assertTrue(panel.tapText(completion))
+                // Keep the UI write coroutine and its frame/looper callbacks moving while DataStore persists.
+                // Elapsed time never makes this pass; the deadline only diagnoses a missing write.
+                val deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(10)
+                while (!written.isCompleted && System.nanoTime() < deadline) {
+                    panel.advance()
+                    Thread.sleep(1)
                 }
+                assertTrue("The tapped completion preference was not persisted: expected=$expected", written.isCompleted)
+                val after = kotlinx.coroutines.runBlocking { written.await() }
+                assertEquals(expected, after)
+                assertEquals(expected, kotlinx.coroutines.runBlocking { AppearanceSettingsRepository.settings() })
+            } finally {
+                observer.cancel()
             }
-            assertEquals(before.copy(taskCompletionAlertsEnabled = !before.taskCompletionAlertsEnabled), after)
         } finally {
             panel.close()
             activity.pause().stop().destroy()

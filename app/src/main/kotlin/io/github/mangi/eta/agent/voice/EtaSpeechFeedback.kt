@@ -9,14 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import io.github.mangi.eta.ui.theme.EtaTheme
 
 internal enum class EtaSpeechPhase { IDLE, STARTING, LISTENING, RECOGNIZING }
 
@@ -55,7 +53,7 @@ internal data class EtaSpeechState(
 @Composable
 internal fun EtaSpeechFeedback(speech: EtaSpeechState, onDownloadModel: () -> Unit, onOpenSpeechSettings: () -> Unit) {
     val message = speech.message ?: speech.errorRes?.let { stringResource(it) } ?: return
-    val dark = MiuixTheme.colorScheme.background.luminance() < 0.5f
+    val colors = EtaTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -63,14 +61,14 @@ internal fun EtaSpeechFeedback(speech: EtaSpeechState, onDownloadModel: () -> Un
         Text(
             text = message,
             color = if (speech.feedbackIsError) {
-                if (dark) Color(0xFFFF9E99) else Color(0xFFB42318)
+                colors.dangerText
             } else {
-                MiuixTheme.colorScheme.onBackground
+                colors.textPrimary
             },
             modifier = Modifier
                 .weight(1f, fill = false)
                 .background(
-                    if (dark) Color(0xFF34363B) else Color(0xFFF2F3F5),
+                    colors.surfaceSunken,
                     RoundedCornerShape(12.dp),
                 )
                 .padding(horizontal = 10.dp, vertical = 6.dp),

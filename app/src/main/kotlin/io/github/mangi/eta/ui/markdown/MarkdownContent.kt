@@ -327,7 +327,8 @@ private fun MarkdownAlertKind.accentColor(): Color = when (this) {
     MarkdownAlertKind.Caution -> MiuixTheme.colorScheme.error
 }
 
-private val AlertImportantColor = Color(0xFF8B5CF6)
+private val AlertImportantColor: Color
+    @Composable get() = EtaTheme.colors.attentionText
 
 // ── 列表 ────────────────────────────────────────────────────────────────
 

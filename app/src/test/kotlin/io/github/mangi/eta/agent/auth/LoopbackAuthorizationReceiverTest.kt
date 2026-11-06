@@ -11,6 +11,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LoopbackAuthorizationReceiverTest {
@@ -31,7 +32,12 @@ class LoopbackAuthorizationReceiverTest {
                 val connection = URI(receiver.redirectUri + "?code=test&state=expected").toURL().openConnection() as HttpURLConnection
                 connection.connectTimeout = 2_000
                 connection.readTimeout = 2_000
-                try { assertEquals(200, connection.responseCode) } finally { connection.disconnect() }
+                try {
+                    assertEquals(200, connection.responseCode)
+                    val bytes = connection.inputStream.use { it.readBytes() }
+                    assertEquals(bytes.size, connection.contentLength)
+                    assertTrue(bytes.toString(Charsets.UTF_8).contains("<title>胖小胖</title>"))
+                } finally { connection.disconnect() }
                 assertEquals("test", future.get(3, TimeUnit.SECONDS))
                 assertThrows(java.io.IOException::class.java) {
                     Socket().use { it.connect(InetSocketAddress("127.0.0.1", port), 1_000) }

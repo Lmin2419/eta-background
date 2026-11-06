@@ -100,7 +100,7 @@ internal class LoopbackAuthorizationReceiver(port: Int = CodexOAuth.CALLBACK_POR
     }
 
     private fun respond(socket: Socket, status: String, message: String) {
-        val body = "<!doctype html><meta charset=utf-8><title>Eta</title><p>$message</p>".toByteArray(Charsets.UTF_8)
+        val body = "<!doctype html><meta charset=utf-8><title>胖小胖</title><p>$message</p>".toByteArray(Charsets.UTF_8)
         val headers = "HTTP/1.1 $status\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: ${body.size}\r\n" +
             "Cache-Control: no-store\r\nContent-Security-Policy: default-src 'none'\r\nConnection: close\r\n\r\n"
         socket.getOutputStream().apply { write(headers.toByteArray(Charsets.US_ASCII)); write(body); flush() }

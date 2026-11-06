@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
+import io.github.mangi.eta.ui.theme.lightEtaColors
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
@@ -31,7 +32,8 @@ internal data class MarkdownInlineStyle(
     val codeBackground: Color,
 ) {
     companion object {
-        val Default = MarkdownInlineStyle(linkColor = Color(0xFF3482FF), codeBackground = Color(0x1F808080))
+        // Background parsing has no composition; rendered pages pass their current theme explicitly.
+        val Default = lightEtaColors().let { MarkdownInlineStyle(linkColor = it.accent, codeBackground = it.surfaceSunken) }
     }
 }
 
