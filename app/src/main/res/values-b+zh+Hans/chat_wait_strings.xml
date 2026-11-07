@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_waiting_reply">正在等待回复</string>
+    <string name="chat_waiting_reply_seconds">正在等待回复 · %1$d 秒</string>
+    <string name="chat_waiting_reply_slow">模型首字较慢，仍在等待 · %1$d 秒</string>
+</resources>

@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-07 · `3.3.5` 胖小胖 · versionCode `2026110701`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-07 · `3.3.5` 胖小胖 · versionCode `2026110702`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-Fixes two background-task entry lifecycle bugs: starting another instruction no longer prematurely removes a stopped task's background preview entry, and a retiring notification service cannot erase a new task whose execution lease survives. Manual pause still requires explicit resume; model requests, scheduling, frame capture and the virtual-display engine are unchanged.
+The chat no longer sits blank between sending a message and the model's first token: a "Waiting for a reply" row with a running ring appears at the end, shows the elapsed seconds after 3 s and says the model is slow to start after 20 s. It yields as soon as the first reasoning, text or tool output arrives, in both the app and the power-key assistant panel. Model requests, scheduling and caching are unchanged.
 
-Stage 9 features remain available. APK: **`Pangxiaopang-3.3.5-2026110701.apk`**.
+Stage 9 features remain available. APK: **`Pangxiaopang-3.3.5-2026110702.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110701) · [Regression evidence and phone checklist](etax/design/validation/task-preview-continuity.md) (Chinese)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110702)
 
 Delivery requires passing CI and a signed Release. Automated checks do not replace phone acceptance of pause, follow-up instructions and retained background pages.
 

@@ -523,7 +523,10 @@ internal fun AgentConversationMessages(
             }
     }
     val earlierMessagesItemCount = if (hasEarlierMessages) 1 else 0
-    val bottomItemIndex = timelineEntries.size + earlierMessagesItemCount
+    // 本轮还没有任何助手输出（连接、排队或模型预填充中）时，尾部补一行等待提示，避免整屏空等。
+    val pendingReplyMessageId = pendingReplyMessageId(timelineEntries, isStreaming)
+    val pendingReplyItemCount = if (pendingReplyMessageId != null) 1 else 0
+    val bottomItemIndex = timelineEntries.size + earlierMessagesItemCount + pendingReplyItemCount
     val isUserDragging by scrollState.interactionSource.collectIsDraggedAsState()
     val isAtBottom by remember(scrollState) {
         derivedStateOf { !scrollState.canScrollForward }
@@ -816,6 +819,23 @@ internal fun AgentConversationMessages(
                             modifier = itemModifier,
                         )
                     }
+                }
+            }
+            if (pendingReplyMessageId != null) {
+                item(key = ChatPendingReplyKey, contentType = ChatPendingReplyKey) {
+                    PendingReplyIndicator(
+                        pendingMessageId = pendingReplyMessageId,
+                        assistantOverlay = assistantOverlay,
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = tween(
+                                durationMillis = io.github.mangi.eta.ui.theme.EtaTheme.motion.medium,
+                                easing = io.github.mangi.eta.ui.theme.EtaTheme.motion.emphasizedDecelerate,
+                            ),
+                            placementSpec = null,
+                            // 首个助手输出到达时立即让位，不和新出现的正文叠在一起。
+                            fadeOutSpec = null,
+                        ),
+                    )
                 }
             }
             item(key = ChatBottomSentinelKey) {
