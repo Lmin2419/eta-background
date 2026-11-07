@@ -20,7 +20,7 @@ import org.json.JSONObject
 internal class SubagentExecutor(
     private val conversationKey: String,
     private val parentController: AgentRunController,
-    private val configProvider: () -> AgentModelClient.ModelConfig,
+    private val configProvider: (SubagentProfile) -> AgentModelClient.ModelConfig,
     private val capabilitiesProvider: () -> AgentToolCapabilities,
     private val baseToolExecutor: AgentModelClient.ToolExecutor,
     private val skillContext: SkillContext,
@@ -99,7 +99,7 @@ internal class SubagentExecutor(
         val childController = AgentRunController()
         val controllerBinding = parentController.linkChild(childController)
 
-        val resolvedConfig = runCatching { configProvider() }.getOrElse { throwable ->
+        val resolvedConfig = runCatching { configProvider(profile) }.getOrElse { throwable ->
             SubagentSessionStore.releaseRunning(conversationKey, subagentId)
             controllerBinding.close()
             return errorResult("SUBAGENT_CONFIG_ERROR", throwable.message ?: "无法加载 Subagent 模型配置")

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.ui.components.SettingsReorganizationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:27:19.755Z" hostname="DESKTOP-C7GT9VI" time="3.858">
+  <properties/>
+  <testcase name="stage5ScreenshotsLightTopBottomAssistantAndDark200" classname="io.github.mangi.eta.ui.components.SettingsReorganizationTest" time="1.963"/>
+  <testcase name="allFortyTwoLegacyItemsReachableByFingerScrollAcrossMainAndMore" classname="io.github.mangi.eta.ui.components.SettingsReorganizationTest" time="0.549"/>
+  <testcase name="completionAlertsAndLocalThinkingKeepTheirOriginalPreferences" classname="io.github.mangi.eta.ui.components.SettingsReorganizationTest" time="0.395"/>
+  <testcase name="mainRoutesUseRealTapsAndScrollReturnsToTopReadinessArea" classname="io.github.mangi.eta.ui.components.SettingsReorganizationTest" time="0.521"/>
+  <testcase name="assistantMorePageShowsMigrationItemsAndEmptyHintWhenCold" classname="io.github.mangi.eta.ui.components.SettingsReorganizationTest" time="0.422"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

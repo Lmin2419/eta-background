@@ -57,6 +57,8 @@ import io.github.mangi.eta.agent.subagent.SubagentProfile
 import io.github.mangi.eta.agent.subagent.SubagentProfileCatalog
 import io.github.mangi.eta.config.Prefs
 import io.github.mangi.eta.data.model.ReasoningEffort
+import io.github.mangi.eta.data.model.SubagentProfileModel
+import io.github.mangi.eta.data.model.ProviderSetting
 import io.github.mangi.eta.data.model.SubagentSettings
 import io.github.mangi.eta.data.model.enabledModel
 import io.github.mangi.eta.data.repository.ProviderRepository
@@ -172,6 +174,7 @@ internal fun SubagentSettingsScreen(
     }
 
     var showModelSheet by remember { mutableStateOf(false) }
+    var modelRoleName by remember { mutableStateOf<String?>(null) }
     var inspectedProfile by remember { mutableStateOf<SubagentProfile?>(null) }
     var editorDraft by remember { mutableStateOf<CustomSubagentDraft?>(null) }
     var editorError by remember { mutableStateOf<String?>(null) }
@@ -195,20 +198,24 @@ internal fun SubagentSettingsScreen(
         overlay = {
             EtaSheet(
                 show = showModelSheet,
-                title = "Subagent 模型",
+                title = if (modelRoleName == null) "默认模型" else "模型",
                 onDismissRequest = { showModelSheet = false },
                 insideMargin = DpSize(0.dp, 0.dp),
             ) {
                 SubagentModelPickerContent(
                     pickerState = pickerState,
-                    selectedSecondaryModelId = resolvedSecondary?.model?.id,
-                    primaryModelName = primaryModelName,
+                    selectedSecondaryModelId = if (modelRoleName == null) subagentSettings.modelId else subagentSettings.profiles[modelRoleName]?.modelId,
+                    primaryModelName = if (modelRoleName == null) primaryModelName else resolvedSecondary?.model?.displayName ?: primaryModelName,
+                    inheritLabel = if (modelRoleName == null) "跟随主模型" else "跟随默认模型",
                     onSelectModel = { modelId ->
                         showModelSheet = false
                         scope.launch {
-                            RuntimeConfigRepository.setSubagentSettings(
-                                subagentSettings.copy(modelId = modelId),
-                            )
+                            RuntimeConfigRepository.updateSubagentSettings { current ->
+                                val name = modelRoleName
+                                if (name == null) current.copy(modelId = modelId)
+                                else current.copy(profiles = current.profiles + (name to
+                                    (current.profiles[name] ?: SubagentProfileModel()).copy(modelId = modelId)))
+                            }
                         }
                     },
                 )
@@ -216,13 +223,40 @@ internal fun SubagentSettingsScreen(
 
             val currentProfile = inspectedProfile
             EtaSheet(
-                show = currentProfile != null,
+                show = currentProfile != null && !showModelSheet,
                 title = currentProfile?.name.orEmpty(),
                 onDismissRequest = { inspectedProfile = null },
             ) {
                 if (currentProfile != null) {
                     SubagentProfileDetailContent(
                         profile = currentProfile,
+                        modelSettings = {
+                            val role = subagentSettings.profiles[currentProfile.name] ?: SubagentProfileModel()
+                            val chosen = providers.enabledModel(role.modelId)
+                            val unavailable = !role.modelId.isNullOrBlank() && chosen == null
+                            val effective = chosen ?: resolvedSecondary ?: providers.enabledModel(primaryModelId)
+                            val capabilities = effective?.let { (provider, model) -> RuntimeConfigRepository.reasoningCapabilities(provider, model) }
+                            val options = listOf<ReasoningEffort?>(null) + capabilities?.selectableEfforts.orEmpty()
+                            EtaPreferenceGroup {
+                                EtaArrowPreference(title = "模型",
+                                    summary = if (unavailable) null else chosen?.let { "${it.provider.name} / ${it.model.displayName}" } ?: "跟随默认模型",
+                                    bottomAction = if (unavailable) ({ Text(stringResource(R.string.subagent_model_unavailable),
+                                        color = EtaTheme.colors.attentionText, style = EtaTheme.type.footnote) }) else null,
+                                    onClick = { modelRoleName = currentProfile.name; showModelSheet = true })
+                                EtaPreferenceDivider()
+                                EtaOverlayDropdownPreference(title = "思考强度",
+                                    items = options.map { it?.displayName ?: "跟随默认" },
+                                    selectedIndex = options.indexOf(ReasoningEffort.fromWireValue(role.reasoningEffort)).coerceAtLeast(0),
+                                    onSelectedIndexChange = { index ->
+                                        scope.launch {
+                                            RuntimeConfigRepository.updateSubagentSettings { current ->
+                                                current.copy(profiles = current.profiles + (currentProfile.name to
+                                                    (current.profiles[currentProfile.name] ?: SubagentProfileModel()).copy(reasoningEffort = options[index]?.wireValue)))
+                                            }
+                                        }
+                                    })
+                            }
+                        },
                         onEdit = if (!currentProfile.builtin) {
                             {
                                 val toolsText = currentProfile.explicitTools
@@ -329,11 +363,8 @@ internal fun SubagentSettingsScreen(
                                                 description = activeDraft.description,
                                                 tools = tools,
                                                 prompt = activeDraft.prompt,
+                                                originalName = activeDraft.originalName,
                                             )
-                                            val oldName = activeDraft.originalName
-                                            if (oldName != null && oldName != saved.name) {
-                                                SubagentProfileCatalog.deleteCustomProfile(oldName)
-                                            }
                                             saved
                                         }
                                     }
@@ -383,7 +414,7 @@ internal fun SubagentSettingsScreen(
                 )
                 EtaPreferenceDivider()
                 EtaArrowPreference(
-                    title = "Subagent 模型",
+                    title = "默认模型",
                     summary = secondarySummary.takeUnless { secondaryUnavailable },
                     bottomAction = if (secondaryUnavailable) ({
                         Text(stringResource(R.string.subagent_model_unavailable), color = EtaTheme.colors.attentionText,
@@ -396,12 +427,12 @@ internal fun SubagentSettingsScreen(
                             tint = EtaPreferenceColors.Blue,
                         )
                     },
-                    onClick = { showModelSheet = true },
+                    onClick = { modelRoleName = null; showModelSheet = true },
                 )
                 if (effortOptions.size > 1) {
                     EtaPreferenceDivider()
                     EtaOverlayDropdownPreference(
-                        title = "思考强度",
+                        title = "默认思考强度",
                         items = effortLabels,
                         selectedIndex = selectedEffortIndex,
                         enabled = subagentEnabled,
@@ -414,9 +445,7 @@ internal fun SubagentSettingsScreen(
                         onSelectedIndexChange = { index ->
                             val chosen = effortOptions.getOrNull(index)
                             scope.launch {
-                                RuntimeConfigRepository.setSubagentSettings(
-                                    subagentSettings.copy(reasoningEffort = chosen?.wireValue),
-                                )
+                                RuntimeConfigRepository.updateSubagentSettings { it.copy(reasoningEffort = chosen?.wireValue) }
                             }
                         },
                     )
@@ -434,6 +463,7 @@ internal fun SubagentSettingsScreen(
                     EtaArrowPreference(
                         title = profile.name,
                         summary = profile.summary,
+                        bottomAction = { SubagentRoleModelSummary(profile.name, subagentSettings, providers) },
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = iconForProfile(profile.name),
@@ -472,6 +502,7 @@ internal fun SubagentSettingsScreen(
                         EtaArrowPreference(
                             title = profile.name,
                             summary = profile.summary,
+                            bottomAction = { SubagentRoleModelSummary(profile.name, subagentSettings, providers) },
                             startAction = {
                                 EtaPreferenceIcon(
                                     icon = Icons.Rounded.Extension,
@@ -507,6 +538,7 @@ private fun SubagentModelPickerContent(
     pickerState: io.github.mangi.eta.ui.model.AgentModelPickerUiState,
     selectedSecondaryModelId: String?,
     primaryModelName: String?,
+    inheritLabel: String = "跟随主模型",
     onSelectModel: (String?) -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
@@ -567,7 +599,7 @@ private fun SubagentModelPickerContent(
             if (query.isBlank() && providerFilter == null) {
                 item(key = "inherit_primary") {
                     SubagentModelRow(
-                        title = "跟随主模型",
+                        title = inheritLabel,
                         subtitle = primaryModelName?.let { "当前：$it" } ?: "默认继承会话正在使用的主模型",
                         modelId = pickerState.selectedModel?.modelId,
                         sourceType = pickerState.selectedModel?.providerSourceType,
@@ -683,6 +715,7 @@ private fun SubagentModelRow(
 @Composable
 private fun SubagentProfileDetailContent(
     profile: SubagentProfile,
+    modelSettings: @Composable () -> Unit = {},
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
 ) {
@@ -694,6 +727,7 @@ private fun SubagentProfileDetailContent(
             .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        modelSettings()
         Text(
             text = profile.summary,
             style = MiuixTheme.textStyles.body1,
@@ -759,4 +793,17 @@ private fun SubagentProfileDetailContent(
             }
         }
     }
+}
+
+@Composable
+private fun SubagentRoleModelSummary(name: String, settings: SubagentSettings, providers: List<ProviderSetting>) {
+    val id = settings.profiles[name]?.modelId
+    val model = providers.enabledModel(id)
+    val unavailable = !id.isNullOrBlank() && model == null
+    Text(
+        text = if (unavailable) stringResource(R.string.subagent_model_unavailable)
+            else "模型：" + (model?.let { "${it.provider.name} / ${it.model.displayName}" } ?: "跟随默认"),
+        color = if (unavailable) EtaTheme.colors.attentionText else EtaTheme.colors.textSecondary,
+        style = EtaTheme.type.footnote,
+    )
 }

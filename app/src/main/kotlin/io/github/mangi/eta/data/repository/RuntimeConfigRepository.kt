@@ -1,5 +1,6 @@
 package io.github.mangi.eta.data.repository
 
+import io.github.mangi.eta.agent.subagent.SubagentProfile
 import android.content.SharedPreferences
 import io.github.mangi.eta.agent.model.AgentModelClient
 import io.github.mangi.eta.config.Prefs
@@ -42,27 +43,32 @@ internal object RuntimeConfigRepository {
         SettingsDataStore.setSubagentSettings(settings)
     }
 
+    suspend fun updateSubagentSettings(transform: (SubagentSettings) -> SubagentSettings) {
+        SettingsDataStore.updateSubagentSettings(transform)
+    }
+
     /**
      * 解析 Subagent 实际运行所用的模型配置。
      *
-     * 指定了独立子模型且该模型仍处于启用状态时优先使用子模型，否则平滑回退到主模型；
+     * 已保存角色的启用模型优先，其次默认子模型，最后主模型；临时角色只用默认配置。
      * 工具开关继承父请求，并强制关闭 `subagentTools` 防止递归派发。
      */
     suspend fun subagentRuntimeConfig(
         primaryConfig: AgentModelClient.ModelConfig,
+        profile: SubagentProfile? = null,
     ): AgentModelClient.ModelConfig {
         val settings = SettingsDataStore.subagentSettings()
-        val secondaryModelId = settings.modelId?.takeIf { it.isNotBlank() }
-        val resolvedSecondary = if (secondaryModelId != null) {
+        val role = profile?.takeIf { it.builtin || it.filePath != null }?.let { settings.profiles[it.name] }
+        val candidates = listOfNotNull(role?.modelId, settings.modelId).filter { it.isNotBlank() }.distinct()
+        val resolvedSecondary = if (candidates.isNotEmpty()) {
             ProviderRepository.ensureBuiltInsMerged()
-            ProviderRepository.allProviders().enabledModel(secondaryModelId)
-        } else {
-            null
-        }
+            val providers = ProviderRepository.allProviders()
+            candidates.firstNotNullOfOrNull { providers.enabledModel(it) }
+        } else null
         val base = resolvedSecondary?.let { (provider, model) ->
             buildRuntimeConfig(provider, model)
         } ?: primaryConfig
-        val explicitEffort = settings.resolvedReasoningEffort
+        val explicitEffort = ReasoningEffort.fromWireValue(role?.reasoningEffort) ?: settings.resolvedReasoningEffort
         val effort = when {
             explicitEffort != null -> {
                 val capabilities = base.reasoningCapabilities

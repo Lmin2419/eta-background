@@ -12,7 +12,14 @@ import kotlinx.serialization.Serializable
 internal data class SubagentSettings(
     val modelId: String? = null,
     val reasoningEffort: String? = null,
+    val profiles: Map<String, SubagentProfileModel> = emptyMap(),
 ) {
     val resolvedReasoningEffort: ReasoningEffort?
         get() = ReasoningEffort.fromWireValue(reasoningEffort)
 }
+
+@Serializable
+internal data class SubagentProfileModel(
+    val modelId: String? = null,
+    val reasoningEffort: String? = null,
+)

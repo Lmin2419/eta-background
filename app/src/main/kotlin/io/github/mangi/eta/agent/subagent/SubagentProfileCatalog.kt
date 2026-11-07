@@ -2,6 +2,11 @@ package io.github.mangi.eta.agent.subagent
 
 import io.github.mangi.eta.agent.skill.SkillParser
 import io.github.mangi.eta.agent.terminal.TerminalRuntime
+import io.github.mangi.eta.data.datastore.SettingsDataStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import java.nio.file.StandardCopyOption
+import java.nio.file.AtomicMoveNotSupportedException
 import java.io.File
 import java.nio.file.Files
 
@@ -53,6 +58,7 @@ internal object SubagentProfileCatalog {
         return listAll(agentsDir).firstOrNull { it.name == normalized }
     }
 
+    @Synchronized
     fun saveCustomProfile(
         name: String,
         description: String,
@@ -62,6 +68,7 @@ internal object SubagentProfileCatalog {
         disallowedTools: List<String> = emptyList(),
         overrideBuiltin: Boolean = false,
         agentsDir: File = defaultAgentsDir(),
+        originalName: String? = null,
     ): SubagentProfile {
         val normalizedName = name.trim().lowercase()
         require(isValidName(normalizedName)) {
@@ -98,6 +105,18 @@ internal object SubagentProfileCatalog {
             "拒绝写入符号链接文件"
         }
 
+        val oldName = originalName?.trim()?.lowercase()?.takeIf { it != normalizedName }
+        val oldFile = oldName?.let { old ->
+            require(isValidName(old)) { "非法的原角色名称" }
+            File(agentsDir, "$old.md").also { file ->
+                require(file.isFile && !Files.isSymbolicLink(file.toPath()) && file.canonicalFile.toPath().startsWith(canonicalRoot)) {
+                    "原角色文件不存在或路径无效"
+                }
+                require(!targetFile.exists()) { "同名 Subagent 已存在" }
+            }
+        }
+        val targetBefore = targetFile.takeIf { it.exists() }?.readBytes()
+        val oldBefore = oldFile?.readBytes()
         val markdown = renderProfileMarkdown(
             name = normalizedName,
             description = cleanDescription,
@@ -107,11 +126,32 @@ internal object SubagentProfileCatalog {
             overrideBuiltin = overrideBuiltin,
             prompt = cleanPrompt,
         )
-        targetFile.writeText(markdown, Charsets.UTF_8)
-        return parseProfileFile(targetFile)
-            ?: error("保存 Subagent 文件后解析失败：$normalizedName")
+        try {
+            writeProfileBytes(targetFile, markdown.toByteArray(Charsets.UTF_8))
+            val saved = parseProfileFile(targetFile) ?: error("保存 Subagent 文件后解析失败：$normalizedName")
+            if (oldFile != null) {
+                check(oldFile.delete()) { "无法删除原角色文件" }
+                // Catalog is also called by the synchronous tool API; its callers run on IO.
+                // Keep the bridge here so no caller can rename a file without moving settings.
+                runBlocking(Dispatchers.IO) {
+                    SettingsDataStore.updateSubagentSettings { settings ->
+                        val previous = settings.profiles[oldName]
+                        settings.copy(profiles = (settings.profiles - requireNotNull(oldName) - normalizedName) +
+                            if (previous == null) emptyMap() else mapOf(normalizedName to previous))
+                    }
+                }
+            }
+            return saved
+        } catch (failure: Throwable) {
+            runCatching {
+                restoreProfileFile(targetFile, targetBefore)
+                if (oldFile != null) restoreProfileFile(oldFile, oldBefore)
+            }.exceptionOrNull()?.let(failure::addSuppressed)
+            throw failure
+        }
     }
 
+    @Synchronized
     fun deleteCustomProfile(
         name: String,
         agentsDir: File = defaultAgentsDir(),
@@ -123,7 +163,33 @@ internal object SubagentProfileCatalog {
         if (!targetFile.exists() || Files.isSymbolicLink(targetFile.toPath())) return false
         val canonicalTarget = targetFile.canonicalFile.toPath()
         if (!canonicalTarget.startsWith(canonicalRoot) || canonicalTarget == canonicalRoot) return false
-        return targetFile.delete()
+        val before = targetFile.readBytes()
+        if (!targetFile.delete()) return false
+        try {
+            runBlocking(Dispatchers.IO) {
+                SettingsDataStore.updateSubagentSettings { it.copy(profiles = it.profiles - normalizedName) }
+            }
+        } catch (failure: Throwable) {
+            runCatching { restoreProfileFile(targetFile, before) }.exceptionOrNull()?.let(failure::addSuppressed)
+            throw failure
+        }
+        return true
+    }
+
+    private fun writeProfileBytes(file: File, bytes: ByteArray) {
+        val temporary = File.createTempFile(".eta-profile-", ".tmp", file.parentFile)
+        try {
+            temporary.writeBytes(bytes)
+            try { Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE) }
+            catch (_: AtomicMoveNotSupportedException) {
+                Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            }
+        } finally { temporary.delete() }
+    }
+
+    private fun restoreProfileFile(file: File, bytes: ByteArray?) {
+        if (bytes != null) writeProfileBytes(file, bytes)
+        else check(!file.exists() || file.delete()) { "无法恢复角色文件" }
     }
 
     private fun discoverCustomProfiles(agentsDir: File): List<SubagentProfile> {

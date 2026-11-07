@@ -290,9 +290,9 @@ internal class AgentRuntimeRunExecutor(
             val subagentExecutor = SubagentExecutor(
                 conversationKey = browserKey,
                 parentController = runController,
-                configProvider = {
+                configProvider = { profile ->
                     val rawSubagentConfig = runBlocking {
-                        RuntimeConfigRepository.subagentRuntimeConfig(request.config)
+                        RuntimeConfigRepository.subagentRuntimeConfig(request.config, profile)
                     }
                     AgentRuntimePolicy.constrain(rawSubagentConfig, currentPermissions())
                 },

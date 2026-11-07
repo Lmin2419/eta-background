@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:27:17.317Z" hostname="DESKTOP-C7GT9VI" time="2.208">
+  <properties/>
+  <testcase name="disabledRoleFallsBackToDefaultBeforePrimary" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.254"/>
+  <testcase name="unsavedTemporaryRoleIgnoresNamedOverrides" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.174"/>
+  <testcase name="missingRoleUsesDefaultAndBothMissingUsePrimary" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.494"/>
+  <testcase name="roleSettingsSurviveDataStoreRoundTripAndOldJsonStillReads" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.125"/>
+  <testcase name="roleWinsAndKeepsParentToolBoundaries" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.134"/>
+  <testcase name="settingsWriteFailureRollsBackBothRenameAndDeleteFiles" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.124"/>
+  <testcase name="roleEffortWinsAndNormalizesAgainstTheActualModel" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.175"/>
+  <testcase name="defaultEffortThenModelDefaultAreUsed" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.203"/>
+  <testcase name="deletingCustomProfileAlsoRemovesItsModelSettings" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.302"/>
+  <testcase name="renameCollisionDoesNotOverwriteFilesOrSettings" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.104"/>
+  <testcase name="renamingCustomProfileMovesSettingsWithoutOverwritingAnotherRole" classname="io.github.mangi.eta.data.repository.Stage9SubagentConfigTest" time="0.113"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -32,7 +32,27 @@ Robolectric 原生 Compose 渲染，不是手机照片；仅此项有界面改�
 
 ## 9b · 按角色模型
 
-待执行，不能视为已验收。
+- DataStore 仍使用 `subagent_settings_v1`；新增 `profiles` 字典，旧 JSON 读为空表。设置修改使用 `dataStore.edit` 内的 transform，避免覆盖其他角色刚保存的配置。
+- 解析顺序：角色的启用模型 → 默认子模型 → 主模型；思考强度独立按角色 → 默认 → 实际模型默认，再按能力归一化。未保存临时角色不用同名覆盖。
+- `configProvider(profile)` 在派发、续接的角色确定后调用；活动快照/结果中的 model 仍来自实际配置。请求构造、工具调度、引擎未改；工具继承和禁止递归派发保持。
+- 全局标题改为默认模型/默认思考强度；角色摘要增加模型行，详情顶部加模型和思考强度；复用模型面板，首项为跟随默认模型。失效的默认/角色模型均有 attentionText 提示。
+- 角色文件的保存/删除入口同步迁移/移除设置，UI 不再先保存新名字再另删旧名字。拒绝重名覆盖；临时文件替换；DataStore 更新异常时恢复原文件字节。同步工具入口保留，UI 从 IO 调用；未宣称跨文件与 DataStore 的断电级事务原子性。
+
+### 复现和回归
+
+初始复现 **10 项、7 个语义失败**；另外单独复现改名（增加可选参数但未实现迁移时）和旧无参配置 provider 的派发/续接断言各 1 项失败。[失败证据](stage-9/9b-before/)。相同派发测试兼容旧 Function0 和新 Function1，不以编译错误代替复现。
+
+最终相关回归 **29 项全通过，0 失败、0 错误、0 跳过**：[XML 和字面输出](stage-9/9b-after/)。覆盖四级组合、无效角色回退默认、思考能力归一化、临时/已保存角色、DataStore 往返、文件改名/删除、重名拒绝、写入失败回滚、三个实际模型标签与续接、真实设置选择后仅更新目标角色、原 SettingsReorganizationTest。测试使用独立真实 DataStore/Room，避免 Robolectric 不同图形沙箱共享文件锁；等待实际写入值并推进 UI 帧，没有跳过测试。
+
+| 截图 | 浅色 | 深色 |
+| --- | --- | --- |
+| 角色列表 | [查看](stage-9/9b-after/stage9b-roles-light.png) | [查看](stage-9/9b-after/stage9b-roles-dark.png) |
+| 角色详情 | [查看](stage-9/9b-after/stage9b-role-detail-light.png) | [查看](stage-9/9b-after/stage9b-role-detail-dark.png) |
+| 角色模型选择 | [查看](stage-9/9b-after/stage9b-role-picker-light.png) | [查看](stage-9/9b-after/stage9b-role-picker-dark.png) |
+
+另有[角色模型失效提示](stage-9/9b-after/stage9b-role-unavailable-light.png)。均为原生 Robolectric 渲染；真机的三个模型并发调用留给最终 APK 验收。
+
+委派：腾讯 coding（GLM-5.3）给解析草案，主会话纠正其中失效模型漏回退默认的问题；review 的 DeepSeek V4 Pro 超时后 Kimi K3-1 完成目录保存边界复核，主会话补了异常恢复测试。
 
 ## 9c · 置顶、分组、迁移和备份 v6
 

@@ -88,6 +88,16 @@ internal object SettingsDataStore {
         dataStore.edit { it[SUBAGENT_SETTINGS] = speechJson.encodeToString(settings) }
     }
 
+    suspend fun updateSubagentSettings(transform: (SubagentSettings) -> SubagentSettings) {
+        ensureInitialized()
+        dataStore.edit { preferences ->
+            val current = preferences[SUBAGENT_SETTINGS]?.let { raw ->
+                speechJson.decodeFromString<SubagentSettings>(raw)
+            } ?: SubagentSettings()
+            preferences[SUBAGENT_SETTINGS] = speechJson.encodeToString(transform(current))
+        }
+    }
+
     private const val STORE_NAME = "eta_settings"
 
     private val SELECTED_PROVIDER_ID = stringPreferencesKey("selected_provider_id")
