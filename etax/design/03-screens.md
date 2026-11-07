@@ -504,3 +504,145 @@ EtaCard，标题行「后台操作就绪」+ 右侧总结（「全部正常」`s
   - 完成后点通知，直接进会话看到结果；
   - 从任务条打开已完成任务的小窗，按钮是两个小号 Tonal，没有大橙按钮；
   - 执行中打开小窗，等画面时不出现红色「未完成」。
+
+## S13 · 子代理按角色单独选模型（2026110616 用户需求）
+
+用户原话：「子代理的模型不能单独设置……不能给每个子代理设置单独的模型。」
+
+**现状**：`SubagentSettings` 只有一组全局 `modelId` + `reasoningEffort`。所有子代理（内置 explore / coder / plan 和 `agents/<name>.md` 自定义角色）都用这一个模型；`SubagentExecutor` 的 `configProvider` 是无参函数，拿不到角色名。另外，选中的模型被停用或删除后，设置页会显示「跟随主模型」，用户不知道自己的选择已经失效。
+
+### S13.1 数据与解析顺序
+- `SubagentSettings` 新增 `profiles: Map<String, SubagentProfileModel> = emptyMap()`，其中 `SubagentProfileModel(modelId: String? = null, reasoningEffort: String? = null)`。键是角色名。DataStore 键不变（`subagent_settings_v1`），旧 JSON 没有这个字段，按空表处理。
+- 每次派发或续接子代理，在角色确定之后才解析模型。`configProvider` 改为带参数（角色名或 `SubagentProfile`）：
+  1. 该角色单独设置了模型，且模型仍启用 → 用它；
+  2. 否则用「默认模型」（即现在的全局设置）；
+  3. 都没有 → 跟随主模型。
+- 思考强度按同样顺序取：角色 → 默认 → 模型默认值。最终值按实际模型的能力归一化（沿用 `subagentRuntimeConfig` 现有逻辑）。
+- 临时角色（派发时传 `role` / `tools`、没有保存成文件的）用默认模型。
+- 自定义角色改名时，把设置挪到新名字下；删除角色时，同时删掉它的设置，和文件操作在同一次保存里完成。
+- 工具开关继承、`subagentTools = false` 等现有约束不变。
+
+### S13.2 设置页
+```
+通用与模型
+  启用 Subagent                       [开关]
+  默认模型        跟随主模型（DeepSeek V4）›
+  默认思考强度     跟随模型默认 ▾
+内置 Subagents
+  explore   只读调研…                     ›
+            模型：跟随默认
+  coder     读写文件与终端…                ›
+            模型：Kimi / kimi-k3
+自定义 Subagents
+  reviewer  …                             ›
+            模型已停用，暂用默认            ← attentionText
+```
+- 原来的「Subagent 模型」改名为「默认模型」，「思考强度」改名为「默认思考强度」。
+- 每个角色行的摘要多一行「模型：…」。
+- 点角色行打开现有详情面板（`SubagentProfileDetailContent`），顶部加两行：
+  - 「模型」：复用现有模型选择面板，第一项是「跟随默认模型」；
+  - 「思考强度」：选项按该角色实际会用的模型计算，第一项是「跟随默认」。
+- 模型选择面板（`SubagentModelPickerContent`）加一个参数，用来指定第一项的文字：默认模型用「跟随主模型」，角色用「跟随默认模型」。
+- 选中的模型被停用或删除时，摘要显示「模型已停用，暂用默认」（`attentionText`）。运行时按 S13.1 自动回退，不报错。
+
+### 验收
+- 单元测试：
+  - 解析顺序四种组合：角色有效、角色失效回退默认、只有默认、都没有跟随主模型；
+  - 思考强度归一化；
+  - 改名后设置跟着走，删除后设置清掉；
+  - 旧 JSON 能读。
+- 子代理活动面板里显示的模型名，必须是实际调用的模型。
+- 真机：explore 设模型 A，coder 设模型 B，默认设模型 C。让主 Agent 同时派发 explore、coder、plan，三个活动面板分别显示 A、B、C。
+
+## S14 · 会话置顶与分组（2026110616 用户需求）
+
+用户原话：「会话列表……再加入置顶和会话分组的功能。」
+
+**现状**：`ConversationSummaryUi.isPinned` 和侧栏的「置顶」分区已经存在，但这个字段只在界面预览的假数据里赋值，数据库没有对应列，用户无法置顶。分组功能完全没有。
+
+### S14.1 数据（Room 24 → 25）
+- `conversations` 表新增：
+  - `pinned_at INTEGER`：null 表示未置顶；
+  - `group_id TEXT`：null 表示未分组。
+- 新表 `conversation_groups`：
+  - `id TEXT PRIMARY KEY`
+  - `name TEXT NOT NULL`
+  - `sort_order INTEGER NOT NULL`
+  - `collapsed INTEGER NOT NULL DEFAULT 0`
+  - `created_at INTEGER NOT NULL`
+- 不加外键。删除分组时，在同一个事务里把该组会话的 `group_id` 置空。
+- **必须写 `MIGRATION_24_25`，并补迁移测试**：用一个装了真实数据的 v24 库升级，确认会话、消息、归档状态都在。`EtaDatabase` 配置了 `fallbackToDestructiveMigration(dropAllTables = true)`（上游原有，保持不动），一旦漏写迁移，用户所有会话会被直接清空。
+- 状态链路照阶段 5.5b 的 `archived_at` 做：Entity → `conversationIndex` 查询 → `AgentAppState` → `ConversationSummaryUi`（`isPinned` 改成读真实数据，新增 `groupId`）→ 持久化。
+- 置顶、移动分组、重命名都**不改 `updated_at`**（重命名的问题见 S15.2）。
+
+### S14.2 侧栏排列（不在搜索、不在已归档页）
+```
+置顶                         ← pinned_at 倒序；置顶的会话只在这里出现
+  📌 周报草稿
+▾ 工作 · 3          (◌)      ← 分组标题行，点一下折叠或展开；组内有任务在跑时显示 StatusRing
+    竞品分析
+    …
+▸ 学习 · 5                   ← 已折叠
+今天 / 昨天 / 7 天内 / 更早     ← 未分组的会话，和现在一样
+已归档 (n) ›
+```
+- 每个会话只出现一次，优先级：置顶 > 分组 > 时间分区。
+- 分组按 `sort_order` 排，组内会话按 `updated_at` 倒序。
+- 分组标题行：高 36；名称 `subhead textSecondary`，后面接 · 和数量；右侧是折叠箭头。折叠状态写进 `collapsed`。空分组也显示，数量为 0。
+- 搜索时：结果平铺（和现在一样）。置顶的会话标题前有小图钉，分组名用和「已归档」一样的小标签显示在右侧。
+- 已归档页：平铺。归档时自动取消置顶，但保留分组；取消归档后回到原来的分组。
+
+### S14.3 操作
+- 长按会话进入多选（现有）。选择栏「⋯」面板的顶部新增两项，都支持多选：
+  - 「置顶」/「取消置顶」：选中的全部已置顶时显示「取消置顶」，否则显示「置顶」；
+  - 「移到分组…」。
+  
+  下面保留「重命名」「导出」（只能单选）。
+- 「移到分组」面板：列出现有分组（带数量）、「新建分组」（弹输入框，建好后直接移进去），以及「移出分组」（选中的会话里有已分组的才显示）。
+- 长按分组标题行 → 面板：「重命名分组」「上移」「下移」「删除分组」。删除前确认：「删除分组后，里面的 N 个会话会回到列表，不会被删除」。
+- 分组名：去掉首尾空格后 1–20 个字，不能和已有分组重名（忽略大小写）。不合规时在输入框下方提示。
+
+### S14.4 备份
+- `EtaBackupDocument` 新增 `conversationGroups: List<...> = emptyList()`，`SCHEMA_VERSION` 升到 6。
+- 置顶和分组字段随 `ConversationEntity` 自动带上。
+- 导入 v5 备份：没有分组，所有会话都是未置顶、未分组。
+- 导入时，如果会话引用的分组不存在，就把它的 `group_id` 置空。
+
+### 验收
+- 迁移测试（v24 带数据 → v25，数据完好）。
+- 侧栏排序投影的单元测试：置顶、分组、时间分区、归档、搜索五种情况。
+- DAO 测试：删除分组后会话全部回到未分组。
+- 备份测试：v6 导出再导入后一致；导入 v5 正常。
+- 渲染截图（浅色、深色）：有置顶和两个分组（一个折叠）的侧栏、「移到分组」面板、分组操作面板。
+- 真机：
+  - 置顶 2 个会话，建「工作」「学习」两个分组，各移入几个；
+  - 折叠「学习」后退出 App 再进，仍然是折叠的；
+  - 删除「学习」，里面的会话回到时间分区；
+  - 重命名一个旧会话，它不会跳到「今天」。
+
+## S15 · Linux 时区与顺带发现的逻辑问题（2026110616）
+
+### S15.1 Linux 环境时间是 UTC（用户反馈）
+**原因**：chroot（`ShellProcessSupervisor` 里 4 处 `env -i` 启动：命令和交互两种模式，各有 `/usr/bin/env` 和 busybox 两个分支）和 proot（`ProotCommandBuilder`）启动时都清空了环境变量，只设了 HOME、LANG、PATH 等，**没有设 `TZ`**。Debian 和 Alpine 的安装配置里也没装 `tzdata`。所以 Linux 里的 `date`、Python、Node 等一律按 UTC。后台常驻任务和 Kimi Web 也走同一个包装脚本，问题一样。手机的时区是 Android 系统设置，chroot 里继承不到。
+
+**修法**：
+- App 侧计算两个值：
+  - 时区 ID：`TimeZone.getDefault().id`，例如 `Asia/Shanghai`；
+  - POSIX 备用串：用 `java.time` 的规则生成。固定偏移的时区生成 `<+08>-8`；有夏令时的生成完整规则，例如 `<-05>5<-04>,M3.2.0,M11.1.0`；算不出规则时，退回当前的固定偏移。
+- 在上面 5 处启动命令里加 `TZ=…`：
+  - rootfs 里有 `/usr/share/zoneinfo/<时区 ID>` → 用时区 ID（能正确处理夏令时和时区缩写）；
+  - 没有 → 用 POSIX 串。
+  
+  chroot 的判断写在 root 脚本里（`[ -e "$eta_rootfs/usr/share/zoneinfo/$id" ]`）；proot 的判断在 Kotlin 里做，App 能直接读自己的 rootfs。
+- 不改 rootfs 里的任何文件（不写 `/etc/localtime`），不额外装 `tzdata`，保持轻量。
+- Android 普通 Shell 模式本来就用系统时区，不用改。
+- **验收**：
+  - POSIX 转换的单元测试：`Asia/Shanghai`、`Asia/Kolkata`（+05:30）、`America/New_York`、`Europe/London`、`Australia/Sydney`；
+  - 启动脚本和 proot 参数里包含 `TZ` 的测试；
+  - 真机分别在 chroot 和 proot 里跑 `date`、`date +%z`、`python3 -c 'import datetime;print(datetime.datetime.now())'`，结果和手机时间、时区一致。
+
+### S15.2 顺带发现的逻辑问题
+1. **重命名会把会话顶到「今天」**：`renameConversation` 会顺手更新 `updated_at`，一个旧会话改个名就跳到列表最上面。这是上游原有的行为，但和置顶、分组的排序规则冲突。改为：重命名、置顶、移动分组都不改 `updated_at`；只有新消息才算「更新」。
+2. **手动暂停的任务，息屏再亮屏后悬浮胶囊消失**：息屏时 `removeAmbientWindows()` 会移除胶囊；亮屏后，`publishExecutionState()` 只在任务运行中时才恢复窗口，已暂停的任务不会恢复，胶囊上的「继续」按钮就找不到了（只能去通知里点）。改为：亮屏后，只要还有未结束的任务、并且当前允许显示浮层（不在胖小胖界面里等），就恢复胶囊，暂停状态显示「继续」；边缘流光仍然只在运行中显示。补测试：手动暂停 → 息屏 → 亮屏 → 胶囊存在，且仍是暂停状态。
+3. **子代理选的模型失效时没有提示**：见 S13.2，摘要显示「模型已停用，暂用默认」。
+4. **「置顶」分区一直是空的**：`isPinned` 从来没存进数据库，由 S14 解决。
