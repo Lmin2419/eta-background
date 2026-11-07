@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" tests="22" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:05:38.836Z" hostname="DESKTOP-C7GT9VI" time="21.569">
+  <properties/>
+  <testcase name="returningToEtaSuppressesAmbientWindowsButRetainsBackgroundTaskCard" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="5.175"/>
+  <testcase name="resumeCannotClearTheGuiPauseOrClaimContinuingWhileManualInputStillOwnsIt" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.184"/>
+  <testcase name="backgroundCompletionDoesNotClearGuiOwnersScreenRequest" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.031"/>
+  <testcase name="completedRunStopsKeepingScreenOnBeforeServiceDestruction" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.041"/>
+  <testcase name="backgroundCapsuleSwitchesAndControlsOnlySelectedTaskWithoutKeepingScreenOn" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.037"/>
+  <testcase name="screenOffKeepsBackgroundWorkButNeverResumesManualPause" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.035"/>
+  <testcase name="cancelledPausedOwnerKeepsTheResumeControlAvailable" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.029"/>
+  <testcase name="destroyingServiceClearsActiveRunScreenRequest" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.028"/>
+  <testcase name="retainedGuiPauseDoesNotPauseBackgroundNotificationOrKeepFinishedRunsPromoted" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.025"/>
+  <testcase name="previewResumeWithRetainedGuiOwnershipWorksOnEveryCycle" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.026"/>
+  <testcase name="pauseResumeAndCancellationUpdateBothAppAndGuiWindowState" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.029"/>
+  <testcase name="screenOnRestoresTheManuallyPausedCapsuleWithoutResumingOrGlowing[36]" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="1.25"/>
+  <testcase name="realTerminalCallbacksRemoveGlowAfterTheLastRunDespiteOldForegroundHistory" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.296"/>
+  <testcase name="executionStatusFollowsGuiOwnershipWithoutGivingBackgroundRunsScreenControl" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.029"/>
+  <testcase name="physicalScreenOffKeepsRunActiveAndScreenOnShowsCurrentState" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.063"/>
+  <testcase name="glowOffCreatesNoBackgroundWindowButPreservesForegroundScreenOn" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="5.293"/>
+  <testcase name="completionSwitchAlsoSuppressesTheLegacyResultFallback" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.098"/>
+  <testcase name="systemTaskSurfaceKeepsOnlyTheGlowAndNotificationControlsTargetTheirOriginalRun" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.035"/>
+  <testcase name="screenOnRestoresTheManuallyPausedCapsuleWithoutResumingOrGlowing" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.134"/>
+  <testcase name="readonlyPreviewResumeAfterAppMovedToMainUsesTheSameRuntimeActionAsNotification" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="3.43"/>
+  <testcase name="completionSwitchAlsoSuppressesTheLegacyResultFallback[33]" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="3.504"/>
+  <testcase name="screenOnRestoresTheManuallyPausedCapsuleWithoutResumingOrGlowing[33]" classname="io.github.mangi.eta.agent.runtime.AgentRuntimeScreenOnTest" time="0.817"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

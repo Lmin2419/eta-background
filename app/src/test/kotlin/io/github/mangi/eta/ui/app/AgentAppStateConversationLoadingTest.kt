@@ -57,6 +57,17 @@ class AgentAppStateConversationLoadingTest {
     }
 
     @Test
+    fun renamingAnOldConversationKeepsItsMessageTimestampAndPersistsTheTitle() {
+        seed("old" to conversation("old"))
+        val state = AgentAppState(context, scope)
+        awaitLoaded(state, "old")
+        state.renameConversation("old", "Renamed old conversation")
+        assertEquals(1L, state.conversationPaneState.conversations.single().updatedAtMillis)
+        awaitCondition { runBlocking { EtaDatabase.get(context).conversationDao().conversationEntities().single().title == "Renamed old conversation" } }
+        assertEquals(1L, runBlocking { EtaDatabase.get(context).conversationDao().conversationEntities().single().updatedAt })
+    }
+
+    @Test
     fun notificationReplyPromptIsVisibleFromCheckpointBeforeAResultExists() {
         seed("first" to conversation("first").copy(archivedAt = 42L))
         val payload = io.github.mangi.eta.agent.runtime.AgentUiHandoffPayload("first",

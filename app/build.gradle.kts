@@ -41,7 +41,7 @@ android {
         minSdk = 33
         targetSdk = 37
         // versionCode 规则：yyyyMMdd + 两位当日序号（01 起），发版时随 versionName 一起手动递增。
-        versionCode = 2026110616
+        versionCode = 2026110617
         versionName = "3.3.5"
 
         ndk {
@@ -149,10 +149,11 @@ android {
 }
 
 androidComponents {
+    val apkVersionName = requireNotNull(android.defaultConfig.versionName)
     onVariants { variant ->
-        // 文件名只取 versionName：构建类型标记与 CI 构建元数据都由 versionNameSuffix 带出
+        // Keep manifest metadata; downloads use the base product version and increasing code.
         variant.outputs.forEach { output ->
-            output.outputFileName.set(output.versionName.map { "Etax-v$it.apk" })
+            output.outputFileName.set(output.versionCode.map { "Pangxiaopang-$apkVersionName-$it.apk" })
         }
     }
 }

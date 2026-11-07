@@ -139,6 +139,39 @@ class AgentRuntimeScreenOnTest {
         }
     }
 
+    @Test
+    @Config(sdk = [33, 36, 37])
+    fun screenOnRestoresTheManuallyPausedCapsuleWithoutResumingOrGlowing() {
+        val host = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        val service = host.get()
+        val display = service.getSystemService(android.hardware.display.DisplayManager::class.java).getDisplay(0)
+        try {
+            shadowOf(display).setState(android.view.Display.STATE_ON)
+            val run = service.registerRun("paused-capsule", ownsGui = false)
+            shadowOf(service.getSystemService(android.app.NotificationManager::class.java)).setNotificationsEnabled(false)
+            org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(true)
+            service.invoke("publishExecutionState")
+            org.junit.Assert.assertNotNull(service.field<ComposeView?>("capsuleView"))
+            service.invokeForRun("requestPause", run.runId)
+            assertTrue(run.session.controller.isPaused)
+            shadowOf(display).setState(android.view.Display.STATE_OFF)
+            val receiver = service.field<android.content.BroadcastReceiver>("screenReceiver")
+            receiver.onReceive(service, android.content.Intent(android.content.Intent.ACTION_SCREEN_OFF))
+            assertNull(service.field<ComposeView?>("capsuleView"))
+            shadowOf(display).setState(android.view.Display.STATE_ON)
+            receiver.onReceive(service, android.content.Intent(android.content.Intent.ACTION_SCREEN_ON))
+            assertTrue("screen-on must never resume a manual pause", run.session.controller.isPaused)
+            org.junit.Assert.assertNotNull("paused task needs its Resume control", service.field<ComposeView?>("capsuleView"))
+            assertEquals(AgentOverlayPhase.PAUSED, service.field<MutableState<AgentOverlayState>>("ambientState").value.phase)
+            assertNull(service.field<ComposeView?>("glowView"))
+            assertFalse(AgentRuntimeService.keepScreenOn.value)
+        } finally {
+            shadowOf(display).setState(android.view.Display.STATE_ON)
+            org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(false)
+            host.destroy()
+        }
+    }
+
     @Test fun screenOffKeepsBackgroundWorkButNeverResumesManualPause() {
         val host = Robolectric.buildService(AgentRuntimeService::class.java).create()
         val service = host.get()

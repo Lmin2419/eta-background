@@ -1154,6 +1154,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                     selected.request.handoff?.source, MainActivity.isInForeground)) removeAmbientWindows()
             else if (working) syncActiveRunOverlayVisibility(selected)
             else {
+                syncActiveRunOverlayVisibility(selected)
                 // Preserve fallback pause controls while removing the animated edge window.
                 glowView?.let { view -> runCatching { windowManager?.removeView(view) } }
                 glowView = null

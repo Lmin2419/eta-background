@@ -44,6 +44,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
+import io.github.mangi.eta.R
+import io.github.mangi.eta.ui.theme.EtaTheme
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -137,6 +140,7 @@ internal fun SubagentSettingsScreen(
         }
     }
     val primaryModelName = pickerState.selectedModel?.displayName
+    val secondaryUnavailable = !subagentSettings.modelId.isNullOrBlank() && resolvedSecondary == null
     val secondarySummary = when {
         resolvedSecondary != null -> "${resolvedSecondary.provider.name} / ${resolvedSecondary.model.displayName}"
         !primaryModelName.isNullOrBlank() -> "跟随主模型 ($primaryModelName)"
@@ -380,7 +384,11 @@ internal fun SubagentSettingsScreen(
                 EtaPreferenceDivider()
                 EtaArrowPreference(
                     title = "Subagent 模型",
-                    summary = secondarySummary,
+                    summary = secondarySummary.takeUnless { secondaryUnavailable },
+                    bottomAction = if (secondaryUnavailable) ({
+                        Text(stringResource(R.string.subagent_model_unavailable), color = EtaTheme.colors.attentionText,
+                            style = EtaTheme.type.footnote)
+                    }) else null,
                     enabled = subagentEnabled,
                     startAction = {
                         EtaPreferenceIcon(

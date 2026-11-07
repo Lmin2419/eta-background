@@ -36,7 +36,9 @@ internal object ProotCommandBuilder {
         }.forEach {
             bind(it.sourcePath, "${SharedFolderMounts.LINUX_MOUNTS_ROOT}/${it.name}")
         }
-        args += listOf("/usr/bin/env", "-i", "HOME=/root", "USER=root", "LOGNAME=root", "SHELL=/bin/sh", "TERM=$termType",
+        val timezone = LinuxTimezone.current()
+        val tz = if (File(rootfsPath, "usr/share/zoneinfo/${timezone.id}").isFile) timezone.id else timezone.posix
+        args += listOf("/usr/bin/env", "-i", "HOME=/root", "USER=root", "LOGNAME=root", "SHELL=/bin/sh", "TERM=$termType", "TZ=$tz",
             "LANG=C.UTF-8", "LC_ALL=C.UTF-8", "TMPDIR=/tmp", "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
         if (command != null) args += "NO_COLOR=1"
         args += "/bin/sh"

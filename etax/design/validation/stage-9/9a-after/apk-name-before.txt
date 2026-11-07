@@ -1,0 +1,7 @@
+expected=Pangxiaopang-3.3.5-2026110616.apk
+actual=Etax-v3.3.5-debug.apk
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Documents\ChatGPT\eta项目\stage-9-transaction\check_apk_name.py", line 18, in <module>
+    assert actual == expected, 'APK output filename must identify brand and versionCode'
+           ^^^^^^^^^^^^^^^^^^
+AssertionError: APK output filename must identify brand and versionCode

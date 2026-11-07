@@ -174,7 +174,7 @@ jobs:
             keytool -genkeypair -keystore "$RUNNER_TEMP/tmp.jks" -storepass android -keypass android \
               -alias tmp -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=etax-temp" >/dev/null 2>&1
             "$bt/zipalign" -f 4 "$apk" "$RUNNER_TEMP/aligned.apk"
-            out="$RUNNER_TEMP/Etax-tempkey.apk"
+            out="$RUNNER_TEMP/$(basename "$apk")"
             "$bt/apksigner" sign --ks "$RUNNER_TEMP/tmp.jks" --ks-pass pass:android \
               --out "$out" "$RUNNER_TEMP/aligned.apk"
             apk="$out"
@@ -188,7 +188,11 @@ jobs:
           [[ "$pkg" == "io.github.mangi.etax" ]] || { echo "::error::包名是 $pkg，应为 io.github.mangi.etax"; exit 1; }
           # Check the signed artifact, not only the staging directory.
           python3 - "$apk" <<'PY'
-          import pathlib, sys, zipfile
+          import pathlib, re, sys, zipfile
+          config = pathlib.Path("app/build.gradle.kts").read_text()
+          version = re.search(r'versionName\s*=\s*"([^"]+)"', config).group(1)
+          code = re.search(r'versionCode\s*=\s*(\d+)', config).group(1)
+          assert pathlib.Path(sys.argv[1]).name == f"Pangxiaopang-{version}-{code}.apk", sys.argv[1]
           with zipfile.ZipFile(sys.argv[1]) as apk:
               for entry, source in {
                   "assets/vdrive.dex": "app/src/main/assets/vdrive.dex",

@@ -1232,7 +1232,6 @@ internal class AgentAppState(
         val trimmed = title.trim()
         if (trimmed.isBlank()) return
         conversationTitles = conversationTitles + (conversationId to trimmed)
-        conversationUpdatedAt = conversationUpdatedAt + (conversationId to System.currentTimeMillis())
         refreshConversationSummaries()
         persistConversations()
     }

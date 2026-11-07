@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="subagent_model_unavailable">模型已停用，暫用預設</string>
+</resources>

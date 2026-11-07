@@ -292,6 +292,7 @@ internal class ShellProcessSupervisor(
             return ProotCommandBuilder.payload(rootfsPath, command, sharedMounts, termType)
         }
         val rootfs = shellQuote(rootfsPath)
+        val timezone = LinuxTimezone.current()
         val mode = if (command == null) "session" else "command"
         val payload = shellQuote(command.orEmpty())
         // name 经 SharedFolderMounts 校验只含 [A-Za-z0-9._-]，可安全拼进双引号路径。
@@ -304,6 +305,10 @@ internal class ShellProcessSupervisor(
             eta_busybox=${'$'}2
             eta_mode=${'$'}3
             eta_payload=${'$'}4
+            eta_tz=${shellQuote(timezone.posix)}
+            if [ -e "${'$'}eta_rootfs"${shellQuote("/usr/share/zoneinfo/${timezone.id}")} ]; then
+              eta_tz=${shellQuote(timezone.id)}
+            fi
             eta_mount_required() {
               eta_source=${'$'}1
               eta_target=${'$'}2
@@ -334,26 +339,26 @@ internal class ShellProcessSupervisor(
               if [ -x "${'$'}eta_rootfs/usr/bin/env" ]; then
                 exec "${'$'}eta_busybox" chroot "${'$'}eta_rootfs" /usr/bin/env -i \
                   HOME=/root USER=root LOGNAME=root SHELL=/bin/sh TERM=$termType NO_COLOR=1 \
-                  LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+                  LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ="${'$'}eta_tz" \
                   PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
                   /bin/sh -lc "${'$'}eta_payload"
               fi
               exec "${'$'}eta_busybox" chroot "${'$'}eta_rootfs" /bin/busybox env -i \
                 HOME=/root USER=root LOGNAME=root SHELL=/bin/sh TERM=$termType NO_COLOR=1 \
-                LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+                LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ="${'$'}eta_tz" \
                 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
                 /bin/sh -lc "${'$'}eta_payload"
             fi
             if [ -x "${'$'}eta_rootfs/usr/bin/env" ]; then
               exec "${'$'}eta_busybox" chroot "${'$'}eta_rootfs" /usr/bin/env -i \
                 HOME=/root USER=root LOGNAME=root SHELL=/bin/sh TERM=$termType \
-                LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+                LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ="${'$'}eta_tz" \
                 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
                 /bin/sh
             fi
             exec "${'$'}eta_busybox" chroot "${'$'}eta_rootfs" /bin/busybox env -i \
               HOME=/root USER=root LOGNAME=root SHELL=/bin/sh TERM=$termType \
-              LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+              LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ="${'$'}eta_tz" \
               PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
               /bin/sh
         """.trimIndent()
