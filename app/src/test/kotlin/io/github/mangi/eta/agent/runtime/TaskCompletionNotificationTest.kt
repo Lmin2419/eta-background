@@ -31,6 +31,10 @@ import java.time.Duration
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33, 37], application = Application::class)
 class TaskCompletionNotificationTest {
+    @org.junit.Before @org.junit.After fun clearRetainedCardsBetweenTests() {
+        dismissRetainedTaskCardsForTest(org.robolectric.RuntimeEnvironment.getApplication())
+    }
+
     private lateinit var controller: ServiceController<AgentExecutionService>
     private lateinit var service: AgentExecutionService
     private lateinit var manager: NotificationManager

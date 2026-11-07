@@ -6,15 +6,15 @@
 
 ## 最新测试版本
 
-**2026-11-07 · `3.3.5` 胖小胖 · versionCode `2026110617`**，引擎仍为 `20261105-e49-parallel-observe`。
+**2026-11-07 · `3.3.5` 胖小胖 · versionCode `2026110701`**，引擎仍为 `20261105-e49-parallel-observe`。
 
-阶段 9：子代理按角色选择模型和思考强度，失效时按「角色 → 默认 → 主模型」回退；会话支持置顶、分组、折叠、排序和批量移动，改名不改变消息时间。Room 24→25 保留旧会话与归档；备份升级 v6，带上分组和子代理模型设置，导入 v5 保留手机现有子代理设置。
+修复后台任务条的两个生命周期问题：停止后再发指令，不再提前清掉上一任务的后台预览入口；通知服务重启时，旧实例不会误删仍在运行的新任务入口。手动暂停仍需手动继续，不改变模型请求、任务调度、取帧和虚拟屏引擎。
 
-Linux chroot / proot 跟随手机时区，未安装 zoneinfo 时使用 POSIX 备用规则，不修改 rootfs。手动暂停任务息屏再亮屏后恢复胶囊，仍需手动继续。安装包改名为 **`Pangxiaopang-3.3.5-2026110617.apk`**，包名、签名和 manifest versionName 规则不变。
+阶段 9 的角色模型、会话置顶分组、备份 v6 和 Linux 时区能力保留。安装包 **`Pangxiaopang-3.3.5-2026110701.apk`**。
 
-**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110617) · [阶段 9 测试、浅深色截图与手机验收清单](etax/design/validation/stage-9.md)
+**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110701) · [后台任务条回归与手机验收清单](etax/design/validation/task-preview-continuity.md)
 
-全量检查、签名构建和 Release 发布通过后交付；三个实际模型派发、进程重启后的分组状态及两种 Linux 环境时间仍需手机验收。
+以该提交的 CI 全绿和签名 Release 为发布门槛；自动测试不代替真实手机上的暂停、续指令和后台页面验收。
 
 > 开发基线：`main` 就是最新版本，后续开发直接基于 `main`。
 

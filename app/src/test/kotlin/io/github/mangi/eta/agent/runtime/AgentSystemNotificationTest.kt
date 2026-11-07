@@ -22,6 +22,10 @@ import java.time.Duration
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36, 37], application = Application::class)
 class AgentSystemNotificationTest {
+    @org.junit.Before @org.junit.After fun clearRetainedCardsBetweenTests() {
+        dismissRetainedTaskCardsForTest(org.robolectric.RuntimeEnvironment.getApplication())
+    }
+
     @Test fun runningBackgroundCardUsesViewPauseStopOrder() {
         val host = Robolectric.buildService(AgentExecutionService::class.java).create()
         val service = host.get()

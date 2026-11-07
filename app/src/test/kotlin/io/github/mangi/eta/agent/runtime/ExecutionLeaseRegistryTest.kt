@@ -18,8 +18,11 @@ class ExecutionLeaseRegistryTest {
         registry.acquire("next") { stopped = true }
         assertTrue(registry.drainOwner(1).isEmpty())
         assertEquals(1, registry.count())
+        assertFalse(registry.contains("old"))
+        assertTrue(registry.contains("next"))
         registry.attachOwner(2)
         registry.drainOwner(2).forEach { it() }
+        assertFalse(registry.contains("next"))
         assertTrue(stopped)
     }
 

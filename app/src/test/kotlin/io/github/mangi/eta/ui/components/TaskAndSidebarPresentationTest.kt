@@ -34,6 +34,10 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 @Config(sdk = [36], application = Application::class, qualifiers = "w411dp-h896dp-xhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class TaskAndSidebarPresentationTest {
+    @org.junit.Before @org.junit.After fun clearRetainedCardsBetweenTests() {
+        dismissRetainedTaskCardsForTest(org.robolectric.RuntimeEnvironment.getApplication())
+    }
+
     @Before fun init() { SettingsDataStore.init(RuntimeEnvironment.getApplication()) }
 
     @Test fun completionRowsDeduplicateAndUseFinishOrderAndKnownDurations() {

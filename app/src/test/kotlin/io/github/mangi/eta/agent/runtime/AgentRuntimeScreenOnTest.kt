@@ -602,6 +602,27 @@ class AgentRuntimeScreenOnTest {
         }
     }
 
+    @Test fun pausingFromTheTaskStripRetainsTheBackgroundPackageWhenAnotherRunIsPublished() {
+        val host = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        try {
+            val service = host.get()
+            val background = service.registerRun("strip-paused", ownsGui = false)
+            background.lastBackgroundApp = "fixture.background"
+            service.invoke("publishExecutionState")
+            AgentRuntimeService.dispatchNotificationAction(AgentExecutionService.ACTION_PAUSE_RUN, background.runId)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertTrue(background.session.controller.isPaused)
+            service.registerRun("another-instruction", ownsGui = false)
+            service.invoke("publishExecutionState")
+            shadowOf(Looper.getMainLooper()).idle()
+            val card = AgentExecutionService.taskSnapshots.value.single { it.runId == background.runId }
+            assertTrue(card.paused)
+            assertFalse(card.completed)
+            assertEquals("fixture.background", card.targetPackage)
+            assertTrue("A later publication must not resume a manual pause", background.session.controller.isPaused)
+        } finally { host.destroy() }
+    }
+
     private fun AgentRuntimeService.assertTaskStatuses(expected: Map<String, AgentOverlayStatus>) {
         invoke("publishExecutionState")
         shadowOf(Looper.getMainLooper()).idle()

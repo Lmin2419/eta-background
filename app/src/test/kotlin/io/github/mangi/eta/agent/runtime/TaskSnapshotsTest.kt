@@ -15,6 +15,10 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class TaskSnapshotsTest {
+    @org.junit.Before @org.junit.After fun clearRetainedCardsBetweenTests() {
+        dismissRetainedTaskCardsForTest(org.robolectric.RuntimeEnvironment.getApplication())
+    }
+
     @Test fun snapshotsPreservePreviousValuesAndTrackPauseCompletionAndDismissal() {
         val context = RuntimeEnvironment.getApplication()
         val first = TaskNotificationState("snapshot-a", "a", "A", AgentOverlayStatus.Reasoning)

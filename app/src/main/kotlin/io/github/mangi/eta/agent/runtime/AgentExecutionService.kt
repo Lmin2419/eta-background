@@ -140,7 +140,9 @@ internal class AgentExecutionService : Service() {
         if (current) instance = null
         replyConnections.values.toList().forEach { it.close() }
         stopQueue.close(leases.drainOwner(owner))
-        if (current) cards.values.filterNot { it.completed }.map { it.runId }.forEach { removeCard(this, it) }
+        // A run acquired after stopSelf belongs to the next service, just like its surviving lease.
+        if (current) cards.values.filter { !it.completed && !leases.contains("run:${it.runId}") }
+            .map { it.runId }.forEach { removeCard(this, it) }
         super.onDestroy()
     }
 
@@ -559,7 +561,10 @@ internal class AgentExecutionService : Service() {
             val newBatch = leases.count() == 0
             if (!leases.acquire(id, allowBoundFallback, onStop)) return true
             if (newBatch) onMain {
-                cards.values.filter { it.completed }.map { it.runId }.forEach { removeCard(context, it) }
+                // A stopped/finished background page still needs its in-chat preview entry.
+                // Completed cards remain bounded by completeTask and can be explicitly dismissed.
+                cards.values.filter { it.completed && it.targetPackage.isNullOrBlank() }
+                    .map { it.runId }.forEach { removeCard(context, it) }
             }
             return try {
                 context.applicationContext.startForegroundService(Intent(context, AgentExecutionService::class.java))
