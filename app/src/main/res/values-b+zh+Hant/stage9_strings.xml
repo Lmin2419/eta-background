@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="subagent_model_unavailable">模型已停用，暫用預設</string>
+    <string name="eta_group_name_empty">請輸入分組名</string>
+    <string name="eta_group_name_long">分組名最多 20 個字</string>
+    <string name="eta_group_name_duplicate">已存在同名分組</string>
+    <string name="eta_pin">置頂</string>
+    <string name="eta_unpin">取消置頂</string>
+    <string name="eta_move_to_group">移到分組</string>
+    <string name="eta_new_group">新增分組</string>
+    <string name="eta_remove_from_group">移出分組</string>
+    <string name="eta_rename_group">重新命名分組</string>
+    <string name="eta_move_group_up">上移</string>
+    <string name="eta_move_group_down">下移</string>
+    <string name="eta_delete_group">刪除分組</string>
+    <string name="eta_group_name">分組名</string>
+    <string name="eta_delete_group_body">刪除分組後，裡面的 %1$d 個會話會回到列表，不會被刪除</string>
+    <string name="eta_group_count">%1$s · %2$d</string>
+    <string name="eta_group_collapsed">已摺疊</string>
+    <string name="eta_group_expanded">已展開</string>
 </resources>

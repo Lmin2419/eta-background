@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.data.repository.GeminiProviderConfigurationTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:55:19.375Z" hostname="DESKTOP-C7GT9VI" time="0.436">
+  <properties/>
+  <testcase name="builtinMergeAppendsGeminiAndPreservesTheSelectedCompatibleConnection" classname="io.github.mangi.eta.data.repository.GeminiProviderConfigurationTest" time="0.126"/>
+  <testcase name="backupUsesNewVersionAndRestoresTheNativeType" classname="io.github.mangi.eta.data.repository.GeminiProviderConfigurationTest" time="0.166"/>
+  <testcase name="configurationDraftRetainsNativeProtocolAndSearchToggle" classname="io.github.mangi.eta.data.repository.GeminiProviderConfigurationTest" time="0.037"/>
+  <testcase name="unknownManualModelUsesDefaultWithoutInventingThinkingCapabilities" classname="io.github.mangi.eta.data.repository.GeminiProviderConfigurationTest" time="0.017"/>
+  <testcase name="customNativeProxyRoundTripsCopiesAndProjectsWithoutAnOpenAiEndpoint" classname="io.github.mangi.eta.data.repository.GeminiProviderConfigurationTest" time="0.088"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

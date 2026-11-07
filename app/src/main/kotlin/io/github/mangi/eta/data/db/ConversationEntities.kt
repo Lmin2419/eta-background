@@ -26,10 +26,14 @@ internal data class ConversationEntity(
     /** 会话最近使用的本地 Model.id；null 表示跟随默认模型。 */
     @ColumnInfo(name = "model_id") val modelId: String? = null,
     @ColumnInfo(name = "archived_at") @SerialName("archived_at") val archivedAt: Long? = null,
+    @ColumnInfo(name = "pinned_at") @SerialName("pinned_at") val pinnedAt: Long? = null,
+    @ColumnInfo(name = "group_id") @SerialName("group_id") val groupId: String? = null,
 )
 
 internal data class ConversationMetadata(
     @ColumnInfo(name = "archived_at") val archivedAt: Long? = null,
+    @ColumnInfo(name = "pinned_at") val pinnedAt: Long? = null,
+    @ColumnInfo(name = "group_id") val groupId: String? = null,
     val id: String,
     val title: String,
     @ColumnInfo(name = "thinking_enabled") val thinkingEnabled: Boolean,
@@ -45,6 +49,8 @@ internal data class ConversationMetadata(
 /** 会话侧栏只读取定长预览，不读取上下文、角色卡与修订正文。 */
 internal data class ConversationIndexRow(
     @ColumnInfo(name = "archived_at") val archivedAt: Long? = null,
+    @ColumnInfo(name = "pinned_at") val pinnedAt: Long? = null,
+    @ColumnInfo(name = "group_id") val groupId: String? = null,
     val id: String,
     val title: String,
     @ColumnInfo(name = "reasoning_effort") val reasoningEffort: String,
@@ -60,6 +66,8 @@ internal data class ConversationIndexRow(
 
 internal data class ConversationIdentity(
     @ColumnInfo(name = "archived_at") val archivedAt: Long? = null,
+    @ColumnInfo(name = "pinned_at") val pinnedAt: Long? = null,
+    @ColumnInfo(name = "group_id") val groupId: String? = null,
     val id: String,
     val title: String,
     @ColumnInfo(name = "created_at") val createdAt: Long,
@@ -135,4 +143,14 @@ internal data class ConversationMessageEntity(
     @ColumnInfo(name = "result_summary") val resultSummary: String? = null,
     @ColumnInfo(name = "image_count") val imageCount: Int = 0,
     @ColumnInfo(name = "tools_json") val toolsJson: String = "[]",
+)
+
+@Serializable
+@Entity(tableName = "conversation_groups")
+internal data class ConversationGroupEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    @ColumnInfo(name = "sort_order") @SerialName("sort_order") val sortOrder: Int,
+    @ColumnInfo(defaultValue = "0") val collapsed: Boolean = false,
+    @ColumnInfo(name = "created_at") @SerialName("created_at") val createdAt: Long,
 )

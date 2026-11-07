@@ -438,6 +438,13 @@ fun AgentAppRoot(
                 delete = agentState::deleteConversations,
                 archive = agentState::archiveConversations,
                 unarchive = agentState::unarchiveConversations,
+                pin = agentState::setConversationsPinned,
+                moveToGroup = agentState::moveConversationsToGroup,
+                createGroup = agentState::createConversationGroup,
+                renameGroup = agentState::renameConversationGroup,
+                toggleGroup = agentState::toggleConversationGroup,
+                reorderGroup = agentState::moveConversationGroup,
+                deleteGroup = agentState::deleteConversationGroup,
             ),
             onConversationDelete = { conversation ->
                 conversationDeleteTarget = conversation

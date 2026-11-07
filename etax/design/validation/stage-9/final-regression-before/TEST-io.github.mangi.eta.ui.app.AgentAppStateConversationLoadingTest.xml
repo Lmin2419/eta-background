@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" tests="24" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:47:50.051Z" hostname="DESKTOP-C7GT9VI" time="2.838">
+  <properties/>
+  <testcase name="pinMoveCollapseRenameAndDeleteGroupsPreserveMessageDatesAcrossRestart" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.526"/>
+  <testcase name="notificationContinuationImportsTheAssistantArchiveBeforeSelectingItsChat" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.155"/>
+  <testcase name="returningToTheLatestMessagesReleasesOldPagesWithoutDeletingHistory" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.138"/>
+  <testcase name="notificationReplyPromptIsVisibleFromCheckpointBeforeAResultExists" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.08"/>
+  <testcase name="fastConversationSwitchesKeepTheLastSelectionAndRestoreEveryBody" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.081"/>
+  <testcase name="archiveDeepLinkRecoversWhenLaunchedFromMain" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.092"/>
+  <testcase name="bulkDeleteStopsBothRunsAndWaitsForAllSettlementsWithoutResurrection" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.109"/>
+  <testcase name="deletingTheSelectedConversationLoadsTheNextConversation" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.126"/>
+  <testcase name="deletingAnActiveConversationWaitsForItsResultAndKeepsOtherRuns" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.071"/>
+  <testcase name="archivingCurrentConversationSwitchesAndAllArchivedRestartHasEmptySelection" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.071"/>
+  <testcase name="renamingAnOldConversationKeepsItsMessageTimestampAndPersistsTheTitle" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.075"/>
+  <testcase name="scrollingBackToHistoryCancelsPageReleaseWithoutCancellingTheNextRead" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.154"/>
+  <testcase name="loadingAnEarlierPageThenDeletingATurnPreservesTheEarlierPrefix" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.096"/>
+  <testcase name="repeatedPrefetchRequestsLoadOnlyOnePage" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.091"/>
+  <testcase name="bulkDeletePublishesOneListAndPersistsOnceIncludingSelectionChange" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.075"/>
+  <testcase name="switchingConversationCancelsAnOutstandingHistoryRead" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.1"/>
+  <testcase name="archiveSkipsRunningPersistsUnloadedRowsAndUndoCannotOverwriteNewerArchive" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.084"/>
+  <testcase name="deletingAnUnloadedConversationKeepsOtherStoredConversationsIntact" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.078"/>
+  <testcase name="startupExposesNoWritableStateUntilTheSnapshotLoadsAndAllowsRetry" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.121"/>
+  <testcase name="searchAndExportIncludeMessagesOutsideTheLoadedWindow" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.114"/>
+  <testcase name="failedPageKeepsTheCurrentWindowAndCanBeRetried" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.083"/>
+  <testcase name="concurrentResultsAndStopRemainBoundToTheirConversations" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.14"/>
+  <testcase name="backgroundQueueContinuesWithItsCompletedHistoryWhileAnotherConversationRuns" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.105"/>
+  <testcase name="openingArchiveKeepsItArchivedButSendingMessageUnarchivesDurably" classname="io.github.mangi.eta.ui.app.AgentAppStateConversationLoadingTest" time="0.061"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

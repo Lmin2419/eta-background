@@ -57,6 +57,41 @@ class AgentAppStateConversationLoadingTest {
     }
 
     @Test
+    fun pinMoveCollapseRenameAndDeleteGroupsPreserveMessageDatesAcrossRestart() {
+        seed("old" to conversation("old"), "other" to conversation("other"))
+        val state = AgentAppState(context, scope); awaitLoaded(state, "old")
+        state.setConversationsPinned(setOf("old", "other"), true)
+        assertTrue(state.conversationPaneState.conversations.all { it.isPinned && it.pinnedAt != null })
+        assertNull(state.createConversationGroup(" 工作 ", setOf("old")))
+        val work = state.conversationPaneState.groups.single()
+        assertEquals("工作", work.name)
+        assertNull(state.createConversationGroup("学习", setOf("other")))
+        val learn = state.conversationPaneState.groups.last()
+        state.toggleConversationGroup(learn.id); state.moveConversationGroup(learn.id, -1)
+        assertEquals(learn.id, state.conversationPaneState.groups.first().id)
+        org.junit.Assert.assertNotNull(state.renameConversationGroup(learn.id, " 工作 "))
+        org.junit.Assert.assertNotNull(state.createConversationGroup(" "))
+        org.junit.Assert.assertNotNull(state.createConversationGroup("x".repeat(21)))
+        assertNull(state.renameConversationGroup(work.id, "Work"))
+        org.junit.Assert.assertNotNull(state.createConversationGroup("work"))
+        state.renameConversation("old", "旧会话新标题")
+        assertTrue(state.conversationPaneState.conversations.all { it.updatedAtMillis == 1L })
+        awaitCondition { runBlocking { EtaDatabase.get(context).conversationDao().conversationGroups().firstOrNull()?.id == learn.id } }
+        val reloaded = runBlocking { AgentConversationStore.loadAsync(context) }
+        assertTrue(reloaded.groups.first().collapsed)
+        assertEquals(work.id, reloaded.conversationsById.getValue("old").groupId)
+        org.junit.Assert.assertNotNull(reloaded.conversationsById.getValue("old").pinnedAt)
+        state.archiveConversations(setOf("old"))
+        val archived = state.conversationPaneState.conversations.first { it.id == "old" }
+        assertFalse(archived.isPinned); assertEquals(work.id, archived.groupId)
+        state.unarchiveConversations(setOf("old")); state.deleteConversationGroup(work.id)
+        assertNull(state.conversationPaneState.conversations.first { it.id == "old" }.groupId)
+        awaitCondition { runBlocking { EtaDatabase.get(context).conversationDao().conversationGroups().none { it.id == work.id } } }
+        assertEquals(2, runBlocking { EtaDatabase.get(context).conversationDao().conversationEntities().size })
+        assertTrue(state.conversationPaneState.conversations.all { it.updatedAtMillis == 1L })
+    }
+
+    @Test
     fun renamingAnOldConversationKeepsItsMessageTimestampAndPersistsTheTitle() {
         seed("old" to conversation("old"))
         val state = AgentAppState(context, scope)

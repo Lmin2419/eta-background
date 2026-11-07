@@ -35,6 +35,31 @@ class AgentConversationPersistenceTest {
     }
 
     @Test
+    fun groupsAndPinMetadataSurviveLoadedAndUnloadedIncrementalSaves() = runBlocking {
+        val groups = listOf(io.github.mangi.eta.data.db.ConversationGroupEntity("work", "工作", 0, false, 1),
+            io.github.mangi.eta.data.db.ConversationGroupEntity("learn", "学习", 1, true, 2))
+        val initial = snapshot(mapOf("active" to state("active").copy(pinnedAt = 10, groupId = "work"),
+            "other" to state("other").copy(groupId = "work"))).copy(groups = groups)
+        AgentConversationPersistence().save(context, initial)
+        val dao = EtaDatabase.get(context).conversationDao()
+        assertEquals(10L, dao.conversation("active")?.pinnedAt)
+        assertEquals("work", dao.conversation("active")?.groupId)
+        assertEquals(groups, dao.conversationGroups())
+        val loaded = AgentConversationStore.loadAsync(context)
+        assertEquals(10L, loaded.conversationsById.getValue("active").pinnedAt)
+        assertEquals("work", loaded.conversationsById.getValue("other").groupId)
+        assertEquals(groups, loaded.groups)
+        val before = dao.messages(); val dates = dao.conversationEntities().associate { it.id to it.updatedAt }
+        val next = loaded.copy(conversationsById = loaded.conversationsById + ("other" to loaded.conversationsById.getValue("other")
+            .copy(pinnedAt = 20, groupId = "learn")), groups = groups.map { it.copy(collapsed = !it.collapsed) })
+        AgentConversationPersistence(loaded).save(context, next)
+        assertEquals(20L, dao.conversation("other")?.pinnedAt)
+        assertEquals("learn", dao.conversation("other")?.groupId)
+        assertEquals(before, dao.messages()); assertEquals(dates, dao.conversationEntities().associate { it.id to it.updatedAt })
+        assertEquals(next.groups, AgentConversationStore.loadAsync(context).groups)
+    }
+
+    @Test
     fun searchSuggestionsStayInLoadedConversationAndNeverReachMessageStorage() = runBlocking {
         val message = AgentMessageUi("search-answer", "正文与引用", searchSuggestionsHtml = listOf("<div>短期建议</div>"))
         val conversation = state("search").copy(messages = listOf(message))

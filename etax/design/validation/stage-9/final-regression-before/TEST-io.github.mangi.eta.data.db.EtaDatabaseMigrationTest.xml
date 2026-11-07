@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.data.db.EtaDatabaseMigrationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:46:51.724Z" hostname="DESKTOP-C7GT9VI" time="6.707">
+  <properties/>
+  <testcase name="migration24To25ThroughProductionBuilderPreservesRealDataAndArchiveState" classname="io.github.mangi.eta.data.db.EtaDatabaseMigrationTest" time="5.219"/>
+  <testcase name="migration23To24PreservesEveryExistingTableAndAddsNullableArchive" classname="io.github.mangi.eta.data.db.EtaDatabaseMigrationTest" time="0.587"/>
+  <testcase name="migration6To24PreservesDataAndMovesCompleteConversationContext" classname="io.github.mangi.eta.data.db.EtaDatabaseMigrationTest" time="0.196"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

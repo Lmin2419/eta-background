@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:47:52.895Z" hostname="DESKTOP-C7GT9VI" time="0.712">
+  <properties/>
+  <testcase name="aNewOffscreenRevisionWithAMissingTargetRollsBackWithoutRejectingOldMetadata" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.058"/>
+  <testcase name="contextCompressionDoesNotRewriteTheUnchangedJournalOrMessages" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.043"/>
+  <testcase name="restartAfterSavingAroundAStreamingPlaceholderKeepsEveryMessage" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.064"/>
+  <testcase name="deletingAConversationCleansItsChunksAndPreservesOthers" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.053"/>
+  <testcase name="offscreenRoleplayRevisionsUpdateStoredRowsWithoutLoadingTheirMessageWindow" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.069"/>
+  <testcase name="groupsAndPinMetadataSurviveLoadedAndUnloadedIncrementalSaves" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.066"/>
+  <testcase name="appendingOnlyWritesTheChangedConversationAndNewMessages" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.048"/>
+  <testcase name="renamingAnUnloadedConversationPreservesItsMessagesAndContext" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.054"/>
+  <testcase name="appendingAndDeletingWithinATailWindowNeverRewritesTheUnloadedPrefix" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.061"/>
+  <testcase name="selectionAndDraftChangesDoNotRewriteStoredContent" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.042"/>
+  <testcase name="adoptingAnEarlierPageDoesNotRewriteItsUnchangedRows" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.056"/>
+  <testcase name="aFailedTransactionRollsBackAndTheSameWriterCanRetry" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.054"/>
+  <testcase name="searchSuggestionsStayInLoadedConversationAndNeverReachMessageStorage" classname="io.github.mangi.eta.ui.app.AgentConversationPersistenceTest" time="0.039"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

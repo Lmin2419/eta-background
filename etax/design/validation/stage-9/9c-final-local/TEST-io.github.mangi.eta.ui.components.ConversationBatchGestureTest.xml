@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:55:34.868Z" hostname="DESKTOP-C7GT9VI" time="2.38">
+  <properties/>
+  <testcase name="archivedSubpageSupportsUnarchiveAndBackAndUndoExpires" classname="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" time="0.638"/>
+  <testcase name="searchThenSelectAll_limits" classname="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" time="0.224"/>
+  <testcase name="cancelAndBack_exitMultiSelect" classname="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" time="0.299"/>
+  <testcase name="searchIncludesArchived" classname="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" time="0.142"/>
+  <testcase name="screenshots_lightDark200" classname="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" time="0.464"/>
+  <testcase name="tapToggles_untilZero_exits" classname="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" time="0.156"/>
+  <testcase name="longPress_selectsOne_noOpen" classname="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" time="0.11"/>
+  <testcase name="moreDisabledInMultiSelect" classname="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" time="0.184"/>
+  <testcase name="archive_showsCount_andUndo" classname="io.github.mangi.eta.ui.components.ConversationBatchGestureTest" time="0.155"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

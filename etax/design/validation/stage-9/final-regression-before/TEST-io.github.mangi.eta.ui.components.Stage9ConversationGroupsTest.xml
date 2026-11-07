@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.ui.components.Stage9ConversationGroupsTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:48:04.933Z" hostname="DESKTOP-C7GT9VI" time="2.795">
+  <properties/>
+  <testcase name="sidebarShowsPinsThenGroupsWithCollapsedMembersHidden" classname="io.github.mangi.eta.ui.components.Stage9ConversationGroupsTest" time="0.347"/>
+  <testcase name="fingerLongPressGroupOffersReorderRenameAndSafeDeleteConfirmation" classname="io.github.mangi.eta.ui.components.Stage9ConversationGroupsTest" time="0.543"/>
+  <testcase name="fingerLongPressAndMoveSheetKeepTheSelectedConversationIds" classname="io.github.mangi.eta.ui.components.Stage9ConversationGroupsTest" time="0.505"/>
+  <testcase name="groupRenameAndReorderCallbacksKeepStableGroupIds" classname="io.github.mangi.eta.ui.components.Stage9ConversationGroupsTest" time="0.403"/>
+  <testcase name="newGroupKeepsSelectionAndDisplaysInlineValidationWithoutClosing" classname="io.github.mangi.eta.ui.components.Stage9ConversationGroupsTest" time="0.456"/>
+  <testcase name="multiSelectPinsAndAllPinnedSelectionUnpins" classname="io.github.mangi.eta.ui.components.Stage9ConversationGroupsTest" time="0.536"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

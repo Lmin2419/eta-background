@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.ui.components.AgentChatLongConversationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:47:53.778Z" hostname="DESKTOP-C7GT9VI" time="2.85">
+  <properties/>
+  <testcase name="fiveHundredMessagesKeepABoundedViewportWhileScrolling" classname="io.github.mangi.eta.ui.components.AgentChatLongConversationTest" time="2.848"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

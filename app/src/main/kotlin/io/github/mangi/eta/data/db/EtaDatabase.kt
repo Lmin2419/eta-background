@@ -11,6 +11,7 @@ import androidx.room.migration.Migration
     entities = [
         AgentTextChunkEntity::class,
         ConversationEntity::class,
+        ConversationGroupEntity::class,
         ConversationContextCheckpointEntity::class,
         ConversationMessageEntity::class,
         ConversationStateEntity::class,
@@ -26,7 +27,7 @@ import androidx.room.migration.Migration
         CharacterEntity::class,
         UserPersonaEntity::class,
     ],
-    version = 24,
+    version = 25,
     exportSchema = false,
 )
 internal abstract class EtaDatabase : RoomDatabase() {
@@ -67,6 +68,7 @@ internal abstract class EtaDatabase : RoomDatabase() {
                         MIGRATION_21_22,
                         MIGRATION_22_23,
                         MIGRATION_23_24,
+                        MIGRATION_24_25,
                     )
                     .addCallback(object : Callback() {
                         override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) { createTextChunkCleanup(db) }
@@ -113,6 +115,14 @@ internal abstract class EtaDatabase : RoomDatabase() {
 
         internal val MIGRATION_21_22 = Migration(21, 22) { database ->
             database.execSQL("ALTER TABLE conversations ADD COLUMN model_id TEXT")
+        }
+
+        internal val MIGRATION_24_25 = Migration(24, 25) { database ->
+            database.execSQL("ALTER TABLE conversations ADD COLUMN pinned_at INTEGER")
+            database.execSQL("ALTER TABLE conversations ADD COLUMN group_id TEXT")
+            database.execSQL("CREATE TABLE IF NOT EXISTS conversation_groups (" +
+                "id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, sort_order INTEGER NOT NULL, " +
+                "collapsed INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)")
         }
 
         internal val MIGRATION_23_24 = Migration(23, 24) { database ->

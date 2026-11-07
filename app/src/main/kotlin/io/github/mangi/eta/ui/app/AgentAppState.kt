@@ -149,6 +149,8 @@ internal class AgentAppState(
     private var conversationsById: Map<String, AgentChatHomeUiState> = initialConversations.conversationsById
     private var conversationTitles: Map<String, String> = initialConversations.titles
     private var conversationUpdatedAt: Map<String, Long> = initialConversations.updatedAt
+    private var conversationGroups = initialConversations.groups
+    private var lastPinTimestamp = initialConversations.conversationsById.values.mapNotNull { it.pinnedAt }.maxOrNull() ?: 0L
 
     var homeState by mutableStateOf(
         selectedConversationId?.let(conversationsById::get) ?: emptyChatState(defaultThinkingEnabled)
@@ -344,6 +346,7 @@ internal class AgentAppState(
             conversationsById = snapshot.conversationsById
             conversationTitles = snapshot.titles
             conversationUpdatedAt = snapshot.updatedAt
+            conversationGroups = snapshot.groups
             conversationPersistence = AgentConversationPersistence(snapshot)
             fileAttachmentOwnerVersion += 1
             homeState = selectedConversationId
@@ -914,7 +917,7 @@ internal class AgentAppState(
                     ?: return@withLock false
                 val current = conversationsById[conversationId] ?: return@withLock false
                 val restored = loaded.copy(
-                    archivedAt = current.archivedAt,
+                    archivedAt = current.archivedAt, pinnedAt = current.pinnedAt, groupId = current.groupId,
                     input = current.input,
                     pendingImages = current.pendingImages,
                     pendingFileReferences = current.pendingFileReferences,
@@ -925,7 +928,7 @@ internal class AgentAppState(
                 )
                 val latest = conversationsById[conversationId] ?: return@withLock false
                 updateConversation(conversationId, restored.copy(
-                    archivedAt = latest.archivedAt,
+                    archivedAt = latest.archivedAt, pinnedAt = latest.pinnedAt, groupId = latest.groupId,
                     input = latest.input,
                     pendingImages = latest.pendingImages,
                     pendingFileReferences = latest.pendingFileReferences,
@@ -1196,6 +1199,77 @@ internal class AgentAppState(
         }
     }
 
+    fun setConversationsPinned(ids: Set<String>, pinned: Boolean) {
+        val timestamp = maxOf(System.currentTimeMillis(), lastPinTimestamp + 1).also { lastPinTimestamp = it }
+        conversationsById = conversationsById.mapValues { (id, state) ->
+            if (id in ids && id !in pendingConversationDeletes && state.archivedAt == null)
+                state.copy(pinnedAt = if (pinned) state.pinnedAt ?: timestamp else null) else state
+        }
+        persistConversationOrganization()
+    }
+
+    fun moveConversationsToGroup(ids: Set<String>, groupId: String?) {
+        if (groupId != null && conversationGroups.none { it.id == groupId }) return
+        conversationsById = conversationsById.mapValues { (id, state) ->
+            if (id in ids && id !in pendingConversationDeletes) state.copy(groupId = groupId) else state
+        }
+        persistConversationOrganization()
+    }
+
+    private fun groupNameError(name: String, excluding: String? = null): String? {
+        val clean = name.trim()
+        return when {
+            clean.isEmpty() -> appContext.getString(R.string.eta_group_name_empty)
+            clean.codePointCount(0, clean.length) > 20 -> appContext.getString(R.string.eta_group_name_long)
+            conversationGroups.any { it.id != excluding && it.name.equals(clean, ignoreCase = true) } -> appContext.getString(R.string.eta_group_name_duplicate)
+            else -> null
+        }
+    }
+
+    fun createConversationGroup(name: String, ids: Set<String> = emptySet()): String? {
+        groupNameError(name)?.let { return it }
+        val group = io.github.mangi.eta.data.db.ConversationGroupEntity(
+            java.util.UUID.randomUUID().toString(), name.trim(), (conversationGroups.maxOfOrNull { it.sortOrder } ?: -1) + 1,
+            createdAt = System.currentTimeMillis())
+        conversationGroups = conversationGroups + group
+        moveConversationsToGroup(ids, group.id) // one state save includes the new group and all selected conversations
+        return null
+    }
+
+    fun renameConversationGroup(id: String, name: String): String? {
+        groupNameError(name, id)?.let { return it }
+        conversationGroups = conversationGroups.map { if (it.id == id) it.copy(name = name.trim()) else it }
+        persistConversationOrganization()
+        return null
+    }
+
+    fun toggleConversationGroup(id: String) {
+        conversationGroups = conversationGroups.map { if (it.id == id) it.copy(collapsed = !it.collapsed) else it }
+        persistConversationOrganization()
+    }
+
+    fun moveConversationGroup(id: String, direction: Int) {
+        val ordered = conversationGroups.sortedWith(compareBy({ it.sortOrder }, { it.id })).toMutableList()
+        val index = ordered.indexOfFirst { it.id == id }
+        val next = index + direction.coerceIn(-1, 1)
+        if (index < 0 || next !in ordered.indices || index == next) return
+        java.util.Collections.swap(ordered, index, next)
+        conversationGroups = ordered.mapIndexed { order, group -> group.copy(sortOrder = order) }
+        persistConversationOrganization()
+    }
+
+    fun deleteConversationGroup(id: String) {
+        conversationGroups = conversationGroups.filterNot { it.id == id }
+        conversationsById = conversationsById.mapValues { (_, state) -> if (state.groupId == id) state.copy(groupId = null) else state }
+        persistConversationOrganization()
+    }
+
+    private fun persistConversationOrganization() {
+        selectedConversationId?.let { conversationsById[it]?.let { state -> homeState = state } }
+        refreshConversationSummaries()
+        persistConversations()
+    }
+
     fun archiveConversations(ids: Set<String>): ConversationArchiveChange {
         val targets = ids.intersect(conversationsById.keys).filterTo(linkedSetOf()) { conversationsById[it]?.archivedAt == null }
         val eligible = targets.filterTo(linkedSetOf()) { id ->
@@ -1205,7 +1279,7 @@ internal class AgentAppState(
         val timestamp = maxOf(System.currentTimeMillis(), lastArchiveTimestamp + 1).also { lastArchiveTimestamp = it }
         if (eligible.isNotEmpty()) {
             conversationsById = conversationsById.mapValues { (id, state) ->
-                if (id in eligible) state.copy(archivedAt = timestamp) else state
+                if (id in eligible) state.copy(archivedAt = timestamp, pinnedAt = null) else state
             }
             if (selectedConversationId in eligible) selectNextManagedConversation()
             refreshConversationSummaries()
@@ -2434,6 +2508,8 @@ internal class AgentAppState(
                     },
                     updatedAtMillis = conversationUpdatedAt[id] ?: 0L,
                     archivedAt = state.archivedAt,
+                    isPinned = state.pinnedAt != null && state.archivedAt == null,
+                    pinnedAt = state.pinnedAt, groupId = state.groupId,
                     mode = ConversationModeUi.Chat,
                     characterName = state.roleplay?.characterName ?: state.conversationCharacterName,
                     characterAvatarPath = state.roleplay?.avatarPath ?: state.conversationCharacterAvatarPath,
@@ -2446,8 +2522,12 @@ internal class AgentAppState(
                 )
             }
         val query = conversationPaneState.searchQuery.trim()
+        val groupCounts = conversationsById.values.groupingBy { it.groupId }.eachCount()
         conversationPaneState = conversationPaneState.copy(
             selectedConversationId = selectedConversationId,
+            groups = conversationGroups.sortedWith(compareBy({ it.sortOrder }, { it.id })).map {
+                io.github.mangi.eta.ui.model.ConversationGroupUi(it.id, it.name, it.sortOrder, it.collapsed, groupCounts[it.id] ?: 0)
+            },
             conversations = if (query.isBlank()) {
                 summaries
             } else {
@@ -2480,6 +2560,7 @@ internal class AgentAppState(
         val conversations = conversationsById
         val titles = conversationTitles
         val timestamps = conversationUpdatedAt
+        val groups = conversationGroups
         return synchronized(persistenceLock) {
             // 未保存会阻止结果回执和 write-ahead 运行，由导入后的重载或失败后的补写收尾。
             if (persistencePaused) return CompletableDeferred(false)
@@ -2489,7 +2570,7 @@ internal class AgentAppState(
                 try {
                     previous?.join()
                     persistence.save(appContext,
-                        AgentConversationStore.Snapshot(selected, conversations, titles, timestamps))
+                        AgentConversationStore.Snapshot(selected, conversations, titles, timestamps, groups = groups))
                     onSaved?.invoke()
                     scope.launch(Dispatchers.Main.immediate) { releaseInactiveConversations(conversations) }
                     true

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.data.repository.Stage9GroupsBackupTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:38:08.844Z" hostname="DESKTOP-C7GT9VI" time="0.41">
+  <properties/>
+  <testcase name="v6RoundTripPreservesGroupsPinsCollapseAndRoleModelsIncludingMissingModelIds" classname="io.github.mangi.eta.data.repository.Stage9GroupsBackupTest" time="0.099"/>
+  <testcase name="removingAGroupClearsAllReferencesWithoutDeletingMessagesOrChangingDates" classname="io.github.mangi.eta.data.repository.Stage9GroupsBackupTest" time="0.054"/>
+  <testcase name="v5ImportHasNoPinsOrGroupsAndKeepsCurrentDeviceSubagentSettings" classname="io.github.mangi.eta.data.repository.Stage9GroupsBackupTest" time="0.091"/>
+  <testcase name="missingGroupReferenceIsClearedButOtherConversationDataRemains" classname="io.github.mangi.eta.data.repository.Stage9GroupsBackupTest" time="0.097"/>
+  <testcase name="databaseFailureRollsBackGroupsConversationsAndKeepsRoleSettings" classname="io.github.mangi.eta.data.repository.Stage9GroupsBackupTest" time="0.062"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

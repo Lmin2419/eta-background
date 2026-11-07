@@ -9,6 +9,7 @@ import io.github.mangi.eta.agent.model.AgentModelClient
 import io.github.mangi.eta.agent.roleplay.RoleplayBinding
 import io.github.mangi.eta.agent.roleplay.RoleplayMessageState
 import io.github.mangi.eta.data.db.ConversationContextCheckpointEntity
+import io.github.mangi.eta.data.db.ConversationGroupEntity
 import io.github.mangi.eta.data.db.ConversationEntity
 import io.github.mangi.eta.data.db.ConversationMetadata
 import io.github.mangi.eta.data.db.ConversationDao
@@ -58,6 +59,7 @@ internal object AgentConversationStore {
          * 重启后列表被压紧；增量保存按下标截断后缀，这些会话必须先整段重写一次。
          */
         val unalignedConversationIds: Set<String> = emptySet(),
+        val groups: List<ConversationGroupEntity> = emptyList(),
     )
 
     private val saveMutex = Mutex()
@@ -84,6 +86,7 @@ internal object AgentConversationStore {
         selectedConversationId: String?,
         current: Map<String, AgentConversationPersistence.Content>,
         previous: Map<String, AgentConversationPersistence.Content>,
+        groups: List<ConversationGroupEntity>,
     ) {
         val appContext = context.applicationContext
         saveMutex.withLock {
@@ -93,6 +96,11 @@ internal object AgentConversationStore {
                     val database = EtaDatabase.get(appContext)
                     val dao = database.conversationDao()
                     database.withTransaction {
+                        val storedGroups = dao.conversationGroups().associateBy { it.id }
+                        val groupIds = groups.mapTo(hashSetOf()) { it.id }
+                        (storedGroups.keys - groupIds).forEach { dao.deleteConversationGroup(it) }
+                        val changedGroups = groups.filter { storedGroups[it.id] != it }
+                        if (changedGroups.isNotEmpty()) dao.insertConversationGroups(changedGroups)
                         val stored = dao.conversationIdentities().associateBy { it.id }
                         phase = "delete_conversations"
                         (stored.keys - current.keys).forEach { dao.deleteConversation(it) }
@@ -103,6 +111,8 @@ internal object AgentConversationStore {
                                     dao.updateConversationTitle(id, state.title, state.updatedAt)
                                 }
                                 if (row.archivedAt != state.archivedAt) dao.updateArchivedAt(id, state.archivedAt)
+                                if (row.pinnedAt != state.pinnedAt) dao.updatePinnedAt(id, state.pinnedAt)
+                                if (row.groupId != state.groupId) dao.updateGroupId(id, state.groupId)
                                 continue
                             }
                             val old = previous[id].takeIf { id in stored && it?.isConversationLoaded == true }
@@ -117,7 +127,7 @@ internal object AgentConversationStore {
                                     revisionsJson = if (state.roleplay == null) "" else json.encodeToString(state.roleplayMessages),
                                     createdAt = stored[id]?.createdAt ?: state.updatedAt.takeIf { it != 0L } ?: System.currentTimeMillis(),
                                     updatedAt = state.updatedAt.takeIf { it != 0L } ?: System.currentTimeMillis(),
-                                    modelId = state.modelId, archivedAt = state.archivedAt,
+                                    modelId = state.modelId, archivedAt = state.archivedAt, pinnedAt = state.pinnedAt.takeIf { state.archivedAt == null }, groupId = state.groupId,
                                 )
                                 phase = "write_metadata"
                                 dao.insertConversations(listOf(row))
@@ -188,12 +198,14 @@ internal object AgentConversationStore {
     private suspend fun loadSnapshot(context: Context): Snapshot {
         val dao = EtaDatabase.get(context).conversationDao()
         val conversations = dao.conversationIndex()
+        val groups = dao.conversationGroups()
         if (conversations.isEmpty()) {
             return Snapshot(
                 selectedConversationId = null,
                 conversationsById = emptyMap(),
                 titles = emptyMap(),
                 updatedAt = emptyMap(),
+                groups = groups,
             )
         }
 
@@ -212,7 +224,7 @@ internal object AgentConversationStore {
                     ).toMessageOrNull()
                 }),
                 input = "", isStreaming = false, thinkingEnabled = effort.enablesReasoning,
-                reasoningEffort = effort, modelId = conversation.modelId, archivedAt = conversation.archivedAt, isConversationLoaded = false,
+                reasoningEffort = effort, modelId = conversation.modelId, archivedAt = conversation.archivedAt, pinnedAt = conversation.pinnedAt, groupId = conversation.groupId, isConversationLoaded = false,
                 conversationCharacterName = character?.first, conversationCharacterAvatarPath = character?.second,
             )
             titles[conversation.id] = conversation.title.takeUnless { it == LEGACY_UNNAMED_TITLE }.orEmpty()
@@ -234,6 +246,7 @@ internal object AgentConversationStore {
             titles = titles,
             updatedAt = updatedAt,
             unalignedConversationIds = unaligned,
+            groups = groups,
         )
     }
 
@@ -266,7 +279,7 @@ internal object AgentConversationStore {
                 input = "", isStreaming = false,
                 thinkingEnabled = conversation.reasoningEffortValue.enablesReasoning,
                 reasoningEffort = conversation.reasoningEffortValue,
-                modelId = conversation.modelId, archivedAt = conversation.archivedAt,
+                modelId = conversation.modelId, archivedAt = conversation.archivedAt, pinnedAt = conversation.pinnedAt, groupId = conversation.groupId,
                 messageStartIndex = page.startIndex,
                 hasEarlierMessages = page.hasEarlierMessages,
             )

@@ -18,7 +18,7 @@ internal class AgentConversationPersistence(initial: AgentConversationStore.Snap
 
     suspend fun save(context: Context, snapshot: AgentConversationStore.Snapshot) = mutex.withLock {
         val current = project(snapshot)
-        AgentConversationStore.saveChanges(context, snapshot.selectedConversationId, current, saved)
+        AgentConversationStore.saveChanges(context, snapshot.selectedConversationId, current, saved, snapshot.groups)
         saved = current
     }
 
@@ -44,6 +44,8 @@ internal class AgentConversationPersistence(initial: AgentConversationStore.Snap
         val roleplayMessages: RoleplayMessageState,
         val modelId: String?,
         val archivedAt: Long?,
+        val pinnedAt: Long?,
+        val groupId: String?,
         val messages: List<AgentChatMessageUi>,
         val history: List<AgentModelClient.ConversationMessage>,
         val journal: List<AgentModelClient.ConversationMessage>,
@@ -53,13 +55,13 @@ internal class AgentConversationPersistence(initial: AgentConversationStore.Snap
         constructor(state: AgentChatHomeUiState, title: String, updatedAt: Long) : this(
             title, updatedAt, state.reasoningEffort, state.appliedRuntimeRunIds,
             state.roleplay, if (state.roleplay == null) RoleplayMessageState() else state.roleplayMessages,
-            state.modelId, state.archivedAt, state.messages, state.history, state.journal.ifEmpty { state.history },
+            state.modelId, state.archivedAt, state.pinnedAt, state.groupId, state.messages, state.history, state.journal.ifEmpty { state.history },
             state.isConversationLoaded, state.messageStartIndex,
         )
 
         fun sameMetadata(other: Content): Boolean =
             title == other.title && updatedAt == other.updatedAt && reasoningEffort == other.reasoningEffort &&
                 appliedRuntimeRunIds == other.appliedRuntimeRunIds && roleplay == other.roleplay &&
-                roleplayMessages == other.roleplayMessages && modelId == other.modelId && archivedAt == other.archivedAt
+                roleplayMessages == other.roleplayMessages && modelId == other.modelId && archivedAt == other.archivedAt && pinnedAt == other.pinnedAt && groupId == other.groupId
     }
 }

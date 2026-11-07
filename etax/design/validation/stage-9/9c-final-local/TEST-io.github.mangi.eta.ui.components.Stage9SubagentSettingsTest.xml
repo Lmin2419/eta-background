@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.ui.components.Stage9SubagentSettingsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:55:43.464Z" hostname="DESKTOP-C7GT9VI" time="1.346">
+  <properties/>
+  <testcase name="unavailableDefaultModelIsExplainedInsteadOfSilentlyFollowingPrimary" classname="io.github.mangi.eta.ui.components.Stage9SubagentSettingsTest" time="0.323"/>
+  <testcase name="rolePickerPersistsOnlyItsRoleAndWarnsWhenAChosenModelDisappears" classname="io.github.mangi.eta.ui.components.Stage9SubagentSettingsTest" time="0.33"/>
+  <testcase name="defaultAndPerRoleSettingsAreVisibleInTheExistingDetailSheet" classname="io.github.mangi.eta.ui.components.Stage9SubagentSettingsTest" time="0.69"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

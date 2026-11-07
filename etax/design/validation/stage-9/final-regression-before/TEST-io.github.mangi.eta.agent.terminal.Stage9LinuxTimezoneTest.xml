@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:47:23.933Z" hostname="DESKTOP-C7GT9VI" time="1.296">
+  <properties/>
+  <testcase name="shanghaiUsesTheReversedPosixOffset" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.006"/>
+  <testcase name="newYorkKeepsBothSeasonalTransitions" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.01"/>
+  <testcase name="kolkataKeepsItsHalfHourOffset" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.001"/>
+  <testcase name="posixMatchesAtTransitionBoundariesIncludingMidnightAndHalfHourDst" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.767"/>
+  <testcase name="prootCommandAndInteractiveShellKeepTheDeviceTimezone" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.008"/>
+  <testcase name="everyChrootEnvBranchKeepsTheDeviceTimezone" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.001"/>
+  <testcase name="generatedPosixRulesMatchJavaTimeInWinterSummerAndRamadan" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.493"/>
+  <testcase name="prootUsesExistingZoneinfoWithoutChangingTheRootfs" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.006"/>
+  <testcase name="londonUsesWallClockTransitionTimes" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.002"/>
+  <testcase name="sydneyKeepsSouthernHemisphereTransitions" classname="io.github.mangi.eta.agent.terminal.Stage9LinuxTimezoneTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

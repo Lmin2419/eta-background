@@ -53,6 +53,13 @@ internal data class PaneManagementActions(
     val delete: (Set<String>, (Int) -> Unit) -> Unit = { _, _ -> },
     val archive: (Set<String>) -> ConversationArchiveChange = { ConversationArchiveChange(emptySet(), 0, 0) },
     val unarchive: (Set<String>, Long?) -> Int = { _, _ -> 0 },
+    val pin: (Set<String>, Boolean) -> Unit = { _, _ -> },
+    val moveToGroup: (Set<String>, String?) -> Unit = { _, _ -> },
+    val createGroup: (String, Set<String>) -> String? = { _, _ -> null },
+    val renameGroup: (String, String) -> String? = { _, _ -> null },
+    val toggleGroup: (String) -> Unit = {},
+    val reorderGroup: (String, Int) -> Unit = { _, _ -> },
+    val deleteGroup: (String) -> Unit = {},
 )
 internal val LocalPaneManagement = staticCompositionLocalOf { PaneManagementActions() }
 
@@ -76,6 +83,7 @@ internal fun ConversationPanePanel(
     var archived by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(emptySet<String>()) }
     var showMore by remember { mutableStateOf(false) }
+    val groupDialogs = remember { ConversationGroupDialogState() }
     var deleteTarget by remember { mutableStateOf(emptySet<String>()) }
     var toast by remember { mutableStateOf<String?>(null) }
     var toastVersion by remember { mutableIntStateOf(0) }
@@ -87,13 +95,14 @@ internal fun ConversationPanePanel(
     }
     val visibleIds = remember(visibleConversations) { visibleConversations.mapTo(linkedSetOf()) { it.id } }
     LaunchedEffect(visibleIds) { selectedIds = selectedIds.intersect(visibleIds) }
-    LaunchedEffect(active) { if (!active) { selectedIds = emptySet(); showMore = false; deleteTarget = emptySet() } }
+    LaunchedEffect(active) { if (!active) { selectedIds = emptySet(); showMore = false; deleteTarget = emptySet(); groupDialogs.dismiss() } }
     NavigationBackHandler(rememberNavigationEventState(NavigationEventInfo.None), isBackEnabled = active && (selecting || archived),
         onBackCompleted = { if (selecting) selectedIds = emptySet() else { archived = false; onSearchChange("") } })
     val snapshots by AgentExecutionService.taskSnapshots.collectAsState()
     val taskStatuses = remember(snapshots) { conversationTaskStatuses(snapshots) }
     val today = LocalDate.now()
-    val groups = remember(visibleConversations, today) { visibleConversations.groupBy { conversationSection(it, today) }.toSortedMap() }
+    val sections = remember(state.conversations, state.groups, state.searchQuery, archived, today) { projectConversationSections(state, archived, today) }
+    val groupNames = remember(state.groups) { state.groups.associate { it.id to it.name } }
     Column(modifier.width(width).fillMaxHeight().background(EtaTheme.colors.surface)
         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))) {
         AnimatedContent(selecting, transitionSpec = { fadeIn(tween(motion.short, easing = motion.standard)) togetherWith fadeOut(tween(motion.exitDuration(180), easing = motion.accelerate)) }, label = "selectionToolbar") { mode ->
@@ -121,21 +130,38 @@ internal fun ConversationPanePanel(
         }
         LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (visibleConversations.isEmpty()) item {
+            if (visibleConversations.isEmpty() && (state.groups.isEmpty() || archived || state.searchQuery.isNotBlank())) item {
                 ListEmptyState(stringResource(if (state.searchQuery.isBlank()) R.string.conversation_empty else R.string.conversation_no_results), icon = Icons.Rounded.Search)
             }
-            groups.forEach { (section, conversations) ->
-                item(key = "section:$section") {
-                    Text(stringResource(when (section) { 0 -> R.string.conversation_section_pinned; 1 -> R.string.conversation_section_today;
-                        2 -> R.string.eta_yesterday; 3 -> R.string.eta_last_week; else -> R.string.eta_earlier }),
-                        Modifier.padding(top = 12.dp, bottom = 6.dp), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
+            sections.forEach { section ->
+                val group = section.group
+                if (group != null) item(key = section.key) {
+                    val status = section.conversations.firstNotNullOfOrNull { row ->
+                        taskStatuses[row.id] ?: TaskVisualStatus.Running.takeIf { row.isActiveRun }
+                    }
+                    val expandedText = stringResource(if (group.collapsed) R.string.eta_group_collapsed else R.string.eta_group_expanded)
+                    Row(Modifier.fillMaxWidth().heightIn(min = 36.dp).semantics { heading(); stateDescription = expandedText }
+                        .combinedClickable(onClick = { management.toggleGroup(group.id) }, onLongClick = { groupDialogs.menuId = group.id })
+                        .padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.eta_group_count, group.name, section.conversations.size), Modifier.weight(1f),
+                            style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        status?.let { StatusRing(it, size = 12.dp) }
+                        Icon(if (group.collapsed) Icons.Rounded.ChevronRight else Icons.Rounded.ExpandMore, null,
+                            Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
+                    }
+                } else section.timeSection?.let { timeSection ->
+                    item(key = section.key) {
+                        Text(stringResource(when (timeSection) { 0 -> R.string.conversation_section_pinned; 1 -> R.string.conversation_section_today;
+                            2 -> R.string.eta_yesterday; 3 -> R.string.eta_last_week; else -> R.string.eta_earlier }),
+                            Modifier.padding(top = 12.dp, bottom = 6.dp), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
+                    }
                 }
-                items(conversations, key = { it.id }) { conversation ->
+                items(section.visibleConversations, key = { it.id }) { conversation ->
                     ConversationTextRow(conversation, if (selecting) conversation.id in selectedIds else state.selectedConversationId == conversation.id, state.searchQuery,
                         taskStatuses[conversation.id] ?: TaskVisualStatus.Running.takeIf { conversation.isActiveRun }, selecting,
                         { if (selecting) selectedIds = if (conversation.id in selectedIds) selectedIds - conversation.id else selectedIds + conversation.id
                           else onConversationSelected(conversation.id) },
-                        { selectedIds = selectedIds + conversation.id })
+                        { selectedIds = selectedIds + conversation.id }, groupName = groupNames[conversation.groupId])
                 }
             }
         }
@@ -186,11 +212,21 @@ internal fun ConversationPanePanel(
     EtaSheet(showMore, title = stringResource(R.string.eta_more), onDismissRequest = { showMore = false }) {
         val target = visibleConversations.singleOrNull { it.id in selectedIds }
         Column {
+            val targets = visibleConversations.filter { it.id in selectedIds }
+            val unpin = targets.isNotEmpty() && targets.all { it.isPinned }
+            EtaArrowPreference(stringResource(if (unpin) R.string.eta_unpin else R.string.eta_pin),
+                enabled = targets.any { it.archivedAt == null }, onClick = {
+                    management.pin(selectedIds, !unpin); showMore = false; selectedIds = emptySet()
+                })
+            EtaArrowPreference(stringResource(R.string.eta_move_to_group), onClick = {
+                groupDialogs.moveIds = selectedIds; showMore = false
+            })
             if (target == null) Text(stringResource(R.string.eta_single_only), Modifier.padding(16.dp), style = EtaTheme.type.footnote, color = EtaTheme.colors.textSecondary)
             EtaArrowPreference(stringResource(R.string.action_rename), enabled = target != null, onClick = { target?.let(onConversationRename); showMore = false })
             EtaArrowPreference(stringResource(R.string.action_export), enabled = target != null, onClick = { target?.let(onConversationExport); showMore = false })
         }
     }
+    ConversationGroupDialogs(state, management, groupDialogs) { selectedIds = emptySet() }
     if (deleteTarget.isNotEmpty()) {
         val running = state.conversations.count { it.id in deleteTarget && (it.isActiveRun || taskStatuses[it.id] != null) }
         EtaWindowDialog(true, title = stringResource(R.string.eta_delete_count_title, deleteTarget.size),
@@ -243,7 +279,7 @@ private fun WorkspaceEntry(icon: ImageVector, label: String, tint: Color, width:
 
 @Composable
 private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: Boolean, query: String, taskStatus: TaskVisualStatus?,
-    selecting: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
+    selecting: Boolean, onClick: () -> Unit, onLongClick: () -> Unit, groupName: String? = null) {
     val haptic = LocalHapticFeedback.current
     val colors = EtaTheme.colors
     val title = conversation.title.ifBlank { conversation.preview }
@@ -261,12 +297,16 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
         .combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (selecting) ConversationSelectionMarker(selected) else if (taskStatus != null) StatusRing(taskStatus, size = 12.dp)
+        if (conversation.isPinned && query.isNotBlank()) Icon(Icons.Rounded.PushPin, stringResource(R.string.eta_pin), Modifier.size(14.dp), tint = colors.textSecondary)
         Text(markedTitle, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp), color = if (selected) colors.onAccentSoft else colors.textPrimary,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (selecting && taskStatus != null) StatusRing(taskStatus, size = 12.dp)
         if (conversation.archivedAt != null && query.isNotBlank()) Text(stringResource(R.string.eta_archived),
             Modifier.background(colors.surfaceRaised, EtaTheme.shapes.radiusFull).padding(horizontal = 6.dp, vertical = 2.dp),
             style = EtaTheme.type.caption, color = colors.textSecondary)
+        if (groupName != null && query.isNotBlank()) Text(groupName,
+            Modifier.widthIn(max = 80.dp).background(colors.surfaceRaised, EtaTheme.shapes.radiusFull).padding(horizontal = 6.dp, vertical = 2.dp),
+            style = EtaTheme.type.caption, color = colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(conversation.timeLabel, style = EtaTheme.type.caption, color = colors.textTertiary, maxLines = 1)
     }
 }

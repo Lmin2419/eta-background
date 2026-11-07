@@ -3,6 +3,8 @@ package io.github.mangi.eta.data.repository
 import android.content.Context
 import androidx.room.withTransaction
 import io.github.mangi.eta.data.db.ConversationContextCheckpointEntity
+import io.github.mangi.eta.data.db.ConversationGroupEntity
+import io.github.mangi.eta.data.model.SubagentSettings
 import io.github.mangi.eta.data.db.ConversationEntity
 import io.github.mangi.eta.data.db.ConversationMessageEntity
 import io.github.mangi.eta.data.db.ConversationStateEntity
@@ -39,6 +41,8 @@ internal data class EtaBackupDocument(
     val selectedProviderId: String? = null,
     val selectedModelId: String? = null,
     val conversations: List<ConversationEntity> = emptyList(),
+    val conversationGroups: List<ConversationGroupEntity> = emptyList(),
+    val subagentSettings: SubagentSettings? = null,
     val messages: List<ConversationMessageEntity> = emptyList(),
     val contextCheckpoints: List<ConversationContextCheckpointEntity> = emptyList(),
     val conversationState: ConversationStateEntity? = null,
@@ -48,7 +52,7 @@ internal data class EtaBackupDocument(
     companion object {
         const val FORMAT = "eta-backup"
         // 旧版会把未知原生 Provider 当作 OpenAI-compatible，必须通过备份版本阻止错误恢复。
-        const val SCHEMA_VERSION = 5
+        const val SCHEMA_VERSION = 6
     }
 }
 
@@ -95,6 +99,8 @@ internal object EtaBackupRepository {
                     writer.value("catalogRevision", Int.serializer(), catalogRevision)
                     writer.value("selectedProviderId", String.serializer().nullable, settings.selectedProviderId)
                     writer.value("selectedModelId", String.serializer().nullable, settings.selectedModelId)
+                    writer.value("conversationGroups", ListSerializer(ConversationGroupEntity.serializer()), dao.conversationGroups())
+                    writer.value("subagentSettings", SubagentSettings.serializer().nullable, SettingsDataStore.subagentSettings())
                     writer.value("conversationState", ConversationStateEntity.serializer().nullable, dao.state())
                     writer.value("memoryMd", String.serializer(), memory)
                     val boundAvatars = linkedMapOf<String, String?>()
@@ -178,10 +184,19 @@ internal object EtaBackupRepository {
                             dao.deleteContextCheckpoints()
                             dao.deleteConversations()
                             dao.deleteState()
+                            phase = "restore_conversation_groups"
+                            dao.clearConversationGroups()
+                            val groups = document.conversationGroups.takeIf { document.schemaVersion >= 6 }.orEmpty()
+                            dao.insertConversationGroups(groups)
+                            val groupIds = groups.mapTo(hashSetOf()) { it.id }
                             phase = "restore_conversations"
                             staged.conversations { row ->
                                 cancellation.ensureActive()
-                                dao.insertConversations(listOf(CharacterBackupTransfer.remapConversation(row, avatarPaths)))
+                                val restored = CharacterBackupTransfer.remapConversation(row, avatarPaths)
+                                dao.insertConversations(listOf(restored.copy(
+                                    pinnedAt = restored.pinnedAt.takeIf { document.schemaVersion >= 6 && restored.archivedAt == null },
+                                    groupId = restored.groupId?.takeIf { it in groupIds },
+                                )))
                             }
                             phase = "restore_messages"
                             staged.messages {
@@ -241,6 +256,7 @@ internal object EtaBackupRepository {
                     }
                     try {
                         phase = "restore_settings"
+                        if (document.schemaVersion >= 6) document.subagentSettings?.let { SettingsDataStore.setSubagentSettings(it) }
                         SettingsDataStore.setSelection(document.selectedProviderId, document.selectedModelId)
                         SettingsDataStore.setOfficialModelCatalogRevision(document.catalogRevision)
                         ProviderRepository.ensureBuiltInsMerged()

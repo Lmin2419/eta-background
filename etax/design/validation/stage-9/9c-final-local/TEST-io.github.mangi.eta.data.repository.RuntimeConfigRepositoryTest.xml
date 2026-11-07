@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.data.repository.RuntimeConfigRepositoryTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:55:19.904Z" hostname="DESKTOP-C7GT9VI" time="0.084">
+  <properties/>
+  <testcase name="oauthConfigUsesBoundEndpointAndNeverSerializesApiKey" classname="io.github.mangi.eta.data.repository.RuntimeConfigRepositoryTest" time="0.057"/>
+  <testcase name="emptyProviderPromptStaysEmptyAcrossRuntimeSerialization" classname="io.github.mangi.eta.data.repository.RuntimeConfigRepositoryTest" time="0.019"/>
+  <testcase name="buildsStructuredRuntimeConfigFromProviderAndModel" classname="io.github.mangi.eta.data.repository.RuntimeConfigRepositoryTest" time="0.008"/>
+  <testcase name="previousRuntimeJsonDefaultsToApiKeyAuthentication" classname="io.github.mangi.eta.data.repository.RuntimeConfigRepositoryTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -56,7 +56,44 @@ Robolectric 原生 Compose 渲染，不是手机照片；仅此项有界面改�
 
 ## 9c · 置顶、分组、迁移和备份 v6
 
-待执行，不能视为已验收。
+### 实现与边界
+
+| 项目 | 实现和自动检查 |
+| --- | --- |
+| Room 24→25 | 新增 pinned_at/group_id、conversation_groups；生产 builder 注册 MIGRATION_24_25，原 destructive fallback 保持。真实 v24 数据经生产入口升级后逐表比较，会话、消息、归档、模型选择均保留 |
+| 防漏注册 | 故意仅去掉生产迁移注册，测试捕获数据被清空并失败；恢复后通过。[失败证据](stage-9/9c-before/missing-migration-guard.xml) |
+| 完整状态链 | Entity、索引、惰性加载、UI、增量保存和重启；已加载/未加载会话均保存置顶/分组，重命名、置顶、移动不改 updated_at |
+| 侧栏 | 置顶按 pinned_at 倒序，分组按 sort_order，组内按 updated_at；每条只出现一次；空组显示、折叠持久化。搜索/归档平铺，搜索有图钉和分组标签 |
+| 分组操作 | 真实 DOWN/UP 长按进入多选，批量置顶/取消、移动、新建后直接移动；长按组头改名、上下移、确认删除。名称 trim、1–20 Unicode 码点、忽略大小写去重；输入错误原位显示 |
+| 归档/删除 | 归档清置顶但保留分组；删除组在同一 DB 事务清引用，不删会话/消息。侧栏组头数量为非置顶未归档成员，移动和删除确认数量包括该组全部引用 |
+| 备份 v6 | 导出分组/折叠/置顶和子代理默认及角色设置；v6 往返一致；v5 无置顶分组且保留手机原子代理设置；悬空 group_id 清空；不存在的模型 ID 可导入、运行时按 9b 回退 |
+| 失败恢复 | 注入数据库写失败，验证旧分组/会话/设置未变；保留原备份提交后设置恢复和错误报告路径，不扩展为跨 DB/DataStore 的断电级原子事务 |
+
+### 先失败，再通过
+
+[修改前 XML](stage-9/9c-before/)分别记录真实 v24 迁移、状态保存、备份和侧栏手势的语义失败。迁移测试使用标准 Application，避免 EtaApp 启动后台任务抢先打开待升级夹具。原有迁移链测试一并跑到 v25。
+
+- 数据专项 **47 项全部通过**：[XML](stage-9/9c-data-after/)。
+- 最终 Windows 综合回归 **159 项，155 通过、4 失败、0 跳过**：[XML](stage-9/9c-final-local/)、[字面输出](stage-9/9c-after/stage9-final-regression-2.txt)。阶段 9 新增测试及侧栏真实触摸、首页手指滚动、长会话、设置回归全部通过。角色选择夹具直接向真实 Room 写输入模型，避免把不属于此 UI 测试的 provider 修复链路一起启动；仍通过实际 UI 选择并等待 DataStore 目标值。
+- 剩余 4 项是既有记忆文件覆盖断言。以相同四测试分别运行 **9c 前的备份代码** 和当前代码，结果完全相同：首项写入新文件通过，后续三项覆盖后仍读到先前内容。未据此更改记忆业务、跳过或删除测试：[旧代码](stage-9/memory-pre9c-replay/)、[当前代码](stage-9/memory-current-replay/)。全量 Linux CI 必须另外通过，不能用这份 Windows 局部结果替代。
+- 本地 lint、Debug APK 结果见本节末尾；签名 APK、全量测试、发布以最终 main 提交的 [Etax Build](https://github.com/Lmin2419/eta-background/actions/workflows/etax-build.yml) 为最终门禁。只有三个 job 全绿且 Release 资源存在才交付。
+
+本地 `lintDebug :app:assembleDebug` **通过**，lint 0 Error / 0 Fatal；[字面输出](stage-9/9c-after/lint-apk.txt)、[lint XML](stage-9/9c-after/lint-results-debug.xml)。接线检查通过；本地引擎脚本回归因 Windows 缺 `mksh` 报错，未改引擎代码或禁用测试，交由配置完整的 Linux CI 全量执行。
+
+### 渲染截图
+
+均为原生 Robolectric Compose 渲染，不是实机截图。
+
+| 场景 | 浅色 | 深色 |
+| --- | --- | --- |
+| 置顶和两个分组（学习折叠） | [查看](stage-9/9c-after/stage9c-sidebar-light.png) | [查看](stage-9/9c-after/stage9c-sidebar-dark.png) |
+| 移到分组面板 | [查看](stage-9/9c-after/stage9c-move-light.png) | [查看](stage-9/9c-after/stage9c-move-dark.png) |
+| 分组操作面板 | [查看](stage-9/9c-after/stage9c-group-actions-light.png) | [查看](stage-9/9c-after/stage9c-group-actions-dark.png) |
+
+委派：腾讯 quick 提供投影测试矩阵，coding GLM-5.3 提供备份草案；主会话落实实际 Room 24→25，未采用草案混淆备份版本和数据库版本的额外建议。持久化 review 的 DeepSeek V4 Pro 超时后 Kimi K3-1 返回；其关于异步空组快照和归档仍可置顶的担心，经实际同步初始快照及 DAO 条件核对不成立。最后一次分组 UI review 的 DeepSeek V4 Pro / Kimi K3-1 / GLM-5.3 均超时（75/55/45 秒），由主会话完成本地复核。
+
+未改猫图标、包名、Eta* 内部名、备份/导出文件名、User-Agent、日志和关于页上游致谢链接；仅安装包文件名按本阶段要求改为 Pangxiaopang。未改引擎、模型请求构造和工具调度。
+
 
 ## 真机验收（最终发布后执行）
 
@@ -64,5 +101,7 @@ Robolectric 原生 Compose 渲染，不是手机照片；仅此项有界面改�
 - 旧会话改名后不跳到「今天」。
 - 手动暂停任务，息屏再亮屏，胶囊恢复且仍需手动点继续。
 - 三个子代理分别使用三个模型；活动面板显示实际模型。
-- 置顶、分组、折叠后退出 App 再进入仍保持；删除分组不删会话。
+- 置顶两个会话，建立「工作」「学习」分组并批量移入；折叠学习，退出 App 再进入后置顶/顺序/分组/折叠仍保持。取消置顶回原分组；改名、排序、删除学习后会话仍在。
+- 归档已置顶分组会话后取消置顶，取消归档回原组；搜索结果平铺并显示图钉、分组、归档标签。
+- 自定义子代理角色改名/删除同步设置；停用角色所选模型有明确提示并按默认→主模型回退。
 - 浅色、深色各走一遍设置和侧栏；导出/导入 v6，另导入 v5 确认保留手机子代理设置。

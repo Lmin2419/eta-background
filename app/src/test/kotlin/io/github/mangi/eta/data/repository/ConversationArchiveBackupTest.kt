@@ -91,7 +91,7 @@ class ConversationArchiveBackupTest {
         val raw = out.toString(Charsets.UTF_8.name())
         assertTrue("导出JSON应包含 archived_at", raw.contains("\"archived_at\""))
         val root = Json.parseToJsonElement(raw).jsonObject
-        assertEquals(5, root.getValue("schemaVersion").jsonPrimitive.int)
+        assertEquals(6, root.getValue("schemaVersion").jsonPrimitive.int)
         val c1json = root.getValue("conversations").jsonArray
             .first { it.jsonObject["id"]?.jsonPrimitive?.content == "c1" }.jsonObject
         assertEquals(1_650_000_000_000L, c1json.getValue("archived_at").jsonPrimitive.long)
@@ -156,7 +156,7 @@ class ConversationArchiveBackupTest {
         val out2 = ByteArrayOutputStream()
         EtaBackupRepository.export(context, out2)
         val second = out2.toString(Charsets.UTF_8.name())
-        assertEquals(5, Json.parseToJsonElement(second).jsonObject.getValue(sk).jsonPrimitive.int)
+        assertEquals(6, Json.parseToJsonElement(second).jsonObject.getValue(sk).jsonPrimitive.int)
         freshDatabase()
         EtaBackupRepository.import(context, ByteArrayInputStream(out2.toByteArray()))
         val again = dao().conversationEntities().single()

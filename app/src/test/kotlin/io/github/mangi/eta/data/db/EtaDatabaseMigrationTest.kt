@@ -58,6 +58,7 @@ class EtaDatabaseMigrationTest {
                 EtaDatabase.MIGRATION_21_22,
                 EtaDatabase.MIGRATION_22_23,
                 EtaDatabase.MIGRATION_23_24,
+                EtaDatabase.MIGRATION_24_25,
             )
             .build()
         try {
@@ -164,12 +165,12 @@ class EtaDatabaseMigrationTest {
             }).build())
         fun snapshot(db: SupportSQLiteDatabase): Map<String, List<List<String?>>> {
             val tables = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' " +
-                "AND name NOT IN ('android_metadata','room_master_table') ORDER BY name").use { cursor ->
+                "AND name NOT IN ('android_metadata','room_master_table','conversation_groups') ORDER BY name").use { cursor ->
                 buildList { while (cursor.moveToNext()) add(cursor.getString(0)) }
             }
             return tables.associateWith { table ->
                 db.query("SELECT * FROM $table ORDER BY rowid").use { cursor ->
-                    val columns = cursor.columnNames.indices.filter { cursor.columnNames[it] != "archived_at" }
+                    val columns = cursor.columnNames.indices.filter { cursor.columnNames[it] !in setOf("archived_at", "pinned_at", "group_id") }
                     buildList { while (cursor.moveToNext()) add(columns.map { if (cursor.isNull(it)) null else cursor.getString(it) }) }
                 }
             }
@@ -182,10 +183,10 @@ class EtaDatabaseMigrationTest {
             snapshot(db)
         }
         val db = Room.databaseBuilder(context, EtaDatabase::class.java, name)
-            .addMigrations(EtaDatabase.MIGRATION_23_24).build()
+            .addMigrations(EtaDatabase.MIGRATION_23_24, EtaDatabase.MIGRATION_24_25).build()
         try {
-            val migrated = db.openHelper.writableDatabase // Room validates the entire v24 schema.
-            assertEquals(24, migrated.version)
+            val migrated = db.openHelper.writableDatabase // Room validates the entire current schema.
+            assertEquals(25, migrated.version)
             assertEquals(before, snapshot(migrated))
             runBlocking(Dispatchers.IO) {
                 val dao = db.conversationDao()
@@ -198,6 +199,60 @@ class EtaDatabaseMigrationTest {
                 assertEquals("conv-1", dao.state()?.selectedConversationId)
             }
         } finally { db.close(); context.deleteDatabase(name) }
+    }
+
+    @Test
+    @Config(application = android.app.Application::class)
+    fun migration24To25ThroughProductionBuilderPreservesRealDataAndArchiveState() {
+        val context = RuntimeEnvironment.getApplication() as Context
+        val name = "eta.db"
+        EtaDatabase.closeForTests(); context.deleteDatabase(name)
+        createVersion6Database(context, name)
+        val migrations = listOf(EtaDatabase.MIGRATION_6_7, EtaDatabase.MIGRATION_7_8,
+            EtaDatabase.MIGRATION_8_9, EtaDatabase.MIGRATION_9_10, EtaDatabase.MIGRATION_10_11,
+            EtaDatabase.MIGRATION_11_12, EtaDatabase.MIGRATION_12_13, EtaDatabase.MIGRATION_13_14,
+            EtaDatabase.MIGRATION_14_15, EtaDatabase.MIGRATION_15_16, EtaDatabase.MIGRATION_16_17,
+            EtaDatabase.MIGRATION_17_18, EtaDatabase.MIGRATION_18_19, EtaDatabase.MIGRATION_19_20,
+            EtaDatabase.MIGRATION_20_21, EtaDatabase.MIGRATION_21_22, EtaDatabase.MIGRATION_22_23,
+            EtaDatabase.MIGRATION_23_24)
+        fun snapshot(db: SupportSQLiteDatabase): Map<String, List<List<String?>>> {
+            val tables = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' " +
+                "AND name NOT IN ('android_metadata','room_master_table','conversation_groups') ORDER BY name").use { cursor ->
+                buildList { while (cursor.moveToNext()) add(cursor.getString(0)) }
+            }
+            return tables.associateWith { table -> db.query("SELECT * FROM $table ORDER BY rowid").use { cursor ->
+                val columns = cursor.columnNames.indices.filter { cursor.columnNames[it] !in setOf("pinned_at", "group_id") }
+                buildList { while (cursor.moveToNext()) add(columns.map { if (cursor.isNull(it)) null else cursor.getString(it) }) }
+            } }
+        }
+        val helper = FrameworkSQLiteOpenHelperFactory().create(SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name(name).callback(object : SupportSQLiteOpenHelper.Callback(24) {
+                override fun onCreate(db: SupportSQLiteDatabase) = error("Must open existing data")
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                    assertEquals(6, oldVersion); assertEquals(24, newVersion); migrations.forEach { it.migrate(db) }
+                }
+            }).build())
+        val before = helper.use {
+            val db = it.writableDatabase
+            db.execSQL("UPDATE conversations SET archived_at=1234, model_id='retained-model' WHERE id='conv-1'")
+            db.execSQL("INSERT OR REPLACE INTO conversation_state(id,selected_conversation_id) VALUES('main','conv-1')")
+            val contents = snapshot(db)
+            org.junit.Assert.assertTrue(contents.getValue("conversations").isNotEmpty())
+            org.junit.Assert.assertTrue(contents.getValue("conversation_messages").isNotEmpty())
+            contents
+        }
+        try {
+            // Exercise production registration AND its existing destructive fallback, not a hand-built migration list.
+            val db = EtaDatabase.get(context).openHelper.writableDatabase
+            assertEquals(25, db.version)
+            assertEquals("Missing production migration must never erase existing rows", before, snapshot(db))
+            db.query("SELECT archived_at, pinned_at, group_id, model_id FROM conversations WHERE id='conv-1'").use {
+                org.junit.Assert.assertTrue(it.moveToFirst()); assertEquals(1234L, it.getLong(0))
+                org.junit.Assert.assertTrue(it.isNull(1)); org.junit.Assert.assertTrue(it.isNull(2))
+                assertEquals("retained-model", it.getString(3))
+            }
+            db.query("SELECT COUNT(*) FROM conversation_groups").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+        } finally { EtaDatabase.closeForTests(); context.deleteDatabase(name) }
     }
 
     private fun createVersion6Database(

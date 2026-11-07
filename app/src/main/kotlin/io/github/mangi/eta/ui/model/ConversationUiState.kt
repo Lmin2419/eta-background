@@ -7,6 +7,7 @@ data class ConversationPaneUiState(
     val conversations: List<ConversationSummaryUi>,
     val selectedConversationId: String?,
     val searchQuery: String,
+    val groups: List<ConversationGroupUi> = emptyList(),
 )
 
 @Immutable
@@ -23,6 +24,8 @@ data class ConversationSummaryUi(
     val runStatus: String? = null,
     val characterName: String? = null,
     val characterAvatarPath: String? = null,
+    val pinnedAt: Long? = null,
+    val groupId: String? = null,
 )
 
 @Immutable
@@ -32,3 +35,9 @@ enum class ConversationModeUi {
     Terminal,
     Automation,
 }
+
+@Immutable
+data class ConversationGroupUi(
+    val id: String, val name: String, val sortOrder: Int,
+    val collapsed: Boolean = false, val conversationCount: Int = 0,
+)

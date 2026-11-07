@@ -11,7 +11,7 @@ import androidx.room.Upsert
 @Dao
 internal interface ConversationDao : ChunkedTextDao {
     @Query(
-        "SELECT c.id, c.title, c.reasoning_effort, c.created_at, c.updated_at, c.model_id, c.archived_at, " +
+        "SELECT c.id, c.title, c.reasoning_effort, c.created_at, c.updated_at, c.model_id, c.archived_at, c.pinned_at, c.group_id, " +
             "(c.roleplay_json != '') AS has_roleplay, " +
             "m.id AS message_id, m.type AS message_type, m.tool_name, " +
             "COALESCE((SELECT substr(content, 1, 256) FROM agent_text_chunks " +
@@ -24,18 +24,45 @@ internal interface ConversationDao : ChunkedTextDao {
     )
     suspend fun conversationIndex(): List<ConversationIndexRow>
 
-    @Query("SELECT id, title, created_at, updated_at, archived_at FROM conversations")
+    @Query("SELECT id, title, created_at, updated_at, archived_at, pinned_at, group_id FROM conversations")
     suspend fun conversationIdentities(): List<ConversationIdentity>
 
-    @Query("UPDATE conversations SET archived_at = :archivedAt WHERE id = :conversationId")
+    @Query("UPDATE conversations SET archived_at = :archivedAt, pinned_at = CASE WHEN :archivedAt IS NULL THEN pinned_at ELSE NULL END WHERE id = :conversationId")
     suspend fun updateArchivedAt(conversationId: String, archivedAt: Long?)
+
+    @Query("UPDATE conversations SET pinned_at = :pinnedAt WHERE id = :conversationId AND archived_at IS NULL")
+    suspend fun updatePinnedAt(conversationId: String, pinnedAt: Long?)
+
+    @Query("UPDATE conversations SET group_id = :groupId WHERE id = :conversationId")
+    suspend fun updateGroupId(conversationId: String, groupId: String?)
+
+    @Query("SELECT * FROM conversation_groups ORDER BY sort_order ASC, id ASC")
+    suspend fun conversationGroups(): List<ConversationGroupEntity>
+
+    @Upsert
+    suspend fun insertConversationGroups(groups: List<ConversationGroupEntity>)
+
+    @Query("DELETE FROM conversation_groups")
+    suspend fun clearConversationGroups()
+
+    @Query("UPDATE conversations SET group_id = NULL WHERE group_id = :id")
+    suspend fun clearConversationGroupReferences(id: String)
+
+    @Query("DELETE FROM conversation_groups WHERE id = :id")
+    suspend fun deleteConversationGroupRow(id: String)
+
+    @Transaction
+    suspend fun deleteConversationGroup(id: String) {
+        clearConversationGroupReferences(id)
+        deleteConversationGroupRow(id)
+    }
 
     @Query("UPDATE conversations SET title = :title, updated_at = :updatedAt WHERE id = :conversationId")
     suspend fun updateConversationTitle(conversationId: String, title: String, updatedAt: Long)
 
     @Query(
         "SELECT id, title, thinking_enabled, reasoning_effort, " +
-            "applied_runtime_run_ids_json, roleplay_json, revisions_json, created_at, updated_at, model_id, archived_at " +
+            "applied_runtime_run_ids_json, roleplay_json, revisions_json, created_at, updated_at, model_id, archived_at, pinned_at, group_id " +
             "FROM conversations WHERE id = :conversationId"
     )
     suspend fun conversationMetadataRow(conversationId: String): ConversationMetadata?
@@ -46,7 +73,7 @@ internal interface ConversationDao : ChunkedTextDao {
 
     @Query(
         "SELECT id, title, thinking_enabled, reasoning_effort, " +
-            "applied_runtime_run_ids_json, roleplay_json, revisions_json, created_at, updated_at, model_id, archived_at " +
+            "applied_runtime_run_ids_json, roleplay_json, revisions_json, created_at, updated_at, model_id, archived_at, pinned_at, group_id " +
             "FROM conversations ORDER BY updated_at DESC"
     )
     suspend fun conversationMetadataRows(): List<ConversationMetadata>
@@ -56,7 +83,7 @@ internal interface ConversationDao : ChunkedTextDao {
 
     @Query(
         "SELECT id, title, thinking_enabled, reasoning_effort, " +
-            "applied_runtime_run_ids_json, roleplay_json, revisions_json, created_at, updated_at, model_id, archived_at " +
+            "applied_runtime_run_ids_json, roleplay_json, revisions_json, created_at, updated_at, model_id, archived_at, pinned_at, group_id " +
             "FROM conversations ORDER BY updated_at DESC LIMIT :limit OFFSET :offset"
     )
     suspend fun conversationMetadataPage(limit: Int, offset: Int): List<ConversationMetadata>

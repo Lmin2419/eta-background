@@ -63,6 +63,14 @@ internal object EtaBackupValidation {
         if (document.schemaVersion !in 1..EtaBackupDocument.SCHEMA_VERSION) {
             throw EtaBackupException("不支持的胖小胖备份版本：${document.schemaVersion}")
         }
+        if (document.schemaVersion >= 6) {
+            val groups = document.conversationGroups
+            if (groups.any { it.id.isBlank() || it.name != it.name.trim() || it.name.codePointCount(0, it.name.length) !in 1..20 } ||
+                groups.map { it.id }.distinct().size != groups.size ||
+                groups.map { it.name.lowercase(java.util.Locale.ROOT) }.distinct().size != groups.size) {
+                throw EtaBackupException("备份中的会话分组名称或 ID 无效")
+            }
+        }
         if (document.catalogRevision < 0) throw EtaBackupException("备份中的模型目录版本无效")
         val providerIds = document.providers.map { it.provider.id }
         if (providerIds.size != providerIds.toSet().size || providerIds.any(String::isBlank)) {

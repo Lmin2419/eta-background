@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.github.mangi.eta.agent.subagent.SubagentTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-07T10:47:23.276Z" hostname="DESKTOP-C7GT9VI" time="0.373">
+  <properties/>
+  <testcase name="wildcardProfilesCannotAcquireOrOperateTheirParentsVirtualDisplay" classname="io.github.mangi.eta.agent.subagent.SubagentTest" time="0.039"/>
+  <testcase name="agentLoopExecutesMultipleSubagentCallsInParallelAndPreservesOrder" classname="io.github.mangi.eta.agent.subagent.SubagentTest" time="0.039"/>
+  <testcase name="customSubagentProfileCanBeSavedDiscoveredAndFilteredSafely" classname="io.github.mangi.eta.agent.subagent.SubagentTest" time="0.233"/>
+  <testcase name="builtinProfilesEnforceReadOnlyAndForbidRecursiveOrGuiTools" classname="io.github.mangi.eta.agent.subagent.SubagentTest" time="0.035"/>
+  <testcase name="subagentProgressEventRoundTripsThroughRuntimeWire" classname="io.github.mangi.eta.agent.subagent.SubagentTest" time="0.025"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

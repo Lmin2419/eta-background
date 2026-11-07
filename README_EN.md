@@ -8,15 +8,15 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-06 · `3.3.5` 胖小胖 · versionCode `2026110616`**, with engine `20261105-e49-parallel-observe`.
+**2026-11-07 · `3.3.5` 胖小胖 · versionCode `2026110617`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-Stage 8.1 follows `ed0c2e8`: missing frames no longer turn successful or running tasks into failed tasks. Terminal previews use one row of equal-width, 40dp tonal “Open chat” and “Open app” buttons, with “Control page” available when the page remains. Released pages show a neutral placeholder; running tasks retain their status while waiting for a frame.
+Stage 9 adds per-role subagent models and reasoning, with role → default → primary fallback. Conversations support persistent pins, groups, collapse, ordering and bulk moves without changing message timestamps. Room 24→25 preserves existing data; backup v6 includes groups and subagent settings, while v5 imports preserve device subagent settings.
 
-Completed notification bodies open the result conversation when available. Running notifications and existing task preview entries are unchanged, as are frame fetching, manual control, return control and App handoff logic.
+Linux chroot/proot inherit the device timezone with a POSIX fallback when zoneinfo is unavailable, without modifying rootfs files. A manually paused task regains its capsule after screen-on without resuming. The APK is named **`Pangxiaopang-3.3.5-2026110617.apk`**; package, signing and manifest versionName conventions are unchanged.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110616) · [Stage 8.1 screenshots and phone checklist](etax/design/validation/stage-8.1.md) (Chinese)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110617) · [Stage 9 tests, screenshots and phone checklist](etax/design/validation/stage-9.md) (Chinese)
 
-Delivery requires passing checks, signed build and Release publication. System notification display and window operation still need phone acceptance.
+Delivery requires passing checks, signed build and Release publication. Actual three-model dispatch, persistent grouping after restart and timezone behavior on both Linux runtimes require phone acceptance.
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 
