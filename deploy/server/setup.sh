@@ -66,7 +66,7 @@ install_frps() {
     local ok=0
     for url in "${urls[@]}"; do
       say "下载 frp：$url"
-      if curl -fL --connect-timeout 10 --max-time 300 -o "$archive" "$url" && \
+      if curl -fL --connect-timeout 10 --max-time 300 --speed-limit 102400 --speed-time 15 -o "$archive" "$url" && \
          [[ "$(sha256sum "$archive" | cut -d' ' -f1)" == "$want" ]]; then
         ok=1; break
       fi
