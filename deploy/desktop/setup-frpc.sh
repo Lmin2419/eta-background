@@ -71,7 +71,7 @@ else
   if [[ $ok -eq 0 ]]; then
     for url in "${urls[@]}"; do
       say "下载 frpc：$url"
-      if curl -fL --connect-timeout 10 --max-time 300 -o "$archive" "$url" && [[ "$(sha256 "$archive")" == "$want" ]]; then
+      if curl -fL --connect-timeout 10 --max-time 300 --speed-limit 102400 --speed-time 15 -o "$archive" "$url" && [[ "$(sha256 "$archive")" == "$want" ]]; then
         ok=1; break
       fi
       say "该地址失败或校验不符，换下一个"
