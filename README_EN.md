@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-08 · `3.3.5` 胖小胖 · versionCode `2026110801`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-08 · `3.3.5` 胖小胖 · versionCode `2026110802`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-New **Settings → Computer**: together with the [`dsh-bridge`](dsh-bridge/README.md) plugin in this repository, sessions of DeepSeek Harness on your computer are mirrored to the phone. Sessions run on the desktop; the phone uses the existing chat UI to read and send, queue, steer, stop, switch models, attach images and answer tool approvals. One WebSocket relayed through your own frp server streams tokens live and only resends the missing tail after a reconnect.
+**Settings → Computer** now has the relay server `8.163.249.159` built in. Run [`deploy/server/setup.sh`](deploy/README.md) once on the server, run the printed frpc command on the computer, and paste the `pxp://` pairing code on the phone. The app pins the server key from the pairing code, so a bare IP with a self-signed certificate stays secure.
 
-APK: **`Pangxiaopang-3.3.5-2026110801.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026110802.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110801)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110802)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

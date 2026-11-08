@@ -149,6 +149,20 @@ class DesktopScreensRenderTest {
         }
     }
 
+    @Test fun settingsLight() {
+        val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
+        val panel = Stage3TestPanel(controller.get()) { DesktopBridgeSettingsScreen(onBack = {}) }
+        try {
+            panel.advance(30)
+            val labels = panel.nodes().mapNotNull { it.config.getOrNull(SemanticsProperties.Text)?.joinToString() }
+            assertTrue(labels.toString(), labels.any { "8.163.249.159" in it })
+            panel.capture("desktop-settings-light")
+        } finally {
+            panel.close()
+            controller.pause().stop().destroy()
+        }
+    }
+
     @Test fun sessionsLight() = renderSessions("desktop-sessions-light", dark = false)
 
     @Test fun sessionsDark() = renderSessions("desktop-sessions-dark", dark = true)

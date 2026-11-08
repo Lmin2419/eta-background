@@ -6,13 +6,13 @@
 
 ## 最新测试版本
 
-**2026-11-08 · `3.3.5` 胖小胖 · versionCode `2026110801`**，引擎仍为 `20261105-e49-parallel-observe`。
+**2026-11-08 · `3.3.5` 胖小胖 · versionCode `2026110802`**，引擎仍为 `20261105-e49-parallel-observe`。
 
-新增「设置 → 电脑」：配合仓库里的 [`dsh-bridge`](dsh-bridge/README.md) 插件，把电脑上 DeepSeek Harness 的会话同步到手机。会话在桌面执行，手机用原有聊天界面查看与发指令，支持排队、插队、停止、切换模型、发图片和回答工具审批。一条 WebSocket 长连接经你自己的 frp 服务器中转，token 逐段实时推送，断线后只补差量。
+「设置 → 电脑」内置中转服务器 `8.163.249.159`。在服务器上执行一次 [`deploy/server/setup.sh`](deploy/README.md)，电脑执行打印出的 frpc 命令，手机粘贴 `pxp://` 配对码即可连上电脑上的 DeepSeek Harness。App 按配对码里的证书指纹固定服务器公钥，纯 IP 加自签证书也能安全连接。
 
-阶段 9 与等待首字进度提示保留。安装包 **`Pangxiaopang-3.3.5-2026110801.apk`**。
+上一版的电脑会话（排队、插队、停止、切换模型、图片、审批）保留。安装包 **`Pangxiaopang-3.3.5-2026110802.apk`**。
 
-**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110801)
+**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026110802)
 
 以该提交的 CI 全绿和签名 Release 为发布门槛；自动测试不代替真实手机上的暂停、续指令和后台页面验收。
 

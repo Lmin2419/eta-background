@@ -53,6 +53,17 @@
 
 ## 版本更新记录
 
+<a id="release-2026110802"></a>
+
+### 2026110802 · 内置中转服务器与一键部署（3.3.5）
+
+- App 内置中转服务器 `8.163.249.159:8443`，「电脑连接」页默认填好这个地址。新增「配对码」：粘贴服务器部署脚本打印的 `pxp://` 配对码，一次填好地址、证书指纹和 token，并立即连接。
+- 证书公钥固定：中转服务器只有 IP、使用自签证书，App 改为只信任配对码里指纹对应的那一把公钥（`DesktopBridgePinnedTrustManager`）。指纹不符时直接停止重连，提示可能被劫持或服务器换了证书；电脑离线（nginx 返回 502）时提示「电脑不在线」。
+- 证书指纹和 token 不写进源码和 APK：仓库与 Release 是公开的，token 能控制电脑。
+- 新增 `deploy/server/setup.sh`（Ubuntu）：安装 frps v0.72.0（国内镜像兜底，内置官方 SHA-256 校验）、nginx（8443 TLS 终止 + WebSocket 反代）、自签证书、systemd、ufw，打印电脑配对串、手机配对码和二维码；再次运行不会更换密钥，`--rotate` 重新生成。
+- 新增 `deploy/desktop/setup-frpc.sh`（macOS/Linux）与 `setup-frpc.ps1`（Windows）：安装并校验 frpc，写入配置与 dsh-bridge token，注册登录自启服务。
+- 本地全链路验证：服务器脚本、电脑脚本、nginx、frps、frpc、DSH 0.2.2-rc.1 与 App 客户端串起来，经固定公钥的 TLS 连接 36ms、首个流式 token 427ms；错误指纹被拒绝；frpc 断开时返回 502，恢复后即可重连。新增 `DesktopBridgePairingTest`（配对码解析、指纹算法与部署脚本一致、固定公钥校验）。
+
 <a id="release-2026110801"></a>
 
 ### 2026110801 · 电脑会话：同步 DeepSeek Harness 到手机（3.3.5）

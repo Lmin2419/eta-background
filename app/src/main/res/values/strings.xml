@@ -1644,7 +1644,7 @@
     <string name="desktop_token_saved_hint">Leave empty to keep the saved token</string>
     <string name="desktop_save_connect">Save and connect</string>
     <string name="desktop_forget">Forget this computer</string>
-    <string name="desktop_setup_note">Install the dsh-bridge plugin on the computer and expose 127.0.0.1:7788 through frp and HTTPS. See dsh-bridge/README.md in the repository.</string>
+    <string name="desktop_setup_note">Install the dsh-bridge plugin on the computer and expose 127.0.0.1:7788 through frp and HTTPS. See deploy/README.md in the repository.</string>
     <string name="desktop_address_invalid">Enter an address such as https://desk.example.com</string>
     <string name="desktop_token_required">Enter the token</string>
     <string name="desktop_state_idle">Not connected</string>
@@ -1672,4 +1672,12 @@
     <string name="desktop_offline_hint">Offline, showing the last synced content</string>
     <string name="desktop_loading">Loading from the computer…</string>
     <string name="desktop_action_unsupported">Not available for computer sessions yet</string>
+    <string name="desktop_pairing_code">Pairing code</string>
+    <string name="desktop_pairing_hint">Paste the pxp:// code printed by the server setup script. It fills in the address, certificate fingerprint and token.</string>
+    <string name="desktop_paste_pair">Paste and connect</string>
+    <string name="desktop_pair">Connect</string>
+    <string name="desktop_pairing_invalid">Not a valid pairing code</string>
+    <string name="desktop_manual_title">Manual setup</string>
+    <string name="desktop_cert_pin">Certificate fingerprint: %1$s</string>
+    <string name="desktop_builtin_server">Built-in relay server: %1$s</string>
 </resources>

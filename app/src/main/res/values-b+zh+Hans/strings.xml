@@ -1622,7 +1622,7 @@
     <string name="desktop_token_saved_hint">留空则沿用已保存的 Token</string>
     <string name="desktop_save_connect">保存并连接</string>
     <string name="desktop_forget">删除连接配置</string>
-    <string name="desktop_setup_note">先在电脑上安装 dsh-bridge 插件，再用 frp 把 127.0.0.1:7788 映射到服务器并配好 HTTPS，详见仓库里的 dsh-bridge/README.md。</string>
+    <string name="desktop_setup_note">先在电脑上安装 dsh-bridge 插件，再用 frp 把 127.0.0.1:7788 映射到服务器并配好 HTTPS，详见仓库里的 deploy/README.md。</string>
     <string name="desktop_address_invalid">请填写类似 https://desk.example.com 的地址</string>
     <string name="desktop_token_required">请填写 Token</string>
     <string name="desktop_state_idle">未连接</string>
@@ -1650,4 +1650,12 @@
     <string name="desktop_offline_hint">已断开，显示的是上次同步的内容</string>
     <string name="desktop_loading">正在从电脑加载…</string>
     <string name="desktop_action_unsupported">电脑会话暂不支持这个操作</string>
+    <string name="desktop_pairing_code">配对码</string>
+    <string name="desktop_pairing_hint">粘贴服务器部署脚本打印的 pxp:// 配对码，会自动填好地址、证书指纹和 Token。</string>
+    <string name="desktop_paste_pair">粘贴并连接</string>
+    <string name="desktop_pair">连接</string>
+    <string name="desktop_pairing_invalid">配对码无效</string>
+    <string name="desktop_manual_title">手动填写</string>
+    <string name="desktop_cert_pin">证书指纹：%1$s</string>
+    <string name="desktop_builtin_server">内置中转服务器：%1$s</string>
 </resources>
