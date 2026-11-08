@@ -24,15 +24,38 @@ import org.junit.Test
  * 并让 DSH 有一个可用模型（`DSH_BRIDGE_E2E_PROVIDER` / `DSH_BRIDGE_E2E_MODEL`）。
  */
 class DesktopBridgeClientE2ETest {
-    @Test
-    fun streamsAPromptThroughTheRealBridge() = runBlocking {
+    private fun e2eConfig(): DesktopBridgeConfig? {
+        System.getenv("DSH_BRIDGE_E2E_PAIRING")?.let { return DesktopBridgeConfig.fromPairingCode(it) }
         val url = System.getenv("DSH_BRIDGE_E2E_URL")
         val token = System.getenv("DSH_BRIDGE_E2E_TOKEN")
-        assumeTrue("set DSH_BRIDGE_E2E_URL to run", !url.isNullOrBlank() && !token.isNullOrBlank())
+        return if (url.isNullOrBlank() || token.isNullOrBlank()) null else DesktopBridgeConfig(url, token)
+    }
+
+    @Test
+    fun wrongCertificatePinIsRefused() = runBlocking {
+        val config = e2eConfig()
+        assumeTrue("needs a pinned pairing code", config?.pin != null)
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val client = DesktopBridgeClient(OkHttpClient(), scope)
         try {
-            client.start(DesktopBridgeConfig(url!!, token!!))
+            client.start(config!!.copy(pin = "A".repeat(43)))
+            val state = withTimeout(10_000) { client.state.first { it is DesktopBridgeClient.State.Unauthorized } }
+            println("wrong pin -> $state")
+            assertTrue((state as DesktopBridgeClient.State.Unauthorized).message.contains("指纹"))
+        } finally {
+            client.stop()
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun streamsAPromptThroughTheRealBridge() = runBlocking {
+        val config = e2eConfig()
+        assumeTrue("set DSH_BRIDGE_E2E_URL/TOKEN or DSH_BRIDGE_E2E_PAIRING to run", config != null)
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val client = DesktopBridgeClient(OkHttpClient(), scope)
+        try {
+            client.start(config!!)
             assertTrue("connects", client.awaitConnected(10_000))
             val connected = client.state.value as DesktopBridgeClient.State.Connected
             println("connected to ${connected.host} in ${connected.latencyMs} ms")

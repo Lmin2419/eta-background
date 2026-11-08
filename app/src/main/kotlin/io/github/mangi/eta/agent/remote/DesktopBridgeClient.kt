@@ -54,7 +54,7 @@ internal class DesktopBridgeClient(
         data class Unauthorized(val message: String) : State
     }
 
-    private val http: OkHttpClient = baseClient.newBuilder()
+    private val baseHttp: OkHttpClient = baseClient.newBuilder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.MILLISECONDS)
         .writeTimeout(15, TimeUnit.SECONDS)
@@ -88,7 +88,8 @@ internal class DesktopBridgeClient(
             _state.value = State.Unauthorized("电脑地址无效")
             return
         }
-        loopJob = scope.launch { runLoop(url, config.token) }
+        val http = baseHttp.newBuilder().pinnedTo(config.pin).build()
+        loopJob = scope.launch { runLoop(http, url, config.token) }
     }
 
     @Synchronized
@@ -105,14 +106,14 @@ internal class DesktopBridgeClient(
         wake.trySend(Unit)
     }
 
-    private suspend fun runLoop(url: String, token: String) {
+    private suspend fun runLoop(http: OkHttpClient, url: String, token: String) {
         var attempt = 0
         var lastError: String? = null
         while (scope.isActive) {
             _state.value = State.Connecting(attempt, lastError)
             val startedAt = System.currentTimeMillis()
             fatal = null
-            when (val outcome = connectOnce(url, token)) {
+            when (val outcome = connectOnce(http, url, token)) {
                 is Outcome.Unauthorized -> {
                     _state.value = State.Unauthorized(outcome.message)
                     return
@@ -135,7 +136,7 @@ internal class DesktopBridgeClient(
         data class Unauthorized(val message: String) : Outcome
     }
 
-    private suspend fun connectOnce(url: String, token: String): Outcome = suspendCancellableCoroutine { cont ->
+    private suspend fun connectOnce(http: OkHttpClient, url: String, token: String): Outcome = suspendCancellableCoroutine { cont ->
         val finished = AtomicBoolean(false)
         fun finish(outcome: Outcome) {
             if (!finished.compareAndSet(false, true)) return
@@ -169,10 +170,13 @@ internal class DesktopBridgeClient(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 val code = response?.code
-                if (code == 401 || code == 403) {
-                    finish(Outcome.Unauthorized("Token 不正确（HTTP $code）"))
-                } else {
-                    finish(Outcome.Closed(code?.let { "HTTP $it" } ?: t.message ?: t.javaClass.simpleName))
+                val mismatch = t.findPinMismatch()
+                when {
+                    mismatch != null -> finish(Outcome.Unauthorized(mismatch.message ?: "服务器证书指纹不符"))
+                    code == 401 || code == 403 -> finish(Outcome.Unauthorized("Token 不正确（HTTP $code）"))
+                    // nginx 连不上 frps 映射的端口：电脑上的 frpc 没运行，或电脑离线/休眠。
+                    code == 502 || code == 504 -> finish(Outcome.Closed("电脑不在线（frpc 未连接到中转服务器）"))
+                    else -> finish(Outcome.Closed(code?.let { "HTTP $it" } ?: t.message ?: t.javaClass.simpleName))
                 }
             }
         })
