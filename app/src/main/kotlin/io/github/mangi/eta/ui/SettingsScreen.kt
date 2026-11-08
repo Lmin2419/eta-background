@@ -56,6 +56,7 @@ import androidx.compose.material.icons.rounded.SportsBar
 import androidx.compose.material.icons.rounded.SupportAgent
 import androidx.compose.material.icons.rounded.SwipeUp
 import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.Computer
 import androidx.compose.material.icons.rounded.Terminal
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material.icons.rounded.TravelExplore
@@ -351,6 +352,18 @@ private fun SettingsPageContent(
                             )
                         },
                         onClick = { onNavigate(AppRoute.Subagents) },
+                    )
+                    EtaPreferenceDivider()
+                    EtaArrowPreference(
+                        title = stringResource(R.string.desktop_title),
+                        summary = stringResource(R.string.desktop_settings_entry_summary),
+                        startAction = {
+                            EtaPreferenceIcon(
+                                icon = Icons.Rounded.Computer,
+                                tint = EtaPreferenceColors.Blue,
+                            )
+                        },
+                        onClick = { onNavigate(AppRoute.DesktopSessions) },
                     )
                 }
             }

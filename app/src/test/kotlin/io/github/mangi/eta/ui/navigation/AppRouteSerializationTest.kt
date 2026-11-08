@@ -58,6 +58,9 @@ class AppRouteSerializationTest {
             AppRoute.ModelProviderNew(NewProviderType.OpenAiCompatible),
             AppRoute.ModelProviderNew(NewProviderType.Anthropic),
             AppRoute.ModelProviderNew(NewProviderType.Gemini),
+            AppRoute.DesktopSessions,
+            AppRoute.DesktopChat("session-1"),
+            AppRoute.DesktopBridgeSettings,
         )
         val json = Json { ignoreUnknownKeys = true }
 

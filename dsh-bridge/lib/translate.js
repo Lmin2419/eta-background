@@ -200,10 +200,12 @@ export function inboxItems(inbox) {
     for (const entry of list) {
       if (!isObject(entry)) continue
       const message = isObject(entry.message) ? entry.message : entry
+      const rpcId = isObject(message.source) && typeof message.source.rpcId === 'string' ? message.source.rpcId : undefined
       out.push({
         id: String(message.id ?? entry.id ?? ''),
         text: textOf(message.content),
         placement,
+        ...(rpcId ? { rpcId } : {}),
       })
     }
   }
