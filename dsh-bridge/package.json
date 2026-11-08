@@ -1,0 +1,30 @@
+{
+  "name": "dsh-bridge",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness plugin that mirrors desktop Sessions to the 胖小胖 Android app over one WebSocket.",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "PROTOCOL.md"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

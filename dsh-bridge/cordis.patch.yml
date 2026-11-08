@@ -1,0 +1,8 @@
+# Inserted when a profile lists the dsh-bridge bundle.
+# The listener stays on loopback; expose it through frp (see README.md).
+- insert:
+    - id: dsh-bridge
+      name: dsh-bridge
+      config:
+        host: 127.0.0.1
+        port: 7788
