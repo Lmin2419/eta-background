@@ -8,15 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-07 · `3.3.5` 胖小胖 · versionCode `2026110702`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-08 · `3.3.5` 胖小胖 · versionCode `2026110801`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-The chat no longer sits blank between sending a message and the model's first token: a "Waiting for a reply" row with a running ring appears at the end, shows the elapsed seconds after 3 s and says the model is slow to start after 20 s. It yields as soon as the first reasoning, text or tool output arrives, in both the app and the power-key assistant panel. Model requests, scheduling and caching are unchanged.
+New **Settings → Computer**: together with the [`dsh-bridge`](dsh-bridge/README.md) plugin in this repository, sessions of DeepSeek Harness on your computer are mirrored to the phone. Sessions run on the desktop; the phone uses the existing chat UI to read and send, queue, steer, stop, switch models, attach images and answer tool approvals. One WebSocket relayed through your own frp server streams tokens live and only resends the missing tail after a reconnect.
 
-Stage 9 features remain available. APK: **`Pangxiaopang-3.3.5-2026110702.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026110801.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110702)
-
-Delivery requires passing CI and a signed Release. Automated checks do not replace phone acceptance of pause, follow-up instructions and retained background pages.
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110801)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

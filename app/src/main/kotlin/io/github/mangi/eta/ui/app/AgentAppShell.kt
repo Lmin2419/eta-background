@@ -499,6 +499,8 @@ private fun titleForRoute(route: AppRoute?): String = when (route) {
     is AppRoute.McpServerDetail -> stringResource(R.string.route_mcp_server_detail)
     is AppRoute.ModelProviderDetail -> stringResource(R.string.route_provider_details)
     is AppRoute.ModelProviderNew -> stringResource(R.string.route_new_provider)
+    is AppRoute.DesktopSessions, is AppRoute.DesktopChat -> stringResource(R.string.desktop_title)
+    is AppRoute.DesktopBridgeSettings -> stringResource(R.string.desktop_settings_title)
     null -> stringResource(R.string.app_name)
 }
 

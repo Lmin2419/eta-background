@@ -53,6 +53,18 @@
 
 ## 版本更新记录
 
+<a id="release-2026110801"></a>
+
+### 2026110801 · 电脑会话：同步 DeepSeek Harness 到手机（3.3.5）
+
+- 新增「设置 → 电脑」：通过仓库里的 `dsh-bridge` 插件，把电脑上 DeepSeek Harness（DSH）的会话映射到手机。会话由桌面执行，模型、工具、MCP、Skills 与桌面完全一致；手机负责查看、发送、排队与插队、停止、切换模型与推理强度、发图片、回答工具审批。
+- 复用原有聊天组件：`DesktopChatProjector` 把桌面事件投影为 `AgentChatMessageUi`，`AgentChatBody`、输入栏、队列条、工作过程与工具卡原样使用，上游聊天与 Runtime 代码不改。
+- 同步链路：一条带 Bearer token 的 WebSocket 长连接（经 frp 中转、服务器 Caddy 终止 TLS）。模型 token 约 30ms 合并推送一次；断线后按会话序号只补差量；系统默认网络切换（Wi-Fi ↔ 蜂窝）时立即重连，不等 ping 超时；发出的消息先本地回显，桌面确认后无闪烁替换。
+- 审批：手机在线时工具审批同时推到手机和桌面网页，先答者生效，另一边自动撤回。
+- Token 以 Android Keystore 加密保存；离开电脑页面 45 秒后断开连接。
+- 插件：`dsh-bridge/`（零依赖 Node.js，19 个单测），已在 DSH 0.2.2-rc.1 上用本地假模型端到端验证流式输出、工具调用、审批与断线续传；部署步骤见 [dsh-bridge/README.md](../dsh-bridge/README.md)，协议见 [PROTOCOL.md](../dsh-bridge/PROTOCOL.md)。
+- 新增 `DesktopSessionStateTest`（快照、续传、流式交接、回显、队列、投影、模型选择、地址规范化）与默认跳过的 `DesktopBridgeClientE2ETest`（设置 `DSH_BRIDGE_E2E_URL` 后对真实插件运行）。引擎、包名与备份格式不变。
+
 <a id="release-2026110702"></a>
 
 ### 2026110702 · 等待首字时显示进度（3.3.5）

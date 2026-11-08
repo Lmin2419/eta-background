@@ -113,6 +113,16 @@ sealed interface AppRoute : NavKey {
 
     @Serializable
     data class ModelProviderNew(val providerType: NewProviderType) : AppRoute
+
+    /** 电脑端 DeepSeek Harness 会话列表（经 dsh-bridge 同步）。 */
+    @Serializable
+    data object DesktopSessions : AppRoute
+
+    @Serializable
+    data class DesktopChat(val sessionId: String) : AppRoute
+
+    @Serializable
+    data object DesktopBridgeSettings : AppRoute
 }
 
 @Serializable

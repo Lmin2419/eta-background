@@ -82,6 +82,9 @@ import io.github.mangi.eta.ui.pages.providers.CommunityCatalogScreen
 import io.github.mangi.eta.ui.pages.providers.ModelProviderDetailScreen
 import io.github.mangi.eta.ui.pages.providers.ModelProviderListScreen
 import io.github.mangi.eta.ui.screens.backup.DataBackupScreen
+import io.github.mangi.eta.ui.screens.desktop.DesktopBridgeSettingsScreen
+import io.github.mangi.eta.ui.screens.desktop.DesktopChatScreen
+import io.github.mangi.eta.ui.screens.desktop.DesktopSessionsScreen
 import io.github.mangi.eta.ui.screens.browser.AgentBrowserActivity
 import io.github.mangi.eta.agent.browser.BrowserSessionRegistry
 import io.github.mangi.eta.ui.screens.characters.CharacterDetailScreen
@@ -614,6 +617,19 @@ fun AgentAppRoot(
             }
             entry<AppRoute.WebToolsSettings>(swipeDismiss = swipeDismiss) {
                 WebToolsSettingsScreen(onBack = ::popRoute)
+            }
+            entry<AppRoute.DesktopSessions>(swipeDismiss = swipeDismiss) {
+                DesktopSessionsScreen(
+                    onBack = ::popRoute,
+                    onOpenSession = { sessionId -> pushRoute(AppRoute.DesktopChat(sessionId)) },
+                    onOpenSettings = { pushRoute(AppRoute.DesktopBridgeSettings) },
+                )
+            }
+            entry<AppRoute.DesktopChat>(swipeDismiss = swipeDismiss) { route ->
+                DesktopChatScreen(sessionId = route.sessionId, onBack = ::popRoute)
+            }
+            entry<AppRoute.DesktopBridgeSettings>(swipeDismiss = swipeDismiss) {
+                DesktopBridgeSettingsScreen(onBack = ::popRoute)
             }
             entry<AppRoute.Subagents>(swipeDismiss = swipeDismiss) {
                 SubagentSettingsScreen(onBack = ::popRoute)
