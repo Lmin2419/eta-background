@@ -52,12 +52,15 @@ internal object DesktopLinkSettings {
     private val _state = MutableStateFlow(DesktopLinkPrefs())
     val state: StateFlow<DesktopLinkPrefs> = _state.asStateFlow()
 
+    /** 读入已保存的偏好（只读一次）；返回可观察的偏好，界面可直接收集。 */
     @Synchronized
-    fun init(context: Context) {
-        if (prefs != null) return
-        val store = context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
-        prefs = store
-        _state.value = read(store)
+    fun init(context: Context): StateFlow<DesktopLinkPrefs> {
+        if (prefs == null) {
+            val store = context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+            prefs = store
+            _state.value = read(store)
+        }
+        return state
     }
 
     fun update(transform: (DesktopLinkPrefs) -> DesktopLinkPrefs) {

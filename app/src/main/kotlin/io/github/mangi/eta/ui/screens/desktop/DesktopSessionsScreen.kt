@@ -82,14 +82,14 @@ internal fun DesktopSessionsScreen(
         DesktopBridge.acquire(context)
         onDispose { DesktopBridge.release() }
     }
-    remember { DesktopLinkSettings.init(context) }
+    val linkPrefs = remember { DesktopLinkSettings.init(context) }
     val config by DesktopBridge.config.collectAsState()
     val connection by DesktopBridge.client.state.collectAsState()
     val sessions by DesktopBridge.sessions.collectAsState()
     val approvals by DesktopBridge.approvals.collectAsState()
     val questions by DesktopBridge.questions.collectAsState()
     val unread by DesktopBridge.unread.collectAsState()
-    val prefs by DesktopLinkSettings.state.collectAsState()
+    val prefs by linkPrefs.collectAsState()
     val scope = rememberCoroutineScope()
     var creating by remember { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }

@@ -53,8 +53,7 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
         DesktopBridge.acquire(context)
         onDispose { DesktopBridge.release() }
     }
-    remember { DesktopLinkSettings.init(context) }
-    val linkPrefs by DesktopLinkSettings.state.collectAsState()
+    val linkPrefs by remember { DesktopLinkSettings.init(context) }.collectAsState()
     val saved by DesktopBridge.config.collectAsState()
     val connection by DesktopBridge.client.state.collectAsState()
     var pairing by rememberSaveable { mutableStateOf("") }
