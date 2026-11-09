@@ -26,7 +26,7 @@ class AgentSystemNotificationTest {
         dismissRetainedTaskCardsForTest(org.robolectric.RuntimeEnvironment.getApplication())
     }
 
-    @Test fun runningBackgroundCardUsesViewPauseStopOrder() {
+    @Test fun runningBackgroundCardOpensConversationAndBodyOpensPreview() {
         val host = Robolectric.buildService(AgentExecutionService::class.java).create()
         val service = host.get()
         val manager = service.getSystemService(NotificationManager::class.java)
@@ -36,15 +36,17 @@ class AgentSystemNotificationTest {
             AgentExecutionService.updateTasks(service, listOf(task))
             shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
             val card = manager.activeNotifications.single().notification
+            // 点通知正文仍进入后台虚拟屏预览。
             assertEquals(TaskPreviewActivity::class.java.name, shadowOf(card.contentIntent).savedIntent.component?.className)
-            assertEquals(listOf(R.string.task_notice_view, R.string.overlay_pause, R.string.overlay_stop_task).map(service::getString),
+            assertEquals(listOf(R.string.overlay_open_conversation, R.string.overlay_pause, R.string.overlay_stop_task).map(service::getString),
                 card.actions.map { it.title.toString() })
-            val view = card.actions[0]
-            assertEquals(card.contentIntent, view.actionIntent)
-            view.actionIntent.send()
+            // 「打开会话」按钮即使有后台屏也回到胖小胖的会话，而不是虚拟屏。
+            val open = card.actions[0]
+            open.actionIntent.send()
             val intent = shadowOf(service.application).nextStartedActivity
-            assertEquals(TaskPreviewActivity::class.java.name, intent.component?.className)
-            assertEquals(task.runId, intent.getStringExtra("run_id"))
+            assertEquals(io.github.mangi.eta.ui.MainActivity::class.java.name, intent.component?.className)
+            assertEquals(io.github.mangi.eta.ui.MainActivity.ACTION_OPEN_CONVERSATION_ID, intent.action)
+            assertEquals(task.conversationId, intent.getStringExtra(io.github.mangi.eta.ui.MainActivity.EXTRA_CONVERSATION_ID))
             assertEquals(task, AgentExecutionService.task(task.runId))
             assertEquals(listOf(AgentExecutionService.ACTION_PAUSE_RUN, AgentExecutionService.ACTION_STOP_RUN),
                 card.actions.drop(1).map { shadowOf(it.actionIntent).savedIntent.action })

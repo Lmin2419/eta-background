@@ -18,6 +18,7 @@ class ConversationSearchTest {
             SystemNoticeCode.RuntimeFailed -> "Runtime failed"
             SystemNoticeCode.Interrupted -> "Interrupted"
             SystemNoticeCode.RunPerformance -> "Execution details"
+            SystemNoticeCode.Marker -> "Marker"
         }
     }
 

@@ -49,12 +49,21 @@ export function apply(ctx, config = {}) {
   const logger = ctx.logger ?? console
   const host = typeof config.host === 'string' ? config.host : (process.env.DSH_BRIDGE_HOST ?? '127.0.0.1')
   const port = Number(config.port ?? process.env.DSH_BRIDGE_PORT ?? 7788)
-  const bridge = new Bridge({
+  const services = {
     controller: ctx.sessionController,
     workspaces: ctx.workspaceRegistry,
+    subagents: undefined,
     logger,
     version: VERSION,
-  })
+  }
+  const bridge = new Bridge(services)
+  // Optional: subagent continuation and stop exist only when the profile composes subagents.
+  if (typeof ctx.inject === 'function') {
+    ctx.inject(['subagents'], (child) => {
+      services.subagents = child.subagents
+      child.effect(() => () => { services.subagents = undefined }, 'dsh-bridge: subagents')
+    })
+  }
 
   ctx.on('api-session/added', summary => bridge.onSessionAdded(summary))
   ctx.on('api-session/status', (sessionId, running) => bridge.onStatus(sessionId, running))

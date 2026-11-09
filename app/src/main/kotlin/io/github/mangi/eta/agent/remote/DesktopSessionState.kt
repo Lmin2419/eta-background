@@ -24,8 +24,20 @@ internal data class DesktopSessionState(
     val loadingOlder: Boolean = false,
     val error: String? = null,
     val echoes: List<DesktopEcho> = emptyList(),
+    val stats: DesktopSessionStats? = null,
+    val usage: DesktopTokenTotals? = null,
+    val pressure: DesktopContextPressure? = null,
+    val subagents: List<DesktopSubagent> = emptyList(),
+    val timing: DesktopSubagentTiming? = null,
 ) {
     val firstSeq: Long? get() = items.firstOrNull()?.seq
+
+    /** 已插队、等当前这一步结束就会被处理的消息（桌面显示为已发出的待送达气泡）。 */
+    val steering: List<DesktopQueueItem> get() = queue.filter { it.steering }
+
+    /** 点了插队后先在本地挪到对话里，不等电脑回执；电脑的队列推送随后会给出权威结果。 */
+    fun markSteering(itemId: String): DesktopSessionState =
+        copy(queue = queue.map { if (it.id == itemId) it.copy(steering = true) else it })
 
     fun addEcho(echo: DesktopEcho): DesktopSessionState = copy(echoes = echoes + echo)
 
@@ -44,11 +56,14 @@ internal data class DesktopSessionState(
         return if (remaining.size == echoes.size) this else copy(echoes = remaining)
     }
 
-    /** 队列条显示的条目：桌面队列减去已由记录回显代表的消息，再加上尚未确认的排队回显。 */
+    /**
+     * 队列条显示的条目：桌面队列减去已由记录回显代表的消息、减去已插队（steering）的消息，
+     * 再加上尚未确认的排队回显。插队消息和桌面一样直接显示在对话末尾，见 [steering]。
+     */
     val visibleQueue: List<DesktopQueueItem>
         get() {
             val transcriptEchoes = echoes.filterNot { it.queued }.mapTo(HashSet()) { it.requestId }
-            val fromDesktop = queue.filterNot { it.rpcId != null && it.rpcId in transcriptEchoes }
+            val fromDesktop = queue.filterNot { it.steering || (it.rpcId != null && it.rpcId in transcriptEchoes) }
             val pendingQueued = echoes.filter { it.queued }.map { DesktopQueueItem("echo-${it.requestId}", it.text, steering = false, rpcId = it.requestId) }
             return fromDesktop + pendingQueued
         }
@@ -71,6 +86,11 @@ internal data class DesktopSessionState(
             running = running || live != null,
             loaded = true,
             error = null,
+            stats = DesktopBridgeProtocol.parseStats(push["stats"]) ?: stats,
+            usage = DesktopBridgeProtocol.parseTokenTotals(push["usage"]) ?: usage,
+            pressure = DesktopBridgeProtocol.parsePressure(push["pressure"]) ?: pressure,
+            subagents = if (push.containsKey("subagents")) DesktopBridgeProtocol.parseSubagentEntries(push["subagents"]) else subagents,
+            timing = DesktopBridgeProtocol.parseTiming(push["timing"]) ?: timing,
         ).settleEchoes()
     }
 
@@ -121,6 +141,19 @@ internal data class DesktopSessionState(
         if (push.containsKey("title")) next = next.copy(title = push.string("title") ?: next.title)
         if (push.containsKey("model")) next = next.copy(model = DesktopBridgeProtocol.parseModelSelection(push["model"]) ?: next.model)
         if (push.containsKey("queue")) next = next.copy(queue = DesktopBridgeProtocol.parseQueue(push["queue"])).settleEchoes()
+        if (push.containsKey("stats")) next = next.copy(stats = DesktopBridgeProtocol.parseStats(push["stats"]) ?: next.stats)
+        if (push.containsKey("usage")) next = next.copy(usage = DesktopBridgeProtocol.parseTokenTotals(push["usage"]) ?: next.usage)
+        if (push.containsKey("pressure")) {
+            // 压力帧可能只带部分字段（例如只有窗口大小），保留已知值。
+            val incoming = DesktopBridgeProtocol.parsePressure(push["pressure"])
+            if (incoming != null) next = next.copy(pressure = DesktopContextPressure(
+                incoming.pressureTokens ?: next.pressure?.pressureTokens,
+                incoming.projectedTokens ?: next.pressure?.projectedTokens,
+                incoming.contextWindow ?: next.pressure?.contextWindow,
+            ))
+        }
+        if (push.containsKey("subagents")) next = next.copy(subagents = DesktopBridgeProtocol.parseSubagentEntries(push["subagents"]))
+        if (push.containsKey("timing")) next = next.copy(timing = DesktopBridgeProtocol.parseTiming(push["timing"]) ?: next.timing)
         return next
     }
 

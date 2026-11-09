@@ -57,7 +57,11 @@ internal object DesktopBridge {
     val config: StateFlow<DesktopBridgeConfig?> = _config.asStateFlow()
 
     private val states = ConcurrentHashMap<String, MutableStateFlow<DesktopSessionState>>()
-    private val followed = ConcurrentHashMap.newKeySet<String>()
+
+    /** 正在看的会话；子代理会话记着主会话 id 与模式，重连后按同一地址续订。 */
+    private data class FollowTarget(val parentId: String?, val mode: String?)
+    private val followed = ConcurrentHashMap<String, FollowTarget>()
+    private val targets = ConcurrentHashMap<String, FollowTarget>()
 
     private var users = 0
     private var releaseJob: Job? = null
@@ -134,25 +138,35 @@ internal object DesktopBridge {
     private fun stateFlow(sessionId: String) =
         states.getOrPut(sessionId) { MutableStateFlow(DesktopSessionState(sessionId)) }
 
-    /** 打开会话：已有缓存时立刻可见，并按 cursor 续订只补差量。 */
-    fun follow(sessionId: String) {
-        followed += sessionId
+    /** 打开会话：已有缓存时立刻可见，并按 cursor 续订只补差量。子代理对话传入主会话 id。 */
+    fun follow(sessionId: String, parentId: String? = null, mode: String? = null) {
+        val target = FollowTarget(parentId, mode)
+        followed[sessionId] = target
+        targets[sessionId] = target
         stateFlow(sessionId)
         if (client.isConnected) scope.launch { sendFollow(sessionId) }
     }
 
     fun unfollow(sessionId: String) {
-        followed -= sessionId
+        followed.remove(sessionId)
         if (client.isConnected) scope.launch {
             runCatching { client.call("sessions.unfollow", mapOf("sessionId" to JsonPrimitive(sessionId))) }
         }
         trimCache()
     }
 
+    private fun MutableMap<String, JsonElement>.putAddress(sessionId: String) {
+        put("sessionId", JsonPrimitive(sessionId))
+        targets[sessionId]?.parentId?.let { parent ->
+            put("parentId", JsonPrimitive(parent))
+            targets[sessionId]?.mode?.let { put("mode", JsonPrimitive(it)) }
+        }
+    }
+
     private suspend fun sendFollow(sessionId: String) {
         val state = stateFlow(sessionId).value
         val params = buildMap<String, JsonElement> {
-            put("sessionId", JsonPrimitive(sessionId))
+            putAddress(sessionId)
             if (state.loaded && state.cursor >= 0) put("afterSeq", JsonPrimitive(state.cursor))
         }
         try {
@@ -204,6 +218,20 @@ internal object DesktopBridge {
         flow.update { it.addEcho(DesktopEcho(requestId, text, queued = running && !interrupt && !steer)) }
         try {
             if (interrupt && running) runCatching { cancel(sessionId) }
+            if (targets[sessionId]?.parentId != null) {
+                // 子代理对话：经 subagents 服务投递（只有可继续的子代理接受）。
+                client.call(
+                    "subagents.prompt",
+                    mapOf(
+                        "childSessionId" to JsonPrimitive(sessionId),
+                        "text" to JsonPrimitive(text),
+                        "mode" to JsonPrimitive(if (steer) "steer" else "queue"),
+                        "requestId" to JsonPrimitive(requestId),
+                        "timeZone" to JsonPrimitive(TimeZone.getDefault().id),
+                    ),
+                )
+                return
+            }
             val params = buildMap<String, JsonElement> {
                 put("sessionId", JsonPrimitive(sessionId))
                 put("text", JsonPrimitive(text))
@@ -224,7 +252,30 @@ internal object DesktopBridge {
     }
 
     suspend fun cancel(sessionId: String) {
-        client.call("sessions.cancel", mapOf("sessionId" to JsonPrimitive(sessionId)))
+        if (targets[sessionId]?.parentId != null) {
+            client.call("subagents.interrupt", mapOf("childSessionId" to JsonPrimitive(sessionId)))
+        } else {
+            client.call("sessions.cancel", mapOf("sessionId" to JsonPrimitive(sessionId)))
+        }
+    }
+
+    /** 插队：先在本地把消息挪进对话（与桌面一致显示为已发出），再请电脑执行。 */
+    suspend fun steer(sessionId: String, itemId: String) {
+        val flow = stateFlow(sessionId)
+        val before = flow.value.queue
+        flow.update { it.markSteering(itemId) }
+        try {
+            queueAction(sessionId, itemId, JsonPrimitive("steer"))
+        } catch (error: DesktopBridgeException) {
+            flow.update { it.copy(queue = before) }
+            throw error
+        }
+    }
+
+    /** 主会话下的子代理目录（状态、用量、耗时），与桌面页头的子代理菜单同源。 */
+    suspend fun subagentDirectory(sessionId: String): List<DesktopSubagent> {
+        val data = client.call("sessions.subagents", mapOf("sessionId" to JsonPrimitive(sessionId))).jsonObject
+        return (data["children"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let(DesktopBridgeProtocol::parseSubagent) }
     }
 
     suspend fun queueAction(sessionId: String, itemId: String, action: JsonElement) {
@@ -241,7 +292,11 @@ internal object DesktopBridge {
         if (current.loadingOlder || !current.hasMore) return
         flow.update { it.copy(loadingOlder = true) }
         try {
-            val data = client.call("sessions.older", mapOf("sessionId" to JsonPrimitive(sessionId), "beforeSeq" to JsonPrimitive(before))).jsonObject
+            val params = buildMap<String, JsonElement> {
+                putAddress(sessionId)
+                put("beforeSeq", JsonPrimitive(before))
+            }
+            val data = client.call("sessions.older", params).jsonObject
             flow.update { it.prependOlder(DesktopBridgeProtocol.parseItems(data["items"]), data.bool("hasMore") == true) }
         } catch (error: DesktopBridgeException) {
             flow.update { it.copy(loadingOlder = false, error = error.message) }
@@ -271,7 +326,7 @@ internal object DesktopBridge {
 
     private suspend fun onConnected(hello: JsonObject) {
         _approvals.value = (hello["approvals"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let(DesktopBridgeProtocol::parseApproval) }
-        for (sessionId in followed) sendFollow(sessionId)
+        for (sessionId in followed.keys) sendFollow(sessionId)
         refreshSessions()
         refreshCatalog()
     }
@@ -284,7 +339,7 @@ internal object DesktopBridge {
                 sessionId?.let { id -> states[id]?.update { it.reduce(push) } }
                 if (type == "projection") push.string("title")?.let { title -> updateRow(sessionId) { it.copy(title = title) } }
             }
-            "follow-end" -> sessionId?.takeIf { it in followed }?.let { id -> scope.launch { delay(500); sendFollow(id) } }
+            "follow-end" -> sessionId?.takeIf { followed.containsKey(it) }?.let { id -> scope.launch { delay(500); sendFollow(id) } }
             "status" -> {
                 val running = push.bool("running") == true
                 sessionId?.let { id -> states[id]?.update { it.reduce(push) } }
@@ -318,7 +373,7 @@ internal object DesktopBridge {
     /** 只保留正在看的会话和最近几个缓存，控制内存。 */
     private fun trimCache() {
         if (states.size <= MAX_CACHED_SESSIONS) return
-        states.keys.filterNot { it in followed }.take(states.size - MAX_CACHED_SESSIONS).forEach(states::remove)
+        states.keys.filterNot { followed.containsKey(it) }.take(states.size - MAX_CACHED_SESSIONS).forEach(states::remove)
     }
 
     // ---- 网络切换 ----------------------------------------------------------

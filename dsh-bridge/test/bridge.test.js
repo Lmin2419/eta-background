@@ -52,7 +52,12 @@ function fakeController() {
       async modelCatalog() {
         return { default: { provider: 'deepseek', model: 'chat' }, routableProviders: ['deepseek'], groups: [{ id: 'deepseek', name: 'DeepSeek', models: [{ id: 'chat', name: 'Chat' }] }], failures: [] }
       },
-      follow(_request, signal) { return follow.iterate(signal) },
+      follow(request, signal) { calls.push(['follow', request]); return follow.iterate(signal) },
+      async projections({ sessionId }) {
+        if (sessionId === 's1') return { kind: 'sequenced', asOfSeq: 1, values: { subagentCatalog: [{ id: 'c1', mode: 'continuable', label: 'scan', name: 'lister', createdAt: 3 }, { id: 'x', mode: 'external', createdAt: 4 }] } }
+        return { kind: 'sequenced', asOfSeq: 1, values: { title: 'child', tokenUsage: { uncachedInputTokens: 1, outputTokens: 2, cacheReadTokens: 3, cacheWriteTokens: 0 }, subagentTiming: { settledMs: 50 } } }
+      },
+      async state({ sessionId }) { return { cursor: 1, active: true, running: sessionId === 'c1', queue: [], pendingInput: [] } },
       observeProjections(_request, signal) { return projections.iterate(signal) },
     },
   }
@@ -274,6 +279,38 @@ test('status and session list events are broadcast', async () => {
   bridge.onSessionAdded({ sessionId: 's3', updatedAt: 1, running: false, blank: true, agentAvailable: true })
   const added = await c.next(m => m.t === 'session')
   assert.equal(added.session.id, 's3')
+  c.ws.close()
+  await handle.close()
+})
+
+test('subagent directory and child follow address', async () => {
+  const { fake, handle, url } = await setup()
+  const c = await connect(url)
+  const dir = await c.call('sessions.subagents', { sessionId: 's1' })
+  assert.deepEqual(dir.children, [
+    { id: 'c1', mode: 'continuable', createdAt: 3, label: 'scan', name: 'lister', title: 'child', usage: { uncachedInputTokens: 1, outputTokens: 2, cacheReadTokens: 3, cacheWriteTokens: 0 }, timing: { settledMs: 50 }, running: true },
+    { id: 'x', mode: 'external', createdAt: 4 },
+  ])
+  await c.call('sessions.follow', { sessionId: 'c1', parentId: 's1', mode: 'continuable' })
+  const follow = fake.calls.find(call => call[0] === 'follow')[1]
+  assert.deepEqual(follow.address, { kind: 'subagent', parentSessionId: 's1', childSessionId: 'c1', mode: 'continuable' })
+  await assert.rejects(c.call('subagents.interrupt', { childSessionId: 'c1' }), /not available/)
+  c.ws.close()
+  await handle.close()
+})
+
+test('snapshot forwards stats, usage, pressure and subagent projections', async () => {
+  const { fake, handle, url } = await setup()
+  const c = await connect(url)
+  await c.call('sessions.follow', { sessionId: 's1' })
+  fake.follow.push({ type: 'snapshot', header: {}, cursor: 1, hasMore: false, records: [], projections: { asOfSeq: 1, values: {
+    sessionStats: { turns: 1 }, tokenUsage: { outputTokens: 2 }, contextPressure: { contextWindow: 9 }, subagentCatalog: [{ id: 'c' }],
+  } } })
+  const snap = await c.next(m => m.t === 'snapshot')
+  assert.deepEqual([snap.stats, snap.usage, snap.pressure, snap.subagents, snap.timing], [{ turns: 1 }, { outputTokens: 2 }, { contextWindow: 9 }, [{ id: 'c' }], null])
+  fake.projections.push({ type: 'projection', seq: 5, changes: [{ key: 'tokenUsage', val: { outputTokens: 7 } }] })
+  const update = await c.next(m => m.t === 'projection')
+  assert.deepEqual(update.usage, { outputTokens: 7 })
   c.ws.close()
   await handle.close()
 })

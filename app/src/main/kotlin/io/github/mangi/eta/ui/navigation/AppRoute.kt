@@ -118,8 +118,9 @@ sealed interface AppRoute : NavKey {
     @Serializable
     data object DesktopSessions : AppRoute
 
+    /** [parentId] 非空时打开的是该主会话下的子代理对话，[mode] 为 one-shot / continuable。 */
     @Serializable
-    data class DesktopChat(val sessionId: String) : AppRoute
+    data class DesktopChat(val sessionId: String, val parentId: String? = null, val mode: String? = null) : AppRoute
 
     @Serializable
     data object DesktopBridgeSettings : AppRoute

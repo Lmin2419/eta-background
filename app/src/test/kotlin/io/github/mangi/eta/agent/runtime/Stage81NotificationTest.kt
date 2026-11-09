@@ -42,10 +42,13 @@ class Stage81NotificationTest {
             assertEquals(AgentExecutionService.REPLY_TEXT, n.actions[2].remoteInputs.single().resultKey)
         }
     }
-    @Test fun runningWithConversationStillOpensPreview() {
+    @Test fun runningWithConversationPreviewsFromBodyButOpenConversationActionOpensChat() {
         val n = notification(task(completed = false, status = AgentOverlayStatus.Reasoning))
         assertEquals(TaskPreviewActivity::class.java.name, shadowOf(n.contentIntent).savedIntent.component?.className)
-        assertEquals(TaskPreviewActivity::class.java.name, shadowOf(n.actions[0].actionIntent).savedIntent.component?.className)
+        val open = shadowOf(n.actions[0].actionIntent).savedIntent
+        assertEquals(MainActivity::class.java.name, open.component?.className)
+        assertEquals(MainActivity.ACTION_OPEN_CONVERSATION_ID, open.action)
+        assertEquals("chat-1", open.getStringExtra(MainActivity.EXTRA_CONVERSATION_ID))
     }
     @Test fun completionWithoutConversationKeepsItsPreviewFallback() {
         for (chat in listOf(null, "", "   ")) {

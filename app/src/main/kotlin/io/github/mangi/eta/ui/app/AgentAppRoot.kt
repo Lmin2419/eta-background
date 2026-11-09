@@ -626,7 +626,13 @@ fun AgentAppRoot(
                 )
             }
             entry<AppRoute.DesktopChat>(swipeDismiss = swipeDismiss) { route ->
-                DesktopChatScreen(sessionId = route.sessionId, onBack = ::popRoute)
+                DesktopChatScreen(
+                    sessionId = route.sessionId,
+                    onBack = ::popRoute,
+                    parentId = route.parentId,
+                    mode = route.mode,
+                    onOpenSubagent = { child -> pushRoute(AppRoute.DesktopChat(child.id, route.sessionId, child.mode)) },
+                )
             }
             entry<AppRoute.DesktopBridgeSettings>(swipeDismiss = swipeDismiss) {
                 DesktopBridgeSettingsScreen(onBack = ::popRoute)

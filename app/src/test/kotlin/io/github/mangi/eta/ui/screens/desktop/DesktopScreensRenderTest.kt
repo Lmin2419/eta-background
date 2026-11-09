@@ -51,13 +51,25 @@ class DesktopScreensRenderTest {
     private fun chatState(): DesktopSessionState {
         val snapshot = Json.parseToJsonElement(
             """
-            {"t":"snapshot","sessionId":"s1","cursor":5,"hasMore":false,"title":"修复登录页的空指针","queue":[],"items":[
-              {"k":"user","seq":1,"time":1,"id":"u","text":"登录页点提交会崩，帮我查一下","source":"user"},
-              {"k":"assistant","seq":2,"time":2,"id":"a","turn":1,"step":1,"blocks":[
+            {"t":"snapshot","sessionId":"s1","cursor":9,"hasMore":false,"title":"修复登录页的空指针",
+             "queue":[{"id":"q1","text":"顺便看看注册页有没有同样的问题","placement":"steering"}],
+             "stats":{"turns":1,"steps":2,"llmMs":6200,"toolMs":800,"ttftMs":1400,"ttftSteps":2,"decodeMs":3000,"decodeTokens":180},
+             "usage":{"uncachedInputTokens":3200,"outputTokens":180,"cacheReadTokens":18000,"cacheWriteTokens":0},
+             "pressure":{"pressureTokens":21200,"contextWindow":1000000},
+             "subagents":[{"id":"c9","mode":"continuable","label":"检查注册页","createdAt":1}],
+             "items":[
+              {"k":"turn_start","seq":1,"time":1794200000000,"turn":1},
+              {"k":"user","seq":2,"time":1794200000000,"id":"u","text":"登录页点提交会崩，帮我查一下","source":"user"},
+              {"k":"step_start","seq":3,"time":1794200000100,"turn":1,"step":1},
+              {"k":"assistant","seq":4,"time":1794200002000,"id":"a","turn":1,"step":1,"firstTokenAt":1794200000800,"model":{"provider":"deepseek","model":"deepseek-v4-pro"},"blocks":[
                 {"type":"reasoning","text":"先看看提交按钮的处理函数和最近的修改。"},
-                {"type":"tool","id":"c1","name":"bash","args":"{\"command\":\"git log -3 --oneline -- src/login\",\"description\":\"查看登录模块最近的提交\"}"}]},
-              {"k":"tool_result","seq":3,"time":3,"callId":"c1","isError":false,"text":"a1b2c3 refactor(login): 提取表单校验\n9f8e7d fix: 记住账号"},
-              {"k":"assistant","seq":4,"time":4,"id":"b","turn":1,"step":2,"blocks":[{"type":"text","text":"问题出在 `validate()` 返回 `null` 时没有判空，最近一次重构引入的。"}],"usage":{"input":12000,"output":180,"cacheRead":9000}}
+                {"type":"tool","id":"c1","name":"bash","args":"{\"command\":\"git log -3 --oneline -- src/login\",\"description\":\"查看登录模块最近的提交\"}"}],"usage":{"input":1200,"output":60,"cacheRead":9000}},
+              {"k":"tool_call","seq":5,"time":1794200002100,"callId":"c1","name":"bash"},
+              {"k":"tool_result","seq":6,"time":1794200002900,"callId":"c1","isError":false,"text":"a1b2c3 refactor(login): 提取表单校验\n9f8e7d fix: 记住账号"},
+              {"k":"step_start","seq":7,"time":1794200003000,"turn":1,"step":2},
+              {"k":"assistant","seq":8,"time":1794200006000,"id":"b","turn":1,"step":2,"firstTokenAt":1794200003700,"model":{"provider":"deepseek","model":"deepseek-v4-pro"},"blocks":[{"type":"text","text":"问题出在 `validate()` 返回 `null` 时没有判空，最近一次重构引入的。"}],"usage":{"input":2000,"output":120,"cacheRead":9000}},
+              {"k":"turn_end","seq":9,"time":1794200006200,"turn":1,"reason":"completed"},
+              {"k":"trigger","seq":10,"time":1794200007000,"id":"t1","kind":"subagent-settled","text":"Background subagent c9 finished.","summary":"检查注册页 已完成"}
             ]}
             """,
         ).jsonObject
@@ -68,7 +80,7 @@ class DesktopScreensRenderTest {
             .reduce(snapshot)
             .reduce(Json.parseToJsonElement("""{"t":"live","op":"start","sessionId":"s1","attemptId":"x","turn":2,"step":1}""").jsonObject)
             .reduce(live)
-            .addEcho(DesktopEcho("r9", "顺便看看注册页有没有同样的问题", queued = true))
+            .addEcho(DesktopEcho("r9", "再补一个单测", queued = true))
     }
 
     private fun renderSessions(name: String, dark: Boolean) {
@@ -103,9 +115,12 @@ class DesktopScreensRenderTest {
         val messages: List<AgentChatMessageUi> = DesktopChatProjector.messages(state)
         assertTrue(messages.first() is UserMessageUi)
         assertTrue(messages.any { it is ToolActivityMessageUi })
-        assertTrue((messages.last() as AgentMessageUi).isStreaming)
+        assertTrue(messages.filterIsInstance<AgentMessageUi>().last().isStreaming)
+        assertTrue((messages.last() as UserMessageUi).id == "steer-q1")
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(controller.get(), dark = dark) {
+          androidx.compose.foundation.layout.Column {
+            DesktopStatsLine(state, runningForMs = 72_000) {}
             AgentChatBody(
                 messages = messages,
                 modelPickerState = DesktopChatProjector.modelPicker(null, state),
@@ -139,6 +154,7 @@ class DesktopScreensRenderTest {
                 onRunTraceClick = {},
                 onOpenBrowser = {},
             )
+          }
         }
         try {
             panel.advance(40)
@@ -161,6 +177,48 @@ class DesktopScreensRenderTest {
             panel.close()
             controller.pause().stop().destroy()
         }
+    }
+
+    private fun renderSheet(name: String, content: @androidx.compose.runtime.Composable (Boolean) -> Unit) {
+        val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
+        val show = androidx.compose.runtime.mutableStateOf(false)
+        val panel = Stage3TestPanel(controller.get()) {
+            top.yukonga.miuix.kmp.basic.Scaffold { content(show.value) }
+        }
+        try {
+            panel.advance(10)
+            show.value = true
+            panel.advance(60)
+            panel.capture(name)
+        } finally {
+            panel.close()
+            controller.pause().stop().destroy()
+        }
+    }
+
+    @Test fun sessionSheetLight() {
+        val state = chatState()
+        val catalog = io.github.mangi.eta.agent.remote.DesktopBridgeProtocol.parseCatalog(Json.parseToJsonElement(
+            """{"default":{"provider":"deepseek","model":"deepseek-v4-pro"},"groups":[{"id":"deepseek","name":"DeepSeek","models":[
+              {"id":"deepseek-flash","name":"DeepSeek Flash","reasoning":{"efforts":[{"id":"off"}],"defaultEffort":"off"}},
+              {"id":"deepseek-v4-pro","name":"DeepSeek V4 Pro","reasoning":{"efforts":[{"id":"off"},{"id":"low"},{"id":"high"},{"id":"max"}],"defaultEffort":"high"}}]}]}""",
+        ).jsonObject)
+        val picker = DesktopChatProjector.modelPicker(catalog, state)
+        val (efforts, effort) = DesktopChatProjector.reasoningEfforts(catalog, state)
+        assertTrue(efforts.size == 4)
+        renderSheet("desktop-session-sheet-light") { show ->
+            DesktopSessionSheet(show, state, picker, efforts, effort, allowModelChange = true, busy = false, onDismiss = {}, onModel = {}, onEffort = {})
+        }
+    }
+
+    @Test fun subagentSheetLight() = renderSheet("desktop-subagent-sheet-light") { show ->
+        DesktopSubagentSheet(show, listOf(
+            io.github.mangi.eta.agent.remote.DesktopSubagent("c9", "continuable", "检查注册页", "checker", 1, running = true,
+                usage = io.github.mangi.eta.agent.remote.DesktopTokenTotals(1200, 300, 8000, 0)),
+            io.github.mangi.eta.agent.remote.DesktopSubagent("c8", "one-shot", "整理依赖列表", null, 1,
+                timing = io.github.mangi.eta.agent.remote.DesktopSubagentTiming(42_000, null, null, true)),
+            io.github.mangi.eta.agent.remote.DesktopSubagent("x1", "external", "Codex 任务", null, 1),
+        ), onDismiss = {}, onOpen = {})
     }
 
     @Test fun sessionsLight() = renderSessions("desktop-sessions-light", dark = false)

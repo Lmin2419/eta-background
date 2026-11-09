@@ -41,6 +41,11 @@ internal object DesktopBridgeProtocol {
                 blocks = json.array("blocks")?.mapNotNull { parseBlock(it as? JsonObject) }.orEmpty(),
                 usage = (json["usage"] as? JsonObject)?.let(::parseUsage),
                 interrupted = json.bool("interrupted") == true,
+                model = (json["model"] as? JsonObject)?.let { m ->
+                    val provider = m.string("provider"); val model = m.string("model")
+                    if (provider != null && model != null) DesktopModelSelection(provider, model, null) else null
+                },
+                firstTokenAt = json.long("firstTokenAt"),
             )
             "tool_result" -> DesktopItem.ToolResult(
                 seq = seq,
@@ -53,6 +58,18 @@ internal object DesktopBridgeProtocol {
                 errorReason = (json["error"] as? JsonObject)?.let { it.string("reason") ?: it.string("code") },
             )
             "turn_start" -> DesktopItem.TurnStart(seq, time, json.int("turn") ?: 0)
+            "step_start" -> DesktopItem.StepStart(seq, time, json.int("turn") ?: 0, json.int("step") ?: 0)
+            "tool_call" -> DesktopItem.ToolCall(seq, time, json.string("callId").orEmpty(), json.string("name").orEmpty())
+            "trigger" -> DesktopItem.Trigger(
+                seq = seq,
+                time = time,
+                id = json.string("id") ?: "t$seq",
+                kind = json.string("kind").orEmpty(),
+                text = json.string("text").orEmpty(),
+                summary = json.string("summary"),
+                stopReason = json.string("stopReason"),
+                sender = json.string("sender"),
+            )
             "turn_end" -> DesktopItem.TurnEnd(
                 seq = seq,
                 time = time,
@@ -87,6 +104,7 @@ internal object DesktopBridgeProtocol {
         total = json.int("total"),
         cacheRead = json.int("cacheRead"),
         reasoning = json.int("reasoning"),
+        cacheWrite = json.int("cacheWrite"),
     )
 
     fun parseItems(element: JsonElement?): List<DesktopItem> =
@@ -165,6 +183,64 @@ internal object DesktopBridgeProtocol {
         )
     }
 
+    fun parseStats(element: JsonElement?): DesktopSessionStats? {
+        val json = element as? JsonObject ?: return null
+        return DesktopSessionStats(
+            turns = json.int("turns") ?: 0,
+            steps = json.int("steps") ?: 0,
+            llmMs = json.long("llmMs") ?: 0,
+            toolMs = json.long("toolMs") ?: 0,
+            ttftMs = json.long("ttftMs") ?: 0,
+            ttftSteps = json.int("ttftSteps") ?: 0,
+            decodeMs = json.long("decodeMs") ?: 0,
+            decodeTokens = json.long("decodeTokens") ?: 0,
+        )
+    }
+
+    fun parseTokenTotals(element: JsonElement?): DesktopTokenTotals? {
+        val json = element as? JsonObject ?: return null
+        return DesktopTokenTotals(
+            uncachedInput = json.long("uncachedInputTokens") ?: 0,
+            output = json.long("outputTokens") ?: 0,
+            cacheRead = json.long("cacheReadTokens") ?: 0,
+            cacheWrite = json.long("cacheWriteTokens") ?: 0,
+        )
+    }
+
+    fun parsePressure(element: JsonElement?): DesktopContextPressure? {
+        val json = element as? JsonObject ?: return null
+        return DesktopContextPressure(json.long("pressureTokens"), json.long("projectedTokens"), json.long("contextWindow"))
+    }
+
+    fun parseTiming(element: JsonElement?): DesktopSubagentTiming? {
+        val json = element as? JsonObject ?: return null
+        val active = json["active"] as? JsonObject
+        return DesktopSubagentTiming(
+            settledMs = json.long("settledMs") ?: 0,
+            activeSince = active?.long("since"),
+            activeThrough = active?.long("through"),
+            lastTurnCompleted = json.bool("lastTurnCompleted"),
+        )
+    }
+
+    fun parseSubagentEntries(element: JsonElement?): List<DesktopSubagent> =
+        (element as? JsonArray)?.mapNotNull { (it as? JsonObject)?.let(::parseSubagent) }.orEmpty()
+
+    fun parseSubagent(json: JsonObject): DesktopSubagent? {
+        val id = json.string("id") ?: return null
+        return DesktopSubagent(
+            id = id,
+            mode = json.string("mode") ?: "unknown",
+            label = json.string("label"),
+            name = json.string("name"),
+            createdAt = json.long("createdAt") ?: 0,
+            title = json.string("title"),
+            usage = parseTokenTotals(json["usage"]),
+            timing = parseTiming(json["timing"]),
+            running = json.bool("running") == true,
+        )
+    }
+
     fun parseCatalog(json: JsonObject): DesktopModelCatalog {
         val default = (json["default"] as? JsonObject)?.let { d ->
             val provider = d.string("provider")
@@ -217,6 +293,8 @@ internal sealed interface DesktopItem {
         val blocks: List<DesktopBlock>,
         val usage: DesktopUsage?,
         val interrupted: Boolean,
+        val model: DesktopModelSelection? = null,
+        val firstTokenAt: Long? = null,
     ) : DesktopItem
 
     data class ToolResult(
@@ -231,6 +309,22 @@ internal sealed interface DesktopItem {
     ) : DesktopItem
 
     data class TurnStart(override val seq: Long, override val time: Long, val turn: Int) : DesktopItem
+
+    data class StepStart(override val seq: Long, override val time: Long, val turn: Int, val step: Int) : DesktopItem
+
+    data class ToolCall(override val seq: Long, override val time: Long, val callId: String, val name: String) : DesktopItem
+
+    /** 运行时触发的输入（子代理结束、定时任务、团队消息等），不是用户本人发的。 */
+    data class Trigger(
+        override val seq: Long,
+        override val time: Long,
+        val id: String,
+        val kind: String,
+        val text: String,
+        val summary: String?,
+        val stopReason: String?,
+        val sender: String?,
+    ) : DesktopItem
 
     data class TurnEnd(
         override val seq: Long,
@@ -258,7 +352,58 @@ internal data class DesktopUsage(
     val total: Int?,
     val cacheRead: Int?,
     val reasoning: Int?,
+    val cacheWrite: Int? = null,
 )
+
+/** 整个会话的累计 token（DSH `tokenUsage` 投影）。 */
+internal data class DesktopTokenTotals(val uncachedInput: Long, val output: Long, val cacheRead: Long, val cacheWrite: Long) {
+    val promptSide: Long get() = uncachedInput + cacheRead + cacheWrite
+    val total: Long get() = promptSide + output
+
+    /** 与桌面一致：缓存读取 ÷ 全部输入侧 token，没有输入时为 null。 */
+    val cacheHitPercent: Int? get() = if (promptSide <= 0) null else ((cacheRead * 100.0) / promptSide).let { kotlin.math.round(it).toInt() }
+}
+
+/** DSH `sessionStats` 投影：整段日志的轮次、步数与耗时。 */
+internal data class DesktopSessionStats(
+    val turns: Int,
+    val steps: Int,
+    val llmMs: Long,
+    val toolMs: Long,
+    val ttftMs: Long,
+    val ttftSteps: Int,
+    val decodeMs: Long,
+    val decodeTokens: Long,
+) {
+    val averageTtftMs: Long? get() = if (ttftSteps > 0) ttftMs / ttftSteps else null
+    val tokensPerSecond: Double? get() = if (decodeMs > 0 && decodeTokens > 0) decodeTokens * 1000.0 / decodeMs else null
+}
+
+internal data class DesktopContextPressure(val pressureTokens: Long?, val projectedTokens: Long?, val contextWindow: Long?)
+
+internal data class DesktopSubagentTiming(
+    val settledMs: Long,
+    val activeSince: Long?,
+    val activeThrough: Long?,
+    val lastTurnCompleted: Boolean?,
+)
+
+/** 主会话下的一个子代理（目录条目，附带状态、用量与耗时）。 */
+internal data class DesktopSubagent(
+    val id: String,
+    val mode: String,
+    val label: String?,
+    val name: String?,
+    val createdAt: Long,
+    val title: String? = null,
+    val usage: DesktopTokenTotals? = null,
+    val timing: DesktopSubagentTiming? = null,
+    val running: Boolean = false,
+) {
+    val displayTitle: String get() = label?.takeIf { it.isNotBlank() } ?: title?.takeIf { it.isNotBlank() } ?: name ?: id
+    val continuable: Boolean get() = mode == "continuable"
+    val openable: Boolean get() = mode != "external"
+}
 
 internal data class DesktopSessionRow(
     val id: String,

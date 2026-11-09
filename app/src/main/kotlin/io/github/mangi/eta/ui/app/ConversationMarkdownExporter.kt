@@ -56,7 +56,7 @@ internal object ConversationMarkdownExporter {
             SystemNoticeCode.ModelRetry -> noticeModelRetry
             SystemNoticeCode.RuntimeFailed -> noticeRuntimeFailed
             SystemNoticeCode.Interrupted -> noticeInterrupted
-            SystemNoticeCode.RunPerformance -> noticeRunPerformance
+            SystemNoticeCode.RunPerformance, SystemNoticeCode.Marker -> noticeRunPerformance
         }
     }
 

@@ -1,6 +1,17 @@
 package io.github.mangi.eta.ui.screens.desktop
 
 import android.content.Context
+import top.yukonga.miuix.kmp.basic.Icon
+import kotlinx.coroutines.delay
+import io.github.mangi.eta.ui.components.ModelPill
+import io.github.mangi.eta.ui.components.EtaIconButton
+import io.github.mangi.eta.agent.remote.DesktopSubagent
+import io.github.mangi.eta.agent.remote.DesktopItem
+import androidx.compose.runtime.produceState
+import androidx.compose.material.icons.rounded.Hub
+import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,12 +62,20 @@ import java.util.UUID
  * 只是动作改为发给桌面 DSH 执行。
  */
 @Composable
-internal fun DesktopChatScreen(sessionId: String, onBack: () -> Unit) {
+internal fun DesktopChatScreen(
+    sessionId: String,
+    onBack: () -> Unit,
+    parentId: String? = null,
+    mode: String? = null,
+    onOpenSubagent: (DesktopSubagent) -> Unit = {},
+) {
     val context = LocalContext.current
     val resources = LocalResources.current
+    val isChild = parentId != null
+    val readOnly = isChild && mode != "continuable"
     DisposableEffect(sessionId) {
         DesktopBridge.acquire(context)
-        DesktopBridge.follow(sessionId)
+        DesktopBridge.follow(sessionId, parentId, mode)
         onDispose {
             DesktopBridge.unfollow(sessionId)
             DesktopBridge.release()
@@ -68,11 +87,7 @@ internal fun DesktopChatScreen(sessionId: String, onBack: () -> Unit) {
     val approvals by DesktopBridge.approvals.collectAsState()
     val scope = rememberCoroutineScope()
 
-    val labels = DesktopChatProjector.Labels(
-        retryPrompt = stringResource(R.string.desktop_retry_prompt),
-        attachment = stringResource(R.string.desktop_attachment),
-        image = stringResource(R.string.desktop_image),
-    )
+    val labels = rememberDesktopLabels()
     val messages = remember(state, labels) { DesktopChatProjector.messages(state, labels) }
     val queued = remember(state) { DesktopChatProjector.queued(state) }
     val picker = remember(catalog, state.model) { DesktopChatProjector.modelPicker(catalog, state) }
@@ -81,6 +96,25 @@ internal fun DesktopChatScreen(sessionId: String, onBack: () -> Unit) {
     var inputSync by remember(sessionId) { mutableIntStateOf(0) }
     var pendingImages by remember(sessionId) { mutableStateOf(emptyList<PendingImageUi>()) }
     val unsupported = stringResource(R.string.desktop_action_unsupported)
+    val readOnlyText = stringResource(R.string.desktop_subagent_readonly)
+    var showSettings by remember(sessionId) { mutableStateOf(false) }
+    var subagentDirectory by remember(sessionId) { mutableStateOf<List<DesktopSubagent>?>(null) }
+    var showSubagents by remember(sessionId) { mutableStateOf(false) }
+    // 运行中的本轮已用时长，每秒刷新（对应桌面「深度求索中，用时 …」）。
+    val turnStartedAt = remember(state.items, state.running) {
+        if (!state.running) null else {
+            val lastStart = state.items.lastOrNull { it is DesktopItem.TurnStart }
+            val lastEnd = state.items.lastOrNull { it is DesktopItem.TurnEnd }
+            lastStart?.takeIf { lastEnd == null || it.seq > lastEnd.seq }?.time
+        }
+    }
+    val runningForMs by produceState<Long?>(null, turnStartedAt) {
+        if (turnStartedAt == null) { value = null; return@produceState }
+        while (true) {
+            value = (System.currentTimeMillis() - turnStartedAt).coerceAtLeast(0)
+            delay(1_000)
+        }
+    }
     val attachmentsUnsupported = stringResource(R.string.desktop_attachments_unsupported)
 
     fun run(block: suspend () -> Unit) {
@@ -94,6 +128,12 @@ internal fun DesktopChatScreen(sessionId: String, onBack: () -> Unit) {
     }
 
     fun submit(text: String, interrupt: Boolean) {
+        if (readOnly) {
+            context.toast(readOnlyText)
+            input = text
+            inputSync++
+            return
+        }
         val images = pendingImages
         pendingImages = emptyList()
         input = ""
@@ -108,6 +148,19 @@ internal fun DesktopChatScreen(sessionId: String, onBack: () -> Unit) {
         inputSync++
     }
 
+    fun openSubagents() {
+        showSubagents = true
+        subagentDirectory = null
+        scope.launch {
+            subagentDirectory = try {
+                DesktopBridge.subagentDirectory(sessionId)
+            } catch (error: DesktopBridgeException) {
+                context.toast(resources.getString(R.string.desktop_failed, error.message))
+                emptyList()
+            }
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -116,12 +169,34 @@ internal fun DesktopChatScreen(sessionId: String, onBack: () -> Unit) {
                 compact = true,
                 navigationIcon = { MiuixBackButton(onClick = onBack) },
                 actions = {
-                    Box(Modifier.padding(end = 16.dp)) { DesktopRunningDot(state.running) }
+                    if (!isChild && state.subagents.isNotEmpty()) {
+                        Box {
+                            EtaIconButton(onClick = ::openSubagents) {
+                                Icon(Icons.Rounded.Hub, stringResource(R.string.desktop_subagents), Modifier.size(22.dp))
+                            }
+                            Text(
+                                state.subagents.size.toString(),
+                                style = EtaTheme.type.caption,
+                                color = EtaTheme.colors.onAccent,
+                                modifier = Modifier.align(Alignment.TopEnd)
+                                    .background(EtaTheme.colors.accent, EtaTheme.shapes.radiusFull)
+                                    .padding(horizontal = 4.dp),
+                            )
+                        }
+                    }
+                    if (!isChild) {
+                        Box(Modifier.padding(end = 8.dp)) {
+                            ModelPill(picker, locked = false, iconOnly = true) { showSettings = true }
+                        }
+                    } else {
+                        Box(Modifier.padding(end = 16.dp)) { DesktopRunningDot(state.running) }
+                    }
                 },
             )
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
+            if (state.loaded) DesktopStatsLine(state, runningForMs) { showSettings = true }
             if (connection !is DesktopBridgeClient.State.Connected) {
                 DesktopConnectionBanner(connection, configured = true, onRetry = DesktopBridge::retry)
                 if (state.loaded) {
@@ -175,7 +250,7 @@ internal fun DesktopChatScreen(sessionId: String, onBack: () -> Unit) {
                 onSubmit = { text -> submit(text, interrupt = false) },
                 onInterruptAndSubmit = { text -> submit(text, interrupt = true) },
                 onSteerQueuedMessage = { id ->
-                    if (!id.startsWith("echo-")) run { DesktopBridge.queueAction(sessionId, id, JsonPrimitive("steer")) }
+                    if (!id.startsWith("echo-")) run { DesktopBridge.steer(sessionId, id) }
                 },
                 onRecallQueuedMessage = { id, draft ->
                     val recalled = queued.firstOrNull { it.id == id }?.content.orEmpty()
@@ -217,6 +292,36 @@ internal fun DesktopChatScreen(sessionId: String, onBack: () -> Unit) {
         }
     }
     DesktopApprovalHost(approvals, sessionId)
+    DesktopSessionSheet(
+        show = showSettings,
+        state = state,
+        picker = picker,
+        efforts = efforts.first,
+        effort = efforts.second,
+        allowModelChange = !isChild,
+        busy = state.running,
+        onDismiss = { showSettings = false },
+        onModel = { id ->
+            showSettings = false
+            DesktopChatProjector.parseOptionId(id)?.let { (provider, model) ->
+                run { DesktopBridge.selectModel(sessionId, provider, model, null) }
+            }
+        },
+        onEffort = { effort ->
+            (state.model ?: catalog?.default)?.let { selection ->
+                run { DesktopBridge.selectModel(sessionId, selection.provider, selection.model, effort.wireValue) }
+            }
+        },
+    )
+    DesktopSubagentSheet(
+        show = showSubagents,
+        children = subagentDirectory,
+        onDismiss = { showSubagents = false },
+        onOpen = { child ->
+            showSubagents = false
+            onOpenSubagent(child)
+        },
+    )
 }
 
 private fun Context.toast(text: String) {
