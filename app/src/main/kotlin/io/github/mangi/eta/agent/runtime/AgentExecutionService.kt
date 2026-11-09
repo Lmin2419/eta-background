@@ -483,9 +483,15 @@ internal class AgentExecutionService : Service() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             }
             if (task != null && !completed) {
+                // 「打开会话」始终回到胖小胖的会话页；后台虚拟屏预览仍可点通知正文打开。
+                val openConversation = !task.conversationId.isNullOrBlank()
                 builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, R.drawable.ic_notification),
-                    context.getString(R.string.task_notice_view), if (task.targetPackage.isNullOrBlank()) destination(context, task, id)
-                    else TaskPreviewActivity.pendingIntent(context, task, id)).build())
+                    context.getString(if (openConversation) R.string.overlay_open_conversation else R.string.task_notice_view),
+                    when {
+                        openConversation -> conversationIntent(context, task.conversationId)
+                        task.targetPackage.isNullOrBlank() -> destination(context, task, id)
+                        else -> TaskPreviewActivity.pendingIntent(context, task, id)
+                    }).build())
                 builder.addAction(runAction(context, task.runId,
                     if (task.paused) ACTION_RESUME_RUN else ACTION_PAUSE_RUN,
                     if (task.paused) R.string.overlay_resume else R.string.overlay_pause,

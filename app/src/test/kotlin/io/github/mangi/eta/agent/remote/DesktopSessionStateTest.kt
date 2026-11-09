@@ -204,4 +204,87 @@ class DesktopSessionStateTest {
         assertNull(DesktopBridgeConfig.normalizeWebSocketUrl("ftp://x"))
         assertNull(DesktopBridgeConfig.normalizeWebSocketUrl("https://bad host"))
     }
+
+    @Test
+    fun steeredQueueItemMovesIntoTranscriptImmediately() {
+        var state = DesktopSessionState("s").reduce(snapshot)
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":7,"queue":[{"id":"q1","text":"插队消息","placement":"queued","rpcId":"r9"}]}"""))
+        assertEquals(listOf("q1"), state.visibleQueue.map { it.id })
+        // 本地先标记插队：立刻离开队列条，出现在对话末尾。
+        state = state.markSteering("q1")
+        assertTrue(state.visibleQueue.isEmpty())
+        val tail = DesktopChatProjector.messages(state).last() as UserMessageUi
+        assertEquals("steer-q1", tail.id)
+        assertEquals("插队消息", tail.content)
+        // 电脑确认 steering，随后在下一步取走：只剩对话里的正式消息。
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":8,"queue":[{"id":"q1","text":"插队消息","placement":"steering","rpcId":"r9"}]}"""))
+        assertTrue(state.visibleQueue.isEmpty())
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":9,"queue":[]}"""))
+        state = state.reduce(json("""{"t":"item","sessionId":"s","item":{"k":"user","seq":10,"time":10,"id":"q1","text":"插队消息","source":"user","rpcId":"r9"}}"""))
+        val users = DesktopChatProjector.messages(state).filterIsInstance<UserMessageUi>().filter { it.content == "插队消息" }
+        assertEquals(1, users.size)
+    }
+
+    @Test
+    fun turnUsageMarkerSummarisesTheTurnLikeTheDesktop() {
+        val state = DesktopSessionState("s").reduce(json(
+            """
+            {"t":"snapshot","sessionId":"s","cursor":9,"queue":[],"items":[
+              {"k":"turn_start","seq":1,"time":1000,"turn":1},
+              {"k":"user","seq":2,"time":1000,"id":"u","text":"hi","source":"user"},
+              {"k":"step_start","seq":3,"time":1100,"turn":1,"step":1},
+              {"k":"assistant","seq":4,"time":2100,"id":"a","turn":1,"step":1,"firstTokenAt":1600,
+               "model":{"provider":"deepseek","model":"v4-pro"},
+               "blocks":[{"type":"tool","id":"c1","name":"bash","args":"{}"}],
+               "usage":{"input":200,"output":50,"cacheRead":800,"reasoning":10}},
+              {"k":"tool_call","seq":5,"time":2200,"callId":"c1","name":"bash"},
+              {"k":"tool_result","seq":6,"time":2700,"callId":"c1","isError":false,"text":"ok"},
+              {"k":"step_start","seq":7,"time":2800,"turn":1,"step":2},
+              {"k":"assistant","seq":8,"time":3800,"id":"b","turn":1,"step":2,"firstTokenAt":3300,
+               "model":{"provider":"deepseek","model":"v4-pro"},
+               "blocks":[{"type":"text","text":"done"}],"usage":{"input":100,"output":50,"cacheRead":900}},
+              {"k":"turn_end","seq":9,"time":4000,"turn":1,"reason":"completed"}
+            ]}
+            """,
+        ))
+        val marker = DesktopChatProjector.messages(state).last() as SystemNoticeMessageUi
+        assertEquals(SystemNoticeCode.Marker, marker.code)
+        val detail = json(marker.detail!!)
+        // 2000 输入侧中 1700 命中缓存 → 85%；总量 2000 + 100 输出。
+        assertEquals("本轮 · 3秒 · 2.1k tok · 缓存命中 85%", detail.string("title"))
+        val details = detail.string("details")!!
+        assertTrue(details, details.contains("模型：deepseek / v4-pro"))
+        assertTrue(details, details.contains("未缓存输入 300 · 缓存读取 1,700 · 输出 100（其中推理 10）"))
+        // 首字：(500 + 500) / 2；输出速度：100 tok / 1 s；工具 0.5 秒。
+        assertTrue(details, details.contains("首字 500毫秒 · 输出 100 tok/s · 工具用时 500毫秒"))
+    }
+
+    @Test
+    fun runtimeTriggersRenderAsMarkersNotUserBubbles() {
+        val state = DesktopSessionState("s").reduce(json(
+            """{"t":"snapshot","sessionId":"s","cursor":1,"queue":[],"items":[{"k":"trigger","seq":1,"time":5,"id":"t","kind":"subagent-settled","text":"Background subagent finished","summary":"lister finished"}]}""",
+        ))
+        val only = DesktopChatProjector.messages(state).single() as SystemNoticeMessageUi
+        assertEquals(SystemNoticeCode.Marker, only.code)
+        assertEquals("子代理已结束：lister finished", json(only.detail!!).string("title"))
+    }
+
+    @Test
+    fun snapshotAndProjectionsCarryStatsUsageAndSubagents() {
+        var state = DesktopSessionState("s").reduce(json(
+            """{"t":"snapshot","sessionId":"s","cursor":1,"queue":[],"items":[],
+               "stats":{"turns":2,"steps":5,"llmMs":4000,"toolMs":1000,"ttftMs":900,"ttftSteps":3,"decodeMs":2000,"decodeTokens":100},
+               "usage":{"uncachedInputTokens":100,"outputTokens":50,"cacheReadTokens":300,"cacheWriteTokens":0},
+               "pressure":{"pressureTokens":400,"contextWindow":1000000},
+               "subagents":[{"id":"c1","mode":"continuable","label":"查看目录","createdAt":1}]}""",
+        ))
+        assertEquals(75, state.usage?.cacheHitPercent)
+        assertEquals(450L, state.usage?.total)
+        assertEquals(300L, state.stats?.averageTtftMs)
+        assertEquals(50.0, state.stats?.tokensPerSecond!!, 0.001)
+        assertEquals("查看目录", state.subagents.single().displayTitle)
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":5,"pressure":{"pressureTokens":800}}"""))
+        assertEquals(800L, state.pressure?.pressureTokens)
+        assertEquals(1000000L, state.pressure?.contextWindow)
+    }
 }

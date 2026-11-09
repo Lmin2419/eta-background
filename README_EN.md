@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-08 · `3.3.5` 胖小胖 · versionCode `2026110802`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-09 · `3.3.5` 胖小胖 · versionCode `2026110901`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-**Settings → Computer** now has the relay server `8.163.249.159` built in. Run [`deploy/server/setup.sh`](deploy/README.md) once on the server, run the printed frpc command on the computer, and paste the `pxp://` pairing code on the phone. The app pins the server key from the pairing code, so a bare IP with a self-signed certificate stays secure.
+Desktop sessions now carry the desktop's details: pick the model and reasoning effort from the top bar, and see total tokens, cache hit rate, running time and per-turn stats. Subagents live behind a subagent button inside their parent session instead of crowding the session list. Fixed a steered message showing twice on the phone, and the background-task notification's "Open conversation" opening the virtual screen. **Update the `dsh-bridge` plugin on the computer and restart DSH.**
 
-APK: **`Pangxiaopang-3.3.5-2026110802.apk`**.
+The built-in relay `8.163.249.159` and `pxp://` pairing codes are unchanged. APK: **`Pangxiaopang-3.3.5-2026110901.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110802)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110901)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

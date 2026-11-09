@@ -29,10 +29,41 @@ import kotlinx.serialization.json.JsonPrimitive
 internal object DesktopChatProjector {
     private val lenientJson = Json { isLenient = true }
 
+    /** 界面文案；默认中文，界面层用资源字符串覆盖，单测直接用默认值。 */
     data class Labels(
         val retryPrompt: String = "继续",
         val attachment: String = "附件",
         val image: String = "图片",
+        val turnTitle: (duration: String?, tokens: String?, cacheHit: Int?) -> String = { d, tk, c ->
+            listOfNotNull("本轮", d, tk, c?.let { "缓存命中 $it%" }).joinToString(" · ")
+        },
+        val modelLine: (String) -> String = { "模型：$it" },
+        val usageLine: (input: String, cacheRead: String, cacheWrite: String?, output: String, reasoning: String?) -> String =
+            { i, r, w, o, re ->
+                buildString {
+                    append("未缓存输入 $i · 缓存读取 $r")
+                    if (w != null) append(" · 缓存写入 $w")
+                    append(" · 输出 $o")
+                    if (re != null) append("（其中推理 $re）")
+                }
+            },
+        val speedLine: (ttft: String?, tps: String?, tools: String?) -> String = { f, s, tl ->
+            listOfNotNull(f?.let { "首字 $it" }, s?.let { "输出 $it tok/s" }, tl?.let { "工具用时 $it" }).joinToString(" · ")
+        },
+        val timeLine: (start: String, steps: Int) -> String = { s, n -> "开始于 $s · 共 $n 步" },
+        val trigger: (kind: String, summary: String?) -> String = { kind, summary ->
+            when (kind) {
+                "subagent-settled" -> "子代理已结束" + (summary?.let { "：$it" } ?: "")
+                "agent-message" -> "子代理发来消息"
+                "schedule" -> "定时任务"
+                "goal" -> "目标续跑"
+                "team" -> "团队消息"
+                "webhook" -> "Webhook"
+                else -> summary ?: "系统消息"
+            }
+        },
+        val duration: (Long) -> String = ::defaultDuration,
+        val clock: (Long) -> String = ::defaultClock,
     )
 
     fun messages(state: DesktopSessionState, labels: Labels = Labels()): List<AgentChatMessageUi> {
@@ -40,25 +71,169 @@ internal object DesktopChatProjector {
         for (item in state.items) if (item is DesktopItem.ToolResult) results[item.callId] = item
         // 轮次结束后仍没有结果的工具（被打断）显示为未知，而不是一直转圈。
         val endedTurns = state.items.filterIsInstance<DesktopItem.TurnEnd>().map { it.seq }
-        val out = ArrayList<AgentChatMessageUi>(state.items.size + 4)
+        val turns = HashMap<Int, TurnAccumulator>()
+        var currentTurn: TurnAccumulator? = null
+        val toolStarts = HashMap<String, Long>()
+        val out = ArrayList<AgentChatMessageUi>(state.items.size + 8)
         for (item in state.items) {
             when (item) {
                 is DesktopItem.User -> out += userMessage(item, labels)
+                is DesktopItem.Trigger -> out += triggerMarker(item, labels)
                 is DesktopItem.Assistant -> {
                     val turnClosed = endedTurns.any { it > item.seq }
                     out += assistantMessages(item, results, turnClosed)
+                    turns.getOrPut(item.turn) { TurnAccumulator(item.turn) }.addAssistant(item)
                 }
-                is DesktopItem.TurnEnd -> turnEndNotice(item)?.let(out::add)
+                is DesktopItem.TurnStart -> currentTurn = turns.getOrPut(item.turn) { TurnAccumulator(item.turn) }.also { it.startedAt = item.time }
+                is DesktopItem.StepStart -> turns.getOrPut(item.turn) { TurnAccumulator(item.turn) }.stepStarts[item.step] = item.time
+                is DesktopItem.ToolCall -> toolStarts[item.callId] = item.time
+                is DesktopItem.ToolResult -> toolStarts.remove(item.callId)?.let { start ->
+                    currentTurn?.let { it.toolMs += (item.time - start).coerceAtLeast(0) }
+                }
+                is DesktopItem.TurnEnd -> {
+                    turnEndNotice(item)?.let(out::add)
+                    turns[item.turn]?.let { turn ->
+                        turn.endedAt = item.time
+                        turnUsageMarker(turn, item.seq, labels)?.let(out::add)
+                    }
+                }
                 is DesktopItem.Notice -> noticeMessage(item)?.let(out::add)
-                is DesktopItem.ToolResult, is DesktopItem.TurnStart, is DesktopItem.Title -> Unit
+                is DesktopItem.Title -> Unit
             }
         }
         for (echo in state.echoes) {
             if (!echo.queued) out += UserMessageUi(id = "echo-${echo.requestId}", content = echo.text)
         }
         state.live?.let { live -> out += liveMessages(live.attemptId, live.blocks) }
+        // 已插队的消息：桌面把它显示为已发出、等当前这一步结束送达的气泡，手机同样放在对话末尾。
+        for (item in state.steering) out += UserMessageUi(id = "steer-${item.id}", content = item.text)
         // 列表 key 必须唯一：持久条目与临时行短暂并存时，以持久条目为准。
         return out.distinctBy { it.id }
+    }
+
+    /** 一轮内的用量与耗时，口径与桌面「本轮用量」一致。 */
+    private class TurnAccumulator(val turn: Int) {
+        var startedAt: Long? = null
+        var endedAt: Long? = null
+        val stepStarts = HashMap<Int, Long>()
+        var input = 0L
+        var output = 0L
+        var cacheRead = 0L
+        var cacheWrite = 0L
+        var reasoning = 0L
+        var hasUsage = false
+        var hasCacheWrite = false
+        var toolMs = 0L
+        var ttftMs = 0L
+        var ttftSamples = 0
+        var decodeMs = 0L
+        var decodeTokens = 0L
+        var steps = 0
+        val models = LinkedHashSet<String>()
+
+        fun addAssistant(item: DesktopItem.Assistant) {
+            steps++
+            item.model?.let { models += "${it.provider} / ${it.model}" }
+            item.usage?.let { usage ->
+                hasUsage = true
+                input += usage.input ?: 0
+                output += usage.output ?: 0
+                cacheRead += usage.cacheRead ?: 0
+                usage.cacheWrite?.let { cacheWrite += it; if (it > 0) hasCacheWrite = true }
+                reasoning += usage.reasoning ?: 0
+            }
+            val first = item.firstTokenAt ?: return
+            stepStarts[item.step]?.let { start -> ttftMs += (first - start).coerceAtLeast(0); ttftSamples++ }
+            val out = item.usage?.output ?: 0
+            if (out > 0 && item.time > first) {
+                decodeMs += item.time - first
+                decodeTokens += out
+            }
+        }
+    }
+
+    private fun turnUsageMarker(turn: TurnAccumulator, seq: Long, labels: Labels): SystemNoticeMessageUi? {
+        if (!turn.hasUsage && turn.steps == 0) return null
+        val promptSide = turn.input + turn.cacheRead + turn.cacheWrite
+        val cacheHit = if (promptSide > 0) kotlin.math.round(turn.cacheRead * 100.0 / promptSide).toInt() else null
+        val duration = turn.startedAt?.let { start -> turn.endedAt?.let { end -> labels.duration((end - start).coerceAtLeast(0)) } }
+        val total = promptSide + turn.output
+        val title = labels.turnTitle(duration, if (turn.hasUsage) "${compactTokens(total)} tok" else null, if (turn.hasUsage) cacheHit else null)
+        val details = buildList {
+            if (turn.models.isNotEmpty()) add(labels.modelLine(turn.models.joinToString("，")))
+            if (turn.hasUsage) add(labels.usageLine(
+                exactTokens(turn.input),
+                exactTokens(turn.cacheRead),
+                if (turn.hasCacheWrite) exactTokens(turn.cacheWrite) else null,
+                exactTokens(turn.output),
+                if (turn.reasoning > 0) exactTokens(turn.reasoning) else null,
+            ))
+            val ttft = if (turn.ttftSamples > 0) labels.duration(turn.ttftMs / turn.ttftSamples) else null
+            val tps = if (turn.decodeMs > 0) formatRate(turn.decodeTokens * 1000.0 / turn.decodeMs) else null
+            val tools = if (turn.toolMs > 0) labels.duration(turn.toolMs) else null
+            labels.speedLine(ttft, tps, tools).takeIf { it.isNotBlank() }?.let(::add)
+            turn.startedAt?.let { add(labels.timeLine(labels.clock(it), turn.steps)) }
+        }.joinToString("\n")
+        return marker("usage-$seq", MARKER_USAGE, title, details)
+    }
+
+    private fun triggerMarker(item: DesktopItem.Trigger, labels: Labels): SystemNoticeMessageUi {
+        val icon = when (item.kind) {
+            "subagent-settled", "agent-message" -> MARKER_SUBAGENT
+            "schedule" -> MARKER_SCHEDULE
+            else -> MARKER_TRIGGER
+        }
+        val summary = item.summary ?: item.stopReason
+        val details = listOf(labels.clock(item.time), item.text).filter { it.isNotBlank() }.joinToString("\n")
+        return marker("trigger-${item.seq}", icon, labels.trigger(item.kind, summary), details)
+    }
+
+    /** 居中的小胶囊行（与「执行统计」同一种样式），点开看详情。 */
+    fun marker(id: String, icon: String, title: String, details: String): SystemNoticeMessageUi =
+        SystemNoticeMessageUi(
+            id = id,
+            code = SystemNoticeCode.Marker,
+            detail = JsonObject(mapOf(
+                "icon" to JsonPrimitive(icon),
+                "title" to JsonPrimitive(title),
+                "details" to JsonPrimitive(details),
+            )).toString(),
+        )
+
+    const val MARKER_USAGE = "usage"
+    const val MARKER_SUBAGENT = "subagent"
+    const val MARKER_SCHEDULE = "schedule"
+    const val MARKER_TRIGGER = "trigger"
+
+    fun compactTokens(value: Long): String = when {
+        value >= 1_000_000 -> trimDecimal(value / 1_000_000.0) + "M"
+        value >= 1_000 -> trimDecimal(value / 1_000.0) + "k"
+        else -> value.toString()
+    }
+
+    fun exactTokens(value: Long): String = "%,d".format(java.util.Locale.ROOT, value)
+
+    fun formatRate(value: Double): String = if (value >= 100) value.toLong().toString() else trimDecimal(value)
+
+    private fun trimDecimal(value: Double): String {
+        val rounded = kotlin.math.round(value * 10) / 10
+        return if (rounded == kotlin.math.floor(rounded)) rounded.toLong().toString() else rounded.toString()
+    }
+
+    fun defaultDuration(ms: Long): String {
+        if (ms < 1_000) return "${ms}毫秒"
+        val seconds = ms / 1000.0
+        if (seconds < 60) return trimDecimal(seconds) + "秒"
+        val total = (ms / 1000)
+        return if (total < 3600) "${total / 60}分${total % 60}秒" else "${total / 3600}小时${(total % 3600) / 60}分"
+    }
+
+    fun defaultClock(epochMs: Long): String {
+        val zone = java.time.ZoneId.systemDefault()
+        val time = java.time.Instant.ofEpochMilli(epochMs).atZone(zone)
+        val today = java.time.LocalDate.now(zone)
+        val pattern = if (time.toLocalDate() == today) "HH:mm" else "M月d日 HH:mm"
+        return time.format(java.time.format.DateTimeFormatter.ofPattern(pattern))
     }
 
     private fun userMessage(item: DesktopItem.User, labels: Labels): UserMessageUi {
@@ -155,7 +330,8 @@ internal object DesktopChatProjector {
     }
 
     private fun DesktopUsage.toUi(): TokenUsageUi = TokenUsageUi(
-        contextTokens = total ?: input?.let { it + (output ?: 0) },
+        // 与桌面上下文占用口径一致：输入侧（未缓存 + 缓存读写）加本次输出。
+        contextTokens = total ?: ((input ?: 0) + (cacheRead ?: 0) + (cacheWrite ?: 0) + (output ?: 0)).takeIf { it > 0 },
         inputTokens = input,
         outputTokens = output,
         reasoningTokens = reasoning,
@@ -209,8 +385,8 @@ internal object DesktopChatProjector {
                         providerSourceType = sourceType,
                         modelId = model.id,
                         displayName = model.name,
-                        contextWindow = null,
-                        reasoning = model.efforts.isNotEmpty(),
+                        contextWindow = state.pressure?.contextWindow?.toInt(),
+                        reasoning = model.efforts.any { it != "off" },
                     )
                 },
             )

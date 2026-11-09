@@ -15,11 +15,13 @@ const OP_TIMEOUT_MS = 30_000
 const FOLLOW_WINDOW = { maxMessages: 200, turnWindow: { minMessages: 30, minTurns: 2 } }
 const OLDER_WINDOW = { maxMessages: 200, turnWindow: { minMessages: 40, minTurns: 2 } }
 const APPROVAL_OUTCOMES = new Set(['allowed-once', 'rejected', 'cancelled'])
+const MAX_SUBAGENTS = 60
 
 /**
  * @typedef {object} BridgeHost
  * @property {any} controller - DSH `sessionController` service.
  * @property {any} [workspaces] - DSH `workspaceRegistry` service.
+ * @property {any} [subagents] - DSH `subagents` runtime (optional).
  * @property {{ info: Function, warn: Function, error: Function }} logger
  * @property {string} version - bridge package version.
  */
@@ -299,7 +301,7 @@ class Client {
         })
         return { accepted: true }
       case 'sessions.follow':
-        this.follow(requireString(m.sessionId, 'sessionId'), typeof m.afterSeq === 'number' ? m.afterSeq : undefined)
+        this.follow(requireString(m.sessionId, 'sessionId'), typeof m.afterSeq === 'number' ? m.afterSeq : undefined, addressOf(m))
         return { following: true }
       case 'sessions.unfollow': {
         const sessionId = requireString(m.sessionId, 'sessionId')
@@ -311,7 +313,7 @@ class Client {
         const sessionId = requireString(m.sessionId, 'sessionId')
         if (typeof m.beforeSeq !== 'number') throw new BridgeError('bad-request', 'beforeSeq is required')
         const page = await controller.events({
-          address: { kind: 'session', sessionId },
+          address: addressOf(m),
           beforeSeq: m.beforeSeq,
           ...OLDER_WINDOW,
         }, this.opSignal())
@@ -328,6 +330,28 @@ class Client {
         }
         const result = await controller.selectModel(request)
         return { selected: result.selected }
+      }
+      case 'sessions.subagents':
+        return this.subagentDirectory(requireString(m.sessionId, 'sessionId'))
+      case 'subagents.prompt': {
+        const runtime = this.host.subagents
+        if (runtime === undefined) throw new BridgeError('unavailable', 'subagents are not available in this DSH profile')
+        const content = []
+        if (typeof m.text === 'string' && m.text.trim().length > 0) content.push({ type: 'text', text: m.text })
+        const request = {
+          requestId: typeof m.requestId === 'string' && m.requestId.length > 0 ? m.requestId : randomUUID(),
+          childSessionId: requireString(m.childSessionId, 'childSessionId'),
+          delivery: m.mode === 'steer' ? 'steer' : 'queue',
+          content,
+          ...(typeof m.timeZone === 'string' ? { clientTimeZone: m.timeZone } : {}),
+        }
+        await runtime.prompt(request, this.opSignal())
+        return { accepted: true, requestId: request.requestId }
+      }
+      case 'subagents.interrupt': {
+        const runtime = this.host.subagents
+        if (runtime === undefined) throw new BridgeError('unavailable', 'subagents are not available in this DSH profile')
+        return runtime.interruptByUser(requireString(m.childSessionId, 'childSessionId'))
       }
       case 'approval.answer':
         return { accepted: this.bridge.answerApproval(requireString(m.approvalId, 'approvalId'), requireString(m.outcome, 'outcome')) }
@@ -380,10 +404,40 @@ class Client {
     return { accepted: true, requestId: request.requestId }
   }
 
+  /**
+   * Direct subagent children of one Session with their status, usage and timing,
+   * the same facts the desktop header directory shows.
+   * @param {string} sessionId
+   */
+  async subagentDirectory(sessionId) {
+    const controller = this.host.controller
+    const signal = this.opSignal()
+    const parent = await controller.projections({ sessionId }, signal)
+    const catalog = Array.isArray(parent?.values?.subagentCatalog) ? parent.values.subagentCatalog : []
+    const children = await Promise.all(catalog.slice(0, MAX_SUBAGENTS).map(async (entry) => {
+      const id = String(entry.id)
+      const row = { id, mode: String(entry.mode ?? 'unknown'), createdAt: entry.createdAt ?? 0 }
+      if (typeof entry.label === 'string') row.label = entry.label
+      if (typeof entry.name === 'string') row.name = entry.name
+      if (row.mode === 'external') return row
+      const [projections, state] = await Promise.all([
+        controller.projections({ sessionId: id }, signal).catch(() => null),
+        controller.state({ sessionId: id }, signal).catch(() => null),
+      ])
+      const values = projections?.values ?? {}
+      if (typeof values.title === 'string') row.title = values.title
+      if (values.tokenUsage) row.usage = values.tokenUsage
+      if (values.subagentTiming) row.timing = values.subagentTiming
+      row.running = state?.running === true
+      return row
+    }))
+    return { children, more: catalog.length > MAX_SUBAGENTS }
+  }
+
   /** @param {string} sessionId @param {number | undefined} afterSeq */
-  follow(sessionId, afterSeq) {
+  follow(sessionId, afterSeq, address) {
     this.follows.get(sessionId)?.stop()
-    const follow = new Follow(this, sessionId)
+    const follow = new Follow(this, sessionId, address)
     this.follows.set(sessionId, follow)
     void follow.run(afterSeq).catch((error) => {
       if (follow.stopped) return
@@ -395,9 +449,10 @@ class Client {
 
 class Follow {
   /** @param {Client} client @param {string} sessionId */
-  constructor(client, sessionId) {
+  constructor(client, sessionId, address = { kind: 'session', sessionId }) {
     this.client = client
     this.sessionId = sessionId
+    this.address = address
     this.abort = new AbortController()
     this.signal = AbortSignal.any([client.lifetime.signal, this.abort.signal])
     /** @type {LiveAttempt | null} */
@@ -427,7 +482,7 @@ class Follow {
     const controller = this.client.host.controller
     void this.observeProjections()
     const frames = controller.follow({
-      address: { kind: 'session', sessionId: this.sessionId },
+      address: this.address,
       assistantStream: true,
       ...FOLLOW_WINDOW,
     }, this.signal)
@@ -486,6 +541,7 @@ class Follow {
       items,
       title: typeof values.title === 'string' ? values.title : null,
       model: values.modelSelection ?? null,
+      ...extraProjections(values),
       queue: inboxItems(values.inbox),
       cwd: frame.header?.cwd ?? null,
       live,
@@ -577,9 +633,35 @@ class Follow {
       if (change.key === 'title') { update.title = change.val; changed = true }
       if (change.key === 'modelSelection') { update.model = change.val; changed = true }
       if (change.key === 'inbox') { update.queue = inboxItems(change.val); changed = true }
+      const extra = EXTRA_PROJECTIONS[change.key]
+      if (extra !== undefined) { update[extra] = change.val ?? null; changed = true }
     }
     if (changed) this.send(update)
   }
+}
+
+/** Projection keys mirrored to the phone under shorter names. */
+const EXTRA_PROJECTIONS = {
+  sessionStats: 'stats',
+  tokenUsage: 'usage',
+  contextPressure: 'pressure',
+  subagentCatalog: 'subagents',
+  subagentTiming: 'timing',
+}
+
+/** @param {Record<string, any>} values */
+function extraProjections(values) {
+  const out = {}
+  for (const [key, name] of Object.entries(EXTRA_PROJECTIONS)) out[name] = values[key] ?? null
+  return out
+}
+
+/** Session address for follow/history: a direct subagent child when `parentId` is given. */
+function addressOf(m) {
+  const sessionId = requireString(m.sessionId, 'sessionId')
+  if (typeof m.parentId !== 'string' || m.parentId.length === 0) return { kind: 'session', sessionId }
+  const mode = m.mode === 'one-shot' || m.mode === 'continuable' ? m.mode : 'unknown'
+  return { kind: 'subagent', parentSessionId: m.parentId, childSessionId: sessionId, mode }
 }
 
 /** @param {any} action */

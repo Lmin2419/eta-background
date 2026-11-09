@@ -163,3 +163,37 @@ test('session row reads title projection and workspace', () => {
     id: 's1', title: 'Fix bug', updatedAt: 9, running: true, blank: false, live: true, cwd: '/w', workspaceId: 'w1',
   })
 })
+
+test('runtime-triggered user messages become trigger items', () => {
+  const item = translateEvent({
+    type: 'user/message', seq: 5, time: 9,
+    data: {
+      id: 'm', content: [{ type: 'text', text: 'Background subagent c1 finished' }],
+      source: { kind: 'subagent-settled', form: 'notice', summary: 'finished', stopReason: 'completed', senderSessionId: 'c1' },
+    },
+  })
+  assert.deepEqual(item, {
+    k: 'trigger', seq: 5, time: 9, id: 'm', kind: 'subagent-settled', text: 'Background subagent c1 finished',
+    summary: 'finished', stopReason: 'completed', sender: 'c1',
+  })
+})
+
+test('assistant message carries model and first-token time', () => {
+  const item = translateEvent({
+    type: 'assistant/message', seq: 3, time: 500,
+    data: {
+      turn: 1, step: 1,
+      message: { id: 'a', content: [{ type: 'text', text: 'hi' }], source: { kind: 'model', provider: 'deepseek', model: 'v4' } },
+      stream: [{ type: 'chunk', time: 90, chunk: { type: 'usage' } }, { type: 'text-chunks', time0: 120, index: 0, dt: [0], texts: ['hi'] }],
+      usage: { inputTokens: 1, outputTokens: 2, cacheWriteTokens: 3 },
+    },
+  })
+  assert.deepEqual(item.model, { provider: 'deepseek', model: 'v4' })
+  assert.equal(item.firstTokenAt, 120)
+  assert.deepEqual(item.usage, { input: 1, output: 2, cacheWrite: 3 })
+})
+
+test('step start and tool call timing items', () => {
+  assert.deepEqual(translateEvent({ type: 'step/start', seq: 1, time: 2, data: { turn: 1, step: 2 } }), { k: 'step_start', seq: 1, time: 2, turn: 1, step: 2 })
+  assert.deepEqual(translateEvent({ type: 'tool/call', seq: 2, time: 3, data: { callId: 'c', name: 'bash', arguments: '{}' } }), { k: 'tool_call', seq: 2, time: 3, callId: 'c', name: 'bash' })
+})

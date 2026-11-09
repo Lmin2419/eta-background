@@ -1350,7 +1350,7 @@ internal class AgentAppState(
             SystemNoticeCode.ModelRetry -> R.string.system_notice_model_retry
             SystemNoticeCode.RuntimeFailed -> R.string.system_notice_runtime_failed
             SystemNoticeCode.Interrupted -> R.string.system_notice_interrupted
-            SystemNoticeCode.RunPerformance -> R.string.system_notice_run_performance
+            SystemNoticeCode.RunPerformance, SystemNoticeCode.Marker -> R.string.system_notice_run_performance
         },
     )
 

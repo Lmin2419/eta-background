@@ -4,6 +4,7 @@
 export const TOOL_ARGS_LIMIT = 4000
 export const TOOL_RESULT_LIMIT = 6000
 const HIDDEN_USER_SOURCES = /-context$|^instructions?$|^system/
+const TRIGGER_TEXT_LIMIT = 4000
 
 /**
  * @param {unknown} value
@@ -41,6 +42,20 @@ export function textOf(content) {
 /**
  * @param {unknown} usage
  */
+function firstTokenTime(stream) {
+  if (!Array.isArray(stream)) return undefined
+  let first
+  for (const record of stream) {
+    if (!isObject(record)) continue
+    let time
+    if (record.type === 'text-chunks' || record.type === 'reasoning-chunks' || record.type === 'tool-call-chunks') time = record.time0
+    else if (record.type === 'chunk' && isObject(record.chunk)
+      && (record.chunk.type === 'text-delta' || record.chunk.type === 'reasoning-delta' || record.chunk.type === 'tool-call-delta')) time = record.time
+    if (typeof time === 'number' && (first === undefined || time < first)) first = time
+  }
+  return first
+}
+
 function usageOf(usage) {
   if (!isObject(usage)) return undefined
   const out = {}
@@ -48,6 +63,7 @@ function usageOf(usage) {
   if (typeof usage.outputTokens === 'number') out.output = usage.outputTokens
   if (typeof usage.totalTokens === 'number') out.total = usage.totalTokens
   if (typeof usage.cacheReadTokens === 'number') out.cacheRead = usage.cacheReadTokens
+  if (typeof usage.cacheWriteTokens === 'number') out.cacheWrite = usage.cacheWriteTokens
   if (typeof usage.reasoningTokens === 'number') out.reasoning = usage.reasoningTokens
   return out
 }
@@ -80,6 +96,21 @@ export function translateEvent(event) {
         if (block.type === 'image') images++
         if (block.type === 'file') files.push(String(block.attachment?.name ?? 'file'))
       }
+      const kind = typeof source.kind === 'string' ? source.kind : 'unknown'
+      if (kind !== 'user' && kind !== 'retry' && kind !== 'unknown') {
+        // Runtime-triggered input (subagent results, schedules, team, webhooks): shown as a
+        // compact trigger row on the desktop, never as the human's own bubble.
+        return {
+          k: 'trigger',
+          ...base,
+          id: String(data.id ?? `t${event.seq}`),
+          kind,
+          text: clip(textOf(content), TRIGGER_TEXT_LIMIT).text,
+          ...(typeof source.summary === 'string' ? { summary: source.summary } : {}),
+          ...(typeof source.stopReason === 'string' ? { stopReason: source.stopReason } : {}),
+          ...(typeof source.senderSessionId === 'string' ? { sender: source.senderSessionId } : {}),
+        }
+      }
       return {
         k: 'user',
         ...base,
@@ -109,6 +140,8 @@ export function translateEvent(event) {
         }
       }
       const usage = usageOf(data.usage)
+      const source = isObject(message.source) ? message.source : {}
+      const firstTokenAt = firstTokenTime(data.stream)
       return {
         k: 'assistant',
         ...base,
@@ -117,6 +150,10 @@ export function translateEvent(event) {
         step: data.step,
         blocks,
         ...(usage ? { usage } : {}),
+        ...(typeof source.provider === 'string' && typeof source.model === 'string'
+          ? { model: { provider: source.provider, model: source.model } }
+          : {}),
+        ...(firstTokenAt === undefined ? {} : { firstTokenAt }),
         ...(data.interrupted === true ? { interrupted: true } : {}),
       }
     }
@@ -142,6 +179,10 @@ export function translateEvent(event) {
     }
     case 'turn/start':
       return { k: 'turn_start', ...base, turn: data.turn }
+    case 'step/start':
+      return { k: 'step_start', ...base, turn: data.turn, step: data.step }
+    case 'tool/call':
+      return { k: 'tool_call', ...base, callId: String(data.callId ?? ''), name: String(data.name ?? '') }
     case 'turn/end': {
       const reason = isObject(data.reason) ? data.reason : {}
       const item = { k: 'turn_end', ...base, turn: data.turn, reason: String(reason.kind ?? 'unknown') }

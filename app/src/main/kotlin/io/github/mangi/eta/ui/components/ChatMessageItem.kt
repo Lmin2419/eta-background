@@ -94,6 +94,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.material.icons.rounded.Speed
+import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Hub
 import io.github.mangi.eta.ui.voice.SpeechReadAloudMenuItem
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -250,6 +253,8 @@ internal fun ChatMessageItem(
             ContextCompactionMarker(message = message, modifier = modifier)
         } else if (message.code == SystemNoticeCode.RunPerformance) {
             RunPerformanceMarker(message = message, modifier = modifier)
+        } else if (message.code == SystemNoticeCode.Marker) {
+            InfoMarker(message = message, modifier = modifier)
         } else {
             AgentMessageBlock(
                 message = AgentMessageUi(
@@ -264,7 +269,7 @@ internal fun ChatMessageItem(
                                     SystemNoticeCode.ModelRetry -> R.string.system_notice_model_retry
                                     SystemNoticeCode.RuntimeFailed -> R.string.system_notice_runtime_failed
                                     SystemNoticeCode.Interrupted -> R.string.system_notice_interrupted
-                                    SystemNoticeCode.RunPerformance -> R.string.system_notice_run_performance
+                                    SystemNoticeCode.RunPerformance, SystemNoticeCode.Marker -> R.string.system_notice_run_performance
                                 },
                             ),
                         )
@@ -447,6 +452,45 @@ private fun RunPerformanceMarker(message: SystemNoticeMessageUi, modifier: Modif
             SelectionContainer {
                 Text(summary.details(chinese), style = MiuixTheme.textStyles.footnote1,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+            }
+        }
+    }
+}
+
+/** 通用小胶囊：标题一行，点开展开详情；与执行统计同一视觉。 */
+@Composable
+private fun InfoMarker(message: SystemNoticeMessageUi, modifier: Modifier = Modifier) {
+    val parsed = remember(message.detail) {
+        runCatching { org.json.JSONObject(message.detail.orEmpty()) }.getOrNull()
+    } ?: return
+    val title = parsed.optString("title")
+    val details = parsed.optString("details")
+    val icon = when (parsed.optString("icon")) {
+        "usage" -> Icons.Rounded.Speed
+        "subagent" -> Icons.Rounded.Hub
+        "schedule" -> Icons.Rounded.Schedule
+        else -> Icons.Rounded.Bolt
+    }
+    var expanded by rememberSaveable(message.id) { mutableStateOf(false) }
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(
+            modifier = Modifier.clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.surfaceSunken)
+                .clickable(enabled = details.isNotBlank()) { expanded = !expanded }.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(icon, null, Modifier.padding(end = 6.dp).size(16.dp), tint = EtaTheme.colors.textTertiary)
+            Text(title, style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary,
+                maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false))
+            if (details.isNotBlank()) Icon(Icons.Rounded.ChevronRight, contentDescription = null,
+                modifier = Modifier.size(16.dp).graphicsLayer(rotationZ = if (expanded) 90f else 0f),
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+        }
+        AnimatedVisibility(visible = expanded) {
+            SelectionContainer {
+                Text(details, style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    modifier = Modifier.padding(top = 6.dp))
             }
         }
     }

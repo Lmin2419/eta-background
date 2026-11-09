@@ -60,6 +60,7 @@ class AppRouteSerializationTest {
             AppRoute.ModelProviderNew(NewProviderType.Gemini),
             AppRoute.DesktopSessions,
             AppRoute.DesktopChat("session-1"),
+            AppRoute.DesktopChat("child-1", "session-1", "continuable"),
             AppRoute.DesktopBridgeSettings,
         )
         val json = Json { ignoreUnknownKeys = true }

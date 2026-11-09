@@ -82,7 +82,10 @@ enum class SystemNoticeCode(val wireValue: String) {
     ModelRetry("model_retry"),
     ContextCompaction("context_compaction"),
     RunPerformance("run_performance"),
-    Interrupted("interrupted");
+    Interrupted("interrupted"),
+
+    /** 通用的小胶囊行：detail 是 `{icon,title,details}` JSON（电脑会话的本轮用量、子代理通知等）。 */
+    Marker("marker");
 
     companion object {
         fun fromWireValue(value: String): SystemNoticeCode? = entries.firstOrNull {
