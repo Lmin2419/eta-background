@@ -5,7 +5,7 @@
 - 地址：`wss://<你的域名>/v1/ws`（插件本身只监听 `ws://127.0.0.1:7788/v1/ws`，TLS 由服务器上的 Caddy 终止）
 - 认证：握手请求头 `Authorization: Bearer <token>`，不对返回 401
 - 心跳：服务端每 15 秒发一次 WebSocket ping，45 秒没收到任何数据就断开；客户端也应自己 ping
-- 健康检查：`GET /v1/health` → `{"ok":true,"protocol":1}`（无需认证，只用于确认穿透通了）
+- 健康检查：`GET /v1/health` → `{"ok":true,"protocol":1,"version":"0.2.0"}`（无需认证，用于确认穿透通了；`version` 是插件版本，0.1.0 不带此字段）
 
 ## 请求 / 响应
 

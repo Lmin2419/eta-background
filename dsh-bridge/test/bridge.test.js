@@ -128,7 +128,7 @@ test('rejects a wrong token', async () => {
 test('health endpoint is open', async () => {
   const { handle } = await setup()
   const res = await fetch(`http://127.0.0.1:${handle.port}/v1/health`)
-  assert.deepEqual(await res.json(), { ok: true, protocol: 1 })
+  assert.deepEqual(await res.json(), { ok: true, protocol: 1, version: 'test' })
   await handle.close()
 })
 

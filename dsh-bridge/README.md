@@ -34,7 +34,17 @@ dsh web
     port: 7788
 ```
 
-验证插件是否已启动：`curl http://127.0.0.1:7788/v1/health`，应返回 `{"ok":true,"protocol":1}`。
+验证插件是否已启动：`curl http://127.0.0.1:7788/v1/health`，应返回 `{"ok":true,"protocol":1,"version":"0.2.0"}`，`version` 是正在运行的插件版本。
+
+### 更新插件
+
+插件是以链接方式装进 profile 的，更新源码目录后重启 DSH 即可：
+
+```sh
+cd eta-background && git pull
+# 重启 dsh web（或 DSH 桌面版）
+curl http://127.0.0.1:7788/v1/health   # version 应为新版本
+```
 
 > 只在电脑上用 DSH 桌面版（Desktop 应用）的话，需要在桌面版使用的 profile 中执行同样的 `dsh plugin --profile <名称> add`。
 
@@ -73,7 +83,7 @@ frps 和 frpc 的配置与脚本生成的相同。手机端在「手动填写」
 
 ```sh
 cd dsh-bridge
-npm test        # node --test，19 个用例
+npm test        # node --test，24 个用例
 ```
 
 `lib/translate.js` 把 DSH 会话事件转换成手机端使用的条目；`lib/bridge.js` 负责连接、订阅与审批；`lib/ws.js` 是一个最小的 RFC 6455 服务端实现。
