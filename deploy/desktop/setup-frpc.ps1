@@ -1,4 +1,4 @@
-# 电脑端（Windows）：安装 frpc，把 dsh-bridge(127.0.0.1:7788) 映射到中转服务器，并写入配对 token。
+﻿# 电脑端（Windows）：安装 frpc，把 dsh-bridge(127.0.0.1:7788) 映射到中转服务器，并写入配对 token。
 #
 #   powershell -ExecutionPolicy Bypass -File setup-frpc.ps1 'pxd://服务器IP:7000?frp=…&token=…&port=17788'
 #
@@ -104,6 +104,6 @@ Say "已注册计划任务 $taskName（登录后自动运行，日志：$HomeDir
 
 Write-Host ''
 Write-Host '完成。接下来：'
-Write-Host '  1. 重启 DeepSeek Harness（dsh web），让 dsh-bridge 读取新的 token'
+Write-Host '  1. 完全退出并重新打开 DeepSeek Harness 桌面版，让 dsh-bridge 读取新的 token'
 Write-Host "  2. 检查：浏览器打开 http://127.0.0.1:$LocalPort/v1/health 应返回 {`"ok`":true,...}"
 Write-Host '  3. 手机上粘贴服务器脚本打印的 pxp:// 配对码'

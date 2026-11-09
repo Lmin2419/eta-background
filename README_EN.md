@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-09 · `3.3.5` 胖小胖 · versionCode `2026110901`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-09 · `3.3.5` 胖小胖 · versionCode `2026110902`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-Desktop sessions now carry the desktop's details: pick the model and reasoning effort from the top bar, and see total tokens, cache hit rate, running time and per-turn stats. Subagents live behind a subagent button inside their parent session instead of crowding the session list. Fixed a steered message showing twice on the phone, and the background-task notification's "Open conversation" opening the virtual screen. **Update the `dsh-bridge` plugin on the computer and restart DSH.**
+Computer sync now installs into the **DSH desktop app**, so the session list matches the desktop: no blank drafts, plus archived sessions, search, and pin/rename/archive. **Settings → Computer** gains a sync switch and a persistent connection. Computer notifications are separate from local tasks: the persistent notification is quiet and low priority by default, and glow, live activity and sound are opt-in. Reminders cover finished tasks, approvals, questions and errors; reply to a finished task straight from the notification, and answer agent questions and plan reviews on the phone. **Reinstall the computer plugin with `deploy/desktop/install-plugin.ps1`.**
 
-The built-in relay `8.163.249.159` and `pxp://` pairing codes are unchanged. APK: **`Pangxiaopang-3.3.5-2026110901.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026110902.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110901)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110902)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

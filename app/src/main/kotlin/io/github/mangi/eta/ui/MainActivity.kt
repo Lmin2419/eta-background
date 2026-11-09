@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
         var contentReady = false
         installStartupSplash { contentReady }
         enableEdgeToEdge()
+        if (savedInstanceState == null) io.github.mangi.eta.agent.remote.DesktopLinkNav.accept(intent)
         launchRequests = MainActivityLaunchRequests.restore(savedInstanceState, intent)
         lifecycleScope.launch {
             val initialAppearance = AppearanceSettingsRepository.settings()
@@ -117,12 +118,14 @@ class MainActivity : ComponentActivity() {
         startedInstances.add(this)
         isInForeground = true
         AgentRuntimeService.onEtaUiVisibilityChanged()
+        io.github.mangi.eta.agent.remote.DesktopBridge.setBackground(false)
     }
 
     override fun onStop() {
         startedInstances.remove(this)
         isInForeground = startedInstances.isNotEmpty() || isChangingConfigurations
         AgentRuntimeService.onEtaUiVisibilityChanged()
+        if (!isInForeground) io.github.mangi.eta.agent.remote.DesktopBridge.setBackground(true)
         super.onStop()
     }
 
@@ -132,6 +135,7 @@ class MainActivity : ComponentActivity() {
         val fromLauncher = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
         AndroidAgentLogger.info("Agent UI new intent: task=$taskId launcher=$fromLauncher")
         setIntent(intent)
+        io.github.mangi.eta.agent.remote.DesktopLinkNav.accept(intent)
         launchRequests = launchRequests.accept(intent)
     }
 

@@ -39,7 +39,9 @@ import io.github.mangi.eta.ui.components.EtaChoiceChip
 import io.github.mangi.eta.ui.components.EtaListGroup
 import io.github.mangi.eta.ui.components.EtaPreference
 import io.github.mangi.eta.ui.components.EtaPreferenceDivider
+import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
+import io.github.mangi.eta.ui.components.EtaSwitchPreference
 import io.github.mangi.eta.ui.components.EtaSheet
 import io.github.mangi.eta.ui.components.ModelPickerRow
 import io.github.mangi.eta.ui.components.StatusIdle
@@ -156,6 +158,8 @@ internal fun DesktopSessionSheet(
     allowModelChange: Boolean,
     busy: Boolean,
     onDismiss: () -> Unit,
+    remindOn: Boolean? = null,
+    onRemind: (Boolean) -> Unit = {},
     onModel: (String) -> Unit,
     onEffort: (ReasoningEffort) -> Unit,
 ) {
@@ -186,6 +190,18 @@ internal fun DesktopSessionSheet(
                         efforts.forEach { option ->
                             EtaChoiceChip(option.displayName, option == effort, { onEffort(option) }, enabled = !busy)
                         }
+                    }
+                }
+            }
+            if (remindOn != null) {
+                item(key = "remind") {
+                    EtaPreferenceGroup(modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)) {
+                        EtaSwitchPreference(
+                            title = stringResource(R.string.desktop_session_remind),
+                            summary = stringResource(R.string.desktop_session_remind_summary),
+                            checked = remindOn,
+                            onCheckedChange = onRemind,
+                        )
                     }
                 }
             }

@@ -168,7 +168,7 @@ fi
 cat <<EOF
 
 完成。接下来：
-  1. 重启 DeepSeek Harness（dsh web），让 dsh-bridge 读取新的 token
+  1. 完全退出并重新打开 DeepSeek Harness 桌面版（只用网页版时重启 dsh web），让 dsh-bridge 读取新的 token
   2. 检查：curl -s http://127.0.0.1:${BRIDGE_LOCAL_PORT}/v1/health 应返回 {"ok":true,...}
   3. 手机上粘贴服务器脚本打印的 pxp:// 配对码
 EOF

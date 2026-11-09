@@ -29,6 +29,8 @@ internal data class DesktopSessionState(
     val pressure: DesktopContextPressure? = null,
     val subagents: List<DesktopSubagent> = emptyList(),
     val timing: DesktopSubagentTiming? = null,
+    /** 仍可回答的限时提问（投影 `questions`）；`continued` 的只能在这里回答。 */
+    val pendingQuestions: List<DesktopPendingQuestion> = emptyList(),
 ) {
     val firstSeq: Long? get() = items.firstOrNull()?.seq
 
@@ -91,6 +93,7 @@ internal data class DesktopSessionState(
             pressure = DesktopBridgeProtocol.parsePressure(push["pressure"]) ?: pressure,
             subagents = if (push.containsKey("subagents")) DesktopBridgeProtocol.parseSubagentEntries(push["subagents"]) else subagents,
             timing = DesktopBridgeProtocol.parseTiming(push["timing"]) ?: timing,
+            pendingQuestions = if (push.containsKey("questions")) DesktopBridgeProtocol.parsePendingQuestions(push["questions"]) else pendingQuestions,
         ).settleEchoes()
     }
 
@@ -154,6 +157,7 @@ internal data class DesktopSessionState(
         }
         if (push.containsKey("subagents")) next = next.copy(subagents = DesktopBridgeProtocol.parseSubagentEntries(push["subagents"]))
         if (push.containsKey("timing")) next = next.copy(timing = DesktopBridgeProtocol.parseTiming(push["timing"]) ?: next.timing)
+        if (push.containsKey("questions")) next = next.copy(pendingQuestions = DesktopBridgeProtocol.parsePendingQuestions(push["questions"]))
         return next
     }
 

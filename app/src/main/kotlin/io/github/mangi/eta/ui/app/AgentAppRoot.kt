@@ -170,6 +170,18 @@ fun AgentAppRoot(
             onTerminalOpened()
         }
     }
+    // 电脑同步的通知：空字符串打开会话列表，否则直接打开那个电脑会话。
+    val desktopRequest by io.github.mangi.eta.agent.remote.DesktopLinkNav.requests.collectAsState()
+    LaunchedEffect(desktopRequest) {
+        val target = desktopRequest ?: return@LaunchedEffect
+        io.github.mangi.eta.agent.remote.DesktopLinkNav.consume()
+        val chat = target.takeIf { it.isNotEmpty() }?.let { AppRoute.DesktopChat(it) }
+        val top = backStack.lastOrNull()
+        if (chat != null && top == chat) return@LaunchedEffect
+        if (backStack.none { it == AppRoute.DesktopSessions }) backStack.add(AppRoute.DesktopSessions)
+        else while (backStack.size > 1 && backStack.last() != AppRoute.DesktopSessions) backStack.removeAt(backStack.lastIndex)
+        if (chat != null) backStack.add(chat)
+    }
     val navigator = remember(backStack) { AgentNavigator(backStack) }
     var navigationResetKey by rememberSaveable { mutableIntStateOf(0) }
     val runtimeActive by AgentRuntimeService.keepScreenOn.collectAsState()

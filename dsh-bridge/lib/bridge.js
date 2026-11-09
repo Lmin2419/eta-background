@@ -5,7 +5,7 @@
 import { randomUUID } from 'node:crypto'
 import { hostname, platform } from 'node:os'
 import {
-  LiveAttempt, inboxItems, sessionRow, translateEvent, translateRecords,
+  LiveAttempt, clip, inboxItems, sessionRow, textOf, translateEvent, translateRecords,
 } from './translate.js'
 
 export const PROTOCOL_VERSION = 1
@@ -16,12 +16,20 @@ const FOLLOW_WINDOW = { maxMessages: 200, turnWindow: { minMessages: 30, minTurn
 const OLDER_WINDOW = { maxMessages: 200, turnWindow: { minMessages: 40, minTurns: 2 } }
 const APPROVAL_OUTCOMES = new Set(['allowed-once', 'rejected', 'cancelled'])
 const MAX_SUBAGENTS = 60
+const TURN_TEXT_LIMIT = 600
+const HEARTBEAT_MIN_MS = 10_000
+const HEARTBEAT_MAX_MS = 120_000
+
+/** Which process hosts the plugin: the DSH Desktop app (Electron) or a Node `dsh` command. */
+export const RUNTIME = typeof process.versions.electron === 'string' ? 'desktop' : 'node'
 
 /**
  * @typedef {object} BridgeHost
  * @property {any} controller - DSH `sessionController` service.
  * @property {any} [workspaces] - DSH `workspaceRegistry` service.
  * @property {any} [subagents] - DSH `subagents` runtime (optional).
+ * @property {any} [userQuestions] - DSH `userQuestions` service (optional).
+ * @property {(sessionId: string) => any} [agentOf] - live root Agent of a Session, when one exists.
  * @property {{ info: Function, warn: Function, error: Function }} logger
  * @property {string} version - bridge package version.
  */
@@ -56,6 +64,10 @@ export class Bridge {
     this.clients = new Set()
     /** @type {Map<string, any>} */
     this.approvals = new Map()
+    /** @type {Map<string, any>} */
+    this.questions = new Map()
+    /** Last assistant text per Session, reported with the turn's end. @type {Map<string, string>} */
+    this.lastText = new Map()
   }
 
   /**
@@ -106,20 +118,54 @@ export class Bridge {
   }
 
   /**
-   * `approval/request` waterfall listener. With a phone connected, the request goes to
-   * the phone and to the next answerer (the desktop Web UI) at the same time; the first
-   * answer wins and the other side's prompt is withdrawn.
+   * Global `session/event` hook: remembers each ordinary Session's latest
+   * assistant text and announces every finished turn, so the phone can remind
+   * the user without following the Session.
+   * @param {any} session
+   * @param {any} event
+   */
+  onSessionEvent(session, event) {
+    if (session?.header?.origin === 'subagent') return
+    const sessionId = String(session?.id ?? session?.header?.id ?? '')
+    if (sessionId.length === 0) return
+    if (event?.type === 'assistant/message') {
+      const text = textOf(event.data?.message?.content).trim()
+      if (text.length > 0) this.lastText.set(sessionId, text)
+      return
+    }
+    if (event?.type === 'turn/start') {
+      this.lastText.delete(sessionId)
+      return
+    }
+    if (event?.type !== 'turn/end') return
+    const text = this.lastText.get(sessionId) ?? ''
+    this.lastText.delete(sessionId)
+    if (this.clients.size === 0) return
+    const end = translateEvent(event)
+    if (end === null || end.k !== 'turn_end') return
+    this.broadcast({
+      t: 'turn',
+      sessionId,
+      turn: end.turn,
+      reason: end.reason,
+      ...(typeof end.message === 'string' ? { message: clip(end.message, TURN_TEXT_LIMIT).text } : {}),
+      text: text.length > TURN_TEXT_LIMIT ? text.slice(-TURN_TEXT_LIMIT) : text,
+      time: end.time,
+    })
+  }
+
+  /**
+   * `approval/request` waterfall listener. The request goes to the phone and to
+   * the next answerer (the desktop UI) at the same time; the first answer wins
+   * and the other side's prompt is withdrawn. It is tracked even while no phone
+   * is connected, so a phone that connects later can still answer it.
    * @param {any} request
    * @param {() => Promise<string>} next
    * @returns {Promise<string>}
    */
   async requestApproval(request, next) {
-    if (this.clients.size === 0) return next()
     const sessionId = String(request.agent?.session?.id ?? request.agent?.id ?? '')
     const id = randomUUID()
-    /** @type {(outcome: string) => void} */
-    let resolvePhone = () => {}
-    const phoneAnswer = new Promise((resolve) => { resolvePhone = resolve })
     const entry = {
       id,
       sessionId,
@@ -129,43 +175,124 @@ export class Bridge {
       ...(request.displayReason === undefined ? {} : { displayReason: request.displayReason }),
       createdAt: Date.now(),
     }
-    this.approvals.set(id, { entry, resolve: resolvePhone })
+    const race = this.raceWithDesktop(request, next, 'cancelled')
+    this.approvals.set(id, { entry, resolve: race.answer })
     this.broadcast({ t: 'approval', approval: entry })
+    let outcome = 'cancelled'
+    try {
+      outcome = await race.result
+      return outcome
+    } finally {
+      this.finishApproval(id, outcome)
+    }
+  }
 
+  /**
+   * Run one interaction against both the phone and the downstream answerer.
+   * The downstream gets a signal this bridge aborts when the phone answers
+   * first. A downstream failure falls back to the phone while one is connected
+   * and is rethrown otherwise, so DSH behaves as without the bridge.
+   * @template T
+   * @param {any} request - waterfall payload; its `signal` is replaced.
+   * @param {() => Promise<T>} next - downstream answerer.
+   * @param {T} cancelled - value the phone side settles with when the request is aborted.
+   * @param {(error: unknown) => boolean} [fallBack] - whether a downstream failure may wait for the phone.
+   * @returns {{ answer: (value: T) => void, result: Promise<T> }}
+   */
+  raceWithDesktop(request, next, cancelled, fallBack = () => true) {
+    /** @type {(value: T) => void} */
+    let answer = () => {}
+    /** @type {(error: unknown) => void} */
+    let fail = () => {}
+    const phone = new Promise((resolve, reject) => { answer = resolve; fail = reject })
     const original = request.signal
-    const onAbort = () => resolvePhone('cancelled')
+    const onAbort = () => {
+      if (cancelled === undefined) fail(original?.reason ?? new Error('aborted'))
+      else answer(cancelled)
+    }
     original?.addEventListener?.('abort', onAbort, { once: true })
-    if (original?.aborted) resolvePhone('cancelled')
+    if (original?.aborted) onAbort()
 
-    // Give the downstream answerer a signal we can abort when the phone answers first.
     const withdraw = new AbortController()
-    let downstream = null
     try {
       const combined = original === undefined ? withdraw.signal : AbortSignal.any([original, withdraw.signal])
       Object.defineProperty(request, 'signal', { value: combined, configurable: true, enumerable: true, writable: true })
-      downstream = Promise.resolve().then(() => next())
-      downstream.catch(() => {})
     } catch {
-      downstream = null // frozen request: the phone answers alone.
+      // Frozen request: the desktop still answers, its prompt just cannot be withdrawn.
     }
-
-    let outcome
-    try {
-      outcome = await (downstream === null
-        ? phoneAnswer
-        : Promise.race([
-          phoneAnswer.then(value => ({ from: 'phone', value })),
-          downstream.then(value => ({ from: 'desktop', value }), () => ({ from: 'desktop', value: 'unavailable' })),
-        ]).then(async (winner) => {
-          if (winner.from === 'desktop' && winner.value === 'unavailable') return phoneAnswer
-          return winner.value
-        }))
-    } finally {
+    const downstream = Promise.resolve().then(() => next())
+    downstream.catch(() => {})
+    const result = (
+      Promise.race([
+        phone.then(value => ({ from: 'phone', value }), error => ({ from: 'phone', error })),
+        downstream.then(value => ({ from: 'desktop', value }), error => ({ from: 'desktop', error })),
+      ]).then((winner) => {
+        if (winner.from === 'desktop' && 'error' in winner) {
+          if (this.clients.size > 0 && fallBack(winner.error)) return phone
+          throw winner.error
+        }
+        if ('error' in winner) throw winner.error
+        return winner.value
+      })
+    ).finally(() => {
       original?.removeEventListener?.('abort', onAbort)
+      withdraw.abort(new Error('dsh-bridge: answered elsewhere'))
+    })
+    return { answer, result }
+  }
+
+  /**
+   * `user-questions/request` waterfall listener: `ask_user_question` calls,
+   * plan reviews and question-shaped approvals reach the phone the same way
+   * approvals do. Only a missing desktop answerer (`NO_PROVIDER`) waits for the
+   * phone; a desktop countdown that ends (`ASK_TIMED_OUT`) is passed through so
+   * DSH turns the call into a continued question.
+   * @param {any} request
+   * @param {() => Promise<any>} next
+   */
+  async requestQuestion(request, next) {
+    const sessionId = String(request.agent?.session?.id ?? request.agent?.id ?? '')
+    const id = randomUUID()
+    const entry = {
+      id,
+      sessionId,
+      ...(request.wait?.callId === undefined ? {} : { callId: String(request.wait.callId) }),
+      timed: request.wait?.timed === true,
+      questions: questionItems(request.questions),
+      createdAt: Date.now(),
     }
-    withdraw.abort(new Error('dsh-bridge: answered elsewhere'))
-    this.finishApproval(id, outcome)
-    return outcome
+    const race = this.raceWithDesktop(request, next, undefined, error => error?.code === 'NO_PROVIDER')
+    this.questions.set(id, { entry, resolve: race.answer })
+    this.broadcast({ t: 'question', question: entry })
+    let outcome = 'cancelled'
+    try {
+      const answer = await race.result
+      outcome = 'answered'
+      return answer
+    } catch (error) {
+      if (error?.code === 'ASK_TIMED_OUT') outcome = 'timeout'
+      throw error
+    } finally {
+      this.finishQuestion(id, outcome)
+    }
+  }
+
+  /** @param {string} id @param {any} answers */
+  answerQuestion(id, answers) {
+    const pending = this.questions.get(id)
+    if (pending === undefined) return false
+    pending.resolve({ answers: answerItems(answers, pending.entry.questions) })
+    return true
+  }
+
+  /** @param {string} id @param {string} outcome */
+  finishQuestion(id, outcome) {
+    if (!this.questions.delete(id)) return
+    this.broadcast({ t: 'question-done', questionId: id, outcome })
+  }
+
+  pendingQuestions() {
+    return [...this.questions.values()].map(pending => pending.entry)
   }
 
   /** @param {string} id @param {string} outcome */
@@ -270,8 +397,17 @@ class Client {
           version: this.host.version,
           host: hostname(),
           platform: platform(),
+          runtime: RUNTIME,
           approvals: this.bridge.pendingApprovals(),
+          questions: this.bridge.pendingQuestions(),
+          features: ['archive', 'pin', 'questions', 'turns', 'heartbeat'],
         }
+      case 'client.heartbeat': {
+        const interval = Number(m.intervalMs)
+        if (!Number.isFinite(interval)) throw new BridgeError('bad-request', 'intervalMs is required')
+        this.conn.heartbeatMs = Math.min(HEARTBEAT_MAX_MS, Math.max(HEARTBEAT_MIN_MS, Math.round(interval)))
+        return { intervalMs: this.conn.heartbeatMs }
+      }
       case 'sessions.list':
         return this.listSessions()
       case 'sessions.search': {
@@ -353,6 +489,17 @@ class Client {
         if (runtime === undefined) throw new BridgeError('unavailable', 'subagents are not available in this DSH profile')
         return runtime.interruptByUser(requireString(m.childSessionId, 'childSessionId'))
       }
+      case 'sessions.archive':
+      case 'sessions.unarchive':
+      case 'sessions.pin':
+      case 'sessions.unpin':
+        return this.updateSessionFlag(m.op, requireString(m.sessionId, 'sessionId'))
+      case 'question.answer': {
+        const accepted = this.bridge.answerQuestion(requireString(m.questionId, 'questionId'), m.answers)
+        return { accepted }
+      }
+      case 'question.reply':
+        return this.replyToQuestion(requireString(m.sessionId, 'sessionId'), requireString(m.callId, 'callId'), m.answers)
       case 'approval.answer':
         return { accepted: this.bridge.answerApproval(requireString(m.approvalId, 'approvalId'), requireString(m.outcome, 'outcome')) }
       default:
@@ -369,9 +516,9 @@ class Client {
     const sessions = []
     for (const summary of items) {
       const id = String(summary.sessionId)
-      if (archived.has(id)) continue
       const row = sessionRow(summary, index)
-      if (pinned.has(id)) row.pinned = true
+      if (archived.has(id)) row.archived = true
+      else if (pinned.has(id)) row.pinned = true
       sessions.push(row)
     }
     const workspaces = registry === undefined ? [] : registry.list().map(workspace => ({
@@ -380,6 +527,51 @@ class Client {
       path: workspace.path,
     }))
     return { sessions, workspaces }
+  }
+
+  /**
+   * Archive, unarchive, pin or unpin through the workspace registry, the same
+   * registry-global sets the desktop sidebar uses.
+   * @param {string} op
+   * @param {string} sessionId
+   */
+  async updateSessionFlag(op, sessionId) {
+    const registry = this.host.workspaces
+    if (registry === undefined) throw new BridgeError('unavailable', 'the workspace registry is not available')
+    try {
+      if (op === 'sessions.archive') await registry.archiveSession(sessionId)
+      else if (op === 'sessions.unarchive') await registry.unarchiveSession(sessionId)
+      else if (op === 'sessions.pin') await registry.pinSession(sessionId)
+      else await registry.unpinSession(sessionId)
+    } catch (error) {
+      const name = error?.constructor?.name ?? ''
+      if (name === 'WorkspaceActiveSessionError') throw new BridgeError('busy', 'the session is still running')
+      if (name === 'WorkspaceUnknownSessionError') throw new BridgeError('not-found', 'the session no longer exists')
+      if (name === 'WorkspaceArchivedSessionPinError') throw new BridgeError('archived', 'an archived session cannot be pinned')
+      throw error
+    }
+    const archived = (registry.archivedSessionIds ?? []).map(String).includes(sessionId)
+    const pinned = !archived && (registry.pinnedSessionIds ?? []).map(String).includes(sessionId)
+    this.bridge.broadcast({ t: 'session-flags', sessionId, archived, pinned })
+    return { archived, pinned }
+  }
+
+  /**
+   * Answer a continued question (its foreground wait already ended): DSH steers
+   * the answer into the live root agent as a reply message.
+   * @param {string} sessionId @param {string} callId @param {any} answers
+   */
+  async replyToQuestion(sessionId, callId, answers) {
+    const service = this.host.userQuestions
+    if (service === undefined) throw new BridgeError('unavailable', 'questions are not available in this DSH profile')
+    const agent = this.host.agentOf?.(sessionId)
+    if (agent === undefined || agent === null) throw new BridgeError('not-live', 'the session is not active; answer it on the computer')
+    const projections = await this.host.controller.projections({ sessionId }, this.opSignal())
+    const active = projections?.values?.userQuestions?.active ?? []
+    const question = active.find(item => String(item.callId) === callId)
+    if (question === undefined) return { accepted: false }
+    const accepted = service.answer(agent, callId, { answers: answerItems(answers, questionItems(question.questions)) })
+    return { accepted: accepted === true }
   }
 
   /** @param {any} m */
@@ -634,7 +826,7 @@ class Follow {
       if (change.key === 'modelSelection') { update.model = change.val; changed = true }
       if (change.key === 'inbox') { update.queue = inboxItems(change.val); changed = true }
       const extra = EXTRA_PROJECTIONS[change.key]
-      if (extra !== undefined) { update[extra] = change.val ?? null; changed = true }
+      if (extra !== undefined) { update[extra] = projectionValue(change.key, change.val); changed = true }
     }
     if (changed) this.send(update)
   }
@@ -647,13 +839,78 @@ const EXTRA_PROJECTIONS = {
   contextPressure: 'pressure',
   subagentCatalog: 'subagents',
   subagentTiming: 'timing',
+  userQuestions: 'questions',
+}
+
+/** @param {string} key @param {any} value */
+function projectionValue(key, value) {
+  if (value === undefined || value === null) return null
+  if (key === 'userQuestions') {
+    const active = Array.isArray(value.active) ? value.active : []
+    return {
+      active: active.map(item => ({
+        callId: String(item.callId),
+        state: item.state === 'continued' ? 'continued' : 'open',
+        questions: questionItems(item.questions),
+      })),
+    }
+  }
+  return value
 }
 
 /** @param {Record<string, any>} values */
 function extraProjections(values) {
   const out = {}
-  for (const [key, name] of Object.entries(EXTRA_PROJECTIONS)) out[name] = values[key] ?? null
+  for (const [key, name] of Object.entries(EXTRA_PROJECTIONS)) out[name] = projectionValue(key, values[key])
   return out
+}
+
+/**
+ * Questions as the phone renders them: text, options, multi-select and the
+ * plan-review / approval presentation intents.
+ * @param {any} questions
+ */
+export function questionItems(questions) {
+  if (!Array.isArray(questions)) return []
+  return questions.filter(item => item !== null && typeof item === 'object' && typeof item.id === 'string').map(item => ({
+    id: item.id,
+    question: String(item.question ?? ''),
+    ...(typeof item.detail === 'string' ? { detail: clip(item.detail, 20_000).text } : {}),
+    ...(typeof item.header === 'string' ? { header: item.header } : {}),
+    options: Array.isArray(item.options)
+      ? item.options.filter(option => typeof option?.label === 'string').map(option => ({
+        label: option.label,
+        ...(typeof option.description === 'string' ? { description: option.description } : {}),
+      }))
+      : [],
+    multiSelect: item.multiSelect === true,
+    ...(item.intent !== null && typeof item.intent === 'object' && typeof item.intent.kind === 'string'
+      ? { intent: { ...item.intent, ...(item.intent.callId === undefined ? {} : { callId: String(item.intent.callId) }) } }
+      : {}),
+  }))
+}
+
+/**
+ * Normalise a phone answer into DSH's batch: one entry per asked question, in
+ * question order; an unanswered question is sent as skipped.
+ * @param {any} answers
+ * @param {ReadonlyArray<{ id: string, options?: ReadonlyArray<{ label: string }>, multiSelect?: boolean }>} questions
+ */
+export function answerItems(answers, questions) {
+  const byId = new Map()
+  for (const answer of Array.isArray(answers) ? answers : []) {
+    if (typeof answer?.id === 'string' && !byId.has(answer.id)) byId.set(answer.id, answer)
+  }
+  return questions.map((question) => {
+    const answer = byId.get(question.id)
+    const labels = new Set((question.options ?? []).map(option => option.label))
+    let selected = Array.isArray(answer?.selected) ? answer.selected.filter(label => typeof label === 'string' && labels.has(label)) : []
+    if (question.multiSelect !== true) selected = selected.slice(0, 1)
+    const custom = typeof answer?.custom === 'string' && answer.custom.trim().length > 0 ? answer.custom.trim() : undefined
+    // A single-select custom answer replaces the choice, as in the desktop form.
+    if (custom !== undefined && question.multiSelect !== true) selected = []
+    return { id: question.id, selected, ...(custom === undefined ? {} : { custom }) }
+  })
 }
 
 /** Session address for follow/history: a direct subagent child when `parentId` is given. */

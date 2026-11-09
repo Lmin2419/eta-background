@@ -3,10 +3,13 @@
 import { createServer } from 'node:http'
 import { timingSafeEqual } from 'node:crypto'
 import { acceptUpgrade, rejectUpgrade } from './ws.js'
-import { PROTOCOL_VERSION } from './bridge.js'
+import { PROTOCOL_VERSION, RUNTIME } from './bridge.js'
 
-const HEARTBEAT_MS = 15_000
-const IDLE_TIMEOUT_MS = 45_000
+// Each connection pings at its own interval (15 s by default; a phone in the
+// background asks for a longer one) and is dropped after three silent intervals.
+const DEFAULT_HEARTBEAT_MS = 15_000
+const TICK_MS = 5_000
+const MISSED_BEATS = 3
 
 /**
  * @param {string} presented
@@ -34,7 +37,7 @@ export function startServer({ bridge, token, host, port, logger }) {
     const url = new URL(req.url ?? '/', 'http://bridge')
     if (req.method === 'GET' && url.pathname === '/v1/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' })
-      res.end(JSON.stringify({ ok: true, protocol: PROTOCOL_VERSION, version: bridge.host.version }))
+      res.end(JSON.stringify({ ok: true, protocol: PROTOCOL_VERSION, version: bridge.host.version, runtime: RUNTIME }))
       return
     }
     res.writeHead(404, { 'content-type': 'text/plain' })
@@ -62,10 +65,15 @@ export function startServer({ bridge, token, host, port, logger }) {
   const heartbeat = setInterval(() => {
     const now = Date.now()
     for (const conn of connections) {
-      if (now - conn.lastSeen > IDLE_TIMEOUT_MS) conn.close(1001, 'heartbeat timeout')
-      else conn.ping()
+      const interval = conn.heartbeatMs ?? DEFAULT_HEARTBEAT_MS
+      if (now - conn.lastSeen > interval * MISSED_BEATS) {
+        conn.close(1001, 'heartbeat timeout')
+      } else if (now - (conn.lastPing ?? 0) >= interval - TICK_MS / 2) {
+        conn.lastPing = now
+        conn.ping()
+      }
     }
-  }, HEARTBEAT_MS)
+  }, TICK_MS)
   heartbeat.unref?.()
 
   return new Promise((resolve, reject) => {

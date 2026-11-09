@@ -43,6 +43,9 @@ class DesktopScreensRenderTest {
             DesktopSessionRow("s1", "修复登录页的空指针", now - 60_000, running = true, blank = false, live = true, cwd = "/repo/web", parentId = null, subagent = false, workspaceId = "w1", pinned = false),
             DesktopSessionRow("s2", "整理 CI 缓存", now - 3_600_000, running = false, blank = false, live = false, cwd = "/repo/web", parentId = null, subagent = false, workspaceId = "w1", pinned = true),
             DesktopSessionRow("s3", null, now - 86_400_000, running = false, blank = true, live = false, cwd = "/tmp", parentId = null, subagent = false, workspaceId = null, pinned = false),
+            DesktopSessionRow("s4", "生成周报", now - 7_200_000, running = false, blank = false, live = false, cwd = "/repo/docs", parentId = null, subagent = false, workspaceId = null, pinned = false),
+            DesktopSessionRow("s5", "迁移旧数据库", now - 172_800_000, running = false, blank = false, live = false, cwd = "/repo/web", parentId = null, subagent = false, workspaceId = "w1", pinned = false, archived = true),
+            DesktopSessionRow("s6", "设计新首页", now - 1_800_000, running = false, blank = false, live = false, cwd = "/repo/web", parentId = null, subagent = false, workspaceId = "w1", pinned = false),
         ),
         workspaces = listOf(DesktopWorkspace("w1", "web", "/repo/web")),
         loaded = true,
@@ -83,15 +86,25 @@ class DesktopScreensRenderTest {
             .addEcho(DesktopEcho("r9", "再补一个单测", queued = true))
     }
 
-    private fun renderSessions(name: String, dark: Boolean) {
+    private val question = io.github.mangi.eta.agent.remote.DesktopBridgeProtocol.parseQuestion(Json.parseToJsonElement(
+        """{"id":"q1","sessionId":"s4","callId":"call","timed":false,"questions":[
+          {"id":"fmt","question":"周报用什么格式？","options":[{"label":"Markdown","description":"直接贴进飞书"},{"label":"PDF"}],"multiSelect":false},
+          {"id":"parts","question":"要包含哪些部分？","options":[{"label":"进度"},{"label":"风险"},{"label":"下周计划"}],"multiSelect":true}]}""",
+    ).jsonObject)!!
+
+    private fun renderSessions(name: String, dark: Boolean, query: String = "") {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(controller.get(), dark = dark) {
             DesktopSessionsContent(
                 configured = true,
-                connection = DesktopBridgeClient.State.Connected("my-mac", "0.1.0", 38),
+                connection = DesktopBridgeClient.State.Connected("my-mac", "0.3.0", 38),
                 sessions = sessions,
                 approvals = listOf(DesktopApproval("p1", "s1", "bash", "c1", "允许本次操作使用 danger-full-access 权限", 0)),
+                questions = listOf(question),
+                unread = setOf("s6"),
                 creating = false,
+                query = query,
+                contentHits = if (query.isEmpty()) emptyMap() else mapOf("s5" to "…把旧数据库的用户表迁移到…"),
                 onBack = {},
                 onOpenSession = {},
                 onOpenSettings = {},
@@ -102,7 +115,15 @@ class DesktopScreensRenderTest {
         try {
             panel.advance(30)
             val labels = panel.nodes().mapNotNull { it.config.getOrNull(SemanticsProperties.Text)?.joinToString() }
-            assertTrue(labels.toString(), labels.any { "修复登录页的空指针" in it })
+            if (query.isEmpty()) {
+                assertTrue(labels.toString(), labels.any { "修复登录页的空指针" in it })
+                // 桌面预建的空白「新对话」不显示；归档会话收进底部的「已归档」。
+                assertTrue(labels.toString(), labels.none { "迁移旧数据库" in it })
+                assertTrue(labels.toString(), labels.any { "已归档" in it || "Archived" in it })
+            } else {
+                assertTrue(labels.toString(), labels.any { "迁移旧数据库" in it })
+                assertTrue(labels.toString(), labels.none { "修复登录页的空指针" in it })
+            }
             panel.capture(name)
         } finally {
             panel.close()
@@ -221,7 +242,40 @@ class DesktopScreensRenderTest {
         ), onDismiss = {}, onOpen = {})
     }
 
+    @Test fun linkSettingsLight() {
+        val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
+        val panel = Stage3TestPanel(controller.get()) {
+            io.github.mangi.eta.ui.components.MiuixScaffoldPage(title = "电脑", onBack = {}) {
+                desktopLinkSections(io.github.mangi.eta.agent.remote.DesktopLinkPrefs())
+            }
+        }
+        try {
+            panel.advance(30)
+            val labels = panel.nodes().mapNotNull { it.config.getOrNull(SemanticsProperties.Text)?.joinToString() }
+            assertTrue(labels.toString(), labels.any { "流体云" in it || "fluid" in it })
+            panel.capture("desktop-link-settings-light")
+        } finally {
+            panel.close()
+            controller.pause().stop().destroy()
+        }
+    }
+
     @Test fun sessionsLight() = renderSessions("desktop-sessions-light", dark = false)
+
+    @Test fun sessionsSearchLight() = renderSessions("desktop-sessions-search-light", dark = false, query = "数据库")
+
+    @Test fun questionSheetLight() = renderSheet("desktop-question-sheet-light") { show ->
+        DesktopQuestionSheet(if (show) DesktopAsk("q:q1", "s4", question.items, questionId = "q1") else null, onDismiss = {})
+    }
+
+    @Test fun planReviewSheetLight() {
+        val plan = io.github.mangi.eta.agent.remote.DesktopBridgeProtocol.parseQuestionItems(Json.parseToJsonElement(
+            """[{"id":"plan","question":"批准这个计划吗？","detail":"## 计划\n1. 给 `validate()` 加判空\n2. 补充登录表单单测\n3. 跑一遍回归","options":[{"label":"批准"},{"label":"修改"}],"intent":{"kind":"plan-review","approve":"批准"}}]""",
+        ))
+        renderSheet("desktop-plan-sheet-light") { show ->
+            DesktopQuestionSheet(if (show) DesktopAsk("q:p", "s1", plan, questionId = "p") else null, onDismiss = {})
+        }
+    }
 
     @Test fun sessionsDark() = renderSessions("desktop-sessions-dark", dark = true)
 

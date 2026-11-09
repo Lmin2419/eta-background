@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.media.AgentImageCodec
 import io.github.mangi.eta.agent.remote.DesktopBridge
+import io.github.mangi.eta.agent.remote.DesktopLinkSettings
 import io.github.mangi.eta.agent.remote.DesktopBridgeClient
 import io.github.mangi.eta.agent.remote.DesktopBridgeException
 import io.github.mangi.eta.agent.remote.DesktopImage
@@ -85,7 +87,25 @@ internal fun DesktopChatScreen(
     val catalog by DesktopBridge.catalog.collectAsState()
     val connection by DesktopBridge.client.state.collectAsState()
     val approvals by DesktopBridge.approvals.collectAsState()
+    val liveQuestions by DesktopBridge.questions.collectAsState()
+    val linkPrefs by DesktopLinkSettings.state.collectAsState()
     val scope = rememberCoroutineScope()
+    // 正在等待的提问优先；前台等待已结束的限时提问也能在这里补答。
+    val asks = remember(liveQuestions, state.pendingQuestions, sessionId) {
+        val live = liveQuestions.filter { it.sessionId == sessionId }
+            .map { DesktopAsk("q:${it.id}", sessionId, it.items, questionId = it.id, callId = it.callId) }
+        val liveCalls = live.mapNotNullTo(HashSet()) { it.callId }
+        val later = state.pendingQuestions.filter { it.continued && it.callId !in liveCalls }
+            .map { DesktopAsk("c:${it.callId}", sessionId, it.items, callId = it.callId) }
+        live + later
+    }
+    var openAsk by remember(sessionId) { mutableStateOf<String?>(null) }
+    var dismissedAsks by remember(sessionId) { mutableStateOf(emptySet<String>()) }
+    // 新的提问到达时自动弹出一次；关掉后用顶部的提示条重新打开。
+    LaunchedEffect(asks) {
+        if (openAsk == null) asks.firstOrNull { it.key !in dismissedAsks && it.questionId != null }?.let { openAsk = it.key }
+        if (openAsk != null && asks.none { it.key == openAsk }) openAsk = null
+    }
 
     val labels = rememberDesktopLabels()
     val messages = remember(state, labels) { DesktopChatProjector.messages(state, labels) }
@@ -197,6 +217,9 @@ internal fun DesktopChatScreen(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
             if (state.loaded) DesktopStatsLine(state, runningForMs) { showSettings = true }
+            if (asks.isNotEmpty()) {
+                DesktopAskBanner(asks.size, plan = asks.first().isPlanReview) { openAsk = asks.first().key }
+            }
             if (connection !is DesktopBridgeClient.State.Connected) {
                 DesktopConnectionBanner(connection, configured = true, onRetry = DesktopBridge::retry)
                 if (state.loaded) {
@@ -292,6 +315,13 @@ internal fun DesktopChatScreen(
         }
     }
     DesktopApprovalHost(approvals, sessionId)
+    DesktopQuestionSheet(
+        ask = asks.firstOrNull { it.key == openAsk },
+        onDismiss = {
+            openAsk?.let { dismissedAsks = dismissedAsks + it }
+            openAsk = null
+        },
+    )
     DesktopSessionSheet(
         show = showSettings,
         state = state,
@@ -300,6 +330,8 @@ internal fun DesktopChatScreen(
         effort = efforts.second,
         allowModelChange = !isChild,
         busy = state.running,
+        remindOn = if (isChild) null else linkPrefs.reminds(sessionId),
+        onRemind = { on -> DesktopLinkSettings.setSessionReminders(sessionId, on) },
         onDismiss = { showSettings = false },
         onModel = { id ->
             showSettings = false

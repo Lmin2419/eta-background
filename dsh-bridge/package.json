@@ -1,6 +1,6 @@
 {
   "name": "dsh-bridge",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "DeepSeek Harness plugin that mirrors desktop Sessions to the 胖小胖 Android app over one WebSocket.",
   "license": "MIT",
   "type": "module",

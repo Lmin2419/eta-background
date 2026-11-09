@@ -40,7 +40,7 @@ internal class DesktopBridgeException(val code: String, message: String) : Excep
  *
  * - 所有请求复用这一条连接，避免每次操作重新握手 TLS；
  * - 断线后指数退避重连（0.3s 起，最长 8s），网络切换时可由 [reconnectNow] 立刻重连；
- * - 15 秒一次 WebSocket ping，死链在 30 秒内被发现；
+ * - 应用层心跳：前台 15 秒一次，后台放宽到 60 秒（[setHeartbeat]），一次心跳 10 秒无回应即判定死链重连；
  * - 推送按到达顺序发到 [pushes]，每次握手成功后在 [connections] 发出 `hello` 结果。
  */
 internal class DesktopBridgeClient(
@@ -58,7 +58,6 @@ internal class DesktopBridgeClient(
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.MILLISECONDS)
         .writeTimeout(15, TimeUnit.SECONDS)
-        .pingInterval(15, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
         .build()
 
@@ -78,6 +77,38 @@ internal class DesktopBridgeClient(
     private val wake = Channel<Unit>(Channel.CONFLATED)
     private val pending = ConcurrentHashMap<String, CompletableDeferred<JsonObject>>()
     private val ids = AtomicLong()
+    @Volatile private var heartbeatMs = FOREGROUND_HEARTBEAT_MS
+    private var heartbeatJob: Job? = null
+
+    /** 调整心跳间隔（同时告诉插件按同样的节奏判活）；后台时调大以省电。 */
+    fun setHeartbeat(intervalMs: Long) {
+        if (heartbeatMs == intervalMs) return
+        heartbeatMs = intervalMs
+        val ws = socket?.takeIf { ready } ?: return
+        scope.launch { announceHeartbeat(ws) }
+    }
+
+    private suspend fun announceHeartbeat(ws: WebSocket) {
+        // 旧插件不认识这个操作，忽略即可：它仍按 15 秒 ping，手机回 pong。
+        runCatching { request(ws, "client.heartbeat", mapOf("intervalMs" to JsonPrimitive(heartbeatMs)), HEARTBEAT_TIMEOUT_MS) }
+    }
+
+    private fun startHeartbeat(ws: WebSocket) {
+        heartbeatJob?.cancel()
+        heartbeatJob = scope.launch {
+            announceHeartbeat(ws)
+            while (isActive && socket === ws && ready) {
+                delay(heartbeatMs)
+                if (socket !== ws || !ready) break
+                val alive = runCatching { request(ws, "ping", emptyMap(), HEARTBEAT_TIMEOUT_MS) }.isSuccess
+                if (!alive && socket === ws) {
+                    closeSocket(4002, "heartbeat timeout")
+                    ws.cancel()
+                    break
+                }
+            }
+        }
+    }
 
     val isConnected: Boolean get() = ready && socket != null
 
@@ -200,6 +231,7 @@ internal class DesktopBridgeClient(
             }
             ready = true
             _state.value = State.Connected(hello.string("host").orEmpty(), hello.string("version").orEmpty(), latency)
+            startHeartbeat(webSocket)
             _connections.emit(hello)
         } catch (error: Exception) {
             webSocket.cancel()
@@ -269,5 +301,7 @@ internal class DesktopBridgeClient(
         const val CALL_TIMEOUT_MS = 20_000L
         const val HANDSHAKE_TIMEOUT_MS = 10_000L
         const val PUSH_BUFFER = 8_192
+        const val HEARTBEAT_TIMEOUT_MS = 10_000L
+        const val FOREGROUND_HEARTBEAT_MS = 15_000L
     }
 }

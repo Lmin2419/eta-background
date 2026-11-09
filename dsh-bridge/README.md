@@ -12,41 +12,60 @@
 
 协议细节见 [PROTOCOL.md](PROTOCOL.md)。
 
-## 1. 电脑：安装插件
+## 1. 电脑：安装插件（DSH 桌面版）
 
-需要 Node.js 22 或更高版本，以及已经能正常使用的 DSH（`npx @deepseek-ai/dsh web` 或 `dsh web`）。
+插件运行在 DeepSeek Harness 桌面版自己的进程里，读到的会话、工作区、归档与桌面侧栏完全一致。桌面版的插件只能在应用**完全退出**时修改（从任务栏托盘退出，关窗口不算）。
+
+**Windows**（在仓库目录执行）：
+
+```powershell
+git clone https://github.com/Lmin2419/eta-background.git
+powershell -ExecutionPolicy Bypass -File eta-background\deploy\desktop\install-plugin.ps1 -Start
+```
+
+脚本会：确认桌面版 profile（`~/.dsh/profiles/desktop`）已初始化；找到桌面版自带的 `dsh` 命令（`…\resources\runtime\cli\bin\dsh.cmd`）；检查桌面版已退出、7788 端口没有被旧的 `dsh web` 占用；以链接方式安装插件；`-Start` 时启动桌面版并等到健康检查通过。桌面版或旧进程仍在运行时加 `-Force` 直接结束它们。
+
+**macOS**：`bash eta-background/deploy/desktop/install-plugin.sh`
+
+也可以手动安装：桌面版 → 侧栏「插件」→「安装第三方插件」→ 填 `dsh-bridge` 目录的绝对路径。
+
+验证：`curl http://127.0.0.1:7788/v1/health`（Windows PowerShell 里写 `curl.exe`）应返回 `{"ok":true,"protocol":1,"version":"0.3.0","runtime":"desktop"}`。`runtime` 为 `node` 说明回应来自另外启动的 `dsh` 进程，而不是桌面版。
+
+### 总开关
+
+桌面版侧栏「插件」→ dsh-bridge 的开关就是电脑端的总开关：关掉后插件不再监听，手机连不上；打开后恢复。手机端另有自己的开关（设置 → 电脑）。
+
+### 更新插件
+
+插件以链接方式安装，更新只需拉取代码后重启桌面版：
 
 ```sh
-git clone https://github.com/Lmin2419/eta-background.git
+cd eta-background && git pull
+# 从托盘完全退出 DeepSeek Harness，再打开
+curl http://127.0.0.1:7788/v1/health   # version 应为新版本
+```
+
+### 只用网页版（dsh web）时
+
+```sh
 dsh plugin --profile web add ./eta-background/dsh-bridge
 dsh web
 ```
 
-插件没有任何第三方依赖，`add` 时 pnpm 只会把这个目录链接进 web profile。之后每次运行 `dsh web`，插件都会随之启动。
+不要同时运行装了插件的 `dsh web` 和桌面版：两边会抢 7788 端口，而且是两个独立进程，手机看到的会话会不全。
+
+### 其他说明
 
 - token 保存在 `~/.dsh-bridge/token`（文件权限 600）。使用部署脚本时，脚本会写入服务器生成的 token；不使用脚本时，插件首次启动会自动生成一个随机 token。
 - 也可以用环境变量 `DSH_BRIDGE_TOKEN` 指定 token，或在 profile 的 `cordis.patch.yml` 里改监听端口：
 
 ```yaml
 - id: dsh-bridge
+  name: dsh-bridge
   config:
     host: 127.0.0.1
     port: 7788
 ```
-
-验证插件是否已启动：`curl http://127.0.0.1:7788/v1/health`，应返回 `{"ok":true,"protocol":1,"version":"0.2.0"}`，`version` 是正在运行的插件版本。
-
-### 更新插件
-
-插件是以链接方式装进 profile 的，更新源码目录后重启 DSH 即可：
-
-```sh
-cd eta-background && git pull
-# 重启 dsh web（或 DSH 桌面版）
-curl http://127.0.0.1:7788/v1/health   # version 应为新版本
-```
-
-> 只在电脑上用 DSH 桌面版（Desktop 应用）的话，需要在桌面版使用的 profile 中执行同样的 `dsh plugin --profile <名称> add`。
 
 ## 2. 服务器、电脑 frpc 与手机配对
 
@@ -83,7 +102,7 @@ frps 和 frpc 的配置与脚本生成的相同。手机端在「手动填写」
 
 ```sh
 cd dsh-bridge
-npm test        # node --test，24 个用例
+npm test        # node --test，31 个用例
 ```
 
 `lib/translate.js` 把 DSH 会话事件转换成手机端使用的条目；`lib/bridge.js` 负责连接、订阅与审批；`lib/ws.js` 是一个最小的 RFC 6455 服务端实现。

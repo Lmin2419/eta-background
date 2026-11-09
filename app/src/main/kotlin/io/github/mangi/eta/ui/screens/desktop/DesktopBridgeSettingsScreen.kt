@@ -16,6 +16,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.remote.DesktopBridge
 import io.github.mangi.eta.agent.remote.DesktopBridgeConfig
 import io.github.mangi.eta.agent.remote.DesktopBridgeDefaults
+import io.github.mangi.eta.agent.remote.DesktopLinkSettings
 import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaButtonKind
 import io.github.mangi.eta.ui.components.EtaIconButton
@@ -51,6 +53,8 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
         DesktopBridge.acquire(context)
         onDispose { DesktopBridge.release() }
     }
+    remember { DesktopLinkSettings.init(context) }
+    val linkPrefs by DesktopLinkSettings.state.collectAsState()
     val saved by DesktopBridge.config.collectAsState()
     val connection by DesktopBridge.client.state.collectAsState()
     var pairing by rememberSaveable { mutableStateOf("") }
@@ -95,6 +99,7 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
                 )
             }
         }
+        if (saved?.isComplete == true) desktopLinkSections(linkPrefs)
         item(key = "pairing") {
             EtaPreferenceGroupTitle(stringResource(R.string.desktop_pairing_code))
             EtaPreferenceGroup {
