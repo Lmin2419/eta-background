@@ -1,0 +1,89 @@
+name: Harmony Check
+
+# 只检查鸿蒙工程 harmony-agent/。不修改、也不替代 Android 的 PR Check。
+on:
+  pull_request:
+    # 也覆盖叠加在未合并鸿蒙分支上的 PR（例如 E01 的 base 为 harmony/m0-0.9.1）。
+    branches:
+      - main
+      - 'harmony/**'
+    paths:
+      - 'harmony-agent/**'
+      - '.github/workflows/harmony-check.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'harmony-agent/**'
+      - '.github/workflows/harmony-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: harmony-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Harmony / TypeScript / Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: harmony-agent
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      # 使用运行器自带的 Node.js；ArkTS（.ets）和 HAP 需要鸿蒙 SDK，不在此处编译。
+      - name: 安装依赖
+        run: |
+          node --version
+          npm ci --no-audit --no-fund
+
+      - name: 类型检查
+        run: npm run check
+
+      - name: 单元测试
+        run: npm test
+
+  ets:
+    name: Harmony / ArkTS (.ets) and resources check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: harmony-agent
+    env:
+      OHOS_SDK_DIR: ${{ github.workspace }}/.ohos-sdk-26
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      # 公开的 OpenHarmony 7.0 SDK（API 26），只缓存 ArkTS 部分；首次约需下载 3.4 GB。
+      - name: 缓存 OpenHarmony SDK
+        id: sdk-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .ohos-sdk-26
+          key: ohos-sdk-ets-26.0.0.38-${{ hashFiles('harmony-agent/scripts/fetch-ohos-sdk.sh') }}
+
+      - name: 下载并校验 SDK
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        run: bash scripts/fetch-ohos-sdk.sh "$OHOS_SDK_DIR"
+
+      # 用 SDK 自带的官方检查器做类型和 ArkTS 规则检查；不生成 HAP。
+      - name: ArkTS 检查
+        run: OHOS_SDK_ETS="$OHOS_SDK_DIR/ets" node scripts/check-ets.cjs
+
+      # 用 SDK 的 restool 打包资源，拦截资源命名、格式、重复声明和未定义引用。
+      - name: 资源打包检查
+        run: OHOS_SDK_ETS="$OHOS_SDK_DIR/ets" node scripts/check-resources.cjs

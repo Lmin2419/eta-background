@@ -1,12 +1,14 @@
 {
   "name": "harmony-agent-core",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "tsx --test tests/*.test.ts",
     "test:native": "bash scripts/test-native.sh",
     "check": "tsc --noEmit",
+    "check:ets": "node scripts/check-ets.cjs",
+    "check:res": "node scripts/check-resources.cjs",
     "build:harmony": "bash scripts/build.sh",
     "test:foundation": "tsx --test tests/foundation.test.ts",
     "build:preview": "python3 scripts/build-preview.py",

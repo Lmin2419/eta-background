@@ -1,6 +1,6 @@
 # 开发接手说明
 
-先读 [当前进度](PROJECT_STATUS.md)，再读 [框架结构](FOUNDATION_0.9.md)。项目处于 0.9 交互框架预览阶段；不要从旧功能表推断当前可用入口。
+先读 [当前进度](PROJECT_STATUS.md)，再读 [框架结构](FOUNDATION_0.9.md)；后续任务见 [ROADMAP](ROADMAP.md)，编码代理规则见 [AGENTS.md](../AGENTS.md)，Windows 真机测试流程见 [LOCAL_DEVELOPMENT](LOCAL_DEVELOPMENT.md)。项目处于 0.9 交互框架预览阶段；不要从旧功能表推断当前可用入口。
 
 ## 仓库目录与入口
 
@@ -28,6 +28,7 @@ cd harmony-agent
 npm ci
 npm run check
 npm test
+bash scripts/fetch-ohos-sdk.sh && OHOS_SDK_ETS=~/.cache/ohos-sdk-26/ets npm run check:ets
 export HARMONY_CLT_HOME=/absolute/path/to/command-line-tools
 npm run build:harmony
 npm run build:preview
@@ -35,7 +36,7 @@ npm run package:framework
 npm run verify:package
 ```
 
-`build:harmony` 构建当前源码和原生库；导出脚本要求先有当前版本 HAP。不要拿旧的同版本 HAP 配新源码来导出。`build-profile.json5` 在仓库中不含个人签名，构建产物默认未签名。
+0.9.1 起 `entry/build-profile.json5` 不再编译 C++，`build:harmony` 只构建 ArkTS；原生 HDC 库在 ROADMAP T10 以预编译文件方式接回。导出脚本要求先有当前版本 HAP。不要拿旧的同版本 HAP 配新源码来导出。`build-profile.json5` 在仓库中不含个人签名，构建产物默认未签名。
 
 生成的 `*-source.zip` 是源码工程；`*-deveco.zip` 含预编译 ARM64 库，适合 Windows DevEco 使用；`*-upgrade.zip` 只覆盖应用源码和资源，保留用户现有构建和签名配置。生成物保存在被忽略的 `dist/`。当前仓库代码比此前发送的 0.9.0 ZIP 更新；后续发布应使用新补丁版本，避免同名产物混淆。
 

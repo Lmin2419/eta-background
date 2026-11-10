@@ -1,9 +1,12 @@
-# 随身助手 · 0.9 交互框架预览
+# 随身助手 · 0.9 交互框架预览（源码 0.9.1）
 
 这次按用户要求先保存旧源码，再重建页面与交互框架。参考自有 `Lmin2419/eta-background` 的页面组织，使用原生 ArkUI 实现。**当前是框架预览版，不是上线版，也不代表已经完成 Eta 的功能对齐。**
 
 ## 仓库进度与接手入口
 
+- [推进方案与任务卡（ROADMAP）](docs/ROADMAP.md)；编码代理规则见 [AGENTS.md](AGENTS.md)
+- [本地开发与真机测试：Windows + DevEco 直接打开仓库](docs/LOCAL_DEVELOPMENT.md)
+- [真机验收记录模板](docs/device-runs/TEMPLATE.md)
 - [当前进度、实现范围、已验证与未验证事项](docs/PROJECT_STATUS.md)
 - [开发接手说明与构建入口](docs/DEVELOPMENT_HANDOFF.md)
 - [15 张原生 UI 截图及 Eta 首页对照](docs/verification/2026-10-30/README.md)
@@ -23,11 +26,13 @@
 
 ## 安装与升级
 
+**0.9.1 起推荐直接用仓库源码**：DevEco 打开 `harmony-agent/`，复制旧工程的签名配置后 Run，不再需要 ZIP，也不编译 C++。步骤见 [LOCAL_DEVELOPMENT](docs/LOCAL_DEVELOPMENT.md)。以下是 0.9.0 ZIP 的历史说明。
+
 已安装旧版：使用 `harmony-agent-0.9.0-upgrade.zip`，合并覆盖原工程的 `AppScope` 和 `entry` 后，同步项目、清理构建，再点 Run。升级包**不含两个 build-profile.json5**，保留你已经配置好的签名和原生构建方式。保持原包名和同一签名，不要先卸载应用。
 
 完整工程：使用 `harmony-agent-0.9.0-deveco.zip`。DevEco 安装 API 26 SDK，打开工程，给 `com.example.harmonyagent` 自动生成名称为 `default` 的调试签名，然后 Run。此包自带旧原生代码的 ARM64 库，无需在 Windows 编译 OpenSSL。若签名名称不同，需要同步修改 `app.products[].signingConfig`。运行日志应安装 `signed.hap`，出现 `unsigned.hap` / `no signature file` 时先检查这个关联。
 
-应用版本代码为 90000。编译 SDK 26，工程最低 API 20；模型网络适配要求实际运行系统 API ≥ 23。本包不包含个人证书、真实 API Key 或已签名 HAP。
+0.9.0 ZIP 的应用版本代码为 90000；当前源码为 0.9.1 / 90001。编译 SDK 26，工程最低 API 20；模型网络适配要求实际运行系统 API ≥ 23。本包不包含个人证书、真实 API Key 或已签名 HAP。
 
 详细步骤：[0.9 升级与核验](docs/UPGRADE_0.9.md)。首次启动仍读取同一应用沙箱的旧对话和模型配置，旧手机执行任务不会自动恢复执行。
 

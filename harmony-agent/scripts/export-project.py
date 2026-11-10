@@ -31,7 +31,6 @@ with zipfile.ZipFile(hap) as z:
     module = json.loads(z.read('module.json'))
     assert module['app']['versionName'] == version, 'HAP version does not match source'
     libraries = {n: z.read(n) for n in z.namelist() if n.startswith('libs/arm64-v8a/') and n.endswith('.so')}
-    assert 'libs/arm64-v8a/libagent_hdc.so' in libraries
 
 for suffix in ['source', 'deveco']:
     destination = dist / f'{prefix}-{suffix}.zip'

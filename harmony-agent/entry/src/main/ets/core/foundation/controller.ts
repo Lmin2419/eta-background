@@ -5,6 +5,7 @@ import { HttpTransport } from '../model';
 import { FoundationChatRuntime } from './chatRuntime';
 import { ProviderEditor, ProviderEditorState } from './providerEditor';
 import { ShellNavigation, Screen, Sheet } from './navigation';
+import { DiagnosticArea, DiagnosticEnvironment, DiagnosticFact, DiagnosticLog, diagnosticReport, emptyEnvironment, environmentFacts, formatEvent } from '../diagnostics';
 
 export interface MessageRow { id: string; request: string; reply: string; reasoning: string; model: string; status: string; notice: string; active: boolean }
 export interface ModelChoice { key: string; profileId: string; provider: string; model: string }
@@ -13,17 +14,21 @@ export interface ChatView {
   model: string; provider: string; profileId: string; active: boolean; phase: string; error: string;
   followBottom: boolean; scroll: number;
 }
+export interface DiagnosticView { facts: DiagnosticFact[]; lines: string[]; total: number }
 export interface ShellState {
   ready: boolean; busy: boolean; error: string; screen: Screen; drawer: boolean; sheet: Sheet;
   conversations: ConversationSummary[]; search: string; providers: ModelProfile[]; providerSearch: string;
   chat: ChatView; editor: ProviderEditorState; choices: ModelChoice[]; modelQuery: string;
+  appVersion: string; diagnostics: DiagnosticView;
 }
 export interface FoundationDependencies {
   chats: ConversationRepository; profiles: ProfileRepository; drafts: DraftRepository;
   load(): Promise<void>; transport(): HttpTransport; uuid(): string;
+  /** Optional so tests and the preview can run without a persistent log. */
+  diagnostics?: DiagnosticLog; environment?: () => Promise<DiagnosticEnvironment>;
 }
 export function emptyShellState(): ShellState {
-  return { ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '',
+  return { ready: false, busy: false, error: '', screen: 'chat', drawer: false, sheet: 'none', conversations: [], search: '', providers: [], providerSearch: '', choices: [], modelQuery: '', appVersion: '', diagnostics: { facts: [], lines: [], total: 0 },
     chat: { id: '', title: '新对话', input: '', inputVersion: 0, rows: [], model: '', provider: '', profileId: '', active: false, phase: '', error: '', followBottom: true, scroll: 0 },
     editor: { draft: { id: '', name: '我的模型', baseUrl: '', apiKey: '', model: '', models: [], rememberKey: false, screenshots: false, allowInsecureHttp: false, streaming: true, protocol: 'chat_completions' }, busy: false, working: '', error: '', message: '', connection: '', catalog: [], selected: [], query: '', tab: 'config' } };
 }
@@ -42,9 +47,10 @@ export class FoundationController {
   private inputVersion = 0;
   private listeners = new Set<() => void>();
   private draftTimer: ReturnType<typeof setTimeout> | undefined;
+  private environment: DiagnosticEnvironment = emptyEnvironment();
   constructor(readonly ports: FoundationDependencies) {
     this.editor = new ProviderEditor(ports.profiles, ports.drafts, () => ports.transport(), () => this.changed());
-    this.runtime = new FoundationChatRuntime(ports.chats, ports.profiles, () => ports.transport(), () => ports.uuid(), () => this.changed());
+    this.runtime = new FoundationChatRuntime(ports.chats, ports.profiles, () => ports.transport(), () => ports.uuid(), () => this.changed(), ports.diagnostics);
   }
   subscribe(listener: () => void): () => void { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; }
   changed(): void { for (const listener of this.listeners) listener(); }
@@ -76,14 +82,15 @@ export class FoundationController {
       providers: this.ports.profiles.document.profiles.filter(p => (p.name + ' ' + p.baseUrl).toLowerCase().includes(this.providerSearch.trim().toLowerCase())), providerSearch: this.providerSearch,
       chat: { id, title: selected?.title || '新对话', input: draft.text, inputVersion: this.inputVersion, rows, model: choice?.model || '', provider: choice?.provider || '', profileId: choice?.profileId || '',
         active: Boolean(activity?.active), phase: activity?.phase || '', error: activity?.error || '', followBottom: draft.followBottom !== false, scroll: draft.scroll },
-      editor: this.editor.snapshot(), choices, modelQuery: this.modelQuery
+      editor: this.editor.snapshot(), choices, modelQuery: this.modelQuery,
+      appVersion: this.environment.appVersion, diagnostics: this.diagnosticView()
     };
   }
   private async action(work: () => Promise<void>): Promise<boolean> {
     if (this.busy) return false;
     this.busy = true; this.error = ''; this.changed();
     try { await work(); return true; }
-    catch (e) { this.error = e instanceof Error ? e.message : '操作未完成'; return false; }
+    catch (e) { this.error = e instanceof Error ? e.message : '操作未完成'; this.log('ui', '操作未完成', this.error); return false; }
     finally { this.busy = false; this.changed(); }
   }
   async initialize(): Promise<void> {
@@ -92,6 +99,7 @@ export class FoundationController {
       if (!this.ports.chats.selectedId) await this.ports.chats.create(this.ports.profiles.document.selectedId, 'chat');
       this.ready = true; this.inputVersion++;
     });
+    await this.refreshEnvironment();
   }
   navigate(screen: Screen): void {
     if (this.busy || this.editor.state.working === '保存' || this.editor.state.working === '删除') return;
@@ -118,7 +126,7 @@ export class FoundationController {
   viewport(id: string, scroll: number, followBottom: boolean): void { if (id) this.ports.drafts.setViewport(id, scroll, followBottom); }
   async flush(): Promise<void> {
     clearTimeout(this.draftTimer);
-    try { await this.ports.drafts.flush(); } catch (e) { this.error = '草稿保存失败：' + (e as Error).message; this.changed(); }
+    try { await this.ports.drafts.flush(); } catch (e) { this.error = '草稿保存失败：' + (e as Error).message; this.log('storage', '草稿保存失败', (e as Error).message); this.changed(); }
   }
   async selectConversation(id: string): Promise<void> {
     await this.action(async () => {
@@ -177,5 +185,31 @@ export class FoundationController {
     this.changed();
   }
   importModels(): void { this.editor.importCatalog(); this.navigation.sheet = 'none'; this.changed(); }
+  /** Lifecycle from EntryAbility. Leaving still stops replies in 0.9.x; the event is recorded for device reports. */
+  foreground(value: boolean): void {
+    this.runtime.setForeground(value);
+    this.log('lifecycle', value ? '回到前台' : '进入后台');
+    if (!value) this.ports.diagnostics?.flush().catch(() => {});
+  }
+  crash(message: string): void {
+    this.ports.diagnostics?.record('app', '未捕获异常', message, 1200);
+    this.ports.diagnostics?.flush().catch(() => {});
+  }
+  log(area: DiagnosticArea, stage: string, detail = ''): void { this.ports.diagnostics?.record(area, stage, detail); }
+  openDiagnostics(): void { this.navigate('diagnostics'); void this.refreshEnvironment(); }
+  diagnosticReport(): string { return diagnosticReport(this.environment, this.ports.diagnostics?.events() || [], Date.now()); }
+  clearDiagnostics(): void { this.ports.diagnostics?.clear(); this.changed(); }
+  private diagnosticView(): DiagnosticView {
+    if (this.navigation.screen !== 'diagnostics') return { facts: [], lines: [], total: 0 };
+    const events = this.ports.diagnostics?.events() || [];
+    return { facts: environmentFacts(this.environment), lines: events.slice(-200).reverse().map(formatEvent), total: events.length };
+  }
+  private async refreshEnvironment(): Promise<void> {
+    if (!this.ports.environment) return;
+    const environment = this.ports.environment;
+    try { this.environment = await environment(); }
+    catch (e) { this.log('app', '读取设备信息失败', e instanceof Error ? e.message : ''); }
+    this.changed();
+  }
   async deleteProvider(): Promise<void> { if (await this.editor.remove()) this.navigation.push('providers'); this.changed(); }
 }
