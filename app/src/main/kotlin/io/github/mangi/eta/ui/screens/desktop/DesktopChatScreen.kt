@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.media.AgentImageCodec
 import io.github.mangi.eta.agent.remote.DesktopBridge
+import io.github.mangi.eta.ui.components.LocalRemoteComposer
+import io.github.mangi.eta.ui.components.RemoteComposer
 import io.github.mangi.eta.agent.remote.DesktopLinkSettings
 import io.github.mangi.eta.agent.remote.DesktopBridgeClient
 import io.github.mangi.eta.agent.remote.DesktopBridgeException
@@ -108,11 +111,15 @@ internal fun DesktopChatScreen(
     }
 
     val labels = rememberDesktopLabels()
-    val messages = remember(state, labels) { DesktopChatProjector.messages(state, labels) }
-    val queued = remember(state) { DesktopChatProjector.queued(state) }
+    // 已写进记录的部分只在记录变化时重算；流式输出每来一小段字，只重算末尾正在生成的部分。
+    val committed = remember(state.items, labels) { DesktopChatProjector.committed(state.items, labels) }
+    val messages = remember(committed, state.echoes, state.live, state.queue, state.handoff) { DesktopChatProjector.merge(committed, state) }
+    val queued = remember(state.queue, state.echoes) { DesktopChatProjector.queued(state) }
+    // 快照到达前先用列表里的标题，不显示成「新对话」。
+    val listTitle = remember(sessionId) { DesktopBridge.sessions.value.rows.firstOrNull { it.id == sessionId }?.title }
     val picker = remember(catalog, state.model) { DesktopChatProjector.modelPicker(catalog, state) }
     val efforts = remember(catalog, state.model) { DesktopChatProjector.reasoningEfforts(catalog, state) }
-    var input by remember(sessionId) { mutableStateOf("") }
+    var input by remember(sessionId) { mutableStateOf(DesktopBridge.draft(sessionId)) }
     var inputSync by remember(sessionId) { mutableIntStateOf(0) }
     var pendingImages by remember(sessionId) { mutableStateOf(emptyList<PendingImageUi>()) }
     val unsupported = stringResource(R.string.desktop_action_unsupported)
@@ -142,30 +149,38 @@ internal fun DesktopChatScreen(
             try {
                 block()
             } catch (error: DesktopBridgeException) {
-                context.toast(resources.getString(R.string.desktop_failed, error.message))
+                context.toast(error.display(resources))
             }
-        }
-    }
-
-    fun submit(text: String, interrupt: Boolean) {
-        if (readOnly) {
-            context.toast(readOnlyText)
-            input = text
-            inputSync++
-            return
-        }
-        val images = pendingImages
-        pendingImages = emptyList()
-        input = ""
-        run {
-            val encoded = withContext(Dispatchers.IO) { images.mapNotNull { encodeImage(context, it) } }
-            DesktopBridge.prompt(sessionId, text, images = encoded, interrupt = interrupt)
         }
     }
 
     fun setInput(text: String) {
         input = text
         inputSync++
+    }
+
+    /** 发送。[steer] 为插队：不停下当前工作，这一步结束就送达；[interrupt] 为先停止再发送。 */
+    fun submit(text: String, interrupt: Boolean = false, steer: Boolean = false) {
+        if (readOnly) {
+            context.toast(readOnlyText)
+            setInput(text)
+            return
+        }
+        val images = pendingImages
+        pendingImages = emptyList()
+        input = ""
+        DesktopBridge.setDraft(sessionId, "")
+        scope.launch {
+            try {
+                val encoded = withContext(Dispatchers.IO) { images.mapNotNull { encodeImage(context, it) } }
+                DesktopBridge.prompt(sessionId, text, images = encoded, interrupt = interrupt, steer = steer)
+            } catch (error: DesktopBridgeException) {
+                // 没发出去（多半是断线）：文字和图片放回输入框，不让用户重打一遍。
+                context.toast(error.display(resources))
+                if (DesktopBridge.draft(sessionId).isEmpty()) setInput(text)
+                if (pendingImages.isEmpty()) pendingImages = images
+            }
+        }
     }
 
     fun openSubagents() {
@@ -175,7 +190,7 @@ internal fun DesktopChatScreen(
             subagentDirectory = try {
                 DesktopBridge.subagentDirectory(sessionId)
             } catch (error: DesktopBridgeException) {
-                context.toast(resources.getString(R.string.desktop_failed, error.message))
+                context.toast(error.display(resources))
                 emptyList()
             }
         }
@@ -185,7 +200,7 @@ internal fun DesktopChatScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             AdaptiveTopAppBar(
-                title = state.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_untitled),
+                title = state.title?.takeIf { it.isNotBlank() } ?: listTitle?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_untitled),
                 compact = true,
                 navigationIcon = { MiuixBackButton(onClick = onBack) },
                 actions = {
@@ -245,6 +260,15 @@ internal fun DesktopChatScreen(
                 }
                 return@Column
             }
+            val remoteComposer = remember(sessionId, isChild) {
+                RemoteComposer(
+                    workingHint = resources.getString(R.string.desktop_working_hint),
+                    steerLabel = resources.getString(R.string.desktop_steer_send),
+                    onSteerSubmit = { text -> submit(text, steer = true) },
+                    onDraftChange = { text -> DesktopBridge.setDraft(sessionId, text) },
+                )
+            }
+            CompositionLocalProvider(LocalRemoteComposer provides remoteComposer) {
             AgentChatBody(
                 messages = messages,
                 modelPickerState = picker,
@@ -270,19 +294,22 @@ internal fun DesktopChatScreen(
                         run { DesktopBridge.selectModel(sessionId, provider, model, null) }
                     }
                 },
-                onSubmit = { text -> submit(text, interrupt = false) },
+                onSubmit = { text -> submit(text) },
                 onInterruptAndSubmit = { text -> submit(text, interrupt = true) },
-                onSteerQueuedMessage = { id ->
-                    if (!id.startsWith("echo-")) run { DesktopBridge.steer(sessionId, id) }
-                },
+                // 排队条上的操作对刚发出、电脑还没回执的消息同样有效，并且立即在界面上体现。
+                onSteerQueuedMessage = { id -> run { DesktopBridge.steer(sessionId, id) } },
                 onRecallQueuedMessage = { id, draft ->
                     val recalled = queued.firstOrNull { it.id == id }?.content.orEmpty()
-                    if (!id.startsWith("echo-")) run { DesktopBridge.queueAction(sessionId, id, JsonPrimitive("remove")) }
-                    setInput(listOf(recalled, draft).filter { it.isNotBlank() }.joinToString("\n"))
+                    scope.launch {
+                        try {
+                            DesktopBridge.removeQueued(sessionId, id)
+                            setInput(listOf(recalled, draft).filter { it.isNotBlank() }.joinToString("\n"))
+                        } catch (error: DesktopBridgeException) {
+                            context.toast(error.display(resources))
+                        }
+                    }
                 },
-                onRemoveQueuedMessage = { id ->
-                    if (!id.startsWith("echo-")) run { DesktopBridge.queueAction(sessionId, id, JsonPrimitive("remove")) }
-                },
+                onRemoveQueuedMessage = { id -> run { DesktopBridge.removeQueued(sessionId, id) } },
                 onStop = { run { DesktopBridge.cancel(sessionId) } },
                 onAttachImage = { uri ->
                     scope.launch {
@@ -312,6 +339,7 @@ internal fun DesktopChatScreen(
                 onLoadEarlierMessages = { scope.launch { DesktopBridge.loadOlder(sessionId) } },
                 modifier = Modifier.weight(1f),
             )
+            }
         }
     }
     DesktopApprovalHost(approvals, sessionId)

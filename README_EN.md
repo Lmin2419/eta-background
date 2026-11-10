@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-09 · `3.3.5` 胖小胖 · versionCode `2026110902`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-10 · `3.3.5` 胖小胖 · versionCode `2026111001`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-Computer sync now installs into the **DSH desktop app**, so the session list matches the desktop: no blank drafts, plus archived sessions, search, and pin/rename/archive. **Settings → Computer** gains a sync switch and a persistent connection. Computer notifications are separate from local tasks: the persistent notification is quiet and low priority by default, and glow, live activity and sound are opt-in. Reminders cover finished tasks, approvals, questions and errors; reply to a finished task straight from the notification, and answer agent questions and plan reviews on the phone. **Reinstall the computer plugin with `deploy/desktop/install-plugin.ps1`.**
+Computer sync now works with DSH 0.2.1 (fixes queue "send now"/"remove" doing nothing, steered messages showing twice, missing older history and the subagent error). Send-and-steer from the composer, a Recent section and collapsible workspace groups in the session list, live sync of new workspaces, sessions, titles and notes, and a Computer entry in the home side pane. **Update the `dsh-bridge` plugin to 0.4.0 on the computer.**
 
-APK: **`Pangxiaopang-3.3.5-2026110902.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026111001.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110902)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111001)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

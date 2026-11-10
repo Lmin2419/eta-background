@@ -58,6 +58,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -117,6 +119,20 @@ private val ThinkingIconSize = 21.dp
 private val InputContainerShape = RoundedCornerShape(28.dp)
 
 /**
+ * 电脑会话对输入器的定制：执行中的占位文字，以及发送时直接插队的入口。
+ * 本机会话不提供，输入器保持原样。
+ */
+internal data class RemoteComposer(
+    val workingHint: String,
+    val steerLabel: String,
+    val onSteerSubmit: (String) -> Unit,
+    /** 输入内容每次变化时回调，用来按会话保存草稿。 */
+    val onDraftChange: (String) -> Unit = {},
+)
+
+internal val LocalRemoteComposer = androidx.compose.runtime.staticCompositionLocalOf<RemoteComposer?> { null }
+
+/**
  * Agent 输入器始终保持同一空间结构，聚焦、输入和执行过程只改变状态，不搬动操作入口。
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -158,6 +174,7 @@ internal fun AgentChatInputBar(
     onCancelMessageEdit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val remoteComposer = LocalRemoteComposer.current
     val keyboard = LocalSoftwareKeyboardController.current
     val hapticFeedback = LocalHapticFeedback.current
     val focusRequester = remember { FocusRequester() }
@@ -170,6 +187,12 @@ internal fun AgentChatInputBar(
         }
     }
     val textFieldState = rememberTextFieldState(initialText = input)
+    if (remoteComposer != null) {
+        val onDraftChange by rememberUpdatedState(remoteComposer.onDraftChange)
+        LaunchedEffect(textFieldState) {
+            snapshotFlow { textFieldState.text.toString() }.collect { onDraftChange(it) }
+        }
+    }
     val speechSettings by remember { SpeechSettingsRepository.settingsFlow() }.collectAsState(initial = null)
     val recognitionEnabled = speechSettings?.recognitionEnabled == true
     val dictation = rememberSpeechInput { recognized ->
@@ -324,6 +347,8 @@ internal fun AgentChatInputBar(
                                 character != null && isStreaming ->
                                     stringResource(R.string.chat_character_typing, character.characterName)
                                 character != null -> stringResource(R.string.chat_character_input_hint, character.characterName)
+                                // 电脑会话：执行的是电脑上的 Agent，不是胖小胖本机。
+                                remoteComposer != null && isStreaming -> remoteComposer.workingHint
                                 isStreaming -> stringResource(R.string.chat_eta_working)
                                 else -> stringResource(R.string.eta_input_placeholder)
                             },
@@ -403,6 +428,24 @@ internal fun AgentChatInputBar(
                             if (!recognitionEnabled) shortcuts.onOpenSpeechSettings()
                             else if (speechState.active) dictation.finish()
                             else { microphoneTapRequest = true; requestMicrophone() }
+                        }
+                        // 电脑会话执行中：主按钮是「加入排队」，旁边这个闪电直接插队，当前这一步结束就送达。
+                        if (remoteComposer != null && action == ComposerAction.Queue) {
+                            EtaIconButton(
+                                onClick = {
+                                    if (canSend && !isCompacting) {
+                                        dictation.cancel()
+                                        val submittedText = textFieldState.text.toString()
+                                        textFieldState.clearText()
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        remoteComposer.onSteerSubmit(submittedText)
+                                    }
+                                },
+                                modifier = Modifier.size(40.dp),
+                            ) {
+                                Icon(Icons.Rounded.Bolt, contentDescription = remoteComposer.steerLabel, tint = EtaTheme.colors.accent, modifier = Modifier.size(22.dp))
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
                         }
                         ComposerActionButton(
                             action = action,

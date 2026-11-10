@@ -1756,9 +1756,6 @@
     <string name="desktop_waiting_banner">%1$d 项等你处理（审批或回答）</string>
     <string name="desktop_search_hint">搜索标题和聊天内容</string>
     <string name="desktop_search_empty">没有匹配的会话</string>
-    <string name="desktop_archived">已归档（%1$d）</string>
-    <string name="desktop_collapse">收起</string>
-    <string name="desktop_expand">展开</string>
     <string name="desktop_needs_you">等你处理</string>
     <string name="desktop_done_unread">已完成</string>
     <string name="desktop_session_actions">会话操作</string>
@@ -1785,4 +1782,25 @@
     <string name="desktop_ask_banner_plan">有计划等你审阅</string>
     <string name="desktop_ask_open">去回答</string>
     <string name="desktop_pinned">已置顶</string>
+    <string name="desktop_refresh">刷新</string>
+    <string name="desktop_recent">最近任务</string>
+    <string name="desktop_archived_title">已归档</string>
+    <string name="desktop_group_expanded">已展开</string>
+    <string name="desktop_group_collapsed">已收起</string>
+    <string name="desktop_group_running">%1$d 个运行中</string>
+    <string name="desktop_group_attention">%1$d 个等你处理</string>
+    <string name="desktop_group_empty">还没有会话，点右边的 + 在这里新建。</string>
+    <string name="desktop_new_session_in">在 %1$s 里新建会话</string>
+    <string name="desktop_working_hint">电脑正在执行…</string>
+    <string name="desktop_steer_send">立即插队发送</string>
+    <string name="desktop_error_not_queued">这条消息已经送达，不在队列里了</string>
+    <string name="desktop_error_busy">会话还在运行，先停止再操作</string>
+    <string name="desktop_error_not_live">这个会话在电脑上没有运行，请到电脑上回答</string>
+    <string name="desktop_error_old_plugin">电脑上的插件版本太旧，不支持这个操作。请更新 dsh-bridge 并重启 DSH。</string>
+    <string name="desktop_error_internal">电脑端没能完成这个操作（可能是插件和 DSH 版本不匹配）：%1$s</string>
+    <string name="desktop_error_offline">未连接到电脑</string>
+    <string name="desktop_diag_dsh">DSH %1$s</string>
+    <string name="desktop_diag_dsh_legacy">DSH（版本未知，旧版接口）</string>
+    <string name="desktop_diag_plugin_outdated">电脑插件需要更新到 0.4.0 或更高，这个 DSH 版本上的排队、标题和历史才能正常同步。</string>
+    <string name="desktop_entry">电脑</string>
 </resources>

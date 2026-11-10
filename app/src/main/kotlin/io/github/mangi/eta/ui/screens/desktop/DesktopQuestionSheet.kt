@@ -90,7 +90,7 @@ internal fun DesktopQuestionSheet(ask: DesktopAsk?, onDismiss: () -> Unit) {
                 if (!accepted) Toast.makeText(context, resources.getString(R.string.desktop_question_closed), Toast.LENGTH_SHORT).show()
                 onDismiss()
             } catch (error: DesktopBridgeException) {
-                Toast.makeText(context, resources.getString(R.string.desktop_failed, error.message), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, error.display(resources), Toast.LENGTH_SHORT).show()
             } finally {
                 sending = false
             }

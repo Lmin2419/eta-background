@@ -19,6 +19,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import io.github.mangi.eta.ui.screens.desktop.listed
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -170,6 +171,13 @@ fun AgentAppRoot(
             onTerminalOpened()
         }
     }
+    // 已配对电脑时，主界面侧栏显示「电脑」入口和运行中数量（不会因此连接电脑）。
+    val appContext = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.mangi.eta.agent.remote.DesktopBridge.prepare(appContext) }
+    }
+    val desktopConfig by io.github.mangi.eta.agent.remote.DesktopBridge.config.collectAsState()
+    val desktopRows by io.github.mangi.eta.agent.remote.DesktopBridge.sessions.collectAsState()
     // 电脑同步的通知：空字符串打开会话列表，否则直接打开那个电脑会话。
     val desktopRequest by io.github.mangi.eta.agent.remote.DesktopLinkNav.requests.collectAsState()
     LaunchedEffect(desktopRequest) {
@@ -414,6 +422,8 @@ fun AgentAppRoot(
             onSearchConversations = { query -> agentState.updateSearchQuery(query) },
             onNewConversation = { createConversation() },
             onOpenCommonTasks = ::openTasks,
+            onOpenDesktop = if (desktopConfig?.isComplete == true) ({ pushRoute(AppRoute.DesktopSessions) }) else null,
+            desktopRunning = desktopRows.rows.count { it.running && it.listed },
             onOpenTerminal = { pushRoute(AppRoute.Terminal) },
             onLaunchKimiWeb = {
                 requestExecutionNotifications()

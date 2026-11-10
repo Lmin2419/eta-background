@@ -94,7 +94,7 @@ internal fun DesktopApprovalHost(approvals: List<DesktopApproval>, sessionId: St
             try {
                 DesktopBridge.answerApproval(approval.id, allow)
             } catch (error: DesktopBridgeException) {
-                Toast.makeText(context, resources.getString(R.string.desktop_failed, error.message), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, error.display(resources), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -135,3 +135,18 @@ internal fun DesktopRunningDot(running: Boolean) {
     if (!running) return
     Box(Modifier.size(8.dp).background(StatusRunning, CircleShape))
 }
+
+/**
+ * 给用户看的失败说明。常见情况有明确的中文解释；电脑端内部错误多半是插件或 DSH 版本不匹配，
+ * 保留原文方便排查。
+ */
+internal fun DesktopBridgeException.display(resources: android.content.res.Resources): String = when (code) {
+    "not-queued" -> resources.getString(R.string.desktop_error_not_queued)
+    "busy" -> resources.getString(R.string.desktop_error_busy)
+    "not-live" -> resources.getString(R.string.desktop_error_not_live)
+    "unknown-op", "bad-request" -> resources.getString(R.string.desktop_error_old_plugin)
+    "internal", "gateway/internal" -> resources.getString(R.string.desktop_error_internal, message.orEmpty())
+    "offline", "timeout" -> message ?: resources.getString(R.string.desktop_error_offline)
+    else -> resources.getString(R.string.desktop_failed, message)
+}
+

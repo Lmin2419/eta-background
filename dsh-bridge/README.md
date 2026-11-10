@@ -29,7 +29,7 @@ powershell -ExecutionPolicy Bypass -File eta-background\deploy\desktop\install-p
 
 也可以手动安装：桌面版 → 侧栏「插件」→「安装第三方插件」→ 填 `dsh-bridge` 目录的绝对路径。
 
-验证：`curl http://127.0.0.1:7788/v1/health`（Windows PowerShell 里写 `curl.exe`）应返回 `{"ok":true,"protocol":1,"version":"0.3.0","runtime":"desktop"}`。`runtime` 为 `node` 说明回应来自另外启动的 `dsh` 进程，而不是桌面版。
+验证：`curl http://127.0.0.1:7788/v1/health`（Windows PowerShell 里写 `curl.exe`）应返回 `{"ok":true,"protocol":1,"version":"0.4.0","runtime":"desktop","dsh":{"version":"…","api":[…]}}`。`dsh.api` 列出这个 DSH 版本提供的会话接口；插件同时支持 DSH 0.2.1 和 0.2.2，缺少的接口自动换用替代接口。`runtime` 为 `node` 说明回应来自另外启动的 `dsh` 进程，而不是桌面版。
 
 ### 总开关
 
@@ -102,7 +102,7 @@ frps 和 frpc 的配置与脚本生成的相同。手机端在「手动填写」
 
 ```sh
 cd dsh-bridge
-npm test        # node --test，31 个用例
+npm test        # node --test，40 个用例
 ```
 
 `lib/translate.js` 把 DSH 会话事件转换成手机端使用的条目；`lib/bridge.js` 负责连接、订阅与审批；`lib/ws.js` 是一个最小的 RFC 6455 服务端实现。

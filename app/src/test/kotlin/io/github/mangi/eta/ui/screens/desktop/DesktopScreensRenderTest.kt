@@ -92,7 +92,7 @@ class DesktopScreensRenderTest {
           {"id":"parts","question":"要包含哪些部分？","options":[{"label":"进度"},{"label":"风险"},{"label":"下周计划"}],"multiSelect":true}]}""",
     ).jsonObject)!!
 
-    private fun renderSessions(name: String, dark: Boolean, query: String = "") {
+    private fun renderSessions(name: String, dark: Boolean, query: String = "", collapsed: Set<String> = emptySet()) {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(controller.get(), dark = dark) {
             DesktopSessionsContent(
@@ -102,6 +102,7 @@ class DesktopScreensRenderTest {
                 approvals = listOf(DesktopApproval("p1", "s1", "bash", "c1", "允许本次操作使用 danger-full-access 权限", 0)),
                 questions = listOf(question),
                 unread = setOf("s6"),
+                collapsed = collapsed,
                 creating = false,
                 query = query,
                 contentHits = if (query.isEmpty()) emptyMap() else mapOf("s5" to "…把旧数据库的用户表迁移到…"),
@@ -115,11 +116,16 @@ class DesktopScreensRenderTest {
         try {
             panel.advance(30)
             val labels = panel.nodes().mapNotNull { it.config.getOrNull(SemanticsProperties.Text)?.joinToString() }
-            if (query.isEmpty()) {
+            if (query.isEmpty() && collapsed.isEmpty()) {
                 assertTrue(labels.toString(), labels.any { "修复登录页的空指针" in it })
-                // 桌面预建的空白「新对话」不显示；归档会话收进底部的「已归档」。
+                assertTrue(labels.toString(), labels.any { it == "Recent" || it == "最近任务" })
+                // 桌面预建的空白「新对话」和归档会话都不在主列表里。
                 assertTrue(labels.toString(), labels.none { "迁移旧数据库" in it })
-                assertTrue(labels.toString(), labels.any { "已归档" in it || "Archived" in it })
+            } else if (query.isEmpty()) {
+                // 收起的分组只剩标题、会话数和运行状态；归档在底部。
+                assertTrue(labels.toString(), labels.none { "修复登录页的空指针" in it })
+                assertTrue(labels.toString(), labels.any { "1 running" in it || "1 个运行中" in it || "need you" in it || "等你处理" in it })
+                assertTrue(labels.toString(), labels.any { it == "Archived" || it == "已归档" })
             } else {
                 assertTrue(labels.toString(), labels.any { "迁移旧数据库" in it })
                 assertTrue(labels.toString(), labels.none { "修复登录页的空指针" in it })
@@ -142,11 +148,14 @@ class DesktopScreensRenderTest {
         val panel = Stage3TestPanel(controller.get(), dark = dark) {
           androidx.compose.foundation.layout.Column {
             DesktopStatsLine(state, runningForMs = 72_000) {}
+            androidx.compose.runtime.CompositionLocalProvider(
+                io.github.mangi.eta.ui.components.LocalRemoteComposer provides io.github.mangi.eta.ui.components.RemoteComposer("电脑正在执行…", "立即插队发送", {}),
+            ) {
             AgentChatBody(
                 messages = messages,
                 modelPickerState = DesktopChatProjector.modelPicker(null, state),
                 isCompacting = false,
-                input = "",
+                input = "也检查一下忘记密码页",
                 isStreaming = state.running,
                 reasoningEffort = io.github.mangi.eta.data.model.ReasoningEffort.DEFAULT,
                 availableReasoningEfforts = emptyList(),
@@ -175,6 +184,7 @@ class DesktopScreensRenderTest {
                 onRunTraceClick = {},
                 onOpenBrowser = {},
             )
+            }
           }
         }
         try {
@@ -261,6 +271,8 @@ class DesktopScreensRenderTest {
     }
 
     @Test fun sessionsLight() = renderSessions("desktop-sessions-light", dark = false)
+
+    @Test fun sessionsCollapsedLight() = renderSessions("desktop-sessions-collapsed-light", dark = false, collapsed = setOf(RECENT_GROUP, "w1", OTHER_GROUP))
 
     @Test fun sessionsSearchLight() = renderSessions("desktop-sessions-search-light", dark = false, query = "数据库")
 

@@ -81,6 +81,19 @@ internal object DesktopBridge {
     /** 轮次外的会话错误：(sessionId, message)。 */
     val errors: SharedFlow<Pair<String, String>> = _errors.asSharedFlow()
 
+    private val _touched = MutableStateFlow<Map<String, Long>>(emptyMap())
+    /** 本机看到会话最近一次开始或结束运行的时间，用来把刚动过的会话排进「最近任务」。 */
+    val touched: StateFlow<Map<String, Long>> = _touched.asStateFlow()
+
+    /** 每个会话没发出去的输入，离开再回来还在（只存在内存里）。 */
+    private val drafts = ConcurrentHashMap<String, String>()
+
+    fun draft(sessionId: String): String = drafts[sessionId].orEmpty()
+
+    fun setDraft(sessionId: String, text: String) {
+        if (text.isEmpty()) drafts.remove(sessionId) else drafts[sessionId] = text
+    }
+
     /** App 在后台：暂停逐字推送（退订正在看的会话），心跳放宽到 60 秒。 */
     @Volatile var background: Boolean = false
         private set
@@ -104,11 +117,9 @@ internal object DesktopBridge {
         scope.launch { client.connections.collect(::onConnected) }
     }
 
+    /** 读入配对信息、偏好和上次的会话列表，但不连接；主界面的入口靠它知道是否已配对。 */
     @Synchronized
-    fun acquire(context: Context) {
-        users++
-        releaseJob?.cancel()
-        releaseJob = null
+    fun prepare(context: Context) {
         val appContext = context.applicationContext
         DesktopLinkSettings.init(appContext)
         if (cacheFile == null) {
@@ -117,6 +128,15 @@ internal object DesktopBridge {
         }
         if (store == null) store = DesktopBridgeConfigStore(appContext)
         if (_config.value == null) _config.value = runCatching { store?.load() }.getOrNull()
+    }
+
+    @Synchronized
+    fun acquire(context: Context) {
+        users++
+        releaseJob?.cancel()
+        releaseJob = null
+        val appContext = context.applicationContext
+        prepare(appContext)
         registerNetworkCallback(appContext)
         val config = _config.value
         if (config != null && config.isComplete && DesktopLinkSettings.state.value.enabled &&
@@ -240,7 +260,9 @@ internal object DesktopBridge {
         }
     }
 
+    /** 向电脑要一份完整列表。推送能跟上绝大多数变化，这里用于首次加载、手动刷新和自愈。 */
     suspend fun refreshSessions() {
+        if (_sessions.value.loading) return
         _sessions.update { it.copy(loading = true) }
         try {
             val data = client.call("sessions.list").jsonObject
@@ -250,6 +272,9 @@ internal object DesktopBridge {
             saveCachedSessions(data)
         } catch (error: DesktopBridgeException) {
             _sessions.update { it.copy(loading = false, error = error.message) }
+        } catch (error: kotlinx.coroutines.CancellationException) {
+            _sessions.update { it.copy(loading = false) }
+            throw error
         }
     }
 
@@ -325,15 +350,42 @@ internal object DesktopBridge {
         }
     }
 
-    /** 插队：先在本地把消息挪进对话（与桌面一致显示为已发出），再请电脑执行。 */
-    suspend fun steer(sessionId: String, itemId: String) {
+    /**
+     * 插队：先在本地把消息挪进对话（与桌面一致显示为已发出），再请电脑执行。
+     * [key] 是电脑的队列条目 id；刚发出、电脑还没回执的那条用 `echo-<请求号>`，同样可以操作。
+     */
+    suspend fun steer(sessionId: String, key: String) {
         val flow = stateFlow(sessionId)
-        val before = flow.value.queue
-        flow.update { it.markSteering(itemId) }
+        val request = key.takeIf { it.startsWith(ECHO_PREFIX) }?.removePrefix(ECHO_PREFIX)
+        flow.update { if (request != null) it.moveEcho(request, queued = false) else it.markSteering(key) }
         try {
-            queueAction(sessionId, itemId, JsonPrimitive("steer"))
+            queueAction(sessionId, key, JsonPrimitive("steer"))
         } catch (error: DesktopBridgeException) {
-            flow.update { it.copy(queue = before) }
+            // 已经不在队列里：模型已取走，等记录到达即可，不算失败。
+            if (error.code == NOT_QUEUED) return
+            flow.update { if (request != null) it.moveEcho(request, queued = true) else it.markSteering(key, steering = false) }
+            throw error
+        }
+    }
+
+    /** 取消一条排队中的消息：先从队列条拿掉，电脑拒绝时放回去。 */
+    suspend fun removeQueued(sessionId: String, key: String) {
+        val flow = stateFlow(sessionId)
+        val request = key.takeIf { it.startsWith(ECHO_PREFIX) }?.removePrefix(ECHO_PREFIX)
+        val echo = request?.let { id -> flow.value.echoes.firstOrNull { it.requestId == id } }
+        val item = if (request == null) flow.value.queue.firstOrNull { it.id == key } else null
+        flow.update { if (request != null) it.removeEcho(request) else it.removeQueued(key) }
+        try {
+            queueAction(sessionId, key, JsonPrimitive("remove"))
+        } catch (error: DesktopBridgeException) {
+            // 已被模型取走的消息撤不回来：它随后会出现在对话里，这里如实报错。
+            if (error.code != NOT_QUEUED) flow.update { state ->
+                when {
+                    echo != null && state.echoes.none { it.requestId == echo.requestId } -> state.addEcho(echo)
+                    item != null -> state.restoreQueued(item)
+                    else -> state
+                }
+            }
             throw error
         }
     }
@@ -344,11 +396,9 @@ internal object DesktopBridge {
         return (data["children"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let(DesktopBridgeProtocol::parseSubagent) }
     }
 
-    suspend fun queueAction(sessionId: String, itemId: String, action: JsonElement) {
-        client.call(
-            "sessions.queue",
-            mapOf("sessionId" to JsonPrimitive(sessionId), "itemId" to JsonPrimitive(itemId), "action" to action),
-        )
+    private suspend fun queueAction(sessionId: String, key: String, action: JsonElement) {
+        val target = if (key.startsWith(ECHO_PREFIX)) "requestId" to JsonPrimitive(key.removePrefix(ECHO_PREFIX)) else "itemId" to JsonPrimitive(key)
+        client.call("sessions.queue", mapOf("sessionId" to JsonPrimitive(sessionId), target, "action" to action))
     }
 
     suspend fun loadOlder(sessionId: String) {
@@ -447,6 +497,7 @@ internal object DesktopBridge {
         _approvals.value = (hello["approvals"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let(DesktopBridgeProtocol::parseApproval) }
         _questions.value = (hello["questions"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let(DesktopBridgeProtocol::parseQuestion) }
         _server.value = DesktopBridgeProtocol.parseServerInfo(hello)
+        unknownSeen.clear()
         if (!background) for (sessionId in followed.keys) sendFollow(sessionId)
         refreshSessions()
         refreshCatalog()
@@ -458,7 +509,11 @@ internal object DesktopBridge {
         when (type) {
             "snapshot", "item", "live", "projection", "follow-error" -> {
                 sessionId?.let { id -> states[id]?.update { it.reduce(push) } }
-                if (type == "projection") push.string("title")?.let { title -> updateRow(sessionId) { it.copy(title = title) } }
+                // 标题变化对所有会话推送（不只是正在看的），列表里的自动标题和改名靠它跟上。
+                if (type == "projection") push.string("title")?.let { title ->
+                    updateRow(sessionId) { it.copy(title = title) }
+                    healIfUnknown(sessionId)
+                }
             }
             "follow-end" -> sessionId?.takeIf { followed.containsKey(it) }?.let { id -> scope.launch { delay(500); sendFollow(id) } }
             "status" -> {
@@ -470,8 +525,14 @@ internal object DesktopBridge {
                 }
                 sessionId?.let { id -> states[id]?.update { it.reduce(push) } }
                 updateRow(sessionId) { it.copy(running = running) }
+                sessionId?.let { id -> _touched.update { it + (id to System.currentTimeMillis()) } }
+                healIfUnknown(sessionId)
             }
-            "activity" -> updateRow(sessionId) { it.copy(updatedAt = push.long("updatedAt") ?: it.updatedAt, blank = false) }
+            "activity" -> {
+                updateRow(sessionId) { it.copy(updatedAt = push.long("updatedAt") ?: it.updatedAt, blank = false) }
+                healIfUnknown(sessionId)
+            }
+            "workspaces" -> applyWorkspaces(push)
             "session" -> (push["session"] as? JsonObject)?.let(DesktopBridgeProtocol::parseSessionRow)?.let(::upsertRow)
             "approval" -> (push["approval"] as? JsonObject)?.let(DesktopBridgeProtocol::parseApproval)?.let { approval ->
                 _approvals.update { list -> list.filterNot { it.id == approval.id } + approval }
@@ -481,9 +542,57 @@ internal object DesktopBridge {
                 _questions.update { list -> list.filterNot { it.id == question.id } + question }
             }
             "question-done" -> push.string("questionId")?.let { id -> _questions.update { list -> list.filterNot { it.id == id } } }
-            "turn" -> DesktopBridgeProtocol.parseTurn(push)?.let { _turns.tryEmit(it) }
+            "turn" -> DesktopBridgeProtocol.parseTurn(push)?.let { turn ->
+                _touched.update { it + (turn.sessionId to System.currentTimeMillis()) }
+                _turns.tryEmit(turn)
+            }
             "error" -> if (sessionId != null) _errors.tryEmit(sessionId to push.string("message").orEmpty())
             "session-flags" -> sessionId?.let { applyFlags(it, push.bool("archived") == true, push.bool("pinned") == true) }
+        }
+    }
+
+    /**
+     * 电脑上的工作区登记变了（新建、改名、排序、会话归属、归档、置顶）：整份替换。
+     * 会话行的工作区、归档和置顶都以这份为准，所以电脑上做的整理手机立即跟上。
+     */
+    private fun applyWorkspaces(push: JsonObject) {
+        val entries = (push["workspaces"] as? JsonArray).orEmpty().mapNotNull { it as? JsonObject }
+        val workspaces = entries.mapNotNull(DesktopBridgeProtocol::parseWorkspace)
+        val membership = HashMap<String, String>()
+        for (entry in entries) {
+            val id = entry.string("id") ?: continue
+            for (sessionId in entry.strings("sessionIds")) membership.putIfAbsent(sessionId, id)
+        }
+        val archived = push.strings("archived").toHashSet()
+        val pinned = push.strings("pinned").toHashSet()
+        _sessions.update { state ->
+            state.copy(
+                workspaces = workspaces,
+                rows = state.rows.map { row ->
+                    val isArchived = row.id in archived
+                    val next = row.copy(workspaceId = membership[row.id], archived = isArchived, pinned = !isArchived && row.id in pinned)
+                    if (next == row) row else next
+                },
+            )
+        }
+    }
+
+    private val unknownSeen: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private var healJob: Job? = null
+
+    /**
+     * 推送提到了列表里没有的会话：说明漏了它的「新增」（例如断线期间创建），稍后整体刷新一次。
+     * 每个陌生会话每次连接只触发一次，电脑上确实没有的会话不会引起反复刷新。
+     */
+    private fun healIfUnknown(sessionId: String?) {
+        sessionId ?: return
+        val state = _sessions.value
+        if (!state.loaded || state.rows.any { it.id == sessionId }) return
+        if (targets[sessionId]?.parentId != null || !unknownSeen.add(sessionId)) return
+        if (healJob?.isActive == true) return
+        healJob = scope.launch {
+            delay(HEAL_DELAY_MS)
+            if (client.isConnected) refreshSessions()
         }
     }
 
@@ -567,6 +676,14 @@ internal object DesktopBridge {
     private const val BACKGROUND_HEARTBEAT_MS = 60_000L
     private const val SESSIONS_CACHE = "desktop-sessions.json"
     private const val MAX_CACHED_SESSIONS = 8
+    private const val HEAL_DELAY_MS = 1_500L
+    /** 队列条里「刚发出、电脑还没回执」的条目 id 前缀，见 [DesktopSessionState.visibleQueue]。 */
+    const val ECHO_PREFIX = "echo-"
+    /** 电脑端返回的错误码：这条消息已不在队列里（已被取走或已取消）。 */
+    const val NOT_QUEUED = "not-queued"
 }
 
 private fun JsonArray?.orEmpty(): List<JsonElement> = this ?: emptyList()
+
+private fun JsonObject.strings(key: String): List<String> =
+    (this[key] as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content }

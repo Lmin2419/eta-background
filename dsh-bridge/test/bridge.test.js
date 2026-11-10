@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { Bridge, answerItems, questionItems } from '../lib/bridge.js'
+import { Bridge, answerItems, projectionChanges, questionItems } from '../lib/bridge.js'
 import { startServer } from '../lib/server.js'
 
 const TOKEN = 'test-token-0123456789'
@@ -30,14 +30,25 @@ function channel() {
   }
 }
 
-function fakeController() {
+/**
+ * A scripted `sessionController`. `legacy` models DSH 0.2.1 and earlier: no
+ * `events`, `state` or `observeProjections`, history through `page`.
+ */
+function fakeController({ legacy = false } = {}) {
   const follow = channel()
-  const projections = channel()
+  const control = channel()
   const calls = []
-  return {
+  const inbox = { 'next-turn': [], 'next-step': [] }
+  const fake = {
     follow,
-    projections,
+    control,
     calls,
+    inbox,
+    /** Push one projection change the way this DSH generation frames it. */
+    project(sessionId, seq, changes) {
+      if (!legacy) control.push({ type: 'projection', sessionId, seq, changes })
+      else for (const change of changes) control.push({ type: 'projection', sessionId, seq, key: change.key, value: change.val })
+    },
     controller: {
       async list() {
         return { items: [{ sessionId: 's1', updatedAt: 5, running: false, blank: false, agentAvailable: false, projections: { kind: 'cached', asOfSeq: 1, values: { title: 'One' } } }] }
@@ -49,18 +60,31 @@ function fakeController() {
         calls.push(['events', request])
         return { records: [{ type: 'event', event: { type: 'turn/start', seq: 1, time: 1, data: { turn: 1 } } }], hasMore: false, cursor: 1 }
       },
+      async page(request) {
+        calls.push(['page', request])
+        return { records: [{ type: 'event', event: { type: 'turn/start', seq: 1, time: 1, data: { turn: 1 } } }], hasMore: false }
+      },
+      async updateQueue(request) {
+        calls.push(['updateQueue', request])
+        return { accepted: true }
+      },
+      control(signal) { return control.iterate(signal) },
       async modelCatalog() {
         return { default: { provider: 'deepseek', model: 'chat' }, routableProviders: ['deepseek'], groups: [{ id: 'deepseek', name: 'DeepSeek', models: [{ id: 'chat', name: 'Chat' }] }], failures: [] }
       },
       follow(request, signal) { calls.push(['follow', request]); return follow.iterate(signal) },
       async projections({ sessionId }) {
-        if (sessionId === 's1') return { kind: 'sequenced', asOfSeq: 1, values: { subagentCatalog: [{ id: 'c1', mode: 'continuable', label: 'scan', name: 'lister', createdAt: 3 }, { id: 'x', mode: 'external', createdAt: 4 }] } }
+        if (sessionId === 's1') return { kind: 'sequenced', asOfSeq: 1, values: { inbox, subagentCatalog: [{ id: 'c1', mode: 'continuable', label: 'scan', name: 'lister', createdAt: 3 }, { id: 'x', mode: 'external', createdAt: 4 }] } }
         return { kind: 'sequenced', asOfSeq: 1, values: { title: 'child', tokenUsage: { uncachedInputTokens: 1, outputTokens: 2, cacheReadTokens: 3, cacheWriteTokens: 0 }, subagentTiming: { settledMs: 50 } } }
       },
       async state({ sessionId }) { return { cursor: 1, active: true, running: sessionId === 'c1', queue: [], pendingInput: [] } },
-      observeProjections(_request, signal) { return projections.iterate(signal) },
     },
   }
+  if (legacy) {
+    delete fake.controller.events
+    delete fake.controller.state
+  }
+  return fake
 }
 
 function fakeWorkspaces() {
@@ -79,11 +103,13 @@ function fakeWorkspaces() {
   }
 }
 
-async function setup(extra = {}) {
-  const fake = fakeController()
+async function setup({ legacy = false, ...extra } = {}) {
+  const fake = fakeController({ legacy })
   const workspaces = fakeWorkspaces()
   const bridge = new Bridge({ controller: fake.controller, workspaces, logger: quiet, version: 'test', ...extra })
-  const handle = await startServer({ bridge, token: TOKEN, host: '127.0.0.1', port: 0, logger: quiet })
+  const server = await startServer({ bridge, token: TOKEN, host: '127.0.0.1', port: 0, logger: quiet })
+  const stopFeed = bridge.startProjectionFeed()
+  const handle = { port: server.port, close: async () => { stopFeed(); await server.close() } }
   return { fake, bridge, workspaces, handle, url: `ws://127.0.0.1:${handle.port}/v1/ws` }
 }
 
@@ -139,7 +165,10 @@ test('rejects a wrong token', async () => {
 test('health endpoint is open', async () => {
   const { handle } = await setup()
   const res = await fetch(`http://127.0.0.1:${handle.port}/v1/health`)
-  assert.deepEqual(await res.json(), { ok: true, protocol: 1, version: 'test', runtime: 'node' })
+  assert.deepEqual(await res.json(), {
+    ok: true, protocol: 1, version: 'test', runtime: 'node',
+    dsh: { version: null, api: ['control', 'page', 'events', 'state', 'projections'] },
+  })
   await handle.close()
 })
 
@@ -206,8 +235,9 @@ test('follow streams snapshot, live deltas, items and projections', async () => 
   assert.deepEqual({ committed: end.committed, seq: end.seq }, { committed: true, seq: 4 })
 
   // Projection at the snapshot cut is dropped, a later one is forwarded.
-  fake.projections.push({ type: 'projection', seq: 3, changes: [{ key: 'title', val: 'stale' }] })
-  fake.projections.push({ type: 'projection', seq: 5, changes: [{ key: 'title', val: 'Two' }, { key: 'inbox', val: { 'next-turn': [{ id: 'q', content: [{ type: 'text', text: 'more' }] }], 'next-step': [] } }] })
+  fake.project('s1', 3, [{ key: 'title', val: 'stale' }])
+  fake.project('other', 9, [{ key: 'inbox', val: { 'next-turn': [], 'next-step': [] } }])
+  fake.project('s1', 5, [{ key: 'title', val: 'Two' }, { key: 'inbox', val: { 'next-turn': [{ id: 'q', content: [{ type: 'text', text: 'more' }] }], 'next-step': [] } }])
   const projection = await c.next(m => m.t === 'projection')
   assert.equal(projection.title, 'Two')
   assert.deepEqual(projection.queue, [{ id: 'q', text: 'more', placement: 'queued' }])
@@ -389,6 +419,151 @@ test('turn ends are announced with the last assistant text; subagents stay quiet
   await handle.close()
 })
 
+test('title changes reach phones that are not following the session', async () => {
+  const sessions = new Map([['child', { header: { origin: 'subagent' } }], ['s9', { header: {} }]])
+  const { fake, handle, url } = await setup({ sessionOf: id => sessions.get(id) })
+  const c = await connect(url)
+  await c.call('hello')
+  fake.project('s9', 7, [{ key: 'tokenUsage', val: {} }, { key: 'title', val: 'Fix login' }])
+  assert.deepEqual(await c.next(m => m.t === 'projection'), { t: 'projection', sessionId: 's9', seq: 7, title: 'Fix login' })
+  fake.project('child', 1, [{ key: 'title', val: 'hidden' }])
+  fake.project('s9', 8, [{ key: 'tokenUsage', val: {} }])
+  await new Promise(resolve => setTimeout(resolve, 50))
+  assert.equal(c.messages.some(m => m.t === 'projection'), false)
+  c.ws.close()
+  await handle.close()
+})
+
+test('DSH 0.2.1: queue and title changes arrive through the per-key control stream', async () => {
+  assert.deepEqual(projectionChanges({ type: 'projection', sessionId: 's', seq: 1, key: 'title', value: 'x' }), [{ key: 'title', val: 'x' }])
+  assert.deepEqual(projectionChanges({ type: 'baseline', value: {} }), [])
+  const { fake, bridge, handle, url } = await setup({ legacy: true })
+  assert.deepEqual(bridge.hostApi(), ['control', 'page', 'projections'])
+  const c = await connect(url)
+  await c.call('sessions.follow', { sessionId: 's1' })
+  fake.follow.push({ type: 'snapshot', header: { cwd: '/repo' }, cursor: 3, hasMore: true, records: [], projections: { asOfSeq: 3, values: {} } })
+  await c.next(m => m.t === 'snapshot')
+  fake.project('s1', 4, [{ key: 'inbox', val: { 'next-turn': [{ id: 'q', content: [{ type: 'text', text: 'wait' }], source: { kind: 'user', rpcId: 'r7' } }], 'next-step': [] } }])
+  const queued = await c.next(m => m.t === 'projection' && m.queue)
+  assert.deepEqual(queued.queue, [{ id: 'q', text: 'wait', placement: 'queued', rpcId: 'r7' }])
+  fake.project('s1', 5, [{ key: 'inbox', val: { 'next-turn': [], 'next-step': [] } }])
+  assert.deepEqual((await c.next(m => m.t === 'projection' && m.queue)).queue, [])
+  c.ws.close()
+  await handle.close()
+})
+
+test('DSH 0.2.1: older history pages through page() with the opening snapshot cut', async () => {
+  const { fake, handle, url } = await setup({ legacy: true })
+  const c = await connect(url)
+  await c.call('sessions.follow', { sessionId: 's1' })
+  fake.follow.push({ type: 'snapshot', header: {}, cursor: 42, hasMore: true, records: [], projections: { asOfSeq: 42, values: {} } })
+  await c.next(m => m.t === 'snapshot')
+  const older = await c.call('sessions.older', { sessionId: 's1', beforeSeq: 10 })
+  assert.deepEqual(older, { items: [{ k: 'turn_start', seq: 1, time: 1, turn: 1 }], hasMore: false, cursor: null })
+  const page = fake.calls.find(call => call[0] === 'page')[1]
+  assert.equal(page.throughSeq, 42)
+  assert.equal(page.beforeSeq, 10)
+  assert.deepEqual(page.address, { kind: 'session', sessionId: 's1' })
+  c.ws.close()
+  await handle.close()
+})
+
+test('DSH 0.2.1: the subagent directory reads running state from the live agent', async () => {
+  const agents = new Map([['c1', { status: 'running' }]])
+  const { handle, url } = await setup({ legacy: true, agentOf: id => agents.get(id) })
+  const c = await connect(url)
+  const dir = await c.call('sessions.subagents', { sessionId: 's1' })
+  assert.equal(dir.children[0].running, true)
+  assert.equal(dir.children[0].title, 'child')
+  c.ws.close()
+  await handle.close()
+})
+
+test('a queued message can be steered or removed by the request that sent it', async () => {
+  const { fake, handle, url } = await setup()
+  const c = await connect(url)
+  fake.inbox['next-turn'].push({ id: 'm1', content: [{ type: 'text', text: 'later' }], source: { kind: 'user', rpcId: 'r1' } })
+  assert.deepEqual(await c.call('sessions.queue', { sessionId: 's1', requestId: 'r1', action: 'steer' }), { accepted: true, itemId: 'm1' })
+  assert.deepEqual(fake.calls.find(call => call[0] === 'updateQueue')[1], { sessionId: 's1', itemId: 'm1', action: { kind: 'steer' } })
+  await assert.rejects(c.call('sessions.queue', { sessionId: 's1', requestId: 'gone', action: 'remove' }), err => err.code === 'not-queued')
+  await assert.rejects(c.call('sessions.queue', { sessionId: 's1', action: 'remove' }), /itemId or requestId is required/)
+  c.ws.close()
+  await handle.close()
+})
+
+test('workspace registry changes are pushed once per burst with membership and flags', async () => {
+  const { bridge, handle, url, workspaces } = await setup()
+  const c = await connect(url)
+  await c.call('hello')
+  workspaces.archivedSessionIds = ['old']
+  bridge.onWorkspacesChanged()
+  bridge.onWorkspacesChanged()
+  bridge.onSessionAdded({ sessionId: 's3', updatedAt: 1, running: false, blank: true, agentAvailable: true })
+  const push = await c.next(m => m.t === 'workspaces')
+  assert.deepEqual(push, {
+    t: 'workspaces',
+    workspaces: [{ id: 'w1', title: 'repo', path: '/repo', sessionIds: ['s1'] }],
+    archived: ['old'],
+    pinned: ['s1'],
+  })
+  await new Promise(resolve => setTimeout(resolve, 250))
+  assert.equal(c.messages.some(m => m.t === 'workspaces'), false)
+  c.ws.close()
+  await handle.close()
+})
+
+test('an approval the desktop cannot ask waits for the phone', async () => {
+  const { bridge, handle, url } = await setup()
+  // No phone: DSH's own fail-closed outcome passes through.
+  assert.equal(await bridge.requestApproval({ agent: { id: 's' }, toolName: 'x' }, () => Promise.resolve('unavailable')), 'unavailable')
+  const c = await connect(url)
+  await c.call('hello')
+  const pending = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'bash' }, () => Promise.resolve('unavailable'))
+  const ask = await c.next(m => m.t === 'approval')
+  await new Promise(resolve => setTimeout(resolve, 30))
+  assert.equal(bridge.pendingApprovals().length, 1)
+  await c.call('approval.answer', { approvalId: ask.approval.id, outcome: 'allowed-once' })
+  assert.equal(await pending, 'allowed-once')
+  c.ws.close()
+  await handle.close()
+})
+
+test('a phone-only approval is released when the phone stays away', async () => {
+  const { bridge, handle, url } = await setup({ phoneGraceMs: 60 })
+  const c = await connect(url)
+  await c.call('hello')
+  const phoneOnly = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'bash' }, () => Promise.resolve('unavailable'))
+  let desktopAnswer
+  const shared = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'edit' }, () => new Promise((resolve) => { desktopAnswer = resolve }))
+  await c.next(m => m.t === 'approval' && m.approval.toolName === 'edit')
+  c.ws.close()
+  assert.equal(await phoneOnly, 'unavailable')
+  // The one the desktop is still showing is untouched and answered there.
+  assert.equal(bridge.pendingApprovals().length, 1)
+  desktopAnswer('allowed-once')
+  assert.equal(await shared, 'allowed-once')
+  await handle.close()
+})
+
+test('stopping the bridge leaves desktop prompts alone and releases phone-only ones', async () => {
+  const { bridge, handle, url } = await setup()
+  const c = await connect(url)
+  await c.call('hello')
+  let desktopAnswer
+  const shared = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'edit' }, () => new Promise((resolve) => { desktopAnswer = resolve }))
+  const phoneOnly = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'bash' }, () => Promise.resolve('unavailable'))
+  const noUi = Object.assign(new Error('none'), { code: 'NO_PROVIDER' })
+  const question = bridge.requestQuestion({ agent: { id: 's1' }, questions: [{ id: 'q', question: '?' }] }, () => Promise.reject(noUi))
+  await c.next(m => m.t === 'question')
+  await new Promise(resolve => setTimeout(resolve, 20))
+  bridge.dispose()
+  assert.equal(await phoneOnly, 'unavailable')
+  await assert.rejects(question, err => err.code === 'NO_PROVIDER')
+  desktopAnswer('rejected')
+  assert.equal(await shared, 'rejected')
+  await handle.close()
+})
+
 test('a client can lengthen its heartbeat within bounds', async () => {
   const { handle, url } = await setup()
   const c = await connect(url)
@@ -437,7 +612,7 @@ test('snapshot forwards stats, usage, pressure and subagent projections', async 
   } } })
   const snap = await c.next(m => m.t === 'snapshot')
   assert.deepEqual([snap.stats, snap.usage, snap.pressure, snap.subagents, snap.timing], [{ turns: 1 }, { outputTokens: 2 }, { contextWindow: 9 }, [{ id: 'c' }], null])
-  fake.projections.push({ type: 'projection', seq: 5, changes: [{ key: 'tokenUsage', val: { outputTokens: 7 } }] })
+  fake.project('s1', 5, [{ key: 'tokenUsage', val: { outputTokens: 7 } }])
   const update = await c.next(m => m.t === 'projection')
   assert.deepEqual(update.usage, { outputTokens: 7 })
   c.ws.close()

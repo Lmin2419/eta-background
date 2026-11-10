@@ -48,6 +48,8 @@ internal data class PaneWorkspaceActions(
     val kimiLabel: String = "Kimi Code", val canStopKimi: Boolean = false,
     val onStopKimi: () -> Unit = {}, val onRefreshKimi: () -> Unit = {},
     val runningCount: Int = 0, val permissionsPending: Int = 0,
+    /** 已配对电脑时显示「电脑」入口；[desktopRunning] 是电脑上正在运行的会话数。 */
+    val onDesktop: (() -> Unit)? = null, val desktopRunning: Int = 0,
 )
 internal data class PaneManagementActions(
     val delete: (Set<String>, (Int) -> Unit) -> Unit = { _, _ -> },
@@ -124,6 +126,7 @@ internal fun ConversationPanePanel(
                 WorkspaceEntry(Icons.Rounded.PeopleAlt, stringResource(R.string.eta_characters), EtaTheme.colors.tilePink, entryWidth, onOpenCharacters)
                 WorkspaceEntry(Icons.Rounded.Terminal, stringResource(R.string.route_terminal), EtaTheme.colors.tileSlate, entryWidth, workspace.onTerminal)
                 WorkspaceEntry(Icons.Rounded.Language, stringResource(R.string.eta_browser), EtaTheme.colors.tileTeal, entryWidth, workspace.onBrowser)
+                workspace.onDesktop?.let { open -> WorkspaceEntry(Icons.Rounded.Computer, stringResource(R.string.desktop_entry), EtaTheme.colors.tileBlue, entryWidth, open, count = workspace.desktopRunning) }
                 workspace.onKimi?.let { launch -> WorkspaceEntry(Icons.Rounded.Code, workspace.kimiLabel, EtaTheme.colors.tileSlate, entryWidth, launch,
                     onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null) }
             }

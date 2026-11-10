@@ -1778,9 +1778,6 @@
     <string name="desktop_waiting_banner">%1$d waiting for you</string>
     <string name="desktop_search_hint">Search titles and messages</string>
     <string name="desktop_search_empty">No matching sessions</string>
-    <string name="desktop_archived">Archived (%1$d)</string>
-    <string name="desktop_collapse">Hide</string>
-    <string name="desktop_expand">Show</string>
     <string name="desktop_needs_you">Needs you</string>
     <string name="desktop_done_unread">Finished</string>
     <string name="desktop_session_actions">Session actions</string>
@@ -1807,4 +1804,25 @@
     <string name="desktop_ask_banner_plan">A plan is waiting for your review</string>
     <string name="desktop_ask_open">Answer</string>
     <string name="desktop_pinned">Pinned</string>
+    <string name="desktop_refresh">Refresh</string>
+    <string name="desktop_recent">Recent</string>
+    <string name="desktop_archived_title">Archived</string>
+    <string name="desktop_group_expanded">Expanded</string>
+    <string name="desktop_group_collapsed">Collapsed</string>
+    <string name="desktop_group_running">%1$d running</string>
+    <string name="desktop_group_attention">%1$d need you</string>
+    <string name="desktop_group_empty">No sessions yet. Tap + to start one here.</string>
+    <string name="desktop_new_session_in">New session in %1$s</string>
+    <string name="desktop_working_hint">The computer is working…</string>
+    <string name="desktop_steer_send">Send now (jump the queue)</string>
+    <string name="desktop_error_not_queued">This message has already been delivered and is no longer in the queue</string>
+    <string name="desktop_error_busy">The session is still running. Stop it first.</string>
+    <string name="desktop_error_not_live">The session is not active on the computer. Open it there to answer.</string>
+    <string name="desktop_error_old_plugin">The computer plugin is too old for this. Update dsh-bridge and restart DSH.</string>
+    <string name="desktop_error_internal">The computer could not complete this (plugin and DSH versions may not match): %1$s</string>
+    <string name="desktop_error_offline">Not connected to the computer</string>
+    <string name="desktop_diag_dsh">DSH %1$s</string>
+    <string name="desktop_diag_dsh_legacy">DSH (version unknown, older interface)</string>
+    <string name="desktop_diag_plugin_outdated">Update the computer plugin to 0.4.0 or later for live queue, titles and history on this DSH version.</string>
+    <string name="desktop_entry">Computer</string>
 </resources>

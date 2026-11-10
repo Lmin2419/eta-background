@@ -37,7 +37,13 @@ export function startServer({ bridge, token, host, port, logger }) {
     const url = new URL(req.url ?? '/', 'http://bridge')
     if (req.method === 'GET' && url.pathname === '/v1/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' })
-      res.end(JSON.stringify({ ok: true, protocol: PROTOCOL_VERSION, version: bridge.host.version, runtime: RUNTIME }))
+      res.end(JSON.stringify({
+        ok: true,
+        protocol: PROTOCOL_VERSION,
+        version: bridge.host.version,
+        runtime: RUNTIME,
+        dsh: { version: bridge.host.dshVersion ?? null, api: bridge.hostApi() },
+      }))
       return
     }
     res.writeHead(404, { 'content-type': 'text/plain' })

@@ -3,6 +3,7 @@
 
 import { randomBytes } from 'node:crypto'
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { Bridge, RUNTIME } from './lib/bridge.js'
@@ -18,6 +19,26 @@ const VERSION = (() => {
     return '0.0.0'
   }
 })()
+
+/**
+ * Version of the DSH runtime this plugin is loaded into, read from the package
+ * the running entry script belongs to. Best effort: `null` when the layout is
+ * not recognised (the bridge itself relies on feature detection, not on this).
+ * @returns {string | null}
+ */
+export function detectDshVersion() {
+  const names = ['@deepseek-ai/dsh/package.json', '@deepseek-ai/dsh-api-session-controller/package.json', '@deepseek-ai/dsh-base/package.json']
+  for (const from of [process.argv[1], process.execPath]) {
+    if (typeof from !== 'string' || from.length === 0) continue
+    for (const name of names) {
+      try {
+        const version = JSON.parse(readFileSync(createRequire(from).resolve(name), 'utf8')).version
+        if (typeof version === 'string' && version.length > 0) return version
+      } catch { /* try the next location */ }
+    }
+  }
+  return null
+}
 
 /**
  * Resolve the shared secret: explicit config, then DSH_BRIDGE_TOKEN, then a
@@ -58,6 +79,11 @@ export function apply(ctx, config = {}) {
       const agents = typeof ctx.get === 'function' ? ctx.get('agents') : ctx.agents
       return agents?.get?.(sessionId)
     },
+    sessionOf: (sessionId) => {
+      const sessions = typeof ctx.get === 'function' ? ctx.get('sessions') : ctx.sessions
+      return sessions?.get?.(sessionId)
+    },
+    dshVersion: detectDshVersion(),
     logger,
     version: VERSION,
   }
@@ -79,6 +105,8 @@ export function apply(ctx, config = {}) {
   ctx.on('api-session/status', (sessionId, running) => bridge.onStatus(sessionId, running))
   ctx.on('api-session/activity', (sessionId, updatedAt) => bridge.onActivity(sessionId, updatedAt))
   ctx.on('api-session/error', (sessionId, message) => bridge.onSessionError(sessionId, message))
+  // Workspace registry writes: new or renamed workspaces, membership, archive and pin sets.
+  ctx.on('domain/changed', (change) => { if (change?.domain === 'workspace') bridge.onWorkspacesChanged() })
   // Every Session's events, for turn-end reminders on the phone.
   ctx.on('session/event', (session, event) => bridge.onSessionEvent(session, event), { global: true })
   // Prepended so the phone sees approvals and questions even while the desktop UI's forwarder holds them.
@@ -94,8 +122,10 @@ export function apply(ctx, config = {}) {
       logger.error(`dsh-bridge: cannot listen on ${host}:${port}: ${error?.message ?? error}`)
       return () => bridge.dispose()
     }
-    logger.info(`dsh-bridge ${VERSION} (${RUNTIME}) listening on http://${host}:${handle.port} (token from ${source})`)
+    const stopFeed = bridge.startProjectionFeed()
+    logger.info(`dsh-bridge ${VERSION} (${RUNTIME}, DSH ${services.dshVersion ?? 'unknown'}, api ${bridge.hostApi().join('+')}) listening on http://${host}:${handle.port} (token from ${source})`)
     return async () => {
+      stopFeed()
       bridge.dispose()
       await handle.close()
     }

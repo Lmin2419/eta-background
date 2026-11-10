@@ -1686,9 +1686,6 @@
     <string name="desktop_waiting_banner">%1$d 項等你處理（審批或回答）</string>
     <string name="desktop_search_hint">搜尋標題和聊天內容</string>
     <string name="desktop_search_empty">沒有符合的會話</string>
-    <string name="desktop_archived">已封存（%1$d）</string>
-    <string name="desktop_collapse">收起</string>
-    <string name="desktop_expand">展開</string>
     <string name="desktop_needs_you">等你處理</string>
     <string name="desktop_done_unread">已完成</string>
     <string name="desktop_session_actions">會話操作</string>
@@ -1715,4 +1712,25 @@
     <string name="desktop_ask_banner_plan">有計畫等你審閱</string>
     <string name="desktop_ask_open">去回答</string>
     <string name="desktop_pinned">已置頂</string>
+    <string name="desktop_refresh">重新整理</string>
+    <string name="desktop_recent">最近任務</string>
+    <string name="desktop_archived_title">已封存</string>
+    <string name="desktop_group_expanded">已展開</string>
+    <string name="desktop_group_collapsed">已收起</string>
+    <string name="desktop_group_running">%1$d 個執行中</string>
+    <string name="desktop_group_attention">%1$d 個等你處理</string>
+    <string name="desktop_group_empty">還沒有會話，點右邊的 + 在這裡新建。</string>
+    <string name="desktop_new_session_in">在 %1$s 裡新建會話</string>
+    <string name="desktop_working_hint">電腦正在執行…</string>
+    <string name="desktop_steer_send">立即插隊傳送</string>
+    <string name="desktop_error_not_queued">這則訊息已經送達，不在佇列裡了</string>
+    <string name="desktop_error_busy">會話還在執行，先停止再操作</string>
+    <string name="desktop_error_not_live">這個會話在電腦上沒有執行，請到電腦上回答</string>
+    <string name="desktop_error_old_plugin">電腦上的外掛版本太舊，不支援這個操作。請更新 dsh-bridge 並重新啟動 DSH。</string>
+    <string name="desktop_error_internal">電腦端沒能完成這個操作（可能是外掛和 DSH 版本不相符）：%1$s</string>
+    <string name="desktop_error_offline">未連接到電腦</string>
+    <string name="desktop_diag_dsh">DSH %1$s</string>
+    <string name="desktop_diag_dsh_legacy">DSH（版本未知，舊版介面）</string>
+    <string name="desktop_diag_plugin_outdated">電腦外掛需要更新到 0.4.0 或更高，這個 DSH 版本上的排隊、標題和歷史才能正常同步。</string>
+    <string name="desktop_entry">電腦</string>
 </resources>

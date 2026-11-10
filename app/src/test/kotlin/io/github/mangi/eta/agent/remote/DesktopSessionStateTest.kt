@@ -226,6 +226,63 @@ class DesktopSessionStateTest {
     }
 
     @Test
+    fun steeredMessageStaysVisibleBetweenLeavingTheQueueAndBeingRecorded() {
+        var state = DesktopSessionState("s").reduce(snapshot).copy(running = true)
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":7,"queue":[{"id":"q1","text":"插队","placement":"steering","rpcId":"r1"}]}"""), now = 1_000)
+        // 电脑先把它移出队列，记录稍后才到：中间这一段仍显示一条，不闪。
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":8,"queue":[]}"""), now = 1_050)
+        assertEquals(listOf("steer-q1"), DesktopChatProjector.messages(state).filterIsInstance<UserMessageUi>().filter { it.content == "插队" }.map { it.id })
+        state = state.reduce(json("""{"t":"item","sessionId":"s","item":{"k":"user","seq":9,"time":9,"id":"q1","text":"插队","source":"user","rpcId":"r1"}}"""), now = 1_080)
+        assertEquals(1, DesktopChatProjector.messages(state).filterIsInstance<UserMessageUi>().count { it.content == "插队" })
+        assertTrue(state.handoff.isEmpty())
+    }
+
+    @Test
+    fun recordedMessageRemovesItsQueueCopyEvenWithoutAQueuePush() {
+        var state = DesktopSessionState("s").reduce(snapshot)
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":7,"queue":[{"id":"q1","text":"排队","placement":"queued","rpcId":"r1"}]}"""))
+        state = state.reduce(json("""{"t":"item","sessionId":"s","item":{"k":"user","seq":9,"time":9,"id":"q1","text":"排队","source":"user","rpcId":"r1"}}"""))
+        assertTrue(state.visibleQueue.isEmpty())
+        assertEquals(1, DesktopChatProjector.messages(state).filterIsInstance<UserMessageUi>().count { it.content == "排队" })
+    }
+
+    @Test
+    fun cancelledSteerHandoffExpires() {
+        var state = DesktopSessionState("s").reduce(snapshot).copy(running = true)
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":7,"queue":[{"id":"q1","text":"撤回","placement":"steering"}]}"""), now = 0)
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":8,"queue":[]}"""), now = 10)
+        assertEquals(1, state.steering.size)
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":9,"title":"x"}"""), now = 10 + DesktopSessionState.HANDOFF_MS)
+        assertTrue(state.steering.isEmpty())
+    }
+
+    @Test
+    fun justSentEchoCanBeSteeredAndMovedBack() {
+        var state = DesktopSessionState("s").reduce(snapshot).addEcho(DesktopEcho("r5", "刚发的", queued = true))
+        assertEquals(listOf("echo-r5"), state.visibleQueue.map { it.id })
+        state = state.moveEcho("r5", queued = false)
+        assertTrue(state.visibleQueue.isEmpty())
+        assertTrue(DesktopChatProjector.messages(state).any { it.id == "echo-r5" })
+        // 电脑已把它当作插队：队列里的 steering 影子不再重复显示。
+        state = state.reduce(json("""{"t":"projection","sessionId":"s","seq":7,"queue":[{"id":"q5","text":"刚发的","placement":"steering","rpcId":"r5"}]}"""))
+        assertEquals(1, DesktopChatProjector.messages(state).filterIsInstance<UserMessageUi>().count { it.content == "刚发的" })
+        state = state.moveEcho("r5", queued = true)
+        assertTrue(DesktopChatProjector.messages(state).none { it.id == "echo-r5" })
+    }
+
+    @Test
+    fun committedProjectionIsReusedForLiveDeltas() {
+        val state = DesktopSessionState("s").reduce(snapshot)
+        val committed = DesktopChatProjector.committed(state.items)
+        val live = state.reduce(json("""{"t":"live","op":"start","sessionId":"s","attemptId":"x","turn":2,"step":1}"""))
+            .reduce(json("""{"t":"live","op":"delta","sessionId":"s","attemptId":"x","deltas":[{"index":0,"kind":"text","text":"正在写"}]}"""))
+        assertEquals(live.items, state.items)
+        val merged = DesktopChatProjector.merge(committed, live)
+        assertEquals(committed, merged.take(committed.size))
+        assertEquals(DesktopChatProjector.messages(live), merged)
+    }
+
+    @Test
     fun turnUsageMarkerSummarisesTheTurnLikeTheDesktop() {
         val state = DesktopSessionState("s").reduce(json(
             """

@@ -303,9 +303,8 @@ internal object DesktopLinkController {
 
     fun sync(context: Context) {
         val app = context.applicationContext
-        DesktopLinkSettings.init(app)
-        val config = runCatching { DesktopBridgeConfigStore(app).load() }.getOrNull()
-        val wanted = DesktopLinkSettings.state.value.enabled && config?.isComplete == true
+        DesktopBridge.prepare(app)
+        val wanted = DesktopLinkSettings.state.value.enabled && DesktopBridge.config.value?.isComplete == true
         val intent = Intent(app, DesktopLinkService::class.java)
         if (wanted) {
             // 从后台（如开机广播之外的场景）启动前台服务可能被系统拒绝；下次打开 App 会再试。

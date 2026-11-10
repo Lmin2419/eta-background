@@ -123,6 +123,12 @@ private fun DesktopDiagnostics() {
     }
     val lines = buildList {
         add(stringResource(R.string.desktop_diag_plugin, info.version ?: "?", runtime))
+        // 插件上报了接口清单才知道 DSH 的情况；0.2.2 之前的 DSH 没有 events 接口。
+        info.dshApi?.let { api ->
+            add(info.dshVersion?.let { stringResource(R.string.desktop_diag_dsh, it) }
+                ?: if ("events" in api) stringResource(R.string.desktop_diag_dsh, "0.2.2+") else stringResource(R.string.desktop_diag_dsh_legacy))
+        }
+        if (info.dshApi == null) add(stringResource(R.string.desktop_diag_plugin_outdated))
         if (sessions.loaded) add(stringResource(R.string.desktop_diag_sessions, visible, rows.count { it.archived }, rows.count { it.blank }))
         if (info.runtime == "node") add(stringResource(R.string.desktop_diag_node_warning))
     }

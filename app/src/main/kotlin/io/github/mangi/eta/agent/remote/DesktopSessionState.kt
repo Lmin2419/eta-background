@@ -31,19 +31,60 @@ internal data class DesktopSessionState(
     val timing: DesktopSubagentTiming? = null,
     /** 仍可回答的限时提问（投影 `questions`）；`continued` 的只能在这里回答。 */
     val pendingQuestions: List<DesktopPendingQuestion> = emptyList(),
+    /**
+     * 刚被模型取走的插队消息：电脑先把它移出队列，随后才把它写进记录，两次推送之间
+     * 继续显示这条气泡，免得闪一下。写进记录、本轮结束或超时后清掉。
+     */
+    val handoff: List<DesktopHandoff> = emptyList(),
 ) {
     val firstSeq: Long? get() = items.firstOrNull()?.seq
 
-    /** 已插队、等当前这一步结束就会被处理的消息（桌面显示为已发出的待送达气泡）。 */
-    val steering: List<DesktopQueueItem> get() = queue.filter { it.steering }
+    /**
+     * 已插队、等当前这一步结束就会被处理的消息（桌面显示为已发出的待送达气泡）。
+     * 手机自己发的那条已由对话里的回显代表，不再重复。
+     */
+    val steering: List<DesktopQueueItem>
+        get() {
+            if (queue.none { it.steering } && handoff.isEmpty()) return emptyList()
+            val echoed = echoes.filterNot { it.queued }.mapTo(HashSet()) { it.requestId }
+            return (queue.filter { it.steering } + handoff.map { it.item })
+                .filterNot { it.rpcId != null && it.rpcId in echoed }
+                .distinctBy { it.id }
+        }
 
     /** 点了插队后先在本地挪到对话里，不等电脑回执；电脑的队列推送随后会给出权威结果。 */
-    fun markSteering(itemId: String): DesktopSessionState =
-        copy(queue = queue.map { if (it.id == itemId) it.copy(steering = true) else it })
+    fun markSteering(itemId: String, steering: Boolean = true): DesktopSessionState =
+        copy(queue = queue.map { if (it.id == itemId) it.copy(steering = steering) else it })
+
+    /** 取消排队：先从本地队列拿掉；电脑拒绝时用 [restoreQueued] 放回去。 */
+    fun removeQueued(itemId: String): DesktopSessionState = copy(queue = queue.filterNot { it.id == itemId })
+
+    fun restoreQueued(item: DesktopQueueItem): DesktopSessionState =
+        if (queue.any { it.id == item.id } || items.any { it is DesktopItem.User && it.id == item.id }) this else copy(queue = queue + item)
 
     fun addEcho(echo: DesktopEcho): DesktopSessionState = copy(echoes = echoes + echo)
 
     fun removeEcho(requestId: String): DesktopSessionState = copy(echoes = echoes.filterNot { it.requestId == requestId })
+
+    /** 刚发出、电脑还没回执的排队消息：插队时挪进对话（[queued] 为 false），失败时挪回队列条。 */
+    fun moveEcho(requestId: String, queued: Boolean): DesktopSessionState =
+        copy(echoes = echoes.map { if (it.requestId == requestId) it.copy(queued = queued) else it })
+
+    /**
+     * 换上电脑推来的新队列。已插队的消息离开队列时先进 [handoff]，
+     * 等它作为用户消息写进记录再撤掉。
+     */
+    private fun withQueue(next: List<DesktopQueueItem>, now: Long): DesktopSessionState {
+        val present = next.mapTo(HashSet()) { it.id }
+        val recorded = if (queue.any { it.steering } || handoff.isNotEmpty()) {
+            items.mapNotNullTo(HashSet()) { (it as? DesktopItem.User)?.id }
+        } else {
+            emptySet()
+        }
+        val leaving = queue.filter { it.steering && it.id !in present && it.id !in recorded }.map { DesktopHandoff(it, now) }
+        val kept = (handoff + leaving).filter { it.item.id !in present && it.item.id !in recorded && now - it.at < HANDOFF_MS }
+        return copy(queue = next, handoff = if (running) kept.distinctBy { it.item.id } else emptyList())
+    }
 
     /**
      * 桌面已经确认的回显不再需要：进入记录的都撤掉；排队发送的回显在出现于队列时撤掉。
@@ -83,6 +124,7 @@ internal data class DesktopSessionState(
             cwd = push.string("cwd") ?: cwd,
             model = DesktopBridgeProtocol.parseModelSelection(push["model"]) ?: model,
             queue = DesktopBridgeProtocol.parseQueue(push["queue"]),
+            handoff = emptyList(),
             live = live,
             pendingCommitSeq = null,
             running = running || live != null,
@@ -105,9 +147,14 @@ internal data class DesktopSessionState(
                 next = next.copy(live = null, pendingCommitSeq = null)
             }
             is DesktopItem.TurnStart -> next = next.copy(running = true)
-            is DesktopItem.TurnEnd -> next = next.copy(running = false, live = null, pendingCommitSeq = null)
+            is DesktopItem.TurnEnd -> next = next.copy(running = false, live = null, pendingCommitSeq = null, handoff = emptyList())
             is DesktopItem.Title -> next = next.copy(title = item.title.ifBlank { title })
-            is DesktopItem.User -> return next.settleEchoes()
+            // 消息已写进记录：它在队列和交接区里的影子一并撤掉，同一条消息只显示一次，
+            // 即使队列的更新推送晚到或丢了。
+            is DesktopItem.User -> return next.copy(
+                queue = next.queue.filterNot { it.id == item.id || (it.rpcId != null && it.rpcId == item.rpcId) },
+                handoff = next.handoff.filterNot { it.item.id == item.id || (it.item.rpcId != null && it.item.rpcId == item.rpcId) },
+            ).settleEchoes()
             else -> Unit
         }
         return next
@@ -139,11 +186,13 @@ internal data class DesktopSessionState(
         }
     }
 
-    fun applyProjection(push: JsonObject): DesktopSessionState {
+    fun applyProjection(push: JsonObject, now: Long = System.currentTimeMillis()): DesktopSessionState {
         var next = this
         if (push.containsKey("title")) next = next.copy(title = push.string("title") ?: next.title)
         if (push.containsKey("model")) next = next.copy(model = DesktopBridgeProtocol.parseModelSelection(push["model"]) ?: next.model)
-        if (push.containsKey("queue")) next = next.copy(queue = DesktopBridgeProtocol.parseQueue(push["queue"])).settleEchoes()
+        if (push.containsKey("queue")) {
+            next = next.withQueue(DesktopBridgeProtocol.parseQueue(push["queue"]), now).settleEchoes()
+        }
         if (push.containsKey("stats")) next = next.copy(stats = DesktopBridgeProtocol.parseStats(push["stats"]) ?: next.stats)
         if (push.containsKey("usage")) next = next.copy(usage = DesktopBridgeProtocol.parseTokenTotals(push["usage"]) ?: next.usage)
         if (push.containsKey("pressure")) {
@@ -165,20 +214,30 @@ internal data class DesktopSessionState(
         copy(items = mergeItems(items, older), hasMore = hasMore, loadingOlder = false)
 
     /** 处理一条属于本会话的推送；不认识的推送原样返回。 */
-    fun reduce(push: JsonObject): DesktopSessionState = when (push.string("t")) {
-        "snapshot" -> applySnapshot(push)
-        "item" -> (push["item"] as? JsonObject)?.let(DesktopBridgeProtocol::parseItem)?.let(::applyItem) ?: this
-        "live" -> applyLive(push)
-        "projection" -> applyProjection(push)
-        "status" -> copy(running = push.bool("running") == true).let { if (!it.running) it.copy(live = null, pendingCommitSeq = null) else it }
-        "follow-error" -> copy(error = (push["error"] as? JsonObject)?.string("message") ?: "订阅失败")
-        else -> this
+    fun reduce(push: JsonObject, now: Long = System.currentTimeMillis()): DesktopSessionState {
+        val next = when (push.string("t")) {
+            "snapshot" -> applySnapshot(push)
+            "item" -> (push["item"] as? JsonObject)?.let(DesktopBridgeProtocol::parseItem)?.let(::applyItem) ?: this
+            "live" -> applyLive(push)
+            "projection" -> applyProjection(push, now)
+            "status" -> copy(running = push.bool("running") == true).let {
+                if (!it.running) it.copy(live = null, pendingCommitSeq = null, handoff = emptyList()) else it
+            }
+            "follow-error" -> copy(error = (push["error"] as? JsonObject)?.string("message") ?: "订阅失败")
+            else -> this
+        }
+        // 插队后又在电脑上被取消的消息不会写进记录：交接区按时间清掉，不留假气泡。
+        if (next.handoff.none { now - it.at >= HANDOFF_MS }) return next
+        return next.copy(handoff = next.handoff.filter { now - it.at < HANDOFF_MS })
     }
 
     private fun DesktopLiveAttempt.matches(item: DesktopItem.Assistant): Boolean =
         turn != null && step != null && turn == item.turn && step == item.step
 
     companion object {
+        /** 交接区里的条目最多留这么久；被取走的消息几十毫秒内就会写进记录。 */
+        const val HANDOFF_MS = 3_000L
+
         fun mergeItems(existing: List<DesktopItem>, incoming: List<DesktopItem>): List<DesktopItem> {
             if (incoming.isEmpty()) return existing
             val bySeq = LinkedHashMap<Long, DesktopItem>(existing.size + incoming.size)

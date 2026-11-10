@@ -123,14 +123,15 @@ internal fun formatDuration(res: Resources, ms: Long): String = when {
 @Composable
 internal fun DesktopStatsLine(state: DesktopSessionState, runningForMs: Long?, onClick: () -> Unit) {
     val res = LocalResources.current
+    // 一行放不下时从后面截断，所以按「现在最想知道的」排：是否在跑、花了多少、其余细节。
     val parts = buildList {
-        state.stats?.takeIf { it.turns > 0 || it.steps > 0 }?.let { add(res.getString(R.string.desktop_stats_counts, it.turns, it.steps)) }
+        runningForMs?.let { add(res.getString(R.string.desktop_running_for, formatDuration(res, it))) }
         state.usage?.let { usage ->
-            usage.cacheHitPercent?.let { add(res.getString(R.string.desktop_cache_hit, it)) }
             if (usage.total > 0) add("${DesktopChatProjector.compactTokens(usage.total)} tok")
+            usage.cacheHitPercent?.let { add(res.getString(R.string.desktop_cache_hit, it)) }
         }
         state.stats?.tokensPerSecond?.let { add("${DesktopChatProjector.formatRate(it)} tok/s") }
-        runningForMs?.let { add(res.getString(R.string.desktop_running_for, formatDuration(res, it))) }
+        state.stats?.takeIf { it.turns > 0 || it.steps > 0 }?.let { add(res.getString(R.string.desktop_stats_counts, it.turns, it.steps)) }
     }
     if (parts.isEmpty()) return
     Text(

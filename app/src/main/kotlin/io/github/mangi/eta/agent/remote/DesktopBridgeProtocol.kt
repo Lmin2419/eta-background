@@ -131,12 +131,17 @@ internal object DesktopBridgeProtocol {
         )
     }
 
-    fun parseServerInfo(json: JsonObject): DesktopServerInfo = DesktopServerInfo(
-        version = json.string("version"),
-        runtime = json.string("runtime"),
-        host = json.string("host"),
-        features = json.array("features")?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }?.toSet().orEmpty(),
-    )
+    fun parseServerInfo(json: JsonObject): DesktopServerInfo {
+        val dsh = json["dsh"] as? JsonObject
+        return DesktopServerInfo(
+            version = json.string("version"),
+            runtime = json.string("runtime"),
+            host = json.string("host"),
+            features = json.array("features")?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }?.toSet().orEmpty(),
+            dshVersion = dsh?.string("version"),
+            dshApi = dsh?.array("api")?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }?.toSet(),
+        )
+    }
 
     fun parseQuestion(json: JsonObject): DesktopQuestion? {
         val id = json.string("id") ?: return null
@@ -504,7 +509,14 @@ internal data class DesktopServerInfo(
     val runtime: String?,
     val host: String?,
     val features: Set<String>,
-)
+    /** 电脑上 DSH 的版本；插件读不到时为空。 */
+    val dshVersion: String? = null,
+    /** DSH 提供的会话接口；空表示插件太旧，没有上报。 */
+    val dshApi: Set<String>? = null,
+) {
+    /** 插件是否支持某项能力；老插件不报能力列表时按不支持处理。 */
+    fun supports(feature: String): Boolean = feature in features
+}
 
 internal data class DesktopQuestionOption(val label: String, val description: String?)
 
@@ -562,6 +574,9 @@ internal data class DesktopApproval(
 )
 
 internal data class DesktopQueueItem(val id: String, val text: String, val steering: Boolean, val rpcId: String? = null)
+
+/** 一条正从插队队列交接到记录里的消息，以及它离开队列的时间。 */
+internal data class DesktopHandoff(val item: DesktopQueueItem, val at: Long)
 
 /** 手机刚发出、桌面还没确认的消息；[queued] 表示发送时会话正在运行，会进入待处理队列。 */
 internal data class DesktopEcho(val requestId: String, val text: String, val queued: Boolean)

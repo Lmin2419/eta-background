@@ -99,6 +99,40 @@ class DesktopLinkTest {
     }
 
     @Test
+    fun groupsFollowDesktopOrderKeepEmptyWorkspacesAndCollectStrays() {
+        val ws = listOf(DesktopWorkspace("w2", "B", "/b"), DesktopWorkspace("w1", "A", "/a"), DesktopWorkspace("w3", "empty", "/c"))
+        val rows = listOf(
+            row("old").copy(workspaceId = "w1", updatedAt = 1),
+            row("new").copy(workspaceId = "w1", updatedAt = 9),
+            row("pin").copy(workspaceId = "w1", updatedAt = 0, pinned = true),
+            row("b").copy(workspaceId = "w2", updatedAt = 5),
+            row("stray").copy(workspaceId = "gone", updatedAt = 3),
+        )
+        val groups = io.github.mangi.eta.ui.screens.desktop.groupByWorkspace(rows, ws)
+        assertEquals(listOf("w2", "w1", "w3", io.github.mangi.eta.ui.screens.desktop.OTHER_GROUP), groups.map { it.key })
+        assertEquals(listOf("pin", "new", "old"), groups[1].rows.map { it.id })
+        assertTrue(groups[2].rows.isEmpty())
+        assertEquals(listOf("stray"), groups[3].rows.map { it.id })
+    }
+
+    @Test
+    fun recentPutsNeedsYouThenRunningThenLatestActivity() {
+        val rows = (1..8).map { row("s$it").copy(updatedAt = it.toLong()) } +
+            row("run").copy(running = true, updatedAt = 0) + row("ask").copy(updatedAt = 0)
+        val recent = io.github.mangi.eta.ui.screens.desktop.recentSessions(rows, needsYou = setOf("ask"), touched = mapOf("s1" to 100L))
+        assertEquals(listOf("ask", "run", "s1", "s8", "s7"), recent.map { it.id })
+    }
+
+    @Test
+    fun helloReportsDshVersionAndInterface() {
+        val info = DesktopBridgeProtocol.parseServerInfo(json("""{"version":"0.4.0","dsh":{"version":"0.2.1-rc.2","api":["control","page"]},"features":["queue-by-request"]}"""))
+        assertEquals("0.2.1-rc.2", info.dshVersion)
+        assertEquals(setOf("control", "page"), info.dshApi)
+        assertTrue(info.supports("queue-by-request"))
+        assertNull(DesktopBridgeProtocol.parseServerInfo(json("""{"version":"0.3.0"}""")).dshApi)
+    }
+
+    @Test
     fun remindersFollowScopeWatchedAndMutedSessions() {
         val prefs = DesktopLinkPrefs(watched = setOf("mine"), muted = setOf("quiet"))
         assertTrue(prefs.reminds("mine"))
