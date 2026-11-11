@@ -44,6 +44,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -51,9 +52,9 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowUpward
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
@@ -88,9 +89,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.mangi.eta.R
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Psychology
-import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.AutoAwesome
 import io.github.mangi.eta.data.model.ReasoningEffort
 import io.github.mangi.eta.data.repository.SpeechSettingsRepository
 import io.github.mangi.eta.ui.model.AgentContextUsageUi
@@ -116,7 +117,7 @@ private val SendButtonVisualSize = ChatInputActionIconSize
 private val SendIconSize = 16.dp
 private val StopIconSize = 10.dp
 private val ThinkingIconSize = 21.dp
-private val InputContainerShape = RoundedCornerShape(28.dp)
+private val InputContainerShape = RoundedCornerShape(24.dp)
 
 /**
  * 电脑会话对输入器的定制：执行中的占位文字，以及发送时直接插队的入口。
@@ -306,8 +307,10 @@ internal fun AgentChatInputBar(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .etaElevation(EtaElevation.E2, InputContainerShape)
+                    // 输入卡片：细描边 + 很轻的阴影，安静地浮在页面上。
+                    .etaElevation(EtaElevation.E1, InputContainerShape)
                     .background(EtaTheme.colors.surfaceRaised, InputContainerShape)
+                    .border(1.dp, EtaTheme.colors.outline, InputContainerShape)
                     .padding(horizontal = 10.dp, vertical = 8.dp),
             ) {
         AnimatedVisibility(
@@ -386,7 +389,7 @@ internal fun AgentChatInputBar(
                                 minHeight = ChatInputActionSize,
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Close,
+                                    imageVector = Icons.Outlined.Close,
                                     contentDescription = stringResource(R.string.ui_cancel_edit_c698df),
                                     modifier = Modifier.size(ChatInputActionIconSize),
                                     tint = MiuixTheme.colorScheme.onSurface,
@@ -448,7 +451,7 @@ internal fun AgentChatInputBar(
                                 },
                                 modifier = Modifier.size(40.dp),
                             ) {
-                                Icon(Icons.Rounded.Bolt, contentDescription = remoteComposer.steerLabel, tint = EtaTheme.colors.accent, modifier = Modifier.size(22.dp))
+                                Icon(Icons.Outlined.Bolt, contentDescription = remoteComposer.steerLabel, tint = EtaTheme.colors.accent, modifier = Modifier.size(22.dp))
                             }
                             Spacer(modifier = Modifier.width(4.dp))
                         }
@@ -526,7 +529,7 @@ private fun ThinkingEffortChip(
                 ReasoningEffort.HIGH, ReasoningEffort.XHIGH, ReasoningEffort.MAX -> R.string.eta_effort_deep
                 else -> R.string.eta_effort_standard
             }),
-            leadingIcon = if (!active) Icons.Rounded.Bolt else if (effort in listOf(ReasoningEffort.HIGH, ReasoningEffort.XHIGH, ReasoningEffort.MAX)) Icons.Rounded.Psychology else Icons.Rounded.AutoAwesome,
+            leadingIcon = if (!active) Icons.Outlined.Bolt else if (effort in listOf(ReasoningEffort.HIGH, ReasoningEffort.XHIGH, ReasoningEffort.MAX)) Icons.Outlined.Psychology else Icons.Outlined.AutoAwesome,
             selected = active,
             enabled = menuEnabled,
             onClick = { showPopup = true },
@@ -606,7 +609,7 @@ private fun PendingImageStrip(
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Close,
+                            imageVector = Icons.Outlined.Close,
                             contentDescription = stringResource(R.string.ui_remove_image_089db3),
                             modifier = Modifier.size(11.dp),
                             tint = EtaTheme.colors.toastForeground,

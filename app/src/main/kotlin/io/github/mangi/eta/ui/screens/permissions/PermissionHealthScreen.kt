@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,21 +42,21 @@ fun PermissionHealthScreen(state: PermissionHealthUiState, onAction: (Permission
 @Composable
 private fun PermissionItemCard(item: PermissionHealthItemUi, checking: Boolean, onActionClick: () -> Unit) {
     val icon = when (item.id) {
-        "accessibility" -> Icons.Rounded.AccessibilityNew
-        "overlay" -> Icons.Rounded.Layers
-        "root" -> Icons.Rounded.Key
-        "engine", "model" -> Icons.Rounded.Memory
-        "terminal" -> Icons.Rounded.Terminal
-        "notification", "notifications" -> Icons.Rounded.Notifications
-        "background" -> Icons.Rounded.History
-        "app_list" -> Icons.Rounded.Dashboard
-        LOCAL_NETWORK_PERMISSION_ITEM_ID -> Icons.Rounded.Wifi
-        "location" -> Icons.Rounded.LocationOn
-        "notification_history" -> Icons.Rounded.NotificationsActive
-        "usage_access" -> Icons.Rounded.QueryStats
-        "calendar" -> Icons.Rounded.CalendarMonth
-        "notification_policy" -> Icons.Rounded.DoNotDisturbOn
-        else -> Icons.Rounded.Shield
+        "accessibility" -> Icons.Outlined.AccessibilityNew
+        "overlay" -> Icons.Outlined.Layers
+        "root" -> Icons.Outlined.Key
+        "engine", "model" -> Icons.Outlined.Memory
+        "terminal" -> Icons.Outlined.Terminal
+        "notification", "notifications" -> Icons.Outlined.Notifications
+        "background" -> Icons.Outlined.History
+        "app_list" -> Icons.Outlined.Dashboard
+        LOCAL_NETWORK_PERMISSION_ITEM_ID -> Icons.Outlined.Wifi
+        "location" -> Icons.Outlined.LocationOn
+        "notification_history" -> Icons.Outlined.NotificationsActive
+        "usage_access" -> Icons.Outlined.QueryStats
+        "calendar" -> Icons.Outlined.CalendarMonth
+        "notification_policy" -> Icons.Outlined.DoNotDisturbOn
+        else -> Icons.Outlined.Shield
     }
     val title = when (item.id) {
         "calendar" -> stringResource(R.string.eta_permission_calendar)

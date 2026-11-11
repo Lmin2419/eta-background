@@ -22,13 +22,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
-import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.outlined.Add
 import io.github.mangi.eta.ui.theme.EtaElevation
 import io.github.mangi.eta.ui.theme.etaElevation
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.material.icons.rounded.MoreHoriz
+import androidx.compose.material.icons.outlined.MoreHoriz
 import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.components.EtaSheet
 import io.github.mangi.eta.ui.components.EtaIconButton
@@ -38,7 +38,7 @@ import top.yukonga.miuix.kmp.basic.Icon
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BookmarkBorder
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -113,13 +113,13 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
         if (store.loadFailed) {
             item(key = "error") {
                 ListEmptyState(title = stringResource(R.string.common_tasks_load_failed),
-                    summary = stringResource(R.string.common_tasks_load_preserved), icon = Icons.Rounded.BookmarkBorder,
+                    summary = stringResource(R.string.common_tasks_load_preserved), icon = Icons.Outlined.BookmarkBorder,
                     action = { EtaButton(stringResource(R.string.common_tasks_retry), store::refresh, enabled = !store.busy) })
             }
         } else if (store.tasks.isEmpty()) {
             item(key = "empty") {
                 ListEmptyState(title = stringResource(if (store.busy) R.string.common_tasks_loading else R.string.common_tasks_empty),
-                    summary = stringResource(R.string.common_tasks_empty_hint), icon = Icons.Rounded.BookmarkBorder)
+                    summary = stringResource(R.string.common_tasks_empty_hint), icon = Icons.Outlined.BookmarkBorder)
             }
         }
         items(store.tasks, key = { it.id }) { task ->
@@ -134,7 +134,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
                             enabled = editable, kind = EtaButtonKind.Tonal, size = EtaButtonSize.Small)
                         Spacer(Modifier.weight(1f))
                         EtaIconButton({ menuId = task.id }, enabled = editable) {
-                            Icon(Icons.Rounded.MoreHoriz, stringResource(R.string.common_tasks_manage))
+                            Icon(Icons.Outlined.MoreHoriz, stringResource(R.string.common_tasks_manage))
                         }
                     }
                 }
@@ -161,7 +161,7 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
                 .heightIn(min = 52.dp).widthIn(min = 52.dp)
                 .padding(horizontal = if (collapsed) 14.dp else 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.Add, null, Modifier.size(24.dp), tint = EtaTheme.colors.onAccent)
+                Icon(Icons.Outlined.Add, null, Modifier.size(24.dp), tint = EtaTheme.colors.onAccent)
                 if (!collapsed) Text(createLabel, style = EtaTheme.type.rowTitle, color = EtaTheme.colors.onAccent)
             }
         }

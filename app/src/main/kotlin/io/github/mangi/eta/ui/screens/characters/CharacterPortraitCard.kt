@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.FileUpload
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarOutline
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,7 +96,7 @@ internal fun CharacterPortraitCard(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = if (card.favorite) Icons.Rounded.Star else Icons.Rounded.StarOutline,
+                    imageVector = if (card.favorite) Icons.Outlined.Star else Icons.Outlined.StarOutline,
                     contentDescription = if (card.favorite) "取消收藏" else "收藏",
                     modifier = Modifier.size(16.dp),
                     tint = if (card.favorite) FavoriteColor else EtaTheme.colors.textSecondary,
@@ -180,7 +180,7 @@ internal fun CharacterAddTile(
                     .background(colors.primary.copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(24.dp), tint = colors.primary)
+                Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(24.dp), tint = colors.primary)
             }
             Spacer(Modifier.height(12.dp))
             Text("新建角色", style = MiuixTheme.textStyles.body2, fontWeight = FontWeight.Medium, color = colors.onSurface)
@@ -199,7 +199,7 @@ internal fun CharacterAddTile(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Rounded.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp), tint = colors.onSurfaceVariantSummary)
+            Icon(Icons.Outlined.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp), tint = colors.onSurfaceVariantSummary)
             Spacer(Modifier.width(6.dp))
             Text("导入角色卡", style = MiuixTheme.textStyles.footnote1, color = colors.onSurfaceVariantSummary)
         }

@@ -22,9 +22,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowUpward
-import androidx.compose.material.icons.rounded.Stop
-import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -454,7 +454,7 @@ private fun InputPanel(
                     modifier = Modifier.padding(end = 8.dp),
                 ) {
                     Icon(
-                        imageVector = if (stopMode) Icons.Rounded.Stop else Icons.Rounded.ArrowUpward,
+                        imageVector = if (stopMode) Icons.Outlined.Stop else Icons.Outlined.ArrowUpward,
                         contentDescription = stringResource(
                             if (stopMode) R.string.terminal_stop else R.string.terminal_send,
                         ),
@@ -474,7 +474,7 @@ private fun InputPanel(
 @Composable
 private fun LinuxGuide(onOpenEnvironment: () -> Unit) {
     TerminalPlaceholder(
-        icon = Icons.Rounded.Terminal,
+        icon = Icons.Outlined.Terminal,
         message = stringResource(R.string.terminal_linux_not_ready),
         actionText = stringResource(R.string.terminal_open_environment),
         onAction = onOpenEnvironment,
@@ -484,7 +484,7 @@ private fun LinuxGuide(onOpenEnvironment: () -> Unit) {
 @Composable
 private fun EmptyHint(message: String? = null) {
     TerminalPlaceholder(
-        icon = Icons.Rounded.Terminal,
+        icon = Icons.Outlined.Terminal,
         message = message ?: stringResource(R.string.terminal_empty_hint),
     )
 }

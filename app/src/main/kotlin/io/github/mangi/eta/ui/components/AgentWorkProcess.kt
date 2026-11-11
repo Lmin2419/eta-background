@@ -32,10 +32,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Build
-import androidx.compose.material.icons.rounded.Checklist
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.Lightbulb
+import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -244,7 +244,7 @@ private fun AgentWorkStepNode(
             }
 
             is ThinkingMessageUi -> WorkTimelineNode(
-                icon = Icons.Rounded.Lightbulb,
+                icon = Icons.Outlined.Lightbulb,
                 tone = if (message.isStreaming) WorkNodeTone.Running else WorkNodeTone.Done,
                 isLast = isLast,
             ) {
@@ -256,7 +256,7 @@ private fun AgentWorkStepNode(
             }
 
             is ToolSummaryMessageUi -> WorkTimelineNode(
-                icon = Icons.Rounded.Build,
+                icon = Icons.Outlined.Build,
                 tone = WorkNodeTone.Done,
                 isLast = isLast,
             ) {
@@ -434,7 +434,7 @@ internal fun ExpandChevron(
         label = "expand_chevron",
     )
     Icon(
-        imageVector = Icons.Rounded.ExpandMore,
+        imageVector = Icons.Outlined.ExpandMore,
         contentDescription = contentDescription,
         modifier = modifier
             .size(16.dp)

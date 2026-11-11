@@ -7,9 +7,9 @@ import android.text.format.Formatter
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Description
-import androidx.compose.material.icons.rounded.Folder
-import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -434,7 +434,7 @@ internal fun LinuxEnvironmentScreen(
                 EtaArrowPreference(
                     title = stringResource(R.string.capability_workspace),
                     summary = stringResource(R.string.capability_workspace_summary),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Folder, tint = EtaPreferenceColors.Orange) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.Folder, tint = EtaPreferenceColors.Orange) },
                     onClick = { onNavigate(AppRoute.Workspace) },
                 )
                 if (selectedBaseReady) {
@@ -442,14 +442,14 @@ internal fun LinuxEnvironmentScreen(
                     EtaArrowPreference(
                         title = stringResource(R.string.shared_folders_entry_title),
                         summary = stringResource(R.string.linux_environment_shared_folders_summary),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.FolderOpen, tint = EtaPreferenceColors.Orange) },
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.FolderOpen, tint = EtaPreferenceColors.Orange) },
                         onClick = { onNavigate(AppRoute.SharedFolders) },
                     )
                     EtaPreferenceDivider(hasLeading = true)
                     EtaArrowPreference(
                         title = stringResource(R.string.linux_files_entry_title),
                         summary = stringResource(R.string.linux_files_entry_summary),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.Description, tint = EtaPreferenceColors.Slate) },
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.Description, tint = EtaPreferenceColors.Slate) },
                         onClick = { onNavigate(AppRoute.LinuxFiles(selectedDistribution.wireName)) },
                     )
                 }

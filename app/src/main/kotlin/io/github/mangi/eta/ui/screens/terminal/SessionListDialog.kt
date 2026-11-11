@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
@@ -153,12 +153,12 @@ private fun SessionRow(
             }
         }
         RowIconAction(
-            icon = Icons.Rounded.RestartAlt,
+            icon = Icons.Outlined.RestartAlt,
             contentDescription = stringResource(R.string.terminal_restart_session),
             onClick = onRestart,
         )
         RowIconAction(
-            icon = Icons.Rounded.Close,
+            icon = Icons.Outlined.Close,
             contentDescription = stringResource(R.string.terminal_close_session),
             onClick = onClose,
         )

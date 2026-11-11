@@ -22,10 +22,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Description
-import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,7 +112,7 @@ internal fun AgentAttachmentPickerButton(
             minHeight = ChatInputActionSize,
         ) {
             Icon(
-                imageVector = Icons.Rounded.Add,
+                imageVector = Icons.Outlined.Add,
                 contentDescription = stringResource(R.string.ui_add_attachment_dba9e8),
                 modifier = Modifier.size(ChatInputActionIconSize),
                 tint = MiuixTheme.colorScheme.onSurface,
@@ -201,9 +201,9 @@ internal fun PendingFileReferenceStrip(
             ) {
                 Icon(
                     imageVector = if (reference.kind == AgentFileReferenceKind.Directory) {
-                        Icons.Rounded.FolderOpen
+                        Icons.Outlined.FolderOpen
                     } else {
-                        Icons.Rounded.Description
+                        Icons.Outlined.Description
                     },
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
@@ -226,7 +226,7 @@ internal fun PendingFileReferenceStrip(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Close,
+                        imageVector = Icons.Outlined.Close,
                         contentDescription = stringResource(R.string.ui_remove_file_reference_04bbfc),
                         modifier = Modifier.size(15.dp),
                         tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -268,9 +268,9 @@ internal fun SentFileReferenceFlow(
             ) {
                 Icon(
                     imageVector = if (reference.kind == AgentFileReferenceKind.Directory) {
-                        Icons.Rounded.FolderOpen
+                        Icons.Outlined.FolderOpen
                     } else {
-                        Icons.Rounded.Description
+                        Icons.Outlined.Description
                     },
                     contentDescription = null,
                     modifier = Modifier.size(17.dp),

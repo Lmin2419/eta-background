@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Description
-import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -133,7 +133,7 @@ internal fun DataBackupScreen(
                     enabled = !busy,
                     startAction = {
                         BackupIcon(
-                            icon = Icons.Rounded.Download,
+                            icon = Icons.Outlined.Download,
                             loading = busy,
                         )
                     },
@@ -148,7 +148,7 @@ internal fun DataBackupScreen(
                     enabled = !busy,
                     startAction = {
                         BackupIcon(
-                            icon = Icons.Rounded.Description,
+                            icon = Icons.Outlined.Description,
                             loading = false,
                         )
                     },

@@ -10,8 +10,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,13 +47,13 @@ internal fun EtaSearchField(
         decorationBox = { inner ->
             Row(Modifier.heightIn(min = 44.dp).padding(start = 14.dp, end = 4.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Rounded.Search, null, Modifier.size(20.dp), tint = colors.textTertiary)
+                Icon(Icons.Outlined.Search, null, Modifier.size(20.dp), tint = colors.textTertiary)
                 Box(Modifier.weight(1f).padding(vertical = 10.dp)) {
                     if (value.isEmpty()) Text(placeholder, style = EtaTheme.type.subhead, color = colors.textTertiary)
                     inner()
                 }
                 if (value.isNotEmpty()) EtaIconButton(onClick = { onValueChange("") }, modifier = Modifier.height(40.dp), enabled = enabled) {
-                    Icon(Icons.Rounded.Close, stringResource(R.string.eta_clear_search), Modifier.size(20.dp), tint = colors.textTertiary)
+                    Icon(Icons.Outlined.Close, stringResource(R.string.eta_clear_search), Modifier.size(20.dp), tint = colors.textTertiary)
                 }
             }
         },

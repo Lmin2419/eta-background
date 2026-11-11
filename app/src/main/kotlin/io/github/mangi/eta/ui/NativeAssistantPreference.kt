@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.PowerSettingsNew
+import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -47,7 +47,7 @@ internal fun NativeAssistantPreference(context: Context) {
     EtaArrowPreference(
         title = stringResource(R.string.native_assistant_title),
         summary = stringResource(R.string.native_assistant_entry_summary),
-        startAction = { EtaPreferenceIcon(Icons.Rounded.PowerSettingsNew, tint = EtaPreferenceColors.Yellow) },
+        startAction = { EtaPreferenceIcon(Icons.Outlined.PowerSettingsNew, tint = EtaPreferenceColors.Yellow) },
         onClick = { show = true; NativeAssistantSettings.refresh(context) },
     )
     EtaWindowDialog(show = show, title = stringResource(R.string.native_assistant_title),

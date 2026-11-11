@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CloudUpload
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -118,7 +118,7 @@ internal fun SpeechRecognitionScreen(onBack: () -> Unit, onOpenOss: () -> Unit) 
                             title = stringResource(R.string.speech_oss_title),
                             summary = settings.oss.bucket.ifBlank { stringResource(R.string.speech_oss_configure) },
                             startAction = {
-                                EtaPreferenceIcon(icon = Icons.Rounded.CloudUpload, tint = EtaPreferenceColors.Blue)
+                                EtaPreferenceIcon(icon = Icons.Outlined.CloudUpload, tint = EtaPreferenceColors.Blue)
                             },
                             onClick = onOpenOss,
                         )

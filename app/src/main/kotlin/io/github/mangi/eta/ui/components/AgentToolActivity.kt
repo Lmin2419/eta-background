@@ -22,9 +22,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -472,7 +472,7 @@ private fun BrowserPagePreview(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Language,
+                    imageVector = Icons.Outlined.Language,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                     tint = MiuixTheme.colorScheme.outline,
@@ -555,8 +555,8 @@ private fun ToolCommandBlock(
                 minHeight = 32.dp,
             ) {
                 Icon(
-                    imageVector = if (copied) Icons.Rounded.Check
-                        else Icons.Rounded.ContentCopy,
+                    imageVector = if (copied) Icons.Outlined.Check
+                        else Icons.Outlined.ContentCopy,
                     contentDescription = stringResource(
                         if (copied) R.string.copy_copied else R.string.copy_command,
                     ),

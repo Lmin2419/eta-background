@@ -3,7 +3,7 @@ package io.github.mangi.eta.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.material.icons.outlined.UnfoldMore
 import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.DropdownColors
@@ -84,7 +84,7 @@ internal fun EtaDropdownPreference(
             )
         }
         Row {
-            Icon(Icons.Rounded.UnfoldMore, null, Modifier.size(20.dp), tint = color)
+            Icon(Icons.Outlined.UnfoldMore, null, Modifier.size(20.dp), tint = color)
             if (useWindow) {
                 WindowDropdownPopup(
                     entry = entry,

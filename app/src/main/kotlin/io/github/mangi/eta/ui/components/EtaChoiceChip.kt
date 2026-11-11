@@ -6,7 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +29,7 @@ internal fun EtaChoiceChip(text: String, selected: Boolean, onClick: () -> Unit,
         .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
         .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (leadingIcon != null || selected) Icon(leadingIcon ?: Icons.Rounded.Check, null, Modifier.size(16.dp), tint = if (selected) colors.onAccentSoft else colors.textSecondary)
+        if (leadingIcon != null || selected) Icon(leadingIcon ?: Icons.Outlined.Check, null, Modifier.size(16.dp), tint = if (selected) colors.onAccentSoft else colors.textSecondary)
         Text(text, style = EtaTheme.type.footnote, color = if (selected) colors.onAccentSoft else colors.textSecondary)
     }
 }

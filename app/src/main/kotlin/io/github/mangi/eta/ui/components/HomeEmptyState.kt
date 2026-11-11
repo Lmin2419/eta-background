@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Coffee
-import androidx.compose.material.icons.rounded.NotificationsNone
-import androidx.compose.material.icons.rounded.BatteryChargingFull
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.outlined.Coffee
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,13 +70,13 @@ internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> U
                         Spacer(Modifier.height(12.dp))
                     }
                     val examples = listOf(
-                        Triple(R.string.eta_example_coffee, R.string.eta_prompt_coffee, Icons.Rounded.Coffee),
-                        Triple(R.string.eta_example_notifications, R.string.eta_prompt_notifications, Icons.Rounded.NotificationsNone),
-                        Triple(R.string.eta_example_battery, R.string.eta_prompt_battery, Icons.Rounded.BatteryChargingFull),
-                        Triple(R.string.eta_example_phones, R.string.eta_prompt_phones, Icons.Rounded.Search),
+                        Triple(R.string.eta_example_coffee, R.string.eta_prompt_coffee, Icons.Outlined.Coffee),
+                        Triple(R.string.eta_example_notifications, R.string.eta_prompt_notifications, Icons.Outlined.NotificationsNone),
+                        Triple(R.string.eta_example_battery, R.string.eta_prompt_battery, Icons.Outlined.BatteryChargingFull),
+                        Triple(R.string.eta_example_phones, R.string.eta_prompt_phones, Icons.Outlined.Search),
                     )
                     val cards = shortcuts.tasks.take(2).map { task ->
-                        HomeSuggestion(task.name, task.instruction, Icons.Rounded.PlayArrow) { shortcuts.onRunTask(task) }
+                        HomeSuggestion(task.name, task.instruction, Icons.Outlined.PlayArrow) { shortcuts.onRunTask(task) }
                     } + examples.take(4 - shortcuts.tasks.size.coerceAtMost(2)).map { (title, prompt, icon) ->
                         val text = stringResource(prompt)
                         HomeSuggestion(stringResource(title), text, icon) { onFillDraft(text) }

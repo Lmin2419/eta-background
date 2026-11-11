@@ -4,7 +4,7 @@ import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -121,7 +121,7 @@ private fun QwenDoubaoConnectionSection(store: SpeechSettingsStore, synthesis: B
                 title = stringResource(R.string.speech_advanced),
                 endActions = {
                     Icon(
-                        imageVector = Icons.Rounded.ExpandMore,
+                        imageVector = Icons.Outlined.ExpandMore,
                         contentDescription = stringResource(
                             if (advanced) R.string.speech_collapse else R.string.speech_expand,
                         ),

@@ -38,17 +38,17 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.Path
 import top.yukonga.miuix.kmp.squircle.addSquircleRect
 import top.yukonga.miuix.kmp.basic.IconButton
-import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.outlined.ContentCopy
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.AnnotatedString
@@ -394,7 +394,7 @@ internal fun AgentResultCard(
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = if (isFailed) Icons.Rounded.Close else Icons.Rounded.Check,
+                            imageVector = if (isFailed) Icons.Outlined.Close else Icons.Outlined.Check,
                             contentDescription = null,
                             modifier = Modifier.size(13.dp),
                             tint = accent,
@@ -466,7 +466,7 @@ private fun ResultCardActions(content: String, onOpenEta: () -> Unit, onDone: ()
             cornerRadius = 22.dp,
         ) {
             Icon(
-                imageVector = if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+                imageVector = if (copied) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
                 contentDescription = stringResource(if (copied) R.string.copy_copied else R.string.ui_copy_4edd1d),
                 modifier = Modifier.size(18.dp),
                 tint = MiuixTheme.colorScheme.onSurfaceVariantActions,

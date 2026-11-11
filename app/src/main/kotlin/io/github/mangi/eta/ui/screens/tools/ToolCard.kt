@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,7 +68,7 @@ internal fun ToolCard(
             {
                 EtaIconButton(onClick = { showDescription = true }) {
                     Icon(
-                        imageVector = Icons.Rounded.Info,
+                        imageVector = Icons.Outlined.Info,
                         contentDescription = stringResource(R.string.ui_description_named, tool.title),
                         modifier = Modifier.size(18.dp),
                         tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -96,7 +96,7 @@ internal fun ToolCard(
             )
             if (action != null) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                     tint = MiuixTheme.colorScheme.primary,

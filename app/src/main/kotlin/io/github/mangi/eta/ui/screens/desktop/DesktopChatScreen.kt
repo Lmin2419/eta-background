@@ -7,8 +7,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.material.icons.rounded.NotificationsActive
-import androidx.compose.material.icons.rounded.NotificationsOff
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.mangi.eta.agent.remote.DesktopApproval
@@ -19,7 +19,7 @@ import io.github.mangi.eta.ui.components.EtaIconButton
 import io.github.mangi.eta.agent.remote.DesktopSubagent
 import io.github.mangi.eta.agent.remote.DesktopItem
 import androidx.compose.runtime.produceState
-import androidx.compose.material.icons.rounded.Hub
+import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
@@ -245,7 +245,7 @@ internal fun DesktopChatScreen(
                         val remind = linkPrefs.reminds(sessionId)
                         EtaIconButton(onClick = { DesktopLinkSettings.setSessionReminders(sessionId, !remind) }) {
                             Icon(
-                                if (remind) Icons.Rounded.NotificationsActive else Icons.Rounded.NotificationsOff,
+                                if (remind) Icons.Outlined.NotificationsActive else Icons.Outlined.NotificationsOff,
                                 stringResource(R.string.desktop_session_remind),
                                 Modifier.size(22.dp),
                                 tint = if (remind) EtaTheme.colors.accent else EtaTheme.colors.textTertiary,
@@ -255,7 +255,7 @@ internal fun DesktopChatScreen(
                     if (!isChild && state.subagents.isNotEmpty()) {
                         Box {
                             EtaIconButton(onClick = ::openSubagents) {
-                                Icon(Icons.Rounded.Hub, stringResource(R.string.desktop_subagents), Modifier.size(22.dp))
+                                Icon(Icons.Outlined.Hub, stringResource(R.string.desktop_subagents), Modifier.size(22.dp))
                             }
                             Text(
                                 state.subagents.size.toString(),

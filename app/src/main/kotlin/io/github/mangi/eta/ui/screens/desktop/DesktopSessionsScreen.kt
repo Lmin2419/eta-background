@@ -1,6 +1,7 @@
 package io.github.mangi.eta.ui.screens.desktop
 
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -22,18 +23,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Computer
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.WarningAmber
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Computer
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material.icons.rounded.ChatBubbleOutline
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
@@ -42,11 +43,11 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupItem
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Inventory2
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.PushPin
-import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -251,7 +252,7 @@ internal fun DesktopSessionsContent(
         actions = {
             if (ready) {
                 EtaIconButton(onClick = { searching = !searching; if (!searching) onQueryChange("") }) {
-                    Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.desktop_search_hint))
+                    Icon(Icons.Outlined.Search, contentDescription = stringResource(R.string.desktop_search_hint))
                 }
                 EtaIconButton(
                     onClick = {
@@ -260,11 +261,11 @@ internal fun DesktopSessionsContent(
                     },
                     enabled = connected && !creating,
                 ) {
-                    Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desktop_new_session))
+                    Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.desktop_new_session))
                 }
             }
             EtaIconButton(onClick = onOpenSettings) {
-                Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.desktop_settings_title))
+                Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.desktop_settings_title))
             }
         },
         overlay = overlay,
@@ -274,7 +275,7 @@ internal fun DesktopSessionsContent(
                 ListEmptyState(
                     title = stringResource(R.string.desktop_link_disabled),
                     summary = stringResource(R.string.desktop_link_disabled_summary),
-                    icon = Icons.Rounded.Computer,
+                    icon = Icons.Outlined.Computer,
                     action = { EtaButton(text = stringResource(R.string.desktop_link_enable), onClick = onEnable) },
                 )
             }
@@ -295,7 +296,7 @@ internal fun DesktopSessionsContent(
                 ListEmptyState(
                     title = stringResource(R.string.desktop_not_configured),
                     summary = stringResource(R.string.desktop_settings_entry_summary),
-                    icon = Icons.Rounded.Computer,
+                    icon = Icons.Outlined.Computer,
                     action = { EtaButton(text = stringResource(R.string.desktop_configure), onClick = onOpenSettings) },
                 )
             }
@@ -334,7 +335,7 @@ internal fun DesktopSessionsContent(
                 .filter { row -> row.title.orEmpty().contains(trimmed, ignoreCase = true) || row.id in contentHits }
                 .sortedByDescending { it.updatedAt }
             if (matches.isEmpty()) {
-                item(key = "results-empty") { ListEmptyState(title = stringResource(R.string.desktop_search_empty), icon = Icons.Rounded.Search) }
+                item(key = "results-empty") { ListEmptyState(title = stringResource(R.string.desktop_search_empty), icon = Icons.Outlined.Search) }
             } else {
                 sessionRows("results", matches, showWorkspace = true, snippets = contentHits)
             }
@@ -346,7 +347,7 @@ internal fun DesktopSessionsContent(
             item(key = "empty") {
                 ListEmptyState(
                     title = stringResource(R.string.desktop_no_sessions),
-                    icon = Icons.Rounded.Computer,
+                    icon = Icons.Outlined.Computer,
                     action = { EtaButton(text = stringResource(R.string.desktop_new_session), onClick = { onCreate(sessions.workspaces.firstOrNull()) }, enabled = connected && !creating) },
                 )
             }
@@ -452,7 +453,6 @@ private fun DesktopGroupHeader(
     createEnabled: Boolean = true,
 ) {
     val state = stringResource(if (expanded) R.string.desktop_group_expanded else R.string.desktop_group_collapsed)
-    val motion = EtaTheme.motion
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp).heightIn(min = 40.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -467,29 +467,34 @@ private fun DesktopGroupHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // 固定列：标题占满剩余宽度；状态圈、箭头、「+」各占固定宽度，所有分组的箭头在同一条竖线上。
             Text(
                 text = if (count != null) stringResource(R.string.eta_group_count, title, count) else title,
                 style = EtaTheme.type.subhead,
                 color = EtaTheme.colors.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier.weight(1f),
             )
-            Spacer(Modifier.weight(1f))
-            // 组里的动静提到标题上：需要你 > 运行中（展开时行内已有状态圈，这里只在收起时显示）。
-            if (!expanded && attention > 0) StatusRing(TaskVisualStatus.Attention, size = 12.dp)
-            else if (!expanded && running > 0) StatusRing(TaskVisualStatus.Running, size = 12.dp)
-            val rotation by animateFloatAsState(if (expanded) 90f else 0f, tween(motion.medium, easing = motion.emphasizedDecelerate), label = "group_chevron")
+            Box(Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+                // 组里的动静提到标题上：需要你 > 运行中（展开时行内已有状态圈，这里只在收起时显示）。
+                if (!expanded && attention > 0) StatusRing(TaskVisualStatus.Attention, size = 12.dp)
+                else if (!expanded && running > 0) StatusRing(TaskVisualStatus.Running, size = 12.dp)
+            }
+            val rotation by animateFloatAsState(if (expanded) 90f else 0f, spring(dampingRatio = 0.8f, stiffness = 380f), label = "group_chevron")
             Icon(
-                Icons.Rounded.ChevronRight,
+                Icons.Outlined.ChevronRight,
                 contentDescription = null,
                 tint = EtaTheme.colors.textSecondary,
                 modifier = Modifier.size(20.dp).graphicsLayer { rotationZ = rotation },
             )
         }
-        if (onCreate != null) {
-            EtaIconButton(onClick = onCreate, enabled = createEnabled, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desktop_new_session_in, title), modifier = Modifier.size(20.dp))
+        // 「+」列始终占位，没有新建入口的分组（最近、其他、已归档）也对齐。
+        Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+            if (onCreate != null) {
+                EtaIconButton(onClick = onCreate, enabled = createEnabled, modifier = Modifier.size(36.dp)) {
+                    Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.desktop_new_session_in, title), modifier = Modifier.size(20.dp))
+                }
             }
         }
     }
@@ -548,14 +553,14 @@ private fun DesktopSessionLine(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            if (row.pinned) Icon(Icons.Rounded.PushPin, contentDescription = stringResource(R.string.desktop_pinned), tint = colors.textTertiary, modifier = Modifier.size(14.dp))
+            if (row.pinned) Icon(Icons.Outlined.PushPin, contentDescription = stringResource(R.string.desktop_pinned), tint = colors.textTertiary, modifier = Modifier.size(14.dp))
             context?.takeIf { it.isNotBlank() }?.let {
                 Text(it, style = EtaTheme.type.caption, color = colors.textTertiary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 96.dp))
             }
             if (unread && status == null) {
                 Box(Modifier.size(7.dp).background(colors.accent, CircleShape).semantics { contentDescription = "" })
             }
-            if (time.isNotEmpty()) Text(time, style = EtaTheme.type.caption, color = colors.textTertiary, maxLines = 1)
+            if (time.isNotEmpty()) Text(time, style = io.github.mangi.eta.ui.theme.EtaTypography.tabular(EtaTheme.type.caption), color = colors.textTertiary, maxLines = 1)
         }
         snippet?.takeIf { it.isNotBlank() }?.let {
             Text(
@@ -590,20 +595,20 @@ private fun DesktopSessionMenu(
                 if (!target.archived) {
                     EtaArrowPreference(
                         title = stringResource(if (target.pinned) R.string.desktop_unpin else R.string.desktop_pin),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.PushPin, tint = EtaPreferenceColors.Blue) },
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.PushPin, tint = EtaPreferenceColors.Blue) },
                         onClick = { onPin(target); onDismiss() },
                     )
                     EtaPreferenceDivider(hasLeading = false)
                 }
                 EtaArrowPreference(
                     title = stringResource(R.string.desktop_rename),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Edit, tint = EtaPreferenceColors.Green) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.Edit, tint = EtaPreferenceColors.Green) },
                     onClick = { onRename(target); onDismiss() },
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaArrowPreference(
                     title = stringResource(if (target.archived) R.string.desktop_unarchive else R.string.desktop_archive),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Inventory2, tint = EtaPreferenceColors.Orange) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.Inventory2, tint = EtaPreferenceColors.Orange) },
                     onClick = { onArchive(target); onDismiss() },
                 )
             }

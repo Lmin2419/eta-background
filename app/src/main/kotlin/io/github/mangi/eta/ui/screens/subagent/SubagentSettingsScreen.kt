@@ -22,15 +22,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Cloud
-import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.Explore
-import androidx.compose.material.icons.rounded.Extension
-import androidx.compose.material.icons.rounded.Hub
-import androidx.compose.material.icons.rounded.Psychology
-import androidx.compose.material.icons.rounded.Route
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Route
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -190,7 +190,7 @@ internal fun SubagentSettingsScreen(
                 },
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Add,
+                    imageVector = Icons.Outlined.Add,
                     contentDescription = "新建 Subagent",
                 )
             }
@@ -397,7 +397,7 @@ internal fun SubagentSettingsScreen(
                     enabled = agentPrefs != null,
                     startAction = {
                         EtaPreferenceIcon(
-                            icon = Icons.Rounded.Hub,
+                            icon = Icons.Outlined.Hub,
                             tint = EtaPreferenceColors.Violet,
                         )
                     },
@@ -423,7 +423,7 @@ internal fun SubagentSettingsScreen(
                     enabled = subagentEnabled,
                     startAction = {
                         EtaPreferenceIcon(
-                            icon = Icons.Rounded.Cloud,
+                            icon = Icons.Outlined.Cloud,
                             tint = EtaPreferenceColors.Blue,
                         )
                     },
@@ -438,7 +438,7 @@ internal fun SubagentSettingsScreen(
                         enabled = subagentEnabled,
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Psychology,
+                                icon = Icons.Outlined.Psychology,
                                 tint = EtaPreferenceColors.Orange,
                             )
                         },
@@ -485,7 +485,7 @@ internal fun SubagentSettingsScreen(
                     ListEmptyState(
                         title = "暂无自定义 Subagent",
                         summary = "可在对话中直接让胖小胖创建专属 Subagent（保存在 agents/<name>.md），或点击右上角 + 手动新建",
-                        icon = Icons.Rounded.Extension,
+                        icon = Icons.Outlined.Extension,
                         action = {
                             EtaButton(
                                 text = "新建 Subagent",
@@ -505,7 +505,7 @@ internal fun SubagentSettingsScreen(
                             bottomAction = { SubagentRoleModelSummary(profile.name, subagentSettings, providers) },
                             startAction = {
                                 EtaPreferenceIcon(
-                                    icon = Icons.Rounded.Extension,
+                                    icon = Icons.Outlined.Extension,
                                     tint = EtaPreferenceColors.Blue,
                                 )
                             },
@@ -519,10 +519,10 @@ internal fun SubagentSettingsScreen(
 }
 
 private fun iconForProfile(name: String): ImageVector = when (name) {
-    SubagentProfile.TYPE_EXPLORE -> Icons.Rounded.Explore
-    SubagentProfile.TYPE_CODER -> Icons.Rounded.Code
-    SubagentProfile.TYPE_PLAN -> Icons.Rounded.Route
-    else -> Icons.Rounded.Hub
+    SubagentProfile.TYPE_EXPLORE -> Icons.Outlined.Explore
+    SubagentProfile.TYPE_CODER -> Icons.Outlined.Code
+    SubagentProfile.TYPE_PLAN -> Icons.Outlined.Route
+    else -> Icons.Outlined.Hub
 }
 
 @Composable
@@ -702,7 +702,7 @@ private fun SubagentModelRow(
         }
         if (selected) {
             Icon(
-                imageVector = Icons.Rounded.Check,
+                imageVector = Icons.Outlined.Check,
                 contentDescription = null,
                 tint = MiuixTheme.colorScheme.primary,
                 modifier = Modifier.size(18.dp),

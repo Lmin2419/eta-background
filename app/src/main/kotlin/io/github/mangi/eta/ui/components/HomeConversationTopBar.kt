@@ -6,16 +6,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ShortText
-import androidx.compose.material.icons.rounded.AddComment
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.TaskAlt
+import androidx.compose.material.icons.automirrored.outlined.ShortText
+import androidx.compose.material.icons.outlined.AddComment
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import io.github.mangi.eta.ui.model.TaskVisualStatus
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -63,7 +63,7 @@ internal fun HomeConversationTopBar(
         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
         .heightIn(min = 56.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         EtaIconButton(onHistory) {
-            Icon(Icons.AutoMirrored.Rounded.ShortText, stringResource(R.string.action_conversation_history), Modifier.size(24.dp))
+            Icon(Icons.AutoMirrored.Outlined.ShortText, stringResource(R.string.action_conversation_history), Modifier.size(24.dp))
         }
         if (character != null) {
             Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onCharacter).padding(horizontal = 4.dp),
@@ -77,14 +77,14 @@ internal fun HomeConversationTopBar(
                 if (isStreaming || isCompacting || models.isChanging) toast(lockedText) else settings = true
             }
         }
-        EtaIconButton(onNew) { Icon(Icons.Rounded.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
+        EtaIconButton(onNew) { Icon(Icons.Outlined.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
         // 任务按钮只在有任务运行时出现（带运行圈和数量）；平时任务中心从侧栏「任务」进入。
         EtaAnimatedVisibility(
             visible = runningTaskCount > 0,
-            enter = fadeIn(tween(EtaTheme.motion.short, easing = EtaTheme.motion.standard)) +
-                scaleIn(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate), initialScale = 0.6f),
-            exit = fadeOut(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.short), easing = EtaTheme.motion.accelerate)) +
-                scaleOut(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.short), easing = EtaTheme.motion.accelerate), targetScale = 0.6f),
+            // 横向展开 + 淡入：按钮从模型胶囊旁边「让出位置」出现，而不是蹦出来。
+            enter = expandHorizontally(tween(320, easing = EtaTheme.motion.emphasizedDecelerate), expandFrom = Alignment.Start) +
+                fadeIn(tween(240, delayMillis = 80)),
+            exit = fadeOut(tween(140)) + shrinkHorizontally(tween(220, easing = EtaTheme.motion.accelerate), shrinkTowards = Alignment.Start),
             label = "runningTasks",
         ) {
             Box {
@@ -119,7 +119,7 @@ internal fun ModelPill(state: AgentModelPickerUiState, locked: Boolean, iconOnly
             modifier = Modifier.weight(1f, fill = false), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp),
             color = if (locked) EtaTheme.colors.textTertiary else EtaTheme.colors.textPrimary,
             maxLines = 1, overflow = TextOverflow.MiddleEllipsis)
-        Icon(Icons.Rounded.ExpandMore, null, Modifier.size(16.dp), tint = EtaTheme.colors.textTertiary)
+        Icon(Icons.Outlined.ExpandMore, null, Modifier.size(16.dp), tint = EtaTheme.colors.textTertiary)
     }
 }
 

@@ -23,8 +23,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Dns
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -393,7 +393,7 @@ internal fun ModelPickerRow(
         if (selected) {
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
-                imageVector = Icons.Rounded.Check,
+                imageVector = Icons.Outlined.Check,
                 contentDescription = stringResource(R.string.ui_current_model_a0af8f),
                 modifier = Modifier.size(18.dp),
                 tint = contentColor,
@@ -426,7 +426,7 @@ internal fun ModelBrandMark(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Rounded.Dns,
+                imageVector = Icons.Outlined.Dns,
                 contentDescription = null,
                 modifier = Modifier.size(size * 0.56f),
                 tint = MiuixTheme.colorScheme.primary,

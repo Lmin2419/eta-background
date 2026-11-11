@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.MoreHoriz
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,19 +88,19 @@ private fun StatusIndicator(status: RunStatusUi) {
             color = MiuixTheme.colorScheme.primary,
         )
         RunStatusUi.Success -> Icon(
-            imageVector = Icons.Rounded.Check,
+            imageVector = Icons.Outlined.Check,
             contentDescription = null,
             modifier = Modifier.size(18.dp),
             tint = MiuixTheme.colorScheme.primary,
         )
         RunStatusUi.Failed -> Icon(
-            imageVector = Icons.Rounded.Close,
+            imageVector = Icons.Outlined.Close,
             contentDescription = null,
             modifier = Modifier.size(18.dp),
             tint = MiuixTheme.colorScheme.primary,
         )
         RunStatusUi.Cancelled -> Icon(
-            imageVector = Icons.Rounded.MoreHoriz,
+            imageVector = Icons.Outlined.MoreHoriz,
             contentDescription = null,
             modifier = Modifier.size(18.dp),
             tint = MiuixTheme.colorScheme.onSurfaceVariantActions,

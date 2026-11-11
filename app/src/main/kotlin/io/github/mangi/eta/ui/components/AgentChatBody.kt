@@ -39,11 +39,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowDownward
-import androidx.compose.material.icons.rounded.DocumentScanner
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.RocketLaunch
-import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.outlined.ArrowDownward
+import androidx.compose.material.icons.outlined.DocumentScanner
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.RocketLaunch
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.theme.EtaElevation
@@ -901,7 +901,7 @@ internal fun AgentConversationMessages(
                 minHeight = 36.dp,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.ArrowDownward,
+                    imageVector = Icons.Outlined.ArrowDownward,
                     contentDescription = stringResource(R.string.ui_back_to_bottom_32282e),
                     modifier = Modifier.size(20.dp),
                     tint = EtaTheme.colors.textPrimary,

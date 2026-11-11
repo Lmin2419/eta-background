@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.FolderZip
+import androidx.compose.material.icons.outlined.FolderZip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,7 +98,7 @@ fun AgentSkillsScreen(
                                 InfiniteProgressIndicator(size = 20.dp)
                             }
                         } else {
-                            EtaPreferenceIcon(Icons.Rounded.FolderZip, enabled = !operationPending, tint = EtaPreferenceColors.Violet)
+                            EtaPreferenceIcon(Icons.Outlined.FolderZip, enabled = !operationPending, tint = EtaPreferenceColors.Violet)
                         }
                     },
                     enabled = !operationPending,
@@ -192,7 +192,7 @@ fun AgentSkillsScreen(
                 ListEmptyState(
                     title = stringResource(R.string.ui_no_skills_installed_yet_4e960f),
                     summary = stringResource(R.string.skills_choose_package),
-                    icon = Icons.Rounded.FolderZip,
+                    icon = Icons.Outlined.FolderZip,
                     action = {
                         EtaButton(
                             text = stringResource(R.string.skills_import_zip),

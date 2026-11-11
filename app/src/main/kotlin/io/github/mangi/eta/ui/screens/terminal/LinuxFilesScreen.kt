@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.InsertDriveFile
-import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material.icons.rounded.Folder
-import androidx.compose.material.icons.rounded.FolderOpen
-import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -128,12 +128,12 @@ internal fun LinuxFilesScreen(
         when {
             linuxDistribution == null -> {
                 item(key = "invalid-distribution") {
-                    StateMessage(stringResource(R.string.linux_files_invalid_distribution), Icons.Rounded.ErrorOutline)
+                    StateMessage(stringResource(R.string.linux_files_invalid_distribution), Icons.Outlined.ErrorOutline)
                 }
             }
             !installed -> {
                 item(key = "not-installed") {
-                    StateMessage(stringResource(R.string.linux_files_not_installed), Icons.Rounded.Terminal)
+                    StateMessage(stringResource(R.string.linux_files_not_installed), Icons.Outlined.Terminal)
                 }
             }
             openFilePath != null -> {
@@ -166,19 +166,19 @@ internal fun LinuxFilesScreen(
                     }
                     LinuxFileExplorer.ReadResult.Binary -> {
                         item(key = "viewer-binary") {
-                            StateMessage(stringResource(R.string.linux_files_binary_hint), Icons.AutoMirrored.Rounded.InsertDriveFile)
+                            StateMessage(stringResource(R.string.linux_files_binary_hint), Icons.AutoMirrored.Outlined.InsertDriveFile)
                         }
                     }
                     LinuxFileExplorer.ReadResult.NotFile -> {
                         item(key = "viewer-not-file") {
-                            StateMessage(stringResource(R.string.linux_files_error_not_file), Icons.Rounded.ErrorOutline)
+                            StateMessage(stringResource(R.string.linux_files_error_not_file), Icons.Outlined.ErrorOutline)
                         }
                     }
                     LinuxFileExplorer.ReadResult.Unreadable,
                     LinuxFileExplorer.ReadResult.CommandFailed,
                     LinuxFileExplorer.ReadResult.NotInstalled -> {
                         item(key = "viewer-error") {
-                            StateMessage(stringResource(R.string.linux_files_error_unreadable), Icons.Rounded.ErrorOutline)
+                            StateMessage(stringResource(R.string.linux_files_error_unreadable), Icons.Outlined.ErrorOutline)
                         }
                     }
                     null -> item(key = "viewer-loading") { LoadingRow() }
@@ -209,7 +209,7 @@ internal fun LinuxFilesScreen(
                 when {
                     listError != null -> {
                         item(key = "list-error") {
-                            StateMessage(stringResource(listError ?: R.string.linux_files_error_unreadable), Icons.Rounded.ErrorOutline)
+                            StateMessage(stringResource(listError ?: R.string.linux_files_error_unreadable), Icons.Outlined.ErrorOutline)
                         }
                     }
                     currentEntries == null -> {
@@ -217,7 +217,7 @@ internal fun LinuxFilesScreen(
                     }
                     currentEntries.isEmpty() -> {
                         item(key = "list-empty") {
-                            StateMessage(stringResource(R.string.linux_files_empty), Icons.Rounded.FolderOpen)
+                            StateMessage(stringResource(R.string.linux_files_empty), Icons.Outlined.FolderOpen)
                         }
                     }
                     else -> {
@@ -304,7 +304,7 @@ private fun FileRow(
             summary = summary,
             startAction = {
                 EtaPreferenceIcon(
-                    icon = if (isDir) Icons.Rounded.Folder else Icons.AutoMirrored.Rounded.InsertDriveFile,
+                    icon = if (isDir) Icons.Outlined.Folder else Icons.AutoMirrored.Outlined.InsertDriveFile,
                     tint = if (isDir) EtaPreferenceColors.Orange else MiuixTheme.colorScheme.onSurfaceVariantActions,
                 )
             },

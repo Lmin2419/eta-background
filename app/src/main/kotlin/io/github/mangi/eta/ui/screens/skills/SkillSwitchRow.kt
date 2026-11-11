@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.DesignServices
-import androidx.compose.material.icons.rounded.Extension
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.outlined.DesignServices
+import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,7 +66,7 @@ internal fun SkillSwitchRow(
                 ),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.MoreHoriz,
+                    imageVector = Icons.Outlined.MoreHoriz,
                     contentDescription = stringResource(R.string.skills_more_named, skill.name),
                     modifier = Modifier.size(20.dp),
                     tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -106,7 +106,7 @@ internal fun SkillSwitchRow(
 }
 
 internal fun iconForSkill(skillId: String): ImageVector = when (skillId) {
-    "self-improving-agent" -> Icons.Rounded.Refresh
-    "skill-creator" -> Icons.Rounded.DesignServices
-    else -> Icons.Rounded.Extension
+    "self-improving-agent" -> Icons.Outlined.Refresh
+    "skill-creator" -> Icons.Outlined.DesignServices
+    else -> Icons.Outlined.Extension
 }

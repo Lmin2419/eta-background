@@ -27,10 +27,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowUpward
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,7 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.ui.theme.EtaTheme
-import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.outlined.Schedule
 import io.github.mangi.eta.ui.model.QueuedMessageUi
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -114,7 +114,7 @@ internal fun AgentChatQueueStrip(
                     .padding(horizontal = 2.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Rounded.Schedule, null, Modifier.size(16.dp), tint = EtaTheme.colors.textSecondary)
+                Icon(Icons.Outlined.Schedule, null, Modifier.size(16.dp), tint = EtaTheme.colors.textSecondary)
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = when {
@@ -132,7 +132,7 @@ internal fun AgentChatQueueStrip(
                 if (hasMultiple) {
                     Spacer(modifier = Modifier.width(2.dp))
                     Icon(
-                        imageVector = Icons.Rounded.ExpandMore,
+                        imageVector = Icons.Outlined.ExpandMore,
                         contentDescription = null,
                         modifier = Modifier
                             .size(14.dp)
@@ -267,7 +267,7 @@ private fun QueuedMessageItemActions(
                 minHeight = QueueActionSize,
             ) {
                 Icon(
-                    imageVector = if (isStreaming) Icons.Rounded.Bolt else Icons.Rounded.ArrowUpward,
+                    imageVector = if (isStreaming) Icons.Outlined.Bolt else Icons.Outlined.ArrowUpward,
                     contentDescription = stringResource(R.string.chat_queue_steer_now),
                     modifier = Modifier.size(15.dp),
                     tint = EtaTheme.colors.onAccentSoft,
@@ -280,7 +280,7 @@ private fun QueuedMessageItemActions(
             minHeight = QueueActionSize,
         ) {
             Icon(
-                imageVector = Icons.Rounded.Close,
+                imageVector = Icons.Outlined.Close,
                 contentDescription = stringResource(R.string.chat_queue_remove),
                 modifier = Modifier.size(14.dp),
                 tint = MiuixTheme.colorScheme.onSurfaceVariantActions,

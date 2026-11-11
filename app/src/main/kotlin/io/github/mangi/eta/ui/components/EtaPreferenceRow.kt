@@ -29,7 +29,7 @@ import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.outlined.ChevronRight
 import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -56,7 +56,7 @@ internal fun EtaArrowPreference(
             Spacer(Modifier.width(8.dp))
             val direction = LocalLayoutDirection.current
             Icon(
-                imageVector = Icons.Rounded.ChevronRight,
+                imageVector = Icons.Outlined.ChevronRight,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp).graphicsLayer {
                     scaleX = if (direction == LayoutDirection.Rtl) -1f else 1f

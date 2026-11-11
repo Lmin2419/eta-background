@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -110,7 +110,7 @@ internal fun ProviderConnectionFields(
                 trailingIcon = {
                     EtaIconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
                         Icon(
-                            imageVector = if (apiKeyVisible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                            imageVector = if (apiKeyVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                             contentDescription = context.getString(if (apiKeyVisible) R.string.page_hide_bb0e7e else R.string.page_show_71b677),
                         )
                     }

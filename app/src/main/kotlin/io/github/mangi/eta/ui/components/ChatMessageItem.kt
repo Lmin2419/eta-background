@@ -40,16 +40,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.ChevronLeft
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Compress
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Lightbulb
-import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Compress
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -93,15 +93,15 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.material.icons.rounded.Speed
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material.icons.rounded.Hub
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Hub
 import io.github.mangi.eta.ui.voice.SpeechReadAloudMenuItem
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.foundation.layout.BoxWithConstraints
 import io.github.mangi.eta.agent.model.AgentFileReferencePromptCodec
 import io.github.mangi.eta.agent.runtime.RunPerformanceSummary
@@ -328,7 +328,8 @@ private fun UserMessageBubble(
     LaunchedEffect(actionsEnabled) { if (!actionsEnabled) menu = false }
     val visiblePrompt = remember(message.content) { AgentFileReferencePromptCodec.parse(message.content) }
     val editor = LocalChatInlineEditor.current?.takeIf { it.messageId == message.id }
-    val shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = if (isEditing) 20.dp else 8.dp)
+    // 用户消息：统一 18dp 圆角、不带尾角，字号略小于回复正文，退到次要层级。
+    val shape = RoundedCornerShape(18.dp)
     BoxWithConstraints(modifier.fillMaxWidth().padding(horizontal = if (assistantOverlay) 16.dp else 20.dp, vertical = if (assistantOverlay) 4.dp else 0.dp)) {
         Column(Modifier.align(Alignment.CenterEnd).widthIn(max = maxWidth * 0.85f), horizontalAlignment = Alignment.End) {
             if (message.images.isNotEmpty()) Row(Modifier.horizontalScroll(rememberScrollState()).padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -340,11 +341,11 @@ private fun UserMessageBubble(
                 .then(if (isEditing) Modifier.border(1.dp, EtaTheme.colors.accent, shape) else Modifier)
                 .combinedClickable(enabled = actionsEnabled, onClick = {}, onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress); menu = true
-                }).padding(horizontal = 16.dp, vertical = 12.dp)) {
+                }).padding(horizontal = 14.dp, vertical = 10.dp)) {
                 if (visiblePrompt.references.isNotEmpty()) SentFileReferenceFlow(visiblePrompt.references,
                     Modifier.padding(bottom = if (visiblePrompt.request.isNotBlank()) 8.dp else 0.dp))
                 if (isEditing && editor != null) InlineUserMessageEditor(editor, message.images.isNotEmpty() || visiblePrompt.references.isNotEmpty())
-                else if (visiblePrompt.request.isNotBlank()) Text(visiblePrompt.request, style = if (assistantOverlay) EtaTheme.type.body.copy(fontSize = 15.sp, lineHeight = 24.sp) else EtaTheme.type.body, color = EtaTheme.colors.textPrimary)
+                else if (visiblePrompt.request.isNotBlank()) Text(visiblePrompt.request, style = EtaTheme.type.body.copy(fontSize = 15.sp, lineHeight = 24.sp), color = EtaTheme.colors.textPrimary)
                 if (message.isEdited) Text(stringResource(R.string.ui_edited_c36776), style = EtaTheme.type.caption,
                     color = EtaTheme.colors.textTertiary, modifier = Modifier.padding(top = 4.dp))
             }
@@ -421,7 +422,7 @@ private fun ContextCompactionMarker(
         Row(Modifier.background(EtaTheme.colors.surfaceSunken, EtaTheme.shapes.radiusFull).padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (message.running) StatusRing(TaskVisualStatus.Running, size = 12.dp)
-            else Icon(Icons.Rounded.Compress, null, Modifier.size(16.dp), tint = EtaTheme.colors.textTertiary)
+            else Icon(Icons.Outlined.Compress, null, Modifier.size(16.dp), tint = EtaTheme.colors.textTertiary)
             Text(message.detail?.takeIf(String::isNotBlank) ?: stringResource(R.string.context_compaction),
                 style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
@@ -441,10 +442,10 @@ private fun RunPerformanceMarker(message: SystemNoticeMessageUi, modifier: Modif
                 .clickable { expanded = !expanded }.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Rounded.Speed, null, Modifier.padding(end = 6.dp).size(16.dp), tint = EtaTheme.colors.textTertiary)
+            Icon(Icons.Outlined.Speed, null, Modifier.padding(end = 6.dp).size(16.dp), tint = EtaTheme.colors.textTertiary)
             Text(summary.title(chinese), style = EtaTheme.type.caption,
                 color = EtaTheme.colors.textTertiary, modifier = Modifier.weight(1f, fill = false))
-            Icon(Icons.Rounded.ChevronRight, contentDescription = null,
+            Icon(Icons.Outlined.ChevronRight, contentDescription = null,
                 modifier = Modifier.size(16.dp).graphicsLayer(rotationZ = if (expanded) 90f else 0f),
                 tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
@@ -466,10 +467,10 @@ private fun InfoMarker(message: SystemNoticeMessageUi, modifier: Modifier = Modi
     val title = parsed.optString("title")
     val details = parsed.optString("details")
     val icon = when (parsed.optString("icon")) {
-        "usage" -> Icons.Rounded.Speed
-        "subagent" -> Icons.Rounded.Hub
-        "schedule" -> Icons.Rounded.Schedule
-        else -> Icons.Rounded.Bolt
+        "usage" -> Icons.Outlined.Speed
+        "subagent" -> Icons.Outlined.Hub
+        "schedule" -> Icons.Outlined.Schedule
+        else -> Icons.Outlined.Bolt
     }
     var expanded by rememberSaveable(message.id) { mutableStateOf(false) }
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -482,7 +483,7 @@ private fun InfoMarker(message: SystemNoticeMessageUi, modifier: Modifier = Modi
             Text(title, style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary,
                 maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false))
-            if (details.isNotBlank()) Icon(Icons.Rounded.ChevronRight, contentDescription = null,
+            if (details.isNotBlank()) Icon(Icons.Outlined.ChevronRight, contentDescription = null,
                 modifier = Modifier.size(16.dp).graphicsLayer(rotationZ = if (expanded) 90f else 0f),
                 tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
@@ -615,14 +616,14 @@ private fun AgentMessageBlock(
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (message.characterEditable && message.candidateCount > 1) CandidateSwitcher(
                     message.selectedCandidate, message.candidateCount, messageActionsEnabled, onSelectCandidate)
-                AnswerActionButton(if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+                AnswerActionButton(if (copied) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
                     stringResource(if (copied) R.string.copy_copied else R.string.copy_answer), {
                         clipboardManager.setText(AnnotatedString(message.content)); copied = true
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     }, tint = if (copied) EtaTheme.colors.accent else null)
-                if (showMessageActions) AnswerActionButton(Icons.Rounded.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
+                if (showMessageActions) AnswerActionButton(Icons.Outlined.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
                 if (allowSpeech) SpeechReadAloudButton(message.id, message.content)
-                if (showMessageActions) AnswerActionButton(Icons.Rounded.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; menu = true }, messageActionsEnabled)
+                if (showMessageActions) AnswerActionButton(Icons.Outlined.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; menu = true }, messageActionsEnabled)
             }
         }
     }
@@ -740,7 +741,7 @@ private fun CandidateSwitcher(
             .padding(horizontal = 2.dp),
     ) {
         AnswerActionButton(
-            icon = Icons.Rounded.ChevronLeft,
+            icon = Icons.Outlined.ChevronLeft,
             contentDescription = stringResource(R.string.chat_previous_candidate),
             onClick = { onSelect(selected - 1) },
             enabled = enabled && selected > 0,
@@ -754,7 +755,7 @@ private fun CandidateSwitcher(
             modifier = Modifier.widthIn(min = 28.dp),
         )
         AnswerActionButton(
-            icon = Icons.Rounded.ChevronRight,
+            icon = Icons.Outlined.ChevronRight,
             contentDescription = stringResource(R.string.chat_next_candidate),
             onClick = { onSelect(selected + 1) },
             enabled = enabled && selected < count - 1,
@@ -835,7 +836,7 @@ internal fun ThinkingRow(
         ) {
             if (!compact) {
                 Icon(
-                    imageVector = Icons.Rounded.Lightbulb,
+                    imageVector = Icons.Outlined.Lightbulb,
                     contentDescription = null,
                     modifier = Modifier
                         .size(15.dp)
@@ -995,7 +996,7 @@ private fun RunTraceRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Rounded.Check,
+            imageVector = Icons.Outlined.Check,
             contentDescription = null,
             modifier = Modifier.size(15.dp),
             tint = MiuixTheme.colorScheme.primary,
@@ -1008,7 +1009,7 @@ private fun RunTraceRow(
             modifier = Modifier.weight(1f),
         )
         Icon(
-            imageVector = Icons.Rounded.ChevronRight,
+            imageVector = Icons.Outlined.ChevronRight,
             contentDescription = null,
             modifier = Modifier.size(14.dp),
             tint = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.7f),
@@ -1093,7 +1094,7 @@ private fun SuggestionChipsRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.AutoAwesome,
+                    imageVector = Icons.Outlined.AutoAwesome,
                     contentDescription = null,
                     modifier = Modifier.size(12.dp),
                     tint = MiuixTheme.colorScheme.primary

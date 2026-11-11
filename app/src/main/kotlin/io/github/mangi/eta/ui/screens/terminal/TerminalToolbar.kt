@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Insights
-import androidx.compose.material.icons.rounded.Layers
-import androidx.compose.material.icons.rounded.Terminal
-import androidx.compose.material.icons.rounded.ViewAgenda
+import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -83,20 +83,20 @@ internal fun TerminalToolbar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ToolbarIcon(
-                icon = Icons.Rounded.Layers,
+                icon = Icons.Outlined.Layers,
                 contentDescription = stringResource(R.string.terminal_sessions),
                 badge = sessionCount.takeIf { it > 1 }?.toString(),
                 onClick = onOpenSessions,
             )
             ToolbarIcon(
-                icon = Icons.Rounded.Insights,
+                icon = Icons.Outlined.Insights,
                 contentDescription = stringResource(R.string.terminal_daemon_tasks),
                 dot = daemonRunning,
                 onClick = onOpenTasks,
             )
             if (modeTarget != null) {
                 ToolbarIcon(
-                    icon = if (modeTarget == TerminalModeTarget.CONSOLE) Icons.Rounded.Terminal else Icons.Rounded.ViewAgenda,
+                    icon = if (modeTarget == TerminalModeTarget.CONSOLE) Icons.Outlined.Terminal else Icons.Outlined.ViewAgenda,
                     contentDescription = stringResource(
                         if (modeTarget == TerminalModeTarget.CONSOLE) R.string.terminal_console_mode else R.string.terminal_block_mode,
                     ),

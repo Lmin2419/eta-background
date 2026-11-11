@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.TaskAlt
+import androidx.compose.material.icons.outlined.PhoneAndroid
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -78,12 +78,12 @@ internal fun TasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRun: (Co
         Box(Modifier.weight(1f)) {
             when (tab) {
                 0 -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    if (active.isEmpty()) item { ListEmptyState(stringResource(R.string.eta_tasks_empty), icon = Icons.Rounded.TaskAlt,
+                    if (active.isEmpty()) item { ListEmptyState(stringResource(R.string.eta_tasks_empty), icon = Icons.Outlined.TaskAlt,
                         action = { EtaButton(stringResource(R.string.eta_tasks_start_saved), { tab = 2 }) }) }
                     items(active, key = { it.runId }) { task -> ActiveTaskCard(task, visible, onConversation) }
                 }
                 1 -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    if (completed.isEmpty()) item { ListEmptyState(stringResource(R.string.eta_tasks_no_completed), icon = Icons.Rounded.TaskAlt) }
+                    if (completed.isEmpty()) item { ListEmptyState(stringResource(R.string.eta_tasks_no_completed), icon = Icons.Outlined.TaskAlt) }
                     items(completed, key = { it.runId }) { task -> CompletedTaskRow(task, onConversation, onArchivedConversation) }
                 }
                 else -> CommonTasksScreen(store, onBack, onRun, embedded = true)
@@ -245,7 +245,7 @@ internal fun TaskApplicationIcon(pkg: String?, modifier: Modifier = Modifier) {
         }
     }
     val icon = bitmap
-    if (icon == null) Icon(Icons.Rounded.PhoneAndroid, null, modifier, tint = EtaTheme.colors.textTertiary)
+    if (icon == null) Icon(Icons.Outlined.PhoneAndroid, null, modifier, tint = EtaTheme.colors.textTertiary)
     else Image(icon, null, modifier, contentScale = ContentScale.Fit)
 }
 

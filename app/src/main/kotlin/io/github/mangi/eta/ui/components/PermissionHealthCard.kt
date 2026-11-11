@@ -5,7 +5,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.outlined.ChevronRight
 import top.yukonga.miuix.kmp.basic.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,7 +44,7 @@ fun PermissionHealthCard(
                     Modifier.weight(1f), style = EtaTheme.type.rowTitle,
                     color = if (!checking && !allReady) EtaTheme.colors.attentionText else EtaTheme.colors.textPrimary,
                 )
-                if (onOpenPermissions != null) Icon(Icons.Rounded.ChevronRight, null, Modifier.size(20.dp), tint = EtaTheme.colors.textTertiary)
+                if (onOpenPermissions != null) Icon(Icons.Outlined.ChevronRight, null, Modifier.size(20.dp), tint = EtaTheme.colors.textTertiary)
             }
             if (!checking && !allReady) {
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

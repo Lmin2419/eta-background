@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ExpandLess
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Visibility
 import io.github.mangi.eta.ui.components.EtaArrowPreference
 import io.github.mangi.eta.ui.theme.EtaTheme
-import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -105,7 +105,7 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
                         summary = stringResource(R.string.desktop_advanced_summary),
                         endActions = {
                             Icon(
-                                if (advanced) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                                if (advanced) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
                                 contentDescription = null,
                                 tint = EtaTheme.colors.textTertiary,
                             )
@@ -200,7 +200,7 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
                         trailingIcon = {
                             EtaIconButton(onClick = { tokenVisible = !tokenVisible }) {
                                 Icon(
-                                    imageVector = if (tokenVisible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                                    imageVector = if (tokenVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                                     contentDescription = null,
                                 )
                             }

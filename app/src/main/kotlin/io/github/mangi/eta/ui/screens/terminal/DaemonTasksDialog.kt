@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Article
-import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -109,7 +109,7 @@ private fun DaemonTaskRow(
                 )
             }
             RowIconAction(
-                icon = Icons.AutoMirrored.Rounded.Article,
+                icon = Icons.AutoMirrored.Outlined.Article,
                 contentDescription = stringResource(
                     if (logsExpanded) R.string.terminal_daemon_hide_logs else R.string.terminal_daemon_view_logs,
                 ),
@@ -123,7 +123,7 @@ private fun DaemonTaskRow(
             )
             if (task.running) {
                 RowIconAction(
-                    icon = Icons.Rounded.Stop,
+                    icon = Icons.Outlined.Stop,
                     contentDescription = stringResource(R.string.terminal_stop),
                     tint = colors.error,
                     onClick = { onStop(task.id) },

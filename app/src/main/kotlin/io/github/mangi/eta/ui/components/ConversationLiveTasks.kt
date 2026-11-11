@@ -10,9 +10,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -70,7 +70,7 @@ internal fun ConversationLiveTasks(conversationId: String?, onOpenTasks: () -> U
                 }
             }
             Text(stringResource(R.string.eta_background_tasks_count, tasks.size), Modifier.weight(1f).padding(start = 8.dp), style = EtaTheme.type.footnote)
-            Icon(Icons.Rounded.ExpandMore, null, Modifier.size(16.dp))
+            Icon(Icons.Outlined.ExpandMore, null, Modifier.size(16.dp))
         }
         if (tasks.size == 1 || expanded) tasks.forEach { task -> key(task.runId) {
             val status = task.toTaskVisualStatus()
@@ -102,10 +102,10 @@ internal fun ConversationLiveTasks(conversationId: String?, onOpenTasks: () -> U
                     }
                 }
                 if (task.completed) EtaIconButton({ dismissed = (dismissed + task.runId).takeLast(64) }) {
-                    Icon(Icons.Rounded.Close, stringResource(R.string.action_close), Modifier.size(16.dp))
+                    Icon(Icons.Outlined.Close, stringResource(R.string.action_close), Modifier.size(16.dp))
                 } else {
                     if (!paused) EtaIconButton({ taskAction(task, AgentExecutionService.ACTION_PAUSE_RUN) }) {
-                        Icon(Icons.Rounded.Pause, stringResource(R.string.overlay_pause), Modifier.size(18.dp))
+                        Icon(Icons.Outlined.Pause, stringResource(R.string.overlay_pause), Modifier.size(18.dp))
                     }
                     EtaButton(stringResource(if (paused) R.string.eta_task_return else if (status == TaskVisualStatus.Attention) R.string.eta_task_handle else R.string.eta_task_view), {
                     if (paused) taskAction(task, AgentExecutionService.ACTION_RESUME_RUN) else openTaskPreview(context, task)

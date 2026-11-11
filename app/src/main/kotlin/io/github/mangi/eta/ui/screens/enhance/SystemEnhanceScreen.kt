@@ -2,15 +2,15 @@ package io.github.mangi.eta.ui.screens.enhance
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ManageSearch
-import androidx.compose.material.icons.rounded.AccountTree
-import androidx.compose.material.icons.rounded.AdminPanelSettings
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Key
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Terminal
-import androidx.compose.material.icons.rounded.VerifiedUser
+import androidx.compose.material.icons.automirrored.outlined.ManageSearch
+import androidx.compose.material.icons.outlined.AccountTree
+import androidx.compose.material.icons.outlined.AdminPanelSettings
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,7 +49,7 @@ fun SystemEnhanceScreen(
                 EtaPreference(
                     title = "Root",
                     summary = capabilities.root.description(context),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Key, tint = EtaPreferenceColors.Yellow) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.Key, tint = EtaPreferenceColors.Yellow) },
                     endActions = {
                         EtaButton(
                             text = stringResource(
@@ -73,7 +73,7 @@ fun SystemEnhanceScreen(
                         if (capabilities.xposedConnected) R.string.capability_xposed_connected
                         else R.string.capability_xposed_disconnected,
                     ),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.AccountTree, tint = EtaPreferenceColors.Teal) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.AccountTree, tint = EtaPreferenceColors.Teal) },
                 )
             }
         }
@@ -82,7 +82,7 @@ fun SystemEnhanceScreen(
                 EtaPreference(
                     title = stringResource(R.string.capability_xposed_help),
                     summary = stringResource(R.string.capability_xposed_help_summary),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Info, tint = EtaPreferenceColors.Slate) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.Info, tint = EtaPreferenceColors.Slate) },
                 )
             }
         }
@@ -92,19 +92,19 @@ fun SystemEnhanceScreen(
                 EtaPreference(
                     title = stringResource(R.string.capability_root_device),
                     summary = stringResource(R.string.capability_root_device_summary),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.AdminPanelSettings, tint = EtaPreferenceColors.Blue) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.AdminPanelSettings, tint = EtaPreferenceColors.Blue) },
                 )
                 EtaPreferenceDivider(hasLeading = true)
                 EtaPreference(
                     title = stringResource(R.string.capability_root_data),
                     summary = stringResource(R.string.capability_root_data_summary),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Lock, tint = EtaPreferenceColors.Blue) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.Lock, tint = EtaPreferenceColors.Blue) },
                 )
                 EtaPreferenceDivider(hasLeading = true)
                 EtaPreference(
                     title = stringResource(R.string.capability_root_linux),
                     summary = stringResource(R.string.capability_root_linux_summary),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Terminal, tint = EtaPreferenceColors.Slate) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.Terminal, tint = EtaPreferenceColors.Slate) },
                 )
             }
         }
@@ -114,19 +114,19 @@ fun SystemEnhanceScreen(
                 EtaPreference(
                     title = stringResource(R.string.capability_hook_assistants),
                     summary = stringResource(R.string.capability_hook_assistants_summary),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.AutoAwesome, tint = EtaPreferenceColors.Green) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.AutoAwesome, tint = EtaPreferenceColors.Green) },
                 )
                 EtaPreferenceDivider(hasLeading = true)
                 EtaPreference(
                     title = stringResource(R.string.capability_hook_google),
                     summary = stringResource(R.string.capability_hook_google_summary),
-                    startAction = { EtaPreferenceIcon(Icons.AutoMirrored.Rounded.ManageSearch, tint = EtaPreferenceColors.Blue) },
+                    startAction = { EtaPreferenceIcon(Icons.AutoMirrored.Outlined.ManageSearch, tint = EtaPreferenceColors.Blue) },
                 )
                 EtaPreferenceDivider(hasLeading = true)
                 EtaPreference(
                     title = stringResource(R.string.capability_hook_accessibility),
                     summary = stringResource(R.string.capability_hook_accessibility_summary),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.VerifiedUser, tint = EtaPreferenceColors.Green) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.VerifiedUser, tint = EtaPreferenceColors.Green) },
                 )
             }
         }

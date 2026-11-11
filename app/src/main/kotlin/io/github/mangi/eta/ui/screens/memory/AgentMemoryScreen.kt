@@ -31,8 +31,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Notes
-import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.automirrored.outlined.Notes
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -107,7 +107,7 @@ internal fun AgentMemoryScreen(
                 enabled = !state.isLoading && !state.isSaving && state.draft.isNotEmpty(),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.DeleteOutline,
+                    imageVector = Icons.Outlined.DeleteOutline,
                     contentDescription = stringResource(R.string.ui_clear_all_memory_a43bd3),
                     tint = if (!state.isLoading && state.draft.isNotEmpty()) {
                         MiuixTheme.colorScheme.onSurface
@@ -234,7 +234,7 @@ private fun MemoryDocumentCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.Notes,
+                imageVector = Icons.AutoMirrored.Outlined.Notes,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
                 tint = colors.primary,

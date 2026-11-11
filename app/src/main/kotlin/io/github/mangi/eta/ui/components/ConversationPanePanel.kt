@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -111,11 +111,11 @@ internal fun ConversationPanePanel(
             if (mode) ConversationSelectionHeader(selectedIds.size, visibleIds.isNotEmpty() && selectedIds.containsAll(visibleIds),
                 { selectedIds = emptySet() }, { selectedIds = if (selectedIds.containsAll(visibleIds)) emptySet() else visibleIds })
             else if (archived) Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                EtaIconButton({ archived = false; onSearchChange("") }) { Icon(Icons.Rounded.ChevronLeft, stringResource(R.string.action_back)) }
+                EtaIconButton({ archived = false; onSearchChange("") }) { Icon(Icons.Outlined.ChevronLeft, stringResource(R.string.action_back)) }
                 Text(stringResource(R.string.eta_archived), style = EtaTheme.type.headline)
             } else Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 EtaSearchField(state.searchQuery, onSearchChange, stringResource(R.string.conversation_search_hint), Modifier.weight(1f))
-                EtaIconButton(workspace.onNew) { Icon(Icons.Rounded.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
+                EtaIconButton(workspace.onNew) { Icon(Icons.Outlined.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
             }
         }
         AnimatedVisibility(!selecting && !archived, enter = expandVertically(tween(motion.medium, easing = motion.emphasizedDecelerate)) + fadeIn(tween(motion.medium, easing = motion.emphasizedDecelerate)),
@@ -124,19 +124,19 @@ internal fun ConversationPanePanel(
                 // 快捷格平分宽度：4 个（无电脑）或 5 个（含电脑）一屏放下，再多才横向滚动。
                 val entryCount = (4 + (if (workspace.onDesktop != null) 1 else 0)).coerceAtMost(5)
                 val entryWidth = (width - 32.dp) / entryCount
-                WorkspaceEntry(Icons.Rounded.TaskAlt, stringResource(R.string.eta_tasks), EtaTheme.colors.tileCaramel, entryWidth, workspace.onTasks, count = workspace.runningCount)
-                WorkspaceEntry(Icons.Rounded.PeopleAlt, stringResource(R.string.eta_characters), EtaTheme.colors.tilePink, entryWidth, onOpenCharacters)
-                WorkspaceEntry(Icons.Rounded.Terminal, stringResource(R.string.route_terminal), EtaTheme.colors.tileSlate, entryWidth, workspace.onTerminal)
-                WorkspaceEntry(Icons.Rounded.Language, stringResource(R.string.eta_browser), EtaTheme.colors.tileTeal, entryWidth, workspace.onBrowser)
-                workspace.onDesktop?.let { open -> WorkspaceEntry(Icons.Rounded.Computer, stringResource(R.string.desktop_entry), EtaTheme.colors.tileBlue, entryWidth, open, count = workspace.desktopRunning) }
-                workspace.onKimi?.let { launch -> WorkspaceEntry(Icons.Rounded.Code, workspace.kimiLabel, EtaTheme.colors.tileSlate, entryWidth, launch,
+                WorkspaceEntry(Icons.Outlined.TaskAlt, stringResource(R.string.eta_tasks), EtaTheme.colors.tileCaramel, entryWidth, workspace.onTasks, count = workspace.runningCount)
+                WorkspaceEntry(Icons.Outlined.PeopleAlt, stringResource(R.string.eta_characters), EtaTheme.colors.tilePink, entryWidth, onOpenCharacters)
+                WorkspaceEntry(Icons.Outlined.Terminal, stringResource(R.string.route_terminal), EtaTheme.colors.tileSlate, entryWidth, workspace.onTerminal)
+                WorkspaceEntry(Icons.Outlined.Language, stringResource(R.string.eta_browser), EtaTheme.colors.tileTeal, entryWidth, workspace.onBrowser)
+                workspace.onDesktop?.let { open -> WorkspaceEntry(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), EtaTheme.colors.tileBlue, entryWidth, open, count = workspace.desktopRunning) }
+                workspace.onKimi?.let { launch -> WorkspaceEntry(Icons.Outlined.Code, workspace.kimiLabel, EtaTheme.colors.tileSlate, entryWidth, launch,
                     onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null) }
             }
         }
         LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (visibleConversations.isEmpty() && (state.groups.isEmpty() || archived || state.searchQuery.isNotBlank())) item {
-                ListEmptyState(stringResource(if (state.searchQuery.isBlank()) R.string.conversation_empty else R.string.conversation_no_results), icon = Icons.Rounded.Search)
+                ListEmptyState(stringResource(if (state.searchQuery.isBlank()) R.string.conversation_empty else R.string.conversation_no_results), icon = Icons.Outlined.Search)
             }
             sections.forEach { section ->
                 val group = section.group
@@ -151,7 +151,7 @@ internal fun ConversationPanePanel(
                         Text(stringResource(R.string.eta_group_count, group.name, section.conversations.size), Modifier.weight(1f),
                             style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         status?.let { StatusRing(it, size = 12.dp) }
-                        Icon(if (group.collapsed) Icons.Rounded.ChevronRight else Icons.Rounded.ExpandMore, null,
+                        Icon(if (group.collapsed) Icons.Outlined.ChevronRight else Icons.Outlined.ExpandMore, null,
                             Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
                     }
                 } else section.timeSection?.let { timeSection ->
@@ -200,13 +200,13 @@ internal fun ConversationPanePanel(
         Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onOpenSettings).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box {
-                    Icon(Icons.Rounded.Settings, null, Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
+                    Icon(Icons.Outlined.Settings, null, Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
                     if (workspace.permissionsPending > 0) Box(Modifier.align(Alignment.TopEnd).size(6.dp).background(EtaTheme.colors.attention, EtaTheme.shapes.radiusFull))
                 }
                 Text(stringResource(R.string.route_settings), Modifier.padding(start = 8.dp), style = EtaTheme.type.subhead)
             }
             Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onOpenPermissions).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.VerifiedUser, stringResource(R.string.route_permissions), Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
+                Icon(Icons.Outlined.VerifiedUser, stringResource(R.string.route_permissions), Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
                 Text(if (workspace.permissionsPending > 0) stringResource(R.string.eta_permissions_pending, workspace.permissionsPending) else stringResource(R.string.eta_permissions_ready),
                     Modifier.padding(start = 8.dp), style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary)
             }
@@ -302,7 +302,7 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
         .combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (selecting) ConversationSelectionMarker(selected) else if (taskStatus != null) StatusRing(taskStatus, size = 12.dp)
-        if (conversation.isPinned && query.isNotBlank()) Icon(Icons.Rounded.PushPin, stringResource(R.string.eta_pin), Modifier.size(14.dp), tint = colors.textSecondary)
+        if (conversation.isPinned && query.isNotBlank()) Icon(Icons.Outlined.PushPin, stringResource(R.string.eta_pin), Modifier.size(14.dp), tint = colors.textSecondary)
         Text(markedTitle, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp), color = if (selected) colors.onAccentSoft else colors.textPrimary,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (selecting && taskStatus != null) StatusRing(taskStatus, size = 12.dp)

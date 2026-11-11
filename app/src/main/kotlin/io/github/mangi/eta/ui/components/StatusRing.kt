@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -114,8 +115,9 @@ fun StatusRing(
         AnimatedContent(
             targetState = status,
             transitionSpec = {
-                val enter = fadeIn(tween(motion.medium, easing = motion.emphasizedDecelerate))
-                (if (motion.reduceMotion) enter else enter + scaleIn(tween(motion.medium, easing = motion.emphasizedDecelerate), initialScale = 0.6f)) togetherWith
+                // 360ms 淡入 + 带一点回弹的放大，结果「落定」而不是硬切。
+                val enter = fadeIn(tween(360, easing = motion.emphasizedDecelerate))
+                (if (motion.reduceMotion) enter else enter + scaleIn(spring(dampingRatio = 0.6f, stiffness = 420f), initialScale = 0.6f)) togetherWith
                     fadeOut(tween(motion.exitDuration(motion.short), easing = motion.accelerate))
             },
             label = "eta_status",

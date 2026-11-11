@@ -33,7 +33,8 @@ internal fun Modifier.etaRiseIn(active: Boolean): Modifier {
     val motion = EtaTheme.motion
     if (!active || motion.reduceMotion) return this
     val progress = remember { Animatable(1f) }
-    LaunchedEffect(progress) { progress.animateTo(0f, tween(motion.medium, easing = motion.emphasizedDecelerate)) }
-    val distance = with(LocalDensity.current) { 16.dp.toPx() }
+    // 弹簧托起：24dp，几乎不回弹，约 350ms 落定。
+    LaunchedEffect(progress) { progress.animateTo(0f, spring(dampingRatio = 0.9f, stiffness = 220f)) }
+    val distance = with(LocalDensity.current) { 24.dp.toPx() }
     return graphicsLayer { translationY = progress.value * distance }
 }

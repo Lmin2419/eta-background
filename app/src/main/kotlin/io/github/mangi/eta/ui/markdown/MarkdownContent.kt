@@ -16,15 +16,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.CheckBox
-import androidx.compose.material.icons.rounded.CheckBoxOutlineBlank
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Feedback
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Lightbulb
-import androidx.compose.material.icons.rounded.Report
-import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.CheckBox
+import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Feedback
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.Report
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -236,7 +236,7 @@ private fun CopyButton(text: String, tint: Color) {
         minHeight = 32.dp,
     ) {
         Icon(
-            imageVector = if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+            imageVector = if (copied) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
             contentDescription = stringResource(if (copied) R.string.copy_copied else R.string.copy_code),
             modifier = Modifier.size(14.dp),
             tint = if (copied) MiuixTheme.colorScheme.primary else tint,
@@ -302,11 +302,11 @@ private fun MarkdownAlertBlock(block: MarkdownAlert, scope: MarkdownRenderScope)
 
 private val MarkdownAlertKind.icon: ImageVector
     get() = when (this) {
-        MarkdownAlertKind.Note -> Icons.Rounded.Info
-        MarkdownAlertKind.Tip -> Icons.Rounded.Lightbulb
-        MarkdownAlertKind.Important -> Icons.Rounded.Feedback
-        MarkdownAlertKind.Warning -> Icons.Rounded.Warning
-        MarkdownAlertKind.Caution -> Icons.Rounded.Report
+        MarkdownAlertKind.Note -> Icons.Outlined.Info
+        MarkdownAlertKind.Tip -> Icons.Outlined.Lightbulb
+        MarkdownAlertKind.Important -> Icons.Outlined.Feedback
+        MarkdownAlertKind.Warning -> Icons.Outlined.Warning
+        MarkdownAlertKind.Caution -> Icons.Outlined.Report
     }
 
 private val MarkdownAlertKind.label: Int
@@ -391,7 +391,7 @@ private fun RowScope.ListMarker(
             val lineHeight = with(LocalDensity.current) { style.body.lineHeight.toDp() }
             Box(markerModifier.height(lineHeight), contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = if (item.checked) Icons.Rounded.CheckBox else Icons.Rounded.CheckBoxOutlineBlank,
+                    imageVector = if (item.checked) Icons.Outlined.CheckBox else Icons.Outlined.CheckBoxOutlineBlank,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                     tint = if (item.checked) MiuixTheme.colorScheme.primary else style.markerColor,

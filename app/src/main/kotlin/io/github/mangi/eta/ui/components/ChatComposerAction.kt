@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowUpward
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -115,16 +115,20 @@ internal fun ComposerActionButton(
                 }
             }
         }, contentAlignment = Alignment.Center) {
-        Box(Modifier.size(40.dp).background(background, CircleShape).drawWithContent {
+        // 发送键：圆角方块（与输入卡片的大圆角呼应），不再是正圆。
+        Box(Modifier.size(40.dp).background(background, SendButtonShape).drawWithContent {
             drawContent()
-            if (flash.value > 0f) drawCircle(Brush.sweepGradient(*aurora.stops), alpha = flash.value, style = Stroke(2.dp.toPx()))
+            if (flash.value > 0f) drawRoundRect(Brush.sweepGradient(*aurora.stops), alpha = flash.value, style = Stroke(2.dp.toPx()),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()))
         }, contentAlignment = Alignment.Center) {
             Icon(when (action) {
-                ComposerAction.Send -> Icons.Rounded.ArrowUpward
-                ComposerAction.Queue -> Icons.Rounded.Schedule
-                ComposerAction.Stop -> Icons.Rounded.Stop
-                else -> Icons.Rounded.Mic
+                ComposerAction.Send -> Icons.Outlined.ArrowUpward
+                ComposerAction.Queue -> Icons.Outlined.Schedule
+                ComposerAction.Stop -> Icons.Outlined.Stop
+                else -> Icons.Outlined.Mic
             }, null, Modifier.size(if (action == ComposerAction.Stop) 20.dp else 24.dp), tint = foreground)
         }
     }
 }
+
+private val SendButtonShape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)

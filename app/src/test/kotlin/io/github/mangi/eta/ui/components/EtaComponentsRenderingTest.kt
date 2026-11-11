@@ -10,9 +10,9 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Cloud
-import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Extension
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
@@ -117,14 +117,14 @@ class EtaComponentsRenderingTest {
                                 EtaPreferenceGroupTitle("General")
                                 EtaPreferenceGroup {
                                     EtaArrowPreference("Service providers", summary = "Models and connections",
-                                        startAction = { EtaPreferenceIcon(Icons.Rounded.Cloud, tint = EtaPreferenceColors.Blue) }, onClick = {})
+                                        startAction = { EtaPreferenceIcon(Icons.Outlined.Cloud, tint = EtaPreferenceColors.Blue) }, onClick = {})
                                     EtaPreferenceDivider()
                                     EtaSwitchPreference("Voice playback", checked = true, onCheckedChange = {},
-                                        startAction = { EtaPreferenceIcon(Icons.Rounded.Extension, tint = EtaPreferenceColors.Green) })
+                                        startAction = { EtaPreferenceIcon(Icons.Outlined.Extension, tint = EtaPreferenceColors.Green) })
                                     EtaPreferenceDivider()
                                     EtaWindowSpinnerPreference("Appearance", items = listOf("System", "Light", "Dark").map { top.yukonga.miuix.kmp.basic.DropdownItem(text = it) },
                                         selectedIndex = 0, onSelectedIndexChange = {},
-                                        startAction = { EtaPreferenceIcon(Icons.Rounded.Palette, tint = EtaPreferenceColors.Orange) })
+                                        startAction = { EtaPreferenceIcon(Icons.Outlined.Palette, tint = EtaPreferenceColors.Orange) })
                                 }
                                 Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     EtaChoiceChip("All", true, {})
@@ -134,7 +134,7 @@ class EtaComponentsRenderingTest {
                                     EtaButton("Save", {})
                                     EtaButton("Disabled", {}, enabled = false)
                                 }
-                                ListEmptyState("No skills yet", summary = "Add a skill to get started", icon = Icons.Rounded.Extension)
+                                ListEmptyState("No skills yet", summary = "Add a skill to get started", icon = Icons.Outlined.Extension)
                             }
                         }
                     }
@@ -193,7 +193,7 @@ private fun EtaExtraSamples(dialog: Boolean, sheet: Boolean) {
                 }
                 EtaListGroup(title = "Connections") {
                     EtaArrowPreference("Provider", summary = "Configuration",
-                        startAction = { EtaIconTile(Icons.Rounded.Cloud) }, onClick = {})
+                        startAction = { EtaIconTile(Icons.Outlined.Cloud) }, onClick = {})
                     EtaPreferenceDivider()
                     EtaCheckboxPreference("Use connection", true, {})
                 }

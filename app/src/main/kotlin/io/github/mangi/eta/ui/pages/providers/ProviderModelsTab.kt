@@ -39,11 +39,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.CloudDownload
-import androidx.compose.material.icons.rounded.RadioButtonUnchecked
-import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -114,7 +114,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.outlined.DeleteOutline
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 
 private val editableReasoningEfforts = listOf(
@@ -276,7 +276,7 @@ internal fun ProviderModelsTab(
                             enabled = !isFetching && !isMutatingModel,
                             startAction = {
                                 EtaPreferenceIcon(
-                                    icon = Icons.Rounded.CloudDownload,
+                                    icon = Icons.Outlined.CloudDownload,
                                     enabled = !isFetching && !isMutatingModel,
                                     tint = EtaPreferenceColors.Blue,
                                 )
@@ -334,7 +334,7 @@ internal fun ProviderModelsTab(
                             enabled = !isFetching && !isMutatingModel,
                             startAction = {
                                 EtaPreferenceIcon(
-                                    icon = Icons.Rounded.Add,
+                                    icon = Icons.Outlined.Add,
                                     enabled = !isFetching && !isMutatingModel,
                                     tint = EtaPreferenceColors.Blue,
                                 )
@@ -757,7 +757,7 @@ private fun ModelDeleteBar(
     ) {
         val tint = if (active) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.disabledOnSecondaryVariant
         Icon(
-            imageVector = Icons.Rounded.DeleteOutline,
+            imageVector = Icons.Outlined.DeleteOutline,
             contentDescription = null,
             tint = tint,
             modifier = Modifier.size(20.dp),
@@ -850,15 +850,15 @@ private fun ModelListItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 EtaIconButton(onClick = onEdit, enabled = enabled) {
                     Icon(
-                        imageVector = Icons.Rounded.Tune,
+                        imageVector = Icons.Outlined.Tune,
                         contentDescription = stringResource(R.string.ui_edit_model_parameters_ba4864),
                         tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
                     )
                 }
                 EtaIconButton(onClick = onSetCurrent, enabled = enabled) {
                     Icon(
-                        imageVector = if (isSelected) Icons.Rounded.Check
-                            else Icons.Rounded.RadioButtonUnchecked,
+                        imageVector = if (isSelected) Icons.Outlined.Check
+                            else Icons.Outlined.RadioButtonUnchecked,
                         contentDescription = if (isSelected) context.getString(R.string.page_current_model_a0af8f) else context.getString(R.string.page_set_as_current_model_183d7d),
                         tint = if (isSelected) {
                             MiuixTheme.colorScheme.primary

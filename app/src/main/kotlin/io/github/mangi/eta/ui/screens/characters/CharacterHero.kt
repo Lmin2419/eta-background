@@ -22,10 +22,10 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.PhotoCamera
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarOutline
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -135,7 +135,7 @@ internal fun CharacterHero(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.PhotoCamera,
+                        imageVector = Icons.Outlined.PhotoCamera,
                         contentDescription = "更换头像",
                         modifier = Modifier.size(18.dp),
                         tint = colors.onSurface,
@@ -156,7 +156,7 @@ internal fun CharacterHero(
                 )
                 EtaIconButton(onClick = onToggleFavorite, enabled = !busy, minWidth = 36.dp, minHeight = 36.dp) {
                     Icon(
-                        imageVector = if (card.favorite) Icons.Rounded.Star else Icons.Rounded.StarOutline,
+                        imageVector = if (card.favorite) Icons.Outlined.Star else Icons.Outlined.StarOutline,
                         contentDescription = if (card.favorite) "取消收藏" else "收藏",
                         modifier = Modifier.size(20.dp),
                         tint = if (card.favorite) FavoriteColor else colors.onSurfaceVariantSummary,
@@ -276,7 +276,7 @@ internal fun GreetingPager(
                         ) {
                             if (page == pagerState.settledPage) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Check,
+                                    imageVector = Icons.Outlined.Check,
                                     contentDescription = "已选择",
                                     modifier = Modifier.size(12.dp),
                                     tint = colors.onPrimary,

@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,7 +75,7 @@ internal fun SpeechNote(text: String, modifier: Modifier = Modifier) {
 @Composable
 internal fun SpeechLoadingState(failure: String?) {
     if (failure != null) {
-        ListEmptyState(title = failure, icon = Icons.Rounded.ErrorOutline)
+        ListEmptyState(title = failure, icon = Icons.Outlined.ErrorOutline)
     } else {
         Box(
             modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
@@ -119,7 +119,7 @@ internal fun SpeechField(
             {
                 EtaIconButton(onClick = { visible = !visible }) {
                     Icon(
-                        imageVector = if (visible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                        imageVector = if (visible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                         contentDescription = stringResource(
                             if (visible) R.string.page_hide_bb0e7e else R.string.page_show_71b677,
                         ),

@@ -18,15 +18,15 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ShortText
-import androidx.compose.material.icons.automirrored.rounded.VolumeOff
-import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.AddComment
-import androidx.compose.material.icons.rounded.BookmarkBorder
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.Stop
-import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.automirrored.outlined.ShortText
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.AddComment
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.mangi.eta.ui.components.LocalChatToast
 import io.github.mangi.eta.ui.components.LocalPaneWorkspace
@@ -246,7 +246,7 @@ private fun AgentTopBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onOpenConversationPane) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ShortText,
+                        imageVector = Icons.AutoMirrored.Outlined.ShortText,
                         modifier = Modifier.size(24.dp),
                         contentDescription = stringResource(R.string.action_conversation_history),
                     )
@@ -324,7 +324,7 @@ private fun TopBarOverflowMenu(
     Box {
         IconButton(onClick = { onRefreshKimiWeb(); showMenu = true }) {
             Icon(
-                imageVector = Icons.Rounded.MoreHoriz,
+                imageVector = Icons.Outlined.MoreHoriz,
                 modifier = Modifier.size(24.dp),
                 contentDescription = stringResource(R.string.action_more),
             )
@@ -360,7 +360,7 @@ private fun TopBarOverflowMenu(
                         text = newConversationText,
                         icon = { modifier ->
                             Icon(
-                                imageVector = Icons.Rounded.AddComment,
+                                imageVector = Icons.Outlined.AddComment,
                                 contentDescription = null,
                                 modifier = modifier.size(TopBarMenuIconSize),
                             )
@@ -370,7 +370,7 @@ private fun TopBarOverflowMenu(
                         text = openTerminalText,
                         icon = { modifier ->
                             Icon(
-                                imageVector = Icons.Rounded.Terminal,
+                                imageVector = Icons.Outlined.Terminal,
                                 contentDescription = null,
                                 modifier = modifier.size(TopBarMenuIconSize),
                             )
@@ -390,7 +390,7 @@ private fun TopBarOverflowMenu(
                         text = openBrowserText,
                         icon = { modifier ->
                             Icon(
-                                imageVector = Icons.Rounded.Language,
+                                imageVector = Icons.Outlined.Language,
                                 contentDescription = null,
                                 modifier = modifier.size(TopBarMenuIconSize),
                             )
@@ -399,7 +399,7 @@ private fun TopBarOverflowMenu(
                     DropdownItem(
                         text = commonTasksText,
                         icon = { modifier ->
-                            Icon(imageVector = Icons.Rounded.BookmarkBorder, contentDescription = null,
+                            Icon(imageVector = Icons.Outlined.BookmarkBorder, contentDescription = null,
                                 modifier = modifier.size(TopBarMenuIconSize))
                         },
                     ),
@@ -409,7 +409,7 @@ private fun TopBarOverflowMenu(
                             text = stopKimiWebText,
                             icon = { modifier ->
                                 Icon(
-                                    imageVector = Icons.Rounded.Stop,
+                                    imageVector = Icons.Outlined.Stop,
                                     contentDescription = null,
                                     modifier = modifier.size(TopBarMenuIconSize),
                                 )
@@ -424,8 +424,8 @@ private fun TopBarOverflowMenu(
                             text = autoReadText,
                             icon = { modifier ->
                                 Icon(
-                                    imageVector = if (autoReadEnabled) Icons.AutoMirrored.Rounded.VolumeUp
-                                        else Icons.AutoMirrored.Rounded.VolumeOff,
+                                    imageVector = if (autoReadEnabled) Icons.AutoMirrored.Outlined.VolumeUp
+                                        else Icons.AutoMirrored.Outlined.VolumeOff,
                                     contentDescription = null,
                                     modifier = modifier.size(TopBarMenuIconSize),
                                 )

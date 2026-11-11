@@ -2,7 +2,7 @@ package io.github.mangi.eta.ui.components
 
 import android.os.LocaleList
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -54,7 +54,7 @@ internal fun LanguagePreference(iconTint: Color = MiuixTheme.colorScheme.onBackg
         items = labels.map { DropdownItem(text = it) },
         useWindow = false,
         selectedIndex = selectedIndex,
-        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.Language, tint = iconTint) },
+        startAction = { EtaPreferenceIcon(icon = Icons.Outlined.Language, tint = iconTint) },
         onSelectedIndexChange = { index ->
             if (index in labels.indices) {
                 repository.selectLocale(if (index == 0) null else locales[index - 1])

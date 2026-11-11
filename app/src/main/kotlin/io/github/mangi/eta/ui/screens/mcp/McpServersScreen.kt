@@ -10,9 +10,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Hub
-import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -81,7 +81,7 @@ internal fun McpServersScreen(
         actions = {
             EtaIconButton(onClick = { showAdd = true }) {
                 Icon(
-                    imageVector = Icons.Rounded.Add,
+                    imageVector = Icons.Outlined.Add,
                     contentDescription = stringResource(R.string.mcp_add_server),
                 )
             }
@@ -94,7 +94,7 @@ internal fun McpServersScreen(
                     ListEmptyState(
                         title = stringResource(R.string.mcp_empty_title),
                         summary = stringResource(R.string.mcp_empty_summary),
-                        icon = Icons.Rounded.Hub,
+                        icon = Icons.Outlined.Hub,
                         action = {
                             EtaButton(
                                 text = stringResource(R.string.mcp_add_server),
@@ -268,7 +268,7 @@ internal fun McpServerDetailScreen(
                 },
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Refresh,
+                    imageVector = Icons.Outlined.Refresh,
                     contentDescription = stringResource(R.string.mcp_refresh_tools),
                 )
             }
@@ -315,7 +315,7 @@ internal fun McpServerDetailScreen(
                     ListEmptyState(
                         title = stringResource(R.string.mcp_no_tools),
                         summary = stringResource(R.string.mcp_refresh_tools_hint),
-                        icon = Icons.Rounded.Refresh,
+                        icon = Icons.Outlined.Refresh,
                     )
                 } else {
                     server.tools.forEachIndexed { index, tool ->

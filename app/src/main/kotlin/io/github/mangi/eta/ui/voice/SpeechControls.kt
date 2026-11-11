@@ -24,11 +24,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -146,7 +146,7 @@ internal fun SpeechDictationButton(
         modifier = modifier,
     ) {
         Icon(
-            imageVector = if (state.active) Icons.Rounded.Check else Icons.Rounded.Mic,
+            imageVector = if (state.active) Icons.Outlined.Check else Icons.Outlined.Mic,
             contentDescription = stringResource(
                 if (state.active) R.string.speech_dictation_finish else R.string.speech_dictation,
             ),
@@ -216,7 +216,7 @@ internal fun SpeechInputFeedback(controller: SpeechInputController) {
                 }
                 EtaIconButton(onClick = controller::cancel, minWidth = 36.dp, minHeight = 36.dp) {
                     Icon(
-                        imageVector = Icons.Rounded.Close,
+                        imageVector = Icons.Outlined.Close,
                         contentDescription = stringResource(R.string.action_cancel),
                         modifier = Modifier.size(16.dp),
                         tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
@@ -386,7 +386,7 @@ internal fun SpeechReadAloudButton(messageId: String, text: String) {
         minHeight = AnswerActionSize,
     ) {
         Icon(
-            imageVector = if (active) Icons.Rounded.Stop else Icons.AutoMirrored.Rounded.VolumeUp,
+            imageVector = if (active) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp,
             contentDescription = stringResource(
                 if (active) R.string.speech_read_stop else R.string.speech_read_aloud,
             ),

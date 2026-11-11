@@ -5,7 +5,7 @@ import io.github.mangi.eta.ui.theme.EtaMotion
 
 import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.outlined.*
 import io.github.mangi.eta.ui.components.EtaIconButton
 import io.github.mangi.eta.ui.theme.EtaTheme
 
@@ -194,9 +194,9 @@ private fun AssistantInputBar(
     )
     val inputShape = RoundedCornerShape(20.dp)
     val trailingIcon = when {
-        speech.active || state.phase == EtaVoicePhase.PROCESSING -> Icons.Rounded.Stop
-        canSubmit || !recognitionEnabled -> Icons.Rounded.Send
-        else -> Icons.Rounded.Mic
+        speech.active || state.phase == EtaVoicePhase.PROCESSING -> Icons.Outlined.Stop
+        canSubmit || !recognitionEnabled -> Icons.Outlined.Send
+        else -> Icons.Outlined.Mic
     }
     val trailingDescription = when {
         speech.phase == EtaSpeechPhase.RECOGNIZING -> R.string.action_stop
@@ -277,7 +277,7 @@ private fun AssistantInputBar(
                 enabled = true,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Keyboard,
+                    imageVector = Icons.Outlined.Keyboard,
                     contentDescription = stringResource(R.string.voice_use_keyboard),
                     tint = themeColors.textPrimary,
                 )
@@ -306,7 +306,7 @@ private fun AssistantInputBar(
                 enabled = canOpenConversation,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.OpenInNew,
+                    imageVector = Icons.Outlined.OpenInNew,
                     contentDescription = stringResource(R.string.overlay_open_conversation),
                     tint = themeColors.textPrimary,
                 )
@@ -420,7 +420,7 @@ private fun AssistantVoiceEntry(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp))
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             EtaIconButton(onKeyboard, enabled = controls.value >= 0.5f) {
-                Icon(Icons.Rounded.Keyboard, stringResource(R.string.voice_use_keyboard), tint = colors.textPrimary)
+                Icon(Icons.Outlined.Keyboard, stringResource(R.string.voice_use_keyboard), tint = colors.textPrimary)
             }
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 EtaAssistantWave(speech.active, speechLevel, Modifier.size(80.dp), ring = true)
@@ -430,12 +430,12 @@ private fun AssistantVoiceEntry(
                     modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.accent)
                         .graphicsLayer { alpha = controls.value },
                 ) {
-                    Icon(Icons.Rounded.Stop, stringResource(if (speech.phase == EtaSpeechPhase.RECOGNIZING)
+                    Icon(Icons.Outlined.Stop, stringResource(if (speech.phase == EtaSpeechPhase.RECOGNIZING)
                         R.string.action_stop else R.string.voice_finish_speech), tint = colors.onAccent)
                 }
             }
             EtaIconButton(onOpenConversation, enabled = canOpenConversation && controls.value >= 0.5f) {
-                Icon(Icons.Rounded.OpenInNew, stringResource(R.string.overlay_open_conversation), tint = colors.textPrimary)
+                Icon(Icons.Outlined.OpenInNew, stringResource(R.string.overlay_open_conversation), tint = colors.textPrimary)
             }
         }
     }

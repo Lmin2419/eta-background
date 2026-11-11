@@ -6,7 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.QuestionAnswer
+import androidx.compose.material.icons.outlined.QuestionAnswer
 import androidx.compose.ui.Alignment
 import top.yukonga.miuix.kmp.basic.Icon
 import androidx.compose.foundation.layout.Column
