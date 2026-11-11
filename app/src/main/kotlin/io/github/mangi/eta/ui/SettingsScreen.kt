@@ -723,8 +723,10 @@ private fun SettingsPageContent(
                     LanguagePreference(iconTint = EtaPreferenceColors.Pink)
                     EtaPreferenceDivider()
                     val hapticsContext = androidx.compose.ui.platform.LocalContext.current
-                    remember(hapticsContext) { io.github.mangi.eta.ui.components.EtaHaptics.init(hapticsContext) }
-                    val hapticsOn by io.github.mangi.eta.ui.components.EtaHaptics.enabled.collectAsState()
+                    val hapticsOn by remember(hapticsContext) {
+                        io.github.mangi.eta.ui.components.EtaHaptics.init(hapticsContext)
+                        io.github.mangi.eta.ui.components.EtaHaptics.enabled
+                    }.collectAsState()
                     EtaSwitchPreference(title = stringResource(R.string.settings_haptics_title),
                         summary = stringResource(R.string.settings_haptics_summary),
                         checked = hapticsOn,
