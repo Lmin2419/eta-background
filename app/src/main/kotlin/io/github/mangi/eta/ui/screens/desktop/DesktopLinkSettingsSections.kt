@@ -18,10 +18,34 @@ import io.github.mangi.eta.agent.remote.DesktopReminderScope
 import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
+import io.github.mangi.eta.ui.components.EtaChoiceChip
+import io.github.mangi.eta.ui.components.EtaSegmented
+import io.github.mangi.eta.ui.theme.EtaTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/** 「设置 → 电脑」里的同步开关、常驻通知与提醒设置，以及电脑端诊断信息。 */
+/** 常驻通知的三档预设：安静（默认，低优先级）/ 标准 / 显眼（流体云 + 流光）。 */
+internal enum class DesktopNoticePreset { Quiet, Standard, Prominent }
+
+internal val DesktopLinkPrefs.noticePreset: DesktopNoticePreset get() = when {
+    fluidCloud || glow -> DesktopNoticePreset.Prominent
+    !ongoingLowPriority -> DesktopNoticePreset.Standard
+    else -> DesktopNoticePreset.Quiet
+}
+
+internal fun DesktopLinkPrefs.withNoticePreset(preset: DesktopNoticePreset): DesktopLinkPrefs = when (preset) {
+    DesktopNoticePreset.Quiet -> copy(ongoingLowPriority = true, fluidCloud = false, glow = false)
+    DesktopNoticePreset.Standard -> copy(ongoingLowPriority = false, fluidCloud = false, glow = false)
+    DesktopNoticePreset.Prominent -> copy(ongoingLowPriority = false, fluidCloud = true, glow = true)
+}
+
+/** 「设置 → 电脑」里的同步开关、常驻通知样式与提醒。诊断信息在「高级」里。 */
+@OptIn(ExperimentalLayoutApi::class)
 internal fun LazyListScope.desktopLinkSections(prefs: DesktopLinkPrefs) {
     item(key = "link-switch") {
         val context = LocalContext.current
@@ -33,32 +57,33 @@ internal fun LazyListScope.desktopLinkSections(prefs: DesktopLinkPrefs) {
                 onCheckedChange = { on -> DesktopLinkController.setEnabled(context, on) },
             )
         }
-        DesktopDiagnostics()
     }
     item(key = "link-notification") {
         EtaPreferenceGroupTitle(stringResource(R.string.desktop_link_notification_title))
         EtaPreferenceGroup {
-            EtaSwitchPreference(
-                title = stringResource(R.string.desktop_link_low_priority),
-                summary = stringResource(R.string.desktop_link_low_priority_summary),
-                checked = prefs.ongoingLowPriority,
-                enabled = prefs.enabled,
-                onCheckedChange = { on -> DesktopLinkSettings.update { it.copy(ongoingLowPriority = on) } },
-            )
-            EtaSwitchPreference(
-                title = stringResource(R.string.desktop_link_fluid_cloud),
-                summary = stringResource(R.string.desktop_link_fluid_cloud_summary),
-                checked = prefs.fluidCloud,
-                enabled = prefs.enabled,
-                onCheckedChange = { on -> DesktopLinkSettings.update { it.copy(fluidCloud = on) } },
-            )
-            EtaSwitchPreference(
-                title = stringResource(R.string.desktop_link_glow),
-                summary = stringResource(R.string.desktop_link_glow_summary),
-                checked = prefs.glow,
-                enabled = prefs.enabled,
-                onCheckedChange = { on -> DesktopLinkSettings.update { it.copy(glow = on) } },
-            )
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                val preset = prefs.noticePreset
+                EtaSegmented(
+                    items = listOf(
+                        stringResource(R.string.desktop_notice_quiet),
+                        stringResource(R.string.desktop_notice_standard),
+                        stringResource(R.string.desktop_notice_prominent),
+                    ),
+                    selectedIndex = preset.ordinal,
+                    onSelectedIndexChange = { index -> DesktopLinkSettings.update { it.withNoticePreset(DesktopNoticePreset.entries[index]) } },
+                    enabled = prefs.enabled,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(
+                    text = stringResource(when (preset) {
+                        DesktopNoticePreset.Quiet -> R.string.desktop_notice_quiet_summary
+                        DesktopNoticePreset.Standard -> R.string.desktop_notice_standard_summary
+                        DesktopNoticePreset.Prominent -> R.string.desktop_notice_prominent_summary
+                    }),
+                    style = EtaTheme.type.caption,
+                    color = EtaTheme.colors.textTertiary,
+                )
+            }
             EtaSwitchPreference(
                 title = stringResource(R.string.desktop_link_sound),
                 summary = stringResource(R.string.desktop_link_sound_summary),
@@ -71,46 +96,37 @@ internal fun LazyListScope.desktopLinkSections(prefs: DesktopLinkPrefs) {
     item(key = "link-reminders") {
         EtaPreferenceGroupTitle(stringResource(R.string.desktop_link_reminders_title))
         EtaPreferenceGroup {
-            EtaSwitchPreference(
-                title = stringResource(R.string.desktop_link_remind_completed),
-                checked = prefs.remindCompleted,
-                enabled = prefs.enabled,
-                onCheckedChange = { on -> DesktopLinkSettings.update { it.copy(remindCompleted = on) } },
-            )
-            EtaSwitchPreference(
-                title = stringResource(R.string.desktop_link_remind_approval),
-                checked = prefs.remindApproval,
-                enabled = prefs.enabled,
-                onCheckedChange = { on -> DesktopLinkSettings.update { it.copy(remindApproval = on) } },
-            )
-            EtaSwitchPreference(
-                title = stringResource(R.string.desktop_link_remind_question),
-                checked = prefs.remindQuestion,
-                enabled = prefs.enabled,
-                onCheckedChange = { on -> DesktopLinkSettings.update { it.copy(remindQuestion = on) } },
-            )
-            EtaSwitchPreference(
-                title = stringResource(R.string.desktop_link_remind_error),
-                checked = prefs.remindError,
-                enabled = prefs.enabled,
-                onCheckedChange = { on -> DesktopLinkSettings.update { it.copy(remindError = on) } },
-            )
-            EtaSwitchPreference(
-                title = stringResource(R.string.desktop_link_remind_all),
-                summary = stringResource(R.string.desktop_link_remind_all_summary),
-                checked = prefs.reminderScope == DesktopReminderScope.All,
-                enabled = prefs.enabled,
-                onCheckedChange = { on ->
-                    DesktopLinkSettings.update { it.copy(reminderScope = if (on) DesktopReminderScope.All else DesktopReminderScope.Watched) }
-                },
-            )
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.desktop_remind_what), style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    EtaChoiceChip(stringResource(R.string.desktop_link_remind_completed), prefs.remindCompleted,
+                        { DesktopLinkSettings.update { it.copy(remindCompleted = !it.remindCompleted) } }, enabled = prefs.enabled)
+                    EtaChoiceChip(stringResource(R.string.desktop_link_remind_approval), prefs.remindApproval,
+                        { DesktopLinkSettings.update { it.copy(remindApproval = !it.remindApproval) } }, enabled = prefs.enabled)
+                    EtaChoiceChip(stringResource(R.string.desktop_link_remind_question), prefs.remindQuestion,
+                        { DesktopLinkSettings.update { it.copy(remindQuestion = !it.remindQuestion) } }, enabled = prefs.enabled)
+                    EtaChoiceChip(stringResource(R.string.desktop_link_remind_error), prefs.remindError,
+                        { DesktopLinkSettings.update { it.copy(remindError = !it.remindError) } }, enabled = prefs.enabled)
+                }
+                Text(stringResource(R.string.desktop_remind_which), style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary)
+                EtaSegmented(
+                    items = listOf(stringResource(R.string.desktop_remind_scope_watched), stringResource(R.string.desktop_remind_scope_all)),
+                    selectedIndex = if (prefs.reminderScope == DesktopReminderScope.All) 1 else 0,
+                    onSelectedIndexChange = { index ->
+                        DesktopLinkSettings.update { it.copy(reminderScope = if (index == 1) DesktopReminderScope.All else DesktopReminderScope.Watched) }
+                    },
+                    enabled = prefs.enabled,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(stringResource(R.string.desktop_remind_scope_summary), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
+            }
         }
     }
 }
 
 /** 电脑端插件的版本、运行位置与会话数，方便核对「列表不全」这类问题。 */
 @Composable
-private fun DesktopDiagnostics() {
+internal fun DesktopDiagnostics() {
     val server by DesktopBridge.server.collectAsState()
     val sessions by DesktopBridge.sessions.collectAsState()
     val info = server ?: return

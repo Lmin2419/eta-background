@@ -1756,7 +1756,7 @@
     <string name="desktop_waiting_banner">%1$d 项等你处理（审批或回答）</string>
     <string name="desktop_search_hint">搜索标题和聊天内容</string>
     <string name="desktop_search_empty">没有匹配的会话</string>
-    <string name="desktop_needs_you">等你处理</string>
+    <string name="desktop_needs_you">需要你处理</string>
     <string name="desktop_done_unread">已完成</string>
     <string name="desktop_session_actions">会话操作</string>
     <string name="desktop_pin">置顶</string>
@@ -1778,12 +1778,12 @@
     <string name="desktop_plan_feedback">修改意见（可选）</string>
     <string name="desktop_plan_approve">批准</string>
     <string name="desktop_plan_revise">退回修改</string>
-    <string name="desktop_ask_banner">Agent 在等你回答（%1$d）</string>
+    <string name="desktop_ask_banner">有 %1$d 个问题需要你回答</string>
     <string name="desktop_ask_banner_plan">有计划等你审阅</string>
-    <string name="desktop_ask_open">去回答</string>
+    <string name="desktop_ask_open">回答</string>
     <string name="desktop_pinned">已置顶</string>
     <string name="desktop_refresh">刷新</string>
-    <string name="desktop_recent">最近任务</string>
+    <string name="desktop_recent">最近</string>
     <string name="desktop_archived_title">已归档</string>
     <string name="desktop_group_expanded">已展开</string>
     <string name="desktop_group_collapsed">已收起</string>
@@ -1803,4 +1803,34 @@
     <string name="desktop_diag_dsh_legacy">DSH（版本未知，旧版接口）</string>
     <string name="desktop_diag_plugin_outdated">电脑插件需要更新到 0.4.0 或更高，这个 DSH 版本上的排队、标题和历史才能正常同步。</string>
     <string name="desktop_entry">电脑</string>
+    <string name="desktop_workspaces">工作区</string>
+  <plurals name="work_summary_done">
+    <item quantity="other">已完成 · %d 步</item>
+  </plurals>
+  <plurals name="work_summary_steps">
+    <item quantity="other">%d 步</item>
+  </plurals>
+    <string name="desktop_plan_review_open">审阅计划</string>
+    <string name="eta_ready_checking_line">正在检查后台能力…</string>
+    <string name="eta_ready_all_line">后台能力全部就绪</string>
+    <string name="eta_ready_pending_line">后台能力还差 %1$d 项</string>
+    <string name="desktop_notice_quiet">安静</string>
+    <string name="desktop_notice_standard">标准</string>
+    <string name="desktop_notice_prominent">显眼</string>
+    <string name="desktop_notice_quiet_summary">低优先级，折叠在通知栏里；没有流体云和流光。</string>
+    <string name="desktop_notice_standard_summary">普通常驻通知；没有流体云和流光。</string>
+    <string name="desktop_notice_prominent_summary">电脑有任务在跑时显示流体云和屏幕流光。</string>
+    <string name="desktop_remind_what">提醒哪些事</string>
+    <string name="desktop_remind_which">提醒哪些会话</string>
+    <string name="desktop_remind_scope_watched">我参与过的</string>
+    <string name="desktop_remind_scope_all">全部会话</string>
+    <string name="desktop_remind_scope_summary">在手机上发过消息的会话算「参与过」。会话顶栏的铃铛可以单独开关。</string>
+    <string name="desktop_advanced">高级</string>
+    <string name="desktop_advanced_summary">重新配对、手动设置、诊断、断开</string>
+    <string name="desktop_stat_time">耗时</string>
+    <string name="desktop_stats_more">更多数据</string>
+    <string name="desktop_stats_less">收起</string>
+    <string name="desktop_stats_rounds">轮次与步数</string>
+    <string name="overlay_open_conversation_short">对话</string>
+    <string name="overlay_supplement_short">补充</string>
 </resources>

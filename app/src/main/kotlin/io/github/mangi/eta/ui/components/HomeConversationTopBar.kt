@@ -11,6 +11,12 @@ import androidx.compose.material.icons.rounded.AddComment
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.TaskAlt
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import io.github.mangi.eta.ui.model.TaskVisualStatus
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,11 +78,21 @@ internal fun HomeConversationTopBar(
             }
         }
         EtaIconButton(onNew) { Icon(Icons.Rounded.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
-        Box {
-            EtaIconButton(onTasks) { Icon(Icons.Rounded.TaskAlt, stringResource(R.string.eta_tasks), Modifier.size(24.dp)) }
-            if (runningTaskCount > 0) Text(runningTaskCount.toString(), style = EtaTheme.type.caption,
-                color = colors.onAccent, modifier = Modifier.align(Alignment.TopEnd)
-                    .background(colors.accent, EtaTheme.shapes.radiusFull).padding(horizontal = 4.dp))
+        // 任务按钮只在有任务运行时出现（带运行圈和数量）；平时任务中心从侧栏「任务」进入。
+        EtaAnimatedVisibility(
+            visible = runningTaskCount > 0,
+            enter = fadeIn(tween(EtaTheme.motion.short, easing = EtaTheme.motion.standard)) +
+                scaleIn(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate), initialScale = 0.6f),
+            exit = fadeOut(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.short), easing = EtaTheme.motion.accelerate)) +
+                scaleOut(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.short), easing = EtaTheme.motion.accelerate), targetScale = 0.6f),
+            label = "runningTasks",
+        ) {
+            Box {
+                EtaIconButton(onTasks) { StatusRing(TaskVisualStatus.Running, size = 20.dp, contentDescription = stringResource(R.string.eta_tasks)) }
+                Text(runningTaskCount.toString(), style = EtaTheme.type.caption,
+                    color = colors.onAccent, modifier = Modifier.align(Alignment.TopEnd)
+                        .background(colors.accent, EtaTheme.shapes.radiusFull).padding(horizontal = 4.dp))
+            }
         }
     }
     ConversationSettingsSheet(settings, models, isStreaming || isCompacting, usage, canCompact, canExport,

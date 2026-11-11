@@ -55,11 +55,23 @@ data class EtaColors(
     val tileSlate: Color get() = Color(0xFF64748B)
     val aurora: EtaAurora get() = EtaAurora
 
-    fun tileBackground(color: Color): Color =
-        color.copy(alpha = if (isDark) 0.20f else 0.12f).compositeOver(surface)
+    /**
+     * 图标底块统一为中性底（阶段 10）：不再按分类铺彩色底，页面整体更安静。
+     */
+    fun tileBackground(@Suppress("UNUSED_PARAMETER") color: Color): Color = surfaceSunken
 
-    // The design asks for a lighter dark-mode glyph without prescribing exact values.
-    fun tileForeground(color: Color): Color = if (isDark) lerp(color, Color.White, 0.25f) else color
+    /**
+     * 图标只保留三种颜色：焦糖（默认）、绿色（与「正常/完成」相关）、石板灰（系统/次要）。
+     * 其余分类色一律收拢到焦糖。深色模式提亮一些。
+     */
+    fun tileForeground(color: Color): Color {
+        val hue = when (color) {
+            tileGreen, tileTeal -> tileGreen
+            tileSlate -> tileSlate
+            else -> tileCaramel
+        }
+        return if (isDark) lerp(hue, Color.White, 0.25f) else hue
+    }
 
     fun withAccent(primary: Color, soft: Color, onSoft: Color, onPrimary: Color = onAccent): EtaColors =
         copy(accent = primary, accentSoft = soft, onAccentSoft = onSoft, onAccent = onPrimary)

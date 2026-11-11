@@ -124,10 +124,13 @@ private val InputContainerShape = RoundedCornerShape(28.dp)
  */
 internal data class RemoteComposer(
     val workingHint: String,
-    val steerLabel: String,
-    val onSteerSubmit: (String) -> Unit,
+    val steerLabel: String = "",
+    /** 发送时直接插队的入口；为空时不显示（插队改在排队条上点）。 */
+    val onSteerSubmit: ((String) -> Unit)? = null,
     /** 输入内容每次变化时回调，用来按会话保存草稿。 */
     val onDraftChange: (String) -> Unit = {},
+    /** 输入框上方的内嵌内容：运行状态条、审批与提问卡片。 */
+    val aboveInput: (@Composable () -> Unit)? = null,
 )
 
 internal val LocalRemoteComposer = androidx.compose.runtime.staticCompositionLocalOf<RemoteComposer?> { null }
@@ -253,6 +256,7 @@ internal fun AgentChatInputBar(
             .fillMaxWidth(),
     ) {
         ConversationLiveTasks(shortcuts.conversationId, shortcuts.onOpenTasks)
+        remoteComposer?.aboveInput?.invoke()
         if (recognitionEnabled) SpeechInputFeedback(dictation)
         AnimatedVisibility(
             visible = queuedMessages.isNotEmpty(),
@@ -430,7 +434,8 @@ internal fun AgentChatInputBar(
                             else { microphoneTapRequest = true; requestMicrophone() }
                         }
                         // 电脑会话执行中：主按钮是「加入排队」，旁边这个闪电直接插队，当前这一步结束就送达。
-                        if (remoteComposer != null && action == ComposerAction.Queue) {
+                        val steerSubmit = remoteComposer?.onSteerSubmit
+                        if (remoteComposer != null && steerSubmit != null && action == ComposerAction.Queue) {
                             EtaIconButton(
                                 onClick = {
                                     if (canSend && !isCompacting) {
@@ -438,7 +443,7 @@ internal fun AgentChatInputBar(
                                         val submittedText = textFieldState.text.toString()
                                         textFieldState.clearText()
                                         hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                                        remoteComposer.onSteerSubmit(submittedText)
+                                        steerSubmit(submittedText)
                                     }
                                 },
                                 modifier = Modifier.size(40.dp),

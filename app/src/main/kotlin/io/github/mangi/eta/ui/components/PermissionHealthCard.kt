@@ -1,11 +1,19 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import top.yukonga.miuix.kmp.basic.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.ui.model.PermissionHealthUiState
@@ -24,31 +32,39 @@ fun PermissionHealthCard(
     val items = readinessItems(state, engineReady)
     val pending = items.count { it.status != PermissionStatusUi.Available }
     val checking = items.any { it.checking }
+    val allReady = pending == 0 && !checking
+    // 全部就绪时收成一行；检查中显示运行圈；有缺项时只列出缺的那几项。
     EtaCard(modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), onClick = onOpenPermissions,
-        insideMargin = PaddingValues(16.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(R.string.eta_background_ready), Modifier.weight(1f), style = EtaTheme.type.headline)
-                Text(stringResource(if (checking) R.string.eta_ready_checking else if (pending == 0) R.string.eta_permissions_ready else R.string.eta_ready_pending, pending),
-                    style = EtaTheme.type.footnote, color = if (pending == 0) EtaTheme.colors.successText else EtaTheme.colors.attentionText)
+        insideMargin = PaddingValues(horizontal = 16.dp, vertical = if (allReady || checking) 14.dp else 16.dp)) {
+        Column(Modifier.animateContentSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                StatusRing(
+                    when { checking -> TaskVisualStatus.Running; allReady -> TaskVisualStatus.Success; else -> TaskVisualStatus.Attention },
+                    size = 18.dp, contentDescription = null,
+                )
+                Text(
+                    stringResource(when { checking -> R.string.eta_ready_checking_line; allReady -> R.string.eta_ready_all_line; else -> R.string.eta_ready_pending_line }, pending),
+                    Modifier.weight(1f), style = EtaTheme.type.rowTitle,
+                    color = if (!checking && !allReady) EtaTheme.colors.attentionText else EtaTheme.colors.textPrimary,
+                )
+                if (onOpenPermissions != null) Icon(Icons.Rounded.ChevronRight, null, Modifier.size(20.dp), tint = EtaTheme.colors.textTertiary)
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                items.forEach { item ->
-                    val title = stringResource(item.title)
-                    val spokenTitle = stringResource(when (item.id) {
-                        "accessibility" -> R.string.eta_ready_accessibility_full
-                        "notifications" -> R.string.eta_ready_notifications_full
-                        else -> item.title
-                    })
-                    val status = if (item.checking) TaskVisualStatus.Queued else if (item.status == PermissionStatusUi.Available) TaskVisualStatus.Success else TaskVisualStatus.Attention
-                    val description = when {
-                        item.checking -> stringResource(R.string.eta_ready_checking)
-                        item.id == "engine" && item.status != PermissionStatusUi.Available -> stringResource(R.string.eta_engine_not_ready)
-                        else -> item.status.label()
-                    }
-                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        StatusRing(status, size = 16.dp, contentDescription = "$spokenTitle: $description")
-                        Text(title, Modifier.fillMaxWidth(), maxLines = 1, softWrap = false, style = EtaTheme.type.caption, color = EtaTheme.colors.textSecondary, textAlign = TextAlign.Center)
+            if (!checking && !allReady) {
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items.filter { it.status != PermissionStatusUi.Available }.forEach { item ->
+                        val spokenTitle = stringResource(when (item.id) {
+                            "accessibility" -> R.string.eta_ready_accessibility_full
+                            "notifications" -> R.string.eta_ready_notifications_full
+                            else -> item.title
+                        })
+                        val description = if (item.id == "engine") stringResource(R.string.eta_engine_not_ready) else item.status.label()
+                        Row(Modifier.background(EtaTheme.colors.attentionSoft, EtaTheme.shapes.radiusFull)
+                            .semantics(mergeDescendants = true) { contentDescription = "$spokenTitle: $description" }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            StatusRing(TaskVisualStatus.Attention, size = 12.dp, contentDescription = null)
+                            Text(stringResource(item.title), maxLines = 1, style = EtaTheme.type.caption, color = EtaTheme.colors.attentionText)
+                        }
                     }
                 }
             }

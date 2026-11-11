@@ -36,8 +36,11 @@ internal data class DesktopLinkPrefs(
     val watched: Set<String> = emptySet(),
     /** 手动关闭提醒的会话（优先于 [reminderScope]）。 */
     val muted: Set<String> = emptySet(),
-    /** 会话列表里收起的分组（工作区 id，或「最近任务」「其他」的固定键）。 */
-    val collapsedGroups: Set<String> = emptySet(),
+    /**
+     * 会话列表里相对默认状态切换过的分组（工作区 id，或「最近」「其他」的固定键）。
+     * 默认「最近」展开、工作区收起；会话很少不显示「最近」时工作区默认展开。
+     */
+    val toggledGroups: Set<String> = emptySet(),
 ) {
     fun reminds(sessionId: String): Boolean = when {
         sessionId in muted -> false
@@ -83,7 +86,7 @@ internal object DesktopLinkSettings {
     }
 
     fun toggleGroup(key: String) = update {
-        it.copy(collapsedGroups = if (key in it.collapsedGroups) it.collapsedGroups - key else it.collapsedGroups + key)
+        it.copy(toggledGroups = if (key in it.toggledGroups) it.toggledGroups - key else it.toggledGroups + key)
     }
 
     private fun read(store: SharedPreferences): DesktopLinkPrefs {
@@ -101,7 +104,7 @@ internal object DesktopLinkSettings {
             reminderScope = if (store.getString("scope", null) == "all") DesktopReminderScope.All else DesktopReminderScope.Watched,
             watched = store.getStringSet("watched", null)?.toSet().orEmpty(),
             muted = store.getStringSet("muted", null)?.toSet().orEmpty(),
-            collapsedGroups = store.getStringSet("collapsed_groups", null)?.toSet().orEmpty(),
+            toggledGroups = store.getStringSet("toggled_groups", null)?.toSet().orEmpty(),
         )
     }
 
@@ -119,7 +122,7 @@ internal object DesktopLinkSettings {
             .putString("scope", if (value.reminderScope == DesktopReminderScope.All) "all" else "watched")
             .putStringSet("watched", HashSet(value.watched))
             .putStringSet("muted", HashSet(value.muted))
-            .putStringSet("collapsed_groups", HashSet(value.collapsedGroups))
+            .putStringSet("toggled_groups", HashSet(value.toggledGroups))
             .apply()
     }
 }

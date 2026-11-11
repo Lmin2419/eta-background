@@ -42,7 +42,7 @@ internal fun EtaCard(
     modifier: Modifier = Modifier,
     insideMargin: PaddingValues = PaddingValues(16.dp),
     colors: CardColors = CardDefaults.defaultColors(),
-    pressFeedbackType: PressFeedbackType = PressFeedbackType.None,
+    pressFeedbackType: PressFeedbackType = PressFeedbackType.Sink,
     showIndication: Boolean = false,
     holdDownState: Boolean = false,
     onClick: (() -> Unit)? = null,

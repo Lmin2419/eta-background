@@ -121,7 +121,9 @@ internal fun ConversationPanePanel(
         AnimatedVisibility(!selecting && !archived, enter = expandVertically(tween(motion.medium, easing = motion.emphasizedDecelerate)) + fadeIn(tween(motion.medium, easing = motion.emphasizedDecelerate)),
             exit = shrinkVertically(tween(motion.exitDuration(260), easing = motion.accelerate)) + fadeOut(tween(motion.exitDuration(260), easing = motion.accelerate))) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
-                val entryWidth = (width - 32.dp) / 4
+                // 快捷格平分宽度：4 个（无电脑）或 5 个（含电脑）一屏放下，再多才横向滚动。
+                val entryCount = (4 + (if (workspace.onDesktop != null) 1 else 0)).coerceAtMost(5)
+                val entryWidth = (width - 32.dp) / entryCount
                 WorkspaceEntry(Icons.Rounded.TaskAlt, stringResource(R.string.eta_tasks), EtaTheme.colors.tileCaramel, entryWidth, workspace.onTasks, count = workspace.runningCount)
                 WorkspaceEntry(Icons.Rounded.PeopleAlt, stringResource(R.string.eta_characters), EtaTheme.colors.tilePink, entryWidth, onOpenCharacters)
                 WorkspaceEntry(Icons.Rounded.Terminal, stringResource(R.string.route_terminal), EtaTheme.colors.tileSlate, entryWidth, workspace.onTerminal)
@@ -143,7 +145,7 @@ internal fun ConversationPanePanel(
                         taskStatuses[row.id] ?: TaskVisualStatus.Running.takeIf { row.isActiveRun }
                     }
                     val expandedText = stringResource(if (group.collapsed) R.string.eta_group_collapsed else R.string.eta_group_expanded)
-                    Row(Modifier.fillMaxWidth().heightIn(min = 36.dp).semantics { heading(); stateDescription = expandedText }
+                    Row(etaAnimateItem().fillMaxWidth().heightIn(min = 36.dp).semantics { heading(); stateDescription = expandedText }
                         .combinedClickable(onClick = { management.toggleGroup(group.id) }, onLongClick = { groupDialogs.menuId = group.id })
                         .padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(R.string.eta_group_count, group.name, section.conversations.size), Modifier.weight(1f),
@@ -156,7 +158,7 @@ internal fun ConversationPanePanel(
                     item(key = section.key) {
                         Text(stringResource(when (timeSection) { 0 -> R.string.conversation_section_pinned; 1 -> R.string.conversation_section_today;
                             2 -> R.string.eta_yesterday; 3 -> R.string.eta_last_week; else -> R.string.eta_earlier }),
-                            Modifier.padding(top = 12.dp, bottom = 6.dp), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
+                            etaAnimateItem().padding(top = 12.dp, bottom = 6.dp), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
                     }
                 }
                 items(section.visibleConversations, key = { it.id }) { conversation ->
@@ -164,7 +166,7 @@ internal fun ConversationPanePanel(
                         taskStatuses[conversation.id] ?: TaskVisualStatus.Running.takeIf { conversation.isActiveRun }, selecting,
                         { if (selecting) selectedIds = if (conversation.id in selectedIds) selectedIds - conversation.id else selectedIds + conversation.id
                           else onConversationSelected(conversation.id) },
-                        { selectedIds = selectedIds + conversation.id }, groupName = groupNames[conversation.groupId])
+                        { selectedIds = selectedIds + conversation.id }, groupName = groupNames[conversation.groupId], modifier = etaAnimateItem())
                 }
             }
         }
@@ -282,7 +284,7 @@ private fun WorkspaceEntry(icon: ImageVector, label: String, tint: Color, width:
 
 @Composable
 private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: Boolean, query: String, taskStatus: TaskVisualStatus?,
-    selecting: Boolean, onClick: () -> Unit, onLongClick: () -> Unit, groupName: String? = null) {
+    selecting: Boolean, onClick: () -> Unit, onLongClick: () -> Unit, groupName: String? = null, modifier: Modifier = Modifier) {
     val haptic = LocalHapticFeedback.current
     val colors = EtaTheme.colors
     val title = conversation.title.ifBlank { conversation.preview }
@@ -294,7 +296,7 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
         }
     } }
     val background by animateColorAsState(if (selected) colors.accentSoft else Color.Transparent, tween(EtaTheme.motion.short), label = "selectedConversation")
-    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
+    Row(modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
         .semantics { if (selecting) { this.selected = selected; role = Role.Checkbox } }
         .background(background)
         .combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })

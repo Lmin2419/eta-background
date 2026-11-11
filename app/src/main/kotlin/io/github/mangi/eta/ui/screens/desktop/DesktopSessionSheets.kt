@@ -22,6 +22,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import io.github.mangi.eta.ui.components.EtaButton
+import io.github.mangi.eta.ui.components.EtaButtonKind
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -120,33 +125,6 @@ internal fun formatDuration(res: Resources, ms: Long): String = when {
 }
 
 /** 页头下方的一行统计：轮/步、缓存命中、总 token、输出速度，运行中附带已用时长。 */
-@Composable
-internal fun DesktopStatsLine(state: DesktopSessionState, runningForMs: Long?, onClick: () -> Unit) {
-    val res = LocalResources.current
-    // 一行放不下时从后面截断，所以按「现在最想知道的」排：是否在跑、花了多少、其余细节。
-    val parts = buildList {
-        runningForMs?.let { add(res.getString(R.string.desktop_running_for, formatDuration(res, it))) }
-        state.usage?.let { usage ->
-            if (usage.total > 0) add("${DesktopChatProjector.compactTokens(usage.total)} tok")
-            usage.cacheHitPercent?.let { add(res.getString(R.string.desktop_cache_hit, it)) }
-        }
-        state.stats?.tokensPerSecond?.let { add("${DesktopChatProjector.formatRate(it)} tok/s") }
-        state.stats?.takeIf { it.turns > 0 || it.steps > 0 }?.let { add(res.getString(R.string.desktop_stats_counts, it.turns, it.steps)) }
-    }
-    if (parts.isEmpty()) return
-    Text(
-        text = parts.joinToString(" · "),
-        style = EtaTheme.type.caption,
-        color = EtaTheme.colors.textTertiary,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 4.dp),
-    )
-}
-
 /** 会话设置：选模型、推理强度和完整的会话统计（对应桌面输入区的统计胶囊与弹窗）。 */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -167,16 +145,33 @@ internal fun DesktopSessionSheet(
     val res = LocalResources.current
     val maxHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() * 0.8f }
     EtaSheet(show, title = stringResource(R.string.desktop_session_settings), onDismissRequest = onDismiss) {
+        var showDetails by remember { mutableStateOf(false) }
         LazyColumn(Modifier.fillMaxWidth().heightIn(max = maxHeight), contentPadding = PaddingValues(bottom = 16.dp)) {
+            // 先看三个数字：耗时、Token、缓存命中；明细收在「更多数据」里。
+            item(key = "summary") {
+                val stats = state.stats
+                val usage = state.usage
+                val elapsed = stats?.let { it.llmMs + it.toolMs }?.takeIf { it > 0 }
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    StatTile(stringResource(R.string.desktop_stat_time), elapsed?.let { formatDuration(res, it) } ?: "—", Modifier.weight(1f))
+                    StatTile("Token", usage?.total?.takeIf { it > 0 }?.let { DesktopChatProjector.compactTokens(it) } ?: "—", Modifier.weight(1f))
+                    StatTile(stringResource(R.string.desktop_stats_cache_hit_label), usage?.cacheHitPercent?.let { "$it%" } ?: "—", Modifier.weight(1f))
+                }
+            }
             if (allowModelChange && picker.providerGroups.isNotEmpty()) {
-                item(key = "models-title") { EtaPreferenceGroupTitle(stringResource(R.string.desktop_models)) }
-                picker.providerGroups.forEach { group ->
-                    item(key = "provider:${group.providerId}") {
-                        Text(group.providerName, style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary,
-                            modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp))
-                    }
-                    items(group.models, key = { "model:${it.id}" }) { model ->
-                        ModelPickerRow(model, model.id == picker.selectedModel?.id, { onModel(model.id) }, enabled = !busy)
+                item(key = "models") {
+                    EtaPreferenceGroupTitle(stringResource(R.string.desktop_models), Modifier.padding(top = 8.dp))
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        picker.providerGroups.forEach { group ->
+                            if (picker.providerGroups.size > 1) {
+                                Text(group.providerName, style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
+                            }
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                group.models.forEach { model ->
+                                    EtaChoiceChip(model.displayName, model.id == picker.selectedModel?.id, { onModel(model.id) }, enabled = !busy)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -206,10 +201,17 @@ internal fun DesktopSessionSheet(
                     }
                 }
             }
-            item(key = "stats") {
-                EtaPreferenceGroupTitle(stringResource(R.string.desktop_stats_title), Modifier.padding(top = 16.dp))
+            item(key = "details-toggle") {
+                EtaButton(
+                    text = stringResource(if (showDetails) R.string.desktop_stats_less else R.string.desktop_stats_more),
+                    onClick = { showDetails = !showDetails },
+                    kind = EtaButtonKind.Ghost,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+            if (showDetails) item(key = "stats") {
                 val rows = buildList {
-                    state.stats?.let { add(res.getString(R.string.desktop_stats_counts, it.turns, it.steps) to "") }
+                    state.stats?.takeIf { it.turns > 0 || it.steps > 0 }?.let { add(res.getString(R.string.desktop_stats_rounds) to res.getString(R.string.desktop_stats_counts, it.turns, it.steps)) }
                     state.usage?.let { usage ->
                         add(res.getString(R.string.desktop_stats_total) to DesktopChatProjector.exactTokens(usage.total))
                         usage.cacheHitPercent?.let { add(res.getString(R.string.desktop_stats_cache_hit_label) to "$it%") }
@@ -241,6 +243,18 @@ internal fun DesktopSessionSheet(
                 }
             }
         }
+    }
+}
+
+/** 设置面板顶部的一个数字卡：大号数值 + 小字标签。 */
+@Composable
+private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier.background(EtaTheme.colors.surfaceSunken, EtaTheme.shapes.radiusMd).padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(value, style = EtaTheme.type.headline, color = EtaTheme.colors.textPrimary, maxLines = 1)
+        Text(label, style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary, maxLines = 1)
     }
 }
 

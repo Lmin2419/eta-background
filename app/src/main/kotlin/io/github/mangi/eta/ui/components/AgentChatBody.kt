@@ -422,7 +422,15 @@ private fun AgentChatScaffold(
         },
     ) { innerPadding ->
         val bottomPadding = innerPadding.calculateBottomPadding()
-        if (!hasMessages) {
+        // 发出第一条消息时问候语与建议淡出上移，消息随后升起，不再硬切。
+        Box(Modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = !hasMessages,
+            enter = fadeIn(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate)),
+            exit = fadeOut(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.medium), easing = EtaTheme.motion.accelerate)) +
+                slideOutVertically(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.medium), easing = EtaTheme.motion.accelerate)) { -it / 12 },
+            label = "emptyChat",
+        ) {
             EmptyChatState(
                 showSuggestions = showEmptySuggestions,
                 onSuggestionClick = onSuggestionClick,
@@ -430,7 +438,8 @@ private fun AgentChatScaffold(
                     .fillMaxSize()
                     .padding(bottom = bottomPadding),
             )
-        } else {
+        }
+        if (hasMessages) {
             AgentConversationMessages(
                 visibleMessages = visibleMessages,
                 scrollState = scrollState,
@@ -456,6 +465,7 @@ private fun AgentChatScaffold(
                 modifier = Modifier
                     .fillMaxSize(),
             )
+        }
         }
     }
 }
@@ -493,6 +503,11 @@ internal fun AgentConversationMessages(
         visibleMessages.toTimelineEntries(previous = previousTimelineEntries[0])
     }
     SideEffect { previousTimelineEntries[0] = timelineEntries }
+    // 新发出的消息（以及紧随其后的回复开头）从下方升起；首屏和历史消息不动。
+    val seenTimelineKeys = remember { HashSet<Any>() }
+    val freshTimelineKeys: Set<Any> = if (seenTimelineKeys.isEmpty()) emptySet()
+        else timelineEntries.takeLast(2).map<AgentTimelineEntry, Any> { it.key }.filterNotTo(HashSet()) { it in seenTimelineKeys }
+    SideEffect { timelineEntries.forEach { seenTimelineKeys += it.key } }
     val activeWorkProcessKey = if (isStreaming) {
         (timelineEntries.lastOrNull() as? AgentTimelineEntry.WorkProcess)?.key
     } else {
@@ -502,6 +517,11 @@ internal fun AgentConversationMessages(
     // 流式进行中当前这一轮尚未收尾，此时的“最后一条正文”只是中间步骤，不标记。
     val finalResultMessageIds = remember(visibleMessages, isStreaming) {
         resolveFinalResultMessageIds(visibleMessages, isStreaming = isStreaming)
+    }
+    // 操作行（复制、重试、更多）只常显在最新一条回复下；更早的回复长按出同样的菜单，
+    // 长会话里不再每条都挂一排图标。
+    val latestAnswerId = remember(visibleMessages, finalResultMessageIds) {
+        visibleMessages.lastOrNull { it is AgentMessageUi && (it.characterEditable || it.id in finalResultMessageIds) }?.id
     }
     // 流式消息的渲染会话按 id 提升到列表层持有：item 滚出视口被 LazyColumn 销毁后，
     // 滑回时复用同一解析会话与打字机进度，避免整段内容重新解析并重放显现动画。
@@ -770,7 +790,7 @@ internal fun AgentConversationMessages(
                     // 历史轮次被编辑、删除或重新生成时必须立即退出；退出动画会让已从
                     // 状态中裁掉的旧消息继续绘制，并与同位置的新流式消息短暂重叠。
                     fadeOutSpec = null,
-                )
+                ).etaRiseIn(remember { entry.key in freshTimelineKeys })
                 when (entry) {
                     is AgentTimelineEntry.Message -> {
                         val message = entry.message
@@ -788,8 +808,7 @@ internal fun AgentConversationMessages(
                             showBrowserShortcut = message is ToolActivityMessageUi &&
                                 message.toolName == "browser_use" &&
                                 message.id == currentBrowserMessageId,
-                            showCopyAction = message !is AgentMessageUi ||
-                                message.characterEditable || message.id in finalResultMessageIds,
+                            showCopyAction = message !is AgentMessageUi || message.id == latestAnswerId,
                             showMessageActions = message.id in finalResultMessageIds ||
                                 (message is AgentMessageUi && message.characterEditable),
                             messageActionsEnabled = messageActionsEnabled,

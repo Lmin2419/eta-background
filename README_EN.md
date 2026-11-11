@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-10 · `3.3.5` 胖小胖 · versionCode `2026111001`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111101`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-Computer sync now works with DSH 0.2.1 (fixes queue "send now"/"remove" doing nothing, steered messages showing twice, missing older history and the subagent error). Send-and-steer from the composer, a Recent section and collapsible workspace groups in the session list, live sync of new workspaces, sessions, titles and notes, and a Computer entry in the home side pane. **Update the `dsh-bridge` plugin to 0.4.0 on the computer.**
+App-wide UI and motion polish: morphing status rings, rising new messages, a calm suggestion list on home, a tasks button that only appears while tasks run, quieter settings icons and a collapsible readiness card. Computer sync gets the same look: sidebar-style session list, inline approval and question cards, a run strip with Stop, and three notification presets. The computer plugin is unchanged (0.4.0).
 
-APK: **`Pangxiaopang-3.3.5-2026111001.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026111101.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111001)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111101)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

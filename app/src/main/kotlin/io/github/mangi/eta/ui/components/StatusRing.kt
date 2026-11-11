@@ -1,6 +1,10 @@
 package io.github.mangi.eta.ui.components
 
-import io.github.mangi.eta.ui.components.EtaCrossfade as Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -106,8 +110,16 @@ fun StatusRing(
     }.semantics {
         contentDescription?.let { this.contentDescription = it }
     }) {
-        Crossfade(targetState = status, animationSpec = tween(motion.short, easing = motion.standard),
-            label = "eta_status") { drawnStatus ->
+        // 状态切换：新图形从 0.6 放大淡入（运行圈 → 对勾像是「收拢」成结果），减少动画时只淡入淡出。
+        AnimatedContent(
+            targetState = status,
+            transitionSpec = {
+                val enter = fadeIn(tween(motion.medium, easing = motion.emphasizedDecelerate))
+                (if (motion.reduceMotion) enter else enter + scaleIn(tween(motion.medium, easing = motion.emphasizedDecelerate), initialScale = 0.6f)) togetherWith
+                    fadeOut(tween(motion.exitDuration(motion.short), easing = motion.accelerate))
+            },
+            label = "eta_status",
+        ) { drawnStatus ->
             StatusGlyph(drawnStatus, animate && drawnStatus == status, monochrome)
         }
     }

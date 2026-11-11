@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Visibility
+import io.github.mangi.eta.ui.components.EtaArrowPreference
+import io.github.mangi.eta.ui.theme.EtaTheme
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -40,7 +44,6 @@ import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import io.github.mangi.eta.ui.components.StatusError
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
@@ -65,6 +68,9 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
     val tokenRequired = stringResource(R.string.desktop_token_required)
     val invalidPairing = stringResource(R.string.desktop_pairing_invalid)
     val hasSavedToken = saved?.token?.isNotBlank() == true
+    val paired = saved?.isComplete == true
+    // 已配对后，配对码、手动设置、诊断都收进「高级」；未配对时配对是唯一主操作。
+    var advanced by rememberSaveable { mutableStateOf(false) }
 
     fun apply(config: DesktopBridgeConfig) {
         runCatching { DesktopBridge.configure(context, config) }
@@ -88,18 +94,39 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
         modifier = Modifier.imePadding(),
     ) {
         item(key = "status") {
-            DesktopConnectionBanner(connection, configured = saved?.isComplete == true, onRetry = DesktopBridge::retry)
-            saved?.pin?.let { pin ->
-                Text(
-                    text = stringResource(R.string.desktop_cert_pin, pin.take(16) + "…"),
-                    style = MiuixTheme.textStyles.footnote2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    modifier = Modifier.padding(horizontal = 36.dp).padding(bottom = 8.dp),
-                )
+            DesktopConnectionBanner(connection, configured = paired, onRetry = DesktopBridge::retry)
+        }
+        if (paired) {
+            desktopLinkSections(linkPrefs)
+            item(key = "advanced-toggle") {
+                EtaPreferenceGroup(modifier = Modifier.padding(top = 8.dp)) {
+                    EtaArrowPreference(
+                        title = stringResource(R.string.desktop_advanced),
+                        summary = stringResource(R.string.desktop_advanced_summary),
+                        endActions = {
+                            Icon(
+                                if (advanced) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                                contentDescription = null,
+                                tint = EtaTheme.colors.textTertiary,
+                            )
+                        },
+                        onClick = { advanced = !advanced },
+                    )
+                }
+            }
+            if (advanced) item(key = "diagnostics") {
+                DesktopDiagnostics()
+                saved?.pin?.let { pin ->
+                    Text(
+                        text = stringResource(R.string.desktop_cert_pin, pin.take(16) + "…"),
+                        style = MiuixTheme.textStyles.footnote2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        modifier = Modifier.padding(horizontal = 32.dp).padding(bottom = 8.dp),
+                    )
+                }
             }
         }
-        if (saved?.isComplete == true) desktopLinkSections(linkPrefs)
-        item(key = "pairing") {
+        if (!paired || advanced) item(key = "pairing") {
             EtaPreferenceGroupTitle(stringResource(R.string.desktop_pairing_code))
             EtaPreferenceGroup {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -113,23 +140,23 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         EtaButton(
-                            text = stringResource(R.string.desktop_paste_pair),
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.textButtonColorsPrimary(),
-                            onClick = { pair(context.clipboardText().orEmpty()) },
-                        )
-                        EtaButton(
                             text = stringResource(R.string.desktop_pair),
                             modifier = Modifier.weight(1f),
+                            kind = EtaButtonKind.Secondary,
                             enabled = pairing.isNotBlank(),
                             onClick = { pair(pairing) },
+                        )
+                        EtaButton(
+                            text = stringResource(R.string.desktop_paste_pair),
+                            modifier = Modifier.weight(1f),
+                            kind = EtaButtonKind.Primary,
+                            onClick = { pair(context.clipboardText().orEmpty()) },
                         )
                     }
                 }
             }
             Text(
-                text = stringResource(R.string.desktop_pairing_hint) + "\n" +
-                    stringResource(R.string.desktop_builtin_server, DesktopBridgeDefaults.SERVER_ADDRESS.removePrefix("https://")),
+                text = stringResource(R.string.desktop_pairing_hint),
                 style = MiuixTheme.textStyles.footnote2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
@@ -144,7 +171,15 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
                 )
             }
         }
-        item(key = "manual") {
+        if (!paired && !advanced) item(key = "manual-toggle") {
+            EtaButton(
+                text = stringResource(R.string.desktop_manual_title),
+                kind = EtaButtonKind.Ghost,
+                onClick = { advanced = true },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            )
+        }
+        if (advanced) item(key = "manual") {
             EtaPreferenceGroupTitle(stringResource(R.string.desktop_manual_title))
             EtaPreferenceGroup {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -174,13 +209,14 @@ internal fun DesktopBridgeSettingsScreen(onBack: () -> Unit) {
                 }
             }
             Text(
-                text = stringResource(R.string.desktop_token_hint) + "\n" + stringResource(R.string.desktop_setup_note),
+                text = stringResource(R.string.desktop_token_hint) + "\n" + stringResource(R.string.desktop_setup_note) + "\n" +
+                    stringResource(R.string.desktop_builtin_server, DesktopBridgeDefaults.SERVER_ADDRESS.removePrefix("https://")),
                 style = MiuixTheme.textStyles.footnote2,
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
             )
         }
-        item(key = "actions") {
+        if (advanced) item(key = "actions") {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

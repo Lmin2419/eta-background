@@ -165,7 +165,7 @@ private fun AgentWorkHeader(
             summary.toolCount,
         ) + " · " + runningTool.argumentsSummary.ifBlank { toolDisplayName(runningTool.toolName) }
         working -> stringResource(R.string.work_analyzing)
-        else -> stringResource(R.string.eta_work_process) + " · " + workSummaryText(summary)
+        else -> workSummaryText(summary)
     }
     Row(
         modifier = Modifier
@@ -196,20 +196,17 @@ private fun AgentWorkHeader(
     }
 }
 
+/** 一句话结果：「已完成 · 3 步」；有失败时「3 步 · 1 个失败」。 */
 @Composable
 private fun workSummaryText(summary: AgentWorkSummary): String {
-    val parts = buildList {
-        if (summary.thinkingCount > 0) {
-            add(pluralStringResource(R.plurals.work_summary_thinking, summary.thinkingCount, summary.thinkingCount))
-        }
-        if (summary.toolCount > 0) {
-            add(pluralStringResource(R.plurals.work_summary_tools, summary.toolCount, summary.toolCount))
-        }
-        if (summary.failedCount > 0) {
-            add(pluralStringResource(R.plurals.work_summary_failed, summary.failedCount, summary.failedCount))
-        }
+    val steps = summary.thinkingCount + summary.toolCount
+    if (steps == 0) return stringResource(R.string.work_completed)
+    return if (summary.failedCount > 0) {
+        pluralStringResource(R.plurals.work_summary_steps, steps, steps) + " · " +
+            pluralStringResource(R.plurals.work_summary_failed, summary.failedCount, summary.failedCount)
+    } else {
+        pluralStringResource(R.plurals.work_summary_done, steps, steps)
     }
-    return parts.joinToString(" · ").ifEmpty { stringResource(R.string.work_completed) }
 }
 
 @Composable

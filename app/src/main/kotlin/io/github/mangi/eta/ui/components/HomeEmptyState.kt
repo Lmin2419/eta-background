@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.ui.theme.EtaTheme
 import java.time.LocalTime
+import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 
 @Composable
@@ -42,10 +44,9 @@ internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> U
     val shortcuts = LocalChatHomeShortcuts.current
     val motion = EtaTheme.motion
     val arrival = remember { Animatable(0f) }
-    LaunchedEffect(motion.reduceMotion) { arrival.animateTo(1f, tween(motion.medium, easing = motion.emphasizedDecelerate)) }
+    LaunchedEffect(motion.reduceMotion) { arrival.animateTo(1f, tween(motion.long, easing = motion.emphasizedDecelerate)) }
     val greeting = when (LocalTime.now().hour) { in 5..11 -> R.string.eta_good_morning; in 12..17 -> R.string.eta_good_afternoon; else -> R.string.eta_good_evening }
     BoxWithConstraints(modifier) {
-        val singleColumn = androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f || maxWidth < 360.dp
         val leadingSpace = maxHeight * if (showSuggestions) 0.12f else 0.08f
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)
             .padding(top = leadingSpace, bottom = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -80,9 +81,16 @@ internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> U
                         val text = stringResource(prompt)
                         HomeSuggestion(stringResource(title), text, icon) { onFillDraft(text) }
                     }
-                    cards.chunked(if (singleColumn) 1 else 2).forEach { pair ->
-                        Row(Modifier.fillMaxWidth().padding(bottom = 12.dp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            pair.forEach { card -> HomeSuggestionCard(card, Modifier.weight(1f).fillMaxHeight()) }
+                    // 建议是一组安静的单行列表（与侧栏同一风格），不再是长短不一的卡片网格。
+                    Column(Modifier.fillMaxWidth().widthIn(max = 560.dp).clip(EtaTheme.shapes.radiusLg).background(EtaTheme.colors.surface)
+                        .padding(vertical = 4.dp)) {
+                        cards.forEachIndexed { index, card ->
+                            HomeSuggestionRow(card, Modifier.graphicsLayer {
+                                // 逐行错开淡入上移：只在首次出现时播放一次。
+                                val local = ((arrival.value - index * 0.12f) / 0.64f).coerceIn(0f, 1f)
+                                alpha = local
+                                translationY = (1f - local) * 8.dp.toPx()
+                            })
                         }
                     }
                 }
@@ -94,18 +102,19 @@ internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> U
 private data class HomeSuggestion(val title: String, val summary: String, val icon: ImageVector, val onClick: () -> Unit)
 
 @Composable
-private fun HomeSuggestionCard(card: HomeSuggestion, modifier: Modifier) {
+private fun HomeSuggestionRow(card: HomeSuggestion, modifier: Modifier) {
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    val scale = animateFloatAsState(if (pressed && !EtaTheme.motion.reduceMotion) 0.98f else 1f, tween(EtaTheme.motion.micro, easing = EtaTheme.motion.standard), label = "suggestionPress")
-    Row(modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value }
-        .heightIn(min = 88.dp).clip(EtaTheme.shapes.radiusMd).background(EtaTheme.colors.surface)
-        .clickable(role = Role.Button, interactionSource = source, indication = null, onClick = card.onClick).padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        EtaIconTile(card.icon, tint = EtaTheme.colors.tileCaramel)
+    val background by animateColorAsState(if (pressed) EtaTheme.colors.surfaceSunken else EtaTheme.colors.surface,
+        tween(EtaTheme.motion.micro, easing = EtaTheme.motion.standard), label = "suggestionPress")
+    Row(modifier.fillMaxWidth().heightIn(min = 56.dp).background(background)
+        .clickable(role = Role.Button, interactionSource = source, indication = null, onClick = card.onClick)
+        .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Icon(card.icon, contentDescription = null, tint = EtaTheme.colors.accent, modifier = Modifier.size(20.dp))
         Column(Modifier.weight(1f)) {
-            Text(card.title, style = EtaTheme.type.rowTitle, color = EtaTheme.colors.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(card.summary, style = EtaTheme.type.footnote, color = EtaTheme.colors.textTertiary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(card.title, style = EtaTheme.type.rowTitle, color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(card.summary, style = EtaTheme.type.footnote, color = EtaTheme.colors.textTertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

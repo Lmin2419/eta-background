@@ -102,7 +102,7 @@ class DesktopScreensRenderTest {
                 approvals = listOf(DesktopApproval("p1", "s1", "bash", "c1", "允许本次操作使用 danger-full-access 权限", 0)),
                 questions = listOf(question),
                 unread = setOf("s6"),
-                collapsed = collapsed,
+                toggled = collapsed,
                 creating = false,
                 query = query,
                 contentHits = if (query.isEmpty()) emptyMap() else mapOf("s5" to "…把旧数据库的用户表迁移到…"),
@@ -147,9 +147,8 @@ class DesktopScreensRenderTest {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(controller.get(), dark = dark) {
           androidx.compose.foundation.layout.Column {
-            DesktopStatsLine(state, runningForMs = 72_000) {}
             androidx.compose.runtime.CompositionLocalProvider(
-                io.github.mangi.eta.ui.components.LocalRemoteComposer provides io.github.mangi.eta.ui.components.RemoteComposer("电脑正在执行…", "立即插队发送", {}),
+                io.github.mangi.eta.ui.components.LocalRemoteComposer provides io.github.mangi.eta.ui.components.RemoteComposer("电脑正在执行…", aboveInput = { DesktopRunStrip(72_000, {}, {}) }),
             ) {
             AgentChatBody(
                 messages = messages,

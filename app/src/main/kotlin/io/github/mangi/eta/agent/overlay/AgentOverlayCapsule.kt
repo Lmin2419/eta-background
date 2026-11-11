@@ -57,6 +57,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Chat
+import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -283,16 +285,23 @@ internal fun AgentOverlayCapsule(
                                     )
                                 }
                             }
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(stringResource(R.string.overlay_open_conversation), modifier = Modifier.clickable(onClick = onOpenConversation)
-                                    .heightIn(min = 48.dp).wrapContentHeight().padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
-                                Text(stringResource(R.string.overlay_supplement), modifier = Modifier.clickable { setSupplementMode(true) }
-                                    .heightIn(min = 48.dp).wrapContentHeight().padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
-                            }
+                            // 打开对话、补充输入与查看/暂停/停止同一排、同一种按钮，不再是两行两套样式。
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
                             ) {
+                                CapsuleAction(
+                                    icon = Icons.AutoMirrored.Rounded.Chat,
+                                    label = stringResource(R.string.overlay_open_conversation_short),
+                                    tint = MiuixTheme.colorScheme.onSurface,
+                                    onClick = onOpenConversation,
+                                )
+                                CapsuleAction(
+                                    icon = Icons.Rounded.EditNote,
+                                    label = stringResource(R.string.overlay_supplement_short),
+                                    tint = MiuixTheme.colorScheme.onSurface,
+                                    onClick = { setSupplementMode(true) },
+                                )
                                 CapsuleAction(
                                     icon = Icons.Rounded.Visibility,
                                     label = stringResource(R.string.task_notice_view),

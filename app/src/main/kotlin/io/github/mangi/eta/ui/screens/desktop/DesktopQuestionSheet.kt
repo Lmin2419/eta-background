@@ -205,28 +205,3 @@ internal fun DesktopQuestionSheet(ask: DesktopAsk?, onDismiss: () -> Unit) {
         }
     }
 }
-
-/** 会话页顶部的提示条：Agent 在等你回答（或审阅计划），点开回答面板。 */
-@Composable
-internal fun DesktopAskBanner(count: Int, plan: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-            .background(EtaTheme.colors.accent.copy(alpha = 0.12f), EtaTheme.shapes.radiusMd)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(Icons.Rounded.QuestionAnswer, contentDescription = null, tint = EtaTheme.colors.accent, modifier = Modifier.size(18.dp))
-        Text(
-            text = if (plan) stringResource(R.string.desktop_ask_banner_plan) else stringResource(R.string.desktop_ask_banner, count),
-            style = EtaTheme.type.caption,
-            color = EtaTheme.colors.accent,
-            modifier = Modifier.weight(1f),
-        )
-        Text(stringResource(R.string.desktop_ask_open), style = EtaTheme.type.caption, color = EtaTheme.colors.accent)
-    }
-}
-

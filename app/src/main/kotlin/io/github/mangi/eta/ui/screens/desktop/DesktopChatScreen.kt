@@ -1,6 +1,17 @@
 package io.github.mangi.eta.ui.screens.desktop
 
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.NotificationsOff
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.text.style.TextOverflow
+import io.github.mangi.eta.agent.remote.DesktopApproval
 import top.yukonga.miuix.kmp.basic.Icon
 import kotlinx.coroutines.delay
 import io.github.mangi.eta.ui.components.ModelPill
@@ -103,11 +114,15 @@ internal fun DesktopChatScreen(
         live + later
     }
     var openAsk by remember(sessionId) { mutableStateOf<String?>(null) }
-    var dismissedAsks by remember(sessionId) { mutableStateOf(emptySet<String>()) }
-    // 新的提问到达时自动弹出一次；关掉后用顶部的提示条重新打开。
+    // 提问不再自动弹出：输入框上方出现卡片，点「回答」才打开作答面板。
     LaunchedEffect(asks) {
-        if (openAsk == null) asks.firstOrNull { it.key !in dismissedAsks && it.questionId != null }?.let { openAsk = it.key }
         if (openAsk != null && asks.none { it.key == openAsk }) openAsk = null
+    }
+    val sessionApprovals = remember(approvals, sessionId) { approvals.filter { it.sessionId == sessionId } }
+    val sessionsList by DesktopBridge.sessions.collectAsState()
+    val workspaceTitle = remember(sessionsList, sessionId) {
+        val row = sessionsList.rows.firstOrNull { it.id == sessionId }
+        row?.workspaceId?.let { id -> sessionsList.workspaces.firstOrNull { it.id == id }?.title }
     }
 
     val labels = rememberDesktopLabels()
@@ -196,6 +211,27 @@ internal fun DesktopChatScreen(
         }
     }
 
+    fun answerApproval(approval: DesktopApproval, allow: Boolean) = run { DesktopBridge.answerApproval(approval.id, allow) }
+
+    // 输入框上方：运行状态条、审批卡、提问卡。用最新状态绘制（RemoteComposer 本身只创建一次）。
+    val aboveInput = rememberUpdatedState<@Composable () -> Unit> {
+        Column {
+            AnimatedVisibility(
+                visible = state.running && !readOnly,
+                enter = fadeIn(tween(EtaTheme.motion.short)) + expandVertically(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate)),
+                exit = fadeOut(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.short))) + shrinkVertically(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.medium))),
+            ) {
+                DesktopRunStrip(runningForMs, onStop = { run { DesktopBridge.cancel(sessionId) } }, onDetails = { showSettings = true })
+            }
+            sessionApprovals.firstOrNull()?.let { approval ->
+                DesktopApprovalCard(approval) { allow -> answerApproval(approval, allow) }
+            }
+            if (asks.isNotEmpty()) {
+                DesktopAskCard(asks.size, plan = asks.first().isPlanReview) { openAsk = asks.first().key }
+            }
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -204,6 +240,18 @@ internal fun DesktopChatScreen(
                 compact = true,
                 navigationIcon = { MiuixBackButton(onClick = onBack) },
                 actions = {
+                    // 这个会话会不会提醒你：铃铛一眼可见，点一下切换。
+                    if (!isChild) {
+                        val remind = linkPrefs.reminds(sessionId)
+                        EtaIconButton(onClick = { DesktopLinkSettings.setSessionReminders(sessionId, !remind) }) {
+                            Icon(
+                                if (remind) Icons.Rounded.NotificationsActive else Icons.Rounded.NotificationsOff,
+                                stringResource(R.string.desktop_session_remind),
+                                Modifier.size(22.dp),
+                                tint = if (remind) EtaTheme.colors.accent else EtaTheme.colors.textTertiary,
+                            )
+                        }
+                    }
                     if (!isChild && state.subagents.isNotEmpty()) {
                         Box {
                             EtaIconButton(onClick = ::openSubagents) {
@@ -231,10 +279,15 @@ internal fun DesktopChatScreen(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
-            if (state.loaded) DesktopStatsLine(state, runningForMs) { showSettings = true }
-            if (asks.isNotEmpty()) {
-                DesktopAskBanner(asks.size, plan = asks.first().isPlanReview) { openAsk = asks.first().key }
-            }
+            // 标题下一行小字：这是电脑上的会话，在哪个工作区。
+            Text(
+                text = listOfNotNull(stringResource(R.string.desktop_title), workspaceTitle?.takeIf { it.isNotBlank() }).joinToString(" · "),
+                style = EtaTheme.type.caption,
+                color = EtaTheme.colors.textTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 4.dp),
+            )
             if (connection !is DesktopBridgeClient.State.Connected) {
                 DesktopConnectionBanner(connection, configured = true, onRetry = DesktopBridge::retry)
                 if (state.loaded) {
@@ -263,9 +316,8 @@ internal fun DesktopChatScreen(
             val remoteComposer = remember(sessionId, isChild) {
                 RemoteComposer(
                     workingHint = resources.getString(R.string.desktop_working_hint),
-                    steerLabel = resources.getString(R.string.desktop_steer_send),
-                    onSteerSubmit = { text -> submit(text, steer = true) },
                     onDraftChange = { text -> DesktopBridge.setDraft(sessionId, text) },
+                    aboveInput = { aboveInput.value() },
                 )
             }
             CompositionLocalProvider(LocalRemoteComposer provides remoteComposer) {
@@ -342,13 +394,9 @@ internal fun DesktopChatScreen(
             }
         }
     }
-    DesktopApprovalHost(approvals, sessionId)
     DesktopQuestionSheet(
         ask = asks.firstOrNull { it.key == openAsk },
-        onDismiss = {
-            openAsk?.let { dismissedAsks = dismissedAsks + it }
-            openAsk = null
-        },
+        onDismiss = { openAsk = null },
     )
     DesktopSessionSheet(
         show = showSettings,

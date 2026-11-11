@@ -91,7 +91,7 @@ internal fun EtaSwitch(
         checkedThumbColor = Color.White, uncheckedThumbColor = Color.White,
         disabledCheckedThumbColor = Color.White.copy(alpha = 0.38f),
         disabledUncheckedThumbColor = Color.White.copy(alpha = 0.38f),
-        checkedTrackColor = EtaTheme.colors.accent, uncheckedTrackColor = EtaTheme.colors.outlineStrong,
+        checkedTrackColor = androidx.compose.ui.graphics.lerp(EtaTheme.colors.accent, EtaTheme.colors.surface, 0.14f), uncheckedTrackColor = EtaTheme.colors.outlineStrong,
         disabledCheckedTrackColor = EtaTheme.colors.accent.copy(alpha = 0.38f),
         disabledUncheckedTrackColor = EtaTheme.colors.outlineStrong.copy(alpha = 0.38f),
     ),

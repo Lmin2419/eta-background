@@ -1,6 +1,21 @@
 package io.github.mangi.eta.ui.screens.desktop
 
-import android.text.format.DateUtils
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.unit.sp
+import io.github.mangi.eta.ui.app.ConversationTimeLabels
+import io.github.mangi.eta.ui.components.EtaSearchField
+import io.github.mangi.eta.ui.components.etaAnimateItem
+import io.github.mangi.eta.ui.components.label
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -159,7 +174,7 @@ internal fun DesktopSessionsScreen(
         questions = questions,
         unread = unread,
         touched = touched,
-        collapsed = prefs.collapsedGroups,
+        toggled = prefs.toggledGroups,
         creating = creating,
         query = query,
         contentHits = hits,
@@ -174,7 +189,6 @@ internal fun DesktopSessionsScreen(
         onEnable = { DesktopLinkController.setEnabled(context, true) },
         onMore = { menuFor = it },
         overlay = {
-            DesktopApprovalHost(approvals)
             DesktopSessionMenu(
                 row = menuFor,
                 remindOn = menuFor?.let { prefs.reminds(it.id) } == true,
@@ -209,7 +223,7 @@ internal fun DesktopSessionsContent(
     questions: List<DesktopQuestion> = emptyList(),
     unread: Set<String> = emptySet(),
     touched: Map<String, Long> = emptyMap(),
-    collapsed: Set<String> = emptySet(),
+    toggled: Set<String> = emptySet(),
     query: String = "",
     contentHits: Map<String, String> = emptyMap(),
     onQueryChange: (String) -> Unit = {},
@@ -221,14 +235,32 @@ internal fun DesktopSessionsContent(
 ) {
     val connected = connection is DesktopBridgeClient.State.Connected
     var showArchived by rememberSaveable { mutableStateOf(false) }
+    var searching by rememberSaveable { mutableStateOf(query.isNotEmpty()) }
+    val needsYou = buildSet {
+        approvals.forEach { add(it.sessionId) }
+        questions.forEach { add(it.sessionId) }
+    }
+    val listed = sessions.rows.filter { it.listed }
+    val recent = recentSessions(listed, needsYou, touched)
+    val ready = configured && enabled
+    // 顶栏只放标题和三个图标：搜索、新建（在最近用过的工作区）、设置。连接状态在标题下一行。
     MiuixScaffoldPage(
-        title = stringResource(R.string.desktop_title),
+        title = (connection as? DesktopBridgeClient.State.Connected)?.host?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_title),
         onBack = onBack,
+        compactTitle = true,
         actions = {
-            if (configured && enabled) {
-                EtaIconButton(onClick = onRefresh, enabled = connected && !sessions.loading) {
-                    if (sessions.loading) StatusRing(TaskVisualStatus.Running, size = 18.dp)
-                    else Icon(Icons.Rounded.Refresh, contentDescription = stringResource(R.string.desktop_refresh))
+            if (ready) {
+                EtaIconButton(onClick = { searching = !searching; if (!searching) onQueryChange("") }) {
+                    Icon(Icons.Rounded.Search, contentDescription = stringResource(R.string.desktop_search_hint))
+                }
+                EtaIconButton(
+                    onClick = {
+                        val workspaceId = recent.firstOrNull()?.workspaceId
+                        onCreate(sessions.workspaces.firstOrNull { it.id == workspaceId } ?: sessions.workspaces.firstOrNull())
+                    },
+                    enabled = connected && !creating,
+                ) {
+                    Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desktop_new_session))
                 }
             }
             EtaIconButton(onClick = onOpenSettings) {
@@ -249,7 +281,14 @@ internal fun DesktopSessionsContent(
             return@MiuixScaffoldPage
         }
         item(key = "status") {
-            DesktopConnectionBanner(connection, configured = configured, onRetry = onRetry)
+            // 状态行同时是手动刷新：点一下和电脑重新核对列表。
+            DesktopConnectionBanner(
+                connection,
+                configured = configured,
+                onRetry = onRetry,
+                refreshing = sessions.loading,
+                onRefresh = onRefresh.takeIf { connected },
+            )
         }
         if (!configured) {
             item(key = "setup") {
@@ -262,53 +301,31 @@ internal fun DesktopSessionsContent(
             }
             return@MiuixScaffoldPage
         }
-        val waiting = approvals.size + questions.size
-        if (waiting > 0) {
-            item(key = "approvals") {
-                EtaPreferenceGroup {
-                    EtaArrowPreference(
-                        title = stringResource(R.string.desktop_waiting_banner, waiting),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.WarningAmber, tint = EtaPreferenceColors.Orange) },
-                        onClick = { onOpenSession((approvals.firstOrNull()?.sessionId ?: questions.first().sessionId)) },
-                    )
-                }
+        if (searching || query.isNotEmpty()) {
+            item(key = "search") {
+                EtaSearchField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    placeholder = stringResource(R.string.desktop_search_hint),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                )
             }
         }
-        item(key = "search") {
-            TextField(
-                value = query,
-                onValueChange = onQueryChange,
-                label = stringResource(R.string.desktop_search_hint),
-                singleLine = true,
-                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, modifier = Modifier.padding(start = 12.dp, end = 4.dp)) },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 4.dp, bottom = 12.dp),
-            )
-        }
-        val needsYou = buildSet {
-            approvals.forEach { add(it.sessionId) }
-            questions.forEach { add(it.sessionId) }
-        }
-        val listed = sessions.rows.filter { it.listed }
         val workspaceTitles = sessions.workspaces.associate { it.id to it.title }
 
-        /** 一组会话，逐行进入懒加载列表；首尾两行负责卡片的圆角。 */
         fun sessionRows(group: String, rows: List<DesktopSessionRow>, showWorkspace: Boolean = false, snippets: Map<String, String> = emptyMap()) {
-            rows.forEachIndexed { index, row ->
-                item(key = "$group/${row.id}", contentType = "session") {
-                    EtaPreferenceGroupItem(isFirst = index == 0, isLast = index == rows.lastIndex, hasLeading = true, modifier = Modifier.animateItem()) {
-                        DesktopSessionRowItem(
-                            row = row,
-                            needsYou = row.id in needsYou,
-                            unread = row.id in unread,
-                            context = if (showWorkspace) row.workspaceId?.let(workspaceTitles::get) else null,
-                            snippet = snippets[row.id],
-                            onClick = { onOpenSession(row.id) },
-                            onMore = { onMore(row) },
-                        )
-                    }
-                }
+            items(rows, key = { "$group/${it.id}" }, contentType = { "session" }) { row ->
+                DesktopSessionLine(
+                    row = row,
+                    needsYou = row.id in needsYou,
+                    unread = row.id in unread,
+                    context = if (showWorkspace) row.workspaceId?.let(workspaceTitles::get) else null,
+                    snippet = snippets[row.id],
+                    onClick = { onOpenSession(row.id) },
+                    onLongClick = { onMore(row) },
+                    modifier = etaAnimateItem(),
+                )
             }
-            item(key = "$group/end", contentType = "gap") { Spacer(Modifier.height(EtaPreferenceDefaults.GroupSpacing - 8.dp)) }
         }
 
         val trimmed = query.trim()
@@ -334,23 +351,34 @@ internal fun DesktopSessionsContent(
                 )
             }
         }
-        // 最近任务：跨工作区最近动过的几个，等你处理和运行中的排在最前。只有一小组会话时不重复显示。
-        if (listed.size > RECENT_LIMIT || groups.count { it.rows.isNotEmpty() } > 1) {
-            val recent = recentSessions(listed, needsYou, touched)
-            val open = RECENT_GROUP !in collapsed
+        // 一屏 = 「最近」5 条 + 工作区目录。工作区默认收起（像文件夹），点开才看里面的会话；
+        // 会话很少、没有「最近」时，工作区默认展开。[toggled] 记录用户相对默认值改过的分组。
+        val showRecent = listed.size > RECENT_LIMIT || groups.count { it.rows.isNotEmpty() } > 1
+        if (showRecent) {
+            val open = RECENT_GROUP !in toggled
             item(key = "h-$RECENT_GROUP", contentType = "header") {
                 DesktopGroupHeader(
                     title = stringResource(R.string.desktop_recent),
                     count = null,
-                    running = 0,
+                    running = recent.count { it.running },
+                    attention = recent.count { it.id in needsYou },
                     expanded = open,
                     onToggle = { onToggleGroup(RECENT_GROUP) },
+                    modifier = etaAnimateItem(),
                 )
             }
             if (open) sessionRows(RECENT_GROUP, recent, showWorkspace = true)
+            item(key = "h-workspaces", contentType = "label") {
+                Text(
+                    text = stringResource(R.string.desktop_workspaces),
+                    style = EtaTheme.type.caption,
+                    color = EtaTheme.colors.textTertiary,
+                    modifier = etaAnimateItem().padding(start = 28.dp, top = 16.dp, bottom = 4.dp),
+                )
+            }
         }
         for (group in groups) {
-            val open = group.key !in collapsed
+            val open = (group.key in toggled) != showRecent
             item(key = "h-${group.key}", contentType = "header") {
                 DesktopGroupHeader(
                     title = group.workspace?.title ?: stringResource(R.string.desktop_other_sessions),
@@ -361,6 +389,7 @@ internal fun DesktopSessionsContent(
                     onToggle = { onToggleGroup(group.key) },
                     onCreate = group.workspace?.let { workspace -> { onCreate(workspace) } },
                     createEnabled = connected && !creating,
+                    modifier = etaAnimateItem(),
                 )
             }
             if (!open) continue
@@ -370,7 +399,7 @@ internal fun DesktopSessionsContent(
                         text = stringResource(R.string.desktop_group_empty),
                         style = EtaTheme.type.caption,
                         color = EtaTheme.colors.textTertiary,
-                        modifier = Modifier.padding(start = 32.dp, end = 16.dp, bottom = 16.dp),
+                        modifier = etaAnimateItem().padding(start = 44.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
                     )
                 }
             } else {
@@ -387,10 +416,12 @@ internal fun DesktopSessionsContent(
                     running = 0,
                     expanded = showArchived,
                     onToggle = { showArchived = !showArchived },
+                    modifier = etaAnimateItem().padding(top = 8.dp),
                 )
             }
             if (showArchived) sessionRows("archived", archived, showWorkspace = true)
         }
+        item(key = "bottom", contentType = "gap") { Spacer(Modifier.height(24.dp)) }
     }
 }
 
@@ -405,7 +436,7 @@ internal const val RECENT_LIMIT = 5
 internal data class DesktopSessionGroup(val key: String, val workspace: DesktopWorkspace?, val rows: List<DesktopSessionRow>)
 
 /**
- * 分组标题：点按收起或展开。收起时仍能看到会话数，以及里面有几个在运行、几个等你处理，
+ * 分组标题：点按收起或展开。收起时仍能看到会话数，以及里面有几个在运行、几个需要你处理，
  * 不用展开就知道要不要点进去。
  */
 @Composable
@@ -415,13 +446,15 @@ private fun DesktopGroupHeader(
     running: Int,
     expanded: Boolean,
     onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
     attention: Int = 0,
     onCreate: (() -> Unit)? = null,
     createEnabled: Boolean = true,
 ) {
     val state = stringResource(if (expanded) R.string.desktop_group_expanded else R.string.desktop_group_collapsed)
+    val motion = EtaTheme.motion
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp).heightIn(min = 44.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp).heightIn(min = 40.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -430,90 +463,111 @@ private fun DesktopGroupHeader(
                 .clip(EtaTheme.shapes.radiusMd)
                 .clickable(onClickLabel = state, role = Role.Button, onClick = onToggle)
                 .semantics { stateDescription = state }
-                .padding(horizontal = 8.dp, vertical = 10.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            val rotation by animateFloatAsState(if (expanded) 90f else 0f, label = "group_chevron")
-            Icon(
-                Icons.Rounded.ChevronRight,
-                contentDescription = null,
-                tint = EtaTheme.colors.textTertiary,
-                modifier = Modifier.size(18.dp).graphicsLayer { rotationZ = rotation },
-            )
             Text(
-                text = title,
-                style = EtaTheme.type.footnote,
+                text = if (count != null) stringResource(R.string.eta_group_count, title, count) else title,
+                style = EtaTheme.type.subhead,
                 color = EtaTheme.colors.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            if (count != null) Text(count.toString(), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
-            // 收起后把组里的动静提到标题上。
-            if (!expanded && attention > 0) {
-                StatusRing(TaskVisualStatus.Attention, size = 14.dp)
-                Text(stringResource(R.string.desktop_group_attention, attention), style = EtaTheme.type.caption, color = EtaTheme.colors.textSecondary)
-            } else if (!expanded && running > 0) {
-                StatusRing(TaskVisualStatus.Running, size = 14.dp)
-                Text(stringResource(R.string.desktop_group_running, running), style = EtaTheme.type.caption, color = EtaTheme.colors.textSecondary)
-            }
+            Spacer(Modifier.weight(1f))
+            // 组里的动静提到标题上：需要你 > 运行中（展开时行内已有状态圈，这里只在收起时显示）。
+            if (!expanded && attention > 0) StatusRing(TaskVisualStatus.Attention, size = 12.dp)
+            else if (!expanded && running > 0) StatusRing(TaskVisualStatus.Running, size = 12.dp)
+            val rotation by animateFloatAsState(if (expanded) 90f else 0f, tween(motion.medium, easing = motion.emphasizedDecelerate), label = "group_chevron")
+            Icon(
+                Icons.Rounded.ChevronRight,
+                contentDescription = null,
+                tint = EtaTheme.colors.textSecondary,
+                modifier = Modifier.size(20.dp).graphicsLayer { rotationZ = rotation },
+            )
         }
         if (onCreate != null) {
-            EtaIconButton(onClick = onCreate, enabled = createEnabled) {
-                Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desktop_new_session_in, title))
+            EtaIconButton(onClick = onCreate, enabled = createEnabled, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desktop_new_session_in, title), modifier = Modifier.size(20.dp))
             }
         }
     }
 }
 
+/**
+ * 会话行，与胖小胖侧栏同一套样式：单行标题、右侧相对时间；状态圈只在「需要你」「运行中」时出现，
+ * 已完成未读用一个小圆点。点按打开，长按出操作面板。
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DesktopSessionRowItem(
+private fun DesktopSessionLine(
     row: DesktopSessionRow,
     needsYou: Boolean,
     unread: Boolean,
     context: String?,
     snippet: String?,
     onClick: () -> Unit,
-    onMore: () -> Unit,
+    onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val updated = remember(row.updatedAt) {
-        if (row.updatedAt <= 0) "" else DateUtils.getRelativeTimeSpanString(row.updatedAt, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS).toString()
+    val haptic = LocalHapticFeedback.current
+    val colors = EtaTheme.colors
+    val yesterday = stringResource(R.string.eta_yesterday)
+    val time = remember(row.updatedAt, yesterday) {
+        if (row.updatedAt <= 0) "" else ConversationTimeLabels.label(row.updatedAt, yesterdayLabel = yesterday, recentLabel = "")
     }
     val status = when {
-        needsYou -> stringResource(R.string.desktop_needs_you)
-        row.running -> stringResource(R.string.desktop_running)
-        unread -> stringResource(R.string.desktop_done_unread)
+        needsYou -> TaskVisualStatus.Attention
+        row.running -> TaskVisualStatus.Running
         else -> null
     }
-    val pinned = if (row.pinned) stringResource(R.string.desktop_pinned) else null
-    val summary = listOfNotNull(
-        status,
-        pinned,
-        context?.takeIf { it.isNotBlank() },
-        updated.takeIf { it.isNotEmpty() },
-        snippet?.takeIf { it.isNotBlank() }?.take(80),
-    ).joinToString(" · ")
-    EtaArrowPreference(
-        title = row.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_untitled),
-        summary = summary,
-        // 每行都占住状态位，标题对齐：等你处理 > 运行中 > 已完成未读 > 置顶 > 普通。
-        startAction = {
-            when {
-                needsYou -> StatusRing(TaskVisualStatus.Attention, size = 16.dp)
-                row.running -> StatusRing(TaskVisualStatus.Running, size = 16.dp)
-                unread -> StatusRing(TaskVisualStatus.Success, size = 16.dp)
-                row.pinned -> Icon(Icons.Rounded.PushPin, contentDescription = null, tint = EtaTheme.colors.accent, modifier = Modifier.size(16.dp))
-                else -> Icon(Icons.Rounded.ChatBubbleOutline, contentDescription = null, tint = EtaTheme.colors.textTertiary, modifier = Modifier.size(16.dp))
+    val statusText = status?.label()
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(EtaTheme.shapes.radiusMd)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() },
+                onLongClickLabel = stringResource(R.string.desktop_session_actions),
+            )
+            .semantics { statusText?.let { stateDescription = it } }
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            status?.let { StatusRing(it, size = 12.dp, contentDescription = null) }
+            Text(
+                text = row.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_untitled),
+                style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp),
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            if (row.pinned) Icon(Icons.Rounded.PushPin, contentDescription = stringResource(R.string.desktop_pinned), tint = colors.textTertiary, modifier = Modifier.size(14.dp))
+            context?.takeIf { it.isNotBlank() }?.let {
+                Text(it, style = EtaTheme.type.caption, color = colors.textTertiary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 96.dp))
             }
-        },
-        endActions = {
-            EtaIconButton(onClick = onMore, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Rounded.MoreHoriz, contentDescription = stringResource(R.string.desktop_session_actions), modifier = Modifier.size(18.dp))
+            if (unread && status == null) {
+                Box(Modifier.size(7.dp).background(colors.accent, CircleShape).semantics { contentDescription = "" })
             }
-        },
-        onClick = onClick,
-    )
+            if (time.isNotEmpty()) Text(time, style = EtaTheme.type.caption, color = colors.textTertiary, maxLines = 1)
+        }
+        snippet?.takeIf { it.isNotBlank() }?.let {
+            Text(
+                text = it.take(120),
+                style = EtaTheme.type.caption,
+                color = colors.textSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 2.dp, start = if (status != null) 20.dp else 0.dp),
+            )
+        }
+    }
 }
 
 /** 会话的操作：置顶、重命名、归档，以及是否提醒这个会话（与桌面侧栏右键菜单对应）。 */
