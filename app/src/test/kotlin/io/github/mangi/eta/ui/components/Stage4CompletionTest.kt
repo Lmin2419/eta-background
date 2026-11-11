@@ -60,7 +60,8 @@ class Stage4CompletionTest {
                 }
             }
         }
-        fun has(text: String) = panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == text } == true && it.boundsInRoot.height > 0 }
+        fun has(text: String) = panel.nodes().any { (it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == text } == true ||
+            it.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().contains(text)) && it.boundsInRoot.height > 0 }
         try {
             panel.advance(20)
             panel.dragFinger(fromX = 20f, fromY = 800f, toX = 740f, toY = 800f)

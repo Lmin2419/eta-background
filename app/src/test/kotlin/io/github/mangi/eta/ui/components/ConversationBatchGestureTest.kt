@@ -140,6 +140,10 @@ class ConversationBatchGestureTest {
         }
         try {
             panel.advance(25)
+            // 阶段 12：侧栏搜索框点圆形搜索按钮才出现。
+            panel.nodes().firstOrNull { it.config.getOrNull(SemanticsActions.SetText) != null }
+                ?: run { panel.nodes().first { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription).orEmpty().contains(controller.get().getString(io.github.mangi.eta.R.string.conversation_search_hint)) && it.config.getOrNull(SemanticsActions.OnClick) != null }
+                    .config[SemanticsActions.OnClick].action?.invoke(); panel.advance(20) }
             panel.nodes().first { it.config.getOrNull(SemanticsActions.SetText) != null }.setInput("Match")
             panel.advance(5)
             panel.longPress(panel.require("Match Alpha"))
@@ -209,6 +213,10 @@ class ConversationBatchGestureTest {
             panel.advance(25)
             assertNotNull(panel.find("Alpha"))
             assertNull(panel.find("Beta"))
+            // 阶段 12：侧栏搜索框点圆形搜索按钮才出现。
+            panel.nodes().firstOrNull { it.config.getOrNull(SemanticsActions.SetText) != null }
+                ?: run { panel.nodes().first { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription).orEmpty().contains(controller.get().getString(io.github.mangi.eta.R.string.conversation_search_hint)) && it.config.getOrNull(SemanticsActions.OnClick) != null }
+                    .config[SemanticsActions.OnClick].action?.invoke(); panel.advance(20) }
             panel.nodes().first { it.config.getOrNull(SemanticsActions.SetText) != null }.setInput("Beta")
             panel.advance(5)
             assertNotNull(panel.find("Beta"))

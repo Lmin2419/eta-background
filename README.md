@@ -6,13 +6,13 @@
 
 ## 最新测试版本
 
-**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111102`**，引擎仍为 `20261105-e49-parallel-observe`。
+**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111103`**，引擎仍为 `20261105-e49-parallel-observe`。
 
-参考 Claude 的动效与字体：页面切换更柔和、回复墨水式渐显、发送后新一轮停在顶部、猫头思考动画、长按气泡菜单、衬线标题和细线图标；电脑会话能发文件、发出的图片有缩略图；frpc 改由插件管理。**电脑端需更新 `dsh-bridge` 到 0.5.0。**
+纯白配色与 Claude 式侧栏：电脑上最近的会话直接混排进侧栏，点开即进；修复电脑会话占位文字、任务完成后流体云不消失。电脑端插件仍为 0.5.0。
 
-安装包 **`Pangxiaopang-3.3.5-2026111102.apk`**。
+安装包 **`Pangxiaopang-3.3.5-2026111103.apk`**。
 
-**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026111102)
+**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026111103)
 
 以该提交的 CI 全绿和签名 Release 为发布门槛；自动测试不代替真实手机上的暂停、续指令和后台页面验收。
 

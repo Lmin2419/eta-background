@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111102`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111103`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-Motion and type inspired by Claude: softer page transitions, ink-like reply reveal, the new turn pinned to the top, a breathing cat while thinking, anchored long-press menus, serif headings and line icons. Computer sessions can send files and show sent image thumbnails; frpc is now run by the plugin. **Update `dsh-bridge` to 0.5.0 on the computer.**
+White pages and a Claude-style side pane: recent computer sessions appear in the side pane and open directly. Fixes the computer chat placeholder and a fluid cloud that lingered after tasks finished. The plugin stays at 0.5.0.
 
-APK: **`Pangxiaopang-3.3.5-2026111102.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026111103.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111102)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111103)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 
