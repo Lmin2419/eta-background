@@ -40,6 +40,15 @@ fi
 say "安装 $plugin"
 "$dsh" plugin --profile desktop add "$plugin"
 grep -q '"dsh-bridge"' "$profile" || fail "profile 里没有出现 dsh-bridge，安装没有生效"
+# 0.5.0 起插件自己管理 frpc：删除旧版注册的 launchd / systemd 服务。
+if [ -f "$HOME/Library/LaunchAgents/com.pangxiaopang.frpc.plist" ]; then
+  launchctl unload "$HOME/Library/LaunchAgents/com.pangxiaopang.frpc.plist" 2>/dev/null || true
+  rm -f "$HOME/Library/LaunchAgents/com.pangxiaopang.frpc.plist"; say "已删除旧的 frpc launchd 服务"
+fi
+if command -v systemctl >/dev/null 2>&1 && systemctl --user cat pangxiaopang-frpc.service >/dev/null 2>&1; then
+  systemctl --user disable --now pangxiaopang-frpc.service >/dev/null 2>&1 || true
+  rm -f "$HOME/.config/systemd/user/pangxiaopang-frpc.service"; say "已删除旧的 frpc systemd 服务"
+fi
 [ -f "$HOME/.dsh-bridge/token" ] || say "注意：没有 ~/.dsh-bridge/token，请重新运行 setup-frpc.sh 写入 token。"
 say "完成。打开 DeepSeek Harness 桌面版后执行：curl http://127.0.0.1:7788/v1/health"
 say "应返回 runtime 为 desktop。"

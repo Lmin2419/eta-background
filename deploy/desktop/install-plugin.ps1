@@ -90,6 +90,13 @@ if ($Existing) {
   & $Dsh plugin --profile desktop remove dsh-bridge
   if ($LASTEXITCODE -ne 0) { Fail "移除旧插件失败（退出码 $LASTEXITCODE）" }
 }
+# 0.5.0 起插件自己管理 frpc：删除旧版注册的开机任务，避免两个 frpc 抢同一个通道。
+if (Get-ScheduledTask -TaskName 'PangxiaopangFrpc' -ErrorAction SilentlyContinue) {
+  Stop-ScheduledTask -TaskName 'PangxiaopangFrpc' -ErrorAction SilentlyContinue
+  Unregister-ScheduledTask -TaskName 'PangxiaopangFrpc' -Confirm:$false -ErrorAction SilentlyContinue
+  Get-Process frpc -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+  Say '已删除旧的 frpc 计划任务（改由插件随桌面版启动）'
+}
 Say '安装到桌面版 profile'
 & $Dsh plugin --profile desktop add $PluginDir
 if ($LASTEXITCODE -ne 0) { Fail "安装失败（退出码 $LASTEXITCODE）" }

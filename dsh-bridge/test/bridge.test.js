@@ -167,7 +167,7 @@ test('health endpoint is open', async () => {
   const res = await fetch(`http://127.0.0.1:${handle.port}/v1/health`)
   assert.deepEqual(await res.json(), {
     ok: true, protocol: 1, version: 'test', runtime: 'node',
-    dsh: { version: null, api: ['control', 'page', 'events', 'state', 'projections'] },
+    dsh: { version: null, api: ['control', 'page', 'events', 'state', 'projections'] }, tunnel: null,
   })
   await handle.close()
 })
@@ -617,4 +617,43 @@ test('snapshot forwards stats, usage, pressure and subagent projections', async 
   assert.deepEqual(update.usage, { outputTokens: 7 })
   c.ws.close()
   await handle.close()
+})
+
+// --- 0.5.0: frpc supervisor, phone files and image previews -------------------------------
+import { classifyLine, startTunnel } from '../lib/tunnel.js'
+import { mkdtempSync, writeFileSync as writeFile2, mkdirSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join as join2 } from 'node:path'
+import { EventEmitter } from 'node:events'
+
+test('frpc log lines map to tunnel states', () => {
+  assert.equal(classifyLine('2026/11/11 [I] [proxy_manager.go:1] [dsh] start proxy success')?.state, 'connected')
+  assert.equal(classifyLine('[E] login to the server failed: dial tcp: i/o timeout')?.state, 'error')
+  assert.equal(classifyLine('[I] something unrelated'), undefined)
+})
+
+test('tunnel is absent without frpc, supervised and stopped with it', async () => {
+  const home = mkdtempSync(join2(tmpdir(), 'tunnel-'))
+  const paths = { home, binary: join2(home, 'frpc'), config: join2(home, 'frpc.toml'), pidFile: join2(home, 'frpc.pid') }
+  const absent = startTunnel({ paths, logger: { info() {} } })
+  assert.equal(absent.state.state, 'absent')
+  absent.stop()
+  writeFile2(paths.binary, ''); writeFile2(paths.config, '')
+  const spawned = []
+  const spawnImpl = () => {
+    const proc = new EventEmitter()
+    proc.stdout = new EventEmitter(); proc.stderr = new EventEmitter()
+    proc.pid = 4242; proc.exitCode = null
+    proc.kill = () => { proc.killed = true }
+    spawned.push(proc)
+    return proc
+  }
+  const seen = []
+  const tunnel = startTunnel({ paths, spawnImpl, logger: { info() {} }, onChange: (s) => seen.push(s.state) })
+  assert.equal(spawned.length, 1)
+  spawned[0].stdout.emit('data', Buffer.from('[I] start proxy success\n'))
+  assert.equal(tunnel.state.state, 'connected')
+  tunnel.stop()
+  assert.equal(spawned[0].killed, true)
+  assert.deepEqual(seen, ['starting', 'connected', 'stopped'])
 })

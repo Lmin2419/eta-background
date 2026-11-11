@@ -1833,4 +1833,10 @@
     <string name="desktop_stats_rounds">轮次与步数</string>
     <string name="overlay_open_conversation_short">对话</string>
     <string name="overlay_supplement_short">补充</string>
+    <string name="desktop_files_too_large">文件太大：一次最多发约 10 MB</string>
+    <string name="desktop_diag_tunnel">通道：%1$s</string>
+    <string name="desktop_tunnel_connected">已连上中转服务器</string>
+    <string name="desktop_tunnel_starting">正在连接…</string>
+    <string name="desktop_tunnel_absent">这台电脑没有配置（运行 setup-frpc）</string>
+    <string name="desktop_tunnel_error">失败：%1$s</string>
 </resources>

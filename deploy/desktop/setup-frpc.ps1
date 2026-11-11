@@ -93,14 +93,15 @@ $configPath = Join-Path $HomeDir 'frpc.toml'
 & $Frpc verify -c $configPath | Out-Null
 Say "已写入 $configPath 与 dsh-bridge token"
 
+# dsh-bridge 0.5.0 起 frpc 由插件启动和停止（随 DSH 桌面版开关），不再注册开机任务。
 $taskName = 'PangxiaopangFrpc'
-$action = New-ScheduledTaskAction -Execute $Frpc -Argument "-c `"$configPath`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
-Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description 'frpc for pangxiaopang desktop bridge' | Out-Null
-Start-ScheduledTask -TaskName $taskName
-Say "已注册计划任务 $taskName（登录后自动运行，日志：$HomeDir\frpc.log）"
+if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+  Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+  Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+  Say "已删除旧的计划任务 $taskName（改由插件管理 frpc）"
+}
+Get-Process frpc -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $Frpc } | Stop-Process -Force -ErrorAction SilentlyContinue
+Say "frpc 将由 dsh-bridge 插件在 DSH 桌面版运行时自动启动"
 
 Write-Host ''
 Write-Host '完成。接下来：'

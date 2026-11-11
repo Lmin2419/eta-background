@@ -34,6 +34,7 @@ internal object DesktopBridgeProtocol {
                 files = json.array("files")?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }.orEmpty(),
                 source = json.string("source") ?: "user",
                 rpcId = json.string("rpcId"),
+                imageRefs = json.array("imageRefs")?.mapNotNull { it as? JsonObject }.orEmpty(),
             )
             "assistant" -> DesktopItem.Assistant(
                 seq = seq,
@@ -140,8 +141,12 @@ internal object DesktopBridgeProtocol {
             features = json.array("features")?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }?.toSet().orEmpty(),
             dshVersion = dsh?.string("version"),
             dshApi = dsh?.array("api")?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }?.toSet(),
+            tunnel = (json["tunnel"] as? JsonObject)?.let(::parseTunnel),
         )
     }
+
+    fun parseTunnel(json: JsonObject): DesktopTunnel? =
+        json.string("state")?.let { DesktopTunnel(it, json.string("message")) }
 
     fun parseQuestion(json: JsonObject): DesktopQuestion? {
         val id = json.string("id") ?: return null
@@ -365,6 +370,8 @@ internal sealed interface DesktopItem {
         val files: List<String>,
         val source: String,
         val rpcId: String?,
+        /** 电脑上存好的图片附件引用（插件 0.5.0 起），手机按需取图预览。 */
+        val imageRefs: List<JsonObject> = emptyList(),
     ) : DesktopItem
 
     data class Assistant(
@@ -513,6 +520,8 @@ internal data class DesktopServerInfo(
     val dshVersion: String? = null,
     /** DSH 提供的会话接口；空表示插件太旧，没有上报。 */
     val dshApi: Set<String>? = null,
+    /** 插件管理的 frpc 通道状态（插件 0.5.0 起）。 */
+    val tunnel: DesktopTunnel? = null,
 ) {
     /** 插件是否支持某项能力；老插件不报能力列表时按不支持处理。 */
     fun supports(feature: String): Boolean = feature in features
@@ -579,7 +588,19 @@ internal data class DesktopQueueItem(val id: String, val text: String, val steer
 internal data class DesktopHandoff(val item: DesktopQueueItem, val at: Long)
 
 /** 手机刚发出、桌面还没确认的消息；[queued] 表示发送时会话正在运行，会进入待处理队列。 */
-internal data class DesktopEcho(val requestId: String, val text: String, val queued: Boolean)
+internal data class DesktopEcho(
+    val requestId: String,
+    val text: String,
+    val queued: Boolean,
+    /** 刚发出的图片（data URL），落定前先用本地图预览。 */
+    val images: List<String> = emptyList(),
+)
+
+/** 插件里 frpc 通道的状态：absent / starting / connected / error / stopped。 */
+internal data class DesktopTunnel(val state: String, val message: String?)
+
+/** 手机要发给电脑的一个文件：名字和原始字节的 base64。 */
+internal data class DesktopFile(val name: String, val base64: String)
 
 internal data class DesktopModelSelection(val provider: String, val model: String, val reasoningEffort: String?)
 

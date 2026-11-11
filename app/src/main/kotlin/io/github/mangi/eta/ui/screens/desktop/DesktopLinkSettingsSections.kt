@@ -145,6 +145,16 @@ internal fun DesktopDiagnostics() {
                 ?: if ("events" in api) stringResource(R.string.desktop_diag_dsh, "0.2.2+") else stringResource(R.string.desktop_diag_dsh_legacy))
         }
         if (info.dshApi == null) add(stringResource(R.string.desktop_diag_plugin_outdated))
+        // 插件 0.5.0 起由插件管理 frpc：断线时能看出是通道的问题还是电脑没开。
+        info.tunnel?.let { tunnel ->
+            val state = when (tunnel.state) {
+                "connected" -> stringResource(R.string.desktop_tunnel_connected)
+                "starting" -> stringResource(R.string.desktop_tunnel_starting)
+                "absent" -> stringResource(R.string.desktop_tunnel_absent)
+                else -> stringResource(R.string.desktop_tunnel_error, tunnel.message ?: tunnel.state)
+            }
+            add(stringResource(R.string.desktop_diag_tunnel, state))
+        }
         if (sessions.loaded) add(stringResource(R.string.desktop_diag_sessions, visible, rows.count { it.archived }, rows.count { it.blank }))
         if (info.runtime == "node") add(stringResource(R.string.desktop_diag_node_warning))
     }

@@ -1,6 +1,7 @@
 // dsh-bridge: DeepSeek Harness plugin that mirrors desktop Sessions to the
 // 胖小胖 Android app over one authenticated WebSocket.
 
+import { startTunnel } from './lib/tunnel.js'
 import { randomBytes } from 'node:crypto'
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -99,6 +100,16 @@ export function apply(ctx, config = {}) {
       services.userQuestions = child.userQuestions
       child.effect(() => () => { services.userQuestions = undefined }, 'dsh-bridge: userQuestions')
     })
+    // Optional: files from the phone are staged through the host's own upload service, and
+    // image previews read the stored attachment, so the desktop shows them natively.
+    ctx.inject(['fileUploads'], (child) => {
+      services.fileUploads = child.fileUploads
+      child.effect(() => () => { services.fileUploads = undefined }, 'dsh-bridge: fileUploads')
+    })
+    ctx.inject(['attachments'], (child) => {
+      services.attachments = child.attachments
+      child.effect(() => () => { services.attachments = undefined }, 'dsh-bridge: attachments')
+    })
   }
 
   ctx.on('api-session/added', summary => bridge.onSessionAdded(summary))
@@ -123,8 +134,13 @@ export function apply(ctx, config = {}) {
       return () => bridge.dispose()
     }
     const stopFeed = bridge.startProjectionFeed()
+    // The relay tunnel runs only while the plugin does: one switch for the whole link.
+    const tunnel = startTunnel({ logger, onChange: (state) => bridge.onTunnelChanged(state) })
+    services.tunnel = () => tunnel.state
     logger.info(`dsh-bridge ${VERSION} (${RUNTIME}, DSH ${services.dshVersion ?? 'unknown'}, api ${bridge.hostApi().join('+')}) listening on http://${host}:${handle.port} (token from ${source})`)
     return async () => {
+      tunnel.stop()
+      services.tunnel = undefined
       stopFeed()
       bridge.dispose()
       await handle.close()

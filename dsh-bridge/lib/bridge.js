@@ -2,11 +2,21 @@
 // assistant streaming, global Session list updates, and tool approvals.
 // `host` is the narrow slice of DSH services the bridge uses, so tests can fake it.
 
+import { readFile, stat } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { hostname, platform } from 'node:os'
 import {
   LiveAttempt, clip, inboxItems, sessionRow, textOf, translateEvent, translateRecords,
 } from './translate.js'
+
+const MAX_FILES = 8
+const MAX_PREVIEW_BYTES = 8 * 1024 * 1024
+
+/** @param {string} path */
+function mediaTypeOf(path) {
+  const ext = path.toLowerCase().split('.').pop()
+  return ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : 'image/jpeg'
+}
 
 export const PROTOCOL_VERSION = 1
 const DELTA_FLUSH_MS = 30
@@ -281,6 +291,11 @@ export class Bridge {
   /** @param {string} sessionId @param {number} updatedAt */
   onActivity(sessionId, updatedAt) {
     if (this.clients.size > 0) this.broadcast({ t: 'activity', sessionId: String(sessionId), updatedAt })
+  }
+
+  /** Relay tunnel state changed (frpc connected, failed, restarted). */
+  onTunnelChanged(state) {
+    if (this.clients.size > 0) this.broadcast({ t: 'tunnel', ...state })
   }
 
   /** @param {string} sessionId @param {string} message */
@@ -598,7 +613,8 @@ class Client {
           dsh: { version: this.host.dshVersion ?? null, api: this.bridge.hostApi() },
           approvals: this.bridge.pendingApprovals(),
           questions: this.bridge.pendingQuestions(),
-          features: ['archive', 'pin', 'questions', 'turns', 'heartbeat', 'titles', 'workspaces', 'queue-by-request'],
+          features: ['archive', 'pin', 'questions', 'turns', 'heartbeat', 'titles', 'workspaces', 'queue-by-request', 'image-preview', 'files', 'tunnel'],
+          tunnel: this.host.tunnel?.() ?? null,
         }
       case 'client.heartbeat': {
         const interval = Number(m.intervalMs)
@@ -622,6 +638,8 @@ class Client {
       }
       case 'sessions.prompt':
         return this.prompt(m)
+      case 'attachments.image':
+        return this.attachmentImage(m)
       case 'sessions.cancel':
         await controller.cancel({ sessionId: requireString(m.sessionId, 'sessionId') })
         return { accepted: true }
@@ -795,6 +813,24 @@ class Client {
     return inboxItems(projections?.values?.inbox).find(item => item.rpcId === requestId)?.id
   }
 
+  /**
+   * Bytes of one stored image attachment, for the phone's message preview.
+   * @param {any} m
+   */
+  async attachmentImage(m) {
+    const ref = m.ref
+    if (!ref || typeof ref !== 'object' || typeof ref.attachmentId !== 'string') throw new BridgeError('bad-request', 'ref is required')
+    const attachments = this.host.attachments
+    if (!attachments || typeof attachments.imageHostPath !== 'function') throw new BridgeError('unsupported', 'image previews are not available on this DSH')
+    let path
+    try { path = attachments.imageHostPath(ref) } catch (error) { throw new BridgeError('not-found', String(error?.message ?? error)) }
+    if (typeof path !== 'string' || path.length === 0) throw new BridgeError('unsupported', 'image previews are not available on this DSH')
+    const info = await stat(path).catch(() => { throw new BridgeError('not-found', 'image file is gone') })
+    if (info.size > MAX_PREVIEW_BYTES) throw new BridgeError('too-large', 'image is too large to preview')
+    const data = (await readFile(path)).toString('base64')
+    return { mediaType: typeof ref.mediaType === 'string' ? ref.mediaType : mediaTypeOf(path), data }
+  }
+
   /** @param {any} m */
   async prompt(m) {
     const sessionId = requireString(m.sessionId, 'sessionId')
@@ -804,6 +840,17 @@ class Client {
       for (const image of m.images) {
         if (typeof image?.data !== 'string' || typeof image?.mediaType !== 'string') continue
         content.push({ type: 'image', mediaType: image.mediaType, data: image.data, ...(typeof image.name === 'string' ? { name: image.name } : {}) })
+      }
+    }
+    if (Array.isArray(m.files) && m.files.length > 0) {
+      const uploads = this.host.fileUploads
+      if (!uploads || typeof uploads.upload !== 'function') throw new BridgeError('unsupported', 'this DSH cannot receive files from the phone')
+      const agent = this.host.agentOf(sessionId) ?? (typeof uploads.resolveAgent === 'function' ? await uploads.resolveAgent(sessionId) : undefined)
+      if (!agent) throw new BridgeError('not-found', `session ${sessionId} is not attached`)
+      for (const file of m.files.slice(0, MAX_FILES)) {
+        if (typeof file?.data !== 'string' || file.data.length === 0) continue
+        const staged = await uploads.upload(agent, { data: file.data, ...(typeof file.name === 'string' ? { name: file.name } : {}) }, this.opSignal())
+        content.push({ type: 'file', receiptId: staged.receiptId })
       }
     }
     const request = {

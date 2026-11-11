@@ -19,7 +19,7 @@ sha_for() {
 }
 HOME_DIR="${DSH_BRIDGE_HOME:-$HOME/.dsh-bridge}"
 BRIDGE_LOCAL_PORT="${BRIDGE_LOCAL_PORT:-7788}"
-NO_SERVICE="${NO_SERVICE:-0}"
+
 
 say() { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31m错误：\033[0m%s\n' "$*" >&2; exit 1; }
@@ -115,55 +115,22 @@ chmod 600 "$HOME_DIR/token"
 "$FRPC" verify -c "$HOME_DIR/frpc.toml" >/dev/null
 say "已写入 $HOME_DIR/frpc.toml 与 dsh-bridge token（$HOME_DIR/token）"
 
-# ---- 后台服务 --------------------------------------------------------------
-if [[ "$NO_SERVICE" == "1" ]]; then
-  say "NO_SERVICE=1：请手动运行 $FRPC -c $HOME_DIR/frpc.toml"
-elif [[ "$OS" == darwin ]]; then
-  plist="$HOME/Library/LaunchAgents/com.pangxiaopang.frpc.plist"
-  mkdir -p "$(dirname "$plist")"
-  cat > "$plist" <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key><string>com.pangxiaopang.frpc</string>
-  <key>ProgramArguments</key>
-  <array><string>${FRPC}</string><string>-c</string><string>${HOME_DIR}/frpc.toml</string></array>
-  <key>RunAtLoad</key><true/>
-  <key>KeepAlive</key><true/>
-  <key>StandardOutPath</key><string>${HOME_DIR}/frpc.log</string>
-  <key>StandardErrorPath</key><string>${HOME_DIR}/frpc.log</string>
-</dict>
-</plist>
-EOF
+# ---- 旧的后台服务 -----------------------------------------------------------
+# dsh-bridge 0.5.0 起 frpc 由插件启动和停止（随 DSH 开关），这里只清理旧版注册的服务。
+plist="$HOME/Library/LaunchAgents/com.pangxiaopang.frpc.plist"
+if [[ -f "$plist" ]]; then
   launchctl unload "$plist" 2>/dev/null || true
-  launchctl load -w "$plist"
-  say "已注册 launchd 服务 com.pangxiaopang.frpc（日志：$HOME_DIR/frpc.log）"
-elif command -v systemctl >/dev/null && systemctl --user show-environment >/dev/null 2>&1; then
-  unit="$HOME/.config/systemd/user/pangxiaopang-frpc.service"
-  mkdir -p "$(dirname "$unit")"
-  cat > "$unit" <<EOF
-[Unit]
-Description=frpc for pangxiaopang desktop bridge
-After=network-online.target
-
-[Service]
-ExecStart=${FRPC} -c ${HOME_DIR}/frpc.toml
-Restart=always
-RestartSec=3
-
-[Install]
-WantedBy=default.target
-EOF
-  systemctl --user daemon-reload
-  systemctl --user enable --now pangxiaopang-frpc.service >/dev/null 2>&1
-  systemctl --user restart pangxiaopang-frpc.service
-  command -v loginctl >/dev/null && loginctl enable-linger "$USER" 2>/dev/null || true
-  say "已注册 systemd 用户服务 pangxiaopang-frpc（日志：journalctl --user -u pangxiaopang-frpc）"
-else
-  nohup "$FRPC" -c "$HOME_DIR/frpc.toml" >"$HOME_DIR/frpc.log" 2>&1 &
-  say "已在后台启动 frpc（重启电脑后需重新运行：$FRPC -c $HOME_DIR/frpc.toml）"
+  rm -f "$plist"
+  say "已删除旧的 launchd 服务 com.pangxiaopang.frpc"
 fi
+if command -v systemctl >/dev/null && systemctl --user cat pangxiaopang-frpc.service >/dev/null 2>&1; then
+  systemctl --user disable --now pangxiaopang-frpc.service >/dev/null 2>&1 || true
+  rm -f "$HOME/.config/systemd/user/pangxiaopang-frpc.service"
+  systemctl --user daemon-reload || true
+  say "已删除旧的 systemd 用户服务 pangxiaopang-frpc"
+fi
+pkill -f "$FRPC -c" 2>/dev/null || true
+say "frpc 将由 dsh-bridge 插件在 DSH 运行时自动启动"
 
 cat <<EOF
 

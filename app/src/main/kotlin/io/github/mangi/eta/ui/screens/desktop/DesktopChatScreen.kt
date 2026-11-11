@@ -61,6 +61,11 @@ import io.github.mangi.eta.ui.components.MiuixBackButton
 import io.github.mangi.eta.ui.model.AgentMessageUi
 import io.github.mangi.eta.ui.model.ConversationHistoryLoadState
 import io.github.mangi.eta.ui.model.PendingImageUi
+import io.github.mangi.eta.ui.model.PendingFileReferenceUi
+import io.github.mangi.eta.agent.model.AgentFileReference
+import io.github.mangi.eta.agent.model.AgentFileReferenceKind
+import io.github.mangi.eta.agent.remote.DesktopFile
+import io.github.mangi.eta.ui.components.LocalRemoteImageLoader
 import io.github.mangi.eta.ui.model.UserMessageUi
 import io.github.mangi.eta.ui.theme.EtaTheme
 import kotlinx.coroutines.Dispatchers
@@ -137,6 +142,9 @@ internal fun DesktopChatScreen(
     var input by remember(sessionId) { mutableStateOf(DesktopBridge.draft(sessionId)) }
     var inputSync by remember(sessionId) { mutableIntStateOf(0) }
     var pendingImages by remember(sessionId) { mutableStateOf(emptyList<PendingImageUi>()) }
+    var pendingFiles by remember(sessionId) { mutableStateOf(emptyList<PendingFileReferenceUi>()) }
+    val server by DesktopBridge.server.collectAsState()
+    val filesSupported = server?.supports("files") == true
     val unsupported = stringResource(R.string.desktop_action_unsupported)
     val readOnlyText = stringResource(R.string.desktop_subagent_readonly)
     var showSettings by remember(sessionId) { mutableStateOf(false) }
@@ -182,18 +190,24 @@ internal fun DesktopChatScreen(
             return
         }
         val images = pendingImages
+        val files = pendingFiles
         pendingImages = emptyList()
+        pendingFiles = emptyList()
         input = ""
         DesktopBridge.setDraft(sessionId, "")
         scope.launch {
             try {
                 val encoded = withContext(Dispatchers.IO) { images.mapNotNull { encodeImage(context, it) } }
-                DesktopBridge.prompt(sessionId, text, images = encoded, interrupt = interrupt, steer = steer)
+                val payload = withContext(Dispatchers.IO) { files.mapNotNull { readFile(context, it.reference) } }
+                if (payload.sumOf { it.base64.length } > MAX_FILE_BASE64) throw DesktopBridgeException("too-large", resources.getString(R.string.desktop_files_too_large))
+                DesktopBridge.prompt(sessionId, text, images = encoded, interrupt = interrupt, steer = steer, files = payload,
+                    previews = images.map { it.dataUrl.ifBlank { it.uri } })
             } catch (error: DesktopBridgeException) {
-                // 没发出去（多半是断线）：文字和图片放回输入框，不让用户重打一遍。
+                // 没发出去（多半是断线）：文字、图片和文件放回输入框，不让用户重选一遍。
                 context.toast(error.display(resources))
                 if (DesktopBridge.draft(sessionId).isEmpty()) setInput(text)
                 if (pendingImages.isEmpty()) pendingImages = images
+                if (pendingFiles.isEmpty()) pendingFiles = files
             }
         }
     }
@@ -320,7 +334,7 @@ internal fun DesktopChatScreen(
                     aboveInput = { aboveInput.value() },
                 )
             }
-            CompositionLocalProvider(LocalRemoteComposer provides remoteComposer) {
+            CompositionLocalProvider(LocalRemoteComposer provides remoteComposer, LocalRemoteImageLoader provides DesktopBridge::image) {
             AgentChatBody(
                 messages = messages,
                 modelPickerState = picker,
@@ -330,7 +344,7 @@ internal fun DesktopChatScreen(
                 reasoningEffort = efforts.second,
                 availableReasoningEfforts = efforts.first,
                 pendingImages = pendingImages,
-                pendingFileReferences = emptyList(),
+                pendingFileReferences = pendingFiles,
                 queuedMessages = queued,
                 inputSyncVersion = inputSync,
                 messageEdit = null,
@@ -370,10 +384,15 @@ internal fun DesktopChatScreen(
                     }
                 },
                 onRemoveImage = { id -> pendingImages = pendingImages.filterNot { it.id == id } },
-                onAttachFiles = { context.toast(attachmentsUnsupported) },
+                onAttachFiles = { uris ->
+                    if (!filesSupported) context.toast(attachmentsUnsupported)
+                    else pendingFiles = (pendingFiles + uris.map { uri ->
+                        PendingFileReferenceUi("file-${UUID.randomUUID()}", AgentFileReference(displayNameOf(context, uri), uri, AgentFileReferenceKind.File))
+                    }).take(8)
+                },
                 onAttachFolder = { context.toast(attachmentsUnsupported) },
                 onAttachFilePath = { context.toast(attachmentsUnsupported) },
-                onRemoveFileReference = {},
+                onRemoveFileReference = { id -> pendingFiles = pendingFiles.filterNot { it.id == id } },
                 onEditMessage = { id ->
                     // 桌面历史不可改写：把原文放回输入框，改完作为新消息发送。
                     (messages.firstOrNull { it.id == id } as? UserMessageUi)?.let { setInput(it.content) }
@@ -431,6 +450,20 @@ internal fun DesktopChatScreen(
         },
     )
 }
+
+/** 一次最多发约 10 MB（base64 后），插件单条消息上限 16 MB。 */
+private const val MAX_FILE_BASE64 = 14_000_000
+
+private fun displayNameOf(context: Context, uri: String): String = runCatching {
+    context.contentResolver.query(android.net.Uri.parse(uri), arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst()) cursor.getString(0) else null
+    }
+}.getOrNull() ?: uri.substringAfterLast('/').ifBlank { "file" }
+
+private fun readFile(context: Context, reference: AgentFileReference): DesktopFile? = runCatching {
+    val bytes = context.contentResolver.openInputStream(android.net.Uri.parse(reference.absolutePath))?.use { it.readBytes() } ?: return null
+    DesktopFile(reference.displayName, android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP))
+}.getOrNull()
 
 private fun Context.toast(text: String) {
     Toast.makeText(this, text, Toast.LENGTH_SHORT).show()

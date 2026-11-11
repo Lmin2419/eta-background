@@ -1857,4 +1857,10 @@
     <string name="desktop_stats_rounds">Turns and steps</string>
     <string name="overlay_open_conversation_short">Chat</string>
     <string name="overlay_supplement_short">Add</string>
+    <string name="desktop_files_too_large">Files are too large: send up to about 10 MB at a time</string>
+    <string name="desktop_diag_tunnel">Tunnel: %1$s</string>
+    <string name="desktop_tunnel_connected">connected to the relay server</string>
+    <string name="desktop_tunnel_starting">connecting…</string>
+    <string name="desktop_tunnel_absent">not set up on this computer (run setup-frpc)</string>
+    <string name="desktop_tunnel_error">failed: %1$s</string>
 </resources>

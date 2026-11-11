@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -301,12 +302,15 @@ internal object DesktopBridge {
         images: List<DesktopImage> = emptyList(),
         interrupt: Boolean = false,
         steer: Boolean = false,
+        files: List<DesktopFile> = emptyList(),
+        previews: List<String> = emptyList(),
     ) {
         val requestId = UUID.randomUUID().toString()
         val flow = stateFlow(sessionId)
         val running = flow.value.running
         if (targets[sessionId]?.parentId == null) DesktopLinkSettings.markWatched(sessionId)
-        flow.update { it.addEcho(DesktopEcho(requestId, text, queued = running && !interrupt && !steer)) }
+        val echoText = (listOf(text) + files.map { "[文件] ${it.name}" }).filter { it.isNotBlank() }.joinToString("\n")
+        flow.update { it.addEcho(DesktopEcho(requestId, echoText, queued = running && !interrupt && !steer, images = previews)) }
         try {
             if (interrupt && running) runCatching { cancel(sessionId) }
             if (targets[sessionId]?.parentId != null) {
@@ -334,13 +338,46 @@ internal object DesktopBridge {
                         JsonObject(mapOf("mediaType" to JsonPrimitive(image.mediaType), "data" to JsonPrimitive(image.base64)))
                     }))
                 }
+                if (files.isNotEmpty()) {
+                    put("files", JsonArray(files.map { file ->
+                        JsonObject(mapOf("name" to JsonPrimitive(file.name), "data" to JsonPrimitive(file.base64)))
+                    }))
+                }
             }
-            client.call("sessions.prompt", params, timeoutMs = if (images.isEmpty()) 20_000 else 60_000)
+            client.call("sessions.prompt", params, timeoutMs = if (images.isEmpty() && files.isEmpty()) 20_000 else 120_000)
         } catch (error: DesktopBridgeException) {
             flow.update { it.removeEcho(requestId) }
             throw error
         }
     }
+
+    private val imageCache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > 40
+    }
+
+    /**
+     * 电脑上一张图片附件的 data URL（按附件 id 缓存）。[encodedRef] 是投影里的
+     * `dsh-image:` 地址，带着附件引用；插件太旧或取图失败时返回空。
+     */
+    suspend fun image(encodedRef: String): String? {
+        val raw = encodedRef.removePrefix(IMAGE_SCHEME)
+        synchronized(imageCache) { imageCache[raw] }?.let { return it }
+        val ref = runCatching {
+            Json.parseToJsonElement(String(android.util.Base64.decode(raw, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP))) as JsonObject
+        }.getOrNull() ?: return null
+        val result = runCatching { client.call("attachments.image", mapOf("ref" to ref), timeoutMs = 60_000).jsonObject }.getOrNull() ?: return null
+        val media = result.string("mediaType") ?: "image/jpeg"
+        val data = result.string("data") ?: return null
+        val url = "data:$media;base64,$data"
+        synchronized(imageCache) { imageCache[raw] = url }
+        return url
+    }
+
+    /** 投影里图片附件的地址：`dsh-image:` + 附件引用 JSON 的 URL-safe base64。 */
+    fun imageAddress(ref: JsonObject): String =
+        IMAGE_SCHEME + android.util.Base64.encodeToString(ref.toString().toByteArray(), android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
+
+    const val IMAGE_SCHEME = "dsh-image:"
 
     suspend fun cancel(sessionId: String) {
         if (targets[sessionId]?.parentId != null) {
@@ -547,6 +584,7 @@ internal object DesktopBridge {
                 _turns.tryEmit(turn)
             }
             "error" -> if (sessionId != null) _errors.tryEmit(sessionId to push.string("message").orEmpty())
+            "tunnel" -> _server.value = _server.value?.copy(tunnel = DesktopBridgeProtocol.parseTunnel(push))
             "session-flags" -> sessionId?.let { applyFlags(it, push.bool("archived") == true, push.bool("pinned") == true) }
         }
     }

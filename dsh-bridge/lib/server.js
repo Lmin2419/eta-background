@@ -43,6 +43,7 @@ export function startServer({ bridge, token, host, port, logger }) {
         version: bridge.host.version,
         runtime: RUNTIME,
         dsh: { version: bridge.host.dshVersion ?? null, api: bridge.hostApi() },
+        tunnel: bridge.host.tunnel?.() ?? null,
       }))
       return
     }

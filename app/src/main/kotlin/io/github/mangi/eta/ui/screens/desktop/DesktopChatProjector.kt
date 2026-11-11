@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.screens.desktop
 
+import io.github.mangi.eta.agent.remote.DesktopBridge
 import io.github.mangi.eta.agent.remote.DesktopBlock
 import io.github.mangi.eta.agent.remote.DesktopItem
 import io.github.mangi.eta.agent.remote.DesktopLiveBlock
@@ -118,7 +119,7 @@ internal object DesktopChatProjector {
         val out = ArrayList<AgentChatMessageUi>(committed.size + 8)
         out += committed
         for (echo in state.echoes) {
-            if (!echo.queued) out += UserMessageUi(id = "echo-${echo.requestId}", content = echo.text)
+            if (!echo.queued) out += UserMessageUi(id = "echo-${echo.requestId}", content = echo.text, images = echo.images)
         }
         state.live?.let { live -> out += liveMessages(live.attemptId, live.blocks) }
         // 已插队的消息：桌面把它显示为已发出、等当前这一步结束送达的气泡，手机同样放在对话末尾。
@@ -254,12 +255,14 @@ internal object DesktopChatProjector {
 
     private fun userMessage(item: DesktopItem.User, labels: Labels): UserMessageUi {
         val extras = buildList {
-            if (item.images > 0) add("[${labels.image} ×${item.images}]")
+            // 有附件引用的图片直接显示缩略图；老插件只报数量时保留文字标记。
+            val unseen = item.images - item.imageRefs.size
+            if (unseen > 0) add("[${labels.image} ×$unseen]")
             item.files.forEach { add("[${labels.attachment}] $it") }
         }
         val text = item.text.ifBlank { if (item.source == "retry") labels.retryPrompt else "" }
         val content = (listOf(text) + extras).filter { it.isNotBlank() }.joinToString("\n")
-        return UserMessageUi(id = "u-${item.seq}", content = content)
+        return UserMessageUi(id = "u-${item.seq}", content = content, images = item.imageRefs.map(DesktopBridge::imageAddress))
     }
 
     private fun assistantMessages(

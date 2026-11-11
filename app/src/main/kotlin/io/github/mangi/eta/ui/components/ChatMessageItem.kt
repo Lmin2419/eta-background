@@ -50,6 +50,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -136,9 +137,18 @@ import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-internal fun rememberDataUrlBitmap(dataUrl: String) = remember(dataUrl) {
-    decodeDataUrlBitmap(dataUrl)
+internal fun rememberDataUrlBitmap(dataUrl: String): ImageBitmap? {
+    val loader = LocalRemoteImageLoader.current
+    if (loader == null || !dataUrl.startsWith("dsh-image:")) return remember(dataUrl) { decodeDataUrlBitmap(dataUrl) }
+    // 电脑会话的图片：按需向电脑取图，在后台线程解码。
+    val bitmap by produceState<ImageBitmap?>(null, dataUrl) {
+        value = loader(dataUrl)?.let { url -> kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { decodeDataUrlBitmap(url) } }
+    }
+    return bitmap
 }
+
+/** 电脑会话提供的取图函数：把 `dsh-image:` 地址换成 data URL。本机会话为空。 */
+internal val LocalRemoteImageLoader = androidx.compose.runtime.staticCompositionLocalOf<(suspend (String) -> String?)?> { null }
 
 internal fun decodeDataUrlBitmap(dataUrl: String): ImageBitmap? {
     val base64 = dataUrl.substringAfter("base64,", "")
