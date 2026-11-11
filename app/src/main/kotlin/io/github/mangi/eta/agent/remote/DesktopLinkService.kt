@@ -83,7 +83,12 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
             combine(DesktopBridge.client.state, DesktopBridge.sessions, DesktopLinkSettings.state) { state, sessions, prefs ->
                 summarize(state, sessions, prefs)
             }.distinctUntilChanged().collect { summary ->
-                notificationManager().notify(ONGOING_ID, buildOngoing(summary))
+                // 常驻通知本身从不提升为流体云；流体云是单独一条只在运行时存在的通知，
+                // 运行结束直接取消它。同一条通知从「提升」改回普通时，ColorOS 不一定收起胶囊，
+                // 会出现任务完成提醒弹出、旧流体云还挂着的情况。
+                notificationManager().notify(ONGOING_ID, buildOngoing(summary.copy(fluidCloud = false)))
+                if (summary.fluidCloud) notificationManager().notify(LIVE_ID, buildLive(summary))
+                else notificationManager().cancel(LIVE_ID)
                 updateGlow(summary.glow)
             }
         }
@@ -104,6 +109,7 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         reminders?.stop()
         updateGlow(false)
+        notificationManager().cancel(LIVE_ID)
         scope.cancel()
         if (started) DesktopBridge.release()
         started = false
@@ -154,6 +160,25 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
             glow = prefs.glow && active,
             detail = detail,
         )
+    }
+
+    /** 电脑上有任务在跑时的流体云 / 实时活动通知（Android 16 起系统提升为胶囊）。 */
+    private fun buildLive(summary: LinkSummary): Notification {
+        val builder = Notification.Builder(this, CHANNEL_ONGOING)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(getString(R.string.desktop_link_running, summary.running.size))
+            .setContentText(summary.running.take(3).joinToString(" · "))
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setShowWhen(false)
+            .setCategory(Notification.CATEGORY_PROGRESS)
+            .setContentIntent(DesktopLinkNav.openIntent(this, null, REQUEST_OPEN_LIST))
+        if (Build.VERSION.SDK_INT >= 36) {
+            builder.setStyle(Notification.ProgressStyle().setProgressIndeterminate(true))
+                .setShortCriticalText(getString(R.string.desktop_link_short, summary.running.size))
+            builder.extras.putBoolean("android.requestPromotedOngoing", true)
+        }
+        return builder.build()
     }
 
     private fun buildOngoing(summary: LinkSummary): Notification {
@@ -262,6 +287,7 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
         const val CHANNEL_REMINDERS = "desktop_reminders"
         const val CHANNEL_REMINDERS_SILENT = "desktop_reminders_silent"
         private const val ONGOING_ID = 0x0D5B0001
+        private const val LIVE_ID = 0x0D5B0002
         private const val ACTION_DISABLE = "io.github.mangi.eta.desktop.DISABLE"
         private const val REQUEST_OPEN_LIST = 7100
         private const val REQUEST_DISABLE = 7101

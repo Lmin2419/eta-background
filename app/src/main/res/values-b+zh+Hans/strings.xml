@@ -1840,4 +1840,5 @@
     <string name="desktop_tunnel_absent">这台电脑没有配置（运行 setup-frpc）</string>
     <string name="desktop_tunnel_error">失败：%1$s</string>
     <string name="eta_new_chat_short">新对话</string>
+    <string name="desktop_idle_hint">给电脑发消息…</string>
 </resources>

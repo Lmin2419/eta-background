@@ -126,6 +126,8 @@ private val InputContainerShape = RoundedCornerShape(24.dp)
  */
 internal data class RemoteComposer(
     val workingHint: String,
+    /** 空闲时的占位文字（「给电脑发消息…」），不再显示本机的「给胖小胖发消息」。 */
+    val idleHint: String? = null,
     val steerLabel: String = "",
     /** 发送时直接插队的入口；为空时不显示（插队改在排队条上点）。 */
     val onSteerSubmit: ((String) -> Unit)? = null,
@@ -357,6 +359,7 @@ internal fun AgentChatInputBar(
                                 character != null -> stringResource(R.string.chat_character_input_hint, character.characterName)
                                 // 电脑会话：执行的是电脑上的 Agent，不是胖小胖本机。
                                 remoteComposer != null && isStreaming -> remoteComposer.workingHint
+                                remoteComposer?.idleHint != null -> remoteComposer.idleHint
                                 isStreaming -> stringResource(R.string.chat_eta_working)
                                 else -> stringResource(R.string.eta_input_placeholder)
                             },

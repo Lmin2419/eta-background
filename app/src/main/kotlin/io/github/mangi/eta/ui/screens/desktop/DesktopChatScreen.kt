@@ -330,6 +330,7 @@ internal fun DesktopChatScreen(
             val remoteComposer = remember(sessionId, isChild) {
                 RemoteComposer(
                     workingHint = resources.getString(R.string.desktop_working_hint),
+                    idleHint = resources.getString(R.string.desktop_idle_hint),
                     onDraftChange = { text -> DesktopBridge.setDraft(sessionId, text) },
                     aboveInput = { aboveInput.value() },
                 )
