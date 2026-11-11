@@ -120,7 +120,7 @@ internal fun ComposerActionButton(
         Box(Modifier.size(40.dp).background(background, SendButtonShape).drawWithContent {
             drawContent()
             if (flash.value > 0f) drawRoundRect(Brush.sweepGradient(*aurora.stops), alpha = flash.value, style = Stroke(2.dp.toPx()),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()))
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.minDimension / 2))
         }, contentAlignment = Alignment.Center) {
             // 图标变形：旧图标缩小淡出，新图标带一点回弹地放大出现（麦克风 → 箭头 → 停止）。
             androidx.compose.animation.AnimatedContent(
@@ -143,4 +143,4 @@ internal fun ComposerActionButton(
     }
 }
 
-private val SendButtonShape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+private val SendButtonShape = CircleShape

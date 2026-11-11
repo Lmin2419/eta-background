@@ -78,7 +78,7 @@ internal val LocalPaneManagement = staticCompositionLocalOf { PaneManagementActi
 internal val LocalPaneWorkspace = staticCompositionLocalOf { PaneWorkspaceActions() }
 
 @Composable
-internal fun conversationPaneContainerColor(): Color = EtaTheme.colors.surface
+internal fun conversationPaneContainerColor(): Color = EtaTheme.colors.surfaceSunken
 
 @Composable
 internal fun ConversationPanePanel(
@@ -117,7 +117,8 @@ internal fun ConversationPanePanel(
     val today = LocalDate.now()
     val sections = remember(state.conversations, state.groups, state.searchQuery, archived, today) { projectConversationSections(state, archived, today) }
     val groupNames = remember(state.groups) { state.groups.associate { it.id to it.name } }
-    Column(modifier.width(width).fillMaxHeight().background(EtaTheme.colors.surface)
+    // 侧栏是浅灰底（与 Claude 一致），主页面纯白；选中行是更深一档的灰色胶囊。
+    Column(modifier.width(width).fillMaxHeight().background(EtaTheme.colors.surfaceSunken)
         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))) {
         AnimatedContent(selecting, transitionSpec = { fadeIn(tween(motion.short, easing = motion.standard)) togetherWith fadeOut(tween(motion.exitDuration(180), easing = motion.accelerate)) }, label = "selectionToolbar") { mode ->
             if (mode) ConversationSelectionHeader(selectedIds.size, visibleIds.isNotEmpty() && selectedIds.containsAll(visibleIds),

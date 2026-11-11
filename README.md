@@ -6,13 +6,13 @@
 
 ## 最新测试版本
 
-**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111103`**，引擎仍为 `20261105-e49-parallel-observe`。
+**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111104`**，引擎仍为 `20261105-e49-parallel-observe`。
 
-纯白配色与 Claude 式侧栏：电脑上最近的会话直接混排进侧栏，点开即进；修复电脑会话占位文字、任务完成后流体云不消失。电脑端插件仍为 0.5.0。
+去掉残留暖色，换成 Claude 配色（纯白页面、灰色侧栏、黑色主按钮、珊瑚橘强调色）；新的简笔猫猫头图标；电脑会话混排进侧栏。电脑端插件仍为 0.5.0。
 
-安装包 **`Pangxiaopang-3.3.5-2026111103.apk`**。
+安装包 **`Pangxiaopang-3.3.5-2026111104.apk`**。
 
-**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026111103)
+**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026111104)
 
 以该提交的 CI 全绿和签名 Release 为发布门槛；自动测试不代替真实手机上的暂停、续指令和后台页面验收。
 

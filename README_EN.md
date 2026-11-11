@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111103`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111104`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-White pages and a Claude-style side pane: recent computer sessions appear in the side pane and open directly. Fixes the computer chat placeholder and a fluid cloud that lingered after tasks finished. The plugin stays at 0.5.0.
+Warm tones removed in favour of a Claude-like palette (white pages, grey side pane, black primary buttons, one coral accent), a new simple cat-head icon, and computer sessions in the side pane. The plugin stays at 0.5.0.
 
-APK: **`Pangxiaopang-3.3.5-2026111103.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026111104.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111103)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111104)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

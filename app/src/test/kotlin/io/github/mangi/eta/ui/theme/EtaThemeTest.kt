@@ -41,9 +41,9 @@ import top.yukonga.miuix.kmp.theme.lightColorScheme
 class EtaThemeTest {
     @Test fun neutralPaletteAndBrandMatchDesignInBothModes() {
         assertEquals(Color.White, lightEtaColors().canvas)
-        assertEquals(Color(0xFFB25A0E), lightEtaColors().accent)
+        assertEquals(Color(0xFFB4532F), lightEtaColors().accent)
         assertEquals(Color(0xFF1C1C1C), darkEtaColors().canvas)
-        assertEquals(Color(0xFFF0A65A), darkEtaColors().accent)
+        assertEquals(Color(0xFFE38D6F), darkEtaColors().accent)
         listOf(lightEtaColors(), darkEtaColors()).forEach { palette ->
             val bridged = palette.toMiuixColors(lightColorScheme())
             assertEquals(palette.canvas, bridged.background)

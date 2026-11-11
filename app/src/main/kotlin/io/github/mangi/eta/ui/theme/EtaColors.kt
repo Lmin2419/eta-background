@@ -43,7 +43,7 @@ data class EtaColors(
     val onStatus: Color get() = Color.White
     val toastBackground: Color get() = if (isDark) Color(0xFFF3EDE4) else Color(0xFF2A241D)
     val toastForeground: Color get() = if (isDark) Color(0xFF201A12) else Color(0xFFF3EDE4)
-    val toastAction: Color get() = if (isDark) Color(0xFF8A4507) else Color(0xFFF8C894)
+    val toastAction: Color get() = if (isDark) Color(0xFF9A4426) else Color(0xFFF2B8A2)
     val shadow: Color get() = Color(0xFF101220)
     val tileBlue: Color get() = Color(0xFF3B82F6)
     val tileCaramel: Color get() = Color(0xFFD27A2C)
@@ -64,14 +64,7 @@ data class EtaColors(
      * 图标只保留三种颜色：焦糖（默认）、绿色（与「正常/完成」相关）、石板灰（系统/次要）。
      * 其余分类色一律收拢到焦糖。深色模式提亮一些。
      */
-    fun tileForeground(color: Color): Color {
-        val hue = when (color) {
-            tileGreen, tileTeal -> tileGreen
-            tileSlate -> tileSlate
-            else -> tileCaramel
-        }
-        return if (isDark) lerp(hue, Color.White, 0.25f) else hue
-    }
+    fun tileForeground(@Suppress("UNUSED_PARAMETER") color: Color): Color = textPrimary
 
     fun withAccent(primary: Color, soft: Color, onSoft: Color, onPrimary: Color = onAccent): EtaColors =
         copy(accent = primary, accentSoft = soft, onAccentSoft = onSoft, onAccent = onPrimary)
@@ -79,10 +72,11 @@ data class EtaColors(
 
 /** 胖小胖 warm aurora: honey → peach → rose → lavender. Only for "AI is working". */
 object EtaAurora {
-    val honey = Color(0xFFFFC861)
-    val peach = Color(0xFFFF9F7A)
-    val rose = Color(0xFFF27BA8)
-    val lavender = Color(0xFFB9A3FF)
+    // 阶段 12：流光只用同一种珊瑚色的深浅（与 Claude 的橘色一致），不再是蜂蜜→玫瑰→薰衣草彩虹。
+    val honey = Color(0xFFF2B8A2)
+    val peach = Color(0xFFE38D6F)
+    val rose = Color(0xFFD97757)
+    val lavender = Color(0xFFB85A3A)
     val stops get() = arrayOf(0f to honey, 0.35f to peach, 0.70f to rose, 1f to lavender)
     const val angleDegrees = 100f
 }
@@ -91,12 +85,13 @@ fun lightEtaColors() = EtaColors(
     isDark = false,
     // 阶段 12：页面回到纯白与中性灰，暖色只留在焦糖主色（主按钮、选中、运行中）上。
     canvas = Color.White, surface = Color.White,
-    surfaceRaised = Color.White, surfaceSunken = Color(0xFFF4F4F4),
+    surfaceRaised = Color.White, surfaceSunken = Color(0xFFF5F5F3),
     outline = Color(0xFFECECEC), outlineStrong = Color(0xFFDADADA),
     textPrimary = Color(0xFF1A1A1A), textSecondary = Color(0xFF5C5C5C), textTertiary = Color(0xFF6B6B6B),
     scrim = Color.Black.copy(alpha = 0.40f), pressed = Color.Black.copy(alpha = 0.06f),
-    accent = Color(0xFFB25A0E), onAccent = Color.White,
-    accentSoft = Color(0xFFFCEAD5), onAccentSoft = Color(0xFF8A4507),
+    // 主色是 Claude 式珊瑚色（文字可读的深一档）；「柔和主色」改为中性灰，选中行、Tonal 按钮不再泛橘。
+    accent = Color(0xFFB4532F), onAccent = Color.White,
+    accentSoft = Color(0xFFE9E9E6), onAccentSoft = Color(0xFF1A1A1A),
     // "Needs you" is violet so it never reads as the caramel accent.
     attention = Color(0xFF6D46DB), attentionSoft = Color(0xFFEFEAFF),
     success = Color(0xFF1E8E4E), successSoft = Color(0xFFE3F5EA),
@@ -111,8 +106,8 @@ fun darkEtaColors() = EtaColors(
     outline = Color(0xFF383838), outlineStrong = Color(0xFF4A4A4A),
     textPrimary = Color(0xFFF2F2F2), textSecondary = Color(0xFFC4C4C4), textTertiary = Color(0xFFA8A8A8),
     scrim = Color.Black.copy(alpha = 0.56f), pressed = Color.White.copy(alpha = 0.08f),
-    accent = Color(0xFFF0A65A), onAccent = Color(0xFF2A1600),
-    accentSoft = Color(0xFF3D2B17), onAccentSoft = Color(0xFFF8C894),
+    accent = Color(0xFFE38D6F), onAccent = Color(0xFF2A1208),
+    accentSoft = Color(0xFF353533), onAccentSoft = Color(0xFFF2F2F2),
     attention = Color(0xFFB8A2FF), attentionSoft = Color(0xFF2A2342),
     success = Color(0xFF5CD08A), successSoft = Color(0xFF13301F),
     danger = Color(0xFFFF7A7A), dangerSoft = Color(0xFF3A1717),

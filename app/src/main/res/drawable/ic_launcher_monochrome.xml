@@ -1,18 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Themed-icon layer: 胖小胖 cat-head silhouette (small round ears, round face, eye cut-outs). -->
+<!-- Themed icon: the cat-head silhouette with eye holes; the system tints the alpha channel. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group
-        android:scaleX="2.6"
-        android:scaleY="2.6"
-        android:translateX="22.8"
-        android:translateY="20.46">
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:fillType="evenOdd"
-            android:pathData="M4.2,10.2 C3.9,8.2 4.4,6.4 5.6,5.4 C6.9,5.6 8.1,6.3 8.9,7.2 C9.9,6.9 10.9,6.8 12,6.8 C13.1,6.8 14.1,6.9 15.1,7.2 C15.9,6.3 17.1,5.6 18.4,5.4 C19.6,6.4 20.1,8.2 19.8,10.2 C21,11.3 21.6,12.7 21.6,14.2 C21.6,17.9 17.3,20.4 12,20.4 C6.7,20.4 2.4,17.9 2.4,14.2 C2.4,12.7 3,11.3 4.2,10.2 Z M7.2,13.4 a1.7,1.8 0 1,0 3.4,0 a1.7,1.8 0 1,0 -3.4,0 Z M13.4,13.4 a1.7,1.8 0 1,0 3.4,0 a1.7,1.8 0 1,0 -3.4,0 Z" />
-    </group>
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd" android:pathData="M30,52 C29,44 30,36 34,30 C38,32 43,36 46,39 C48.5,38.4 51.2,38 54,38 C56.8,38 59.5,38.4 62,39 C65,36 70,32 74,30 C78,36 79,44 78,52 C81,55.5 82.5,59.5 82.5,63.5 C82.5,73.5 70,80.5 54,80.5 C38,80.5 25.5,73.5 25.5,63.5 C25.5,59.5 27,55.5 30,52 Z M40.9,60 a2.6,3.2 0 1,0 5.2,0 a2.6,3.2 0 1,0 -5.2,0 Z M61.9,60 a2.6,3.2 0 1,0 5.2,0 a2.6,3.2 0 1,0 -5.2,0 Z" />
 </vector>

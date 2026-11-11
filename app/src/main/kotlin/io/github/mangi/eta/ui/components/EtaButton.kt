@@ -48,7 +48,8 @@ internal fun EtaButton(
 ) {
     val palette = EtaTheme.colors
     val (background, foreground) = when (kind) {
-        EtaButtonKind.Primary -> palette.accent to palette.onAccent
+        // 主按钮是黑底白字（深色模式反过来），与 Claude 一致；珊瑚色只用于发送键和品牌元素。
+        EtaButtonKind.Primary -> palette.textPrimary to palette.canvas
         EtaButtonKind.Tonal -> palette.accentSoft to palette.onAccentSoft
         EtaButtonKind.Secondary -> Color.Transparent to palette.textPrimary
         EtaButtonKind.Ghost -> Color.Transparent to palette.accent
