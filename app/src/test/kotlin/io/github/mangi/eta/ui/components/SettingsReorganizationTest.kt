@@ -140,10 +140,12 @@ class SettingsReorganizationTest {
                 panel.scrollDownUntil({ sourceCode in panel.visibleTexts() }, maxSteps = 36),
             )
 
-            val firstGroup = context.getString(R.string.eta_background_ready)
+            // 阶段 10：就绪卡标题改为一句状态（检查中 / 全部就绪 / 还差 N 项）。
+            val readinessLines = setOf(context.getString(R.string.eta_ready_checking_line), context.getString(R.string.eta_ready_all_line)) +
+                (0..5).map { context.getString(R.string.eta_ready_pending_line, it) }
             assertTrue(
                 "top readiness area not restored after dragging back",
-                panel.scrollUpUntil({ firstGroup in panel.visibleTexts() }, maxSteps = 40),
+                panel.scrollUpUntil({ panel.visibleTexts().any { it in readinessLines } }, maxSteps = 40),
             )
         } finally {
             panel.close()

@@ -1,14 +1,11 @@
 package io.github.mangi.eta.ui.components
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import top.yukonga.miuix.kmp.basic.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,7 +33,7 @@ fun PermissionHealthCard(
     // 全部就绪时收成一行；检查中显示运行圈；有缺项时只列出缺的那几项。
     EtaCard(modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), onClick = onOpenPermissions,
         insideMargin = PaddingValues(horizontal = 16.dp, vertical = if (allReady || checking) 14.dp else 16.dp)) {
-        Column(Modifier.animateContentSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 StatusRing(
                     when { checking -> TaskVisualStatus.Running; allReady -> TaskVisualStatus.Success; else -> TaskVisualStatus.Attention },
@@ -59,11 +56,10 @@ fun PermissionHealthCard(
                         })
                         val description = if (item.id == "engine") stringResource(R.string.eta_engine_not_ready) else item.status.label()
                         Row(Modifier.background(EtaTheme.colors.attentionSoft, EtaTheme.shapes.radiusFull)
-                            .semantics(mergeDescendants = true) { contentDescription = "$spokenTitle: $description" }
                             .padding(horizontal = 10.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            StatusRing(TaskVisualStatus.Attention, size = 12.dp, contentDescription = null)
-                            Text(stringResource(item.title), maxLines = 1, style = EtaTheme.type.caption, color = EtaTheme.colors.attentionText)
+                            StatusRing(TaskVisualStatus.Attention, size = 12.dp, contentDescription = "$spokenTitle: $description")
+                            Text(stringResource(item.title), maxLines = 1, softWrap = false, style = EtaTheme.type.caption, color = EtaTheme.colors.attentionText)
                         }
                     }
                 }

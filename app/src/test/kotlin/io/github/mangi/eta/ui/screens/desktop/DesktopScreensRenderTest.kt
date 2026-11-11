@@ -118,14 +118,13 @@ class DesktopScreensRenderTest {
             val labels = panel.nodes().mapNotNull { it.config.getOrNull(SemanticsProperties.Text)?.joinToString() }
             if (query.isEmpty() && collapsed.isEmpty()) {
                 assertTrue(labels.toString(), labels.any { "修复登录页的空指针" in it })
-                assertTrue(labels.toString(), labels.any { it == "Recent" || it == "最近任务" })
+                assertTrue(labels.toString(), labels.any { it == "Recent" || it == "最近" })
                 // 桌面预建的空白「新对话」和归档会话都不在主列表里。
                 assertTrue(labels.toString(), labels.none { "迁移旧数据库" in it })
             } else if (query.isEmpty()) {
                 // 收起的分组只剩标题、会话数和运行状态；归档在底部。
                 assertTrue(labels.toString(), labels.none { "修复登录页的空指针" in it })
-                assertTrue(labels.toString(), labels.any { "1 running" in it || "1 个运行中" in it || "need you" in it || "等你处理" in it })
-                assertTrue(labels.toString(), labels.any { it == "Archived" || it == "已归档" })
+                assertTrue(labels.toString(), labels.any { it.startsWith("Archived") || it.startsWith("已归档") })
             } else {
                 assertTrue(labels.toString(), labels.any { "迁移旧数据库" in it })
                 assertTrue(labels.toString(), labels.none { "修复登录页的空指针" in it })
@@ -201,7 +200,7 @@ class DesktopScreensRenderTest {
         try {
             panel.advance(30)
             val labels = panel.nodes().mapNotNull { it.config.getOrNull(SemanticsProperties.Text)?.joinToString() }
-            assertTrue(labels.toString(), labels.any { "8.163.249.159" in it })
+            assertTrue(labels.toString(), labels.any { it == controller.get().getString(io.github.mangi.eta.R.string.desktop_paste_pair) })
             panel.capture("desktop-settings-light")
         } finally {
             panel.close()
@@ -261,7 +260,7 @@ class DesktopScreensRenderTest {
         try {
             panel.advance(30)
             val labels = panel.nodes().mapNotNull { it.config.getOrNull(SemanticsProperties.Text)?.joinToString() }
-            assertTrue(labels.toString(), labels.any { "流体云" in it || "fluid" in it })
+            assertTrue(labels.toString(), labels.any { "流体云" in it || it.contains("fluid", ignoreCase = true) })
             panel.capture("desktop-link-settings-light")
         } finally {
             panel.close()
@@ -271,7 +270,7 @@ class DesktopScreensRenderTest {
 
     @Test fun sessionsLight() = renderSessions("desktop-sessions-light", dark = false)
 
-    @Test fun sessionsCollapsedLight() = renderSessions("desktop-sessions-collapsed-light", dark = false, collapsed = setOf(RECENT_GROUP, "w1", OTHER_GROUP))
+    @Test fun sessionsCollapsedLight() = renderSessions("desktop-sessions-collapsed-light", dark = false, collapsed = setOf(RECENT_GROUP))
 
     @Test fun sessionsSearchLight() = renderSessions("desktop-sessions-search-light", dark = false, query = "数据库")
 

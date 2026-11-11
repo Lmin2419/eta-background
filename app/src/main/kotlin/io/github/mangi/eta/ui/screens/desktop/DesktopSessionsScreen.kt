@@ -378,7 +378,7 @@ internal fun DesktopSessionsContent(
             }
         }
         for (group in groups) {
-            val open = (group.key in toggled) != showRecent
+            val open = (group.key in toggled) == showRecent
             item(key = "h-${group.key}", contentType = "header") {
                 DesktopGroupHeader(
                     title = group.workspace?.title ?: stringResource(R.string.desktop_other_sessions),

@@ -131,22 +131,29 @@ class Stage8LayoutTest {
             panel.advance(30)
             val nodes = listOf(R.string.eta_prompt_coffee, R.string.eta_prompt_notifications,
                 R.string.eta_prompt_battery, R.string.eta_prompt_phones).map { text(panel, owner.get().getString(it)) }
-            nodes.forEach { n -> assertFalse("full preset summary: ${n.config[SemanticsProperties.Text]}", layout(n).hasVisualOverflow) }
+            // 阶段 10：建议改为单行列表，说明可省略，四行等高。
+            nodes.forEach { n -> assertEquals(1, layout(n).lineCount) }
             fun card(node: SemanticsNode): SemanticsNode = if (node.config.getOrNull(SemanticsActions.OnClick) != null) node else card(requireNotNull(node.parent))
-            nodes.chunked(2).forEach { assertEquals(card(it[0]).boundsInRoot.height, card(it[1]).boundsInRoot.height, 1f) }
+            nodes.drop(1).forEach { assertEquals(card(nodes[0]).boundsInRoot.height, card(it).boundsInRoot.height, 1f) }
         } finally { panel.close(); owner.pause().stop().destroy() }
     }
 
     @Test @Config(qualifiers = "en-rUS-w393dp-h851dp-xhdpi")
     fun s10_5_englishReadinessHasShortSingleLineLabelsAndFullSpokenNames() {
         val owner = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
-        val panel = Stage3TestPanel(owner.get()) { PermissionHealthCard(PermissionHealthUiState(emptyList()), {}, engineReady = true) }
+        // 阶段 10：只列缺的项，所以给出四项都缺的状态（空列表表示还在检查）。
+        val missing = listOf("root", "accessibility", "overlay", "notifications").map {
+            io.github.mangi.eta.ui.model.PermissionHealthItemUi(it, it, "", io.github.mangi.eta.ui.model.PermissionStatusUi.Missing, null)
+        }
+        val panel = Stage3TestPanel(owner.get()) { PermissionHealthCard(PermissionHealthUiState(missing), {}, engineReady = true) }
         try {
             panel.advance(20)
-            for (label in listOf("Root", "A11y", "Overlay", "Alerts", "Engine")) {
+            // 阶段 10：就绪卡只列出缺的项；引擎已就绪，不再显示。
+            for (label in listOf("Root", "A11y", "Overlay", "Alerts")) {
                 val matches = panel.nodes().filter { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == label } == true }
                 assertEquals("short readiness label $label", 1, matches.size)
-                val result = layout(matches.single()); assertEquals(1, result.lineCount); assertFalse("$label: ${result.size}, overflow=${result.hasVisualOverflow}", result.hasVisualOverflow)
+                // 缺项 chip 在横向滚动行里，宽度不受限；只核对单行。
+                val result = layout(matches.single()); assertEquals(1, result.lineCount)
             }
             val descriptions = panel.nodes().flatMap { it.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty() }
             assertTrue(descriptions.any { it.startsWith("Accessibility:") }); assertTrue(descriptions.any { it.startsWith("Notifications:") })
@@ -173,7 +180,8 @@ class Stage8LayoutTest {
         try {
             panel.advance(60)
             val density = owner.get().resources.displayMetrics.density
-            for (value in listOf("● 任务一", "○ 任务二", owner.get().getString(R.string.overlay_open_conversation), owner.get().getString(R.string.overlay_supplement))) {
+            // 打开对话、补充已并入下方的图标按钮排；这里核对任务行的触控高度。
+            for (value in listOf("● 任务一", "○ 任务二")) {
                 val n = text(panel, value)
                 assertNotNull(n.config.getOrNull(SemanticsActions.OnClick))
                 assertTrue("$value target ${n.boundsInRoot.height / density}dp", n.boundsInRoot.height / density >= 47.9f)
