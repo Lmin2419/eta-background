@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.markdown
 
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
@@ -337,37 +338,88 @@ internal class SmoothTextRevealNode(
         }
     }
 
+    // 流式收尾：显现追上目标后，尾巴再用约 180ms 淡完，不在最后一帧「啪」地变实。
+    private var settleLayout: TextLayoutResult? = null
+    private var settle = 0f
+    private var settleJob: kotlinx.coroutines.Job? = null
+    private var sawPartial = false
+    private val tailPaths = arrayOfNulls<Path>(TailBuckets)
+    private var tailKey: Any? = null
+    private var tailStart = -1
+
     override fun ContentDrawScope.draw() {
         val snapshot = state.drawSnapshot() ?: return
         val contentScope = this
         val targetCount = snapshot.boundaries.lastIndex
-        if (targetCount <= 0 || snapshot.progress >= targetCount) {
+        if (targetCount <= 0) {
             drawContent()
             return
         }
-
-        val fullCount = floor(snapshot.progress).toInt().coerceIn(0, targetCount)
-        ensurePaths(snapshot, fullCount)
+        // 正文像墨水一样显出：最前面 TailWidth 个字是一段由浅到深的渐变尾巴，而不是逐字硬切。
+        var progress = snapshot.progress
+        if (progress >= targetCount) {
+            // 没亲眼看到它显现（滚回已完成的回答）就直接画全，不重放收尾。
+            if (!sawPartial) {
+                drawContent()
+                return
+            }
+            if (settleLayout !== snapshot.layoutResult) startSettle(snapshot.layoutResult)
+            if (settle >= TailWidth) {
+                drawContent()
+                return
+            }
+            progress = targetCount + settle
+        } else {
+            sawPartial = true
+        }
+        val solidCount = floor(progress - TailWidth).toInt().coerceIn(0, targetCount)
+        ensurePaths(snapshot, solidCount)
         cachedFullPath?.let { path ->
             clipPath(path) { contentScope.drawContent() }
         }
-
-        val partialAlpha = (snapshot.progress - fullCount).coerceIn(0f, 1f)
-        if (partialAlpha > 0f) {
-            cachedNextPath?.let { path ->
-                clipPath(path) {
-                    alphaPaint.alpha = partialAlpha
-                    drawContext.canvas.saveLayer(
-                        Rect(Offset.Zero, size),
-                        alphaPaint,
-                    )
-                    try {
-                        contentScope.drawContent()
-                    } finally {
-                        drawContext.canvas.restore()
-                    }
+        ensureTail(snapshot, solidCount)
+        for (bucket in 0 until TailBuckets) {
+            val path = tailPaths[bucket] ?: continue
+            val middle = solidCount + bucket * TailBucketSize + TailBucketSize / 2f
+            val alpha = ((progress - middle) / TailWidth).coerceIn(0f, 1f)
+            if (alpha <= 0f) continue
+            clipPath(path) {
+                alphaPaint.alpha = alpha
+                drawContext.canvas.saveLayer(Rect(Offset.Zero, size), alphaPaint)
+                try {
+                    contentScope.drawContent()
+                } finally {
+                    drawContext.canvas.restore()
                 }
             }
+        }
+    }
+
+    private fun startSettle(layout: TextLayoutResult) {
+        settleLayout = layout
+        settle = 0f
+        settleJob?.cancel()
+        if (!isAttached) { settle = TailWidth.toFloat(); return }
+        settleJob = coroutineScope.launch {
+            val started = withFrameNanos { it }
+            while (settle < TailWidth) {
+                val now = withFrameNanos { it }
+                settle = ((now - started) / 1_000_000f / SettleMillis * TailWidth).coerceAtMost(TailWidth.toFloat())
+                invalidateDraw()
+            }
+        }
+    }
+
+    private fun ensureTail(snapshot: RevealDrawSnapshot, solidCount: Int) {
+        if (tailKey === snapshot.layoutResult && tailStart == solidCount) return
+        tailKey = snapshot.layoutResult
+        tailStart = solidCount
+        val textLength = snapshot.layoutResult.layoutInput.text.length
+        for (bucket in 0 until TailBuckets) {
+            val from = solidCount + bucket * TailBucketSize
+            val start = snapshot.boundaries.getOrNull(from)?.coerceIn(0, textLength)
+            val end = snapshot.boundaries.getOrNull((from + TailBucketSize).coerceAtMost(snapshot.boundaries.lastIndex))?.coerceIn(0, textLength)
+            tailPaths[bucket] = if (start != null && end != null && end > start) snapshot.layoutResult.getPathForRange(start, end) else null
         }
     }
 
@@ -416,6 +468,9 @@ internal class SmoothTextRevealNode(
     }
 
     private fun clearPathCache() {
+        tailKey = null
+        tailStart = -1
+        tailPaths.fill(null)
         cachedLayoutResult = null
         cachedFullCount = -1
         cachedFullPath = null
@@ -535,3 +590,9 @@ private const val NANOS_PER_SECOND = 1_000_000_000f
 private const val MAX_FRAME_DELTA_SECONDS = 0.05f
 private const val BASE_REVEAL_GRAPHEMES_PER_SECOND = 36f
 private const val TARGET_CATCH_UP_SECONDS = 0.20f
+
+/** 渐变尾巴的长度（字形数）与分段：分 3 段各 2 个字，每帧最多 3 次离屏绘制。 */
+private const val TailBuckets = 3
+private const val TailBucketSize = 2
+private const val TailWidth = TailBuckets * TailBucketSize
+private const val SettleMillis = 180f

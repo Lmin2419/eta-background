@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111101`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111102`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-App-wide UI and motion polish: morphing status rings, rising new messages, a calm suggestion list on home, a tasks button that only appears while tasks run, quieter settings icons and a collapsible readiness card. Computer sync gets the same look: sidebar-style session list, inline approval and question cards, a run strip with Stop, and three notification presets. The computer plugin is unchanged (0.4.0).
+Motion and type inspired by Claude: softer page transitions, ink-like reply reveal, the new turn pinned to the top, a breathing cat while thinking, anchored long-press menus, serif headings and line icons. Computer sessions can send files and show sent image thumbnails; frpc is now run by the plugin. **Update `dsh-bridge` to 0.5.0 on the computer.**
 
-APK: **`Pangxiaopang-3.3.5-2026111101.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026111102.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111101)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111102)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.animation.animateContentSize
 import io.github.mangi.eta.ui.theme.EtaMotion
 
 import io.github.mangi.eta.ui.voice.rememberSpeechPermission
@@ -367,6 +368,8 @@ internal fun AgentChatInputBar(
                         state = textFieldState,
                         modifier = Modifier
                             .fillMaxWidth()
+                            // 多行输入时高度用弹簧平滑变化，不跳。
+                            .animateContentSize(androidx.compose.animation.core.spring(dampingRatio = 0.9f, stiffness = 500f))
                             .focusRequester(focusRequester),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                         textStyle = inputTextStyle.copy(color = MiuixTheme.colorScheme.onSurface),

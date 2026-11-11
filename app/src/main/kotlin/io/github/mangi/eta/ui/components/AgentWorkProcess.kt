@@ -117,10 +117,11 @@ internal fun AgentWorkProcess(
         )
         AnimatedVisibility(
             visible = bodyVisible,
-            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + expandVertically(
+            // 先让出高度，内容晚 60ms 再淡入，展开时不会和高度变化挤在一起。
+            enter = fadeIn(tween(220, delayMillis = 60, easing = EtaMotion.Default.standard)) + expandVertically(
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
+                    dampingRatio = 0.92f,
+                    stiffness = 320f,
                 ),
             ),
             exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(

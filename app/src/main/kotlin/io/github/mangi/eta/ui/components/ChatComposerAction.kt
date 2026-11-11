@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -121,12 +122,23 @@ internal fun ComposerActionButton(
             if (flash.value > 0f) drawRoundRect(Brush.sweepGradient(*aurora.stops), alpha = flash.value, style = Stroke(2.dp.toPx()),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()))
         }, contentAlignment = Alignment.Center) {
-            Icon(when (action) {
-                ComposerAction.Send -> Icons.Outlined.ArrowUpward
-                ComposerAction.Queue -> Icons.Outlined.Schedule
-                ComposerAction.Stop -> Icons.Outlined.Stop
-                else -> Icons.Outlined.Mic
-            }, null, Modifier.size(if (action == ComposerAction.Stop) 20.dp else 24.dp), tint = foreground)
+            // 图标变形：旧图标缩小淡出，新图标带一点回弹地放大出现（麦克风 → 箭头 → 停止）。
+            androidx.compose.animation.AnimatedContent(
+                targetState = action,
+                transitionSpec = {
+                    if (motion.reduceMotion) androidx.compose.animation.fadeIn(tween(motion.micro)) togetherWith androidx.compose.animation.fadeOut(tween(motion.micro))
+                    else (androidx.compose.animation.fadeIn(tween(160)) + androidx.compose.animation.scaleIn(androidx.compose.animation.core.spring(dampingRatio = 0.6f, stiffness = 600f), initialScale = 0.5f)) togetherWith
+                        (androidx.compose.animation.fadeOut(tween(100)) + androidx.compose.animation.scaleOut(tween(120), targetScale = 0.5f))
+                },
+                label = "composerActionIcon",
+            ) { shown ->
+                Icon(when (shown) {
+                    ComposerAction.Send -> Icons.Outlined.ArrowUpward
+                    ComposerAction.Queue -> Icons.Outlined.Schedule
+                    ComposerAction.Stop -> Icons.Outlined.Stop
+                    else -> Icons.Outlined.Mic
+                }, null, Modifier.size(if (shown == ComposerAction.Stop) 20.dp else 24.dp), tint = foreground)
+            }
         }
     }
 }

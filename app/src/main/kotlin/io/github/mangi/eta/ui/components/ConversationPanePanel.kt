@@ -115,7 +115,13 @@ internal fun ConversationPanePanel(
                 Text(stringResource(R.string.eta_archived), style = EtaTheme.type.headline)
             } else Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 EtaSearchField(state.searchQuery, onSearchChange, stringResource(R.string.conversation_search_hint), Modifier.weight(1f))
-                EtaIconButton(workspace.onNew) { Icon(Icons.Outlined.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
+                // 带文字的「新对话」按钮：比单个图标更一目了然。
+                Row(Modifier.padding(start = 8.dp).clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.accentSoft)
+                    .clickable(onClick = workspace.onNew).heightIn(min = 40.dp).padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(Icons.Outlined.Add, null, Modifier.size(18.dp), tint = EtaTheme.colors.onAccentSoft)
+                    Text(stringResource(R.string.eta_new_chat_short), style = EtaTheme.type.subhead, color = EtaTheme.colors.onAccentSoft, maxLines = 1)
+                }
             }
         }
         AnimatedVisibility(!selecting && !archived, enter = expandVertically(tween(motion.medium, easing = motion.emphasizedDecelerate)) + fadeIn(tween(motion.medium, easing = motion.emphasizedDecelerate)),

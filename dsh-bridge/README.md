@@ -12,6 +12,10 @@
 
 协议细节见 [PROTOCOL.md](PROTOCOL.md)。
 
+## 通道（0.5.0 起）
+
+插件启动时会拉起 `~/.dsh-bridge/bin/frpc`（Windows 为 `frpc.exe`，配置 `~/.dsh-bridge/frpc.toml`，由 `deploy/desktop/setup-frpc.*` 写入），关闭插件或退出 DSH 时停止；frpc 异常退出会自动重启（间隔逐渐拉长）。所以只有 DSH 开着时手机才能连上。旧版注册的开机自启任务由安装脚本删除。
+
 ## 1. 电脑：安装插件（DSH 桌面版）
 
 插件运行在 DeepSeek Harness 桌面版自己的进程里，读到的会话、工作区、归档与桌面侧栏完全一致。桌面版的插件只能在应用**完全退出**时修改（从任务栏托盘退出，关窗口不算）。
@@ -29,7 +33,7 @@ powershell -ExecutionPolicy Bypass -File eta-background\deploy\desktop\install-p
 
 也可以手动安装：桌面版 → 侧栏「插件」→「安装第三方插件」→ 填 `dsh-bridge` 目录的绝对路径。
 
-验证：`curl http://127.0.0.1:7788/v1/health`（Windows PowerShell 里写 `curl.exe`）应返回 `{"ok":true,"protocol":1,"version":"0.4.0","runtime":"desktop","dsh":{"version":"…","api":[…]}}`。`dsh.api` 列出这个 DSH 版本提供的会话接口；插件同时支持 DSH 0.2.1 和 0.2.2，缺少的接口自动换用替代接口。`runtime` 为 `node` 说明回应来自另外启动的 `dsh` 进程，而不是桌面版。
+验证：`curl http://127.0.0.1:7788/v1/health`（Windows PowerShell 里写 `curl.exe`）应返回 `{"ok":true,"protocol":1,"version":"0.5.0","runtime":"desktop","dsh":{"version":"…","api":[…]},"tunnel":{"state":"connected",…}}`。`tunnel` 是插件管理的 frpc 通道状态（`connected` 已连上服务器、`starting`、`error`、`absent` 表示这台电脑没配置 frpc）。`dsh.api` 列出这个 DSH 版本提供的会话接口；插件同时支持 DSH 0.2.1 和 0.2.2，缺少的接口自动换用替代接口。`runtime` 为 `node` 说明回应来自另外启动的 `dsh` 进程，而不是桌面版。
 
 ### 总开关
 

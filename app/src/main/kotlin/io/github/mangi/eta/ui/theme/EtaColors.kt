@@ -89,9 +89,9 @@ object EtaAurora {
 
 fun lightEtaColors() = EtaColors(
     isDark = false,
-    canvas = Color(0xFFFBF6EE), surface = Color.White,
-    surfaceRaised = Color.White, surfaceSunken = Color(0xFFF4EBDD),
-    outline = Color(0xFFEADFCD), outlineStrong = Color(0xFFD9CBB5),
+    canvas = Color(0xFFFAF8F3), surface = Color.White,
+    surfaceRaised = Color.White, surfaceSunken = Color(0xFFF2EDE4),
+    outline = Color(0xFFE8E1D6), outlineStrong = Color(0xFFD6CBBB),
     textPrimary = Color(0xFF201A12), textSecondary = Color(0xFF5E5347), textTertiary = Color(0xFF6E6254),
     scrim = Color(0xFF1A120A).copy(alpha = 0.40f), pressed = Color(0xFF2A1A08).copy(alpha = 0.08f),
     accent = Color(0xFFB25A0E), onAccent = Color.White,
@@ -104,9 +104,10 @@ fun lightEtaColors() = EtaColors(
 
 fun darkEtaColors() = EtaColors(
     isDark = true,
-    canvas = Color(0xFF12100D), surface = Color(0xFF1B1814),
-    surfaceRaised = Color(0xFF24201B), surfaceSunken = Color(0xFF2B261F),
-    outline = Color(0xFF362F27), outlineStrong = Color(0xFF4A4136),
+    // 深色用暖炭灰而不是近黑：长时间阅读更柔和。
+    canvas = Color(0xFF1E1C19), surface = Color(0xFF262320),
+    surfaceRaised = Color(0xFF2E2A26), surfaceSunken = Color(0xFF332F2A),
+    outline = Color(0xFF3D3832), outlineStrong = Color(0xFF524A41),
     textPrimary = Color(0xFFF3EDE4), textSecondary = Color(0xFFBDB2A4), textTertiary = Color(0xFF9C9082),
     scrim = Color.Black.copy(alpha = 0.56f), pressed = Color.White.copy(alpha = 0.08f),
     accent = Color(0xFFF0A65A), onAccent = Color(0xFF2A1600),

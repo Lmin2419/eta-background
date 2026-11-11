@@ -56,6 +56,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -227,6 +228,8 @@ internal fun AgentChatBody(
     }
     var sentFromKeyboard by remember { mutableStateOf(false) }
     var keepBottomAnchored by rememberSaveable { mutableStateOf(true) }
+    // 发送后把这一轮的用户消息停在屏幕上方、回复在下面展开（不再一直贴底）；计数器每次发送递增。
+    var pinTurnRequest by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(isStreaming) {
         if (isStreaming && sentFromKeyboard) {
@@ -267,12 +270,13 @@ internal fun AgentChatBody(
             messageEdit = messageEdit,
             showEmptySuggestions = !isKeyboardVisible,
             keepBottomAnchored = keepBottomAnchored,
+            pinTurnRequest = pinTurnRequest,
             onBottomAnchorChanged = { keepBottomAnchored = it },
             onSubmit = { text ->
                 sentFromKeyboard = true
-                // 发送即重新锚定底部：用户从历史上方直接发送时，同帧内 isStreaming 与
-                // 新消息一起到位，立即回到底部并恢复后续的流式平滑跟底。
-                keepBottomAnchored = true
+                // 发送后新一轮停在顶部：先不跟底，新消息出现后滚到它，回复在其下展开。
+                keepBottomAnchored = false
+                pinTurnRequest++
                 onSubmit(text)
             },
             onInterruptAndSubmit = { text ->
@@ -339,6 +343,7 @@ private fun AgentChatScaffold(
     messageEdit: MessageEditUiState?,
     showEmptySuggestions: Boolean,
     keepBottomAnchored: Boolean,
+    pinTurnRequest: Int,
     onBottomAnchorChanged: (Boolean) -> Unit,
     onSubmit: (String) -> Unit,
     onInterruptAndSubmit: (String) -> Unit,
@@ -446,6 +451,7 @@ private fun AgentChatScaffold(
                 isStreaming = isStreaming,
                 bottomInset = bottomPadding,
                 keepBottomAnchored = keepBottomAnchored,
+                pinTurnRequest = pinTurnRequest,
                 onBottomAnchorChanged = onBottomAnchorChanged,
                 onSuggestionClick = onSuggestionClick,
                 onRunTraceClick = onRunTraceClick,
@@ -479,6 +485,7 @@ internal fun AgentConversationMessages(
     bottomInset: Dp,
     keepBottomAnchored: Boolean,
     onBottomAnchorChanged: (Boolean) -> Unit,
+    pinTurnRequest: Int = 0,
     assistantOverlay: Boolean = false,
     onSuggestionClick: (String) -> Unit = {},
     onRunTraceClick: () -> Unit = {},
@@ -559,13 +566,44 @@ internal fun AgentConversationMessages(
     val densityScale = LocalDensity.current.density
     val coroutineScope = rememberCoroutineScope()
 
+    // 新一轮停在顶部：发送请求到达后，等这条用户消息出现，滚到它；尾部垫一屏高的空白让它
+    // 能停在顶部。回复长到超过一屏时撤掉空白（它在屏幕外，撤掉不会跳），之后由用户自己滚动。
+    var pinnedKey by remember { mutableStateOf<String?>(null) }
+    var handledPinRequest by remember { mutableIntStateOf(pinTurnRequest) }
+    val lastUserKey = timelineEntries.lastOrNull { (it as? AgentTimelineEntry.Message)?.message is io.github.mangi.eta.ui.model.UserMessageUi }?.key
+    LaunchedEffect(pinTurnRequest, lastUserKey) {
+        if (pinTurnRequest == handledPinRequest || lastUserKey == null) return@LaunchedEffect
+        handledPinRequest = pinTurnRequest
+        pinnedKey = lastUserKey
+        onBottomAnchorChanged(false)
+        val index = timelineEntries.indexOfFirst { it.key == lastUserKey }
+        if (index >= 0) {
+            withFrameNanos { }
+            scrollState.animateScrollToItem(index + earlierMessagesItemCount, scrollOffset = -(12 * densityScale).toInt())
+        }
+    }
+    LaunchedEffect(pinnedKey) {
+        val key = pinnedKey ?: return@LaunchedEffect
+        snapshotFlow {
+            val info = scrollState.layoutInfo
+            val pinned = info.visibleItemsInfo.firstOrNull { it.key == key }
+            val lastContent = info.visibleItemsInfo.lastOrNull { it.key != ChatBottomSentinelKey }
+            val viewport = info.viewportEndOffset - info.afterContentPadding
+            // 回复已经填满一屏（或这条消息已滚出视野），垫高就不再需要。
+            pinned == null && info.visibleItemsInfo.none { it.key == key } && info.totalItemsCount > 0 ||
+                (pinned != null && lastContent != null && lastContent.offset + lastContent.size > viewport)
+        }.first { it }
+        pinnedKey = null
+    }
+
     LaunchedEffect(
         isListMeasured,
         isUserDragging,
         isAtBottom,
         keepBottomAnchored,
+        pinnedKey,
     ) {
-        if (!isListMeasured) return@LaunchedEffect
+        if (!isListMeasured || pinnedKey != null) return@LaunchedEffect
         val next = resolveKeepBottomAnchored(
             current = keepBottomAnchored,
             isUserDragging = isUserDragging,
@@ -858,10 +896,14 @@ internal fun AgentConversationMessages(
                 }
             }
             item(key = ChatBottomSentinelKey) {
+                // 新一轮停在顶部时，哨兵临时垫高一屏，让那条消息能滚到顶部。
+                val pinSpace = if (pinnedKey != null) with(LocalDensity.current) {
+                    (scrollState.layoutInfo.viewportSize.height).toDp()
+                } else 0.dp
                 Spacer(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(1.dp),
+                        .height(1.dp + pinSpace),
                 )
             }
         }
@@ -882,7 +924,8 @@ internal fun AgentConversationMessages(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = bottomInset + 12.dp),
-            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + scaleIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard), initialScale = 0.82f),
+            // 回到底部按钮：淡入并带一点回弹地从 0.8 倍弹出。
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + scaleIn(spring(dampingRatio = 0.6f, stiffness = 520f), initialScale = 0.8f),
             exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + scaleOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate), targetScale = 0.86f),
         ) {
             IconButton(

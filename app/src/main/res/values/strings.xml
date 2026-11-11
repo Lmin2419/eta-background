@@ -1863,4 +1863,5 @@
     <string name="desktop_tunnel_starting">connecting…</string>
     <string name="desktop_tunnel_absent">not set up on this computer (run setup-frpc)</string>
     <string name="desktop_tunnel_error">failed: %1$s</string>
+    <string name="eta_new_chat_short">New</string>
 </resources>

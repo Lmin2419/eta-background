@@ -1769,4 +1769,5 @@
     <string name="desktop_tunnel_starting">正在連線…</string>
     <string name="desktop_tunnel_absent">這台電腦沒有設定（執行 setup-frpc）</string>
     <string name="desktop_tunnel_error">失敗：%1$s</string>
+    <string name="eta_new_chat_short">新對話</string>
 </resources>

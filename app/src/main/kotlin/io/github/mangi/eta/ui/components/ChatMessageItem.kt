@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import io.github.mangi.eta.ui.theme.EtaMotion
 
 import android.graphics.BitmapFactory
@@ -164,32 +166,8 @@ internal fun decodeDataUrlBitmap(dataUrl: String): ImageBitmap? {
  */
 @Composable
 fun AITypingIndicator(modifier: Modifier = Modifier) {
-    val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
-    val infiniteTransition = if (motion.reduceMotion) null else rememberInfiniteTransition(label = "dots")
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        repeat(3) { index ->
-            val delay = index * 150
-            val alpha = infiniteTransition?.animateFloat(
-                initialValue = 0.3f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(600, delayMillis = delay, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "alpha"
-            )
-            Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .graphicsLayer { this.alpha = alpha?.value ?: 1f }
-                    .background(MiuixTheme.colorScheme.onSurfaceVariantSummary, CircleShape)
-            )
-        }
-    }
+    // 等首个字时用胖小胖猫头的「思考」呼吸，取代三个跳动的点。
+    EtaThinkingMark(modifier.padding(vertical = 2.dp), size = 20.dp)
 }
 
 /**
@@ -334,6 +312,10 @@ private fun UserMessageBubble(
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     var menu by remember(message.id) { mutableStateOf(false) }
+    var menuAnchor by remember(message.id) { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+    // 菜单打开时被按的气泡轻轻放大，提示「操作的是这一条」。
+    val pressScale = androidx.compose.animation.core.animateFloatAsState(if (menu) 1.03f else 1f,
+        androidx.compose.animation.core.spring(dampingRatio = 0.7f, stiffness = 500f), label = "userBubbleMenu")
     val haptic = LocalHapticFeedback.current
     LaunchedEffect(actionsEnabled) { if (!actionsEnabled) menu = false }
     val visiblePrompt = remember(message.content) { AgentFileReferencePromptCodec.parse(message.content) }
@@ -347,7 +329,9 @@ private fun UserMessageBubble(
                     Image(bitmap, stringResource(R.string.chat_image_attachment), Modifier.size(120.dp).clip(EtaTheme.shapes.radiusMd), contentScale = ContentScale.Crop)
                 } }
             }
-            Column(Modifier.background(EtaTheme.colors.surfaceSunken, shape)
+            Column(Modifier.onGloballyPositioned { menuAnchor = it.boundsInWindow() }
+                .graphicsLayer { val s = pressScale.value; scaleX = s; scaleY = s }
+                .background(EtaTheme.colors.surfaceSunken, shape)
                 .then(if (isEditing) Modifier.border(1.dp, EtaTheme.colors.accent, shape) else Modifier)
                 .combinedClickable(enabled = actionsEnabled, onClick = {}, onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress); menu = true
@@ -361,14 +345,12 @@ private fun UserMessageBubble(
             }
         }
     }
-    EtaSheet(menu, title = stringResource(R.string.eta_message_actions), onDismissRequest = { menu = false }) {
-        Column {
-            EtaArrowPreference(stringResource(R.string.ui_copy_4edd1d), onClick = {
-                clipboardManager.setText(AnnotatedString(message.content)); menu = false
-            })
-            EtaArrowPreference(stringResource(R.string.ui_edit_a7f814), onClick = { menu = false; onEdit() })
-            EtaArrowPreference(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() })
-        }
+    EtaContextMenu(menu, anchor = menuAnchor, onDismiss = { menu = false }, alignEnd = true) {
+        EtaMenuItem(stringResource(R.string.ui_copy_4edd1d), onClick = {
+            clipboardManager.setText(AnnotatedString(message.content)); menu = false
+        })
+        EtaMenuItem(stringResource(R.string.ui_edit_a7f814), onClick = { menu = false; onEdit() })
+        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() }, destructive = true)
     }
 }
 
@@ -560,9 +542,11 @@ private fun AgentMessageBlock(
 
     val character = LocalRoleplayChat.current.takeUnless { assistantOverlay }
     val isGreeting = character != null && message.id.startsWith(GreetingMessagePrefix)
+    var menuAnchor by remember(message.id) { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .onGloballyPositioned { menuAnchor = it.boundsInWindow() }
             .combinedClickable(enabled = showMessageActions && messageActionsEnabled && revealComplete,
                 onClick = {}, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); selectingText = false; menu = true })
             .padding(
@@ -637,22 +621,24 @@ private fun AgentMessageBlock(
             }
         }
     }
-    EtaSheet(menu, title = stringResource(R.string.eta_message_actions), onDismissRequest = { menu = false }) {
-        if (selectingText) SelectionContainer {
+    // 选择文字仍用底部面板（需要整段可选的大区域）；其余操作是贴着回答弹出的气泡菜单。
+    EtaSheet(menu && selectingText, title = stringResource(R.string.eta_select_text), onDismissRequest = { menu = false; selectingText = false }) {
+        SelectionContainer {
             Text(message.content, style = EtaTheme.type.body, modifier = Modifier.fillMaxWidth()
                 .heightIn(max = 420.dp).verticalScroll(rememberScrollState()))
-        } else Column {
-            EtaArrowPreference(stringResource(R.string.eta_select_text), onClick = { selectingText = true })
-            EtaArrowPreference(stringResource(R.string.copy_answer), onClick = {
-                clipboardManager.setText(AnnotatedString(message.content)); copied = true; menu = false
-            })
-            if (allowSpeech) SpeechReadAloudMenuItem(message.id, message.content) { menu = false }
-            EtaArrowPreference(stringResource(R.string.ui_regenerate_reply_84a7d9), enabled = messageActionsEnabled,
-                onClick = { menu = false; onRegenerate() })
-            if (message.characterEditable) EtaArrowPreference(stringResource(R.string.chat_edit_character_reply), onClick = { menu = false; onEdit() })
-            EtaArrowPreference(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() })
-            EtaArrowPreference(stringResource(R.string.action_export), onClick = { menu = false; export() })
         }
+    }
+    EtaContextMenu(menu && !selectingText, anchor = menuAnchor, onDismiss = { menu = false }) {
+        EtaMenuItem(stringResource(R.string.eta_select_text), onClick = { selectingText = true })
+        EtaMenuItem(stringResource(R.string.copy_answer), onClick = {
+            clipboardManager.setText(AnnotatedString(message.content)); copied = true; menu = false
+        })
+        if (allowSpeech) SpeechReadAloudMenuItem(message.id, message.content) { menu = false }
+        EtaMenuItem(stringResource(R.string.ui_regenerate_reply_84a7d9), enabled = messageActionsEnabled,
+            onClick = { menu = false; onRegenerate() })
+        if (message.characterEditable) EtaMenuItem(stringResource(R.string.chat_edit_character_reply), onClick = { menu = false; onEdit() })
+        EtaMenuItem(stringResource(R.string.action_export), onClick = { menu = false; export() })
+        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() }, destructive = true)
     }
 }
 

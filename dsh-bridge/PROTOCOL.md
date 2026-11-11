@@ -25,7 +25,8 @@
 | `sessions.list` | – | `{sessions:[SessionRow], workspaces:[{id,title,path}]}`（从 0.3.0 起归档会话也返回，带 `archived`） |
 | `sessions.search` | `query` | `{items:[{sessionId,snippet}], hasMore}` |
 | `sessions.create` | `workspaceId?` 或 `cwd?`、`agentPreset?` | `{sessionId}` |
-| `sessions.prompt` | `sessionId`、`text`、`mode?:"queue"\|"steer"`、`requestId?`、`images?:[{mediaType,data(base64),name?}]`、`timeZone?` | `{accepted, requestId}` |
+| `sessions.prompt` | `sessionId`、`text`、`mode?:"queue"\|"steer"`、`requestId?`、`images?:[{mediaType,data(base64),name?}]`、`files?:[{name,data(base64)}]`（0.5.0，经 DSH `fileUploads` 成为原生附件，最多 8 个）、`timeZone?` | `{accepted, requestId}` |
+| `attachments.image`（0.5.0） | `ref`（用户消息 `imageRefs` 里的附件引用） | `{mediaType, data(base64)}`，单张上限 8 MB |
 | `sessions.cancel` | `sessionId` | `{accepted}` |
 | `sessions.rename` | `sessionId`、`title` | `{title, seq}` |
 | `sessions.queue` | `sessionId`、`itemId` 或 `requestId`（发送时的请求号，用于刚发出、还不知道条目 id 的消息）、`action:"remove"\|"steer"\|{edit:text}` | `{accepted}`（`steer` 后条目带 `steering:true` 留在队列里，直到下一步被模型取走） |
@@ -105,3 +106,9 @@
 | `title` | `title` |
 
 DSH 注入给模型的上下文消息（`runtime-context`、`time-context` 等）不推送。
+
+## 0.5.0 增补
+
+- 用户消息条目可带 `imageRefs:[ref]`（最多 6 个），手机用 `attachments.image` 按需取图。
+- `hello` 与 `/v1/health` 增加 `tunnel:{state, message?, since}`；状态变化推送 `{t:"tunnel", state, message?, since}`。
+- `features` 增加 `image-preview`、`files`、`tunnel`。

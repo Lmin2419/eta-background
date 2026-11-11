@@ -367,7 +367,7 @@ internal fun SpeechReadAloudMenuItem(messageId: String, text: String, onInvoked:
     if (!LocalSpeechPlaybackEnabled.current) return
     val state by controller.state.collectAsState()
     val active = state.messageId == messageId
-    io.github.mangi.eta.ui.components.EtaArrowPreference(
+    io.github.mangi.eta.ui.components.EtaMenuItem(
         stringResource(if (active) R.string.speech_read_stop else R.string.speech_read_aloud), onClick = {
             if (active) controller.stop() else controller.speak(messageId, text)
             onInvoked()
