@@ -108,7 +108,7 @@ fun darkEtaColors() = EtaColors(
     canvas = Color(0xFF1E1C19), surface = Color(0xFF262320),
     surfaceRaised = Color(0xFF2E2A26), surfaceSunken = Color(0xFF332F2A),
     outline = Color(0xFF3D3832), outlineStrong = Color(0xFF524A41),
-    textPrimary = Color(0xFFF3EDE4), textSecondary = Color(0xFFBDB2A4), textTertiary = Color(0xFF9C9082),
+    textPrimary = Color(0xFFF3EDE4), textSecondary = Color(0xFFC4BAAD), textTertiary = Color(0xFFADA193),
     scrim = Color.Black.copy(alpha = 0.56f), pressed = Color.White.copy(alpha = 0.08f),
     accent = Color(0xFFF0A65A), onAccent = Color(0xFF2A1600),
     accentSoft = Color(0xFF3D2B17), onAccentSoft = Color(0xFFF8C894),
