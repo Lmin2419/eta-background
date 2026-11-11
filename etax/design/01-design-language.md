@@ -175,11 +175,11 @@ Compose 实现：`Modifier.shadow(elevation, shape, ambientColor, spotColor)` �
 - 只用 material-icons-extended 的 **Rounded** 家族（现有代码混用 Outlined/Rounded，统一为 Rounded；`ShortText`、`MoreHoriz` 等也换成 Rounded 版本）。
 - 尺寸：顶栏 24，列表/菜单 20，行内/徽章 16。
 - 图标颜色默认 `textSecondary`；选中或主操作用 `accent`；危险操作用 `danger`。
-- 品牌形象「胖小胖」（阶段 12）：用户家金渐层照片生成的插画风猫脸 `etax/design/brand/pangxiaopang-illustration.png`——桌面图标铺满（`drawable-nodpi/ic_launcher_art.webp`，可见区之外镜像模糊补边），App 内标志为同图圆形头像（`ic_eta_mark.webp`）。单色场景（主题图标、状态栏、任务大图标）统一用同一只猫的字形 `etax/design/brand/pangxiaopang-glyph.svg`：小圆耳、两簇圆头脸颊长毛、圆眼：大黑瞳 + 月牙眼白 + 高光点、头微歪 6°。改单色猫只改这个 SVG 的路径，再同步到 `ic_launcher_monochrome` / `ic_notification` / `ic_task_phone`。资源：
-  - `ic_launcher_foreground`（生成）+ `ic_launcher_background`（蜂蜜蜜桃渐变底）：桌面图标，猫脸铺满可见区；
-  - `ic_eta_mark`（生成）：App 内品牌标志（空状态、助手头像），无底色，资源名沿用；
-  - `ic_launcher_monochrome` / `ic_notification`：单色猫头剪影（小圆耳 + 圆脸 + 眼睛镂空），主题图标与状态栏用，系统按 alpha 着色；
-  - `ic_task_phone`：后台任务通知大图标与预览窗占位，手机轮廓 + 猫头剪影，屏幕区域透明。
+- 品牌形象「胖小胖」（阶段 12）：一枚猫爪印——四颗脚趾肉垫 + 下沿三瓣的掌心肉垫。桌面图标为白底（向边缘极轻地过渡到 `#F2EFEB`）上的珊瑚橘肉垫（`#EB9A7B → #C95F3D` 径向渐变、柔和投影和高光），爪印约占可见区 2/3；源文件 `etax/design/brand/pangxiaopang-icon.svg`，导出为 `drawable-nodpi/ic_launcher_art.webp`（648px，含可见区外的出血边）。单色场景统一用同一枚爪印的剪影 `etax/design/brand/pangxiaopang-glyph.svg`；改形状时只改这两个源文件的路径，再同步到下列矢量。资源：
+  - `ic_launcher_art`（背景层，生成）+ 空的 `ic_launcher_foreground`：桌面图标；
+  - `ic_eta_mark`（矢量）：App 内品牌标志（空状态、助手头像、「思考中」动画），珊瑚橘爪印带高光，无底色；
+  - `ic_launcher_monochrome` / `ic_notification`：单色爪印剪影，主题图标与状态栏用，系统按 alpha 着色；
+  - `ic_task_phone`：后台任务通知大图标与预览窗占位，手机轮廓 + 珊瑚橘爪印，屏幕区域透明。
   minSdk 33 只用自适应图标，无 `mipmap-*dpi` 位图。`BrandIconRenderingTest` 会把它们按桌面遮罩、主题色、状态栏着色画成预览图（`build/reports/eta-icons/`）。
 - 名称：用户可见处一律「胖小胖」（三种语言相同）；包名 `io.github.mangi.etax`、内部代码名、备份文件格式不变；关于页保留对上游 Eta 的致谢。
 

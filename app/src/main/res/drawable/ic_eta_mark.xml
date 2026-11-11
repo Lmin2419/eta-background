@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- In-app brand mark (empty states, assistant avatar, thinking mark): the coral paw print with soft highlights. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <group android:scaleX="0.13937" android:scaleY="0.13937" android:translateX="-11.679" android:translateY="-13.700">
+        <path android:fillColor="#FFD97757" android:pathData="M256,268 C306,268 350,302 367,344 C381,380 364,414 334,414 C316,414 306,406 290,406 C276,406 268,414 256,414 C244,414 236,406 222,406 C206,406 196,414 178,414 C148,414 131,380 145,344 C162,302 206,268 256,268 Z M192.77,217.35 A37,45 -20 1,1 123.23,242.65 A37,45 -20 1,1 192.77,217.35 Z M254.72,167.49 A37,45 -7 1,1 181.28,176.51 A37,45 -7 1,1 254.72,167.49 Z M330.72,176.51 A37,45 7 1,1 257.28,167.49 A37,45 7 1,1 330.72,176.51 Z M388.77,242.65 A37,45 20 1,1 319.23,217.35 A37,45 20 1,1 388.77,242.65 Z" />
+        <path android:fillColor="#59FFFFFF" android:pathData="M253.95,294.37 A34,14 -20 1,1 190.05,317.63 A34,14 -20 1,1 253.95,294.37 Z M155.77,204.33 A11,6.5 -52 1,1 142.23,221.67 A11,6.5 -52 1,1 155.77,204.33 Z M217.55,148.08 A11,6.5 -39 1,1 200.45,161.92 A11,6.5 -39 1,1 217.55,148.08 Z M294.97,150.35 A11,6.5 -25 1,1 275.03,159.65 A11,6.5 -25 1,1 294.97,150.35 Z M355.76,210.71 A11,6.5 -12 1,1 334.24,215.29 A11,6.5 -12 1,1 355.76,210.71 Z" />
+    </group>
+</vector>

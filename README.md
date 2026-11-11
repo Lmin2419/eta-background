@@ -2,13 +2,13 @@
 
 [简体中文](README.md) · [English](README_EN.md) · [版本记录与源码导航](etax/README.md) · [构建说明](.github/RELEASING.md)
 
-**胖小胖（原「Eta 后台版」）是 [Eta](https://github.com/Mangi-11/Eta) 的衍生分支，基于上游 v3.3.5。原作者为 [蛮吉（Mangi-11）](https://github.com/Mangi-11)。** 2026-11-06 起 App 显示名改为「胖小胖」，图标是一只金渐层猫。 本仓库维护后台虚拟屏、多任务与通知交互等扩展，非上游官方发行版。内部工程名沿用 `Etax`，安装包名为 `io.github.mangi.etax`，可与官方 Eta 共存。
+**胖小胖（原「Eta 后台版」）是 [Eta](https://github.com/Mangi-11/Eta) 的衍生分支，基于上游 v3.3.5。原作者为 [蛮吉（Mangi-11）](https://github.com/Mangi-11)。** 2026-11-06 起 App 显示名改为「胖小胖」，图标是一枚珊瑚橘猫爪印。 本仓库维护后台虚拟屏、多任务与通知交互等扩展，非上游官方发行版。内部工程名沿用 `Etax`，安装包名为 `io.github.mangi.etax`，可与官方 Eta 共存。
 
 ## 最新测试版本
 
 **2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111105`**，引擎仍为 `20261105-e49-parallel-observe`。
 
-插画风金渐层新图标；Claude 配色收尾（纯白页面、灰色侧栏与二级页、黑色主按钮和开关、珊瑚橘强调色）；电脑会话混排进侧栏。电脑端插件仍为 0.5.0。
+新图标：白底珊瑚橘猫爪印；Claude 配色收尾（纯白页面、灰色侧栏与二级页、黑色主按钮和开关、珊瑚橘强调色）；电脑会话混排进侧栏。电脑端插件仍为 0.5.0。
 
 安装包 **`Pangxiaopang-3.3.5-2026111105.apk`**。
 

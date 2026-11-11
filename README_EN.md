@@ -2,7 +2,7 @@
 
 [简体中文](README.md) · [English](README_EN.md) · [Version history and source map](etax/README.md) · [Build instructions](.github/RELEASING.md)
 
-胖小胖 (formerly "Eta 后台版") is a derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮吉 / Mangi-11](https://github.com/Mangi-11)**, based on upstream v3.3.5. From 2026-11-06 the app is shown as 胖小胖 with a golden-shaded cat icon. This repository maintains background virtual-display automation and related task, notification and lifecycle extensions. It is an independent distribution. The internal project name remains `Etax`; its Android package is `io.github.mangi.etax`.
+胖小胖 (formerly "Eta 后台版") is a derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮吉 / Mangi-11](https://github.com/Mangi-11)**, based on upstream v3.3.5. From 2026-11-06 the app is shown as 胖小胖 with a coral paw-print icon. This repository maintains background virtual-display automation and related task, notification and lifecycle extensions. It is an independent distribution. The internal project name remains `Etax`; its Android package is `io.github.mangi.etax`.
 
 A development candidate adds built-in Root configuration for the system assistant, with a durable backup, read-back checks, user-confirmed power-key wake and restoration. It does not depend on Vector or inject into system_server. Physical power-key routing on ColorOS remains unverified; this is not a fix claim for the earlier soft reboot. [Implementation and acceptance](etax/NATIVE_ASSISTANT.md).
 
@@ -10,7 +10,7 @@ A development candidate adds built-in Root configuration for the system assistan
 
 **2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111105`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-A new illustrated golden-cat icon and a finished Claude-like palette (white pages, grey side pane and settings, black primary buttons and switches, one coral accent), with computer sessions in the side pane. The plugin stays at 0.5.0.
+A new coral paw-print icon on white and a finished Claude-like palette (white pages, grey side pane and settings, black primary buttons and switches, one coral accent), with computer sessions in the side pane. The plugin stays at 0.5.0.
 
 APK: **`Pangxiaopang-3.3.5-2026111105.apk`**.
 
