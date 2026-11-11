@@ -89,11 +89,12 @@ object EtaAurora {
 
 fun lightEtaColors() = EtaColors(
     isDark = false,
-    canvas = Color(0xFFFAF8F3), surface = Color.White,
-    surfaceRaised = Color.White, surfaceSunken = Color(0xFFF2EDE4),
-    outline = Color(0xFFE8E1D6), outlineStrong = Color(0xFFD6CBBB),
-    textPrimary = Color(0xFF201A12), textSecondary = Color(0xFF5E5347), textTertiary = Color(0xFF6E6254),
-    scrim = Color(0xFF1A120A).copy(alpha = 0.40f), pressed = Color(0xFF2A1A08).copy(alpha = 0.08f),
+    // 阶段 12：页面回到纯白与中性灰，暖色只留在焦糖主色（主按钮、选中、运行中）上。
+    canvas = Color.White, surface = Color.White,
+    surfaceRaised = Color.White, surfaceSunken = Color(0xFFF4F4F4),
+    outline = Color(0xFFECECEC), outlineStrong = Color(0xFFDADADA),
+    textPrimary = Color(0xFF1A1A1A), textSecondary = Color(0xFF5C5C5C), textTertiary = Color(0xFF6B6B6B),
+    scrim = Color.Black.copy(alpha = 0.40f), pressed = Color.Black.copy(alpha = 0.06f),
     accent = Color(0xFFB25A0E), onAccent = Color.White,
     accentSoft = Color(0xFFFCEAD5), onAccentSoft = Color(0xFF8A4507),
     // "Needs you" is violet so it never reads as the caramel accent.
@@ -105,10 +106,10 @@ fun lightEtaColors() = EtaColors(
 fun darkEtaColors() = EtaColors(
     isDark = true,
     // 深色用暖炭灰而不是近黑：长时间阅读更柔和。
-    canvas = Color(0xFF1E1C19), surface = Color(0xFF262320),
-    surfaceRaised = Color(0xFF2E2A26), surfaceSunken = Color(0xFF332F2A),
-    outline = Color(0xFF3D3832), outlineStrong = Color(0xFF524A41),
-    textPrimary = Color(0xFFF3EDE4), textSecondary = Color(0xFFC4BAAD), textTertiary = Color(0xFFADA193),
+    canvas = Color(0xFF1C1C1C), surface = Color(0xFF232323),
+    surfaceRaised = Color(0xFF2A2A2A), surfaceSunken = Color(0xFF2F2F2F),
+    outline = Color(0xFF383838), outlineStrong = Color(0xFF4A4A4A),
+    textPrimary = Color(0xFFF2F2F2), textSecondary = Color(0xFFC4C4C4), textTertiary = Color(0xFFA8A8A8),
     scrim = Color.Black.copy(alpha = 0.56f), pressed = Color.White.copy(alpha = 0.08f),
     accent = Color(0xFFF0A65A), onAccent = Color(0xFF2A1600),
     accentSoft = Color(0xFF3D2B17), onAccentSoft = Color(0xFFF8C894),

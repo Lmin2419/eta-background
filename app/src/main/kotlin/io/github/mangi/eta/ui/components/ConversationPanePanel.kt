@@ -50,7 +50,16 @@ internal data class PaneWorkspaceActions(
     val runningCount: Int = 0, val permissionsPending: Int = 0,
     /** 已配对电脑时显示「电脑」入口；[desktopRunning] 是电脑上正在运行的会话数。 */
     val onDesktop: (() -> Unit)? = null, val desktopRunning: Int = 0,
+    /** 侧栏里直接列出的电脑会话（最近几条），点开直达电脑会话。 */
+    val desktopSessions: List<PaneDesktopSession> = emptyList(),
+    val desktopName: String? = null, val desktopOnline: Boolean = false,
+    /** true：电脑会话按时间与本机对话混排；false：单独一个「电脑」分组。 */
+    val desktopMixed: Boolean = false,
+    val onOpenDesktopSession: (String) -> Unit = {},
 )
+
+/** 侧栏里的一条电脑会话。[status] 只在运行中 / 需要你时有值。 */
+internal data class PaneDesktopSession(val id: String, val title: String, val updatedAt: Long, val status: TaskVisualStatus? = null)
 internal data class PaneManagementActions(
     val delete: (Set<String>, (Int) -> Unit) -> Unit = { _, _ -> },
     val archive: (Set<String>) -> ConversationArchiveChange = { ConversationArchiveChange(emptySet(), 0, 0) },
@@ -90,6 +99,7 @@ internal fun ConversationPanePanel(
     var toast by remember { mutableStateOf<String?>(null) }
     var toastVersion by remember { mutableIntStateOf(0) }
     var undo by remember { mutableStateOf<ConversationArchiveChange?>(null) }
+    var desktopCollapsed by remember { mutableStateOf(false) }
     val selecting = selectedIds.isNotEmpty()
     val motion = EtaTheme.motion
     val visibleConversations = remember(state.conversations, state.searchQuery, archived) {
@@ -116,11 +126,11 @@ internal fun ConversationPanePanel(
             } else Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 EtaSearchField(state.searchQuery, onSearchChange, stringResource(R.string.conversation_search_hint), Modifier.weight(1f))
                 // 带文字的「新对话」按钮：比单个图标更一目了然。
-                Row(Modifier.padding(start = 8.dp).clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.accentSoft)
+                Row(Modifier.padding(start = 8.dp).clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.surfaceSunken)
                     .clickable(onClick = workspace.onNew).heightIn(min = 40.dp).padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Icon(Icons.Outlined.Add, null, Modifier.size(18.dp), tint = EtaTheme.colors.onAccentSoft)
-                    Text(stringResource(R.string.eta_new_chat_short), style = EtaTheme.type.subhead, color = EtaTheme.colors.onAccentSoft, maxLines = 1)
+                    Icon(Icons.Outlined.Add, null, Modifier.size(18.dp), tint = EtaTheme.colors.textPrimary)
+                    Text(stringResource(R.string.eta_new_chat_short), style = EtaTheme.type.subhead, color = EtaTheme.colors.textPrimary, maxLines = 1)
                 }
             }
         }
@@ -144,6 +154,21 @@ internal fun ConversationPanePanel(
             if (visibleConversations.isEmpty() && (state.groups.isEmpty() || archived || state.searchQuery.isNotBlank())) item {
                 ListEmptyState(stringResource(if (state.searchQuery.isBlank()) R.string.conversation_empty else R.string.conversation_no_results), icon = Icons.Outlined.Search)
             }
+            val showDesktop = !archived && !selecting && state.searchQuery.isBlank() && workspace.desktopSessions.isNotEmpty()
+            // 分组样式：电脑会话单独一组，放在最上面，标题带电脑名和连接状态，右侧「全部」进完整电脑页。
+            if (showDesktop && !workspace.desktopMixed) {
+                item(key = "desktop-header") {
+                    DesktopPaneHeader(workspace.desktopName, workspace.desktopOnline, desktopCollapsed,
+                        onToggle = { desktopCollapsed = !desktopCollapsed }, onAll = workspace.onDesktop, modifier = etaAnimateItem())
+                }
+                if (!desktopCollapsed) items(workspace.desktopSessions.take(DesktopPaneLimit), key = { "desktop/${it.id}" }) { row ->
+                    DesktopPaneRow(row, { workspace.onOpenDesktopSession(row.id) }, etaAnimateItem())
+                }
+            }
+            // 混排样式：电脑会话按更新时间插进「今天 / 昨天 / 7 天内 / 更早」，只靠小电脑图标区分。
+            val desktopByTime = if (showDesktop && workspace.desktopMixed)
+                workspace.desktopSessions.take(DesktopPaneLimit).groupBy { timeSectionOf(it.updatedAt, today) } else emptyMap()
+            val consumedTimes = HashSet<Int>()
             sections.forEach { section ->
                 val group = section.group
                 if (group != null) item(key = section.key) {
@@ -167,12 +192,25 @@ internal fun ConversationPanePanel(
                             etaAnimateItem().padding(top = 12.dp, bottom = 6.dp), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
                     }
                 }
+                val mixedDesktop = section.timeSection?.let { consumedTimes += it; desktopByTime[it] }.orEmpty()
+                items(mixedDesktop, key = { "desktop/${it.id}" }) { row ->
+                    DesktopPaneRow(row, { workspace.onOpenDesktopSession(row.id) }, etaAnimateItem())
+                }
                 items(section.visibleConversations, key = { it.id }) { conversation ->
                     ConversationTextRow(conversation, if (selecting) conversation.id in selectedIds else state.selectedConversationId == conversation.id, state.searchQuery,
                         taskStatuses[conversation.id] ?: TaskVisualStatus.Running.takeIf { conversation.isActiveRun }, selecting,
                         { if (selecting) selectedIds = if (conversation.id in selectedIds) selectedIds - conversation.id else selectedIds + conversation.id
                           else onConversationSelected(conversation.id) },
                         { selectedIds = selectedIds + conversation.id }, groupName = groupNames[conversation.groupId], modifier = etaAnimateItem())
+                }
+            }
+            desktopByTime.keys.filter { it !in consumedTimes }.sorted().forEach { time ->
+                item(key = "desktop-time-$time") {
+                    Text(stringResource(when (time) { 1 -> R.string.conversation_section_today; 2 -> R.string.eta_yesterday; 3 -> R.string.eta_last_week; else -> R.string.eta_earlier }),
+                        etaAnimateItem().padding(top = 12.dp, bottom = 6.dp), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary)
+                }
+                items(desktopByTime[time].orEmpty(), key = { "desktop/${it.id}" }) { row ->
+                    DesktopPaneRow(row, { workspace.onOpenDesktopSession(row.id) }, etaAnimateItem())
                 }
             }
         }
@@ -319,5 +357,49 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
             Modifier.widthIn(max = 80.dp).background(colors.surfaceRaised, EtaTheme.shapes.radiusFull).padding(horizontal = 6.dp, vertical = 2.dp),
             style = EtaTheme.type.caption, color = colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(conversation.timeLabel, style = EtaTheme.type.caption, color = colors.textTertiary, maxLines = 1)
+    }
+}
+
+private const val DesktopPaneLimit = 8
+
+/** 与 [conversationSection] 同一套时间分段：1 今天、2 昨天、3 七天内、4 更早。 */
+internal fun timeSectionOf(millis: Long, today: LocalDate): Int {
+    if (millis <= 0) return 1
+    val date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+    return when { !date.isBefore(today) -> 1; date == today.minusDays(1) -> 2; !date.isBefore(today.minusDays(7)) -> 3; else -> 4 }
+}
+
+@Composable
+private fun DesktopPaneHeader(name: String?, online: Boolean, collapsed: Boolean, onToggle: () -> Unit, onAll: (() -> Unit)?, modifier: Modifier) {
+    Row(modifier.fillMaxWidth().heightIn(min = 36.dp).padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onToggle).padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Icon(Icons.Outlined.Computer, null, Modifier.size(16.dp), tint = EtaTheme.colors.textSecondary)
+            Text(listOfNotNull(stringResource(R.string.desktop_entry), name?.takeIf { it.isNotBlank() }).joinToString(" · "),
+                Modifier.weight(1f, fill = false), style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Box(Modifier.size(6.dp).background(if (online) EtaTheme.colors.success else EtaTheme.colors.textTertiary, EtaTheme.shapes.radiusFull))
+            Spacer(Modifier.weight(1f))
+            Icon(if (collapsed) Icons.Outlined.ChevronRight else Icons.Outlined.ExpandMore, null, Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
+        }
+        if (onAll != null) Text(stringResource(R.string.desktop_pane_all), Modifier.clip(EtaTheme.shapes.radiusMd).clickable(onClick = onAll)
+            .padding(horizontal = 10.dp, vertical = 8.dp), style = EtaTheme.type.caption, color = EtaTheme.colors.accent)
+    }
+}
+
+/** 侧栏里的电脑会话行：与本机对话同一行样式，左侧是淡灰的小电脑图标（运行中 / 需要你时换成状态圈）。 */
+@Composable
+private fun DesktopPaneRow(row: PaneDesktopSession, onClick: () -> Unit, modifier: Modifier) {
+    val colors = EtaTheme.colors
+    Row(modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onClick)
+        .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.size(14.dp), contentAlignment = Alignment.Center) {
+            if (row.status != null) StatusRing(row.status, size = 12.dp)
+            else Icon(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), Modifier.size(14.dp), tint = colors.textTertiary)
+        }
+        Text(row.title.ifBlank { stringResource(R.string.desktop_untitled) }, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp),
+            color = colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val yesterday = stringResource(R.string.eta_yesterday)
+        Text(remember(row.updatedAt, yesterday) { io.github.mangi.eta.ui.app.ConversationTimeLabels.label(row.updatedAt, yesterdayLabel = yesterday, recentLabel = "") },
+            style = io.github.mangi.eta.ui.theme.EtaTypography.tabular(EtaTheme.type.caption), color = colors.textTertiary, maxLines = 1)
     }
 }

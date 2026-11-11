@@ -1865,4 +1865,5 @@
     <string name="desktop_tunnel_error">failed: %1$s</string>
     <string name="eta_new_chat_short">New</string>
     <string name="desktop_idle_hint">Message your computer…</string>
+    <string name="desktop_pane_all">All</string>
 </resources>
