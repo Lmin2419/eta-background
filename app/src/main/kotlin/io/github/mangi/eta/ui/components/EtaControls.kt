@@ -88,11 +88,12 @@ internal fun EtaSwitch(
 ) = Switch(
     checked = checked, onCheckedChange = onCheckedChange, enabled = enabled,
     colors = SwitchDefaults.switchColors(
-        checkedThumbColor = Color.White, uncheckedThumbColor = Color.White,
+        checkedThumbColor = EtaTheme.colors.canvas, uncheckedThumbColor = Color.White,
         disabledCheckedThumbColor = Color.White.copy(alpha = 0.38f),
         disabledUncheckedThumbColor = Color.White.copy(alpha = 0.38f),
-        checkedTrackColor = androidx.compose.ui.graphics.lerp(EtaTheme.colors.accent, EtaTheme.colors.surface, 0.14f), uncheckedTrackColor = EtaTheme.colors.outlineStrong,
-        disabledCheckedTrackColor = EtaTheme.colors.accent.copy(alpha = 0.38f),
+        // 开关打开是黑色轨道（深色模式为浅色），不再满屏珊瑚橘。
+        checkedTrackColor = EtaTheme.colors.textPrimary, uncheckedTrackColor = EtaTheme.colors.outlineStrong,
+        disabledCheckedTrackColor = EtaTheme.colors.textPrimary.copy(alpha = 0.38f),
         disabledUncheckedTrackColor = EtaTheme.colors.outlineStrong.copy(alpha = 0.38f),
     ),
     modifier = modifier.layout { measurable, constraints ->

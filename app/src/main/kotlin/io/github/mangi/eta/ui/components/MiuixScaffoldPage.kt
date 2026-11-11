@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.theme.EtaTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
@@ -40,7 +41,8 @@ fun MiuixScaffoldPage(
     overlay: @Composable () -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
     compactTitle: Boolean = false,
-    containerColor: Color = MiuixTheme.colorScheme.surface,
+    // 二级页是浅灰底 + 白色卡片分组（与 Claude 的设置页一致）。
+    containerColor: Color = EtaTheme.colors.surfaceSunken,
     content: LazyListScope.() -> Unit,
 ) {
     EtaPreferenceTheme {
