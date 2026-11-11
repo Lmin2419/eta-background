@@ -62,8 +62,9 @@ internal fun HomeConversationTopBar(
         .windowInsetsPadding(WindowInsets.statusBars)
         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
         .heightIn(min = 56.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        EtaIconButton(onHistory) {
-            Icon(Icons.AutoMirrored.Outlined.ShortText, stringResource(R.string.action_conversation_history), Modifier.size(24.dp))
+        // 圆形描边按钮（与 Claude 顶栏一致）。
+        Box(Modifier.padding(start = 8.dp)) {
+            CircleIconButton(Icons.AutoMirrored.Outlined.ShortText, stringResource(R.string.action_conversation_history), onHistory)
         }
         if (character != null) {
             Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onCharacter).padding(horizontal = 4.dp),
@@ -77,7 +78,9 @@ internal fun HomeConversationTopBar(
                 if (isStreaming || isCompacting || models.isChanging) toast(lockedText) else settings = true
             }
         }
-        EtaIconButton(onNew) { Icon(Icons.Outlined.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(24.dp)) }
+        Box(Modifier.padding(end = 8.dp)) {
+            CircleIconButton(Icons.Outlined.AddComment, stringResource(R.string.action_new_conversation), onNew)
+        }
         // 任务按钮只在有任务运行时出现（带运行圈和数量）；平时任务中心从侧栏「任务」进入。
         EtaAnimatedVisibility(
             visible = runningTaskCount > 0,

@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.foundation.border
 import androidx.compose.animation.*
 import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
 import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
@@ -54,7 +55,7 @@ internal data class PaneWorkspaceActions(
     val desktopSessions: List<PaneDesktopSession> = emptyList(),
     val desktopName: String? = null, val desktopOnline: Boolean = false,
     /** true：电脑会话按时间与本机对话混排；false：单独一个「电脑」分组。 */
-    val desktopMixed: Boolean = false,
+    val desktopMixed: Boolean = true,
     val onOpenDesktopSession: (String) -> Unit = {},
 )
 
@@ -100,6 +101,7 @@ internal fun ConversationPanePanel(
     var toastVersion by remember { mutableIntStateOf(0) }
     var undo by remember { mutableStateOf<ConversationArchiveChange?>(null) }
     var desktopCollapsed by remember { mutableStateOf(false) }
+    var searching by remember { mutableStateOf(false) }
     val selecting = selectedIds.isNotEmpty()
     val motion = EtaTheme.motion
     val visibleConversations = remember(state.conversations, state.searchQuery, archived) {
@@ -123,36 +125,34 @@ internal fun ConversationPanePanel(
             else if (archived) Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 EtaIconButton({ archived = false; onSearchChange("") }) { Icon(Icons.Outlined.ChevronLeft, stringResource(R.string.action_back)) }
                 Text(stringResource(R.string.eta_archived), style = EtaTheme.type.headline)
-            } else Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                EtaSearchField(state.searchQuery, onSearchChange, stringResource(R.string.conversation_search_hint), Modifier.weight(1f))
-                // 带文字的「新对话」按钮：比单个图标更一目了然。
-                Row(Modifier.padding(start = 8.dp).clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.surfaceSunken)
-                    .clickable(onClick = workspace.onNew).heightIn(min = 40.dp).padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Icon(Icons.Outlined.Add, null, Modifier.size(18.dp), tint = EtaTheme.colors.textPrimary)
-                    Text(stringResource(R.string.eta_new_chat_short), style = EtaTheme.type.subhead, color = EtaTheme.colors.textPrimary, maxLines = 1)
+            } else Column {
+                // 与 Claude 侧栏同一套结构：左上衬线大标题，右上圆形搜索；点搜索才展开搜索框。
+                Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.app_name), Modifier.weight(1f), style = EtaTheme.type.title1, color = EtaTheme.colors.textPrimary)
+                    CircleIconButton(Icons.Outlined.Search, stringResource(R.string.conversation_search_hint)) {
+                        searching = !searching; if (!searching) onSearchChange("")
+                    }
                 }
-            }
-        }
-        AnimatedVisibility(!selecting && !archived, enter = expandVertically(tween(motion.medium, easing = motion.emphasizedDecelerate)) + fadeIn(tween(motion.medium, easing = motion.emphasizedDecelerate)),
-            exit = shrinkVertically(tween(motion.exitDuration(260), easing = motion.accelerate)) + fadeOut(tween(motion.exitDuration(260), easing = motion.accelerate))) {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
-                // 快捷格平分宽度：4 个（无电脑）或 5 个（含电脑）一屏放下，再多才横向滚动。
-                val entryCount = (4 + (if (workspace.onDesktop != null) 1 else 0)).coerceAtMost(5)
-                val entryWidth = (width - 32.dp) / entryCount
-                WorkspaceEntry(Icons.Outlined.TaskAlt, stringResource(R.string.eta_tasks), EtaTheme.colors.tileCaramel, entryWidth, workspace.onTasks, count = workspace.runningCount)
-                WorkspaceEntry(Icons.Outlined.PeopleAlt, stringResource(R.string.eta_characters), EtaTheme.colors.tilePink, entryWidth, onOpenCharacters)
-                WorkspaceEntry(Icons.Outlined.Terminal, stringResource(R.string.route_terminal), EtaTheme.colors.tileSlate, entryWidth, workspace.onTerminal)
-                WorkspaceEntry(Icons.Outlined.Language, stringResource(R.string.eta_browser), EtaTheme.colors.tileTeal, entryWidth, workspace.onBrowser)
-                workspace.onDesktop?.let { open -> WorkspaceEntry(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), EtaTheme.colors.tileBlue, entryWidth, open, count = workspace.desktopRunning) }
-                workspace.onKimi?.let { launch -> WorkspaceEntry(Icons.Outlined.Code, workspace.kimiLabel, EtaTheme.colors.tileSlate, entryWidth, launch,
-                    onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null) }
+                AnimatedVisibility(searching || state.searchQuery.isNotBlank()) {
+                    EtaSearchField(state.searchQuery, onSearchChange, stringResource(R.string.conversation_search_hint),
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp))
+                }
             }
         }
         LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (visibleConversations.isEmpty() && (state.groups.isEmpty() || archived || state.searchQuery.isNotBlank())) item {
                 ListEmptyState(stringResource(if (state.searchQuery.isBlank()) R.string.conversation_empty else R.string.conversation_no_results), icon = Icons.Outlined.Search)
+            }
+            // 功能入口是列表顶部的几行（图标 + 文字），随列表一起滚走；终端入口移到「设置」。
+            if (!selecting && !archived && state.searchQuery.isBlank()) {
+                item(key = "nav-tasks") { PaneNavRow(Icons.Outlined.TaskAlt, stringResource(R.string.eta_tasks), workspace.onTasks, count = workspace.runningCount) }
+                item(key = "nav-characters") { PaneNavRow(Icons.Outlined.PeopleAlt, stringResource(R.string.eta_characters), onOpenCharacters) }
+                item(key = "nav-browser") { PaneNavRow(Icons.Outlined.Language, stringResource(R.string.eta_browser), workspace.onBrowser) }
+                workspace.onDesktop?.let { open -> item(key = "nav-desktop") { PaneNavRow(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), open, count = workspace.desktopRunning) } }
+                workspace.onKimi?.let { launch -> item(key = "nav-kimi") { PaneNavRow(Icons.Outlined.Code, workspace.kimiLabel, launch,
+                    onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null) } }
+                item(key = "nav-gap") { Spacer(Modifier.height(8.dp)) }
             }
             val showDesktop = !archived && !selecting && state.searchQuery.isBlank() && workspace.desktopSessions.isNotEmpty()
             // 分组样式：电脑会话单独一组，放在最上面，标题带电脑名和连接状态，右侧「全部」进完整电脑页。
@@ -240,19 +240,18 @@ internal fun ConversationPanePanel(
                 }
             }, onDelete = { deleteTarget = selectedIds }, onMore = { showMore = true })
         else {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(EtaTheme.colors.outline))
-        Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onOpenSettings).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box {
-                    Icon(Icons.Outlined.Settings, null, Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
-                    if (workspace.permissionsPending > 0) Box(Modifier.align(Alignment.TopEnd).size(6.dp).background(EtaTheme.colors.attention, EtaTheme.shapes.radiusFull))
-                }
-                Text(stringResource(R.string.route_settings), Modifier.padding(start = 8.dp), style = EtaTheme.type.subhead)
+        // 底部：左边圆形设置按钮（有待处理权限时带提示点），右边黑色「新建会话」胶囊。
+        Row(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box {
+                CircleIconButton(Icons.Outlined.Settings, stringResource(R.string.route_settings), onClick = onOpenSettings)
+                if (workspace.permissionsPending > 0) Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(8.dp).background(EtaTheme.colors.attention, EtaTheme.shapes.radiusFull))
             }
-            Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onOpenPermissions).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.VerifiedUser, stringResource(R.string.route_permissions), Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
-                Text(if (workspace.permissionsPending > 0) stringResource(R.string.eta_permissions_pending, workspace.permissionsPending) else stringResource(R.string.eta_permissions_ready),
-                    Modifier.padding(start = 8.dp), style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary)
+            Spacer(Modifier.weight(1f))
+            Row(Modifier.clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.textPrimary)
+                .clickable(onClick = workspace.onNew).heightIn(min = 48.dp).padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Outlined.Add, null, Modifier.size(20.dp), tint = EtaTheme.colors.canvas)
+                Text(stringResource(R.string.eta_new_session), style = EtaTheme.type.rowTitle, color = EtaTheme.colors.canvas, maxLines = 1)
             }
         }
         }
@@ -307,26 +306,6 @@ internal fun conversationTaskStatuses(tasks: List<TaskNotificationState>): Map<S
     }
 
 @Composable
-private fun WorkspaceEntry(icon: ImageVector, label: String, tint: Color, width: Dp, onClick: () -> Unit,
-    count: Int = 0, onLongClick: (() -> Unit)? = null) {
-    val haptic = LocalHapticFeedback.current
-    var showStop by remember { mutableStateOf(false) }
-    Column(Modifier.width(width).clip(EtaTheme.shapes.radiusMd).combinedClickable(onClick = onClick,
-        onLongClick = onLongClick?.let { { haptic.performHapticFeedback(HapticFeedbackType.LongPress); showStop = true } }).padding(vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box {
-            EtaIconTile(icon, tint = tint, size = 40.dp)
-            if (count > 0) Text(count.toString(), Modifier.align(Alignment.TopEnd).background(EtaTheme.colors.accent, EtaTheme.shapes.radiusFull).padding(horizontal = 4.dp),
-                style = EtaTheme.type.caption, color = EtaTheme.colors.onAccent)
-        }
-        Text(label, style = EtaTheme.type.caption, color = EtaTheme.colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
-    EtaSheet(showStop, title = label, onDismissRequest = { showStop = false }) {
-        EtaButton(stringResource(R.string.action_stop), { showStop = false; onLongClick?.invoke() }, kind = EtaButtonKind.Destructive, modifier = Modifier.fillMaxWidth())
-    }
-}
-
-@Composable
 private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: Boolean, query: String, taskStatus: TaskVisualStatus?,
     selecting: Boolean, onClick: () -> Unit, onLongClick: () -> Unit, groupName: String? = null, modifier: Modifier = Modifier) {
     val haptic = LocalHapticFeedback.current
@@ -345,7 +324,12 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
         .background(background)
         .combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (selecting) ConversationSelectionMarker(selected) else if (taskStatus != null) StatusRing(taskStatus, size = 12.dp)
+        if (selecting) ConversationSelectionMarker(selected)
+        else Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) {
+            // 每行左侧一个类型图标（与 Claude 一致）；运行中 / 需要你时换成状态圈。
+            if (taskStatus != null) StatusRing(taskStatus, size = 14.dp)
+            else Icon(Icons.Outlined.ChatBubbleOutline, null, Modifier.size(18.dp), tint = colors.textSecondary)
+        }
         if (conversation.isPinned && query.isNotBlank()) Icon(Icons.Outlined.PushPin, stringResource(R.string.eta_pin), Modifier.size(14.dp), tint = colors.textSecondary)
         Text(markedTitle, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp), color = if (selected) colors.onAccentSoft else colors.textPrimary,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -392,14 +376,45 @@ private fun DesktopPaneRow(row: PaneDesktopSession, onClick: () -> Unit, modifie
     val colors = EtaTheme.colors
     Row(modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onClick)
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Box(Modifier.size(14.dp), contentAlignment = Alignment.Center) {
-            if (row.status != null) StatusRing(row.status, size = 12.dp)
-            else Icon(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), Modifier.size(14.dp), tint = colors.textTertiary)
+        // 与本机对话行同宽的图标位（20dp），标题左边缘对齐。
+        Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) {
+            if (row.status != null) StatusRing(row.status, size = 14.dp)
+            else Icon(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), Modifier.size(18.dp), tint = colors.textSecondary)
         }
         Text(row.title.ifBlank { stringResource(R.string.desktop_untitled) }, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp),
             color = colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         val yesterday = stringResource(R.string.eta_yesterday)
         Text(remember(row.updatedAt, yesterday) { io.github.mangi.eta.ui.app.ConversationTimeLabels.label(row.updatedAt, yesterdayLabel = yesterday, recentLabel = "") },
             style = io.github.mangi.eta.ui.theme.EtaTypography.tabular(EtaTheme.type.caption), color = colors.textTertiary, maxLines = 1)
+    }
+}
+
+/** 圆形描边图标按钮（44dp），用于侧栏的搜索与设置。 */
+@Composable
+internal fun CircleIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
+    Box(Modifier.size(44.dp).clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.surfaceRaised)
+        .border(1.dp, EtaTheme.colors.outline, EtaTheme.shapes.radiusFull).clickable(onClickLabel = description, onClick = onClick)
+        .semantics { contentDescription = description; role = Role.Button }, contentAlignment = Alignment.Center) {
+        Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary)
+    }
+}
+
+/** 侧栏顶部的功能行：线条图标 + 文字，计数显示在右侧。 */
+@Composable
+private fun PaneNavRow(icon: ImageVector, label: String, onClick: () -> Unit, count: Int = 0, onLongClick: (() -> Unit)? = null) {
+    val haptic = LocalHapticFeedback.current
+    var showStop by remember { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
+        .combinedClickable(onClick = onClick, onLongClick = onLongClick?.let { { haptic.performHapticFeedback(HapticFeedbackType.LongPress); showStop = true } })
+        .padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary)
+        Text(label, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 16.sp), color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (count > 0) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            StatusRing(TaskVisualStatus.Running, size = 12.dp, contentDescription = null)
+            Text(count.toString(), style = EtaTheme.type.caption, color = EtaTheme.colors.textSecondary)
+        }
+    }
+    if (onLongClick != null) EtaSheet(showStop, title = label, onDismissRequest = { showStop = false }) {
+        EtaButton(stringResource(R.string.action_stop), { showStop = false; onLongClick() }, kind = EtaButtonKind.Destructive, modifier = Modifier.fillMaxWidth())
     }
 }

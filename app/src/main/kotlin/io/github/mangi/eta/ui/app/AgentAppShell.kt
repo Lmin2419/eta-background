@@ -129,6 +129,7 @@ internal fun AgentAppShell(
     permissionsPending: Int = 0,
     onOpenDesktop: (() -> Unit)? = null,
     desktopRunning: Int = 0,
+    onOpenDesktopSession: (String) -> Unit = {},
     showKimi: Boolean = false,
     paneManagement: io.github.mangi.eta.ui.components.PaneManagementActions = io.github.mangi.eta.ui.components.PaneManagementActions(),
     onOpenCharacter: () -> Unit = {},
@@ -185,10 +186,33 @@ internal fun AgentAppShell(
         }
     }
 
+    // 侧栏里直接列出电脑上最近的会话（与本机对话按时间混排，左侧小电脑图标区分）。
+    val desktopList by io.github.mangi.eta.agent.remote.DesktopBridge.sessions.collectAsState()
+    val desktopServer by io.github.mangi.eta.agent.remote.DesktopBridge.server.collectAsState()
+    val desktopLink by io.github.mangi.eta.agent.remote.DesktopBridge.client.state.collectAsState()
+    val desktopApprovals by io.github.mangi.eta.agent.remote.DesktopBridge.approvals.collectAsState()
+    val desktopQuestions by io.github.mangi.eta.agent.remote.DesktopBridge.questions.collectAsState()
+    val paneDesktop = remember(desktopList, desktopApprovals, desktopQuestions, onOpenDesktop != null) {
+        if (onOpenDesktop == null) emptyList() else {
+            val needsYou = desktopApprovals.mapTo(HashSet()) { it.sessionId } + desktopQuestions.map { it.sessionId }
+            desktopList.rows.filter { with(io.github.mangi.eta.ui.screens.desktop.DesktopListing) { it.isListed() } }
+                .sortedByDescending { it.updatedAt }.take(8).map { row ->
+                    io.github.mangi.eta.ui.components.PaneDesktopSession(row.id, row.title.orEmpty(), row.updatedAt, when {
+                        row.id in needsYou -> io.github.mangi.eta.ui.model.TaskVisualStatus.Attention
+                        row.running -> io.github.mangi.eta.ui.model.TaskVisualStatus.Running
+                        else -> null
+                    })
+                }
+        }
+    }
     CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalPaneManagement provides paneManagement, LocalChatToast provides { toast = it }, LocalPaneWorkspace provides PaneWorkspaceActions(
         onNewConversation, onOpenCommonTasks, onOpenTerminal, onOpenBrowser,
         onLaunchKimiWeb.takeIf { showKimi }, kimiWebLabel, canStopKimiWeb, onStopKimiWeb, onRefreshKimiWeb,
         runningTaskCount, permissionsPending, onOpenDesktop, desktopRunning,
+        desktopSessions = paneDesktop,
+        desktopName = desktopServer?.host,
+        desktopOnline = desktopLink is io.github.mangi.eta.agent.remote.DesktopBridgeClient.State.Connected,
+        onOpenDesktopSession = onOpenDesktopSession,
     )) {
     Box(modifier = modifier.fillMaxSize()) {
         if (conversationPaneState != null && currentRoute is AppRoute.Home) {

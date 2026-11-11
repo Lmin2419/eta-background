@@ -445,6 +445,18 @@ private fun SettingsPageContent(
                         onClick = { onNavigate(AppRoute.LinuxEnvironment) },
                     )
                     EtaPreferenceDivider()
+                    // 终端入口从侧栏移到这里（阶段 12）。
+                    EtaArrowPreference(
+                        title = stringResource(R.string.route_terminal),
+                        startAction = {
+                            EtaPreferenceIcon(
+                                icon = Icons.Outlined.Terminal,
+                                tint = EtaPreferenceColors.Slate,
+                            )
+                        },
+                        onClick = { onNavigate(AppRoute.Terminal) },
+                    )
+                    EtaPreferenceDivider()
                     EtaArrowPreference(
                         title = stringResource(R.string.route_skills),
                         startAction = {

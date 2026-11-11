@@ -424,6 +424,7 @@ fun AgentAppRoot(
             onOpenCommonTasks = ::openTasks,
             onOpenDesktop = if (desktopConfig?.isComplete == true) ({ pushRoute(AppRoute.DesktopSessions) }) else null,
             desktopRunning = desktopRows.rows.count { it.running && it.listed },
+            onOpenDesktopSession = { id -> conversationPaneOpen = false; pushRoute(AppRoute.DesktopChat(id)) },
             onOpenTerminal = { pushRoute(AppRoute.Terminal) },
             onLaunchKimiWeb = {
                 requestExecutionNotifications()

@@ -429,6 +429,11 @@ internal fun DesktopSessionsContent(
 /** 主列表显示的会话：不含子代理、桌面预建的空白「新对话」和已归档会话（与桌面侧栏一致）。 */
 internal val DesktopSessionRow.listed: Boolean get() = !subagent && parentId == null && !blank && !archived
 
+/** 给 ui.app 用的同一判断（扩展属性在别的包里不便直接引用）。 */
+internal object DesktopListing {
+    fun DesktopSessionRow.isListed(): Boolean = listed
+}
+
 internal const val RECENT_GROUP = "__recent"
 internal const val OTHER_GROUP = "__other"
 internal const val RECENT_LIMIT = 5

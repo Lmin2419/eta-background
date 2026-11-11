@@ -1772,4 +1772,5 @@
     <string name="eta_new_chat_short">新對話</string>
     <string name="desktop_idle_hint">給電腦發訊息…</string>
     <string name="desktop_pane_all">全部</string>
+    <string name="eta_new_session">新建會話</string>
 </resources>
