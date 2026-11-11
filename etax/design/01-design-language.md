@@ -175,7 +175,7 @@ Compose 实现：`Modifier.shadow(elevation, shape, ambientColor, spotColor)` �
 - 只用 material-icons-extended 的 **Rounded** 家族（现有代码混用 Outlined/Rounded，统一为 Rounded；`ShortText`、`MoreHoriz` 等也换成 Rounded 版本）。
 - 尺寸：顶栏 24，列表/菜单 20，行内/徽章 16。
 - 图标颜色默认 `textSecondary`；选中或主操作用 `accent`；危险操作用 `danger`。
-- 品牌形象「胖小胖」：照着用户家的金渐层画的动漫猫头——圆脸长毛、小圆耳、琥珀金毛色（两眼间深金纹）、奶油色围脖、薄荷绿大眼 + 粗黑眼线 + 竖瞳、嘴角下撇、头微歪。源文件 `etax/design/brand/pangxiaopang.svg`，改猫只改这个 SVG，再运行 `python3 etax/design/brand/svg2vector.py` 生成矢量。资源：
+- 品牌形象「胖小胖」（阶段 12）：用户家金渐层照片生成的插画风猫脸 `etax/design/brand/pangxiaopang-illustration.png`——桌面图标铺满（`drawable-nodpi/ic_launcher_art.webp`，可见区之外镜像模糊补边），App 内标志为同图圆形头像（`ic_eta_mark.webp`）。单色场景（主题图标、状态栏、任务大图标）统一用同一只猫的字形 `etax/design/brand/pangxiaopang-glyph.svg`：小圆耳、两簇圆头脸颊长毛、圆眼镂空加高光点、头微歪 6°。改单色猫只改这个 SVG 的路径，再同步到 `ic_launcher_monochrome` / `ic_notification` / `ic_task_phone`。资源：
   - `ic_launcher_foreground`（生成）+ `ic_launcher_background`（蜂蜜蜜桃渐变底）：桌面图标，猫脸铺满可见区；
   - `ic_eta_mark`（生成）：App 内品牌标志（空状态、助手头像），无底色，资源名沿用；
   - `ic_launcher_monochrome` / `ic_notification`：单色猫头剪影（小圆耳 + 圆脸 + 眼睛镂空），主题图标与状态栏用，系统按 alpha 着色；
