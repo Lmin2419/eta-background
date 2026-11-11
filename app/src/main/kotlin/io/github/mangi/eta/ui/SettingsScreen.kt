@@ -294,7 +294,7 @@ private fun SettingsPageContent(
     MiuixScaffoldPage(
         title = stringResource(if (assistantDetails) R.string.eta_more_assistant_settings else R.string.route_settings),
         onBack = onBack,
-        containerColor = EtaTheme.colors.canvas,
+        containerColor = EtaTheme.colors.surfaceSunken,
     ) {
         if (!assistantDetails) {
             item(key = "readiness") {

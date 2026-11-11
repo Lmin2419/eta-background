@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111104`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111105`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-Warm tones removed in favour of a Claude-like palette (white pages, grey side pane, black primary buttons, one coral accent), a new simple cat-head icon, and computer sessions in the side pane. The plugin stays at 0.5.0.
+A new illustrated golden-cat icon and a finished Claude-like palette (white pages, grey side pane and settings, black primary buttons and switches, one coral accent), with computer sessions in the side pane. The plugin stays at 0.5.0.
 
-APK: **`Pangxiaopang-3.3.5-2026111104.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026111105.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111104)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111105)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 
