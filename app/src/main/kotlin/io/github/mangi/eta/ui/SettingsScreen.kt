@@ -46,6 +46,7 @@ import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Security
@@ -63,10 +64,10 @@ import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -152,8 +153,8 @@ private fun SettingsPageContent(
                 requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).bufferedWriter().use { it.write(report) }
             } }.isSuccess
             exportingDiagnostics = false
-            Toast.makeText(context, context.getString(if (saved) R.string.background_diagnostics_saved
-                else R.string.background_diagnostics_failed), Toast.LENGTH_SHORT).show()
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(context, context.getString(if (saved) R.string.background_diagnostics_saved
+                else R.string.background_diagnostics_failed), Toast.LENGTH_SHORT)
         }
     }
     val capabilities = rememberDeviceCapabilities()
@@ -179,7 +180,7 @@ private fun SettingsPageContent(
             context.startActivity(Intent(Settings.ACTION_VOICE_INPUT_SETTINGS))
         }.isFailure
         if (failed) {
-            Toast.makeText(context, context.getString(R.string.settings_open_assistant_failed), Toast.LENGTH_SHORT).show()
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(context, context.getString(R.string.settings_open_assistant_failed), Toast.LENGTH_SHORT)
         }
     }
 
@@ -203,17 +204,17 @@ private fun SettingsPageContent(
                 }.getOrNull()
                 checkingUpdate = false
                 when {
-                    release == null -> Toast.makeText(
+                    release == null -> io.github.mangi.eta.ui.components.EtaToastCenter.show(
                         context.applicationContext,
                         context.getString(R.string.ui_update_check_failed),
                         Toast.LENGTH_SHORT,
-                    ).show()
+                    )
                     AppUpdateChecker.isNewer(release.version, appVersionName) -> availableUpdate = release
-                    else -> Toast.makeText(
+                    else -> io.github.mangi.eta.ui.components.EtaToastCenter.show(
                         context.applicationContext,
                         context.getString(R.string.ui_update_already_latest),
                         Toast.LENGTH_SHORT,
-                    ).show()
+                    )
                 }
             }
         }
@@ -552,11 +553,11 @@ private fun SettingsPageContent(
                                     powerAssistantTarget = target
                                     enhancementHistory.recordCommittedTarget(target)
                                 } else {
-                                    Toast.makeText(
+                                    io.github.mangi.eta.ui.components.EtaToastCenter.show(
                                         context.applicationContext,
                                         context.getString(R.string.settings_write_failed),
                                         Toast.LENGTH_SHORT,
-                                    ).show()
+                                    )
                                 }
                             },
                             startAction = {
@@ -674,11 +675,11 @@ private fun SettingsPageContent(
                                             context.getString(R.string.accessibility_protection_rejected)
                                     }
                                     if (failureMessage != null) {
-                                        Toast.makeText(
+                                        io.github.mangi.eta.ui.components.EtaToastCenter.show(
                                             context.applicationContext,
                                             failureMessage,
                                             Toast.LENGTH_SHORT,
-                                        ).show()
+                                        )
                                     }
                                 }
                             },
@@ -720,6 +721,15 @@ private fun SettingsPageContent(
                     )
                     EtaPreferenceDivider()
                     LanguagePreference(iconTint = EtaPreferenceColors.Pink)
+                    EtaPreferenceDivider()
+                    val hapticsContext = androidx.compose.ui.platform.LocalContext.current
+                    remember(hapticsContext) { io.github.mangi.eta.ui.components.EtaHaptics.init(hapticsContext) }
+                    val hapticsOn by io.github.mangi.eta.ui.components.EtaHaptics.enabled.collectAsState()
+                    EtaSwitchPreference(title = stringResource(R.string.settings_haptics_title),
+                        summary = stringResource(R.string.settings_haptics_summary),
+                        checked = hapticsOn,
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.Vibration, tint = EtaPreferenceColors.Pink) },
+                        onCheckedChange = { io.github.mangi.eta.ui.components.EtaHaptics.setEnabled(hapticsContext, it) })
                 }
             }
             item(key = "section_data") {
@@ -938,11 +948,11 @@ private fun SettingsPageContent(
                         GoogleAppSystemizerInstaller(context.applicationContext).install()
                     }
                     installingSystemizer = false
-                    Toast.makeText(
+                    io.github.mangi.eta.ui.components.EtaToastCenter.show(
                         context.applicationContext,
                         result.toToastMessage(context),
                         Toast.LENGTH_LONG,
-                    ).show()
+                    )
                 }
             },
         )
@@ -1044,11 +1054,11 @@ private fun SwitchPref(
                     Prefs.reconcileAgentPreferences(EtaApp.serviceInstance)
                 }
             } else {
-                Toast.makeText(
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(
                     context.applicationContext,
                     context.getString(R.string.settings_write_failed),
                     Toast.LENGTH_SHORT,
-                ).show()
+                )
             }
         },
         startAction = {

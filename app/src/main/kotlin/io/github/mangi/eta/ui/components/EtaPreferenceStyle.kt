@@ -43,12 +43,15 @@ internal object EtaPreferenceDefaults {
 internal fun EtaPreferenceTheme(content: @Composable () -> Unit) {
     // Scope typography to preferences; retain AgentAppTheme's palette and density.
     val type = EtaTheme.type
+    val selection = androidx.compose.foundation.text.selection.LocalTextSelectionColors.current
     MiuixTheme(colors = MiuixTheme.colorScheme, textStyles = MiuixTheme.textStyles.copy(
         body1 = type.rowTitle, body2 = type.subhead, button = type.rowTitle,
         footnote1 = type.footnote, footnote2 = type.caption, subtitle = type.caption,
         title1 = type.title1, title2 = type.title2, title3 = type.topBarTitle, title4 = type.title2,
     )) {
-        CompositionLocalProvider(LocalSquircleEnabled provides false, content = content)
+        // 内层 MiuixTheme 会重设选区颜色，这里接回 App 统一的珊瑚橘。
+        CompositionLocalProvider(LocalSquircleEnabled provides false,
+            androidx.compose.foundation.text.selection.LocalTextSelectionColors provides selection, content = content)
     }
 }
 
@@ -86,7 +89,7 @@ internal fun EtaPreferenceIcon(
 internal fun EtaPreferenceDivider(hasLeading: Boolean = true, modifier: Modifier = Modifier) {
     HorizontalDivider(
         modifier = modifier.padding(start = EtaPreferenceDefaults.contentStart(hasLeading), end = EtaPreferenceDefaults.SidePadding),
-        thickness = 1.dp,
+        thickness = 0.5.dp,
         color = EtaTheme.colors.outline,
     )
 }

@@ -260,19 +260,19 @@ fun AgentAppRoot(
                 withContext(Dispatchers.IO) {
                     output.use { it.write(markdown.toByteArray(Charsets.UTF_8)) }
                 }
-                Toast.makeText(
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(
                     context,
                     resources.getString(R.string.conversation_exported),
                     Toast.LENGTH_SHORT,
-                ).show()
+                )
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Throwable) {
-                Toast.makeText(
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(
                     context,
                     resources.getString(R.string.conversation_export_failed),
                     Toast.LENGTH_LONG,
-                ).show()
+                )
             }
         }
     }
@@ -293,7 +293,7 @@ fun AgentAppRoot(
         // A newer navigation request can arrive while the file read is in flight.
         if (!onCommonTaskConsumed(request.requestId)) return@LaunchedEffect
         if (task == null) {
-            Toast.makeText(context, R.string.common_tasks_missing, Toast.LENGTH_LONG).show()
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(context, R.string.common_tasks_missing, Toast.LENGTH_LONG)
         } else if (agentState.startCommonTask(task.id, task.instruction, request.requestId)) {
             rememberTaskUse(task.id)
             requestExecutionNotifications()
@@ -431,11 +431,11 @@ fun AgentAppRoot(
                 if (appViewModel.kimiWebState.phase != KimiWebPhase.NOT_INSTALLED) {
                     appViewModel.launchKimiWeb { result ->
                         if (result is KimiWebLaunchResult.Failed) {
-                            Toast.makeText(
+                            io.github.mangi.eta.ui.components.EtaToastCenter.show(
                                 context,
                                 result.message(context),
                                 Toast.LENGTH_LONG,
-                            ).show()
+                            )
                         }
                     }
                 } else {

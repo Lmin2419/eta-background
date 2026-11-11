@@ -87,10 +87,10 @@ internal fun DesktopQuestionSheet(ask: DesktopAsk?, onDismiss: () -> Unit) {
                     target.callId != null -> DesktopBridge.replyQuestion(target.sessionId, target.callId, answers)
                     else -> false
                 }
-                if (!accepted) Toast.makeText(context, resources.getString(R.string.desktop_question_closed), Toast.LENGTH_SHORT).show()
+                if (!accepted) io.github.mangi.eta.ui.components.EtaToastCenter.show(context, resources.getString(R.string.desktop_question_closed), Toast.LENGTH_SHORT)
                 onDismiss()
             } catch (error: DesktopBridgeException) {
-                Toast.makeText(context, error.display(resources), Toast.LENGTH_SHORT).show()
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(context, error.display(resources), Toast.LENGTH_SHORT)
             } finally {
                 sending = false
             }

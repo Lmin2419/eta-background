@@ -251,7 +251,7 @@ internal fun OverlaySupplementInput(
                     lineHeight = 18.sp,
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
-                cursorBrush = SolidColor(MiuixTheme.colorScheme.primary),
+                cursorBrush = SolidColor(io.github.mangi.eta.ui.theme.EtaTheme.colors.accent),
                 maxLines = 4,
             )
         }

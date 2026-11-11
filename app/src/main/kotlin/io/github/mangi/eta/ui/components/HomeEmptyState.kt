@@ -45,7 +45,7 @@ internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> U
     val motion = EtaTheme.motion
     val arrival = remember { Animatable(0f) }
     LaunchedEffect(motion.reduceMotion) { arrival.animateTo(1f, tween(motion.long, easing = motion.emphasizedDecelerate)) }
-    val greeting = when (LocalTime.now().hour) { in 5..11 -> R.string.eta_good_morning; in 12..17 -> R.string.eta_good_afternoon; else -> R.string.eta_good_evening }
+    val greeting = when (LocalTime.now().hour) { in 5..11 -> R.string.eta_good_morning; in 12..17 -> R.string.eta_good_afternoon; in 18..23 -> R.string.eta_good_evening; else -> R.string.eta_good_late }
     BoxWithConstraints(modifier) {
         val leadingSpace = maxHeight * if (showSuggestions) 0.12f else 0.08f
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)
@@ -55,10 +55,17 @@ internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> U
                 Text(character.characterName, style = EtaTheme.type.display, modifier = Modifier.padding(top = 16.dp))
                 Text(stringResource(R.string.chat_character_story_start), style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary)
             } else {
-                EtaBrandMark(Modifier.size(48.dp).graphicsLayer { alpha = arrival.value })
-                Text(stringResource(greeting), style = EtaTheme.type.display, color = EtaTheme.colors.textPrimary)
+                // 爪印先落下、脚趾依次冒出；问候和副标题随后由下往上浮现。
+                EtaPawArrival(size = 52.dp)
+                Text(stringResource(greeting), style = EtaTheme.type.display, color = EtaTheme.colors.textPrimary,
+                    modifier = Modifier.padding(top = 12.dp).graphicsLayer {
+                        alpha = arrival.value; translationY = (1f - arrival.value) * 8.dp.toPx()
+                    })
                 Text(stringResource(R.string.eta_home_subtitle), style = EtaTheme.type.subhead,
-                    color = EtaTheme.colors.textSecondary, modifier = Modifier.padding(top = 8.dp, bottom = 24.dp))
+                    color = EtaTheme.colors.textSecondary, modifier = Modifier.padding(top = 8.dp, bottom = 24.dp).graphicsLayer {
+                        val t = ((arrival.value - 0.25f) / 0.75f).coerceIn(0f, 1f)
+                        alpha = t; translationY = (1f - t) * 8.dp.toPx()
+                    })
                 if (showSuggestions) {
                     if (shortcuts.missingSetupCount > 0) {
                         Column(Modifier.fillMaxWidth().background(EtaTheme.colors.attentionSoft, EtaTheme.shapes.radiusMd)
@@ -108,6 +115,7 @@ private fun HomeSuggestionRow(card: HomeSuggestion, modifier: Modifier) {
     val background by animateColorAsState(if (pressed) EtaTheme.colors.surfaceSunken else EtaTheme.colors.surface,
         tween(EtaTheme.motion.micro, easing = EtaTheme.motion.standard), label = "suggestionPress")
     Row(modifier.fillMaxWidth().heightIn(min = 56.dp).background(background)
+        .etaPressScale(source, pressedScale = 0.98f)
         .clickable(role = Role.Button, interactionSource = source, indication = null, onClick = card.onClick)
         .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

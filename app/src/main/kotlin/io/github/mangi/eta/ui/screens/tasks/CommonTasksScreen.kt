@@ -98,8 +98,8 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
 
     LaunchedEffect(store.error) {
         if (store.error) {
-            Toast.makeText(context, if (store.conflict) R.string.common_tasks_conflict else R.string.common_tasks_save_failed,
-                Toast.LENGTH_LONG).show()
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(context, if (store.conflict) R.string.common_tasks_conflict else R.string.common_tasks_save_failed,
+                Toast.LENGTH_LONG)
             store.dismissError()
         }
     }
@@ -210,8 +210,8 @@ internal fun CommonTasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRu
                 EtaButton(stringResource(R.string.common_tasks_pin), {
                     menuId = null
                     val accepted = runCatching { CommonTaskShortcuts.requestPin(context, task) }.getOrDefault(false)
-                    Toast.makeText(context, if (accepted) R.string.common_tasks_pin_requested else R.string.common_tasks_pin_unavailable,
-                        Toast.LENGTH_LONG).show()
+                    io.github.mangi.eta.ui.components.EtaToastCenter.show(context, if (accepted) R.string.common_tasks_pin_requested else R.string.common_tasks_pin_unavailable,
+                        Toast.LENGTH_LONG)
                 }, Modifier.fillMaxWidth())
                 EtaButton(stringResource(R.string.common_tasks_delete), { menuId = null; deleteId = task.id }, Modifier.fillMaxWidth())
             }

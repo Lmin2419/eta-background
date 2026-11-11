@@ -17,6 +17,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -709,16 +710,22 @@ internal fun AnswerActionButton(
         minWidth = AnswerActionSize,
         minHeight = AnswerActionSize,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(18.dp),
-            tint = when {
-                !enabled -> MiuixTheme.colorScheme.disabledOnSurface
-                tint != null -> tint
-                else -> EtaTheme.colors.textTertiary
+        // 图标切换（如复制 → 对勾）带一点缩放淡入，不是生硬替换。
+        val iconTint = when {
+            !enabled -> MiuixTheme.colorScheme.disabledOnSurface
+            tint != null -> tint
+            else -> EtaTheme.colors.textTertiary
+        }
+        androidx.compose.animation.AnimatedContent(
+            targetState = icon,
+            transitionSpec = {
+                (androidx.compose.animation.fadeIn(tween(160)) + androidx.compose.animation.scaleIn(androidx.compose.animation.core.spring(dampingRatio = 0.55f, stiffness = 700f), initialScale = 0.6f))
+                    .togetherWith(androidx.compose.animation.fadeOut(tween(100)) + androidx.compose.animation.scaleOut(tween(100), targetScale = 0.6f))
             },
-        )
+            label = "answerActionIcon",
+        ) { current ->
+            Icon(imageVector = current, contentDescription = contentDescription, modifier = Modifier.size(18.dp), tint = iconTint)
+        }
     }
 }
 

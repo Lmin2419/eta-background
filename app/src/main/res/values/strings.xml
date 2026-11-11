@@ -1867,4 +1867,8 @@
     <string name="desktop_idle_hint">Message your computer…</string>
     <string name="desktop_pane_all">All</string>
     <string name="eta_new_session">New chat</string>
+    <string name="eta_good_late">Still up?</string>
+    <string name="settings_haptics_title">Haptic feedback</string>
+    <string name="settings_haptics_summary">A light tap when you send, flip a switch, open a menu or a task finishes</string>
+    <string name="pull_to_refresh">Pull to refresh</string>
 </resources>

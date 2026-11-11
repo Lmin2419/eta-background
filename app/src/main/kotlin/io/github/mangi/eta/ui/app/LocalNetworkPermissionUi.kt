@@ -81,6 +81,6 @@ private fun openLocalNetworkPermissionSettings(context: Context) {
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")),
         )
     } catch (_: ActivityNotFoundException) {
-        Toast.makeText(context, R.string.permission_local_network_settings_unavailable, Toast.LENGTH_LONG).show()
+        io.github.mangi.eta.ui.components.EtaToastCenter.show(context, R.string.permission_local_network_settings_unavailable, Toast.LENGTH_LONG)
     }
 }

@@ -323,7 +323,7 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
     Row(modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
         .semantics { if (selecting) { this.selected = selected; role = Role.Checkbox } }
         .background(background)
-        .combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })
+        .etaTouchScale().combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (selecting) ConversationSelectionMarker(selected)
         else Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) {
@@ -375,7 +375,7 @@ private fun DesktopPaneHeader(name: String?, online: Boolean, collapsed: Boolean
 @Composable
 private fun DesktopPaneRow(row: PaneDesktopSession, onClick: () -> Unit, modifier: Modifier) {
     val colors = EtaTheme.colors
-    Row(modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onClick)
+    Row(modifier.fillMaxWidth().heightIn(min = 48.dp).etaTouchScale().clip(EtaTheme.shapes.radiusMd).clickable(onClick = onClick)
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         // 与本机对话行同宽的图标位（20dp），标题左边缘对齐。
         Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) {
@@ -406,7 +406,7 @@ private fun PaneNavRow(icon: ImageVector, label: String, onClick: () -> Unit, co
     val haptic = LocalHapticFeedback.current
     var showStop by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
-        .combinedClickable(onClick = onClick, onLongClick = onLongClick?.let { { haptic.performHapticFeedback(HapticFeedbackType.LongPress); showStop = true } })
+        .etaTouchScale().combinedClickable(onClick = onClick, onLongClick = onLongClick?.let { { haptic.performHapticFeedback(HapticFeedbackType.LongPress); showStop = true } })
         .padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary)
         Text(label, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 16.sp), color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)

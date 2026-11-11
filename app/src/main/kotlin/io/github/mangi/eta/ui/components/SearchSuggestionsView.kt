@@ -96,9 +96,9 @@ internal class SearchSuggestionsWebView(
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         })
                     } catch (_: ActivityNotFoundException) {
-                        Toast.makeText(context, context.getString(io.github.mangi.eta.R.string.search_no_browser), Toast.LENGTH_SHORT).show()
+                        io.github.mangi.eta.ui.components.EtaToastCenter.show(context, context.getString(io.github.mangi.eta.R.string.search_no_browser), Toast.LENGTH_SHORT)
                     } catch (_: SecurityException) {
-                        Toast.makeText(context, context.getString(io.github.mangi.eta.R.string.search_open_failed), Toast.LENGTH_SHORT).show()
+                        io.github.mangi.eta.ui.components.EtaToastCenter.show(context, context.getString(io.github.mangi.eta.R.string.search_open_failed), Toast.LENGTH_SHORT)
                     }
                 }
                 return true

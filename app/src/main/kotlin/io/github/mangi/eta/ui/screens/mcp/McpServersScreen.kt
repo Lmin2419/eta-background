@@ -212,11 +212,11 @@ internal fun McpServersScreen(
                             url = ""
                             token = ""
                             error = null
-                            Toast.makeText(
+                            io.github.mangi.eta.ui.components.EtaToastCenter.show(
                                 context,
                                 resources.getString(R.string.mcp_server_added, it.tools.size),
                                 Toast.LENGTH_SHORT,
-                            ).show()
+                            )
                         }.onFailure {
                             error = it.message ?: resources.getString(R.string.mcp_connection_failed)
                         }
@@ -256,14 +256,14 @@ internal fun McpServerDetailScreen(
                             runCatching { McpServerManager.refresh(serverId) }
                         }
                         working = false
-                        Toast.makeText(
+                        io.github.mangi.eta.ui.components.EtaToastCenter.show(
                             context,
                             result.fold(
                                 onSuccess = { resources.getString(R.string.mcp_refreshed, it.tools.size) },
                                 onFailure = { it.message ?: resources.getString(R.string.mcp_refresh_failed) },
                             ),
                             Toast.LENGTH_SHORT,
-                        ).show()
+                        )
                     }
                 },
             ) {

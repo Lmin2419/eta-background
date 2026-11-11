@@ -118,7 +118,7 @@ internal fun rememberSpeechPermission(onGranted: () -> Unit): () -> Unit {
     val deniedMessage = stringResource(R.string.speech_mic_permission)
     val action by rememberUpdatedState(onGranted)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) action() else Toast.makeText(context, deniedMessage, Toast.LENGTH_SHORT).show()
+        if (granted) action() else io.github.mangi.eta.ui.components.EtaToastCenter.show(context, deniedMessage, Toast.LENGTH_SHORT)
     }
     return {
         if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
@@ -356,7 +356,7 @@ internal fun SpeechPlaybackErrors(controller: SpeechPlaybackController) {
     val context = LocalContext.current
     val state by controller.state.collectAsState()
     LaunchedEffect(state.error) {
-        state.error?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+        state.error?.let { io.github.mangi.eta.ui.components.EtaToastCenter.show(context, it, Toast.LENGTH_LONG) }
     }
 }
 

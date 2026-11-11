@@ -59,8 +59,10 @@ internal fun EtaContextMenu(
     var visible by remember { mutableStateOf(false) }
     val progress = remember { Animatable(0f) }
     val motion = EtaTheme.motion
+    val haptics = rememberEtaHaptics()
     LaunchedEffect(show) {
         if (show) {
+            if (!visible) haptics.longPress()
             visible = true
             progress.animateTo(1f, if (motion.reduceMotion) tween(motion.short) else spring(dampingRatio = 0.72f, stiffness = 520f))
         } else if (visible) {

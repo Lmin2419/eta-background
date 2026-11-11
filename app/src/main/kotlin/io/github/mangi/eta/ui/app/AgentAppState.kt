@@ -828,7 +828,7 @@ internal class AgentAppState(
                 throw cancelled
             } catch (_: Throwable) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(appContext, appContext.getString(R.string.state_ui_model_switching_failed_please_try_again_later_4af439), Toast.LENGTH_SHORT).show()
+                    io.github.mangi.eta.ui.components.EtaToastCenter.show(appContext, appContext.getString(R.string.state_ui_model_switching_failed_please_try_again_later_4af439), Toast.LENGTH_SHORT)
                 }
             } finally {
                 withContext(Dispatchers.Main) {
@@ -886,9 +886,9 @@ internal class AgentAppState(
                 if (homeState.roleplayMessages.pendingRewrites.isNotEmpty()) refreshRuntimeResults()
                 if (homeState.modelId != null && providers.enabledModel(homeState.modelId) == null) {
                     modelPickerState.selectedModel?.let { fallback ->
-                        Toast.makeText(appContext, appContext.getString(
+                        io.github.mangi.eta.ui.components.EtaToastCenter.show(appContext, appContext.getString(
                             R.string.conversation_model_unavailable, fallback.displayName,
-                        ), Toast.LENGTH_SHORT).show()
+                        ), Toast.LENGTH_SHORT)
                     }
                 }
                 if (persistSelection) persistConversations()
@@ -1171,7 +1171,7 @@ internal class AgentAppState(
             val saved = persistConversations()
             scope.launch {
                 if (saved.await()) batch.onComplete(ids.size)
-                else Toast.makeText(appContext, R.string.conversation_delete_save_failed, Toast.LENGTH_LONG).show()
+                else io.github.mangi.eta.ui.components.EtaToastCenter.show(appContext, R.string.conversation_delete_save_failed, Toast.LENGTH_LONG)
             }
         }
     }
@@ -1194,7 +1194,7 @@ internal class AgentAppState(
     private fun abortPendingConversationDelete(conversationId: String) {
         if (pendingConversationDeletes.remove(conversationId)) {
             conversationDeleteBatches.forEach { it.ids.remove(conversationId); it.waiting.remove(conversationId) }
-            Toast.makeText(appContext, R.string.conversation_delete_save_failed, Toast.LENGTH_LONG).show()
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(appContext, R.string.conversation_delete_save_failed, Toast.LENGTH_LONG)
             drainConversationDeletes()
         }
     }
@@ -1425,11 +1425,11 @@ internal class AgentAppState(
                 terminalToolsEnabled = agentBooleanForUi(Prefs.Keys.AGENT_TERMINAL_TOOLS),
             )
         ) {
-            Toast.makeText(
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(
                 appContext,
                 appContext.getString(R.string.state_ui_file_path_reference_requires_opening_the_termina_deca4c),
                 Toast.LENGTH_SHORT,
-            ).show()
+            )
             return
         }
 
@@ -1492,11 +1492,11 @@ internal class AgentAppState(
                 terminalToolsEnabled = agentBooleanForUi(Prefs.Keys.AGENT_TERMINAL_TOOLS),
             )
         ) {
-            Toast.makeText(
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(
                 appContext,
                 appContext.getString(R.string.state_ui_file_path_reference_requires_opening_the_termina_deca4c),
                 Toast.LENGTH_SHORT,
-            ).show()
+            )
             return
         }
         dispatchMessageToConversation(
@@ -1655,7 +1655,7 @@ internal class AgentAppState(
     private fun revisionBoundary(messageId: String): AgentConversationRevisionReducer.Boundary? =
         AgentConversationRevisionReducer.boundary(homeState, messageId).also { boundary ->
             if (boundary == null && homeState.hasEarlierMessages) {
-                Toast.makeText(appContext, R.string.conversation_load_turn_start, Toast.LENGTH_SHORT).show()
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(appContext, R.string.conversation_load_turn_start, Toast.LENGTH_SHORT)
             }
         }
 
@@ -1969,11 +1969,11 @@ internal class AgentAppState(
     }
 
     private fun showCompactedRevisionNotice() {
-        Toast.makeText(
+        io.github.mangi.eta.ui.components.EtaToastCenter.show(
             appContext,
             appContext.getString(R.string.state_ui_the_earlier_context_has_been_compressed_and_will_cf6c86),
             Toast.LENGTH_LONG,
-        ).show()
+        )
     }
 
     fun attachImage(uri: String) {
@@ -1986,11 +1986,11 @@ internal class AgentAppState(
                 )
                 if (image == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(
+                        io.github.mangi.eta.ui.components.EtaToastCenter.show(
                             appContext,
                             appContext.getString(R.string.state_ui_unable_to_read_this_image_please_try_again_or_us_d94978),
                             Toast.LENGTH_SHORT,
-                        ).show()
+                        )
                     }
                     return@launch
                 }
@@ -2076,7 +2076,7 @@ internal class AgentAppState(
             }
             withContext(Dispatchers.Main) {
                 if (ownerVersion != fileAttachmentOwnerVersion) {
-                    Toast.makeText(appContext, appContext.getString(R.string.state_ui_conversation_switched_selected_path_not_added_5bf91e), Toast.LENGTH_SHORT).show()
+                    io.github.mangi.eta.ui.components.EtaToastCenter.show(appContext, appContext.getString(R.string.state_ui_conversation_switched_selected_path_not_added_5bf91e), Toast.LENGTH_SHORT)
                     return@withContext
                 }
                 val existingPaths = homeState.pendingFileReferences
@@ -2109,7 +2109,7 @@ internal class AgentAppState(
                     else -> null
                 }
                 if (message != null) {
-                    Toast.makeText(appContext, message, Toast.LENGTH_SHORT).show()
+                    io.github.mangi.eta.ui.components.EtaToastCenter.show(appContext, message, Toast.LENGTH_SHORT)
                 }
             }
         }

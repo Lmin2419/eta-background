@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import io.github.mangi.eta.ui.app.ConversationTimeLabels
 import io.github.mangi.eta.ui.components.EtaSearchField
 import io.github.mangi.eta.ui.components.etaAnimateItem
+import io.github.mangi.eta.ui.components.etaTouchScale
 import io.github.mangi.eta.ui.components.label
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -144,7 +145,7 @@ internal fun DesktopSessionsScreen(
     }
 
     fun failed(error: DesktopBridgeException) =
-        Toast.makeText(context, error.display(resources), Toast.LENGTH_SHORT).show()
+        io.github.mangi.eta.ui.components.EtaToastCenter.show(context, error.display(resources), Toast.LENGTH_SHORT)
 
     fun create(workspace: DesktopWorkspace?) {
         if (creating) return
@@ -249,6 +250,9 @@ internal fun DesktopSessionsContent(
         title = (connection as? DesktopBridgeClient.State.Connected)?.host?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_title),
         onBack = onBack,
         compactTitle = true,
+        // 已连上电脑时可下拉刷新会话列表。
+        refreshing = sessions.loading,
+        onRefresh = onRefresh.takeIf { connected && ready },
         actions = {
             if (ready) {
                 EtaIconButton(onClick = { searching = !searching; if (!searching) onQueryChange("") }) {
@@ -343,6 +347,10 @@ internal fun DesktopSessionsContent(
         }
 
         val groups = groupByWorkspace(listed, sessions.workspaces)
+        if (!sessions.loaded && listed.isEmpty()) {
+            // 第一次加载列表：几行占位条，比转圈更安静。
+            item(key = "skeleton") { io.github.mangi.eta.ui.components.EtaSkeletonRows(modifier = Modifier.padding(top = 8.dp)) }
+        }
         if (sessions.loaded && listed.isEmpty() && groups.none { it.workspace != null }) {
             item(key = "empty") {
                 ListEmptyState(
@@ -538,7 +546,7 @@ private fun DesktopSessionLine(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(EtaTheme.shapes.radiusMd)
-            .combinedClickable(
+            .etaTouchScale().combinedClickable(
                 onClick = onClick,
                 onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() },
                 onLongClickLabel = stringResource(R.string.desktop_session_actions),

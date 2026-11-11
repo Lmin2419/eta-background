@@ -242,7 +242,7 @@ private fun AssistantInputBar(
                     fontSize = 15.sp,
                     lineHeight = 24.sp,
                 ),
-                cursorBrush = SolidColor(themeColors.textPrimary),
+                cursorBrush = SolidColor(themeColors.accent),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = { if (canSubmit) onSubmit() }),
                 maxLines = 4,

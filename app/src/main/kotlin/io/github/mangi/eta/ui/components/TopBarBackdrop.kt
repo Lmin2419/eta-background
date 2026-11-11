@@ -4,10 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
@@ -17,12 +14,9 @@ internal fun rememberTopBarBackdrop(): LayerBackdrop? = null
 
 @Suppress("UNUSED_PARAMETER")
 @Composable
-internal fun TopBarBackdrop(backdrop: LayerBackdrop?, content: @Composable () -> Unit) {
-    val colors = EtaTheme.colors
-    Box(Modifier.background(colors.canvas).drawWithContent {
-        drawContent()
-        drawLine(colors.outline, Offset(0f, size.height - 0.5.dp.toPx()), Offset(size.width, size.height - 0.5.dp.toPx()), 1.dp.toPx())
-    }) { content() }
+internal fun TopBarBackdrop(backdrop: LayerBackdrop?, color: Color = EtaTheme.colors.canvas, content: @Composable () -> Unit) {
+    // 分隔线由 AdaptiveTopAppBar 按滚动位置淡入淡出，这里只铺底色。
+    Box(Modifier.background(color)) { content() }
 }
 
 @Suppress("UNUSED_PARAMETER")

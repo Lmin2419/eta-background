@@ -19,7 +19,7 @@ internal object OverlayPermissionSettings {
             Destination.APP_DETAILS -> R.string.overlay_settings_app_details
             Destination.UNAVAILABLE -> R.string.overlay_settings_unavailable
         }
-        message?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+        message?.let { io.github.mangi.eta.ui.components.EtaToastCenter.show(context, it, Toast.LENGTH_LONG) }
     }
 
     internal fun launch(context: Context): Destination {

@@ -376,7 +376,7 @@ internal fun AgentChatInputBar(
                             .focusRequester(focusRequester),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                         textStyle = inputTextStyle.copy(color = MiuixTheme.colorScheme.onSurface),
-                        cursorBrush = SolidColor(MiuixTheme.colorScheme.primary),
+                        cursorBrush = SolidColor(EtaTheme.colors.accent),
                         lineLimits = TextFieldLineLimits.MultiLine(
                             minHeightInLines = 1,
                             maxHeightInLines = 8,

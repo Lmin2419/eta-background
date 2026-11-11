@@ -231,6 +231,13 @@ internal fun AgentChatBody(
     // 发送后把这一轮的用户消息停在屏幕上方、回复在下面展开（不再一直贴底）；计数器每次发送递增。
     var pinTurnRequest by remember { mutableIntStateOf(0) }
 
+    // 一轮回复完整结束时轻轻振动一下（只在从「生成中」变为结束时，不在打开旧会话时）。
+    val haptics = rememberEtaHaptics()
+    var wasStreaming by remember { mutableStateOf(false) }
+    LaunchedEffect(isStreaming) {
+        if (wasStreaming && !isStreaming) haptics.confirm()
+        wasStreaming = isStreaming
+    }
     LaunchedEffect(isStreaming) {
         if (isStreaming && sentFromKeyboard) {
             keyboard?.hide()

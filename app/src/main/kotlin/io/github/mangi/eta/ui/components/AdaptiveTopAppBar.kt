@@ -39,12 +39,19 @@ fun AdaptiveTopAppBar(
         derivedStateOf { pinned || (state?.collapsedFraction ?: 0f) >= 1f / 3f }
     }
     val outline = EtaTheme.colors.outline
+    // 页面在顶部时顶栏与页面连成一片；内容滚到顶栏下面时，底部淡入一条细线。
+    val scrolled by remember(state) { derivedStateOf { state == null || state.contentOffset < 0f || state.heightOffset < 0f } }
+    val lineAlpha = androidx.compose.animation.core.animateFloatAsState(if (scrolled) 1f else 0f,
+        androidx.compose.animation.core.tween(EtaTheme.motion.short), label = "topBarLine")
     Layout(
         modifier = modifier.fillMaxWidth().background(color)
             .drawWithContent {
                 drawContent()
-                if (state == null || state.contentOffset < 0f || state.heightOffset < 0f)
-                    drawLine(outline, Offset(0f, size.height - 0.5.dp.toPx()), Offset(size.width, size.height - 0.5.dp.toPx()), 1.dp.toPx())
+                val a = lineAlpha.value
+                if (a > 0.01f) {
+                    val y = size.height - 0.25.dp.toPx()
+                    drawLine(outline.copy(alpha = outline.alpha * a), Offset(0f, y), Offset(size.width, y), 0.5.dp.toPx())
+                }
             }
             .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))

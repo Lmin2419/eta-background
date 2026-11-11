@@ -313,10 +313,14 @@ internal fun DesktopChatScreen(
                     )
                 }
             }
+            if (!state.loaded && state.error == null) {
+                // 打开会话时用占位条代替转圈，内容到了直接替换。
+                io.github.mangi.eta.ui.components.EtaSkeletonChat(Modifier.weight(1f))
+                return@Column
+            }
             if (!state.loaded) {
                 Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        InfiniteProgressIndicator()
                         Text(
                             text = state.error ?: stringResource(R.string.desktop_loading),
                             style = MiuixTheme.textStyles.footnote1,
@@ -467,7 +471,7 @@ private fun readFile(context: Context, reference: AgentFileReference): DesktopFi
 }.getOrNull()
 
 private fun Context.toast(text: String) {
-    Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+    io.github.mangi.eta.ui.components.EtaToastCenter.show(this, text, Toast.LENGTH_SHORT)
 }
 
 private fun loadPendingImage(context: Context, uri: String): PendingImageUi? {

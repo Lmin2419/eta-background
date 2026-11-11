@@ -1773,4 +1773,8 @@
     <string name="desktop_idle_hint">給電腦發訊息…</string>
     <string name="desktop_pane_all">全部</string>
     <string name="eta_new_session">新建會話</string>
+    <string name="eta_good_late">夜深了</string>
+    <string name="settings_haptics_title">觸感回饋</string>
+    <string name="settings_haptics_summary">傳送、開關、長按選單和任務完成時輕輕震動一下</string>
+    <string name="pull_to_refresh">下拉重新整理</string>
 </resources>

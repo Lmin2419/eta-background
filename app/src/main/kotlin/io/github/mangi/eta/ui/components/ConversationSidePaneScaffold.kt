@@ -99,8 +99,8 @@ fun ConversationSidePaneScaffold(
                     onOpenTools, onOpenSkills, onOpenCharacters, onOpenPermissions,
                     Modifier.drawWithContent {
                         drawContent()
-                        drawLine(outline, androidx.compose.ui.geometry.Offset(size.width - 1.dp.toPx(), 0f),
-                            androidx.compose.ui.geometry.Offset(size.width - 1.dp.toPx(), size.height), 1.dp.toPx())
+                        drawLine(outline, androidx.compose.ui.geometry.Offset(size.width - 0.25.dp.toPx(), 0f),
+                            androidx.compose.ui.geometry.Offset(size.width - 0.25.dp.toPx(), size.height), 0.5.dp.toPx())
                     })
                 Box(Modifier.weight(1f)) { content() }
             }

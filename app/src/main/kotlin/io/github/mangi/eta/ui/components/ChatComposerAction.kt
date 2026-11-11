@@ -76,7 +76,8 @@ internal fun ComposerActionButton(
     LaunchedEffect(sent) {
         if (sent > 0) { flash.snapTo(1f); flash.animateTo(0f, tween(motion.short)) }
     }
-    val trigger = { if (action == ComposerAction.Send) sent++; click() }
+    val haptics = rememberEtaHaptics()
+    val trigger = { if (action == ComposerAction.Send) sent++; haptics.tick(); click() }
     val latestTrigger by rememberUpdatedState(trigger)
     val aurora = colors.aurora
     Box(modifier.size(48.dp)

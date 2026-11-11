@@ -10,7 +10,7 @@ A development candidate adds built-in Root configuration for the system assistan
 
 **2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111105`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-A new coral paw-print icon on white and a finished Claude-like palette (white pages, grey side pane and settings, black primary buttons and switches, one coral accent), with computer sessions in the side pane. The plugin stays at 0.5.0.
+A new coral paw-print icon on white with matching paw motion (thinking, home, splash, pull-to-refresh), haptics and press feedback, refined top bars, code blocks, loading placeholders and toasts, and a finished Claude-like palette (white pages, grey side pane and settings, black primary buttons and switches, one coral accent), with computer sessions in the side pane. The plugin stays at 0.5.0.
 
 APK: **`Pangxiaopang-3.3.5-2026111105.apk`**.
 

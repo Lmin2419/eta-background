@@ -85,6 +85,17 @@ internal fun EtaSwitch(
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+) {
+    val haptics = rememberEtaHaptics()
+    EtaSwitchImpl(checked, onCheckedChange?.let { change -> { v: Boolean -> haptics.tick(); change(v) } }, modifier, enabled)
+}
+
+@Composable
+private fun EtaSwitchImpl(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier,
+    enabled: Boolean,
 ) = Switch(
     checked = checked, onCheckedChange = onCheckedChange, enabled = enabled,
     colors = SwitchDefaults.switchColors(

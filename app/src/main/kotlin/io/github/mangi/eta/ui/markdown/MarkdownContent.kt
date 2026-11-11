@@ -1,5 +1,11 @@
 package io.github.mangi.eta.ui.markdown
 
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
@@ -182,20 +188,25 @@ private fun MarkdownText(
 @Composable
 private fun MarkdownCodeBlock(block: MarkdownCode, scope: MarkdownRenderScope) {
     val style = scope.style
+    val shape = RoundedCornerShape(12.dp)
+    // 代码块：浅灰标题栏（左语言名、右复制）+ 细分隔线 + 代码区，整体一圈极细描边。
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .squircleSurface(color = style.codeBackground, cornerRadius = 10.dp),
+            .clip(shape)
+            .background(style.codeBackground)
+            .border(0.5.dp, style.dividerColor, shape),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 32.dp).padding(start = 12.dp, end = 4.dp),
+                .background(style.dividerColor.copy(alpha = 0.35f))
+                .heightIn(min = 34.dp).padding(start = 14.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = block.language ?: stringResource(R.string.markdown_code_block),
-                style = EtaTheme.type.caption,
+                text = block.language?.lowercase() ?: stringResource(R.string.markdown_code_block),
+                style = EtaTheme.type.mono.copy(fontSize = 12.sp),
                 color = style.secondaryColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -203,22 +214,25 @@ private fun MarkdownCodeBlock(block: MarkdownCode, scope: MarkdownRenderScope) {
             )
             CopyButton(text = block.text.text, tint = style.secondaryColor)
         }
+        Box(Modifier.fillMaxWidth().height(0.5.dp).background(style.dividerColor))
         // 代码不折行，长行横向滚动，保留缩进与对齐。
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
+                .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 12.dp),
         ) {
             MarkdownText(block, style.code, scope, softWrap = false)
         }
     }
 }
 
+/** 复制：图标 + 「复制」，点后变成对勾 +「已复制」1.4 秒，带缩放淡入。 */
 @Composable
 private fun CopyButton(text: String, tint: Color) {
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
+    val haptics = io.github.mangi.eta.ui.components.rememberEtaHaptics()
     var copied by remember { mutableStateOf(false) }
     LaunchedEffect(copied) {
         if (copied) {
@@ -226,21 +240,44 @@ private fun CopyButton(text: String, tint: Color) {
             copied = false
         }
     }
-    IconButton(
-        onClick = {
-            @Suppress("DEPRECATION")
-            clipboard.setText(AnnotatedString(text))
-            copied = true
-        },
-        minWidth = 32.dp,
-        minHeight = 32.dp,
+    val color = if (copied) EtaTheme.colors.accent else tint
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable {
+                @Suppress("DEPRECATION")
+                clipboard.setText(AnnotatedString(text))
+                if (!copied) haptics.confirm()
+                copied = true
+            }
+            .heightIn(min = 32.dp)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = if (copied) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
-            contentDescription = stringResource(if (copied) R.string.copy_copied else R.string.copy_code),
-            modifier = Modifier.size(14.dp),
-            tint = if (copied) MiuixTheme.colorScheme.primary else tint,
-        )
+        androidx.compose.animation.AnimatedContent(
+            targetState = copied,
+            transitionSpec = {
+                (androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(160)) +
+                    androidx.compose.animation.scaleIn(androidx.compose.animation.core.spring(dampingRatio = 0.55f, stiffness = 700f), initialScale = 0.6f))
+                    .togetherWith(androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(100)))
+            },
+            label = "codeCopy",
+        ) { done ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (done) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = color,
+                )
+                Text(
+                    text = stringResource(if (done) R.string.copy_copied else R.string.ui_copy_4edd1d),
+                    style = EtaTheme.type.caption,
+                    color = color,
+                    modifier = Modifier.padding(start = 4.dp),
+                )
+            }
+        }
     }
 }
 

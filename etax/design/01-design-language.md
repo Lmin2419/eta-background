@@ -152,7 +152,11 @@ Compose 实现：`Modifier.shadow(elevation, shape, ambientColor, spotColor)` �
 - 可拖拽的面板（侧栏、底部面板、助手面板）用弹簧：`dampingRatio = 0.86`，`stiffness = 420`。
 - 消息出现：上移 8dp + 淡入，`medium`。流式文字沿用现有平滑揭示（`SmoothTextReveal`），不改。
 - 运行中的状态环：弧线旋转一圈 1.1s 线性 + 流光渐变；只在可见时运行（沿用现有 `rememberDrawPhasePulse` 的做法，动画只使绘制失效，不触发重组）。
-- 触感：发送、开始接管、交还 AI、任务完成、长按菜单出现时给一次轻触感（沿用 `AgentHapticFeedback`）。
+- 触感：发送、开始接管、交还 AI、任务完成、长按菜单出现时给一次轻触感（沿用 `AgentHapticFeedback`）。App 界面内统一走 `EtaHaptics`（发送 / 开关 = tick，长按菜单 = long press，回复结束 / 复制 = confirm），设置 → 个性化 →「触感反馈」可关。
+- 按压回弹：可点的按钮、卡片、列表行按下时 `micro` 缩到 0.97（行 0.98），松手用弹簧（`dampingRatio = 0.55`，`stiffness = 600`）回到原大小（`etaPressScale` / `etaTouchScale`）。
+- 爪印动效（`EtaPaw.kt`）：「思考中」四颗脚趾依次按下，1.4s 一轮；首页掌心先落、脚趾间隔 70ms 弹出；下拉刷新脚趾随拉开进度逐颗出现，拉满轻振。启动画面同一动作（`avd_splash_paw`）。
+- 加载占位：浅灰圆角条加一道 1.3s 的柔光扫过（`etaShimmer`），用于首次加载列表、打开会话；减少动画时为静态灰条。
+- 提示条：底部黑色胶囊，带小爪印，弹簧浮现（`dampingRatio = 0.72`），短提示 2.2s、长提示 3.5s。
 - 「减少动画」（`Settings.Global.ANIMATOR_DURATION_SCALE == 0` 或系统无障碍设置）时：所有位移动画改为淡入淡出 ≤120ms；流光静止；状态环改为静态图形。
 
 ## 8. 状态语言（全局统一）

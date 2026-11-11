@@ -43,27 +43,32 @@ fun MiuixScaffoldPage(
     compactTitle: Boolean = false,
     // 二级页是浅灰底 + 白色卡片分组（与 Claude 的设置页一致）。
     containerColor: Color = EtaTheme.colors.surfaceSunken,
+    // 传入 onRefresh 即开启下拉刷新（顶部爪印指示器）。
+    refreshing: Boolean = false,
+    onRefresh: (() -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
     EtaPreferenceTheme {
         val scrollBehavior = MiuixScrollBehavior()
+        val pull = onRefresh?.let { rememberEtaPullRefreshState(refreshing, it) }
         val backdrop = rememberTopBarBackdrop()
-        val topBarColor = topBarContainerColor(backdrop)
 
         Scaffold(
             modifier = modifier.fillMaxSize(),
             containerColor = containerColor,
             topBar = {
-                TopBarBackdrop(backdrop) {
+                // 顶栏与页面同色（浅灰底），滚动后才出现分隔线。
+                TopBarBackdrop(backdrop, color = containerColor) {
                     // 页面自带主视觉（如角色详情）时用紧凑标题，避免大标题与主视觉重复。
                     AdaptiveTopAppBar(
-                        title = title, color = topBarColor, compact = compactTitle,
+                        title = title, color = containerColor, compact = compactTitle,
                         navigationIcon = { MiuixBackButton(onClick = onBack) },
                         actions = actions, scrollBehavior = scrollBehavior,
                     )
                 }
             },
         ) { innerPadding ->
+          androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
             WidePageContent { centeredPadding ->
                 val sidePadding = centeredPadding + if (rememberIsWideScreen()) 8.dp else 0.dp
                 // 保留 MiuixTheme 注入的默认越界工厂，保留短内容页的回弹行为。
@@ -75,6 +80,7 @@ fun MiuixScaffoldPage(
                         .captureForTopBar(backdrop)
                         .scrollEndHaptic()
                         .overScrollVertical()
+                        .then(if (pull != null) Modifier.nestedScroll(pull.connection) else Modifier)
                         .nestedScroll(scrollBehavior.nestedScrollConnection),
                     contentPadding = PaddingValues(
                         start = sidePadding,
@@ -88,7 +94,10 @@ fun MiuixScaffoldPage(
                     }
                 }
             }
+            if (pull != null) EtaPullRefreshIndicator(pull, Modifier.align(androidx.compose.ui.Alignment.TopCenter),
+                topInset = innerPadding.calculateTopPadding())
             overlay()
+          }
         }
     }
 }

@@ -61,16 +61,13 @@ internal fun EtaButton(
         ?: foreground.copy(alpha = if (enabled) 1f else 0.38f)
     val source = interactionSource ?: remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    val motion = EtaTheme.motion
-    val scale = animateFloatAsState(if (pressed && enabled && !motion.reduceMotion) 0.97f else 1f,
-        tween(motion.micro, easing = motion.standard), label = "buttonPress")
     val shape = RoundedCornerShape(cornerRadius)
     val small = size == EtaButtonSize.Small
     val height = if (small && minHeight == EtaControlDefaults.ButtonMinHeight) 32.dp else minHeight
     val padding = if (small && insideMargin == EtaControlDefaults.ButtonPadding) PaddingValues(horizontal = 12.dp, vertical = 6.dp) else insideMargin
     val pressedColor = palette.pressed
     Box(
-        modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value }
+        modifier.etaPressScale(source, enabled && !loading)
             .heightIn(min = height).widthIn(min = minWidth)
             .clip(shape).background(container)
             .then(if (kind == EtaButtonKind.Secondary && colors == null) Modifier.border(1.dp, palette.outlineStrong, shape) else Modifier)
