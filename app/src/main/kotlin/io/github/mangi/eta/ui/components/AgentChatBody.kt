@@ -13,6 +13,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import com.itos.coui.backdrop.couiBackdrop
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.clickable
@@ -398,11 +399,10 @@ private fun AgentChatScaffold(
     modifier: Modifier = Modifier,
     backgroundCompacting: Boolean = false,
 ) {
-    val composerTop = remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
-    val composerHeight = remember { androidx.compose.runtime.mutableIntStateOf(0) }
-    val emptyContentBottom = remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
 
     val glassBackdrop = rememberEtaGlassBackdrop(EtaTheme.colors.canvas)
+    // 消息区的 COUI 背景源：输入胶囊的液态玻璃从这里采样（不含输入胶囊自身）。
+    val messageCouiBackdrop = if (LocalBlurEnabled.current) com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-messages") else null
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
@@ -413,23 +413,8 @@ private fun AgentChatScaffold(
             bottom = 0.dp,
         ),
         bottomBar = {
-            androidx.compose.runtime.CompositionLocalProvider(LocalEtaGlassBackdrop provides glassBackdrop) {
-            // 新对话空白页：输入胶囊停在屏幕约 58% 处（上方是爪印、问候和建议）；发出第一条消息后用跟手弹簧滑到底部。
-            val density = androidx.compose.ui.platform.LocalDensity.current
-            val screenHeight = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toFloat()
-            val imeOpen = androidx.compose.foundation.layout.WindowInsets.ime.getBottom(density) > 0
-            val gap = with(density) { 16.dp.toPx() }
-            val liftTarget = if (hasMessages || imeOpen || composerHeight.intValue == 0) 0f else {
-                val desiredTop = screenHeight * 0.58f - composerHeight.intValue / 2f
-                val roomAboveEmpty = composerTop.floatValue - (emptyContentBottom.floatValue + gap)
-                minOf(composerTop.floatValue - desiredTop, roomAboveEmpty).coerceAtLeast(0f)
-            }
-            val lift by androidx.compose.animation.core.animateFloatAsState(liftTarget,
-                if (EtaTheme.motion.reduceMotion) tween(EtaTheme.motion.short) else EtaTheme.motion.follow(), label = "composerLift")
-            Box(Modifier.onGloballyPositioned {
-                composerTop.floatValue = it.positionInRoot().y
-                composerHeight.intValue = it.size.height
-            }.graphicsLayer { translationY = -lift }) {
+            androidx.compose.runtime.CompositionLocalProvider(LocalEtaGlassBackdrop provides glassBackdrop,
+                io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides messageCouiBackdrop) {
             if (LocalChatInlineEditor.current == null) AgentChatBottomBar(
                 showFade = hasMessages,
                 messageBackdrop = null,
@@ -468,12 +453,13 @@ private fun AgentChatScaffold(
                 backgroundCompacting = backgroundCompacting,
             ) else Spacer(Modifier.height(12.dp).navigationBarsPadding().imePadding())
             }
-            }
         },
     ) { innerPadding ->
         val bottomPadding = innerPadding.calculateBottomPadding()
         // 发出第一条消息时问候语与建议淡出上移，消息随后升起，不再硬切。
-        Box(Modifier.fillMaxSize().then(if (glassBackdrop != null) Modifier.layerBackdrop(glassBackdrop) else Modifier).background(EtaTheme.colors.canvas)) {
+        Box(Modifier.fillMaxSize().then(if (glassBackdrop != null) Modifier.layerBackdrop(glassBackdrop) else Modifier)
+            .then(if (messageCouiBackdrop != null) Modifier.couiBackdrop(messageCouiBackdrop) else Modifier)
+            .background(EtaTheme.colors.canvas)) {
         AnimatedVisibility(
             visible = !hasMessages,
             enter = fadeIn(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate)),
@@ -487,7 +473,6 @@ private fun AgentChatScaffold(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = LocalTopBarInset.current, bottom = bottomPadding),
-                onContentBottom = { emptyContentBottom.floatValue = it },
             )
         }
         if (hasMessages) {

@@ -44,6 +44,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.itos.coui.backdrop.couiBackdrop
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -142,6 +143,9 @@ internal fun AgentAppShell(
     val usesShellTopBar = currentRoute !is AppRoute.Settings && !(currentRoute is AppRoute.Home && homeTopBar != null)
     val backdrop = rememberTopBarBackdrop()
     val topBarColor = topBarContainerColor(backdrop)
+    // 对话页正文的 COUI 背景源：顶部三个液态玻璃控件从这里采样（Android 14+）。
+    val isHome = currentRoute is AppRoute.Home && homeTopBar != null
+    val couiPageBackdrop = if (isHome) com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-page") else null
     val pageContent: @Composable () -> Unit = {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -150,7 +154,11 @@ internal fun AgentAppShell(
                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
             ),
             topBar = {
-                if (currentRoute is AppRoute.Home && homeTopBar != null) io.github.mangi.eta.ui.components.ChatScrollEdge(backdrop) { homeTopBar() }
+                if (currentRoute is AppRoute.Home && homeTopBar != null) io.github.mangi.eta.ui.components.ChatScrollEdge(backdrop) {
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides couiPageBackdrop,
+                    ) { homeTopBar() }
+                }
                 else if (currentRoute !is AppRoute.Settings) {
                     TopBarBackdrop(backdrop) {
                         AgentTopBar(
@@ -179,6 +187,7 @@ internal fun AgentAppShell(
                 modifier = Modifier
                     .fillMaxSize()
                     .captureForTopBar(backdrop)
+                    .then(if (couiPageBackdrop != null) Modifier.couiBackdrop(couiPageBackdrop) else Modifier)
                     .then(if (usesShellTopBar) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier),
             ) {
                 content(padding)

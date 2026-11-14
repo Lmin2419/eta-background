@@ -45,21 +45,64 @@ import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.theme.etaElevation
 import top.yukonga.miuix.kmp.basic.Text
 
+/** 菜单项收集器：在 [EtaContextMenu] 里，[EtaMenuItem] 不直接绘制，而是交给 COUI 菜单。 */
+internal class EtaMenuCollector {
+    class Entry(
+        val text: String,
+        val icon: androidx.compose.ui.graphics.vector.ImageVector?,
+        val enabled: Boolean,
+        val destructive: Boolean,
+        val selected: Boolean,
+        val dividerBefore: Boolean,
+        val onClick: () -> Unit,
+    )
+    val entries = mutableListOf<Entry>()
+    var dividerPending = false
+}
+
+internal val LocalEtaMenuCollector = androidx.compose.runtime.staticCompositionLocalOf<EtaMenuCollector?> { null }
+
 /**
- * 长按消息出现的菜单：一枚玻璃小窗（[EtaPopover]），从被按的消息旁边（优先下方，放不下就上方）
- * 展开，背后不变暗，背后的内容被模糊。[anchor] 是消息在窗口中的位置；[alignEnd] 为真时与消息右边对齐（用户消息）。
+ * 弹出菜单（小窗）：与上游 3.4.x 一致，使用 COUI 菜单——从按住的位置展开，背后的页面被模糊，
+ * 手指不松开滑到某一项松手即可选中。[couiAnchor] 挂在被长按的元素上（`couiMenuAnchor`），
+ * 打开时用 `couiAnchor.open { ... }` 记录触点。没有锚点时跟随父布局定位。
  */
 @Composable
 internal fun EtaContextMenu(
     show: Boolean,
-    anchor: Rect,
+    @Suppress("UNUSED_PARAMETER") anchor: Rect = Rect.Zero,
     onDismiss: () -> Unit,
-    alignEnd: Boolean = false,
+    @Suppress("UNUSED_PARAMETER") alignEnd: Boolean = false,
+    couiAnchor: com.itos.coui.menu.CouiMenuAnchor? = null,
+    header: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val haptics = rememberEtaHaptics()
-    LaunchedEffect(show) { if (show) haptics.longPress() }
-    EtaPopover(show, anchor, onDismiss, align = if (alignEnd) EtaPopoverAlign.End else EtaPopoverAlign.Start, content = content)
+    val collector = EtaMenuCollector()
+    androidx.compose.runtime.CompositionLocalProvider(LocalEtaMenuCollector provides collector) {
+        Column(Modifier.size(0.dp)) { content() }
+    }
+    val entries = collector.entries.toList()
+    val dark = com.itos.coui.theme.CouiTheme.isDark
+    val destructive = com.itos.coui.dialog.CouiDialogDefaults.themeColors(dark).destructive
+    val items = entries.mapIndexed { index, entry ->
+        com.itos.coui.menu.CouiMenuItem(
+            value = index,
+            text = entry.text,
+            icon = entry.icon,
+            selected = entry.selected,
+            enabled = entry.enabled,
+            dividerBefore = entry.dividerBefore,
+            iconTint = if (entry.destructive) destructive else null,
+        )
+    }
+    com.itos.coui.menu.Menu(
+        expanded = show && items.isNotEmpty(),
+        onDismissRequest = onDismiss,
+        items = items,
+        onItemClick = { item -> entries.getOrNull(item.value)?.onClick?.invoke() },
+        anchor = couiAnchor,
+        headerText = header,
+    )
 }
 
 /**
@@ -76,6 +119,11 @@ internal fun EtaMenuItem(
     selected: Boolean = false,
     summary: String? = null,
 ) {
+    LocalEtaMenuCollector.current?.let { collector ->
+        collector.entries += EtaMenuCollector.Entry(text, icon, enabled, destructive, selected, collector.dividerPending, onClick)
+        collector.dividerPending = false
+        return
+    }
     val color = when {
         !enabled -> EtaTheme.colors.textTertiary
         destructive -> EtaTheme.colors.dangerText
@@ -110,6 +158,7 @@ internal fun EtaMenuItem(
 /** 小窗里的分隔：0.5dp，左右各内缩 12dp，与条目文字对齐。 */
 @Composable
 internal fun EtaMenuDivider() {
+    LocalEtaMenuCollector.current?.let { it.dividerPending = true; return }
     androidx.compose.foundation.layout.Box(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
             .height(0.5.dp).background(EtaTheme.colors.outline),

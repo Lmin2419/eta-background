@@ -197,8 +197,8 @@ fun AgentAppRoot(
         else while (backStack.size > 1 && backStack.last() != AppRoute.DesktopSessions) backStack.removeAt(backStack.lastIndex)
         if (chat != null) backStack.add(chat)
     }
-    val windowStack = rememberNavBackStack<AppRoute>()
-    val navigator = remember(backStack, windowStack) { AgentNavigator(backStack, windowStack) }
+    // 设置类页面与上游一致，整页打开（大标题随滚动收缩）；选择类操作用小窗菜单和半窗。
+    val navigator = remember(backStack) { AgentNavigator(backStack) }
     var navigationResetKey by rememberSaveable { mutableIntStateOf(0) }
     val runtimeActive by AgentRuntimeService.keepScreenOn.collectAsState()
     val view = LocalView.current
@@ -1019,23 +1019,6 @@ fun AgentAppRoot(
                 cornerClipRadius = rememberNavSystemCornerRadius(),
             ),
         ) { appEntries() }
-    }
-    // 设置类页面在对话上方的玻璃窗口里打开（§3.3）；窗口内有自己的返回栈，左右滑入下一级。
-    io.github.mangi.eta.ui.components.EtaGlassWindow(
-        open = windowStack.isNotEmpty(),
-        closing = navigator.windowClosing,
-        depth = windowStack.size,
-        onRequestClose = navigator::closeWindows,
-        onClosed = navigator::onWindowClosed,
-        onBack = { navigator.pop() },
-    ) {
-        if (windowStack.isNotEmpty()) {
-            NavDisplay(
-                backStack = windowStack,
-                transition = io.github.mangi.eta.ui.navigation.rememberEtaNavigationTransition(),
-                onBack = { navigator.pop() },
-            ) { appEntries() }
-        }
     }
     }
 

@@ -29,33 +29,22 @@ internal fun EtaSheet(
     allowDismiss: Boolean = true, enableNestedScroll: Boolean = true, renderInRootScaffold: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val colors = EtaTheme.colors
-    EtaPreferenceTheme {
-        OverlayBottomSheet(show = show, title = null,
-            startAction = if (title != null || startAction != null || endAction != null) ({
-                Row(Modifier.fillMaxWidth().padding(horizontal = if (insideMargin.width == 0.dp) 16.dp else 0.dp)
-                    .offset(y = (-6).dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    startAction?.invoke()
-                    Text(title.orEmpty(), Modifier.weight(1f).semantics { heading() }, style = EtaTheme.type.title2, color = colors.textPrimary)
-                    endAction?.invoke()
-                }
-            }) else null,
-            modifier = modifier.semantics { title?.let { paneTitle = it } }
-                .etaElevation(EtaElevation.E3, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).drawWithContent {
-                drawContent()
-                // Paint only the handle. Its original 24dp drag/tap area and gesture recognizer remain.
-                drawRect(colors.surfaceRaised, Offset(size.width / 2 - 32.dp.toPx(), 0f), Size(64.dp.toPx(), 24.dp.toPx()))
-                // 拖动条：更细更柔的胶囊（iOS 面板的抓手）。
-                drawRoundRect(colors.textTertiary.copy(alpha = 0.45f), Offset((size.width - 40.dp.toPx()) / 2, 8.dp.toPx()),
-                    Size(40.dp.toPx(), 5.dp.toPx()), CornerRadius(2.5.dp.toPx()))
-            },
-            backgroundColor = colors.surfaceRaised, cornerRadius = 28.dp,
-            sheetMaxWidth = BottomSheetDefaults.maxWidth,
-            insideMargin = insideMargin, onDismissRequest = onDismissRequest, onDismissFinished = onDismissFinished,
-            allowDismiss = allowDismiss, enableNestedScroll = enableNestedScroll, renderInRootScaffold = renderInRootScaffold,
-        ) {
-            content()
-        }
+    // 半窗：与上游一致的 COUI 底部对话框（材质模糊背后的页面），底部「关闭」。
+    val screen = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height
+    val maxHeight = with(androidx.compose.ui.platform.LocalDensity.current) { (screen * 0.72f).toDp() }
+    @Suppress("UNUSED_VARIABLE") val unusedHeader = startAction ?: endAction
+    io.github.mangi.eta.ui.components.coui.EtaCouiDialog(
+        show = show,
+        title = title,
+        message = null,
+        onDismissRequest = { if (allowDismiss) onDismissRequest?.invoke() },
+        closeText = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_close),
+        modifier = modifier,
+        contentPadding = insideMargin.width,
+        maxContentHeight = maxHeight,
+    ) { content() }
+    if (onDismissFinished != null) androidx.compose.runtime.LaunchedEffect(show) {
+        if (!show) { kotlinx.coroutines.delay(320); onDismissFinished() }
     }
 }
+

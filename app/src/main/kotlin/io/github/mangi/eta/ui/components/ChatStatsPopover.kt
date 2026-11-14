@@ -294,15 +294,15 @@ internal fun ContextUsageStatsPopoverPopup(
         if (canCompact) {
             Spacer(Modifier.height(12.dp))
             val compactLabel = stringResource(R.string.context_compact_action)
-            EtaButton(
-                compactLabel,
-                onClick = {
+            // 半窗底部按钮栏：主操作「压缩」，次操作「关闭」。
+            MiuixDialogActions(
+                confirmText = compactLabel,
+                onCancel = onDismissRequest,
+                onConfirm = {
                     onDismissRequest()
                     onCompact()
                 },
-                kind = EtaButtonKind.Tonal,
-                minHeight = 44.dp,
-                modifier = Modifier.fillMaxWidth(),
+                cancelText = stringResource(R.string.action_close),
             )
         }
     }
@@ -312,13 +312,13 @@ internal fun ContextUsageStatsPopoverPopup(
 internal fun ChatStatsPopoverPopup(
     onDismissRequest: () -> Unit,
     show: Boolean = true,
-    anchor: androidx.compose.ui.geometry.Rect = androidx.compose.ui.geometry.Rect.Zero,
-    align: EtaPopoverAlign = EtaPopoverAlign.Start,
+    @Suppress("UNUSED_PARAMETER") anchor: androidx.compose.ui.geometry.Rect = androidx.compose.ui.geometry.Rect.Zero,
+    @Suppress("UNUSED_PARAMETER") align: EtaPopoverAlign = EtaPopoverAlign.Start,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    // 统计卡片是一枚玻璃小窗：从点击处展开、原路收回，背后内容被模糊。
-    EtaPopover(show, anchor, onDismissRequest, align = align, minWidth = 256.dp, maxWidth = 320.dp) {
-        Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), content = content)
+    // 统计卡片：与上游一致的半窗（COUI 底部对话框，材质模糊背后的页面）。
+    EtaSheet(show, onDismissRequest = onDismissRequest) {
+        Column(Modifier.fillMaxWidth().padding(vertical = 6.dp), content = content)
     }
 }
 

@@ -39,20 +39,20 @@ internal fun EtaWindowDialog(
     onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    EtaPreferenceTheme {
-        WindowDialog(
-            show = show, title = null, summary = null, modifier = modifier
-                .semantics { title?.let { paneTitle = it } }.etaElevation(EtaElevation.E3, EtaTheme.shapes.radiusXl),
-            backgroundColor = EtaTheme.colors.surfaceRaised,
-            onDismissRequest = onDismissRequest, onDismissFinished = onDismissFinished,
-            cornerRadius = 28.dp,
-            insideMargin = EtaControlDefaults.DialogInsideMargin,
-            outsideMargin = EtaControlDefaults.DialogOutsideMargin,
-            maxWidth = 300.dp,
-            content = { EtaDialogHeading(title, summary); content() },
-        )
+    // 与上游一致：COUI 对话框（从底部升起，材质模糊背后的页面），按钮在底部按钮栏。
+    io.github.mangi.eta.ui.components.coui.EtaCouiDialog(
+        show = show,
+        title = title,
+        message = summary,
+        onDismissRequest = { onDismissRequest?.invoke() },
+        closeText = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_close),
+        modifier = modifier,
+    ) { content() }
+    if (onDismissFinished != null) androidx.compose.runtime.LaunchedEffect(show) {
+        if (!show) { kotlinx.coroutines.delay(320); onDismissFinished() }
     }
 }
+
 
 @Composable
 internal fun EtaOverlayDialog(
@@ -64,25 +64,20 @@ internal fun EtaOverlayDialog(
     onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    // 对话框（§3.4）：居中、宽 300dp、圆角 28、玻璃外框（底色 0.94，背后的页面被模糊）。
-    val appBackdrop = LocalEtaAppBackdrop.current
-    val shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
-    EtaPreferenceTheme {
-        OverlayDialog(
-            show = show, title = null, summary = null, modifier = modifier
-                .semantics { title?.let { paneTitle = it } }
-                .etaGlass(shape, elevation = EtaElevation.E3, backdrop = appBackdrop, useLocalBackdrop = false,
-                    blurAlpha = 0.94f, solidAlpha = 0.98f),
-            backgroundColor = androidx.compose.ui.graphics.Color.Transparent,
-            onDismissRequest = onDismissRequest, onDismissFinished = onDismissFinished,
-            cornerRadius = 28.dp,
-            insideMargin = EtaControlDefaults.DialogInsideMargin,
-            outsideMargin = EtaControlDefaults.DialogOutsideMargin,
-            maxWidth = 300.dp,
-            content = { EtaDialogHeading(title, summary); content() },
-        )
+    // 与上游一致：COUI 对话框（从底部升起，材质模糊背后的页面），按钮在底部按钮栏。
+    io.github.mangi.eta.ui.components.coui.EtaCouiDialog(
+        show = show,
+        title = title,
+        message = summary,
+        onDismissRequest = { onDismissRequest?.invoke() },
+        closeText = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_close),
+        modifier = modifier,
+    ) { content() }
+    if (onDismissFinished != null) androidx.compose.runtime.LaunchedEffect(show) {
+        if (!show) { kotlinx.coroutines.delay(320); onDismissFinished() }
     }
 }
+
 
 @Composable
 internal fun EtaSwitch(

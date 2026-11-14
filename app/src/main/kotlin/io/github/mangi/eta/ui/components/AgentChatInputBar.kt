@@ -85,6 +85,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.ui.layout.positionInWindow
@@ -327,11 +328,17 @@ internal fun AgentChatInputBar(
                     inputContainerTopPx = coordinates.positionInWindow().y.roundToInt()
                 },
         ) {
+            // 输入胶囊：上游 COUI 的流体液态玻璃（背后的消息被折射、模糊透出），不支持时退回胖小胖的玻璃。
+            io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = InputContainerShape,
+                capsule = true,
+                onClick = null,
+                wrapContent = true,
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // 输入胶囊：玻璃材质，背后的消息模糊透出；关闭模糊时为磨砂实色。
-                    .etaGlass(InputContainerShape, elevation = EtaElevation.E2)
                     // 发送后一道光从左到右扫过玻璃（画在内容下面，不盖文字）。
                     .drawWithCache {
                         val outline = InputContainerShape.createOutline(size, layoutDirection, this)
@@ -552,6 +559,7 @@ internal fun AgentChatInputBar(
                         )
                 }
             }
+            }
         }
     }
 
@@ -572,7 +580,7 @@ private fun ThinkingEffortChip(
     modifier: Modifier = Modifier,
 ) {
     var showPopup by remember { mutableStateOf(false) }
-    var anchor by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+    val anchor = com.itos.coui.menu.rememberCouiMenuAnchor()
     val menuEnabled = enabled && options.size > 1
     LaunchedEffect(menuEnabled) {
         if (!menuEnabled) showPopup = false
@@ -588,9 +596,9 @@ private fun ThinkingEffortChip(
     Row(
         modifier
             .heightIn(min = ChatInputActionSize)
-            .onGloballyPositioned { anchor = it.boundsInWindow() }
+            .couiMenuAnchor(anchor)
             .clip(EtaTheme.shapes.radiusFull)
-            .clickable(enabled = menuEnabled, role = androidx.compose.ui.semantics.Role.Button) { showPopup = true }
+            .clickable(enabled = menuEnabled, role = androidx.compose.ui.semantics.Role.Button) { anchor.open { showPopup = true } }
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -599,7 +607,7 @@ private fun ThinkingEffortChip(
             maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         if (menuEnabled) Icon(Icons.Outlined.ExpandMore, null, Modifier.size(16.dp), tint = colors.textQuiet)
     }
-    EtaPopover(showPopup && menuEnabled, anchor, { showPopup = false }, title = label) {
+    EtaContextMenu(showPopup && menuEnabled, onDismiss = { showPopup = false }, couiAnchor = anchor) {
         options.forEach { option ->
             EtaMenuItem(option.displayName, onClick = { onEffortChange(option); showPopup = false }, selected = option == effort)
         }

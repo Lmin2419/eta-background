@@ -66,6 +66,23 @@ internal fun EtaButton(
     val height = if (small && minHeight == EtaControlDefaults.ButtonMinHeight) 32.dp else minHeight
     val padding = if (small && insideMargin == EtaControlDefaults.ButtonPadding) PaddingValues(horizontal = 12.dp, vertical = 6.dp) else insideMargin
     val pressedColor = palette.pressed
+    // 默认样式的按钮与上游一致：COUI 胶囊按钮（按下回弹、触点聚光、轮廓光）。
+    if (colors == null && textStyle == null && !loading && kind != EtaButtonKind.Ghost) {
+        io.github.mangi.eta.ui.components.coui.EtaCouiButton(
+            text = text,
+            onClick = onClick,
+            modifier = modifier.widthIn(min = minWidth),
+            enabled = enabled,
+            role = when (kind) {
+                EtaButtonKind.Primary -> io.github.mangi.eta.ui.components.coui.EtaCouiButtonRole.Primary
+                EtaButtonKind.Destructive -> io.github.mangi.eta.ui.components.coui.EtaCouiButtonRole.Destructive
+                else -> io.github.mangi.eta.ui.components.coui.EtaCouiButtonRole.Secondary
+            },
+            minHeight = height,
+            contentPadding = padding,
+        )
+        return
+    }
     Box(
         modifier.etaPressScale(source, enabled && !loading)
             .heightIn(min = height).widthIn(min = minWidth)

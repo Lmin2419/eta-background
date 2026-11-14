@@ -21,6 +21,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -320,7 +321,7 @@ private fun UserMessageBubble(
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     var menu by remember(message.id) { mutableStateOf(false) }
-    var menuAnchor by remember(message.id) { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+    val couiAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
     // 菜单打开时被按的气泡轻轻放大，提示「操作的是这一条」。
     val pressScale = androidx.compose.animation.core.animateFloatAsState(if (menu) 1.03f else 1f,
         androidx.compose.animation.core.spring(dampingRatio = 0.7f, stiffness = 500f), label = "userBubbleMenu")
@@ -347,12 +348,12 @@ private fun UserMessageBubble(
                         }, contentScale = ContentScale.Crop)
                 } }
             }
-            Column(Modifier.onGloballyPositioned { menuAnchor = it.boundsInWindow() }
+            Column(Modifier.couiMenuAnchor(couiAnchor)
                 .graphicsLayer { val s = pressScale.value; scaleX = s; scaleY = s }
                 .background(EtaTheme.colors.surfaceSunken, shape)
                 .then(if (isEditing) Modifier.border(1.dp, EtaTheme.colors.accent, shape) else Modifier)
                 .combinedClickable(enabled = actionsEnabled, onClick = {}, onLongClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress); menu = true
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress); couiAnchor.open { menu = true }
                 }).padding(horizontal = 14.dp, vertical = 10.dp)) {
                 if (visiblePrompt.references.isNotEmpty()) SentFileReferenceFlow(visiblePrompt.references,
                     Modifier.padding(bottom = if (visiblePrompt.request.isNotBlank()) 8.dp else 0.dp))
@@ -363,7 +364,7 @@ private fun UserMessageBubble(
             }
         }
     }
-    EtaContextMenu(menu, anchor = menuAnchor, onDismiss = { menu = false }, alignEnd = true) {
+    EtaContextMenu(menu, onDismiss = { menu = false }, couiAnchor = couiAnchor) {
         EtaMenuItem(stringResource(R.string.ui_copy_4edd1d), icon = Icons.Outlined.ContentCopy, onClick = {
             clipboardManager.setText(AnnotatedString(message.content)); menu = false
         })
@@ -562,17 +563,17 @@ private fun AgentMessageBlock(
 
     val character = LocalRoleplayChat.current.takeUnless { assistantOverlay }
     val isGreeting = character != null && message.id.startsWith(GreetingMessagePrefix)
-    var menuAnchor by remember(message.id) { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+    val couiAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
     // 长按出菜单时，这条回复轻轻「浮起」，菜单收起后落回。
     val lift = androidx.compose.animation.core.animateFloatAsState(if (menu) 1.015f else 1f,
         androidx.compose.animation.core.spring(dampingRatio = 0.6f, stiffness = 500f), label = "answerLift")
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .onGloballyPositioned { menuAnchor = it.boundsInWindow() }
+            .couiMenuAnchor(couiAnchor)
             .graphicsLayer { val s = lift.value; scaleX = s; scaleY = s }
             .combinedClickable(enabled = showMessageActions && messageActionsEnabled && revealComplete,
-                onClick = {}, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); selectingText = false; menu = true })
+                onClick = {}, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); selectingText = false; couiAnchor.open { menu = true } })
             .padding(
                 horizontal = if (assistantOverlay) 16.dp else 20.dp,
                 vertical = if (assistantOverlay) 8.dp else 0.dp,
@@ -648,7 +649,7 @@ private fun AgentMessageBlock(
                     }, tint = if (copied) EtaTheme.colors.textPrimary else null)
                 if (showMessageActions) AnswerActionButton(Icons.Outlined.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
                 if (allowSpeech) SpeechReadAloudButton(message.id, message.content)
-                if (showMessageActions) AnswerActionButton(Icons.Outlined.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; menu = true }, messageActionsEnabled)
+                if (showMessageActions) AnswerActionButton(Icons.Outlined.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; couiAnchor.open { menu = true } }, messageActionsEnabled)
             }
         }
     }
@@ -659,7 +660,7 @@ private fun AgentMessageBlock(
                 .heightIn(max = 420.dp).verticalScroll(rememberScrollState()))
         }
     }
-    EtaContextMenu(menu && !selectingText, anchor = menuAnchor, onDismiss = { menu = false }) {
+    EtaContextMenu(menu && !selectingText, onDismiss = { menu = false }, couiAnchor = couiAnchor) {
         EtaMenuItem(stringResource(R.string.eta_select_text), icon = Icons.Outlined.TextFields, onClick = { selectingText = true })
         EtaMenuItem(stringResource(R.string.copy_answer), icon = Icons.Outlined.ContentCopy, onClick = {
             clipboardManager.setText(AnnotatedString(message.content)); copied = true; menu = false

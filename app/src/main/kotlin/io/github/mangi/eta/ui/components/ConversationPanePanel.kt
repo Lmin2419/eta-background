@@ -12,6 +12,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.compose.foundation.layout.*
+import com.itos.coui.menu.couiMenuAnchor
 import io.github.mangi.eta.ui.theme.EtaTypography
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -114,7 +115,8 @@ internal fun ConversationPanePanel(
     var desktopCollapsed by remember { mutableStateOf(false) }
     var searching by remember { mutableStateOf(false) }
     var menuTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
-    var menuAnchor by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+    // 长按对话的菜单从按住的位置展开（上游 COUI 菜单）。
+    val paneMenuAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
     val selecting = selectedIds.isNotEmpty()
     val motion = EtaTheme.motion
     val visibleConversations = remember(state.conversations, state.searchQuery, archived) {
@@ -154,7 +156,7 @@ internal fun ConversationPanePanel(
                 }
             }
         }
-        LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth().couiMenuAnchor(paneMenuAnchor), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (visibleConversations.isEmpty() && (state.groups.isEmpty() || archived || state.searchQuery.isNotBlank())) item {
                 ListEmptyState(stringResource(if (state.searchQuery.isBlank()) R.string.conversation_empty else R.string.conversation_no_results), icon = Icons.Outlined.Search)
@@ -221,7 +223,7 @@ internal fun ConversationPanePanel(
                         taskStatuses[conversation.id] ?: TaskVisualStatus.Running.takeIf { conversation.isActiveRun }, selecting,
                         { if (selecting) selectedIds = if (conversation.id in selectedIds) selectedIds - conversation.id else selectedIds + conversation.id
                           else onConversationSelected(conversation.id) },
-                        { rect -> if (selecting) selectedIds = selectedIds + conversation.id else { menuTarget = conversation; menuAnchor = rect } },
+                        { _ -> if (selecting) selectedIds = selectedIds + conversation.id else paneMenuAnchor.open { menuTarget = conversation } },
                         groupName = groupNames[conversation.groupId], modifier = etaAnimateItem())
                 }
             }
@@ -297,8 +299,9 @@ internal fun ConversationPanePanel(
     }
     // 长按对话：从这一行展开玻璃小窗（置顶 / 移到分组 / 改名 / 导出 / 多选 / 删除）。
     val menuConversation = menuTarget
-    EtaPopover(menuConversation != null, menuAnchor, { menuTarget = null }, title = menuConversation?.title) {
-        val target = menuConversation ?: return@EtaPopover
+    EtaContextMenu(menuConversation != null, onDismiss = { menuTarget = null }, couiAnchor = paneMenuAnchor,
+        header = menuConversation?.title?.takeIf { it.isNotBlank() }) {
+        val target = menuConversation ?: return@EtaContextMenu
         val ids = setOf(target.id)
         EtaMenuItem(stringResource(if (target.isPinned) R.string.eta_unpin else R.string.eta_pin), icon = Icons.Outlined.PushPin,
             enabled = target.archivedAt == null, onClick = { management.pin(ids, !target.isPinned); menuTarget = null })
@@ -434,6 +437,17 @@ private fun DesktopPaneRow(row: PaneDesktopSession, onClick: () -> Unit, modifie
 /** 圆形描边图标按钮（44dp），用于侧栏的搜索与设置。 */
 @Composable
 internal fun CircleIconButton(icon: ImageVector, description: String, onClick: () -> Unit, glass: Boolean = true) {
+    if (glass) {
+        // 对话页顶部：上游 COUI 的流体液态玻璃圆钮（边缘折光、内发光、按压回弹）。
+        io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
+            modifier = Modifier.requiredSize(44.dp),
+            shape = EtaTheme.shapes.radiusFull,
+            capsule = false,
+            contentDescription = description,
+            onClick = onClick,
+        ) { Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary) }
+        return
+    }
     val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     // 对话页顶部是玻璃（模糊背后的消息）；侧栏里本身已在玻璃上，按钮用实色白圆，不叠玻璃。
     Box(Modifier.requiredSize(44.dp).etaPressScale(press, pressedScale = 0.92f)

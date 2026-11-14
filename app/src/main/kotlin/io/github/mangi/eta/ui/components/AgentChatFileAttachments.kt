@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.background
+import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.material.icons.outlined.Close
@@ -121,10 +122,10 @@ internal fun AgentAttachmentPickerButton(
         if (uri != null) onAttachFolder(uri.toString())
     }
 
-    var anchor by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
-    Box(modifier = modifier.onGloballyPositioned { anchor = it.boundsInWindow() }) {
+    val anchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    Box(modifier = modifier.couiMenuAnchor(anchor)) {
         IconButton(
-            onClick = { showPopup = true },
+            onClick = { anchor.open { showPopup = true } },
             minWidth = ChatInputActionSize,
             minHeight = ChatInputActionSize,
         ) {
@@ -136,32 +137,20 @@ internal fun AgentAttachmentPickerButton(
             )
         }
     }
-    // 「＋」展开一枚玻璃小窗：四格实色方块（照片 / 文件 / 文件夹 / 输入路径），从按钮处展开。
-    EtaPopover(showPopup, anchor, { showPopup = false }, title = stringResource(R.string.ui_add_attachment_dba9e8),
-        minWidth = 232.dp, maxWidth = 260.dp) {
-        val items = listOf(
-            Triple(R.string.attachment_image, Icons.Outlined.Image, 0),
-            Triple(R.string.attachment_file, Icons.Outlined.Description, 1),
-            Triple(R.string.attachment_folder, Icons.Outlined.Folder, 2),
-            Triple(R.string.attachment_enter_path, Icons.Outlined.Terminal, 3),
-        )
-        items.chunked(2).forEach { row ->
-            androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                row.forEach { (label, icon, index) ->
-                    AttachmentTile(stringResource(label), icon, Modifier.weight(1f)) {
-                        showPopup = false
-                        when (index) {
-                            0 -> photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                            1 -> filePicker.launch(arrayOf("*/*"))
-                            2 -> folderPicker.launch(null)
-                            3 -> { pathInput = ""; showPathDialog = true }
-                        }
-                    }
-                }
-            }
-            androidx.compose.foundation.layout.Spacer(Modifier.height(8.dp))
-        }
+    // 「＋」：与上游一致的 COUI 菜单（照片 / 文件 / 文件夹 / 输入路径），从按钮处展开。
+    EtaContextMenu(showPopup, onDismiss = { showPopup = false }, couiAnchor = anchor) {
+        EtaMenuItem(stringResource(R.string.attachment_image), icon = Icons.Outlined.Image, onClick = {
+            showPopup = false; photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        })
+        EtaMenuItem(stringResource(R.string.attachment_file), icon = Icons.Outlined.Description, onClick = {
+            showPopup = false; filePicker.launch(arrayOf("*/*"))
+        })
+        EtaMenuItem(stringResource(R.string.attachment_folder), icon = Icons.Outlined.Folder, onClick = {
+            showPopup = false; folderPicker.launch(null)
+        })
+        EtaMenuItem(stringResource(R.string.attachment_enter_path), icon = Icons.Outlined.Terminal, onClick = {
+            showPopup = false; pathInput = ""; showPathDialog = true
+        })
     }
 
     WindowDialog(
