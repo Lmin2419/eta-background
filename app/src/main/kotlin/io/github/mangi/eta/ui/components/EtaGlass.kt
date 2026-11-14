@@ -2,7 +2,9 @@ package io.github.mangi.eta.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -57,12 +59,15 @@ internal object EtaGlassDefaults {
     const val BlurRadius = 28f
 }
 
-/** 玻璃边缘：上沿更亮、下沿更暗的一圈细高光，模拟玻璃厚度的反光。 */
+/**
+ * 玻璃边缘：上沿最亮、中段几乎透明、下沿再亮一点——像光从上方照进玻璃、在底边又折回来，
+ * 让面板看起来有厚度。
+ */
 @Composable
 internal fun etaGlassEdge(): Brush {
     val dark = EtaTheme.colors.canvas.luminance() < 0.5f
-    return if (dark) Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.05f)))
-    else Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.85f), Color.Black.copy(alpha = 0.06f)))
+    return if (dark) Brush.verticalGradient(0f to Color.White.copy(alpha = 0.24f), 0.5f to Color.White.copy(alpha = 0.04f), 1f to Color.White.copy(alpha = 0.12f))
+    else Brush.verticalGradient(0f to Color.White.copy(alpha = 0.95f), 0.5f to Color.White.copy(alpha = 0.18f), 1f to Color.White.copy(alpha = 0.55f))
 }
 
 /**
@@ -77,6 +82,8 @@ internal fun Modifier.etaGlass(
     backdrop: LayerBackdrop? = null,
     useLocalBackdrop: Boolean = true,
     solidAlpha: Float = EtaGlassDefaults.SolidTintAlpha,
+    blurAlpha: Float = EtaGlassDefaults.BlurTintAlpha,
+    interactionSource: androidx.compose.foundation.interaction.InteractionSource? = null,
 ): Modifier = composed {
     val base = tint ?: EtaTheme.colors.surfaceRaised
     val layer = backdrop ?: if (useLocalBackdrop) LocalEtaGlassBackdrop.current else null
@@ -90,14 +97,25 @@ internal fun Modifier.etaGlass(
             backdrop = layer,
             shape = shape,
             blurRadius = EtaGlassDefaults.BlurRadius,
-            colors = BlurColors(blendColors = listOf(BlendColorEntry(base.copy(alpha = EtaGlassDefaults.BlurTintAlpha)))),
+            colors = BlurColors(blendColors = listOf(BlendColorEntry(base.copy(alpha = blurAlpha)))),
         )
     } else {
         m.background(base.copy(alpha = solidAlpha), shape)
     }
+    // 按下时整块玻璃微微提亮（液态玻璃被「按亮」的感觉），配合调用方的按压回弹。
+    val pressed = interactionSource?.let { src ->
+        val down by src.collectIsPressedAsState()
+        androidx.compose.animation.core.animateFloatAsState(if (down) 1f else 0f,
+            androidx.compose.animation.core.tween(if (down) 90 else 260), label = "glassPress")
+    }
+    val dark = EtaTheme.colors.canvas.luminance() < 0.5f
     m.drawWithCache {
         val outline = shape.createOutline(size, layoutDirection, this)
-        onDrawBehind { drawOutline(outline, sheen) }
+        onDrawBehind {
+            drawOutline(outline, sheen)
+            val p = pressed?.value ?: 0f
+            if (p > 0f) drawOutline(outline, Color.White.copy(alpha = (if (dark) 0.10f else 0.35f) * p))
+        }
     }.border(edgeWidth, edge, shape)
 }
 

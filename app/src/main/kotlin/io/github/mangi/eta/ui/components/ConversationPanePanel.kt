@@ -319,10 +319,12 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
             while (index >= 0) { addStyle(SpanStyle(color = colors.accent), index, index + query.length); index = title.indexOf(query, index + query.length, ignoreCase = true) }
         }
     } }
-    val background by animateColorAsState(if (selected) colors.accentSoft else Color.Transparent, tween(EtaTheme.motion.short), label = "selectedConversation")
+    val background by animateColorAsState(if (selected) colors.surfaceRaised else Color.Transparent, tween(EtaTheme.motion.short), label = "selectedConversation")
     Row(modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
         .semantics { if (selecting) { this.selected = selected; role = Role.Checkbox } }
-        .background(background)
+        // 当前对话：一块带高光边的玻璃底，而不是平涂的色块。
+        .then(if (selected) Modifier.etaGlass(EtaTheme.shapes.radiusMd, elevation = null, useLocalBackdrop = false, solidAlpha = 0.82f)
+            else Modifier.background(background))
         .etaTouchScale().combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (selecting) ConversationSelectionMarker(selected)
@@ -393,8 +395,10 @@ private fun DesktopPaneRow(row: PaneDesktopSession, onClick: () -> Unit, modifie
 /** 圆形描边图标按钮（44dp），用于侧栏的搜索与设置。 */
 @Composable
 internal fun CircleIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
-    Box(Modifier.size(44.dp).etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false)
-        .clip(EtaTheme.shapes.radiusFull).clickable(onClickLabel = description, onClick = onClick)
+    val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Box(Modifier.size(44.dp).etaPressScale(press, pressedScale = 0.92f)
+        .etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false, interactionSource = press)
+        .clip(EtaTheme.shapes.radiusFull).clickable(interactionSource = press, indication = null, onClickLabel = description, onClick = onClick)
         .semantics { contentDescription = description; role = Role.Button }, contentAlignment = Alignment.Center) {
         Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary)
     }

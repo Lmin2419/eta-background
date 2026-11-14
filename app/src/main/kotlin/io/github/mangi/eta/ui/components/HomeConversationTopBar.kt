@@ -87,7 +87,7 @@ internal fun HomeConversationTopBar(
                 exit = fadeOut(tween(140)) + shrinkHorizontally(tween(220, easing = EtaTheme.motion.accelerate), shrinkTowards = Alignment.End),
                 label = "runningTasks",
             ) {
-                Box(Modifier.size(40.dp).clip(EtaTheme.shapes.radiusFull).clickable(onClick = onTasks), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(40.dp).etaTouchScale(0.88f).clip(EtaTheme.shapes.radiusFull).clickable(onClick = onTasks), contentAlignment = Alignment.Center) {
                     StatusRing(TaskVisualStatus.Running, size = 20.dp, contentDescription = stringResource(R.string.eta_tasks))
                     // 数量角标留在按钮范围内，不再压到旁边的按钮。
                     Text(runningTaskCount.toString(), style = EtaTheme.type.caption.copy(fontSize = 10.sp),
@@ -95,7 +95,7 @@ internal fun HomeConversationTopBar(
                             .background(colors.accent, EtaTheme.shapes.radiusFull).padding(horizontal = 4.dp))
                 }
             }
-            Box(Modifier.size(40.dp).clip(EtaTheme.shapes.radiusFull).clickable(onClickLabel = stringResource(R.string.action_new_conversation), onClick = onNew),
+            Box(Modifier.size(40.dp).etaTouchScale(0.88f).clip(EtaTheme.shapes.radiusFull).clickable(onClickLabel = stringResource(R.string.action_new_conversation), onClick = onNew),
                 contentAlignment = Alignment.Center) {
                 Icon(Icons.Outlined.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(22.dp), tint = colors.textPrimary)
             }
@@ -113,8 +113,10 @@ internal fun ModelPill(state: AgentModelPickerUiState, locked: Boolean, iconOnly
     val model = state.selectedModel
     val current = model?.displayName ?: stringResource(R.string.model_not_selected)
     val shown = model?.pillName ?: current
-    Row(Modifier.heightIn(min = 40.dp).etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false)
-        .clip(EtaTheme.shapes.radiusFull).clickable(role = Role.Button, onClick = onClick)
+    val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Row(Modifier.heightIn(min = 40.dp).etaPressScale(press, pressedScale = 0.95f)
+        .etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false, interactionSource = press)
+        .clip(EtaTheme.shapes.radiusFull).clickable(interactionSource = press, indication = null, role = Role.Button, onClick = onClick)
         .semantics { contentDescription = current }
         .padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)) {

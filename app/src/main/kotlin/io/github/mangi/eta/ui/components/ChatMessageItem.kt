@@ -55,6 +55,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -363,11 +364,11 @@ private fun UserMessageBubble(
         }
     }
     EtaContextMenu(menu, anchor = menuAnchor, onDismiss = { menu = false }, alignEnd = true) {
-        EtaMenuItem(stringResource(R.string.ui_copy_4edd1d), onClick = {
+        EtaMenuItem(stringResource(R.string.ui_copy_4edd1d), icon = Icons.Outlined.ContentCopy, onClick = {
             clipboardManager.setText(AnnotatedString(message.content)); menu = false
         })
-        EtaMenuItem(stringResource(R.string.ui_edit_a7f814), onClick = { menu = false; onEdit() })
-        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() }, destructive = true)
+        EtaMenuItem(stringResource(R.string.ui_edit_a7f814), icon = Icons.Outlined.Edit, onClick = { menu = false; onEdit() })
+        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
     }
 }
 
@@ -652,19 +653,19 @@ private fun AgentMessageBlock(
         }
     }
     EtaContextMenu(menu && !selectingText, anchor = menuAnchor, onDismiss = { menu = false }) {
-        EtaMenuItem(stringResource(R.string.eta_select_text), onClick = { selectingText = true })
-        EtaMenuItem(stringResource(R.string.copy_answer), onClick = {
+        EtaMenuItem(stringResource(R.string.eta_select_text), icon = Icons.Outlined.TextFields, onClick = { selectingText = true })
+        EtaMenuItem(stringResource(R.string.copy_answer), icon = Icons.Outlined.ContentCopy, onClick = {
             clipboardManager.setText(AnnotatedString(message.content)); copied = true; menu = false
         })
         if (allowSpeech) SpeechReadAloudMenuItem(message.id, message.content) { menu = false }
-        EtaMenuItem(stringResource(R.string.ui_regenerate_reply_84a7d9), enabled = messageActionsEnabled,
+        EtaMenuItem(stringResource(R.string.ui_regenerate_reply_84a7d9), icon = Icons.Outlined.Refresh, enabled = messageActionsEnabled,
             onClick = { menu = false; onRegenerate() })
-        if (message.characterEditable) EtaMenuItem(stringResource(R.string.chat_edit_character_reply), onClick = { menu = false; onEdit() })
+        if (message.characterEditable) EtaMenuItem(stringResource(R.string.chat_edit_character_reply), icon = Icons.Outlined.Edit, onClick = { menu = false; onEdit() })
         // 上游 3.4.1：从这条已完成的回复另开一个独立对话，原对话不受影响。
-        if (showBranchAction) EtaMenuItem(stringResource(R.string.conversation_branch), enabled = messageActionsEnabled,
+        if (showBranchAction) EtaMenuItem(stringResource(R.string.conversation_branch), icon = Icons.AutoMirrored.Outlined.CallSplit, enabled = messageActionsEnabled,
             onClick = { menu = false; onBranch() })
-        EtaMenuItem(stringResource(R.string.action_export), onClick = { menu = false; export() })
-        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() }, destructive = true)
+        EtaMenuItem(stringResource(R.string.action_export), icon = Icons.Outlined.IosShare, onClick = { menu = false; export() })
+        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
     }
 }
 

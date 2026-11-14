@@ -46,7 +46,7 @@ internal fun EtaToast(
             scaleIn(tween(motion.short), initialScale = 0.94f),
         exit = fadeOut(tween(motion.short)) + slideOutVertically(tween(motion.short)) { it / 2 }) {
         Row(Modifier.heightIn(min = 44.dp)
-            .etaGlass(EtaTheme.shapes.radiusFull, tint = colors.toastBackground, elevation = io.github.mangi.eta.ui.theme.EtaElevation.E2, useLocalBackdrop = false)
+            .etaGlass(EtaTheme.shapes.radiusFull, tint = colors.toastBackground, elevation = io.github.mangi.eta.ui.theme.EtaElevation.E2, blurAlpha = 0.8f)
             .padding(start = 14.dp, end = 16.dp, top = if (actionLabel != null && onAction != null) 6.dp else 10.dp,
                 bottom = if (actionLabel != null && onAction != null) 6.dp else 10.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },

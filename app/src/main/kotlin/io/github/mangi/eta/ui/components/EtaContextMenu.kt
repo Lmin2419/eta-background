@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -118,26 +119,35 @@ internal fun EtaContextMenu(
     }
 }
 
-/** 菜单里的一项：48dp 高、左对齐文字，危险操作用红色。 */
+/**
+ * 菜单里的一项：46dp 高、左对齐文字、右侧线条图标（可选），危险操作用红色。
+ * 按下时出现一块内缩的圆角高光，像在玻璃上点亮一格。
+ */
 @Composable
-internal fun EtaMenuItem(text: String, onClick: () -> Unit, enabled: Boolean = true, destructive: Boolean = false) {
-    Box(
+internal fun EtaMenuItem(
+    text: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    destructive: Boolean = false,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+) {
+    val color = when {
+        !enabled -> EtaTheme.colors.textTertiary
+        destructive -> EtaTheme.colors.dangerText
+        else -> EtaTheme.colors.textPrimary
+    }
+    androidx.compose.foundation.layout.Row(
         Modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
+            .padding(horizontal = 6.dp)
+            .heightIn(min = 46.dp)
+            .clip(EtaTheme.shapes.radiusMd)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart,
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text,
-            style = EtaTheme.type.rowTitle,
-            color = when {
-                !enabled -> EtaTheme.colors.textTertiary
-                destructive -> EtaTheme.colors.dangerText
-                else -> EtaTheme.colors.textPrimary
-            },
-        )
+        Text(text, style = EtaTheme.type.rowTitle, color = color, modifier = Modifier.weight(1f))
+        if (icon != null) top.yukonga.miuix.kmp.basic.Icon(icon, null, Modifier.padding(start = 12.dp).size(18.dp), tint = color)
     }
 }
 
