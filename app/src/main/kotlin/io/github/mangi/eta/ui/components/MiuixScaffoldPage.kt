@@ -54,9 +54,11 @@ fun MiuixScaffoldPage(
         val pull = onRefresh?.let { rememberEtaPullRefreshState(refreshing, it) }
         val backdrop = rememberTopBarBackdrop(containerColor)
 
+        val inWindow = LocalEtaWindow.current != null
         Scaffold(
             modifier = modifier.fillMaxSize(),
-            containerColor = containerColor,
+            // 窗口里页面底色透明，由窗口的玻璃外框提供。
+            containerColor = if (inWindow) Color.Transparent else containerColor,
             topBar = {
                 // 顶栏与页面同色（浅灰底），滚动后才出现分隔线。
                 TopBarBackdrop(backdrop, color = containerColor) {
@@ -79,7 +81,7 @@ fun MiuixScaffoldPage(
                         .fillMaxSize()
                         .horizontalCutoutPadding()
                         .captureForTopBar(backdrop)
-                        .background(containerColor)
+                        .background(if (inWindow) Color.Transparent else containerColor)
                         .scrollEndHaptic()
                         .overScrollVertical()
                         .then(if (pull != null) Modifier.nestedScroll(pull.connection) else Modifier)
@@ -126,8 +128,10 @@ fun MiuixScaffold(
         val backdrop = rememberTopBarBackdrop()
         val topBarColor = topBarContainerColor(backdrop)
 
+        val inWindow = LocalEtaWindow.current != null
         Scaffold(
             modifier = modifier.fillMaxSize(),
+            containerColor = if (inWindow) Color.Transparent else MiuixTheme.colorScheme.surface,
             topBar = {
                 TopBarBackdrop(backdrop) {
                     AdaptiveTopAppBar(

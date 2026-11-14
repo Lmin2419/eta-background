@@ -67,8 +67,9 @@ internal fun TasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRun: (Co
     }
     LaunchedEffect(Unit) { store.refresh() }
     val completed = remember(snapshots, archive) { completedTaskRows(snapshots, archive) }
-    Column(Modifier.fillMaxSize().background(EtaTheme.colors.canvas)
-        .statusBarsPadding().navigationBarsPadding()) {
+    val inWindow = io.github.mangi.eta.ui.components.LocalEtaWindow.current != null
+    Column(Modifier.fillMaxSize().then(if (inWindow) Modifier else Modifier.background(EtaTheme.colors.canvas).statusBarsPadding())
+        .navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp).heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
             MiuixBackButton(onClick = onBack)
             Text(stringResource(R.string.eta_tasks), style = if (embedded) EtaTheme.type.title2 else EtaTheme.type.title1)

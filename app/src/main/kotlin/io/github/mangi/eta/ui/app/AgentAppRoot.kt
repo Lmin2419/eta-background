@@ -197,7 +197,8 @@ fun AgentAppRoot(
         else while (backStack.size > 1 && backStack.last() != AppRoute.DesktopSessions) backStack.removeAt(backStack.lastIndex)
         if (chat != null) backStack.add(chat)
     }
-    val navigator = remember(backStack) { AgentNavigator(backStack) }
+    val windowStack = rememberNavBackStack<AppRoute>()
+    val navigator = remember(backStack, windowStack) { AgentNavigator(backStack, windowStack) }
     var navigationResetKey by rememberSaveable { mutableIntStateOf(0) }
     val runtimeActive by AgentRuntimeService.keepScreenOn.collectAsState()
     val view = LocalView.current
@@ -557,15 +558,8 @@ fun AgentAppRoot(
     val chatChrome = remember { io.github.mangi.eta.ui.components.EtaChromeState() }
     EtaAppOverlayHost {
     androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalEtaChrome provides chatChrome) {
-    key(navigationResetKey) {
-        NavDisplay(
-            backStack = backStack,
-            transition = io.github.mangi.eta.ui.navigation.rememberEtaNavigationTransition(),
-            onBack = { popRoute() },
-            effects = NavDisplayEffects(
-                cornerClipRadius = rememberNavSystemCornerRadius(),
-            ),
-        ) {
+    // 所有路由的页面内容只定义一次：整页导航与玻璃窗口里的导航共用。
+    val appEntries: top.yukonga.miuix.kmp.nav.core.NavEntryBuilder.() -> Unit = {
             entry<AppRoute.Home>(swipeDismiss = swipeDismiss) {
                 RoutedShell(route = AppRoute.Home) {
                     AgentHomeScreen(
@@ -731,17 +725,17 @@ fun AgentAppRoot(
             }
             entry<AppRoute.Tasks>(swipeDismiss = swipeDismiss) { route ->
                 TasksScreen(commonTasks, ::popRoute, ::runHomeTask, { id -> selectConversation(id); navigator.popToHome() },
-                    initialTab = route.tab, visible = backStack.lastOrNull() == route, onArchivedConversation = ::openArchivedTask)
+                    initialTab = route.tab, visible = navigator.current() == route, onArchivedConversation = ::openArchivedTask)
             }
             entry<AppRoute.Characters>(swipeDismiss = swipeDismiss) {
-                LaunchedEffect(backStack.lastOrNull() == AppRoute.Characters) {
-                    if (backStack.lastOrNull() == AppRoute.Characters) characterStore.loadLibrary()
+                LaunchedEffect(navigator.current() == AppRoute.Characters) {
+                    if (navigator.current() == AppRoute.Characters) characterStore.loadLibrary()
                 }
                 CharacterLibraryScreen(characterStore, { if (navigator.current() == AppRoute.Characters) pushRoute(it) }, ::popRoute)
             }
             entry<AppRoute.CharacterDetail>(swipeDismiss = swipeDismiss) { route ->
-                LaunchedEffect(route.characterId, backStack.lastOrNull() == route) {
-                    if (backStack.lastOrNull() == route) characterStore.loadDetail(route.characterId)
+                LaunchedEffect(route.characterId, navigator.current() == route) {
+                    if (navigator.current() == route) characterStore.loadDetail(route.characterId)
                 }
                 CharacterDetailScreen(route.characterId, characterStore, { if (navigator.current() == route) pushRoute(it) }, ::popRoute) { binding, greeting ->
                     if (navigator.current() == route) {
@@ -754,24 +748,24 @@ fun AgentAppRoot(
                 }
             }
             entry<AppRoute.CharacterEditor>(swipeDismiss = swipeDismiss) { route ->
-                LaunchedEffect(route.characterId, backStack.lastOrNull() == route) {
-                    if (backStack.lastOrNull() == route) characterStore.loadEditor(route.characterId)
+                LaunchedEffect(route.characterId, navigator.current() == route) {
+                    if (navigator.current() == route) characterStore.loadEditor(route.characterId)
                 }
                 CharacterEditorScreen(route.characterId, characterStore, ::popRoute) { id ->
                     if (navigator.current() == route) navigator.replace(AppRoute.CharacterDetail(id))
                 }
             }
             entry<AppRoute.CharacterPersona>(swipeDismiss = swipeDismiss) {
-                LaunchedEffect(backStack.lastOrNull() == AppRoute.CharacterPersona) {
-                    if (backStack.lastOrNull() == AppRoute.CharacterPersona) characterStore.loadPersona()
+                LaunchedEffect(navigator.current() == AppRoute.CharacterPersona) {
+                    if (navigator.current() == AppRoute.CharacterPersona) characterStore.loadPersona()
                 }
                 CharacterPersonaScreen(characterStore) {
                     if (navigator.current() == AppRoute.CharacterPersona) popRoute()
                 }
             }
             entry<AppRoute.CharacterMemory>(swipeDismiss = swipeDismiss) { route ->
-                LaunchedEffect(route.characterId, backStack.lastOrNull() == route) {
-                    if (backStack.lastOrNull() == route) characterStore.loadMemory(route.characterId)
+                LaunchedEffect(route.characterId, navigator.current() == route) {
+                    if (navigator.current() == route) characterStore.loadMemory(route.characterId)
                 }
                 CharacterMemoryScreen(route.characterId, characterStore, ::popRoute)
             }
@@ -1015,6 +1009,32 @@ fun AgentAppRoot(
                     onBack = ::popRoute
                 )
             }
+    }
+    key(navigationResetKey) {
+        NavDisplay(
+            backStack = backStack,
+            transition = io.github.mangi.eta.ui.navigation.rememberEtaNavigationTransition(),
+            onBack = { popRoute() },
+            effects = NavDisplayEffects(
+                cornerClipRadius = rememberNavSystemCornerRadius(),
+            ),
+        ) { appEntries() }
+    }
+    // 设置类页面在对话上方的玻璃窗口里打开（§3.3）；窗口内有自己的返回栈，左右滑入下一级。
+    io.github.mangi.eta.ui.components.EtaGlassWindow(
+        open = windowStack.isNotEmpty(),
+        closing = navigator.windowClosing,
+        depth = windowStack.size,
+        onRequestClose = navigator::closeWindows,
+        onClosed = navigator::onWindowClosed,
+        onBack = { navigator.pop() },
+    ) {
+        if (windowStack.isNotEmpty()) {
+            NavDisplay(
+                backStack = windowStack,
+                transition = io.github.mangi.eta.ui.navigation.rememberEtaNavigationTransition(),
+                onBack = { navigator.pop() },
+            ) { appEntries() }
         }
     }
     }

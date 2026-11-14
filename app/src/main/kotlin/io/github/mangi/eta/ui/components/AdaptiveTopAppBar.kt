@@ -54,7 +54,8 @@ fun AdaptiveTopAppBar(
                     drawLine(outline.copy(alpha = outline.alpha * a), Offset(0f, y), Offset(size.width, y), 0.5.dp.toPx())
                 }
             }
-            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
+            // 玻璃窗口里不加状态栏内边距（窗口本身在状态栏下方 24dp）。
+            .then(if (LocalEtaWindow.current == null) Modifier.windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top)) else Modifier)
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
             .clipToBounds().pointerInput(Unit) { detectTapGestures { /* Preserve top-bar tap consumption. */ } },
