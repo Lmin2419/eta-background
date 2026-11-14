@@ -26,6 +26,7 @@ internal fun SpeechVoiceSection(store: SpeechSettingsStore) {
         TtsProvider.DOUBAO -> settings.doubaoVoice
         TtsProvider.GEMINI -> settings.geminiTts.voice
         TtsProvider.MINIMAX -> settings.minimaxTts.voice
+        TtsProvider.MIMO -> settings.mimoTts.voice
     }
     val presets = SpeechVoicePresets.forProvider(settings.tts)
     val presetIndex = presets.indexOfFirst { it.id == voice }
@@ -38,8 +39,12 @@ internal fun SpeechVoiceSection(store: SpeechSettingsStore) {
             TtsProvider.DOUBAO -> settings.copy(doubaoVoice = it)
             TtsProvider.GEMINI -> settings.copy(geminiTts = settings.geminiTts.copy(voice = it))
             TtsProvider.MINIMAX -> settings.copy(minimaxTts = settings.minimaxTts.copy(voice = it))
+            TtsProvider.MIMO -> settings.copy(mimoTts = settings.mimoTts.copy(voice = it))
         })
     }
+    val customLabel = stringResource(
+        if (settings.tts == TtsProvider.MIMO) R.string.speech_voice_manual else R.string.speech_voice_custom,
+    )
 
     Column {
         EtaPreferenceGroupTitle(stringResource(R.string.speech_group_voice))
@@ -47,7 +52,7 @@ internal fun SpeechVoiceSection(store: SpeechSettingsStore) {
             EtaDropdownPreference(
                 title = stringResource(R.string.speech_voice),
                 items = presets.map { preset ->
-                    DropdownItem(text = stringResource(preset.name), summary = stringResource(preset.summary))
+                    DropdownItem(text = stringResource(preset.name), summary = preset.summary?.let { stringResource(it) })
                 } + DropdownItem(text = stringResource(R.string.speech_voice_custom)),
                 selectedIndex = if (custom) presets.size else presetIndex,
                 useWindow = false,
@@ -78,6 +83,7 @@ internal fun SpeechVoiceSection(store: SpeechSettingsStore) {
                     TtsProvider.DOUBAO -> R.string.speech_doubao_voice_note
                     TtsProvider.GEMINI -> R.string.speech_gemini_voice_note
                     TtsProvider.MINIMAX -> R.string.speech_minimax_voice_note
+                    TtsProvider.MIMO -> R.string.speech_mimo_voice_note
                     TtsProvider.NONE -> error("No synthesis provider")
                 },
             ),

@@ -66,19 +66,21 @@ internal fun MiniMaxConnectionSection(store: SpeechSettingsStore) {
 }
 
 @Composable
-private fun SpeechApiKeyConnectionSection(
+internal fun SpeechApiKeyConnectionSection(
     baseUrl: String,
     apiKey: String,
     onBaseUrl: (String) -> Unit,
     onApiKey: (String) -> Unit,
     note: String,
-    model: @Composable () -> Unit,
+    model: (@Composable () -> Unit)? = null,
 ) {
     Column {
         EtaPreferenceGroupTitle(stringResource(R.string.speech_group_connection))
         EtaPreferenceGroup {
-            model()
-            EtaPreferenceDivider(hasLeading = false)
+            if (model != null) {
+                model()
+                EtaPreferenceDivider(hasLeading = false)
+            }
             SpeechFieldColumn {
                 SpeechField("API Key", apiKey, secret = true, onChange = { onApiKey(it.trim()) })
                 SpeechField(stringResource(R.string.speech_base_url), baseUrl, onChange = { onBaseUrl(it.trim()) })
@@ -88,19 +90,37 @@ private fun SpeechApiKeyConnectionSection(
     }
 }
 
+@Composable
+internal fun MimoTtsConnectionSection(store: SpeechSettingsStore) {
+    val config = store.settings.mimoTts
+    SpeechApiKeyConnectionSection(
+        baseUrl = config.baseUrl,
+        apiKey = store.credentials.mimoTts,
+        onBaseUrl = { store.edit(store.settings.copy(mimoTts = config.copy(baseUrl = it))) },
+        onApiKey = { store.credential(SpeechCredentialField.MIMO_TTS, it) },
+        note = stringResource(R.string.speech_mimo_tts_connection_note),
+    )
+}
+
 /** 只呈现该服务实际支持的发声参数。 */
 @Composable
 internal fun SpeechDeliveryFields(store: SpeechSettingsStore) {
     when (store.settings.tts) {
-        TtsProvider.GEMINI -> {
-            val config = store.settings.geminiTts
+        TtsProvider.GEMINI, TtsProvider.MIMO -> {
+            val settings = store.settings
+            val mimo = settings.tts == TtsProvider.MIMO
             EtaPreferenceDivider(hasLeading = false)
             SpeechFieldColumn {
                 SpeechField(
-                    label = stringResource(R.string.speech_gemini_style),
-                    value = config.style,
+                    label = stringResource(R.string.speech_style),
+                    value = if (mimo) settings.mimoTts.style else settings.geminiTts.style,
                     singleLine = false,
-                    onChange = { store.edit(store.settings.copy(geminiTts = config.copy(style = it))) },
+                    onChange = {
+                        store.edit(
+                            if (mimo) settings.copy(mimoTts = settings.mimoTts.copy(style = it))
+                            else settings.copy(geminiTts = settings.geminiTts.copy(style = it)),
+                        )
+                    },
                 )
             }
         }

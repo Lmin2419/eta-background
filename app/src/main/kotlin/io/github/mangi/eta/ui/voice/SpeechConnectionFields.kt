@@ -32,7 +32,12 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 internal fun SpeechConnectionSection(store: SpeechSettingsStore, synthesis: Boolean) {
     if (!synthesis) {
-        QwenDoubaoConnectionSection(store, synthesis = false)
+        when (store.settings.asr) {
+            AsrProvider.SYSTEM -> Unit
+            AsrProvider.MIMO -> MimoAsrConnectionSection(store)
+            AsrProvider.QWEN_REALTIME, AsrProvider.QWEN_FLASH, AsrProvider.QWEN_FILE, AsrProvider.DOUBAO ->
+                QwenDoubaoConnectionSection(store, synthesis = false)
+        }
         return
     }
     when (store.settings.tts) {
@@ -40,8 +45,10 @@ internal fun SpeechConnectionSection(store: SpeechSettingsStore, synthesis: Bool
         TtsProvider.QWEN, TtsProvider.DOUBAO -> QwenDoubaoConnectionSection(store, synthesis = true)
         TtsProvider.GEMINI -> GeminiConnectionSection(store)
         TtsProvider.MINIMAX -> MiniMaxConnectionSection(store)
+        TtsProvider.MIMO -> MimoTtsConnectionSection(store)
     }
 }
+
 
 /** 识别与播报共用的服务商连接配置：地域或旧版鉴权、凭据与高级地址设置。 */
 @Composable

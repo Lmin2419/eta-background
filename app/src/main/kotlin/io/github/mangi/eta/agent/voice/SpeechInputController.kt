@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -231,10 +232,11 @@ internal class SpeechInputController(
         autoSubmit = false
         refineTranscript = false
         pendingSystemResult = null
+        // 先取消识别协程，避免关闭录音通道被当作正常录音完成而提交请求（上游修复）。
+        job?.cancel(); job = null
         recorder?.cancel(); recorder = null
         releaseCapture()
         system?.cancel(); system = null
-        job?.cancel(); job = null
         delivery?.cancel(); delivery = null
         lease?.close(); lease = null
         mutableState.value = SpeechInputState()
