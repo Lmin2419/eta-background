@@ -27,7 +27,7 @@ internal fun EtaCard(
     colors: CardColors = CardDefaults.defaultColors(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    CompositionLocalProvider(LocalSquircleEnabled provides true) {
+    CompositionLocalProvider(LocalSquircleEnabled provides EtaCouiSupport.shaders) {
         Card(
             modifier = modifier,
             cornerRadius = EtaCardDefaults.CornerRadius,

@@ -13,6 +13,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.compose.foundation.layout.*
 import com.itos.coui.menu.couiMenuAnchor
+import com.itos.coui.backdrop.couiBackdrop
 import io.github.mangi.eta.ui.theme.EtaTypography
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -113,10 +114,12 @@ internal fun ConversationPanePanel(
     var toastVersion by remember { mutableIntStateOf(0) }
     var undo by remember { mutableStateOf<ConversationArchiveChange?>(null) }
     var desktopCollapsed by remember { mutableStateOf(false) }
-    var searching by remember { mutableStateOf(false) }
     var menuTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
     // 长按对话的菜单从按住的位置展开（上游 COUI 菜单）。
     val paneMenuAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    // 底部玻璃栏采样的列表画面（上游侧栏的 COUI 背景采样）；关闭模糊或省电时不采样。
+    val paneBackdrop = if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && EtaCouiSupport.shaders)
+        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "conversation-pane") else null
     val selecting = selectedIds.isNotEmpty()
     val motion = EtaTheme.motion
     val visibleConversations = remember(state.conversations, state.searchQuery, archived) {
@@ -143,20 +146,19 @@ internal fun ConversationPanePanel(
                 EtaIconButton({ archived = false; onSearchChange("") }) { Icon(Icons.Outlined.ChevronLeft, stringResource(R.string.action_back)) }
                 Text(stringResource(R.string.eta_archived), style = EtaTheme.type.headline)
             } else Column {
-                // 与 Claude 侧栏同一套结构：左上衬线大标题，右上圆形搜索；点搜索才展开搜索框。
+                // 与上游侧栏一致：左上大标题，右上「新建会话」；搜索、权限、设置在底部的玻璃栏里。
                 Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.app_name), Modifier.weight(1f), style = EtaTheme.type.title1, color = EtaTheme.colors.textPrimary)
-                    CircleIconButton(Icons.Outlined.Search, stringResource(R.string.conversation_search_hint), glass = false, onClick = {
-                        searching = !searching; if (!searching) onSearchChange("")
-                    })
-                }
-                AnimatedVisibility(searching || state.searchQuery.isNotBlank()) {
-                    EtaSearchField(state.searchQuery, onSearchChange, stringResource(R.string.conversation_search_hint),
-                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp))
+                    CircleIconButton(Icons.Outlined.Add, stringResource(R.string.eta_new_session), glass = false, onClick = workspace.onNew)
                 }
             }
         }
-        LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxWidth().couiMenuAnchor(paneMenuAnchor), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        val showDock = !selecting
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+        // 列表从底部玻璃栏下面穿过：玻璃栏采样这块列表做液态玻璃折射。
+        Box(Modifier.fillMaxSize().then(if (paneBackdrop != null) Modifier.couiBackdrop(paneBackdrop) else Modifier)) {
+        LazyColumn(state = listState, modifier = Modifier.fillMaxSize().couiMenuAnchor(paneMenuAnchor),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = if (showDock) PaneDockHeight + 8.dp else 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (visibleConversations.isEmpty() && (state.groups.isEmpty() || archived || state.searchQuery.isNotBlank())) item {
                 ListEmptyState(stringResource(if (state.searchQuery.isBlank()) R.string.conversation_empty else R.string.conversation_no_results), icon = Icons.Outlined.Search)
@@ -236,16 +238,25 @@ internal fun ConversationPanePanel(
                     DesktopPaneRow(row, { workspace.onOpenDesktopSession(row.id) }, etaAnimateItem())
                 }
             }
+            // 归档入口是列表最后一行，随列表滚动，不压在玻璃栏上。
+            val archiveCount = state.conversations.count { it.archivedAt != null }
+            if (!archived && !selecting && state.searchQuery.isBlank() && archiveCount > 0) item(key = "archive-entry") {
+                Box(etaAnimateItem().padding(top = 8.dp).clip(EtaTheme.shapes.radiusLg)) {
+                    EtaArrowPreference(stringResource(R.string.eta_archived_count, archiveCount),
+                        onClick = { archived = true; onSearchChange("") })
+                }
+            }
         }
-        val archiveCount = state.conversations.count { it.archivedAt != null }
-        if (!archived && !selecting && state.searchQuery.isBlank() && archiveCount > 0) {
-            EtaArrowPreference(stringResource(R.string.eta_archived_count, archiveCount),
-                onClick = { archived = true; onSearchChange("") })
         }
-        key(toastVersion) {
-            EtaToast(toast, { toast = null; undo = null }, Modifier.padding(horizontal = 12.dp),
-                actionLabel = if (undo != null) stringResource(R.string.eta_undo) else null,
-                onAction = undo?.let { change -> { management.unarchive(change.ids, change.archivedAt); undo = null; toast = null } })
+        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+            key(toastVersion) {
+                EtaToast(toast, { toast = null; undo = null }, Modifier.padding(horizontal = 12.dp),
+                    actionLabel = if (undo != null) stringResource(R.string.eta_undo) else null,
+                    onAction = undo?.let { change -> { management.unarchive(change.ids, change.archivedAt); undo = null; toast = null } })
+            }
+            if (showDock) PaneBottomDock(state.searchQuery, onSearchChange, workspace.permissionsPending > 0,
+                onOpenPermissions, onOpenSettings, paneBackdrop)
+        }
         }
         AnimatedContent(selecting, transitionSpec = { fadeIn(tween(motion.short, easing = motion.standard)) togetherWith fadeOut(tween(motion.exitDuration(180), easing = motion.accelerate)) }, label = "selectionActions") { mode ->
         if (mode) ConversationSelectionBar(archived,
@@ -262,22 +273,7 @@ internal fun ConversationPanePanel(
                         else resources.getString(R.string.eta_archive_done, change.ids.size)
                 }
             }, onDelete = { deleteTarget = selectedIds }, onMore = { showMore = true })
-        else {
-        // 底部：左边圆形设置按钮（有待处理权限时带提示点），右边黑色「新建会话」胶囊。
-        Row(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box {
-                CircleIconButton(Icons.Outlined.Settings, stringResource(R.string.route_settings), onClick = onOpenSettings, glass = false)
-                if (workspace.permissionsPending > 0) Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(8.dp).background(EtaTheme.colors.attention, EtaTheme.shapes.radiusFull))
-            }
-            Spacer(Modifier.weight(1f))
-            Row(Modifier.clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.textPrimary)
-                .clickable(onClick = workspace.onNew).heightIn(min = 48.dp).padding(horizontal = 20.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Outlined.Add, null, Modifier.size(20.dp), tint = EtaTheme.colors.canvas)
-                Text(stringResource(R.string.eta_new_session), style = EtaTheme.type.rowTitle, color = EtaTheme.colors.canvas, maxLines = 1)
-            }
-        }
-        }
+        else Spacer(Modifier.height(0.dp))
     }
     }
     EtaSheet(showMore, title = stringResource(R.string.eta_more), onDismissRequest = { showMore = false }) {
@@ -435,6 +431,40 @@ private fun DesktopPaneRow(row: PaneDesktopSession, onClick: () -> Unit, modifie
 }
 
 /** 圆形描边图标按钮（44dp），用于侧栏的搜索与设置。 */
+/** 底部玻璃栏的高度（含上下留白），列表底部按它留出空间。 */
+private val PaneDockHeight = 72.dp
+
+/**
+ * 侧栏底部的玻璃栏（上游 ConversationPaneBottomDock）：左边搜索胶囊，右边权限和设置两枚圆钮。
+ * 三者都是液态玻璃，浮在会话列表上面；有待处理的权限时权限钮带一个提示点。
+ */
+@Composable
+private fun PaneBottomDock(
+    query: String, onSearchChange: (String) -> Unit, permissionsAttention: Boolean,
+    onOpenPermissions: () -> Unit, onOpenSettings: () -> Unit, backdrop: com.itos.coui.backdrop.CouiBackdrop?,
+) {
+    androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides backdrop) {
+        Row(Modifier.fillMaxWidth().height(PaneDockHeight).padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = EtaTheme.shapes.radiusFull,
+                capsule = true,
+                onClick = null,
+            ) {
+                EtaSearchField(query, onSearchChange, stringResource(R.string.conversation_search_hint),
+                    Modifier.fillMaxWidth(), bare = true)
+            }
+            Box {
+                CircleIconButton(Icons.Outlined.VerifiedUser, stringResource(R.string.route_permissions), onClick = onOpenPermissions)
+                if (permissionsAttention) Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(8.dp)
+                    .background(EtaTheme.colors.attention, EtaTheme.shapes.radiusFull))
+            }
+            CircleIconButton(Icons.Outlined.Settings, stringResource(R.string.route_settings), onClick = onOpenSettings)
+        }
+    }
+}
+
 @Composable
 internal fun CircleIconButton(icon: ImageVector, description: String, onClick: () -> Unit, glass: Boolean = true) {
     if (glass) {

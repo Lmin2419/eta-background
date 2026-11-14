@@ -181,6 +181,16 @@ internal class AgentAppState(
     )
         private set
 
+    /** 与上游一致：有内容的对话才显示标题（顶栏上行标题、下行模型）。 */
+    val currentConversationTitle: String?
+        get() {
+            val state = homeState
+            if (state.messages.isEmpty() && !state.hasEarlierMessages) return null
+            val id = conversationPaneState.selectedConversationId ?: return null
+            return conversationPaneState.conversations.firstOrNull { it.id == id }?.title?.takeIf(String::isNotBlank)
+                ?: conversationTitles[id]?.takeIf(String::isNotBlank)
+        }
+
     private var runtimeTaskStatuses: Map<String, AgentOverlayStatus> = emptyMap()
     private val commonTaskLaunches = CommonTaskLaunchGuard()
 

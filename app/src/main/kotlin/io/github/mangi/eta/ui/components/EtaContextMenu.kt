@@ -68,7 +68,7 @@ internal val LocalEtaMenuCollector = androidx.compose.runtime.staticCompositionL
  */
 internal object EtaCouiSupport {
     @Volatile
-    var popups: Boolean = android.os.Build.FINGERPRINT != "robolectric"
+    var shaders: Boolean = android.os.Build.FINGERPRINT != "robolectric"
 }
 
 /**
@@ -86,7 +86,7 @@ internal fun EtaContextMenu(
     header: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    if (!EtaCouiSupport.popups) {
+    if (!EtaCouiSupport.shaders) {
         EtaPopover(show, anchor, onDismiss, align = if (alignEnd) EtaPopoverAlign.End else EtaPopoverAlign.Start, title = header, content = content)
         return
     }

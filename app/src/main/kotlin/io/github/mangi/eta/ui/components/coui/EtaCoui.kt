@@ -104,7 +104,7 @@ internal fun EtaFloatingSurface(
     val dark = CouiTheme.isDark
     val view = LocalView.current
     val renderer = remember {
-        if (Build.VERSION.SDK_INT >= 34) runCatching { CouiFloatingRenderer.standalone() }.getOrNull() else null
+        if (Build.VERSION.SDK_INT >= 34 && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders) runCatching { CouiFloatingRenderer.standalone() }.getOrNull() else null
     }
     val accent = io.github.mangi.eta.ui.theme.EtaTheme.colors.accent
     if (Build.VERSION.SDK_INT >= 34 && backdrop != null && renderer != null && view.display != null) {
@@ -497,7 +497,7 @@ internal fun EtaCouiTopBarIconButton(
     enabled: Boolean = true,
 ) {
     val dark = CouiTheme.isDark
-    val renderer = remember { if (Build.VERSION.SDK_INT >= 34) runCatching { CouiFloatingRenderer.standalone() }.getOrNull() else null }
+    val renderer = remember { if (Build.VERSION.SDK_INT >= 34 && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders) runCatching { CouiFloatingRenderer.standalone() }.getOrNull() else null }
     val tint = io.github.mangi.eta.ui.theme.EtaTheme.colors.textPrimary
     if (Build.VERSION.SDK_INT >= 34 && renderer != null) {
         com.itos.coui.topappbar.TopAppBarButton(

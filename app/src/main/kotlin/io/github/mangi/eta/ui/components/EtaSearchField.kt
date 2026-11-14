@@ -29,6 +29,8 @@ import top.yukonga.miuix.kmp.basic.Text
 internal fun EtaSearchField(
     value: String, onValueChange: (String) -> Unit, placeholder: String,
     modifier: Modifier = Modifier, enabled: Boolean = true, onSearch: (String) -> Unit = {},
+    /** 放在液态玻璃胶囊里时不画自己的底色和描边。 */
+    bare: Boolean = false,
 ) {
     val colors = EtaTheme.colors
     val source = remember { MutableInteractionSource() }
@@ -42,8 +44,7 @@ internal fun EtaSearchField(
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { onSearch(value) }),
         modifier = modifier.fillMaxWidth().semantics { contentDescription = placeholder }
-            .background(colors.surfaceSunken, shape)
-            .border(1.5.dp, focusBorder, shape),
+            .then(if (bare) Modifier else Modifier.background(colors.surfaceSunken, shape).border(1.5.dp, focusBorder, shape)),
         decorationBox = { inner ->
             Row(Modifier.heightIn(min = 44.dp).padding(start = 14.dp, end = 4.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

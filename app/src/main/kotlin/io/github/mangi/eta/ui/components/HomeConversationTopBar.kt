@@ -60,6 +60,7 @@ internal fun HomeConversationTopBar(
     @Suppress("UNUSED_PARAMETER") onCompact: () -> Unit,
     @Suppress("UNUSED_PARAMETER") onExport: () -> Unit,
     onManageModels: () -> Unit,
+    conversationTitle: String? = null,
 ) {
     var settings by remember { mutableStateOf(false) }
     val pillAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
@@ -87,9 +88,11 @@ internal fun HomeConversationTopBar(
             }
             Box((if (character == null) Modifier.weight(1f) else Modifier).etaChromeScale(0.88f)
                 .couiMenuAnchor(pillAnchor), contentAlignment = Alignment.Center) {
-                ModelPill(models, isStreaming || isCompacting || models.isChanging, character != null) {
-                    if (isStreaming || isCompacting || models.isChanging) toast(lockedText) else pillAnchor.open { settings = true }
-                }
+                val locked = isStreaming || isCompacting || models.isChanging
+                val openModels = { if (locked) toast(lockedText) else pillAnchor.open { settings = true } }
+                // 与上游一致：对话有了标题时，中间上行标题、下行模型；新对话只显示模型胶囊。
+                if (character == null && !conversationTitle.isNullOrBlank()) ChatTitleCapsule(conversationTitle, models, locked, openModels)
+                else ModelPill(models, locked, character != null, openModels)
             }
             Box(Modifier.etaChromeScale()) { CircleIconButton(Icons.Outlined.Add, stringResource(R.string.action_new_conversation), onNew) }
         }
@@ -99,6 +102,36 @@ internal fun HomeConversationTopBar(
         onDismiss = { settings = false },
         onModel = { id -> settings = false; if (id != models.selectedModel?.id) { pendingModel = id; onModel(id) } },
         onManageModels = { settings = false; onManageModels() })
+}
+
+/**
+ * 对话标题胶囊（上游 AgentTopBarChatHeader 的「标题＋模型」）：上行会话标题，下行模型名和下箭头，
+ * 整块是 44dp 高的液态玻璃，点一下切换模型。
+ */
+@Composable
+private fun ChatTitleCapsule(title: String, state: AgentModelPickerUiState, locked: Boolean, onClick: () -> Unit) {
+    val model = state.selectedModel
+    val current = model?.displayName ?: stringResource(R.string.model_not_selected)
+    val description = stringResource(R.string.model_switch_current, current)
+    io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
+        modifier = Modifier.height(44.dp).width(IntrinsicSize.Max).widthIn(max = 240.dp),
+        shape = EtaTheme.shapes.radiusFull,
+        capsule = true,
+        contentDescription = description,
+        onClick = onClick,
+    ) {
+        Column(Modifier.padding(horizontal = 18.dp), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center) {
+            Text(title, style = EtaTheme.type.subhead.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, lineHeight = 18.sp),
+                color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(model?.pillName ?: current, style = EtaTheme.type.caption.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Normal, lineHeight = 14.sp),
+                    color = if (locked) EtaTheme.colors.textQuiet else EtaTheme.colors.textTertiary,
+                    maxLines = 1, overflow = TextOverflow.MiddleEllipsis, modifier = Modifier.weight(1f, fill = false))
+                Icon(Icons.Outlined.ExpandMore, null, Modifier.size(12.dp), tint = EtaTheme.colors.textQuiet)
+            }
+        }
+    }
 }
 
 /**

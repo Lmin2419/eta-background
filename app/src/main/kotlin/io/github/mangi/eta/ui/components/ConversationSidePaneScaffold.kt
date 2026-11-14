@@ -61,11 +61,9 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private object ConversationPaneMetrics {
-    val PaneMaxWidth = 320.dp
+    val PaneMaxWidth = 340.dp
     val PaneWidthFraction = 0.84f
-    /** 悬浮侧栏离屏幕左、上、下的距离。 */
-    val PaneInset = 8.dp
-    const val ChatScrimAlpha = 0.14f
+    const val ChatScrimAlpha = 0.16f
     const val SettleVisibilityThresholdPx = 0.5f
     const val SettlePositionThresholdFraction = 0.5f
 }
@@ -221,9 +219,7 @@ fun ConversationSidePaneScaffold(
             onBackCompleted = closePane,
         )
 
-        // 悬浮侧栏（§3.4）：浮在对话上方的玻璃面板，模糊背后的对话；对话本身不再被推开。
-        val pageBackdrop = rememberEtaGlassBackdrop()
-        val insetPx = with(density) { ConversationPaneMetrics.PaneInset.toPx() }
+        // 与上游一致的推开式侧栏：侧栏从左侧滑入，同时把对话推向右边；底部是液态玻璃栏。
         Box(
             modifier = Modifier.fillMaxSize()
                 .clipToBounds()
@@ -260,13 +256,7 @@ fun ConversationSidePaneScaffold(
                         onOpenSkills = onOpenSkills,
                         onOpenCharacters = onOpenCharacters,
                         onOpenPermissions = onOpenPermissions,
-                        floating = true,
                         modifier = Modifier
-                            .etaGlass(io.github.mangi.eta.ui.theme.EtaTheme.shapes.radiusWindow,
-                                tint = io.github.mangi.eta.ui.theme.EtaTheme.colors.surfaceSunken,
-                                elevation = io.github.mangi.eta.ui.theme.EtaElevation.E3,
-                                backdrop = pageBackdrop, useLocalBackdrop = false, blurAlpha = 0.86f, solidAlpha = 0.97f)
-                            .clip(io.github.mangi.eta.ui.theme.EtaTheme.shapes.radiusWindow)
                             .focusProperties { onEnter = { if (!isRevealed) cancelFocusChange() } }
                             .focusGroup()
                             .then(if (!isRevealed) Modifier.clearAndSetSemantics {} else Modifier),
@@ -278,8 +268,7 @@ fun ConversationSidePaneScaffold(
                                 val progress = conversationPaneMotion(paneDragState.offset, paneWidthPx).progress
                                 drawRect(Color.Black, alpha = ConversationPaneMetrics.ChatScrimAlpha * progress)
                             }
-                            .background(MiuixTheme.colorScheme.background)
-                            .then(if (pageBackdrop != null) Modifier.layerBackdrop(pageBackdrop) else Modifier),
+                            .background(MiuixTheme.colorScheme.background),
                     ) {
                         Box(
                             modifier = Modifier
@@ -305,7 +294,7 @@ fun ConversationSidePaneScaffold(
                 },
             ) { measurables, constraints ->
                 val panel = measurables[0].measure(
-                    Constraints.fixed(paneWidthPx.roundToInt(), (constraints.maxHeight - insetPx * 2).roundToInt().coerceAtLeast(0)),
+                    Constraints.fixed(paneWidthPx.roundToInt(), constraints.maxHeight),
                 )
                 val page = measurables[1].measure(
                     Constraints.fixed(constraints.maxWidth, constraints.maxHeight),
@@ -313,11 +302,9 @@ fun ConversationSidePaneScaffold(
                 layout(constraints.maxWidth, constraints.maxHeight) {
                     // 物理左侧是会话区；不随 RTL 改变两个槽位的关系。
                     val motion = conversationPaneMotion(paneDragState.offset, paneWidthPx)
-                    // 对话不动；侧栏从左侧滑入，停在离边缘 8dp 处，画在对话上面。
-                    val hidden = panel.width + insetPx * 2
-                    val x = (insetPx - (1f - motion.progress) * hidden).roundToInt()
-                    page.placeWithLayer(0, 0)
-                    panel.placeWithLayer(x, insetPx.roundToInt(), zIndex = 1f)
+                    val offset = motion.foregroundOffset.roundToInt()
+                    panel.placeWithLayer(offset - panel.width, 0)
+                    page.placeWithLayer(offset, 0)
                 }
             }
         }

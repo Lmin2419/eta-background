@@ -50,6 +50,10 @@ fun MiuixScaffoldPage(
     onRefresh: (() -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
+    if (!EtaCouiSupport.shaders) {
+        LegacyMiuixScaffoldPage(title, onBack, modifier, actions, overlay, listState, compactTitle, containerColor, refreshing, onRefresh, content)
+        return
+    }
     EtaPreferenceTheme {
         val pull = onRefresh?.let { rememberEtaPullRefreshState(refreshing, it) }
 
@@ -133,6 +137,138 @@ fun MiuixScaffold(
         sidePadding: Dp,
     ) -> Unit,
 ) {
+    if (!EtaCouiSupport.shaders) {
+        LegacyMiuixScaffold(title, onBack, modifier, actions, content)
+        return
+    }
+    EtaPreferenceTheme {
+        // 自带内容的二级页同样用 COUI 骨架：紧凑顶栏（返回键是液态玻璃圆钮），内容从顶栏下面滚过并被模糊。
+        // 旧的 Miuix 滚动行为仍传给内容（内容里的 nestedScroll 不依赖顶栏）。
+        val scrollBehavior = MiuixScrollBehavior()
+        val dark = com.itos.coui.theme.CouiTheme.isDark
+        val barColors = com.itos.coui.topappbar.CouiTopAppBarDefaults.colors(titleColor = EtaTheme.colors.textPrimary, dark = dark)
+        com.itos.coui.layout.Scaffold(
+            modifier = modifier.fillMaxSize(),
+            containerColor = if (LocalEtaWindow.current != null) Color.Transparent else EtaTheme.colors.surfaceSunken,
+            topBar = {
+                com.itos.coui.topappbar.TopAppBar(
+                    title = {
+                        androidx.compose.foundation.text.BasicText(title, style = com.itos.coui.theme.LocalCouiTextStyle.current,
+                            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    },
+                    navigationIcon = { io.github.mangi.eta.ui.components.coui.EtaCouiBackButton(onClick = onBack) },
+                    actions = { com.itos.coui.topappbar.TopAppBarButtonGroup { actions() } },
+                    dark = dark, colors = barColors,
+                )
+            },
+        ) { paddingValues ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                WidePageContent { centeredPadding ->
+                    val sidePadding = centeredPadding + if (rememberIsWideScreen()) 8.dp else 0.dp
+                    content(paddingValues, scrollBehavior, sidePadding)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MiuixPageBottomSpacer(modifier: Modifier = Modifier) {
+    Spacer(
+        modifier = modifier
+            .height(24.dp)
+            .navigationBarsPadding(),
+    )
+}
+
+/** 本机测试环境（画不了 COUI 着色器）用的旧骨架，见 [EtaCouiSupport]。 */
+@Composable
+private fun LegacyMiuixScaffoldPage(
+    title: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
+    overlay: @Composable () -> Unit = {},
+    listState: LazyListState = rememberLazyListState(),
+    compactTitle: Boolean = false,
+    // 二级页是浅灰底 + 白色卡片分组（与 Claude 的设置页一致）。
+    containerColor: Color = EtaTheme.colors.surfaceSunken,
+    // 传入 onRefresh 即开启下拉刷新（顶部爪印指示器）。
+    refreshing: Boolean = false,
+    onRefresh: (() -> Unit)? = null,
+    content: LazyListScope.() -> Unit,
+) {
+    EtaPreferenceTheme {
+        val scrollBehavior = MiuixScrollBehavior()
+        val pull = onRefresh?.let { rememberEtaPullRefreshState(refreshing, it) }
+        val backdrop = rememberTopBarBackdrop(containerColor)
+
+        val inWindow = LocalEtaWindow.current != null
+        Scaffold(
+            modifier = modifier.fillMaxSize(),
+            // 窗口里页面底色透明，由窗口的玻璃外框提供。
+            containerColor = if (inWindow) Color.Transparent else containerColor,
+            topBar = {
+                // 顶栏与页面同色（浅灰底），滚动后才出现分隔线。
+                TopBarBackdrop(backdrop, color = containerColor) {
+                    // 页面自带主视觉（如角色详情）时用紧凑标题，避免大标题与主视觉重复。
+                    AdaptiveTopAppBar(
+                        title = title, color = if (backdrop != null) Color.Transparent else containerColor, compact = compactTitle,
+                        navigationIcon = { MiuixBackButton(onClick = onBack) },
+                        actions = actions, scrollBehavior = scrollBehavior,
+                    )
+                }
+            },
+        ) { innerPadding ->
+          androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
+            WidePageContent { centeredPadding ->
+                val sidePadding = centeredPadding + if (rememberIsWideScreen()) 8.dp else 0.dp
+                // 保留 MiuixTheme 注入的默认越界工厂，保留短内容页的回弹行为。
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .horizontalCutoutPadding()
+                        .captureForTopBar(backdrop)
+                        .background(if (inWindow) Color.Transparent else containerColor)
+                        .scrollEndHaptic()
+                        .overScrollVertical()
+                        .then(if (pull != null) Modifier.nestedScroll(pull.connection) else Modifier)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    contentPadding = PaddingValues(
+                        start = sidePadding,
+                        top = innerPadding.calculateTopPadding(),
+                        end = sidePadding,
+                    ),
+                ) {
+                    // 卡片滑到顶栏下缩小淡出、往回滑放大还原；从底边进入时轻微放大到位。
+                    EtaScrollEdgeListScope(this, innerPadding.calculateTopPadding()).content()
+                    item(key = "bottom_spacer") {
+                        MiuixPageBottomSpacer()
+                    }
+                }
+            }
+            if (pull != null) EtaPullRefreshIndicator(pull, Modifier.align(androidx.compose.ui.Alignment.TopCenter),
+                topInset = innerPadding.calculateTopPadding())
+            overlay()
+          }
+        }
+    }
+}
+
+/** 同上：自定义内容页的旧骨架。 */
+@Composable
+private fun LegacyMiuixScaffold(
+    title: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
+    content: @Composable (
+        paddingValues: PaddingValues,
+        scrollBehavior: ScrollBehavior,
+        sidePadding: Dp,
+    ) -> Unit,
+) {
     EtaPreferenceTheme {
         val scrollBehavior = MiuixScrollBehavior()
         val backdrop = rememberTopBarBackdrop()
@@ -162,13 +298,4 @@ fun MiuixScaffold(
             }
         }
     }
-}
-
-@Composable
-fun MiuixPageBottomSpacer(modifier: Modifier = Modifier) {
-    Spacer(
-        modifier = modifier
-            .height(24.dp)
-            .navigationBarsPadding(),
-    )
 }
