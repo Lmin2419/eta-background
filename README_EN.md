@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-14 · `3.3.5` 胖小胖 · versionCode `2026111410`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-14 · `3.3.5` 胖小胖 · versionCode `2026111411`**, with engine `20261105-e49-parallel-observe` unchanged.
 
 Fixes the blank chat page and the oval composer; settings, side pane and chat header rebuilt on upstream COUI (COUI page skeleton, switches and dropdown menus in settings; upstream push-style side pane with a liquid-glass bottom dock; "title + model" chat header); the agent now fixes small coding errors (escaping, whitespace, CRLF) before giving up; upstream COUI menus, bottom sheets and capsule buttons, COUI fluid liquid glass on the chat top controls and composer, per-reply speed stats and background context compaction with an optional dedicated model. Earlier: upstream context-compression cache reuse and usage stats, MiMo/DeepSeek voice, a separate model for the assistant overlay and cleaner read-aloud. Earlier upstream merges: auto-generated conversation titles, branching a new conversation from a reply, full-screen chat image viewer, share-to-chat from other apps, per-tool switches, automatic root re-check after reboot, plus Grok/Gemini fixes. The license follows upstream to GPL-3.0.
 
-APK: **`Pangxiaopang-3.3.5-2026111410.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026111411.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111410)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111411)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 

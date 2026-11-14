@@ -26,6 +26,8 @@
 
 2026111410：真机上手机首页仍空白（电脑会话页正常）。首页顶部控件与侧栏底部玻栏暂改回磨砂玻璃，首页只有输入框用 COUI 液态玻璃，与电脑会话页一致；确切原因（COUI 流体材质放在外壳顶栏 / 屏幕外侧栏里）待定位后再恢复。
 
+2026111411：10 仍整页空白（顶部按钮与输入框都没画出来），排除顶部控件与侧栏玻璃栏。只有首页与终端页经过外壳（`RoutedShell`），外壳在内容上挂 Miuix 整页采样（`captureForTopBar`）并在顶栏消费它；它套在 COUI 整窗源（`ProvideCouiMenuBackdrop`）里。有 COUI 整窗源时外壳不再做 Miuix 采样。
+
 ## 测试环境
 
 Robolectric 画不了 COUI 的 Mesh 阴影和 AGSL 着色器。`EtaCouiSupport.shaders`（Robolectric 下为 false）时：菜单退回旧小窗、页面退回旧骨架、卡片不用平滑圆角、玻璃控件走磨砂。只用于本机测试，真机始终是 COUI。

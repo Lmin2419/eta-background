@@ -141,7 +141,11 @@ internal fun AgentAppShell(
     // Only the shell's Miuix bar measures this behaviour. Without that measurement its collapse
     // range is unbounded and it would swallow every upward drag of the page beneath it.
     val usesShellTopBar = currentRoute !is AppRoute.Settings && !(currentRoute is AppRoute.Home && homeTopBar != null)
-    val backdrop = rememberTopBarBackdrop()
+    // 有 COUI 整窗背景源（小窗、半窗的模糊）时，外壳不再给顶栏做 Miuix 整页采样：
+    // 真机上首页（外壳 Miuix 采样 + 顶栏模糊，套在 COUI 整窗源里）整页空白，而不经过外壳的电脑会话页正常。
+    // 这时顶栏只铺渐变，不做背后模糊。
+    val couiWindowSource = com.itos.coui.menu.rememberCouiWindowBackdrop()
+    val backdrop = if (couiWindowSource != null) null else rememberTopBarBackdrop()
     val topBarColor = topBarContainerColor(backdrop)
     // 对话页的顶部控件用胖小胖的磨砂玻璃（采样外壳的 Miuix 背景），不再挂 COUI 背景源：
     // 真机上首页（顶部控件 + 侧栏玻璃栏都用 COUI 流体材质）整页空白，而只有输入框用 COUI 的电脑会话页正常。
