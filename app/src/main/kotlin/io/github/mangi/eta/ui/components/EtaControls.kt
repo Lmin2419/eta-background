@@ -48,7 +48,7 @@ internal fun EtaWindowDialog(
             cornerRadius = 28.dp,
             insideMargin = EtaControlDefaults.DialogInsideMargin,
             outsideMargin = EtaControlDefaults.DialogOutsideMargin,
-            maxWidth = 360.dp,
+            maxWidth = 300.dp,
             content = { EtaDialogHeading(title, summary); content() },
         )
     }
@@ -64,16 +64,21 @@ internal fun EtaOverlayDialog(
     onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
+    // 对话框（§3.4）：居中、宽 300dp、圆角 28、玻璃外框（底色 0.94，背后的页面被模糊）。
+    val appBackdrop = LocalEtaAppBackdrop.current
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
     EtaPreferenceTheme {
         OverlayDialog(
             show = show, title = null, summary = null, modifier = modifier
-                .semantics { title?.let { paneTitle = it } }.etaElevation(EtaElevation.E3, EtaTheme.shapes.radiusXl),
-            backgroundColor = EtaTheme.colors.surfaceRaised,
+                .semantics { title?.let { paneTitle = it } }
+                .etaGlass(shape, elevation = EtaElevation.E3, backdrop = appBackdrop, useLocalBackdrop = false,
+                    blurAlpha = 0.94f, solidAlpha = 0.98f),
+            backgroundColor = androidx.compose.ui.graphics.Color.Transparent,
             onDismissRequest = onDismissRequest, onDismissFinished = onDismissFinished,
             cornerRadius = 28.dp,
             insideMargin = EtaControlDefaults.DialogInsideMargin,
             outsideMargin = EtaControlDefaults.DialogOutsideMargin,
-            maxWidth = 360.dp,
+            maxWidth = 300.dp,
             content = { EtaDialogHeading(title, summary); content() },
         )
     }

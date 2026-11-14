@@ -12,6 +12,14 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.IosShare
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.PushPin
 import io.github.mangi.eta.ui.theme.etaElevation
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -103,6 +111,8 @@ internal fun ConversationPanePanel(
     var undo by remember { mutableStateOf<ConversationArchiveChange?>(null) }
     var desktopCollapsed by remember { mutableStateOf(false) }
     var searching by remember { mutableStateOf(false) }
+    var menuTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
+    var menuAnchor by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
     val selecting = selectedIds.isNotEmpty()
     val motion = EtaTheme.motion
     val visibleConversations = remember(state.conversations, state.searchQuery, archived) {
@@ -203,7 +213,8 @@ internal fun ConversationPanePanel(
                         taskStatuses[conversation.id] ?: TaskVisualStatus.Running.takeIf { conversation.isActiveRun }, selecting,
                         { if (selecting) selectedIds = if (conversation.id in selectedIds) selectedIds - conversation.id else selectedIds + conversation.id
                           else onConversationSelected(conversation.id) },
-                        { selectedIds = selectedIds + conversation.id }, groupName = groupNames[conversation.groupId], modifier = etaAnimateItem())
+                        { rect -> if (selecting) selectedIds = selectedIds + conversation.id else { menuTarget = conversation; menuAnchor = rect } },
+                        groupName = groupNames[conversation.groupId], modifier = etaAnimateItem())
                 }
             }
             desktopByTime.keys.filter { it !in consumedTimes }.sorted().forEach { time ->
@@ -276,6 +287,25 @@ internal fun ConversationPanePanel(
             EtaArrowPreference(stringResource(R.string.action_export), enabled = target != null, onClick = { target?.let(onConversationExport); showMore = false })
         }
     }
+    // 长按对话：从这一行展开玻璃小窗（置顶 / 移到分组 / 改名 / 导出 / 多选 / 删除）。
+    val menuConversation = menuTarget
+    EtaPopover(menuConversation != null, menuAnchor, { menuTarget = null }, title = menuConversation?.title) {
+        val target = menuConversation ?: return@EtaPopover
+        val ids = setOf(target.id)
+        EtaMenuItem(stringResource(if (target.isPinned) R.string.eta_unpin else R.string.eta_pin), icon = Icons.Outlined.PushPin,
+            enabled = target.archivedAt == null, onClick = { management.pin(ids, !target.isPinned); menuTarget = null })
+        EtaMenuItem(stringResource(R.string.eta_move_to_group), icon = Icons.Outlined.Folder,
+            onClick = { groupDialogs.moveIds = ids; menuTarget = null })
+        EtaMenuItem(stringResource(R.string.action_rename), icon = Icons.Outlined.Edit,
+            onClick = { onConversationRename(target); menuTarget = null })
+        EtaMenuItem(stringResource(R.string.action_export), icon = Icons.Outlined.IosShare,
+            onClick = { onConversationExport(target); menuTarget = null })
+        EtaMenuItem(stringResource(R.string.conversation_select_multiple), icon = Icons.Outlined.Checklist,
+            onClick = { selectedIds = ids; menuTarget = null })
+        EtaMenuDivider()
+        EtaMenuItem(stringResource(R.string.action_delete), icon = Icons.Outlined.Delete, destructive = true,
+            onClick = { deleteTarget = ids; menuTarget = null })
+    }
     ConversationGroupDialogs(state, management, groupDialogs) { selectedIds = emptySet() }
     if (deleteTarget.isNotEmpty()) {
         val running = state.conversations.count { it.id in deleteTarget && (it.isActiveRun || taskStatuses[it.id] != null) }
@@ -309,8 +339,9 @@ internal fun conversationTaskStatuses(tasks: List<TaskNotificationState>): Map<S
 
 @Composable
 private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: Boolean, query: String, taskStatus: TaskVisualStatus?,
-    selecting: Boolean, onClick: () -> Unit, onLongClick: () -> Unit, groupName: String? = null, modifier: Modifier = Modifier) {
+    selecting: Boolean, onClick: () -> Unit, onLongClick: (androidx.compose.ui.geometry.Rect) -> Unit, groupName: String? = null, modifier: Modifier = Modifier) {
     val haptic = LocalHapticFeedback.current
+    var bounds by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
     val colors = EtaTheme.colors
     val title = conversation.title.ifBlank { conversation.preview }
     val markedTitle = remember(title, query, colors.accent) { buildAnnotatedString {
@@ -324,7 +355,8 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
     Row(modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
         .semantics { if (selecting) { this.selected = selected; role = Role.Checkbox } }
         .background(background)
-        .etaTouchScale().combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })
+        .onGloballyPositioned { bounds = it.boundsInWindow() }
+        .etaTouchScale().combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick(bounds) })
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (selecting) ConversationSelectionMarker(selected)
         else Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) {

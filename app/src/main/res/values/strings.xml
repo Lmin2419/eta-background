@@ -1972,4 +1972,5 @@
   <string name="compaction_settings_keep">Keep recent</string>
   <string name="compaction_settings_keep_turns">%1$d turns</string>
   <string name="compaction_settings_note">When usage reaches the chosen share of the context window, earlier messages are summarised in the background and the most recent turns stay as they are. If it is not ready by 85%, the conversation waits for it; if it fails, compaction runs the usual way. The conversation history is sent to the chosen model\'s provider. A dedicated model cannot reuse the conversation model\'s prompt cache, and its context window should be at least as large as the conversation model\'s.</string>
+  <string name="conversation_select_multiple">Select multiple</string>
 </resources>

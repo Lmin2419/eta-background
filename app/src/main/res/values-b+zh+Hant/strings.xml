@@ -1844,4 +1844,5 @@
   <string name="compaction_settings_keep">保留最近</string>
   <string name="compaction_settings_keep_turns">%1$d 輪</string>
   <string name="compaction_settings_note">用量到設定比例時，在背景把較早的對話整理成摘要，最近幾輪原樣保留；到 85% 還沒整理好會等它，失敗時退回原來的壓縮方式。對話歷史會傳送給所選模型的服務商。指定專用模型後不能複用對話模型的提示快取，它的上下文視窗應不小於對話模型。</string>
+  <string name="conversation_select_multiple">多選</string>
 </resources>
