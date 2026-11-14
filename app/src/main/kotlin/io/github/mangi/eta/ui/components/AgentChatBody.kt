@@ -147,7 +147,6 @@ internal fun AgentChatBody(
     messages: List<AgentChatMessageUi>,
     modelPickerState: AgentModelPickerUiState,
     isCompacting: Boolean,
-    isBranching: Boolean,
     input: String,
     isStreaming: Boolean,
     reasoningEffort: ReasoningEffort,
@@ -179,7 +178,6 @@ internal fun AgentChatBody(
     onCancelMessageEdit: () -> Unit,
     onDeleteMessage: (String) -> Unit,
     onRegenerateMessage: (String) -> Unit,
-    onBranchMessage: (String) -> Unit,
     onSelectReplyCandidate: (String, Int) -> Unit,
     onSuggestionClick: (String) -> Unit,
     onRunTraceClick: () -> Unit,
@@ -191,6 +189,8 @@ internal fun AgentChatBody(
     onHistoryViewportChanged: (Boolean) -> Unit = {},
     isDrawerOpen: Boolean = false,
     modifier: Modifier = Modifier,
+    isBranching: Boolean = false,
+    onBranchMessage: (String) -> Unit = {},
 ) {
     val scrollState = rememberLazyListState(initialFirstVisibleItemIndex = messages.size + if (hasEarlierMessages) 1 else 0)
     val keyboard = LocalSoftwareKeyboardController.current

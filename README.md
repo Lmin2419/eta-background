@@ -2,17 +2,17 @@
 
 [简体中文](README.md) · [English](README_EN.md) · [版本记录与源码导航](etax/README.md) · [构建说明](.github/RELEASING.md)
 
-**胖小胖（原「Eta 后台版」）是 [Eta](https://github.com/Mangi-11/Eta) 的衍生分支，基于上游 v3.3.5。原作者为 [蛮吉（Mangi-11）](https://github.com/Mangi-11)。** 2026-11-06 起 App 显示名改为「胖小胖」，图标是一枚珊瑚橘猫爪印。 本仓库维护后台虚拟屏、多任务与通知交互等扩展，非上游官方发行版。内部工程名沿用 `Etax`，安装包名为 `io.github.mangi.etax`，可与官方 Eta 共存。
+**胖小胖（原「Eta 后台版」）是 [Eta](https://github.com/Mangi-11/Eta) 的衍生分支，基于上游 v3.3.5，并选择性合入上游 3.4.x 的新功能。原作者为 [蛮吉（Mangi-11）](https://github.com/Mangi-11)。** 2026-11-06 起 App 显示名改为「胖小胖」，图标是一枚珊瑚橘猫爪印。 本仓库维护后台虚拟屏、多任务与通知交互等扩展，非上游官方发行版。内部工程名沿用 `Etax`，安装包名为 `io.github.mangi.etax`，可与官方 Eta 共存。
 
 ## 最新测试版本
 
-**2026-11-11 · `3.3.5` 胖小胖 · versionCode `2026111105`**，引擎仍为 `20261105-e49-parallel-observe`。
+**2026-11-14 · `3.3.5` 胖小胖 · versionCode `2026111401`**，引擎仍为 `20261105-e49-parallel-observe`。
 
-新图标：白底珊瑚橘猫爪印，配套爪印动效（思考中、首页、启动画面、下拉刷新）；触感反馈与按压回弹；顶栏、代码块、占位条、提示条等细节打磨；Claude 配色收尾（纯白页面、灰色侧栏与二级页、黑色主按钮和开关、珊瑚橘强调色）；电脑会话混排进侧栏。电脑端插件仍为 0.5.0。
+合入上游 Eta 3.4.x 的新功能：自动生成对话标题、从回复分支出新对话、聊天图片全屏查看、系统分享直达对话、本机工具逐项开关、重启后 Root 自动复检，以及 Grok / Gemini 修复。许可证随上游改为 GPL-3.0。
 
-安装包 **`Pangxiaopang-3.3.5-2026111105.apk`**。
+安装包 **`Pangxiaopang-3.3.5-2026111401.apk`**。
 
-**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026111105)
+**[下载签名测试 APK](https://github.com/Lmin2419/eta-background/releases)** · [更新记录](etax/README.md#release-2026111401)
 
 以该提交的 CI 全绿和签名 Release 为发布门槛；自动测试不代替真实手机上的暂停、续指令和后台页面验收。
 
@@ -74,7 +74,7 @@ Android 应用位于 `app/`；后台桥接在 `app/src/main/java/com/eta/shadow/
 
 感谢 **蛮吉（Mangi-11）** 及 [Eta 上游贡献者](https://github.com/Mangi-11/Eta/graphs/contributors)。原始项目：[Mangi-11/Eta](https://github.com/Mangi-11/Eta)；本分支维护：[Lmin2419/eta-background](https://github.com/Lmin2419/eta-background)。
 
-本项目沿用 **[PolyForm Noncommercial 1.0.0](LICENSE)**，保留上游版权与 Required Notice。源码可按该许可证使用、修改和分发，商业用途不在其一般授权范围内。这是带非商业限制的源码公开项目，不是 MIT/Apache 或 OSI 定义的开源许可。第三方组件继续遵循各自许可证。
+上游 Eta 自 3.4.1 起改为 **[GPL-3.0](LICENSE)**；本项目合入了上游 3.4.x 的代码，随之改用 GPL-3.0，保留上游版权与致谢。可以自由使用、修改和分发，分发修改版时须以 GPL-3.0 公开对应源码。第三方组件继续遵循各自许可证。
 
 Required Notice: Copyright © 2026 蛮吉 (Mangi-11).
 
