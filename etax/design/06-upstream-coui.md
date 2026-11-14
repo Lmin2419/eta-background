@@ -28,6 +28,15 @@
 
 2026111411：10 仍整页空白（顶部按钮与输入框都没画出来），排除顶部控件与侧栏玻璃栏。只有首页与终端页经过外壳（`RoutedShell`），外壳在内容上挂 Miuix 整页采样（`captureForTopBar`）并在顶栏消费它；它套在 COUI 整窗源（`ProvideCouiMenuBackdrop`）里。有 COUI 整窗源时外壳不再做 Miuix 采样。
 
+## 首页空白的真正原因（2026111412）
+
+09–11 的「玻璃背景源」猜测都不对。真正原因：COUI 模式下 `EtaContextMenu` 用一个 0 尺寸 `Column` 收集菜单项，这个节点会进入调用处的父布局。`ConversationPanePanel` 在顶层调用了长按菜单，于是 `ConversationSidePaneScaffold` 的自定义 `Layout`（按 `measurables[0]` 侧栏、`measurables[1]` 对话页取）拿到的第 2 个子节点是这个空 Column，真正的对话页没有被测量和摆放。
+
+- 修复：`EtaContextMenu` 用不发出节点的作用域收集菜单项；侧栏在 `Layout` 里包一层 `Box`，保证只有两个子节点。
+- 规则：**按下标取 `measurables` 的自定义布局，子项必须各包一层容器**；组件不要在调用处父布局里发出看不见的节点。
+- 本机复现方法：`HomeChatRenderTest`——`EtaCouiSupport.shaders = true`（真机模式）、`robolectric.pixelCopyRenderMode=hardware` 用 PixelCopy 截窗口。开模糊时本机编译不了 Miuix 模糊着色器，测试里关掉模糊。
+- 10、11 的误判改动已撤回：顶部按钮、侧栏底栏恢复 COUI 液态玻璃，顶栏恢复背后模糊。
+
 ## 测试环境
 
 Robolectric 画不了 COUI 的 Mesh 阴影和 AGSL 着色器。`EtaCouiSupport.shaders`（Robolectric 下为 false）时：菜单退回旧小窗、页面退回旧骨架、卡片不用平滑圆角、玻璃控件走磨砂。只用于本机测试，真机始终是 COUI。

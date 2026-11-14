@@ -240,7 +240,8 @@ fun ConversationSidePaneScaffold(
             Layout(
                 modifier = Modifier.fillMaxSize(),
                 content = {
-                    ConversationPanePanel(
+                    // 侧栏包在一个盒子里：侧栏内部即使多发出节点（弹窗、菜单），这里也始终只有「侧栏、对话页」两个子节点。
+                    Box { ConversationPanePanel(
                         state = state,
                         active = isRevealed && backHandlerEnabled && sceneLifecycleState == Lifecycle.State.RESUMED,
                         width = paneWidth,
@@ -260,7 +261,7 @@ fun ConversationSidePaneScaffold(
                             .focusProperties { onEnter = { if (!isRevealed) cancelFocusChange() } }
                             .focusGroup()
                             .then(if (!isRevealed) Modifier.clearAndSetSemantics {} else Modifier),
-                    )
+                    ) }
                     Box(
                         modifier = Modifier.fillMaxSize()
                             .drawWithContent {

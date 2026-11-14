@@ -62,6 +62,14 @@ internal class EtaMenuCollector {
 
 internal val LocalEtaMenuCollector = androidx.compose.runtime.staticCompositionLocalOf<EtaMenuCollector?> { null }
 
+/** 收集菜单项用的作用域：菜单项在收集模式下不发出界面，这里也不发出布局节点。 */
+private object EtaMenuCollectScope : ColumnScope {
+    override fun Modifier.weight(weight: Float, fill: Boolean): Modifier = this
+    override fun Modifier.align(alignment: Alignment.Horizontal): Modifier = this
+    override fun Modifier.alignBy(alignmentLine: androidx.compose.ui.layout.VerticalAlignmentLine): Modifier = this
+    override fun Modifier.alignBy(alignmentLineBlock: (androidx.compose.ui.layout.Measured) -> Int): Modifier = this
+}
+
 /**
  * COUI 菜单与对话框依赖平台着色器（Android 14+ 的 Mesh 阴影、AGSL）。本机测试环境（Robolectric）
  * 实现不了这些着色器，组合会直接报错；这时退回旧的小窗与面板，保证测试仍能检查菜单内容。
@@ -91,8 +99,11 @@ internal fun EtaContextMenu(
         return
     }
     val collector = EtaMenuCollector()
+    // 只收集菜单项，不往父布局里放任何节点：以前这里放了一个 0 尺寸的 Column，
+    // 侧栏（按子节点顺序摆放「侧栏、对话页」的自定义布局）把它当成了对话页，真正的对话页没有被测量和摆放，
+    // 真机上首页整页空白（2026111407–11）。
     androidx.compose.runtime.CompositionLocalProvider(LocalEtaMenuCollector provides collector) {
-        Column(Modifier.size(0.dp)) { content() }
+        EtaMenuCollectScope.content()
     }
     val entries = collector.entries.toList()
     val dark = com.itos.coui.theme.CouiTheme.isDark
