@@ -154,7 +154,7 @@ internal class AgentFileOperations(private val backend: FileToolBackend) {
             if (!replaceAll && count > 1) throw FileToolException("AMBIGUOUS_MATCH", "old_text 命中多处，请提供更多上下文或明确 replace_all=true")
             position = found + oldText.length
         }
-        if (count == 0) throw FileToolException("MATCH_NOT_FOUND", "未找到 old_text，文件未修改；请重新读取并使用原文")
+        if (count == 0) throw FileToolException("MATCH_NOT_FOUND", "未找到 old_text，文件未修改" + editMismatchHint(original, oldText))
         val estimatedChars = original.length.toLong() + count.toLong() * (newText.length - oldText.length)
         if (estimatedChars > MAX_EDIT_BYTES) throw FileToolException("CONTENT_TOO_LARGE", "替换后的文本超过编辑大小限制")
         val replacement = encodeBounded(original.replace(oldText, newText))
@@ -226,3 +226,44 @@ internal inline fun fileToolOperation(tool: String, block: () -> JSONObject): St
 } catch (_: IOException) {
     JSONObject().put("ok", false).put("tool", tool).put("code", "FILE_IO_ERROR").put("message", "文件读写失败，请检查当前授权和文件状态").toString()
 }
+
+/**
+ * edit_file 找不到原文时的提示：给出文件里与 old_text 最相近的一段（行号与原文），并指出常见的小差异
+ * ——只差空白/缩进/换行、文件是 CRLF 换行、old_text 多了一层转义。模型据此直接修正，
+ * 而不是误判文件有问题或换一条路线。
+ */
+internal fun editMismatchHint(original: String, oldText: String): String {
+    val lines = original.split('\n').map { it.trimEnd('\r') }
+    val wanted = oldText.split('\n').map { it.trimEnd('\r') }
+    val first = wanted.firstOrNull { it.isNotBlank() }?.trim() ?: return "；请重新读取文件并使用原文"
+    fun collapse(text: String) = text.replace(Regex("\\s+"), " ").trim()
+    fun unescape(text: String) = text.replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"")
+        .replace("\\'", "'").replace("\\\\", "\\")
+    val firstUnescaped = unescape(first).trim()
+    var best = -1
+    var bestScore = 0
+    lines.forEachIndexed { index, line ->
+        val trimmed = line.trim()
+        if (trimmed.isEmpty()) return@forEachIndexed
+        val score = when {
+            trimmed == first -> 1000
+            trimmed == firstUnescaped -> 900
+            collapse(trimmed) == collapse(first) -> 800
+            trimmed.contains(first) || first.contains(trimmed) -> 400 + minOf(trimmed.length, first.length)
+            else -> trimmed.commonPrefixWith(first).length
+        }
+        if (score > bestScore) { bestScore = score; best = index }
+    }
+    if (best < 0 || bestScore < 8) return "；文件中没有与 old_text 第一行相近的内容，请重新读取文件确认位置"
+    val span = wanted.size.coerceIn(1, 12)
+    val snippet = lines.subList(best, minOf(lines.size, best + span)).joinToString("\n")
+    val reasons = mutableListOf<String>()
+    if (original.contains("\r\n") && !oldText.contains("\r\n")) reasons += "文件使用 CRLF 换行"
+    when {
+        collapse(snippet) == collapse(oldText) -> reasons += "只差空格、缩进或换行"
+        collapse(snippet) == collapse(unescape(oldText)) -> reasons += "old_text 里多了一层转义（如 \\n、\\\"）"
+    }
+    val why = reasons.joinToString("、").ifEmpty { "内容有差异" }
+    return "；最相近的原文在第 ${best + 1} 行起（$why），请按下面的原文重写 old_text：\n" + snippet.take(1200)
+}
+

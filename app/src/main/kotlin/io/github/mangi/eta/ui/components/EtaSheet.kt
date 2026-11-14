@@ -37,11 +37,12 @@ internal fun EtaSheet(
         show = show,
         title = title,
         message = null,
-        onDismissRequest = { if (allowDismiss) onDismissRequest?.invoke() },
+        onDismissRequest = { onDismissRequest?.invoke() },
         closeText = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_close),
         modifier = modifier,
         contentPadding = insideMargin.width,
         maxContentHeight = maxHeight,
+        dismissible = allowDismiss,
     ) { content() }
     if (onDismissFinished != null) androidx.compose.runtime.LaunchedEffect(show) {
         if (!show) { kotlinx.coroutines.delay(320); onDismissFinished() }

@@ -51,6 +51,10 @@ class ConversationBatchGestureTest {
         find(ctx.getString(R.string.conversation_select_multiple))?.let { tapNode(it); advance(20) }
     }
     private fun Stage3TestPanel.tapNode(n: SemanticsNode) {
+        // 弹出菜单在独立窗口里，坐标触摸只发给主窗口；有点击语义时用语义点击。
+        var target: SemanticsNode? = n
+        while (target != null && target.config.getOrNull(SemanticsActions.OnClick) == null) target = target.parent
+        if (target != null) { click(target); advance(5); return }
         val c = n.boundsInRoot.center; tapFinger(c.x, c.y); advance(5)
     }
     private fun Stage3TestPanel.find(text: String): SemanticsNode? = nodes().firstOrNull {

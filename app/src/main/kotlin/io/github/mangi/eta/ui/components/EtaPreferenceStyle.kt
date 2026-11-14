@@ -31,14 +31,16 @@ internal object EtaPreferenceColors {
     val Slate: Color @Composable get() = EtaTheme.colors.tileSlate
 }
 
+/** 与上游 COUI 设置页一致的尺寸（CouiPageDefaults）：组间 16、图标格 24 + 间距 16、行高 48、分隔线 0.33。 */
 internal object EtaPreferenceDefaults {
-    val SidePadding = 16.dp
-    val GroupSpacing = 24.dp
-    val IconSize = 32.dp
-    val IconTextGap = 12.dp
+    val SidePadding = com.itos.coui.layout.CouiPageDefaults.rowPadding
+    val GroupSpacing = com.itos.coui.layout.CouiPageDefaults.groupSpacing
+    val IconSize = com.itos.coui.layout.CouiPageDefaults.iconSize
+    val IconTextGap = com.itos.coui.layout.CouiPageDefaults.iconSpacing
     val ContentStart = SidePadding + IconSize + IconTextGap
     fun contentStart(hasLeading: Boolean) = if (hasLeading) ContentStart else SidePadding
-    val RowMinHeight = 56.dp
+    val RowMinHeight = com.itos.coui.layout.CouiPageDefaults.rowMinHeight
+    val RowVerticalPadding = com.itos.coui.layout.CouiPageDefaults.contentPadding
 }
 
 @Composable
@@ -85,12 +87,12 @@ internal fun EtaPreferenceIcon(
     tint: Color = EtaTheme.colors.tileSlate,
     enabled: Boolean = true,
 ) {
-    // 设置行只画 20dp 线条图标，不再画底块：列表更安静，图标对齐文字的视觉重量。
+    // 设置行只画线条图标，不再画底块：列表更安静。图标格 24dp（与上游 COUI 一致）。
     androidx.compose.foundation.layout.Box(
-        modifier.size(32.dp).alpha(if (enabled) 1f else 0.38f),
+        modifier.size(EtaPreferenceDefaults.IconSize).alpha(if (enabled) 1f else 0.38f),
         contentAlignment = androidx.compose.ui.Alignment.Center,
     ) {
-        top.yukonga.miuix.kmp.basic.Icon(icon, null, Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
+        top.yukonga.miuix.kmp.basic.Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textSecondary)
     }
 }
 
@@ -98,7 +100,7 @@ internal fun EtaPreferenceIcon(
 internal fun EtaPreferenceDivider(hasLeading: Boolean = true, modifier: Modifier = Modifier) {
     HorizontalDivider(
         modifier = modifier.padding(start = EtaPreferenceDefaults.contentStart(hasLeading), end = EtaPreferenceDefaults.SidePadding),
-        thickness = 0.5.dp,
+        thickness = com.itos.coui.layout.CouiPageDefaults.dividerHeight,
         color = EtaTheme.colors.outline,
     )
 }

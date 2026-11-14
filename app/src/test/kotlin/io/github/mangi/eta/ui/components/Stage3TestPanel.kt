@@ -52,9 +52,22 @@ internal class Stage3TestPanel(activity: ComponentActivity, dark: Boolean = fals
         return null
     }
     fun root(): ViewRootForTest = findRoot(view) ?: error("No Compose root")
+    /** 主窗口在前，其后是弹出窗口（COUI 菜单、半窗是独立窗口）。 */
+    fun roots(): List<ViewRootForTest> {
+        val main = root()
+        val others = runCatching {
+            val manager = org.robolectric.util.ReflectionHelpers.callStaticMethod<Any>(Class.forName("android.view.WindowManagerGlobal"), "getInstance")
+            val views = org.robolectric.util.ReflectionHelpers.getField<List<View>>(manager, "mViews")
+            views.mapNotNull { findRoot(it) }.filter { it !== main }
+        }.getOrDefault(emptyList())
+        return listOf(main) + others
+    }
     fun nodes(): List<SemanticsNode> {
         fun visit(node: SemanticsNode): List<SemanticsNode> = listOf(node) + node.children.flatMap(::visit)
-        return visit(root().semanticsOwner.unmergedRootSemanticsNode)
+        return roots().flatMap { root ->
+            if (root !== root()) runCatching { root.measureAndLayoutForTest() }
+            visit(root.semanticsOwner.unmergedRootSemanticsNode)
+        }
     }
     fun advance(frames: Int = 1) = repeat(frames) {
         Snapshot.sendApplyNotifications()

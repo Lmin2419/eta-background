@@ -6,7 +6,6 @@ import androidx.compose.ui.graphics.Color
 import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.theme.EtaElevation
 import io.github.mangi.eta.ui.theme.etaElevation
-import top.yukonga.miuix.kmp.basic.SwitchDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -17,7 +16,6 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.window.WindowDialog
 
@@ -86,39 +84,19 @@ internal fun EtaSwitch(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val haptics = rememberEtaHaptics()
-    EtaSwitchImpl(checked, onCheckedChange?.let { change -> { v: Boolean -> haptics.tick(); change(v) } }, modifier, enabled)
+    // 与上游一致的 COUI 开关（拖动、回弹和触感都由它处理）。打开时轨道用正文色：浅色是黑、深色是浅色，不再满屏珊瑚橘。
+    val dark = com.itos.coui.theme.CouiTheme.isDark
+    com.itos.coui.switch.Switch(
+        modifier = modifier,
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        dark = dark,
+        // 圆点用页面底色：浅色模式白点配黑轨道，深色模式深色圆点配浅色轨道，两种状态都看得清。
+        colors = com.itos.coui.switch.CouiSwitchDefaults.colors(EtaTheme.colors.textPrimary, dark)
+            .copy(thumb = if (dark) EtaTheme.colors.canvas else Color.White),
+        enabled = enabled,
+    )
 }
-
-@Composable
-private fun EtaSwitchImpl(
-    checked: Boolean,
-    onCheckedChange: ((Boolean) -> Unit)?,
-    modifier: Modifier,
-    enabled: Boolean,
-) = Switch(
-    checked = checked, onCheckedChange = onCheckedChange, enabled = enabled,
-    colors = SwitchDefaults.switchColors(
-        checkedThumbColor = EtaTheme.colors.canvas, uncheckedThumbColor = Color.White,
-        disabledCheckedThumbColor = Color.White.copy(alpha = 0.38f),
-        disabledUncheckedThumbColor = Color.White.copy(alpha = 0.38f),
-        // 开关打开是黑色轨道（深色模式为浅色），不再满屏珊瑚橘。
-        checkedTrackColor = EtaTheme.colors.textPrimary, uncheckedTrackColor = EtaTheme.colors.outlineStrong,
-        disabledCheckedTrackColor = EtaTheme.colors.textPrimary.copy(alpha = 0.38f),
-        disabledUncheckedTrackColor = EtaTheme.colors.outlineStrong.copy(alpha = 0.38f),
-    ),
-    modifier = modifier.layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
-        val width = 52.dp.roundToPx()
-        val height = 32.dp.roundToPx()
-        layout(width, height) {
-            placeable.placeWithLayer((width - placeable.width) / 2, (height - placeable.height) / 2) {
-                scaleX = width.toFloat() / placeable.width
-                scaleY = height.toFloat() / placeable.height
-            }
-        }
-    },
-)
 
 @Composable
 private fun EtaDialogHeading(title: String?, summary: String?) {

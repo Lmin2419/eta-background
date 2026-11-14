@@ -65,7 +65,6 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -146,7 +145,7 @@ internal fun AgentModelPickerButton(
             )
         }
 
-        OverlayBottomSheet(
+        EtaSheet(
             show = showSheet,
             title = stringResource(R.string.model_picker_title),
             onDismissRequest = { showSheet = false },

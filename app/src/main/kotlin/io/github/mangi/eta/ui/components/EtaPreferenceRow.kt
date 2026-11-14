@@ -119,8 +119,8 @@ internal fun EtaPreferenceRow(
     ) {
         Layout(
             modifier = Modifier.fillMaxWidth()
-                .heightIn(min = if (summary != null) 64.dp else EtaPreferenceDefaults.RowMinHeight)
-                .padding(horizontal = EtaPreferenceDefaults.SidePadding, vertical = 12.dp),
+                .heightIn(min = EtaPreferenceDefaults.RowMinHeight)
+                .padding(horizontal = EtaPreferenceDefaults.SidePadding, vertical = EtaPreferenceDefaults.RowVerticalPadding),
             content = {
                 if (startAction != null) Box(contentAlignment = Alignment.Center) { startAction() }
                 Column {
@@ -135,7 +135,9 @@ internal fun EtaPreferenceRow(
                         )
                         if (summary != null) Text(
                             text = summary,
-                            style = EtaTheme.type.subhead,
+                            // 与 COUI 列表副标题一致：13sp，与标题间隔 2dp。
+                            modifier = Modifier.padding(top = com.itos.coui.layout.CouiPageDefaults.summarySpacing),
+                            style = EtaTheme.type.footnote,
                             color = if (enabled) summaryColor.color else summaryColor.disabledColor,
                         )
                     }

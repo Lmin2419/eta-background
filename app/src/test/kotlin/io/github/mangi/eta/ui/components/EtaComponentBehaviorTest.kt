@@ -228,8 +228,7 @@ class EtaComponentBehaviorTest {
         }) { panel ->
             assertEquals(0, requests)
             assertEquals(0, finished)
-            val dismiss = panel.nodes().first { it.config.getOrNull(SemanticsActions.OnClick)?.label == "Dismiss" }
-            dismiss.config[SemanticsActions.OnClick].action!!.invoke()
+            panel.clickText("Close")
             panel.advance(90)
             assertEquals(1, requests)
             assertEquals(1, finished)
@@ -249,11 +248,11 @@ class EtaComponentBehaviorTest {
                     onDismissFinished = { finished++ }) { EtaButton("Import", {}) }
             }
         }) { panel ->
-            assertFalse(panel.nodes().any { it.config.getOrNull(SemanticsActions.OnClick)?.label == "Dismiss" })
+            // 不允许关闭时，「关闭」按钮不可用。
+            assertTrue(panel.clickableFor("Close").config.contains(SemanticsProperties.Disabled))
             allow.value = true
             panel.advance()
-            val dismiss = panel.nodes().first { it.config.getOrNull(SemanticsActions.OnClick)?.label == "Dismiss" }
-            dismiss.config[SemanticsActions.OnClick].action!!.invoke()
+            panel.clickText("Close")
             panel.advance(90)
             assertEquals(1, requests)
             assertEquals(1, finished)
@@ -295,8 +294,9 @@ class EtaComponentBehaviorTest {
         }) { panel ->
             val dialog = panel.tag("dialog")
             assertEquals("Remove selected models?", dialog.config[SemanticsProperties.PaneTitle])
-            assertTrue(dialog.boundsInRoot.width <= (320f - 48f) * 2f + 1f)
-            assertTrue(dialog.boundsInRoot.left >= 48f - 1f)
+            // COUI 底部对话框：左右各留至少 8dp，不贴屏幕边。
+            assertTrue(dialog.boundsInRoot.width <= (320f - 16f) * 2f + 1f)
+            assertTrue(dialog.boundsInRoot.left >= 16f - 1f)
             assertTrue(panel.nodes().any {
                 it.config.getOrNull(SemanticsProperties.Heading) != null &&
                     it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == "Remove selected models?" } == true
@@ -339,13 +339,31 @@ class EtaComponentBehaviorTest {
             if (view is android.view.ViewGroup) for (i in 0 until view.childCount) findRoot(view.getChildAt(i))?.let { return it }
             return null
         }
+        /** 主窗口加上对话框等子窗口（COUI 对话框是独立窗口）。 */
+        private fun roots(): List<ViewRootForTest> {
+            val main = root()
+            val others = runCatching {
+                val manager = org.robolectric.util.ReflectionHelpers.callStaticMethod<Any>(Class.forName("android.view.WindowManagerGlobal"), "getInstance")
+                val views = org.robolectric.util.ReflectionHelpers.getField<List<View>>(manager, "mViews")
+                views.mapNotNull { findRoot(it) }.filter { it !== main }
+            }.getOrDefault(emptyList())
+            return listOf(main) + others
+        }
         fun nodes(): List<SemanticsNode> {
             fun all(node: SemanticsNode): List<SemanticsNode> = listOf(node) + node.children.flatMap(::all)
-            return all(root().semanticsOwner.unmergedRootSemanticsNode)
+            return roots().flatMap { root ->
+                if (root !== root()) runCatching { root.measureAndLayoutForTest() }
+                all(root.semanticsOwner.unmergedRootSemanticsNode)
+            }
         }
         fun tag(value: String) = nodes().first { it.config.getOrNull(SemanticsProperties.TestTag) == value }
         fun clickText(text: String) = clickAncestor(nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == text } == true })
         fun clickDescription(text: String) = clickAncestor(nodes().first { it.config.getOrNull(SemanticsProperties.ContentDescription)?.contains(text) == true })
+        fun clickableFor(text: String): SemanticsNode {
+            var node: SemanticsNode? = nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == text } == true }
+            while (node != null && node.config.getOrNull(SemanticsActions.OnClick) == null) node = node.parent
+            return requireNotNull(node)
+        }
         private fun clickAncestor(node: SemanticsNode) {
             var clickable: SemanticsNode? = node
             while (clickable != null && clickable.config.getOrNull(SemanticsActions.OnClick) == null) clickable = clickable.parent

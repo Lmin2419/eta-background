@@ -63,6 +63,15 @@ internal class EtaMenuCollector {
 internal val LocalEtaMenuCollector = androidx.compose.runtime.staticCompositionLocalOf<EtaMenuCollector?> { null }
 
 /**
+ * COUI 菜单与对话框依赖平台着色器（Android 14+ 的 Mesh 阴影、AGSL）。本机测试环境（Robolectric）
+ * 实现不了这些着色器，组合会直接报错；这时退回旧的小窗与面板，保证测试仍能检查菜单内容。
+ */
+internal object EtaCouiSupport {
+    @Volatile
+    var popups: Boolean = android.os.Build.FINGERPRINT != "robolectric"
+}
+
+/**
  * 弹出菜单（小窗）：与上游 3.4.x 一致，使用 COUI 菜单——从按住的位置展开，背后的页面被模糊，
  * 手指不松开滑到某一项松手即可选中。[couiAnchor] 挂在被长按的元素上（`couiMenuAnchor`），
  * 打开时用 `couiAnchor.open { ... }` 记录触点。没有锚点时跟随父布局定位。
@@ -70,13 +79,17 @@ internal val LocalEtaMenuCollector = androidx.compose.runtime.staticCompositionL
 @Composable
 internal fun EtaContextMenu(
     show: Boolean,
-    @Suppress("UNUSED_PARAMETER") anchor: Rect = Rect.Zero,
+    anchor: Rect = Rect.Zero,
     onDismiss: () -> Unit,
-    @Suppress("UNUSED_PARAMETER") alignEnd: Boolean = false,
+    alignEnd: Boolean = false,
     couiAnchor: com.itos.coui.menu.CouiMenuAnchor? = null,
     header: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    if (!EtaCouiSupport.popups) {
+        EtaPopover(show, anchor, onDismiss, align = if (alignEnd) EtaPopoverAlign.End else EtaPopoverAlign.Start, title = header, content = content)
+        return
+    }
     val collector = EtaMenuCollector()
     androidx.compose.runtime.CompositionLocalProvider(LocalEtaMenuCollector provides collector) {
         Column(Modifier.size(0.dp)) { content() }

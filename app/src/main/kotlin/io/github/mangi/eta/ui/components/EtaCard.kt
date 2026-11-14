@@ -16,7 +16,8 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
 internal object EtaCardDefaults {
-    val CornerRadius = 20.dp
+    /** 上游 COUI 设置卡片：24dp 平滑圆角、无阴影。 */
+    val CornerRadius = 24.dp
 }
 
 @Composable
@@ -26,14 +27,12 @@ internal fun EtaCard(
     colors: CardColors = CardDefaults.defaultColors(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    CompositionLocalProvider(LocalSquircleEnabled provides false) {
-        val cardModifier = modifier.etaElevation(EtaElevation.E1, EtaTheme.shapes.radiusLg)
-        val cardColors = colors
+    CompositionLocalProvider(LocalSquircleEnabled provides true) {
         Card(
-            modifier = cardModifier,
+            modifier = modifier,
             cornerRadius = EtaCardDefaults.CornerRadius,
             insideMargin = insideMargin,
-            colors = cardColors,
+            colors = colors,
             content = content,
         )
     }

@@ -1023,23 +1023,19 @@ fun AgentAppRoot(
     }
 
     characterStore.notice?.let { notice ->
-        WindowDialog(
+        io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
             title = "角色",
             summary = notice,
             onDismissRequest = characterStore::dismissNotice,
-        ) {
-            io.github.mangi.eta.ui.components.EtaButton(
-                text = "知道了", onClick = characterStore::dismissNotice, modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        ) {}
     }
 
     }
 
     conversationRenameTarget?.let { conversation ->
         var renameInput by remember(conversation.id) { mutableStateOf(conversation.title) }
-        WindowDialog(
+        io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
             title = stringResource(R.string.conversation_rename_title),
             onDismissRequest = { conversationRenameTarget = null },
@@ -1067,7 +1063,7 @@ fun AgentAppRoot(
     }
 
     conversationDeleteTarget?.let { conversation ->
-        WindowDialog(
+        io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
             title = stringResource(R.string.conversation_delete_title),
             summary = stringResource(if (conversation.isActiveRun) R.string.conversation_stop_and_delete_message else R.string.conversation_delete_message),
@@ -1089,7 +1085,7 @@ fun AgentAppRoot(
     }
 
     messageDeleteTarget?.let { target ->
-        WindowDialog(
+        io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
             title = stringResource(R.string.conversation_delete_message_title),
             summary = if (target.laterTurnCount == 0) {
@@ -1116,7 +1112,7 @@ fun AgentAppRoot(
     }
 
     messageRegenerateTarget?.let { target ->
-        WindowDialog(
+        io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
             title = stringResource(R.string.conversation_regenerate_title),
             summary = if (target.laterTurnCount == 0) {

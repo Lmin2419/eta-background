@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.automirrored.outlined.ArrowBackIos
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +43,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -184,7 +187,7 @@ internal fun EtaApi34FloatingSurface(
                                 center,
                             )
                         }) {
-                            clipPath(lightClip) { drawLight.invoke(this) }
+                            if (drawContext.canvas.nativeCanvas.isHardwareAccelerated) clipPath(lightClip) { drawLight.invoke(this) }
                         }
                     }
                 }
@@ -338,11 +341,12 @@ internal fun EtaCouiButton(
             .clip(CouiCapsuleShape)
             .drawWithContent {
                 drawContent()
-                drawLight?.invoke(this)
+                // 光效用 RuntimeShader，只能画在硬件加速画布上（截图、导出图片时走软件绘制）。
+                if (drawContext.canvas.nativeCanvas.isHardwareAccelerated) drawLight?.invoke(this)
             }
             .drawWithContent {
                 drawRect(fillColor)
-                if (Build.VERSION.SDK_INT >= 33 && contour != null) {
+                if (Build.VERSION.SDK_INT >= 33 && contour != null && drawContext.canvas.nativeCanvas.isHardwareAccelerated) {
                     val alpha = if (isPrimaryLike) {
                         if (dark) { if (enabled) 0.25f else 0.05f } else 0.3f
                     } else if (dark) {
@@ -428,18 +432,21 @@ internal fun EtaCouiDialog(
     placement: com.itos.coui.dialog.CouiDialogPlacement = com.itos.coui.dialog.CouiDialogPlacement.Bottom,
     contentPadding: Dp = CouiDialogDefaults.contentPadding,
     maxContentHeight: Dp = Dp.Unspecified,
+    dismissible: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val dark = CouiTheme.isDark
     val sink = remember { EtaDialogActionSink() }
     val spec = sink.spec
     val confirm = if (spec != null) etaPrimaryDialogAction(spec.confirmText, { sink.onConfirm() }, spec.confirmEnabled, spec.destructive, dark)
-        else com.itos.coui.dialog.CouiDialogAction(closeText, onDismissRequest)
+        else com.itos.coui.dialog.CouiDialogAction(closeText, onDismissRequest, enabled = dismissible)
     val dismiss = spec?.let { com.itos.coui.dialog.CouiDialogAction(it.cancelText, { sink.onCancel() }, it.cancelEnabled) }
     com.itos.coui.dialog.Dialog(
-        modifier = modifier,
+        modifier = modifier.semantics { title?.let { paneTitle = it } },
         visible = show,
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = { if (dismissible) onDismissRequest() },
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false,
+            dismissOnBackPress = dismissible, dismissOnClickOutside = dismissible),
         dark = dark,
         title = title,
         message = message,
@@ -459,4 +466,65 @@ internal fun EtaCouiDialog(
             ) { content() }
         }
     }
+}
+
+/** 上游的系统顶栏按钮样式：流体材质、阴影与轮廓光（Android 14+）。 */
+@Composable
+internal fun rememberEtaToolbarStyle(dark: Boolean = CouiTheme.isDark): com.itos.coui.topappbar.CouiToolbarStyle {
+    val density = LocalDensity.current.density
+    val contour = LocalCouiContourGlowEnabled.current
+    val textStyle = com.itos.coui.text.rememberCouiTextStyle(CouiTextKind.TopBar)
+    val colors = io.github.mangi.eta.ui.theme.EtaTheme.colors
+    return CouiTopAppBarButtonDefaults.style(dark).copy(
+        contentColor = colors.textPrimary,
+        textStyle = textStyle,
+        cursorColor = colors.accent,
+        material = { CouiTopAppBarButtonDefaults.systemMaterial(dark, it) },
+        shadow = { CouiTopAppBarButtonDefaults.shadow(dark, it, density, contour, alphaScale = 1f) },
+    )
+}
+
+/**
+ * COUI 顶栏图标按钮：Android 14+ 是浮动的液态玻璃圆钮（与上游一致），更低版本是带按压反馈的圆形按钮。
+ * 必须放在 COUI 顶栏（TopAppBar / LargeTopAppBar）里。
+ */
+@Composable
+internal fun EtaCouiTopBarIconButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    val dark = CouiTheme.isDark
+    val renderer = remember { if (Build.VERSION.SDK_INT >= 34) runCatching { CouiFloatingRenderer.standalone() }.getOrNull() else null }
+    val tint = io.github.mangi.eta.ui.theme.EtaTheme.colors.textPrimary
+    if (Build.VERSION.SDK_INT >= 34 && renderer != null) {
+        com.itos.coui.topappbar.TopAppBarButton(
+            modifier = modifier.then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
+            onClick = onClick, enabled = enabled, renderer = renderer, style = rememberEtaToolbarStyle(dark),
+        ) {
+            top.yukonga.miuix.kmp.basic.Icon(icon, null, Modifier.size(22.dp), tint = tint)
+        }
+    } else {
+        val source = remember { MutableInteractionSource() }
+        Box(
+            modifier.size(48.dp).clip(com.itos.coui.shape.CouiShape(24.dp, 2f))
+                .couiButtonFeedback(dark, source, enabled)
+                .clickable(source, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+                .then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
+            contentAlignment = Alignment.Center,
+        ) { top.yukonga.miuix.kmp.basic.Icon(icon, null, Modifier.size(22.dp), tint = tint) }
+    }
+}
+
+/** 二级页的返回键（浮动液态玻璃圆钮）。 */
+@Composable
+internal fun EtaCouiBackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    EtaCouiTopBarIconButton(
+        icon = androidx.compose.material.icons.Icons.AutoMirrored.Outlined.ArrowBackIos,
+        contentDescription = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_back),
+        onClick = onClick,
+        modifier = modifier,
+    )
 }

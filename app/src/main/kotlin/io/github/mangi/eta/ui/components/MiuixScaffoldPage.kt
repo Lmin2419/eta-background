@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
@@ -50,59 +51,68 @@ fun MiuixScaffoldPage(
     content: LazyListScope.() -> Unit,
 ) {
     EtaPreferenceTheme {
-        val scrollBehavior = MiuixScrollBehavior()
         val pull = onRefresh?.let { rememberEtaPullRefreshState(refreshing, it) }
-        val backdrop = rememberTopBarBackdrop(containerColor)
 
-        val inWindow = LocalEtaWindow.current != null
-        Scaffold(
-            modifier = modifier.fillMaxSize(),
-            // 窗口里页面底色透明，由窗口的玻璃外框提供。
-            containerColor = if (inWindow) Color.Transparent else containerColor,
+        // 与上游 3.4.x 一致的 COUI 二级页：大标题随滚动收缩成顶栏小标题，返回键是浮动的液态玻璃圆钮，
+        // 顶栏是 COUI 的模糊渐隐材质；内容是分组卡片列表。宽屏或页面自带主视觉时用紧凑标题。
+        val dark = com.itos.coui.theme.CouiTheme.isDark
+        val useCompact = compactTitle || rememberIsWideScreen()
+        val behavior = if (useCompact) null else com.itos.coui.topappbar.CouiTopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+            canScroll = { listState.canScrollForward || listState.canScrollBackward },
+        )
+        val overscroll = com.itos.coui.scroll.rememberCouiOverscrollEffect()
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        val barColors = com.itos.coui.topappbar.CouiTopAppBarDefaults.colors(titleColor = EtaTheme.colors.textPrimary, dark = dark)
+        val titleContent: @Composable () -> Unit = {
+            androidx.compose.foundation.text.BasicText(
+                text = title,
+                style = com.itos.coui.theme.LocalCouiTextStyle.current,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        }
+        val navigation: @Composable () -> Unit = { io.github.mangi.eta.ui.components.coui.EtaCouiBackButton(onClick = onBack) }
+        val topBarActions: @Composable RowScope.() -> Unit = { com.itos.coui.topappbar.TopAppBarButtonGroup { actions() } }
+        com.itos.coui.layout.Scaffold(
+            modifier = modifier.fillMaxSize()
+                .then(if (behavior != null) Modifier.nestedScroll(behavior.nestedScrollConnection) else Modifier),
+            containerColor = containerColor,
             topBar = {
-                // 顶栏与页面同色（浅灰底），滚动后才出现分隔线。
-                TopBarBackdrop(backdrop, color = containerColor) {
-                    // 页面自带主视觉（如角色详情）时用紧凑标题，避免大标题与主视觉重复。
-                    AdaptiveTopAppBar(
-                        title = title, color = if (backdrop != null) Color.Transparent else containerColor, compact = compactTitle,
-                        navigationIcon = { MiuixBackButton(onClick = onBack) },
-                        actions = actions, scrollBehavior = scrollBehavior,
-                    )
-                }
+                if (useCompact) com.itos.coui.topappbar.TopAppBar(title = titleContent, navigationIcon = navigation,
+                    actions = topBarActions, dark = dark, colors = barColors)
+                else com.itos.coui.topappbar.LargeTopAppBar(title = titleContent, navigationIcon = navigation,
+                    actions = topBarActions, scrollBehavior = behavior, dark = dark, colors = barColors)
             },
         ) { innerPadding ->
-          androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
-            WidePageContent { centeredPadding ->
-                val sidePadding = centeredPadding + if (rememberIsWideScreen()) 8.dp else 0.dp
-                // 保留 MiuixTheme 注入的默认越界工厂，保留短内容页的回弹行为。
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .horizontalCutoutPadding()
-                        .captureForTopBar(backdrop)
-                        .background(if (inWindow) Color.Transparent else containerColor)
-                        .scrollEndHaptic()
-                        .overScrollVertical()
-                        .then(if (pull != null) Modifier.nestedScroll(pull.connection) else Modifier)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection),
-                    contentPadding = PaddingValues(
-                        start = sidePadding,
-                        top = innerPadding.calculateTopPadding(),
-                        end = sidePadding,
-                    ),
-                ) {
-                    // 卡片滑到顶栏下缩小淡出、往回滑放大还原；从底边进入时轻微放大到位。
-                    EtaScrollEdgeListScope(this, innerPadding.calculateTopPadding()).content()
-                    item(key = "bottom_spacer") {
-                        MiuixPageBottomSpacer()
+            val padding = remember(behavior, innerPadding, density) {
+                behavior?.state?.contentPadding(innerPadding, density) ?: innerPadding
+            }
+            androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
+                WidePageContent { sidePadding ->
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .horizontalCutoutPadding()
+                            .then(if (pull != null) Modifier.nestedScroll(pull.connection) else Modifier),
+                        contentPadding = PaddingValues(
+                            start = sidePadding,
+                            top = padding.calculateTopPadding(),
+                            end = sidePadding,
+                            bottom = padding.calculateBottomPadding(),
+                        ),
+                        overscrollEffect = overscroll,
+                    ) {
+                        content()
+                        item(key = "bottom_spacer") {
+                            MiuixPageBottomSpacer()
+                        }
                     }
                 }
+                if (pull != null) EtaPullRefreshIndicator(pull, Modifier.align(androidx.compose.ui.Alignment.TopCenter),
+                    topInset = padding.calculateTopPadding())
+                overlay()
             }
-            if (pull != null) EtaPullRefreshIndicator(pull, Modifier.align(androidx.compose.ui.Alignment.TopCenter),
-                topInset = innerPadding.calculateTopPadding())
-            overlay()
-          }
         }
     }
 }

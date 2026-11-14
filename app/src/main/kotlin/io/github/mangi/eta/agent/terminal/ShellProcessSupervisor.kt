@@ -545,6 +545,7 @@ internal fun runOneShotShell(
     linuxRootfsPath: String? = null,
     linuxSharedMounts: List<SharedFolderMount> = emptyList(),
     maxOutputBytes: Int = Int.MAX_VALUE,
+    keepTailBytes: Int = 0,
 ): OneShotShellResult {
     val process = processSupervisor.startShellProcess(
         identity = identity,
@@ -563,10 +564,10 @@ internal fun runOneShotShell(
         val output = ByteArrayOutputCollector()
         val stderr = ByteArrayOutputCollector()
         val outputThread = thread(name = "agent-terminal-stdout") {
-            process.inputStream.use { input -> output.readFrom(input, maxOutputBytes) }
+            process.inputStream.use { input -> output.readFrom(input, maxOutputBytes, keepTailBytes) }
         }
         val stderrThread = thread(name = "agent-terminal-stderr") {
-            process.errorStream.use { input -> stderr.readFrom(input, minOf(maxOutputBytes, 64 * 1024)) }
+            process.errorStream.use { input -> stderr.readFrom(input, minOf(maxOutputBytes, 64 * 1024), minOf(keepTailBytes, 32 * 1024)) }
         }
         val stdinFailed = AtomicBoolean(false)
         val stdinThread = thread(name = "agent-terminal-stdin") {

@@ -47,7 +47,6 @@ import io.github.mangi.eta.ui.model.ToolActivityMessageUi
 import io.github.mangi.eta.ui.model.ToolActivityStatusUi
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -139,7 +138,7 @@ internal fun SubagentActivityRow(
         }
     }
 
-    OverlayBottomSheet(
+    EtaSheet(
         show = showInspector,
         title = taskTitle,
         onDismissRequest = { showInspector = false },
