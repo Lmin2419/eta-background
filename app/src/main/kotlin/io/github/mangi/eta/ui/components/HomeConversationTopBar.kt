@@ -64,7 +64,7 @@ internal fun HomeConversationTopBar(
         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
         .heightIn(min = 60.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CircleIconButton(Icons.AutoMirrored.Outlined.ShortText, stringResource(R.string.action_conversation_history), onHistory)
+        Box(Modifier.etaChromeScale()) { CircleIconButton(Icons.AutoMirrored.Outlined.ShortText, stringResource(R.string.action_conversation_history), onHistory) }
         if (character != null) {
             Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onCharacter).padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -72,13 +72,13 @@ internal fun HomeConversationTopBar(
                 Text(character.characterName, style = EtaTheme.type.rowTitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
-        Box(if (character == null) Modifier.weight(1f) else Modifier, contentAlignment = Alignment.Center) {
+        Box((if (character == null) Modifier.weight(1f) else Modifier).etaChromeScale(0.88f), contentAlignment = Alignment.Center) {
             ModelPill(models, isStreaming || isCompacting || models.isChanging, character != null) {
                 if (isStreaming || isCompacting || models.isChanging) toast(lockedText) else settings = true
             }
         }
         // 右侧按钮收进同一枚玻璃胶囊：有任务运行时，任务状态从左侧展开进来，两个按钮间距固定，不会挤在一起。
-        Row(Modifier.height(44.dp).etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false)
+        Row(Modifier.etaChromeScale().height(44.dp).etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false)
             .padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
             EtaAnimatedVisibility(
                 visible = runningTaskCount > 0,

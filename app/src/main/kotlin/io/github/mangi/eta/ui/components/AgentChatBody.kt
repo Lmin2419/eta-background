@@ -814,6 +814,12 @@ internal fun AgentConversationMessages(
         }
     }
 
+    val chrome = LocalEtaChrome.current
+    val chromeRange = with(androidx.compose.ui.platform.LocalDensity.current) { 140.dp.toPx() }
+    val chromeScroll = remember(chrome, chromeRange) {
+        if (chrome == null) Modifier else Modifier.nestedScroll(chrome.connection(chromeRange))
+    }
+    LaunchedEffect(chrome) { chrome?.reset() }
     // 滚动层保持整屏，输入器作为后绘制浮层；输入器高度进入列表的
     // afterContentPadding，确保跟到底部时最后一行停在输入器上方。
     Box(modifier = modifier.clipToBounds()) {
@@ -824,6 +830,7 @@ internal fun AgentConversationMessages(
                 .align(Alignment.TopCenter).widthIn(max = 720.dp).fillMaxSize()
                 .scrollEndHaptic()
                 .nestedScroll(historyPaging.scrollConnection)
+                .then(chromeScroll)
                 .overScrollVertical(),
             contentPadding = PaddingValues(
                 top = LocalTopBarInset.current + 16.dp,

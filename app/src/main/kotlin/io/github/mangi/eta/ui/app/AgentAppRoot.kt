@@ -553,7 +553,10 @@ fun AgentAppRoot(
     val swipeDismiss = swipeBackDirection.takeIf {
         LocalAppearanceSettings.current.swipeDismissEnabled
     }
+    // 对话页顶部按钮随消息滚动收缩/还原的共享进度（消息列表写、顶栏读）。
+    val chatChrome = remember { io.github.mangi.eta.ui.components.EtaChromeState() }
     EtaAppOverlayHost {
+    androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalEtaChrome provides chatChrome) {
     key(navigationResetKey) {
         NavDisplay(
             backStack = backStack,
@@ -1010,6 +1013,7 @@ fun AgentAppRoot(
                 )
             }
         }
+    }
     }
 
     characterStore.notice?.let { notice ->

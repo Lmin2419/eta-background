@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.animation.animateContentSize
 import io.github.mangi.eta.ui.theme.EtaMotion
 
@@ -199,6 +201,15 @@ internal fun AgentChatInputBar(
             onInputFocusHandled()
         }
     }
+    var sendSweep by remember { mutableIntStateOf(0) }
+    val sweepProgress = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(sendSweep) {
+        if (sendSweep > 0 && !EtaMotion.Default.reduceMotion) {
+            sweepProgress.snapTo(0f)
+            sweepProgress.animateTo(1f, androidx.compose.animation.core.tween(700, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+            sweepProgress.snapTo(0f)
+        }
+    }
     val textFieldState = rememberTextFieldState(initialText = input)
     if (remoteComposer != null) {
         val onDraftChange by rememberUpdatedState(remoteComposer.onDraftChange)
@@ -318,6 +329,21 @@ internal fun AgentChatInputBar(
                     .fillMaxWidth()
                     // 输入胶囊：玻璃材质，背后的消息模糊透出；关闭模糊时为磨砂实色。
                     .etaGlass(InputContainerShape, elevation = EtaElevation.E2)
+                    // 发送后一道光从左到右扫过玻璃（画在内容下面，不盖文字）。
+                    .drawWithCache {
+                        val outline = InputContainerShape.createOutline(size, layoutDirection, this)
+                        onDrawBehind {
+                            val p = sweepProgress.value
+                            if (p > 0.001f && p < 0.999f) {
+                                val w = size.width
+                                val x = -0.3f * w + 1.6f * w * p
+                                drawOutline(outline, androidx.compose.ui.graphics.Brush.linearGradient(
+                                    listOf(Color.Transparent, Color.White.copy(alpha = 0.45f), Color.Transparent),
+                                    start = androidx.compose.ui.geometry.Offset(x - 0.22f * w, 0f),
+                                    end = androidx.compose.ui.geometry.Offset(x + 0.22f * w, size.height)))
+                            }
+                        }
+                    }
                     .padding(horizontal = 10.dp, vertical = 8.dp),
             ) {
         AnimatedVisibility(
@@ -438,6 +464,7 @@ internal fun AgentChatInputBar(
                                 val submittedText = textFieldState.text.toString()
                                 textFieldState.clearText()
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                                sendSweep++
                                 if (interrupt) onInterruptAndSubmit(submittedText) else onSubmit(submittedText)
                             }
                         }

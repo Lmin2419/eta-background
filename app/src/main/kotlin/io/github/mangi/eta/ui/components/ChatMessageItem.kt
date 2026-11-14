@@ -563,10 +563,14 @@ private fun AgentMessageBlock(
     val character = LocalRoleplayChat.current.takeUnless { assistantOverlay }
     val isGreeting = character != null && message.id.startsWith(GreetingMessagePrefix)
     var menuAnchor by remember(message.id) { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+    // 长按出菜单时，这条回复轻轻「浮起」，菜单收起后落回。
+    val lift = androidx.compose.animation.core.animateFloatAsState(if (menu) 1.015f else 1f,
+        androidx.compose.animation.core.spring(dampingRatio = 0.6f, stiffness = 500f), label = "answerLift")
     Column(
         modifier = modifier
             .fillMaxWidth()
             .onGloballyPositioned { menuAnchor = it.boundsInWindow() }
+            .graphicsLayer { val s = lift.value; scaleX = s; scaleY = s }
             .combinedClickable(enabled = showMessageActions && messageActionsEnabled && revealComplete,
                 onClick = {}, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); selectingText = false; menu = true })
             .padding(

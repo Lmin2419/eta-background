@@ -89,7 +89,8 @@ fun MiuixScaffoldPage(
                         end = sidePadding,
                     ),
                 ) {
-                    content()
+                    // 卡片滑到顶栏下缩小淡出、往回滑放大还原；从底边进入时轻微放大到位。
+                    EtaScrollEdgeListScope(this, innerPadding.calculateTopPadding()).content()
                     item(key = "bottom_spacer") {
                         MiuixPageBottomSpacer()
                     }
