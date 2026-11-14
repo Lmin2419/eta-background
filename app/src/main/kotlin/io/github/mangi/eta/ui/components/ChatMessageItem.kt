@@ -348,7 +348,7 @@ private fun UserMessageBubble(
             }
             Column(Modifier.onGloballyPositioned { menuAnchor = it.boundsInWindow() }
                 .graphicsLayer { val s = pressScale.value; scaleX = s; scaleY = s }
-                .background(EtaTheme.colors.surfaceSunken, shape)
+                .etaGlass(shape, tint = EtaTheme.colors.surfaceSunken, elevation = null, useLocalBackdrop = false, solidAlpha = 0.86f)
                 .then(if (isEditing) Modifier.border(1.dp, EtaTheme.colors.accent, shape) else Modifier)
                 .combinedClickable(enabled = actionsEnabled, onClick = {}, onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress); menu = true

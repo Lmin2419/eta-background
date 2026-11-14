@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -33,6 +35,9 @@ import top.yukonga.miuix.kmp.blur.textureBlur
 
 /** 当前页面里可供玻璃元素模糊的背景层；由页面捕获内容后提供。 */
 internal val LocalEtaGlassBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
+
+/** 页面内容延伸到玻璃顶栏下方时，列表需要额外留出的顶部距离（顶栏高度）。 */
+internal val LocalTopBarInset = androidx.compose.runtime.compositionLocalOf { 0.dp }
 
 /** 捕获页面内容用于玻璃模糊；关闭模糊或设备不支持时返回 null。[base] 是内容底下的页面底色。 */
 @Composable
@@ -71,11 +76,13 @@ internal fun Modifier.etaGlass(
     edgeWidth: Dp = 0.75.dp,
     backdrop: LayerBackdrop? = null,
     useLocalBackdrop: Boolean = true,
+    solidAlpha: Float = EtaGlassDefaults.SolidTintAlpha,
 ): Modifier = composed {
     val base = tint ?: EtaTheme.colors.surfaceRaised
     val layer = backdrop ?: if (useLocalBackdrop) LocalEtaGlassBackdrop.current else null
     val blurOn = LocalBlurEnabled.current && isRuntimeShaderSupported()
     val edge = etaGlassEdge()
+    val sheen = etaGlassSheen()
     var m: Modifier = this
     if (elevation != null) m = m.etaElevation(elevation, shape)
     m = if (layer != null && blurOn) {
@@ -86,7 +93,40 @@ internal fun Modifier.etaGlass(
             colors = BlurColors(blendColors = listOf(BlendColorEntry(base.copy(alpha = EtaGlassDefaults.BlurTintAlpha)))),
         )
     } else {
-        m.background(base.copy(alpha = EtaGlassDefaults.SolidTintAlpha), shape)
+        m.background(base.copy(alpha = solidAlpha), shape)
     }
-    m.border(edgeWidth, edge, shape)
+    m.drawWithCache {
+        val outline = shape.createOutline(size, layoutDirection, this)
+        onDrawBehind { drawOutline(outline, sheen) }
+    }.border(edgeWidth, edge, shape)
+}
+
+/** 上沿反光：顶部一抹很淡的白，向下 45% 处消失。 */
+@Composable
+internal fun etaGlassSheen(): Brush {
+    val dark = EtaTheme.colors.canvas.luminance() < 0.5f
+    val top = if (dark) 0.07f else 0.35f
+    return Brush.verticalGradient(0f to Color.White.copy(alpha = top), 0.45f to Color.Transparent)
+}
+
+/**
+ * 页面背景的环境光：画布底色上两团很淡的光晕（左上珊瑚、右下冷色），给玻璃材质提供透出的层次。
+ * 只画在背景层，不影响内容；深色模式更暗更收敛。
+ */
+internal fun Modifier.etaAmbientBackground(base: Color? = null): Modifier = composed {
+    val colors = EtaTheme.colors
+    val canvas = base ?: colors.canvas
+    val dark = colors.canvas.luminance() < 0.5f
+    val warm = colors.accent.copy(alpha = if (dark) 0.16f else 0.10f)
+    val cool = Color(if (dark) 0xFF5B6CFF else 0xFF8FA8FF).copy(alpha = if (dark) 0.12f else 0.10f)
+    drawWithCache {
+        val r = maxOf(size.width, size.height) * 0.75f
+        val warmBrush = Brush.radialGradient(listOf(warm, Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.1f, size.height * 0.04f), radius = r)
+        val coolBrush = Brush.radialGradient(listOf(cool, Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.95f, size.height * 0.85f), radius = r)
+        onDrawBehind {
+            drawRect(canvas)
+            drawRect(warmBrush)
+            drawRect(coolBrush)
+        }
+    }
 }

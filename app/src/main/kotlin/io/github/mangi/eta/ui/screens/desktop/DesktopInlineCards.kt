@@ -26,6 +26,7 @@ import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaButtonKind
 import io.github.mangi.eta.ui.components.EtaButtonSize
 import io.github.mangi.eta.ui.components.StatusRing
+import io.github.mangi.eta.ui.components.etaGlass
 import io.github.mangi.eta.ui.model.TaskVisualStatus
 import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.Text
@@ -42,7 +43,7 @@ internal fun DesktopRunStrip(runningForMs: Long?, onStop: () -> Unit, onDetails:
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(bottom = 6.dp)
-            .background(EtaTheme.colors.runningSoft, EtaTheme.shapes.radiusFull)
+            .etaGlass(EtaTheme.shapes.radiusFull, tint = EtaTheme.colors.runningSoft, elevation = null)
             .clickable(onClick = onDetails)
             .padding(start = 14.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -69,7 +70,7 @@ private fun AttentionCard(title: String, body: (@Composable () -> Unit)? = null,
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .padding(bottom = 8.dp)
-            .background(EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusLg)
+            .etaGlass(EtaTheme.shapes.radiusLg, elevation = io.github.mangi.eta.ui.theme.EtaElevation.E1)
             .padding(14.dp)
             .animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(10.dp),

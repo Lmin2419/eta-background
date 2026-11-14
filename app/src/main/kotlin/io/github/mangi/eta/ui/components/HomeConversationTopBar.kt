@@ -58,14 +58,13 @@ internal fun HomeConversationTopBar(
         if (pendingModel != null && models.selectedModel?.id == pendingModel) { toast(changedText); pendingModel = null }
     }
     val colors = EtaTheme.colors
-    Row(Modifier.fillMaxWidth().background(colors.canvas)
+    // 顶栏本身透明，铺在玻璃顶栏材质上；左边历史、中间模型、右边一枚玻璃胶囊（任务状态 + 新建会话）。
+    Row(Modifier.fillMaxWidth()
         .windowInsetsPadding(WindowInsets.statusBars)
         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
-        .heightIn(min = 56.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        // 圆形描边按钮（与 Claude 顶栏一致）。
-        Box(Modifier.padding(start = 8.dp)) {
-            CircleIconButton(Icons.AutoMirrored.Outlined.ShortText, stringResource(R.string.action_conversation_history), onHistory)
-        }
+        .heightIn(min = 60.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CircleIconButton(Icons.AutoMirrored.Outlined.ShortText, stringResource(R.string.action_conversation_history), onHistory)
         if (character != null) {
             Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onCharacter).padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -78,23 +77,27 @@ internal fun HomeConversationTopBar(
                 if (isStreaming || isCompacting || models.isChanging) toast(lockedText) else settings = true
             }
         }
-        Box(Modifier.padding(end = 8.dp)) {
-            CircleIconButton(Icons.Outlined.AddComment, stringResource(R.string.action_new_conversation), onNew)
-        }
-        // 任务按钮只在有任务运行时出现（带运行圈和数量）；平时任务中心从侧栏「任务」进入。
-        EtaAnimatedVisibility(
-            visible = runningTaskCount > 0,
-            // 横向展开 + 淡入：按钮从模型胶囊旁边「让出位置」出现，而不是蹦出来。
-            enter = expandHorizontally(tween(320, easing = EtaTheme.motion.emphasizedDecelerate), expandFrom = Alignment.Start) +
-                fadeIn(tween(240, delayMillis = 80)),
-            exit = fadeOut(tween(140)) + shrinkHorizontally(tween(220, easing = EtaTheme.motion.accelerate), shrinkTowards = Alignment.Start),
-            label = "runningTasks",
-        ) {
-            Box {
-                EtaIconButton(onTasks) { StatusRing(TaskVisualStatus.Running, size = 20.dp, contentDescription = stringResource(R.string.eta_tasks)) }
-                Text(runningTaskCount.toString(), style = EtaTheme.type.caption,
-                    color = colors.onAccent, modifier = Modifier.align(Alignment.TopEnd)
-                        .background(colors.accent, EtaTheme.shapes.radiusFull).padding(horizontal = 4.dp))
+        // 右侧按钮收进同一枚玻璃胶囊：有任务运行时，任务状态从左侧展开进来，两个按钮间距固定，不会挤在一起。
+        Row(Modifier.height(44.dp).etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false)
+            .padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            EtaAnimatedVisibility(
+                visible = runningTaskCount > 0,
+                enter = expandHorizontally(tween(320, easing = EtaTheme.motion.emphasizedDecelerate), expandFrom = Alignment.End) +
+                    fadeIn(tween(240, delayMillis = 80)),
+                exit = fadeOut(tween(140)) + shrinkHorizontally(tween(220, easing = EtaTheme.motion.accelerate), shrinkTowards = Alignment.End),
+                label = "runningTasks",
+            ) {
+                Box(Modifier.size(40.dp).clip(EtaTheme.shapes.radiusFull).clickable(onClick = onTasks), contentAlignment = Alignment.Center) {
+                    StatusRing(TaskVisualStatus.Running, size = 20.dp, contentDescription = stringResource(R.string.eta_tasks))
+                    // 数量角标留在按钮范围内，不再压到旁边的按钮。
+                    Text(runningTaskCount.toString(), style = EtaTheme.type.caption.copy(fontSize = 10.sp),
+                        color = colors.onAccent, modifier = Modifier.align(Alignment.TopEnd).padding(top = 4.dp, end = 4.dp)
+                            .background(colors.accent, EtaTheme.shapes.radiusFull).padding(horizontal = 4.dp))
+                }
+            }
+            Box(Modifier.size(40.dp).clip(EtaTheme.shapes.radiusFull).clickable(onClickLabel = stringResource(R.string.action_new_conversation), onClick = onNew),
+                contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.AddComment, stringResource(R.string.action_new_conversation), Modifier.size(22.dp), tint = colors.textPrimary)
             }
         }
     }
@@ -110,8 +113,8 @@ internal fun ModelPill(state: AgentModelPickerUiState, locked: Boolean, iconOnly
     val model = state.selectedModel
     val current = model?.displayName ?: stringResource(R.string.model_not_selected)
     val shown = model?.pillName ?: current
-    Row(Modifier.heightIn(min = 36.dp).clip(EtaTheme.shapes.radiusFull)
-        .background(EtaTheme.colors.surfaceSunken).clickable(role = Role.Button, onClick = onClick)
+    Row(Modifier.heightIn(min = 40.dp).etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false)
+        .clip(EtaTheme.shapes.radiusFull).clickable(role = Role.Button, onClick = onClick)
         .semantics { contentDescription = current }
         .padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)) {

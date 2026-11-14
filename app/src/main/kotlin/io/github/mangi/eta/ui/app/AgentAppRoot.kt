@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -524,12 +526,21 @@ fun AgentAppRoot(
                 agentState.homeState.roleplay?.let { pushRoute(AppRoute.CharacterDetail(it.characterId)) }
             },
         ) { padding ->
+            // 对话页：内容延伸到玻璃顶栏下面，滚动时消息从顶栏后模糊透出；列表自己留出顶栏高度。
+            val underTopBar = route is AppRoute.Home
+            val layoutDirection = androidx.compose.ui.platform.LocalLayoutDirection.current
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
+                    .then(if (underTopBar) Modifier.padding(
+                        start = padding.calculateStartPadding(layoutDirection),
+                        end = padding.calculateEndPadding(layoutDirection),
+                        bottom = padding.calculateBottomPadding(),
+                    ) else Modifier.padding(padding))
             ) {
-                content()
+                androidx.compose.runtime.CompositionLocalProvider(
+                    io.github.mangi.eta.ui.components.LocalTopBarInset provides if (underTopBar) padding.calculateTopPadding() else 0.dp,
+                ) { content() }
             }
         }
     }

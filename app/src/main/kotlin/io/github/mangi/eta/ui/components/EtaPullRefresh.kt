@@ -125,7 +125,7 @@ internal fun EtaPullRefreshIndicator(state: EtaPullRefreshState, modifier: Modif
             }
             .size(40.dp)
             .etaElevation(EtaElevation.E2, EtaTheme.shapes.radiusFull)
-            .background(EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusFull)
+            .etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {

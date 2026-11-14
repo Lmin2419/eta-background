@@ -45,11 +45,12 @@ internal fun EtaSheet(
                 .etaElevation(EtaElevation.E3, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)).drawWithContent {
                 drawContent()
                 // Paint only the handle. Its original 24dp drag/tap area and gesture recognizer remain.
-                drawRect(colors.surfaceRaised, Offset(size.width / 2 - 32.dp.toPx(), 0f), Size(64.dp.toPx(), 24.dp.toPx()))
+                drawRect(colors.surfaceRaised.copy(alpha = 0.94f), Offset(size.width / 2 - 32.dp.toPx(), 0f), Size(64.dp.toPx(), 24.dp.toPx()))
                 drawRoundRect(colors.outlineStrong, Offset((size.width - 36.dp.toPx()) / 2, 8.dp.toPx()),
                     Size(36.dp.toPx(), 4.dp.toPx()), CornerRadius(2.dp.toPx()))
             },
-            backgroundColor = colors.surfaceRaised, cornerRadius = 28.dp,
+            // 玻璃面板：略透出背后的页面。
+            backgroundColor = colors.surfaceRaised.copy(alpha = 0.94f), cornerRadius = 28.dp,
             sheetMaxWidth = BottomSheetDefaults.maxWidth,
             insideMargin = insideMargin, onDismissRequest = onDismissRequest, onDismissFinished = onDismissFinished,
             allowDismiss = allowDismiss, enableNestedScroll = enableNestedScroll, renderInRootScaffold = renderInRootScaffold,

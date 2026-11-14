@@ -42,7 +42,7 @@ internal fun EtaSearchField(
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { onSearch(value) }),
         modifier = modifier.fillMaxWidth().semantics { contentDescription = placeholder }
-            .background(colors.surfaceSunken, shape)
+            .etaGlass(shape, tint = colors.surfaceSunken, elevation = null, useLocalBackdrop = false, solidAlpha = 0.8f)
             .border(1.5.dp, focusBorder, shape),
         decorationBox = { inner ->
             Row(Modifier.heightIn(min = 44.dp).padding(start = 14.dp, end = 4.dp),

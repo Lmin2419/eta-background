@@ -447,7 +447,7 @@ private fun AgentChatScaffold(
     ) { innerPadding ->
         val bottomPadding = innerPadding.calculateBottomPadding()
         // 发出第一条消息时问候语与建议淡出上移，消息随后升起，不再硬切。
-        Box(Modifier.fillMaxSize().then(if (glassBackdrop != null) Modifier.layerBackdrop(glassBackdrop) else Modifier)) {
+        Box(Modifier.fillMaxSize().then(if (glassBackdrop != null) Modifier.layerBackdrop(glassBackdrop) else Modifier).etaAmbientBackground()) {
         AnimatedVisibility(
             visible = !hasMessages,
             enter = fadeIn(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate)),
@@ -460,7 +460,7 @@ private fun AgentChatScaffold(
                 onSuggestionClick = onSuggestionClick,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = bottomPadding),
+                    .padding(top = LocalTopBarInset.current, bottom = bottomPadding),
             )
         }
         if (hasMessages) {
@@ -826,7 +826,7 @@ internal fun AgentConversationMessages(
                 .nestedScroll(historyPaging.scrollConnection)
                 .overScrollVertical(),
             contentPadding = PaddingValues(
-                top = 16.dp,
+                top = LocalTopBarInset.current + 16.dp,
                 bottom = bottomInset + 16.dp,
             ),
             overscrollEffect = null,

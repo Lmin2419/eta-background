@@ -78,6 +78,7 @@ fun MiuixScaffoldPage(
                         .fillMaxSize()
                         .horizontalCutoutPadding()
                         .captureForTopBar(backdrop)
+                        .etaAmbientBackground(containerColor)
                         .scrollEndHaptic()
                         .overScrollVertical()
                         .then(if (pull != null) Modifier.nestedScroll(pull.connection) else Modifier)
