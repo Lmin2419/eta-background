@@ -63,9 +63,16 @@ internal class AgentRunMessageProjector(
         is AgentEvent.ContextCompaction -> {
             val id = "assistant-$runId-compaction-${event.operationId}"
             messages.filterNot { it.id == id } + SystemNoticeMessageUi(
-                id = id, code = SystemNoticeCode.ContextCompaction, detail = event.displayMessage,
+                id = id,
+                code = SystemNoticeCode.ContextCompaction,
+                detail = event.displayMessage,
                 contextTokens = event.tokensAfter,
                 running = event.phase == AgentEvent.ContextCompaction.PHASE_STARTED,
+                usage = event.usage?.takeUnless { it.isEmpty }?.toUi()?.copy(
+                    requestKind = AgentTokenUsage.REQUEST_KIND_COMPACTION,
+                ),
+                archiveId = event.archiveId,
+                tokensBefore = event.tokensBefore,
             )
         }
         is AgentEvent.ModelRetryScheduled -> scheduleModelRetry(runId, event, messages)
@@ -118,8 +125,19 @@ internal class AgentRunMessageProjector(
             message is AgentMessageUi && isAssistantMessageForRound(message.id, runId, round)
         }
         if (targetIndex < 0) return messages
+        val turnStartIndex = messages.indexOfLast { message ->
+            message is UserMessageUi ||
+                (message is SystemNoticeMessageUi && message.code == SystemNoticeCode.ModelRetry && message.id.startsWith("assistant-$runId-retry-"))
+        }
         return messages.mapIndexed { index, message ->
-            if (index == targetIndex && message is AgentMessageUi) message.copy(usage = usage) else message
+            when {
+                index == targetIndex && message is AgentMessageUi -> message.copy(usage = usage)
+                index > turnStartIndex && index < targetIndex &&
+                    message is AgentMessageUi &&
+                    isAssistantMessageForRun(message.id, runId) &&
+                    message.usage != null -> message.copy(usage = null)
+                else -> message
+            }
         }
     }
 
@@ -755,4 +773,13 @@ internal fun AgentTokenUsage.toUi(): TokenUsageUi =
         outputTokens = outputTokens,
         reasoningTokens = reasoningTokens,
         cachedTokens = cachedTokens,
+        cacheWriteTokens = cacheWriteTokens,
+        requestKind = requestKind,
+        stepCount = stepCount,
+        llmMs = llmMs,
+        toolMs = toolMs,
+        ttftMs = ttftMs,
+        ttftSteps = ttftSteps,
+        decodeMs = decodeMs,
+        decodeTokens = decodeTokens,
     )

@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import io.github.mangi.eta.ui.theme.EtaMotion
@@ -636,6 +637,10 @@ private fun AgentMessageBlock(
                 if (showMessageActions) AnswerActionButton(Icons.Outlined.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
                 if (allowSpeech) SpeechReadAloudButton(message.id, message.content)
                 if (showMessageActions) AnswerActionButton(Icons.Outlined.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; menu = true }, messageActionsEnabled)
+                // 上游 3.4.1：本轮性能统计（步数、首字时间、生成速度、用量），点开看详情。
+                if (!assistantOverlay && message.usage != null && message.usage.hasPerformanceStats) {
+                    TurnStatsPill(usage = message.usage, modifier = Modifier.padding(start = 4.dp))
+                }
             }
         }
     }
@@ -724,11 +729,19 @@ internal fun AnswerActionButton(
     enabled: Boolean = true,
     tint: Color? = null,
 ) {
-    IconButton(
-        onClick = onClick,
-        enabled = enabled,
-        minWidth = AnswerActionSize,
-        minHeight = AnswerActionSize,
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .size(AnswerActionSize)
+            .clip(RoundedCornerShape(8.dp))
+            .etaPressScale(interactionSource, enabled, pressedScale = 0.88f)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
     ) {
         // 图标切换（如复制 → 对勾）带一点缩放淡入，不是生硬替换。
         val iconTint = when {

@@ -27,7 +27,7 @@ import androidx.room.migration.Migration
         CharacterEntity::class,
         UserPersonaEntity::class,
     ],
-    version = 25,
+    version = 26,
     exportSchema = false,
 )
 internal abstract class EtaDatabase : RoomDatabase() {
@@ -69,6 +69,7 @@ internal abstract class EtaDatabase : RoomDatabase() {
                         MIGRATION_22_23,
                         MIGRATION_23_24,
                         MIGRATION_24_25,
+                        MIGRATION_25_26,
                     )
                     .addCallback(object : Callback() {
                         override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) { createTextChunkCleanup(db) }
@@ -115,6 +116,19 @@ internal abstract class EtaDatabase : RoomDatabase() {
 
         internal val MIGRATION_21_22 = Migration(21, 22) { database ->
             database.execSQL("ALTER TABLE conversations ADD COLUMN model_id TEXT")
+        }
+
+        /**
+         * 合入上游 3.4.x 的性能统计（上游 24→25）与上下文缓存复用（上游 25→26）。
+         * 我们的 24、25 已用于归档与分组，所以把上游这两步需要的列合并为本地的 25→26；
+         * 上游的 is_pinned 不需要（我们用 pinned_at）。
+         */
+        internal val MIGRATION_25_26 = Migration(25, 26) { database ->
+            listOf(
+                "step_count INTEGER", "llm_ms INTEGER", "tool_ms INTEGER", "ttft_ms INTEGER",
+                "ttft_steps INTEGER", "decode_ms INTEGER", "decode_tokens INTEGER",
+                "cache_write_tokens INTEGER", "compaction_archive_id TEXT",
+            ).forEach { column -> database.execSQL("ALTER TABLE conversation_messages ADD COLUMN $column") }
         }
 
         internal val MIGRATION_24_25 = Migration(24, 25) { database ->
