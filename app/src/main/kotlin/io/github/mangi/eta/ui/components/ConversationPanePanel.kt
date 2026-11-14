@@ -118,8 +118,8 @@ internal fun ConversationPanePanel(
     // 长按对话的菜单从按住的位置展开（上游 COUI 菜单）。
     val paneMenuAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
     // 底部玻璃栏采样的列表画面（上游侧栏的 COUI 背景采样）；关闭模糊或省电时不采样。
-    val paneBackdrop = if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && EtaCouiSupport.shaders)
-        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "conversation-pane") else null
+    // 侧栏底部玻璃栏暂用磨砂玻璃：侧栏关着时也在屏幕外组合，COUI 流体材质在真机上与首页空白有关，先不用。
+    val paneBackdrop: com.itos.coui.backdrop.CouiBackdrop? = null
     val selecting = selectedIds.isNotEmpty()
     val motion = EtaTheme.motion
     val visibleConversations = remember(state.conversations, state.searchQuery, archived) {

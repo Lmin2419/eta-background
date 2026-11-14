@@ -143,9 +143,10 @@ internal fun AgentAppShell(
     val usesShellTopBar = currentRoute !is AppRoute.Settings && !(currentRoute is AppRoute.Home && homeTopBar != null)
     val backdrop = rememberTopBarBackdrop()
     val topBarColor = topBarContainerColor(backdrop)
-    // 对话页正文的 COUI 背景源：顶部三个液态玻璃控件从这里采样（Android 14+）。
-    val isHome = currentRoute is AppRoute.Home && homeTopBar != null
-    val chatCouiSource = if (isHome && LocalBlurEnabled.current) com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-page") else null
+    // 对话页的顶部控件用胖小胖的磨砂玻璃（采样外壳的 Miuix 背景），不再挂 COUI 背景源：
+    // 真机上首页（顶部控件 + 侧栏玻璃栏都用 COUI 流体材质）整页空白，而只有输入框用 COUI 的电脑会话页正常。
+    // 输入框的液态玻璃保留，背景源由 AgentChatBody 自己挂在消息区上（与电脑会话页一致）。
+    val chatCouiSource: com.itos.coui.backdrop.CouiBackdrop? = null
     val pageContent: @Composable () -> Unit = {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
