@@ -92,12 +92,33 @@ internal object BackgroundCompactionRegistry {
         failureCounts.remove(key)
     }
 
-    fun fingerprint(history: List<JSONObject>, cut: Int): String {
+    /**
+     * 被压范围的指纹。下一轮的历史是从存储重建的（不带推理内容、服务商的临时状态和屏幕观察），
+     * 所以只比较「角色 + 文字 + 工具调用编号」，不比较原始 JSON；屏幕观察消息不参与。
+     */
+    fun fingerprint(messages: List<JSONObject>): String {
         val digest = MessageDigest.getInstance("SHA-256")
-        history.take(cut).forEachIndexed { index, message ->
+        messages.forEachIndexed { index, message ->
             if (index > 0) digest.update('\n'.code.toByte())
-            digest.update(message.toString().toByteArray(Charsets.UTF_8))
+            digest.update(normalized(message).toByteArray(Charsets.UTF_8))
         }
         return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    fun isObservation(message: JSONObject): Boolean = message.optBoolean("_eta_observation")
+
+    private fun normalized(message: JSONObject): String = buildString {
+        append(message.optString("role")).append('\u0001')
+        append(message.optString("tool_call_id")).append('\u0001')
+        when (val content = message.opt("content")) {
+            is String -> append(content.trim())
+            is org.json.JSONArray -> for (index in 0 until content.length()) {
+                val part = content.optJSONObject(index) ?: continue
+                if (part.optString("type") in setOf("text", "input_text", "output_text")) append(part.optString("text").trim())
+            }
+            else -> Unit
+        }
+        append('\u0001')
+        AgentConversationCodec.parseToolCalls(message).forEach { append(it.id).append(':').append(it.name).append(';') }
     }
 }

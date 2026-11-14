@@ -179,7 +179,10 @@ internal class AgentContextSession(
         }
         if (keepFrom < 2) return
         val cut = (keepFrom downTo 2).firstOrNull { AgentContextCompactor.canSplit(history, it) } ?: return
-        val fingerprint = BackgroundCompactionRegistry.fingerprint(history, cut)
+        // 记录被压范围里「持久消息」的条数与指纹：下一轮从存储重建的历史没有屏幕观察消息。
+        val durablePrefix = history.take(cut).filterNot(BackgroundCompactionRegistry::isObservation)
+        val fingerprint = BackgroundCompactionRegistry.fingerprint(durablePrefix)
+        val durableCut = durablePrefix.size
         val systemMessages = (0 until systemCount).map { org.json.JSONObject(messages.getJSONObject(it).toString()) }
         val followsConversation = policy.modelConfig == null
         val compactionConfig = policy.modelConfig ?: config
@@ -207,7 +210,7 @@ internal class AgentContextSession(
                 enableCacheReuse = cacheReuse,
             ).compactWithOutcome(source, systemCount, sensitive, protectLatestUser = false)
             val summary = (systemCount until outcome.messages.length()).map { outcome.messages.getJSONObject(it) }
-            BackgroundCompactionRegistry.Result(cut, fingerprint, summary, outcome.usage, outcome.archiveId)
+            BackgroundCompactionRegistry.Result(durableCut, fingerprint, summary, outcome.usage, outcome.archiveId)
         }
         if (started) {
             onEvent(AgentEvent.ContextCompaction(java.util.UUID.randomUUID().toString(),
@@ -225,7 +228,17 @@ internal class AgentContextSession(
         val ready = BackgroundCompactionRegistry.takeReady(policy.key) ?: return false
         val before = inputTokens
         val history = (systemCount until messages.length()).map { messages.getJSONObject(it) }
-        if (ready.cut > history.size || BackgroundCompactionRegistry.fingerprint(history, ready.cut) != ready.fingerprint) {
+        // 在当前历史里找到第 cut 条持久消息之后的位置；被压范围变过（编辑、删除、重新生成）就丢弃。
+        var durableSeen = 0
+        var position = -1
+        for (index in history.indices) {
+            if (BackgroundCompactionRegistry.isObservation(history[index])) continue
+            durableSeen++
+            if (durableSeen == ready.cut) { position = index + 1; break }
+        }
+        val prefix = if (position < 0) emptyList() else history.take(position).filterNot(BackgroundCompactionRegistry::isObservation)
+        if (position < 0 || BackgroundCompactionRegistry.fingerprint(prefix) != ready.fingerprint ||
+            !AgentContextCompactor.canSplit(history, position)) {
             onEvent(AgentEvent.ContextCompaction(java.util.UUID.randomUUID().toString(),
                 AgentEvent.ContextCompaction.PHASE_BACKGROUND_DISCARDED, before, reasonCode = "BACKGROUND_STALE"))
             return false
@@ -233,7 +246,7 @@ internal class AgentContextSession(
         val candidate = JSONArray()
         for (index in 0 until systemCount) candidate.put(messages.getJSONObject(index))
         ready.summary.forEach(candidate::put)
-        history.drop(ready.cut).forEach(candidate::put)
+        history.drop(position).forEach(candidate::put)
         val wasCompacted = compacted
         compacted = true
         try {

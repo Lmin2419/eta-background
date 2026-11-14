@@ -97,6 +97,25 @@ class AgentBackgroundCompactionTest {
         assertNull(BackgroundCompactionRegistry.state(key))
     }
 
+    @Test fun resultCarriesOverToNextTurnWhoseHistoryWasRebuiltFromStorage() {
+        // 本轮：带服务商临时字段（推理内容）和一条屏幕观察消息。
+        val list = (0 until history().length()).map(history()::getJSONObject).toMutableList()
+        list[2].put("reasoning_content", "PRIVATE_THINKING")
+        list.add(3, JSONObject().put("role", "user").put("content", "屏幕观察").put("_eta_observation", true))
+        val first = JSONArray().also { array -> list.forEach(array::put) }
+        val events = mutableListOf<AgentEvent>()
+        val turn1 = session(first, events)
+        turn1.observeInputTokens(65_000)
+        turn1.compact(final = true)
+        runPending()
+        // 下一轮：历史从存储重建（没有推理内容和观察消息），末尾是新问题。
+        val second = history().also { it.put(AgentConversationCodec.toJsonObject(AgentModelClient.ConversationMessage("user", "问题 9"))) }
+        val turn2 = session(second, events)
+        turn2.compact()
+        assertTrue(second.getJSONObject(1).optBoolean("_eta_context_summary"))
+        assertEquals(listOf("问题 5", "问题 6", "问题 7", "问题 8", "问题 9"), users(second))
+    }
+
     @Test fun changedPrefixDiscardsBackgroundResult() {
         val messages = history()
         val events = mutableListOf<AgentEvent>()
