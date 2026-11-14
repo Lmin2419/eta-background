@@ -331,8 +331,18 @@ private fun UserMessageBubble(
     BoxWithConstraints(modifier.fillMaxWidth().padding(horizontal = if (assistantOverlay) 16.dp else 20.dp, vertical = if (assistantOverlay) 4.dp else 0.dp)) {
         Column(Modifier.align(Alignment.CenterEnd).widthIn(max = maxWidth * 0.85f), horizontalAlignment = Alignment.End) {
             if (message.images.isNotEmpty()) Row(Modifier.horizontalScroll(rememberScrollState()).padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                message.images.forEach { url -> rememberDataUrlBitmap(url)?.let { bitmap ->
-                    Image(bitmap, stringResource(R.string.chat_image_attachment), Modifier.size(120.dp).clip(EtaTheme.shapes.radiusMd), contentScale = ContentScale.Crop)
+                // 点图片在原位放大到全屏，可左右翻页、双指缩放，下滑关闭。
+                val previewer = LocalChatImagePreviewer.current
+                val imageBounds = remember(message.id) { mutableMapOf<Int, androidx.compose.ui.geometry.Rect>() }
+                val viewLabel = stringResource(R.string.chat_view_image)
+                message.images.forEachIndexed { index, url -> rememberDataUrlBitmap(url)?.let { bitmap ->
+                    Image(bitmap, stringResource(R.string.chat_image_attachment), Modifier.size(120.dp)
+                        .onGloballyPositioned { imageBounds[index] = it.boundsInWindow() }
+                        .graphicsLayer { alpha = if (previewer?.isPresenting(message.id, index) == true) 0f else 1f }
+                        .clip(EtaTheme.shapes.radiusMd)
+                        .clickable(enabled = previewer != null, onClickLabel = viewLabel) {
+                            previewer?.open(message.images, index, message.id, { imageBounds[it] }, 12.dp)
+                        }, contentScale = ContentScale.Crop)
                 } }
             }
             Column(Modifier.onGloballyPositioned { menuAnchor = it.boundsInWindow() }

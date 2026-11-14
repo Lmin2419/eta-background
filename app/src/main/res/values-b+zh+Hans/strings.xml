@@ -1868,4 +1868,5 @@
   <string name="conversation_title_settings_reasoning_unsupported">当前模型不支持调节思考</string>
   <string name="conversation_title_settings_note">新对话首轮回复完成后将在后台自动提炼简短标题；建议单独配置轻量小模型并关闭或降低思考等级，避免较大的主力模型浪费 Token。</string>
   <string name="conversation_title_settings_disabled">已关闭</string>
+    <string name="chat_view_image">查看图片</string>
 </resources>

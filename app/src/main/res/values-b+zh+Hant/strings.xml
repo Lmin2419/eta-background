@@ -1798,4 +1798,5 @@
   <string name="conversation_title_settings_reasoning_unsupported">目前模型不支援調整思考</string>
   <string name="conversation_title_settings_note">新對話首輪回覆完成後將在背景自動提煉簡短標題；建議單獨設定輕量小模型並關閉或降低思考等級，避免較大的主力模型浪費 Token。</string>
   <string name="conversation_title_settings_disabled">已關閉</string>
+    <string name="chat_view_image">查看圖片</string>
 </resources>

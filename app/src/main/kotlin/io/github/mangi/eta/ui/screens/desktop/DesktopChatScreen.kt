@@ -340,6 +340,7 @@ internal fun DesktopChatScreen(
                 )
             }
             CompositionLocalProvider(LocalRemoteComposer provides remoteComposer, LocalRemoteImageLoader provides DesktopBridge::image) {
+            io.github.mangi.eta.ui.components.ChatImagePreviewHost {
             AgentChatBody(
                 isBranching = false,
                 onBranchMessage = {},  // 电脑会话不支持分支
@@ -417,6 +418,7 @@ internal fun DesktopChatScreen(
                 onLoadEarlierMessages = { scope.launch { DesktopBridge.loadOlder(sessionId) } },
                 modifier = Modifier.weight(1f),
             )
+            }
             }
         }
     }

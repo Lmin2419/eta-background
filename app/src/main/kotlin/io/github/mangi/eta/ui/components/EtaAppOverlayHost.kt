@@ -17,7 +17,8 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 internal fun EtaAppOverlayHost(content: @Composable () -> Unit) {
     Scaffold(Modifier.fillMaxSize(), contentWindowInsets = WindowInsets(0.dp)) {
         androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
-            content()
+            // 聊天图片点开后原位放大到全屏（上游 3.4.2 的查看器），覆盖在所有页面之上。
+            ChatImagePreviewHost { content() }
             // 全局提示条：在输入框上方，避开导航栏和键盘。
             EtaToastHost(Modifier.align(androidx.compose.ui.Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
