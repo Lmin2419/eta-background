@@ -338,6 +338,8 @@ internal fun AgentChatInputBar(
                 // 圆角矩形（28dp），不是胶囊：多行时也保持矩形。
                 cornerRadius = InputContainerRadius,
                 wrapContent = true,
+                // 输入框更实一些：玻璃上铺一层约 78% 的白（深色模式为深灰），背后的文字只隐约透出。
+                fillAlpha = 0.78f,
             ) {
             Column(
                 modifier = Modifier

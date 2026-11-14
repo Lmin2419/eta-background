@@ -107,9 +107,16 @@ internal fun EtaFloatingSurface(
     wrapContent: Boolean = false,
     /** 圆角半径；不传时是胶囊（短边的一半）。输入框这类圆角矩形必须传。 */
     cornerRadius: Dp? = null,
+    /** 玻璃上再铺一层表面色的不透明度（0 = 纯玻璃）。输入框要压住背后的文字时用。 */
+    fillAlpha: Float = 0f,
     content: @Composable () -> Unit,
 ) {
     val dark = CouiTheme.isDark
+    val fill = io.github.mangi.eta.ui.theme.EtaTheme.colors.surfaceRaised.copy(alpha = fillAlpha)
+    val filledContent: @Composable () -> Unit = if (fillAlpha > 0f) ({
+        Box(Modifier.then(if (wrapContent) Modifier.fillMaxWidth() else Modifier.fillMaxSize()).background(fill, shape),
+            contentAlignment = Alignment.Center) { content() }
+    }) else content
     val view = LocalView.current
     val renderer = remember {
         if (Build.VERSION.SDK_INT >= 34 && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders) runCatching { CouiFloatingRenderer.standalone() }.getOrNull() else null
@@ -118,7 +125,7 @@ internal fun EtaFloatingSurface(
     if (Build.VERSION.SDK_INT >= 34 && backdrop != null && renderer != null && view.display != null) {
         ProvideCouiBackdrop(backdrop) {
             EtaApi34FloatingSurface(modifier, shape, capsule, backdrop, renderer, dark, focused, accent,
-                contentDescription, onClick, content, wrapContent, cornerRadius)
+                contentDescription, onClick, filledContent, wrapContent, cornerRadius)
         }
     } else {
         val source = remember { MutableInteractionSource() }
@@ -130,7 +137,7 @@ internal fun EtaFloatingSurface(
                     .clickable(source, indication = null, role = Role.Button, onClick = onClick) else Modifier)
                 .then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
             contentAlignment = Alignment.Center,
-        ) { content() }
+        ) { filledContent() }
     }
 }
 
