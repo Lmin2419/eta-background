@@ -51,7 +51,7 @@ fun MiuixScaffoldPage(
     EtaPreferenceTheme {
         val scrollBehavior = MiuixScrollBehavior()
         val pull = onRefresh?.let { rememberEtaPullRefreshState(refreshing, it) }
-        val backdrop = rememberTopBarBackdrop()
+        val backdrop = rememberTopBarBackdrop(containerColor)
 
         Scaffold(
             modifier = modifier.fillMaxSize(),
@@ -61,7 +61,7 @@ fun MiuixScaffoldPage(
                 TopBarBackdrop(backdrop, color = containerColor) {
                     // 页面自带主视觉（如角色详情）时用紧凑标题，避免大标题与主视觉重复。
                     AdaptiveTopAppBar(
-                        title = title, color = containerColor, compact = compactTitle,
+                        title = title, color = if (backdrop != null) Color.Transparent else containerColor, compact = compactTitle,
                         navigationIcon = { MiuixBackButton(onClick = onBack) },
                         actions = actions, scrollBehavior = scrollBehavior,
                     )

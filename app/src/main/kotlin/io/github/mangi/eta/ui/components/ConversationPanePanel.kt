@@ -393,8 +393,8 @@ private fun DesktopPaneRow(row: PaneDesktopSession, onClick: () -> Unit, modifie
 /** 圆形描边图标按钮（44dp），用于侧栏的搜索与设置。 */
 @Composable
 internal fun CircleIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
-    Box(Modifier.size(44.dp).clip(EtaTheme.shapes.radiusFull).background(EtaTheme.colors.surfaceRaised)
-        .border(1.dp, EtaTheme.colors.outline, EtaTheme.shapes.radiusFull).clickable(onClickLabel = description, onClick = onClick)
+    Box(Modifier.size(44.dp).etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false)
+        .clip(EtaTheme.shapes.radiusFull).clickable(onClickLabel = description, onClick = onClick)
         .semantics { contentDescription = description; role = Role.Button }, contentAlignment = Alignment.Center) {
         Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary)
     }

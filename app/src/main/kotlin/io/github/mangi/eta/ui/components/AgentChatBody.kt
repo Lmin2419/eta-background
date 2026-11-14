@@ -88,6 +88,7 @@ import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.browser.BrowserSessionSnapshot
 import io.github.mangi.eta.data.model.ReasoningEffort
 import io.github.mangi.eta.data.repository.ConversationBranchBoundary
+import top.yukonga.miuix.kmp.blur.layerBackdrop
 import io.github.mangi.eta.ui.model.branchMessageOutline
 import io.github.mangi.eta.ui.app.AgentConversationRevisionReducer
 import io.github.mangi.eta.ui.app.LocalBlurEnabled
@@ -393,6 +394,7 @@ private fun AgentChatScaffold(
     modifier: Modifier = Modifier,
 ) {
 
+    val glassBackdrop = rememberEtaGlassBackdrop(EtaTheme.colors.canvas)
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
@@ -403,6 +405,7 @@ private fun AgentChatScaffold(
             bottom = 0.dp,
         ),
         bottomBar = {
+            androidx.compose.runtime.CompositionLocalProvider(LocalEtaGlassBackdrop provides glassBackdrop) {
             if (LocalChatInlineEditor.current == null) AgentChatBottomBar(
                 showFade = hasMessages,
                 messageBackdrop = null,
@@ -439,11 +442,12 @@ private fun AgentChatScaffold(
                 onRemoveFileReference = onRemoveFileReference,
                 onCancelMessageEdit = onCancelMessageEdit,
             ) else Spacer(Modifier.height(12.dp).navigationBarsPadding().imePadding())
+            }
         },
     ) { innerPadding ->
         val bottomPadding = innerPadding.calculateBottomPadding()
         // 发出第一条消息时问候语与建议淡出上移，消息随后升起，不再硬切。
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().then(if (glassBackdrop != null) Modifier.layerBackdrop(glassBackdrop) else Modifier)) {
         AnimatedVisibility(
             visible = !hasMessages,
             enter = fadeIn(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate)),
@@ -951,7 +955,7 @@ internal fun AgentConversationMessages(
             exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + scaleOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate), targetScale = 0.86f),
         ) {
             IconButton(
-                modifier = Modifier.etaElevation(EtaElevation.E2, CircleShape).drawWithContent {
+                modifier = Modifier.etaGlass(CircleShape, elevation = EtaElevation.E2, useLocalBackdrop = false).drawWithContent {
                     drawContent()
                     if (isStreaming) drawCircle(etaAccent, 3.dp.toPx(), androidx.compose.ui.geometry.Offset(size.width - 3.dp.toPx(), 3.dp.toPx()))
                 },
@@ -961,7 +965,7 @@ internal fun AgentConversationMessages(
                         scrollState.animateScrollToItem(bottomItemIndex)
                     }
                 },
-                backgroundColor = EtaTheme.colors.surfaceRaised,
+                backgroundColor = Color.Transparent,
                 minWidth = 36.dp,
                 minHeight = 36.dp,
             ) {

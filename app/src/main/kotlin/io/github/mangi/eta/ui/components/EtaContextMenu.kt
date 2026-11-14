@@ -96,9 +96,8 @@ internal fun EtaContextMenu(
                                 scaleX = scale; scaleY = scale
                                 transformOrigin = TransformOrigin(if (alignEnd) 1f else 0f, if (below) 0f else 1f)
                             }
-                            .etaElevation(EtaElevation.E3, EtaTheme.shapes.radiusLg)
+                            .etaGlass(EtaTheme.shapes.radiusLg, elevation = EtaElevation.E3, useLocalBackdrop = false)
                             .clip(EtaTheme.shapes.radiusLg)
-                            .background(EtaTheme.colors.surfaceRaised)
                             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
                             .padding(vertical = 6.dp),
                         content = content,

@@ -45,8 +45,8 @@ internal fun EtaToast(
             if (motion.reduceMotion) tween(motion.short) else androidx.compose.animation.core.spring(dampingRatio = 0.72f, stiffness = 420f)) { it } +
             scaleIn(tween(motion.short), initialScale = 0.94f),
         exit = fadeOut(tween(motion.short)) + slideOutVertically(tween(motion.short)) { it / 2 }) {
-        Row(Modifier.heightIn(min = 44.dp).etaElevation(io.github.mangi.eta.ui.theme.EtaElevation.E2, EtaTheme.shapes.radiusFull)
-            .background(colors.toastBackground, EtaTheme.shapes.radiusFull)
+        Row(Modifier.heightIn(min = 44.dp)
+            .etaGlass(EtaTheme.shapes.radiusFull, tint = colors.toastBackground, elevation = io.github.mangi.eta.ui.theme.EtaElevation.E2, useLocalBackdrop = false)
             .padding(start = 14.dp, end = 16.dp, top = if (actionLabel != null && onAction != null) 6.dp else 10.dp,
                 bottom = if (actionLabel != null && onAction != null) 6.dp else 10.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },

@@ -19,8 +19,14 @@ internal fun ChatComposerSurface(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val canvas = EtaTheme.colors.canvas
+    val glass = LocalEtaGlassBackdrop.current != null
     Column(
         modifier.fillMaxWidth().imePadding().drawWithCache {
+            if (glass) {
+                // 玻璃模式：底部一层很淡的渐变，压住胶囊外露出的文字，胶囊本身透出模糊的消息。
+                val brush = Brush.verticalGradient(listOf(canvas.copy(alpha = 0f), canvas.copy(alpha = 0.55f)))
+                return@drawWithCache onDrawBehind { drawRect(brush) }
+            }
             val fade = if (showFade) 24.dp.toPx().coerceAtMost(size.height) else 0f
             val brush = if (fade > 0f) Brush.verticalGradient(
                 listOf(canvas.copy(alpha = 0f), canvas), startY = 0f, endY = fade,

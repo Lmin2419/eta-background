@@ -139,6 +139,10 @@ Markdown：h1 22/30、h2 19/28、h3 17/26 SemiBold；段落间距 12；列表项
 
 Compose 实现：`Modifier.shadow(elevation, shape, ambientColor, spotColor)` 近似；深色模式不画阴影，只画描边。
 
+### 6.1 玻璃材质（2026111402）
+
+浮在内容上方的导航层用玻璃材质（`EtaGlass.kt` 的 `etaGlass`）：背后内容模糊（半径 28）+ 半透明底色（有模糊 62%、无模糊 92%）+ 上亮下暗的 0.75dp 高光边 + 轻投影。用于顶栏（`TopBarBackdrop`，渐进或高斯模糊）、聊天输入胶囊、长按菜单、提示条、回到底部按钮、圆形图标按钮。内容（消息、卡片、列表）保持实色，保证可读。外观设置关闭「模糊」或设备不支持 RuntimeShader 时，全部退回磨砂实色。
+
 ## 7. 动效
 
 | Token | 时长 | 曲线 | 用于 |

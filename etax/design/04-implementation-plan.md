@@ -104,6 +104,12 @@
 - 反馈：`EtaFeedback.kt` 统一触感（发送、开关、长按菜单、回复结束；设置可关）与按压回弹（`etaPressScale` / `etaTouchScale`）。
 - 质感：二级页顶栏同页面底色、滚动后淡入 0.5dp 细线；分隔线统一 0.5dp；代码块标题栏与复制反馈；`EtaShimmer.kt` 占位条；`EtaToastCenter` 全局黑色胶囊提示（前台接管 Toast）；光标与选区珊瑚橘。
 
+### 阶段 12 · 玻璃质感与上游 3.4.x 合入（2026111401–02，用户需求）
+
+- 按功能三方合并上游 3.4.x：标题生成、对话分支、图片查看、分享直达、工具开关、Root 复检、上下文缓存复用与用量统计、MiMo / DeepSeek 语音、浮窗助手模型；冲突时保留我们的界面与后台引擎，去掉 COUI 分支。
+- 数据库新增列合并为本地 25→26 迁移。
+- 玻璃材质见 01-design-language §6.1。
+
 ## 验证
 
 - 每阶段：`./gradlew :app:testDebugUnitTest :app:lintDebug` 全绿；CI 签名构建成功。

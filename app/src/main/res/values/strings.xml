@@ -1449,9 +1449,8 @@
   <string name="speech_minimax_hd">Speech 2.8 HD · 品质优先</string>
   <string name="speech_gemini_connection_note">使用 Google AI Studio 的 API Key。自定义地址须支持 Gemini 语音接口，填写服务根地址。</string>
   <string name="speech_minimax_connection_note">默认连接 MiniMax 中国站。海外账号请填写对应的服务根地址，API Key 须与站点匹配。</string>
-  <string name="speech_gemini_style">朗读风格（可选，最多 500 字）</string>
   <string name="speech_speed">Speed</string>
-  <string name="speech_style">朗读风格（可选，最多 500 字）</string>
+  <string name="speech_style">Reading style (optional, up to 500 characters)</string>
   <string name="speech_gemini_voice_note">音色可用于中文及其他支持的语言。朗读风格可填写“自然、温和，语速稍慢”；留空使用默认风格。也可填写账号已有的音色 ID。</string>
   <string name="speech_minimax_voice_note">预设为普通话音色，也可填写账号已有的系统或自定义音色 ID。</string>
   <string name="speech_preview_text">试听文本（最多 500 字）</string>

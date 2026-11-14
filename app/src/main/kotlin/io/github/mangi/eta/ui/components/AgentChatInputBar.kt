@@ -316,10 +316,8 @@ internal fun AgentChatInputBar(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // 输入卡片：细描边 + 很轻的阴影，安静地浮在页面上。
-                    .etaElevation(EtaElevation.E1, InputContainerShape)
-                    .background(EtaTheme.colors.surfaceRaised, InputContainerShape)
-                    .border(1.dp, EtaTheme.colors.outline, InputContainerShape)
+                    // 输入胶囊：玻璃材质，背后的消息模糊透出；关闭模糊时为磨砂实色。
+                    .etaGlass(InputContainerShape, elevation = EtaElevation.E2)
                     .padding(horizontal = 10.dp, vertical = 8.dp),
             ) {
         AnimatedVisibility(
