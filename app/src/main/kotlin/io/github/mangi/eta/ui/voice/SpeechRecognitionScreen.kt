@@ -83,6 +83,7 @@ internal fun SpeechRecognitionScreen(onBack: () -> Unit, onOpenOss: () -> Unit) 
                                 AsrProvider.QWEN_FLASH -> R.string.speech_asr_note_flash
                                 AsrProvider.QWEN_FILE -> R.string.speech_asr_note_file
                                 AsrProvider.MIMO -> R.string.speech_asr_note_mimo
+                                AsrProvider.DEEPSEEK -> R.string.speech_asr_note_deepseek
                             },
                         ),
                     )
@@ -93,7 +94,7 @@ internal fun SpeechRecognitionScreen(onBack: () -> Unit, onOpenOss: () -> Unit) 
                     SpeechConnectionSection(store, synthesis = false)
                 }
             }
-            if (settings.asr != AsrProvider.SYSTEM && settings.asr != AsrProvider.DOUBAO && settings.asr != AsrProvider.MIMO) {
+            if (settings.asr != AsrProvider.SYSTEM && settings.asr != AsrProvider.DOUBAO && settings.asr != AsrProvider.MIMO && settings.asr != AsrProvider.DEEPSEEK) {
                 item(key = "language") {
                     EtaPreferenceGroup {
                         SpeechFieldColumn {

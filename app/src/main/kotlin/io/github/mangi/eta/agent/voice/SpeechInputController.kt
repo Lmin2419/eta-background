@@ -65,11 +65,13 @@ internal class SpeechInputController(
         mutableState.value = SpeechInputState(phase = EtaSpeechPhase.STARTING, progress = "正在连接")
         job = scope.launch(Dispatchers.Main.immediate) {
             try {
-                val config = settings ?: SpeechSettingsRepository.settings()
-                if (!config.recognitionEnabled) return@launch
+                val rawConfig = settings ?: SpeechSettingsRepository.settings()
+                if (!rawConfig.recognitionEnabled) return@launch
                 lease = SpeechAudioLease(context) { cancel() }.also { it.acquire(playback = false) }
-                val secrets = credentials ?: if (config.asr == AsrProvider.SYSTEM) SpeechCredentials()
+                val rawSecrets = credentials ?: if (rawConfig.asr == AsrProvider.SYSTEM) SpeechCredentials()
                     else SpeechSettingsRepository.credentials(context)
+                // 上游 3.4.4：DeepSeek 语音未单独填 Key 时，沿用模型服务里配置的 DeepSeek Key。
+                val (config, secrets) = SpeechSettingsRepository.resolveDeepSeekFallback(rawConfig, rawSecrets)
                 validateSpeechSettings(config, secrets, synthesis = false)
                 val endpointSilenceMs = if (automaticEndpoint && !holdToTalk) config.autoSendSilenceMs else 0
                 autoSubmit = endpointSilenceMs > 0

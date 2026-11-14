@@ -12,6 +12,7 @@ import io.github.mangi.eta.ui.components.EtaOverlayDropdownPreference
 import io.github.mangi.eta.ui.components.EtaPreferenceDivider
 import io.github.mangi.eta.ui.components.EtaPreferenceGroup
 import io.github.mangi.eta.ui.components.EtaPreferenceGroupTitle
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 
 @Composable
 internal fun GeminiConnectionSection(store: SpeechSettingsStore) {
@@ -104,6 +105,24 @@ internal fun MimoTtsConnectionSection(store: SpeechSettingsStore) {
 
 /** 只呈现该服务实际支持的发声参数。 */
 @Composable
+internal fun DeepSeekTtsConnectionSection(store: SpeechSettingsStore) {
+    val config = store.settings.deepseekTts
+    SpeechApiKeyConnectionSection(
+        baseUrl = config.baseUrl,
+        apiKey = store.credentials.deepseekTts,
+        onBaseUrl = { store.edit(store.settings.copy(deepseekTts = config.copy(baseUrl = it))) },
+        onApiKey = { store.credential(SpeechCredentialField.DEEPSEEK_TTS, it) },
+        note = stringResource(
+            if (store.hasProviderDeepSeekKey) {
+                R.string.speech_deepseek_tts_connection_note_with_provider
+            } else {
+                R.string.speech_deepseek_tts_connection_note
+            },
+        ),
+    )
+}
+
+@Composable
 internal fun SpeechDeliveryFields(store: SpeechSettingsStore) {
     when (store.settings.tts) {
         TtsProvider.GEMINI, TtsProvider.MIMO -> {
@@ -138,6 +157,18 @@ internal fun SpeechDeliveryFields(store: SpeechSettingsStore) {
                         store.edit(store.settings.copy(minimaxTts = config.copy(speed = it)))
                     }
                 },
+            )
+        }
+        TtsProvider.DEEPSEEK -> {
+            val config = store.settings.deepseekTts
+            val onToggle: (Boolean) -> Unit = { checked ->
+                store.edit(store.settings.copy(deepseekTts = config.copy(filterMarkdown = checked)))
+            }
+            EtaPreferenceDivider(hasLeading = false)
+            io.github.mangi.eta.ui.components.EtaSwitchPreference(
+                title = stringResource(R.string.speech_filter_markdown),
+                checked = config.filterMarkdown,
+                onCheckedChange = onToggle,
             )
         }
         TtsProvider.NONE, TtsProvider.QWEN, TtsProvider.DOUBAO -> Unit
