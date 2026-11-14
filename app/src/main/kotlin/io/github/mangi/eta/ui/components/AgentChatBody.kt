@@ -87,6 +87,8 @@ import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.browser.BrowserSessionSnapshot
 import io.github.mangi.eta.data.model.ReasoningEffort
+import io.github.mangi.eta.data.repository.ConversationBranchBoundary
+import io.github.mangi.eta.ui.model.branchMessageOutline
 import io.github.mangi.eta.ui.app.AgentConversationRevisionReducer
 import io.github.mangi.eta.ui.app.LocalBlurEnabled
 import io.github.mangi.eta.ui.markdown.StreamingMarkdownStateCache
@@ -145,6 +147,7 @@ internal fun AgentChatBody(
     messages: List<AgentChatMessageUi>,
     modelPickerState: AgentModelPickerUiState,
     isCompacting: Boolean,
+    isBranching: Boolean,
     input: String,
     isStreaming: Boolean,
     reasoningEffort: ReasoningEffort,
@@ -176,6 +179,7 @@ internal fun AgentChatBody(
     onCancelMessageEdit: () -> Unit,
     onDeleteMessage: (String) -> Unit,
     onRegenerateMessage: (String) -> Unit,
+    onBranchMessage: (String) -> Unit,
     onSelectReplyCandidate: (String, Int) -> Unit,
     onSuggestionClick: (String) -> Unit,
     onRunTraceClick: () -> Unit,
@@ -264,6 +268,7 @@ internal fun AgentChatBody(
             input = input,
             modelPickerState = modelPickerState,
             isCompacting = isCompacting,
+            isBranching = isBranching,
             contextUsage = contextUsage,
             isStreaming = isStreaming,
             reasoningEffort = reasoningEffort,
@@ -312,6 +317,7 @@ internal fun AgentChatBody(
             onCancelMessageEdit = onCancelMessageEdit,
             onDeleteMessage = onDeleteMessage,
             onRegenerateMessage = onRegenerateMessage,
+            onBranchMessage = onBranchMessage,
             onSelectReplyCandidate = onSelectReplyCandidate,
             onSuggestionClick = { prompt -> draftRequest.value = ChatDraftRequest(prompt, (draftRequest.value?.sequence ?: 0L) + 1L) },
             onRunTraceClick = onRunTraceClick,
@@ -337,6 +343,7 @@ private fun AgentChatScaffold(
     input: String,
     modelPickerState: AgentModelPickerUiState,
     isCompacting: Boolean,
+    isBranching: Boolean,
     contextUsage: AgentContextUsageUi,
     isStreaming: Boolean,
     reasoningEffort: ReasoningEffort,
@@ -372,6 +379,7 @@ private fun AgentChatScaffold(
     onCancelMessageEdit: () -> Unit,
     onDeleteMessage: (String) -> Unit,
     onRegenerateMessage: (String) -> Unit,
+    onBranchMessage: (String) -> Unit,
     onSelectReplyCandidate: (String, Int) -> Unit,
     onSuggestionClick: (String) -> Unit,
     onRunTraceClick: () -> Unit,
@@ -466,8 +474,9 @@ private fun AgentChatScaffold(
                 onEditMessage = onEditMessage,
                 onDeleteMessage = onDeleteMessage,
                 onRegenerateMessage = onRegenerateMessage,
+                onBranchMessage = onBranchMessage,
                 onSelectReplyCandidate = onSelectReplyCandidate,
-                messageActionsEnabled = !isStreaming && messageEdit == null,
+                messageActionsEnabled = !isStreaming && !isCompacting && !isBranching && messageEdit == null,
                 editTargetMessageId = messageEdit?.targetMessageId,
                 currentBrowserMessageId = currentBrowserMessageId,
                 hasEarlierMessages = hasEarlierMessages,
@@ -500,6 +509,7 @@ internal fun AgentConversationMessages(
     onEditMessage: (String) -> Unit = {},
     onDeleteMessage: (String) -> Unit = {},
     onRegenerateMessage: (String) -> Unit = {},
+    onBranchMessage: (String) -> Unit = {},
     onSelectReplyCandidate: (String, Int) -> Unit = { _, _ -> },
     messageActionsEnabled: Boolean = false,
     editTargetMessageId: String? = null,
@@ -536,6 +546,9 @@ internal fun AgentConversationMessages(
     // 长会话里不再每条都挂一排图标。
     val latestAnswerId = remember(visibleMessages, finalResultMessageIds) {
         visibleMessages.lastOrNull { it is AgentMessageUi && (it.characterEditable || it.id in finalResultMessageIds) }?.id
+    }
+    val branchMessageIds = remember(visibleMessages, isStreaming) {
+        ConversationBranchBoundary.eligibleMessageIds(visibleMessages.branchMessageOutline(), running = isStreaming)
     }
     // 流式消息的渲染会话按 id 提升到列表层持有：item 滚出视口被 LazyColumn 销毁后，
     // 滑回时复用同一解析会话与打字机进度，避免整段内容重新解析并重放显现动画。
@@ -857,6 +870,8 @@ internal fun AgentConversationMessages(
                             showMessageActions = message.id in finalResultMessageIds ||
                                 (message is AgentMessageUi && message.characterEditable),
                             messageActionsEnabled = messageActionsEnabled,
+                            showBranchAction = !assistantOverlay && message.id in branchMessageIds,
+                            onBranchMessage = onBranchMessage,
                             isEditing = message.id == editTargetMessageId,
                             onEditMessage = onEditMessage,
                             onDeleteMessage = onDeleteMessage,

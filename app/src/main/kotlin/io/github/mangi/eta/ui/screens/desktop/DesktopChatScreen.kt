@@ -341,6 +341,8 @@ internal fun DesktopChatScreen(
             }
             CompositionLocalProvider(LocalRemoteComposer provides remoteComposer, LocalRemoteImageLoader provides DesktopBridge::image) {
             AgentChatBody(
+                isBranching = false,
+                onBranchMessage = {},  // 电脑会话不支持分支
                 messages = messages,
                 modelPickerState = picker,
                 isCompacting = false,

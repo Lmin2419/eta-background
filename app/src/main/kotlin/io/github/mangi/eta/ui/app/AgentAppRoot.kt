@@ -550,6 +550,7 @@ fun AgentAppRoot(
                             onExportConversation = ::exportCurrentConversation,
                             onOpenSpeechSettings = { pushRoute(AppRoute.SpeechRecognition) },
                         ),
+                        isBranching = agentState.isBranchingCurrentConversation,
                         conversationKey = agentState.conversationPaneState.selectedConversationId,
                         focusInputRequest = pendingComposeId?.takeIf { it == agentState.conversationPaneState.selectedConversationId },
                         onInputFocusHandled = { pendingComposeId = null },
@@ -590,6 +591,8 @@ fun AgentAppRoot(
                                         messageRegenerateTarget = MessageMutationTarget(action.id, impact.laterTurnCount)
                                     }
                                 }
+                                is AgentHomeAction.BranchConversation ->
+                                    agentState.branchConversation(action.conversationId, action.messageId)
                                 is AgentHomeAction.SelectReplyCandidate -> agentState.selectReplyCandidate(action.id, action.index)
                                 AgentHomeAction.OpenTools -> pushRoute(AppRoute.Tools)
                                 AgentHomeAction.OpenSkills -> pushRoute(AppRoute.Skills)

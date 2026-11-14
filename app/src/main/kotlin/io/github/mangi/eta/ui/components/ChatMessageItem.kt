@@ -44,6 +44,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.automirrored.outlined.CallSplit
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -207,11 +208,13 @@ internal fun ChatMessageItem(
     retainedStreamingState: StreamingMarkdownState? = null,
     showCopyAction: Boolean = true,
     showMessageActions: Boolean = false,
+    showBranchAction: Boolean = false,
     messageActionsEnabled: Boolean = true,
     isEditing: Boolean = false,
     onEditMessage: (String) -> Unit = {},
     onDeleteMessage: (String) -> Unit = {},
     onRegenerateMessage: (String) -> Unit = {},
+    onBranchMessage: (String) -> Unit = {},
     onSelectReplyCandidate: (String, Int) -> Unit = { _, _ -> },
 ) {
     when (message) {
@@ -231,6 +234,8 @@ internal fun ChatMessageItem(
             retainedStreamingState = retainedStreamingState,
             showCopyAction = showCopyAction,
             showMessageActions = showMessageActions,
+            showBranchAction = showBranchAction,
+            onBranch = { onBranchMessage(message.id) },
             messageActionsEnabled = messageActionsEnabled,
             onDelete = { onDeleteMessage(message.id) },
             onRegenerate = { onRegenerateMessage(message.id) },
@@ -498,6 +503,8 @@ private fun AgentMessageBlock(
     retainedStreamingState: StreamingMarkdownState?,
     showCopyAction: Boolean,
     showMessageActions: Boolean,
+    showBranchAction: Boolean = false,
+    onBranch: () -> Unit = {},
     messageActionsEnabled: Boolean,
     onDelete: () -> Unit,
     onRegenerate: () -> Unit,
@@ -638,6 +645,9 @@ private fun AgentMessageBlock(
         EtaMenuItem(stringResource(R.string.ui_regenerate_reply_84a7d9), enabled = messageActionsEnabled,
             onClick = { menu = false; onRegenerate() })
         if (message.characterEditable) EtaMenuItem(stringResource(R.string.chat_edit_character_reply), onClick = { menu = false; onEdit() })
+        // 上游 3.4.1：从这条已完成的回复另开一个独立对话，原对话不受影响。
+        if (showBranchAction) EtaMenuItem(stringResource(R.string.conversation_branch), enabled = messageActionsEnabled,
+            onClick = { menu = false; onBranch() })
         EtaMenuItem(stringResource(R.string.action_export), onClick = { menu = false; export() })
         EtaMenuItem(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() }, destructive = true)
     }

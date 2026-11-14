@@ -44,6 +44,7 @@ internal fun AgentHomeScreen(
     isDrawerOpen: Boolean = false,
     focusInputRequest: String? = null,
     onInputFocusHandled: () -> Unit = {},
+    isBranching: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     // Keep a bounded set of lightweight viewport/composer states; task execution stays in Runtime.
@@ -79,6 +80,7 @@ internal fun AgentHomeScreen(
                         messages = state.messages,
                         modelPickerState = modelPickerState,
                         isCompacting = state.isCompacting,
+                        isBranching = isBranching,
                         input = state.input,
                         isStreaming = state.isStreaming,
                         reasoningEffort = state.reasoningEffort,
@@ -110,6 +112,7 @@ internal fun AgentHomeScreen(
                         onCancelMessageEdit = { onAction(AgentHomeAction.CancelMessageEdit) },
                         onDeleteMessage = { id -> onAction(AgentHomeAction.DeleteMessage(id)) },
                         onRegenerateMessage = { id -> onAction(AgentHomeAction.RegenerateMessage(id)) },
+                        onBranchMessage = { id -> conversationKey?.let { onAction(AgentHomeAction.BranchConversation(it, id)) } },
                         onSelectReplyCandidate = { id, index -> onAction(AgentHomeAction.SelectReplyCandidate(id, index)) },
                         onSuggestionClick = { prompt ->
                             onAction(AgentHomeAction.SubmitMessage(prompt))
