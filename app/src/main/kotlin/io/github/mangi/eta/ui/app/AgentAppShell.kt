@@ -498,6 +498,7 @@ private fun titleForRoute(route: AppRoute?): String = when (route) {
     is AppRoute.Skills -> stringResource(R.string.route_skills)
     is AppRoute.CommonTasks, is AppRoute.Tasks -> stringResource(R.string.eta_tasks)
     is AppRoute.Subagents -> "Subagent"
+    is AppRoute.ConversationTitleSettings -> stringResource(R.string.conversation_title_settings_title)
     is AppRoute.Characters -> "角色"
     is AppRoute.CharacterDetail -> "角色详情"
     is AppRoute.CharacterEditor -> "编辑角色"

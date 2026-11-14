@@ -534,7 +534,7 @@ private fun tintForProfile(name: String) = when (name) {
 }
 
 @Composable
-private fun SubagentModelPickerContent(
+internal fun SubagentModelPickerContent(
     pickerState: io.github.mangi.eta.ui.model.AgentModelPickerUiState,
     selectedSecondaryModelId: String?,
     primaryModelName: String?,
