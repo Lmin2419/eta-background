@@ -65,6 +65,7 @@ class Stage9ConversationGroupsTest {
         }
         touchWindow(MotionEvent.ACTION_DOWN); advance(if (long) 45 else 2)
         touchWindow(MotionEvent.ACTION_UP); advance(30)
+        if (long && windowNodes().any { it.second.matches("多选") }) press("多选")
     }
     private fun inThemes(block: (Stage3TestPanel, Boolean) -> Unit, actions: PaneManagementActions = PaneManagementActions()) {
         SettingsDataStore.init(RuntimeEnvironment.getApplication())

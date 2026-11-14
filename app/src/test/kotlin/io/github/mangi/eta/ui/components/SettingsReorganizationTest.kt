@@ -365,7 +365,7 @@ class SettingsReorganizationTest {
     private fun expectedTitles(context: Context): List<String> = listOf(
         context.getString(R.string.ui_model_provider_e8c7f5), // 0
         context.getString(R.string.ui_deep_thinking_enabled_by_default_c032d6), // 1
-        context.getString(R.string.settings_auto_compaction), // 2
+        context.getString(R.string.compaction_settings_title), // 2（自动压缩开关挪进「上下文压缩」页）
         context.getString(R.string.ui_memory_b55ff5), // 3
         "Subagent", // 4
         context.getString(R.string.route_skills), // 5

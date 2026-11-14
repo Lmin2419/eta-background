@@ -46,6 +46,7 @@ import top.yukonga.miuix.kmp.basic.Text
 @Composable
 internal fun ContextCompactionSettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
     val scope = rememberCoroutineScope()
     val agentPrefs = remember { Prefs.localAgentPreferences() }
     val providers by ProviderRepository.providersFlow().collectAsState(initial = emptyList())
@@ -148,7 +149,7 @@ internal fun ContextCompactionSettingsScreen(onBack: () -> Unit) {
                 EtaPreferenceDivider(hasLeading = false)
                 EtaOverlayDropdownPreference(
                     title = stringResource(R.string.compaction_settings_keep),
-                    items = keepOptions.map { context.getString(R.string.compaction_settings_keep_turns, it) },
+                    items = keepOptions.map { resources.getString(R.string.compaction_settings_keep_turns, it) },
                     selectedIndex = keepOptions.indexOf(settings.keepRecentTurns).takeIf { it >= 0 } ?: 1,
                     enabled = settings.background,
                     onSelectedIndexChange = { index -> save(settings.copy(keepRecentTurns = keepOptions[index])) },

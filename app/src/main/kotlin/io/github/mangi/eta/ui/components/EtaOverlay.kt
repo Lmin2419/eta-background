@@ -198,10 +198,12 @@ private fun EtaPopoverSurface(
     val motion = EtaTheme.motion
     EtaOverlayBackHandler(active, onDismiss)
     val shape = RoundedCornerShape(24.dp)
+    // 收回动画期间不再拦截触摸：点按直接落到背后的页面。
     Box(
         Modifier
             .fillMaxSize()
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
+            .then(if (active) Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss)
+                else Modifier),
     ) {
         val density = LocalDensity.current
         val margin = with(density) { 8.dp.roundToPx() }
@@ -223,7 +225,8 @@ private fun EtaPopoverSurface(
                         .semantics { title?.let { paneTitle = it } }
                         .etaGlass(shape, elevation = EtaElevation.E2, blurAlpha = EtaGlassDefaults.PopoverAlpha, solidAlpha = 0.97f)
                         .clip(shape)
-                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
+                        .then(if (active) Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
+                            else Modifier)
                         .verticalScroll(rememberScrollState())
                         .padding(8.dp),
                     content = content,

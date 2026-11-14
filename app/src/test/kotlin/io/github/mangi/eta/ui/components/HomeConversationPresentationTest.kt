@@ -117,7 +117,8 @@ class HomeConversationPresentationTest {
             panel.capture("model-settings-search")
             clickText("Choice 9"); panel.advance(35)
             assertEquals(listOf("choice-9"), actions)
-            for ((id, action) in listOf(R.string.context_compact_action to "compact", R.string.action_export to "export", R.string.eta_manage_models to "manage")) {
+            // 「压缩」挪到上下文圆环、「导出」挪到侧栏长按；模型小窗里保留「管理模型…」。
+            for ((id, action) in listOf(R.string.eta_manage_models_ellipsis to "manage")) {
                 open(); search("no matching model")
                 clickText(controller.get().getString(id)); panel.advance(35)
                 assertEquals(action, actions.last())

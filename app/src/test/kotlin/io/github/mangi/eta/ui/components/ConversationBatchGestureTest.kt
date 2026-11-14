@@ -47,6 +47,8 @@ class ConversationBatchGestureTest {
         val c = n.boundsInRoot.center; val t = SystemClock.uptimeMillis()
         touch(MotionEvent.ACTION_DOWN, c.x, c.y, t); advance(45)
         touch(MotionEvent.ACTION_UP, c.x, c.y, t); advance(30)
+        // 长按先出玻璃小窗，「多选」进入批量选择（已在选择中时长按直接加选）。
+        find(ctx.getString(R.string.conversation_select_multiple))?.let { tapNode(it); advance(20) }
     }
     private fun Stage3TestPanel.tapNode(n: SemanticsNode) {
         val c = n.boundsInRoot.center; tapFinger(c.x, c.y); advance(5)

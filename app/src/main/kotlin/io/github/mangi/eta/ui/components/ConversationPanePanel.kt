@@ -12,6 +12,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.compose.foundation.layout.*
+import io.github.mangi.eta.ui.theme.EtaTypography
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.material.icons.outlined.Delete
@@ -97,6 +98,7 @@ internal fun ConversationPanePanel(
     onConversationDelete: (ConversationSummaryUi) -> Unit, onOpenSettings: () -> Unit,
     onOpenModelProviders: () -> Unit, onOpenTools: () -> Unit, onOpenSkills: () -> Unit,
     onOpenCharacters: () -> Unit, onOpenPermissions: () -> Unit, modifier: Modifier = Modifier, active: Boolean = true,
+    floating: Boolean = false,
 ) {
     val workspace = LocalPaneWorkspace.current
     val management = LocalPaneManagement.current
@@ -129,7 +131,8 @@ internal fun ConversationPanePanel(
     val sections = remember(state.conversations, state.groups, state.searchQuery, archived, today) { projectConversationSections(state, archived, today) }
     val groupNames = remember(state.groups) { state.groups.associate { it.id to it.name } }
     // 侧栏是浅灰底（与 Claude 一致），主页面纯白；选中行是更深一档的灰色胶囊。
-    Column(modifier.width(width).fillMaxHeight().background(EtaTheme.colors.surfaceSunken)
+    // 悬浮侧栏的底色由外层玻璃提供；宽屏常驻侧栏仍是浅灰实色。
+    Column(modifier.width(width).fillMaxHeight().then(if (floating) Modifier else Modifier.background(EtaTheme.colors.surfaceSunken))
         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))) {
         AnimatedContent(selecting, transitionSpec = { fadeIn(tween(motion.short, easing = motion.standard)) togetherWith fadeOut(tween(motion.exitDuration(180), easing = motion.accelerate)) }, label = "selectionToolbar") { mode ->
             if (mode) ConversationSelectionHeader(selectedIds.size, visibleIds.isNotEmpty() && selectedIds.containsAll(visibleIds),
@@ -158,13 +161,18 @@ internal fun ConversationPanePanel(
             }
             // 功能入口是列表顶部的几行（图标 + 文字），随列表一起滚走；终端入口移到「设置」。
             if (!selecting && !archived && state.searchQuery.isBlank()) {
-                item(key = "nav-tasks") { PaneNavRow(Icons.Outlined.TaskAlt, stringResource(R.string.eta_tasks), workspace.onTasks, count = workspace.runningCount) }
-                item(key = "nav-characters") { PaneNavRow(Icons.Outlined.PeopleAlt, stringResource(R.string.eta_characters), onOpenCharacters) }
-                item(key = "nav-browser") { PaneNavRow(Icons.Outlined.Language, stringResource(R.string.eta_browser), workspace.onBrowser) }
-                workspace.onDesktop?.let { open -> item(key = "nav-desktop") { PaneNavRow(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), open, count = workspace.desktopRunning) } }
-                workspace.onKimi?.let { launch -> item(key = "nav-kimi") { PaneNavRow(Icons.Outlined.Code, workspace.kimiLabel, launch,
-                    onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null) } }
-                item(key = "nav-gap") { Spacer(Modifier.height(8.dp)) }
+                // 功能入口：一排实色白色方块（任务 / 角色 / 浏览器 / 电脑 / Kimi），图标在上、文字在下。
+                item(key = "nav-grid") {
+                    val tiles = buildList {
+                        add(PaneTile(Icons.Outlined.TaskAlt, stringResource(R.string.eta_tasks), workspace.onTasks, workspace.runningCount))
+                        add(PaneTile(Icons.Outlined.PeopleAlt, stringResource(R.string.eta_characters), onOpenCharacters))
+                        add(PaneTile(Icons.Outlined.Language, stringResource(R.string.eta_browser), workspace.onBrowser))
+                        workspace.onDesktop?.let { add(PaneTile(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), it, workspace.desktopRunning)) }
+                        workspace.onKimi?.let { add(PaneTile(Icons.Outlined.Code, workspace.kimiLabel, it,
+                            onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null)) }
+                    }
+                    PaneTileRow(tiles, Modifier.padding(top = 4.dp, bottom = 12.dp))
+                }
             }
             val showDesktop = !archived && !selecting && state.searchQuery.isBlank() && workspace.desktopSessions.isNotEmpty()
             // 分组样式：电脑会话单独一组，放在最上面，标题带电脑名和连接状态，右侧「全部」进完整电脑页。
@@ -437,22 +445,47 @@ internal fun CircleIconButton(icon: ImageVector, description: String, onClick: (
     }
 }
 
-/** 侧栏顶部的功能行：线条图标 + 文字，计数显示在右侧。 */
+
+private class PaneTile(
+    val icon: ImageVector,
+    val label: String,
+    val onClick: () -> Unit,
+    val count: Int = 0,
+    val onLongClick: (() -> Unit)? = null,
+)
+
+/** 侧栏顶部的一排功能方块：实色白块（圆角 16、E1），22dp 线条图标；有运行中的任务时右上角一个计数。 */
 @Composable
-private fun PaneNavRow(icon: ImageVector, label: String, onClick: () -> Unit, count: Int = 0, onLongClick: (() -> Unit)? = null) {
+private fun PaneTileRow(tiles: List<PaneTile>, modifier: Modifier = Modifier) {
+    val colors = EtaTheme.colors
     val haptic = LocalHapticFeedback.current
-    var showStop by remember { mutableStateOf(false) }
-    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
-        .etaTouchScale().combinedClickable(onClick = onClick, onLongClick = onLongClick?.let { { haptic.performHapticFeedback(HapticFeedbackType.LongPress); showStop = true } })
-        .padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary)
-        Text(label, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 16.sp), color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (count > 0) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            StatusRing(TaskVisualStatus.Running, size = 12.dp, contentDescription = null)
-            Text(count.toString(), style = EtaTheme.type.caption, color = EtaTheme.colors.textSecondary)
+    var stopTarget by remember { mutableStateOf<PaneTile?>(null) }
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        tiles.forEach { tile ->
+            Column(Modifier.weight(1f).clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).etaTouchScale(0.94f)
+                .combinedClickable(onClickLabel = tile.label, onClick = tile.onClick,
+                    onLongClick = tile.onLongClick?.let { { haptic.performHapticFeedback(HapticFeedbackType.LongPress); stopTarget = tile } }),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                val shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                Box(Modifier.fillMaxWidth().aspectRatio(1f)
+                    .etaElevation(io.github.mangi.eta.ui.theme.EtaElevation.E1, shape)
+                    .background(colors.surfaceRaised, shape),
+                    contentAlignment = Alignment.Center) {
+                    Icon(tile.icon, null, Modifier.size(22.dp), tint = colors.textPrimary)
+                    if (tile.count > 0) Text(tile.count.toString(),
+                        style = EtaTypography.tabular(EtaTheme.type.micro), color = colors.onBrand,
+                        modifier = Modifier.align(Alignment.TopEnd).padding(5.dp)
+                            .background(colors.brand, EtaTheme.shapes.radiusFull).padding(horizontal = 5.dp, vertical = 1.dp))
+                }
+                Text(tile.label, style = EtaTheme.type.caption, color = colors.textSecondary, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis)
+            }
         }
     }
-    if (onLongClick != null) EtaSheet(showStop, title = label, onDismissRequest = { showStop = false }) {
-        EtaButton(stringResource(R.string.action_stop), { showStop = false; onLongClick() }, kind = EtaButtonKind.Destructive, modifier = Modifier.fillMaxWidth())
+    val target = stopTarget
+    if (target?.onLongClick != null) EtaSheet(true, title = target.label, onDismissRequest = { stopTarget = null }) {
+        EtaButton(stringResource(R.string.action_stop), { stopTarget = null; target.onLongClick.invoke() },
+            kind = EtaButtonKind.Destructive, modifier = Modifier.fillMaxWidth())
     }
 }

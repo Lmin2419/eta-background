@@ -90,8 +90,7 @@ class TaskAndSidebarPresentationTest {
             val down = android.os.SystemClock.uptimeMillis()
             panel.touch(android.view.MotionEvent.ACTION_DOWN, target.x, target.y, down); panel.advance(45)
             panel.touch(android.view.MotionEvent.ACTION_UP, target.x, target.y, down); panel.advance(30)
-            val more = panel.nodes().first { it.config.getOrNull(SemanticsProperties.ContentDescription)?.contains(controller.get().getString(R.string.eta_more)) == true }.boundsInRoot.center
-            panel.tapFinger(more.x, more.y); panel.advance(30)
+            // 长按对话：从这一行展开玻璃小窗，改名等操作直接可见。
             panel.capture("sidebar-menu-light")
             assertTrue("Sidebar sheets must have a visible host", panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == controller.get().getString(R.string.action_rename) } == true })
         } finally { panel.close(); controller.pause().stop().destroy() }

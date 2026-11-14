@@ -20,6 +20,8 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -39,7 +41,8 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 
 @Composable
-internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> Unit, modifier: Modifier = Modifier) {
+internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> Unit, modifier: Modifier = Modifier,
+    onContentBottom: (Float) -> Unit = {}) {
     val character = LocalRoleplayChat.current
     val shortcuts = LocalChatHomeShortcuts.current
     val motion = EtaTheme.motion
@@ -102,6 +105,8 @@ internal fun HomeEmptyState(showSuggestions: Boolean, onFillDraft: (String) -> U
                     }
                 }
             }
+            // 报告内容底部，输入胶囊上移时不压到建议。
+            Spacer(Modifier.height(0.dp).onGloballyPositioned { onContentBottom(it.positionInRoot().y) })
         }
     }
 }
@@ -119,7 +124,7 @@ private fun HomeSuggestionRow(card: HomeSuggestion, modifier: Modifier) {
         .clickable(role = Role.Button, interactionSource = source, indication = null, onClick = card.onClick)
         .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(card.icon, contentDescription = null, tint = EtaTheme.colors.accent, modifier = Modifier.size(20.dp))
+        Icon(card.icon, contentDescription = null, tint = EtaTheme.colors.textSecondary, modifier = Modifier.size(20.dp))
         Column(Modifier.weight(1f)) {
             Text(card.title, style = EtaTheme.type.rowTitle, color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(card.summary, style = EtaTheme.type.footnote, color = EtaTheme.colors.textTertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)

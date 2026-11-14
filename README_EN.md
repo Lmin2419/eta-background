@@ -8,13 +8,13 @@ A development candidate adds built-in Root configuration for the system assistan
 
 ## Latest test build
 
-**2026-11-14 · `3.3.5` 胖小胖 · versionCode `2026111405`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-14 · `3.3.5` 胖小胖 · versionCode `2026111406`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-A full glass UI (collapsing large titles, glass cards, ambient page glow, chat content under a glass top bar), plus upstream context-compression cache reuse and usage stats, MiMo/DeepSeek voice, a separate model for the assistant overlay and cleaner read-aloud. Earlier upstream merges: auto-generated conversation titles, branching a new conversation from a reply, full-screen chat image viewer, share-to-chat from other apps, per-tool switches, automatic root re-check after reboot, plus Grok/Gemini fixes. The license follows upstream to GPL-3.0.
+Liquid glass 2.0: glass only on floating controls with solid content, glass popovers that open from where you tap (model, reasoning effort, attachments, context usage, long-press menus), settings in a glass window over the chat, a floating side pane, per-reply speed stats and background context compaction with an optional dedicated model. Earlier: upstream context-compression cache reuse and usage stats, MiMo/DeepSeek voice, a separate model for the assistant overlay and cleaner read-aloud. Earlier upstream merges: auto-generated conversation titles, branching a new conversation from a reply, full-screen chat image viewer, share-to-chat from other apps, per-tool switches, automatic root re-check after reboot, plus Grok/Gemini fixes. The license follows upstream to GPL-3.0.
 
-APK: **`Pangxiaopang-3.3.5-2026111405.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026111406.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111405)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111406)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 
