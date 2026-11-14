@@ -14,8 +14,11 @@ import androidx.compose.ui.text.TextRange
 import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
 import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -28,7 +31,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +44,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border
@@ -159,6 +163,8 @@ internal fun AgentChatInputBar(
     inputSyncVersion: Int = 0,
     focusInputRequest: String? = null,
     onInputFocusHandled: () -> Unit = {},
+    // 外部写入草稿（如系统分享）时可不弹键盘。
+    focusInputOnSync: Boolean = true,
     isEditingMessage: Boolean,
     editHasLaterTurns: Boolean,
     preserveFollowingMessages: Boolean,
@@ -247,7 +253,7 @@ internal fun AgentChatInputBar(
         if (isEditingMessage || wasEditingMessage || versionChanged) {
             textFieldState.setTextAndPlaceCursorAtEnd(input)
         }
-        if (isEditingMessage || (versionChanged && input.isNotEmpty())) {
+        if (isEditingMessage || (versionChanged && input.isNotEmpty() && focusInputOnSync)) {
             focusRequester.requestFocus()
             keyboard?.show()
         }
@@ -576,14 +582,24 @@ private fun PendingImageStrip(
     onRemoveImage: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
+    val listState = rememberLazyListState()
+    var previousCount by remember { mutableIntStateOf(images.size) }
+    LaunchedEffect(images.size) {
+        if (images.size > previousCount && images.isNotEmpty()) {
+            listState.animateScrollToItem(images.lastIndex)
+        }
+        previousCount = images.size
+    }
+    LazyRow(
+        state = listState,
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        images.forEach { image ->
+        items(
+            items = images,
+            key = { it.id },
+        ) { image ->
             Box(
                 modifier = Modifier
                     .size(64.dp)
