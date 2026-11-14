@@ -401,8 +401,12 @@ private fun AgentChatScaffold(
 ) {
 
     val glassBackdrop = rememberEtaGlassBackdrop(EtaTheme.colors.canvas)
-    // 消息区的 COUI 背景源：输入胶囊的液态玻璃从这里采样（不含输入胶囊自身）。
-    val messageCouiBackdrop = if (LocalBlurEnabled.current) com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-messages") else null
+    // 消息区的 COUI 背景源：顶部控件和输入框都从这里采样（它们是消息区的兄弟节点，不在源里面）。
+    // 首页由外壳创建并传入，顶部控件共用；其他页面用自己的。
+    val sharedSource = io.github.mangi.eta.ui.components.coui.LocalChatCouiSource.current
+    val ownSource = if (sharedSource == null && LocalBlurEnabled.current)
+        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-messages") else null
+    val messageCouiBackdrop = sharedSource ?: ownSource
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,

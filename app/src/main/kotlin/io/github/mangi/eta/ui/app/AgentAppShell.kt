@@ -145,7 +145,7 @@ internal fun AgentAppShell(
     val topBarColor = topBarContainerColor(backdrop)
     // 对话页正文的 COUI 背景源：顶部三个液态玻璃控件从这里采样（Android 14+）。
     val isHome = currentRoute is AppRoute.Home && homeTopBar != null
-    val couiPageBackdrop = if (isHome) com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-page") else null
+    val chatCouiSource = if (isHome && LocalBlurEnabled.current) com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-page") else null
     val pageContent: @Composable () -> Unit = {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -156,7 +156,7 @@ internal fun AgentAppShell(
             topBar = {
                 if (currentRoute is AppRoute.Home && homeTopBar != null) io.github.mangi.eta.ui.components.ChatScrollEdge(backdrop) {
                     androidx.compose.runtime.CompositionLocalProvider(
-                        io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides couiPageBackdrop,
+                        io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides chatCouiSource,
                     ) { homeTopBar() }
                 }
                 else if (currentRoute !is AppRoute.Settings) {
@@ -187,10 +187,12 @@ internal fun AgentAppShell(
                 modifier = Modifier
                     .fillMaxSize()
                     .captureForTopBar(backdrop)
-                    .then(if (couiPageBackdrop != null) Modifier.couiBackdrop(couiPageBackdrop) else Modifier)
                     .then(if (usesShellTopBar) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier),
             ) {
-                content(padding)
+                // 背景源挂在对话页的消息区上（AgentChatBody），这里只往下传。
+                CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalChatCouiSource provides chatCouiSource) {
+                    content(padding)
+                }
             }
         }
     }

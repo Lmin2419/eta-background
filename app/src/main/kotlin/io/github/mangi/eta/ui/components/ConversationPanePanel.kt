@@ -156,7 +156,8 @@ internal fun ConversationPanePanel(
         val showDock = !selecting
         Box(Modifier.weight(1f).fillMaxWidth()) {
         // 列表从底部玻璃栏下面穿过：玻璃栏采样这块列表做液态玻璃折射。
-        Box(Modifier.fillMaxSize().then(if (paneBackdrop != null) Modifier.couiBackdrop(paneBackdrop) else Modifier)) {
+        Box(Modifier.fillMaxSize().then(if (paneBackdrop != null) Modifier.couiBackdrop(paneBackdrop)
+            .background(EtaTheme.colors.surfaceSunken) else Modifier)) {
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize().couiMenuAnchor(paneMenuAnchor),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = if (showDock) PaneDockHeight + 8.dp else 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {

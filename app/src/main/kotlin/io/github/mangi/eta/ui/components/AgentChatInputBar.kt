@@ -127,7 +127,8 @@ private val SendButtonVisualSize = ChatInputActionIconSize
 private val SendIconSize = 16.dp
 private val StopIconSize = 10.dp
 private val ThinkingIconSize = 21.dp
-private val InputContainerShape = RoundedCornerShape(28.dp)
+private val InputContainerRadius = 28.dp
+private val InputContainerShape = RoundedCornerShape(InputContainerRadius)
 
 /**
  * 电脑会话对输入器的定制：执行中的占位文字，以及发送时直接插队的入口。
@@ -334,6 +335,8 @@ internal fun AgentChatInputBar(
                 shape = InputContainerShape,
                 capsule = true,
                 onClick = null,
+                // 圆角矩形（28dp），不是胶囊：多行时也保持矩形。
+                cornerRadius = InputContainerRadius,
                 wrapContent = true,
             ) {
             Column(

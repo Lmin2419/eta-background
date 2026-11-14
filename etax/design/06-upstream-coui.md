@@ -20,6 +20,10 @@
 - `edit_file` 找不到原文：返回最相近的一段、行号和可能原因（只差空格或缩进、多一层转义、CRLF）（`editMismatchHint`）。
 - 提示词 `AgentPromptBuilder.CODING_GUIDANCE`：用 `write_file` / `edit_file` 写文件；针对具体报错至少修三次；先查引号转义、空格缩进、换行符；说做不到之前先复核最后一条真实报错。编程子代理同样带上。界面操作的「无进展停止」规则不适用于代码和命令报错。
 
+## 液态玻璃背景源（2026111409 起）
+
+对话页只有一个 COUI 背景源（`LocalChatCouiSource`，外壳创建，挂在 `AgentChatBody` 的消息区上，源里先画不透明底色），顶部控件与输入框是它的兄弟节点、从它采样。不要在整页外面再套源，也不要让某个源的消费者位于另一个源的子树里再被采样——2026111408 这样做导致真机上消息区空白。侧栏同理：列表区一个源（带底色），底部玻璃栏是兄弟节点。圆角矩形的玻璃控件必须给 `EtaFloatingSurface` 传 `cornerRadius`，否则 COUI 按胶囊处理。
+
 ## 测试环境
 
 Robolectric 画不了 COUI 的 Mesh 阴影和 AGSL 着色器。`EtaCouiSupport.shaders`（Robolectric 下为 false）时：菜单退回旧小窗、页面退回旧骨架、卡片不用平滑圆角、玻璃控件走磨砂。只用于本机测试，真机始终是 COUI。

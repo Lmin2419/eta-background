@@ -84,6 +84,12 @@ import io.github.mangi.eta.ui.theme.EtaElevation
  */
 
 /** 当前页面供浮动液态玻璃采样的 COUI 背景源（页面正文节点挂 couiBackdrop 后提供）。 */
+/**
+ * 对话页唯一的 COUI 背景源（与上游 COUI Scaffold 同一结构）：源挂在消息区上并带不透明底色，
+ * 顶部控件和输入框作为它的兄弟节点采样；不再在整页外面再套一层源。
+ */
+internal val LocalChatCouiSource = androidx.compose.runtime.staticCompositionLocalOf<CouiBackdrop?> { null }
+
 internal val LocalEtaCouiBackdrop = staticCompositionLocalOf<CouiBackdrop?> { null }
 
 /**
@@ -99,6 +105,8 @@ internal fun EtaFloatingSurface(
     focused: Boolean = false,
     backdrop: CouiBackdrop? = LocalEtaCouiBackdrop.current,
     wrapContent: Boolean = false,
+    /** 圆角半径；不传时是胶囊（短边的一半）。输入框这类圆角矩形必须传。 */
+    cornerRadius: Dp? = null,
     content: @Composable () -> Unit,
 ) {
     val dark = CouiTheme.isDark
@@ -110,7 +118,7 @@ internal fun EtaFloatingSurface(
     if (Build.VERSION.SDK_INT >= 34 && backdrop != null && renderer != null && view.display != null) {
         ProvideCouiBackdrop(backdrop) {
             EtaApi34FloatingSurface(modifier, shape, capsule, backdrop, renderer, dark, focused, accent,
-                contentDescription, onClick, content, wrapContent)
+                contentDescription, onClick, content, wrapContent, cornerRadius)
         }
     } else {
         val source = remember { MutableInteractionSource() }
@@ -141,6 +149,7 @@ internal fun EtaApi34FloatingSurface(
     onClick: (() -> Unit)?,
     content: @Composable () -> Unit,
     wrapContent: Boolean = false,
+    cornerRadius: Dp? = null,
 ) {
     val density = LocalDensity.current.density
     val contour = LocalCouiContourGlowEnabled.current
@@ -210,6 +219,7 @@ internal fun EtaApi34FloatingSurface(
                     scaleX = motion.scaleX.value + press.scale.value - 1f,
                     scaleY = motion.scaleY.value + press.scale.value - 1f,
                     cornerWeight = if (capsule) 1f else 2f,
+                    cornerRadius = cornerRadius?.let { it.value * density },
                 )
             }
             .then(
