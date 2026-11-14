@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.AccessibilityNew
 import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Dashboard
@@ -541,6 +542,12 @@ private fun SettingsPageContent(
                     )
                     EtaPreferenceDivider()
                     NativeAssistantPreference(context)
+                    EtaPreferenceDivider()
+                    EtaArrowPreference(
+                        title = stringResource(R.string.assistant_overlay_settings_title),
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.ChatBubbleOutline, tint = EtaPreferenceColors.Blue) },
+                        onClick = { onNavigate(AppRoute.AssistantOverlaySettings) },
+                    )
                     if (prefs != null || hasConnectedFramework) {
                         EtaPreferenceDivider()
                         EtaDropdownPreference(
