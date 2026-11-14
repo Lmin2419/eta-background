@@ -349,7 +349,7 @@ private fun UserMessageBubble(
             }
             Column(Modifier.onGloballyPositioned { menuAnchor = it.boundsInWindow() }
                 .graphicsLayer { val s = pressScale.value; scaleX = s; scaleY = s }
-                .etaGlass(shape, tint = EtaTheme.colors.surfaceSunken, elevation = null, useLocalBackdrop = false, solidAlpha = 0.86f)
+                .background(EtaTheme.colors.surfaceSunken, shape)
                 .then(if (isEditing) Modifier.border(1.dp, EtaTheme.colors.accent, shape) else Modifier)
                 .combinedClickable(enabled = actionsEnabled, onClick = {}, onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress); menu = true
@@ -622,6 +622,13 @@ private fun AgentMessageBlock(
             SearchSuggestionsView(html = html, modifier = Modifier.padding(top = 8.dp))
         }
 
+        // 每条回复下方的统计小字（不受操作行只在最新回复显示的限制）；只有 2026111402 之后的回复有数据。
+        val showTurnStats = io.github.mangi.eta.ui.app.LocalAppearanceSettings.current.showTurnStats
+        if (showTurnStats && !assistantOverlay && !message.isStreaming && revealComplete &&
+            message.usage != null && message.usage.hasPerformanceStats) {
+            TurnStatsLine(usage = message.usage)
+        }
+
         // 回答显现完成后才出现操作行；淡入展开避免贴底滚动时整页突然跳动一行高度。
         AnimatedVisibility(
             visible = showCopyAction &&
@@ -631,21 +638,17 @@ private fun AgentMessageBlock(
             enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + expandVertically(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
             exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
         ) {
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (message.characterEditable && message.candidateCount > 1) CandidateSwitcher(
                     message.selectedCandidate, message.candidateCount, messageActionsEnabled, onSelectCandidate)
                 AnswerActionButton(if (copied) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
                     stringResource(if (copied) R.string.copy_copied else R.string.copy_answer), {
                         clipboardManager.setText(AnnotatedString(message.content)); copied = true
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    }, tint = if (copied) EtaTheme.colors.accent else null)
+                    }, tint = if (copied) EtaTheme.colors.textPrimary else null)
                 if (showMessageActions) AnswerActionButton(Icons.Outlined.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
                 if (allowSpeech) SpeechReadAloudButton(message.id, message.content)
                 if (showMessageActions) AnswerActionButton(Icons.Outlined.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; menu = true }, messageActionsEnabled)
-                // 上游 3.4.1：本轮性能统计（步数、首字时间、生成速度、用量），点开看详情。
-                if (!assistantOverlay && message.usage != null && message.usage.hasPerformanceStats) {
-                    TurnStatsPill(usage = message.usage, modifier = Modifier.padding(start = 4.dp))
-                }
             }
         }
     }

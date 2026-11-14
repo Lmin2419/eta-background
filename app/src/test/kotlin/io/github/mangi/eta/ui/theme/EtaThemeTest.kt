@@ -40,9 +40,10 @@ import top.yukonga.miuix.kmp.theme.lightColorScheme
 @Config(sdk = [36], application = Application::class)
 class EtaThemeTest {
     @Test fun neutralPaletteAndBrandMatchDesignInBothModes() {
-        assertEquals(Color.White, lightEtaColors().canvas)
+        assertEquals(Color(0xFFFBFAF8), lightEtaColors().canvas)
+        assertEquals(Color(0xFFD97757), lightEtaColors().brand)
         assertEquals(Color(0xFFB4532F), lightEtaColors().accent)
-        assertEquals(Color(0xFF1C1C1C), darkEtaColors().canvas)
+        assertEquals(Color(0xFF161616), darkEtaColors().canvas)
         assertEquals(Color(0xFFE38D6F), darkEtaColors().accent)
         listOf(lightEtaColors(), darkEtaColors()).forEach { palette ->
             val bridged = palette.toMiuixColors(lightColorScheme())
@@ -67,7 +68,7 @@ class EtaThemeTest {
                     val expected = if (monet || accent != AppearanceAccentColor.SYSTEM)
                         base.withAccent(Color.Magenta, Color.Yellow, Color.Blue, Color.Black) else base
                     assertEquals(expected, resolved)
-                    assertEquals(resolved.accent, resolved.running)
+                    assertEquals(resolved.brand, resolved.running)
                     assertEquals(resolved.accentSoft, resolved.runningSoft)
                 }
             }

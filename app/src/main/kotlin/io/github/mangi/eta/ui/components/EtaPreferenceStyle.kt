@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import top.yukonga.miuix.kmp.squircle.LocalSquircleEnabled
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -76,13 +78,20 @@ internal fun EtaPreferenceGroupTitle(text: String, modifier: Modifier = Modifier
 }
 
 @Composable
+@Suppress("UNUSED_PARAMETER")
 internal fun EtaPreferenceIcon(
     icon: ImageVector,
     modifier: Modifier = Modifier,
     tint: Color = EtaTheme.colors.tileSlate,
     enabled: Boolean = true,
 ) {
-    EtaIconTile(icon = icon, modifier = modifier, tint = tint, enabled = enabled)
+    // 设置行只画 20dp 线条图标，不再画底块：列表更安静，图标对齐文字的视觉重量。
+    androidx.compose.foundation.layout.Box(
+        modifier.size(32.dp).alpha(if (enabled) 1f else 0.38f),
+        contentAlignment = androidx.compose.ui.Alignment.Center,
+    ) {
+        top.yukonga.miuix.kmp.basic.Icon(icon, null, Modifier.size(20.dp), tint = EtaTheme.colors.textSecondary)
+    }
 }
 
 @Composable

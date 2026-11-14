@@ -93,7 +93,7 @@ internal fun AgentChatQueueStrip(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .etaGlass(if (expanded) EtaTheme.shapes.radiusMd else EtaTheme.shapes.radiusFull, tint = EtaTheme.colors.surfaceSunken, elevation = null)
+            .background(EtaTheme.colors.surfaceSunken, if (expanded) EtaTheme.shapes.radiusMd else EtaTheme.shapes.radiusFull)
     ) {
         Row(
             modifier = Modifier

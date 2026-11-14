@@ -34,6 +34,7 @@ internal class AgentContextCompactor(
         messages: JSONArray,
         systemCount: Int,
         sensitiveIds: Set<String>,
+        protectLatestUser: Boolean = true,
     ): CompactionOutcome {
         controller.throwIfCancelled()
         if (SignedToolContext.hasPendingResponse(messages)) {
@@ -46,7 +47,8 @@ internal class AgentContextCompactor(
         // 最新用户请求及其后尚在进行的工具链必须可以继续；长任务允许压缩该请求之后的已完成批次。
         val end = (history.size downTo 1).firstOrNull { canSplit(history, it) }
             ?: throw failure("CONTEXT_NOT_COMPACTABLE", "没有可安全压缩的完整历史批次。")
-        val protectedUser = history.getOrNull(latestUser)?.takeIf { latestUser < end }
+        // 后台压缩只压较早的前缀，最近几轮本来就原样留在后面，不需要再保留「最新用户消息」。
+        val protectedUser = if (protectLatestUser) history.getOrNull(latestUser)?.takeIf { latestUser < end } else null
         val foldedSlice = history.take(end)
         val source = JSONArray(foldedSlice.filterNot { it === protectedUser })
         val durable = AgentConversationCodec.transcript(source, 0, sensitiveIds)

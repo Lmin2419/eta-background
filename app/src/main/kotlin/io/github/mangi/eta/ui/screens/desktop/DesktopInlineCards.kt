@@ -2,6 +2,7 @@ package io.github.mangi.eta.ui.screens.desktop
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +27,7 @@ import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaButtonKind
 import io.github.mangi.eta.ui.components.EtaButtonSize
 import io.github.mangi.eta.ui.components.StatusRing
-import io.github.mangi.eta.ui.components.etaGlass
+import io.github.mangi.eta.ui.theme.etaElevation
 import io.github.mangi.eta.ui.model.TaskVisualStatus
 import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.Text
@@ -43,7 +44,8 @@ internal fun DesktopRunStrip(runningForMs: Long?, onStop: () -> Unit, onDetails:
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(bottom = 6.dp)
-            .etaGlass(EtaTheme.shapes.radiusFull, tint = EtaTheme.colors.runningSoft, elevation = null)
+            .background(EtaTheme.colors.runningSoft, EtaTheme.shapes.radiusFull)
+            .clip(EtaTheme.shapes.radiusFull)
             .clickable(onClick = onDetails)
             .padding(start = 14.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -70,7 +72,8 @@ private fun AttentionCard(title: String, body: (@Composable () -> Unit)? = null,
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .padding(bottom = 8.dp)
-            .etaGlass(EtaTheme.shapes.radiusLg, elevation = io.github.mangi.eta.ui.theme.EtaElevation.E1)
+            .etaElevation(io.github.mangi.eta.ui.theme.EtaElevation.E1, EtaTheme.shapes.radiusLg)
+            .background(EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusLg)
             .padding(14.dp)
             .animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(10.dp),

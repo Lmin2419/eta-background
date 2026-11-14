@@ -85,7 +85,8 @@ fun AgentAppTheme(
         }
         CompositionLocalProvider(
             LocalAppearanceSettings provides appearance,
-            LocalBlurEnabled provides appearance.blurEnabled,
+            // 系统省电模式下真模糊自动降为磨砂底色。
+            LocalBlurEnabled provides (appearance.blurEnabled && !rememberPowerSaveMode()),
             LocalTopBarBlurStyle provides appearance.topBarBlurStyle,
             LocalPlatformDensity provides platformDensity,
             LocalDensity provides appDensity,
@@ -105,4 +106,26 @@ private fun AppearancePaletteStyle.toMiuixPaletteStyle(): ThemePaletteStyle = wh
     AppearancePaletteStyle.MONOCHROME -> ThemePaletteStyle.Monochrome
     AppearancePaletteStyle.FIDELITY -> ThemePaletteStyle.Fidelity
     AppearancePaletteStyle.CONTENT -> ThemePaletteStyle.Content
+}
+
+/** 系统省电模式；变化时重组。 */
+@androidx.compose.runtime.Composable
+private fun rememberPowerSaveMode(): Boolean {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val power = androidx.compose.runtime.remember(context) {
+        context.getSystemService(android.content.Context.POWER_SERVICE) as? android.os.PowerManager
+    }
+    val state = androidx.compose.runtime.remember(power) { androidx.compose.runtime.mutableStateOf(power?.isPowerSaveMode == true) }
+    androidx.compose.runtime.DisposableEffect(context, power) {
+        val receiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(c: android.content.Context?, intent: android.content.Intent?) {
+                state.value = power?.isPowerSaveMode == true
+            }
+        }
+        androidx.core.content.ContextCompat.registerReceiver(context, receiver,
+            android.content.IntentFilter(android.os.PowerManager.ACTION_POWER_SAVE_MODE_CHANGED),
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED)
+        onDispose { runCatching { context.unregisterReceiver(receiver) } }
+    }
+    return state.value
 }

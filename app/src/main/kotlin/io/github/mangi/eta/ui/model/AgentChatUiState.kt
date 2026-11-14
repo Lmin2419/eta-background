@@ -18,6 +18,8 @@ internal data class AgentChatUiState(
     val isStreaming: Boolean,
     val isCompacting: Boolean = false,
     val thinkingEnabled: Boolean,
+    /** 后台正在整理较早的对话（不锁输入）。 */
+    val backgroundCompacting: Boolean = false,
     val reasoningEffort: ReasoningEffort = ReasoningEffort.fromLegacy(thinkingEnabled),
     val availableReasoningEfforts: List<ReasoningEffort> = emptyList(),
     val pendingImages: List<PendingImageUi> = emptyList(),

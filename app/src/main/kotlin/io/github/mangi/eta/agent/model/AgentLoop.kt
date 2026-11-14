@@ -41,6 +41,7 @@ internal class AgentLoop(
     private val purpose: ProviderRequestPurpose = ProviderRequestPurpose.CHAT,
     private val roleplayContext: RoleplayRunContext? = null,
     initialSupplementIndex: Int = 0,
+    backgroundCompaction: BackgroundCompactionPolicy? = null,
 ) {
     data class Result(
         val content: String,
@@ -68,6 +69,7 @@ internal class AgentLoop(
         mainSessionId = sessionId,
         messageProjector = { source -> roleplayContext?.projectMessages(source) ?: source },
         enableCacheReuse = true,
+        background = backgroundCompaction,
     )
     private var supplementIndex = initialSupplementIndex
 

@@ -28,6 +28,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.background
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FolderOpen
@@ -114,7 +121,8 @@ internal fun AgentAttachmentPickerButton(
         if (uri != null) onAttachFolder(uri.toString())
     }
 
-    Box(modifier = modifier) {
+    var anchor by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+    Box(modifier = modifier.onGloballyPositioned { anchor = it.boundsInWindow() }) {
         IconButton(
             onClick = { showPopup = true },
             minWidth = ChatInputActionSize,
@@ -127,10 +135,21 @@ internal fun AgentAttachmentPickerButton(
                 tint = MiuixTheme.colorScheme.onSurface,
             )
         }
-        EtaSheet(showPopup, title = stringResource(R.string.ui_add_attachment_dba9e8), onDismissRequest = { showPopup = false }) {
-            Column {
-                listOf(R.string.attachment_image, R.string.attachment_file, R.string.attachment_folder, R.string.attachment_enter_path).forEachIndexed { index, label ->
-                    EtaArrowPreference(stringResource(label), onClick = {
+    }
+    // 「＋」展开一枚玻璃小窗：四格实色方块（照片 / 文件 / 文件夹 / 输入路径），从按钮处展开。
+    EtaPopover(showPopup, anchor, { showPopup = false }, title = stringResource(R.string.ui_add_attachment_dba9e8),
+        minWidth = 232.dp, maxWidth = 260.dp) {
+        val items = listOf(
+            Triple(R.string.attachment_image, Icons.Outlined.Image, 0),
+            Triple(R.string.attachment_file, Icons.Outlined.Description, 1),
+            Triple(R.string.attachment_folder, Icons.Outlined.Folder, 2),
+            Triple(R.string.attachment_enter_path, Icons.Outlined.Terminal, 3),
+        )
+        items.chunked(2).forEach { row ->
+            androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                row.forEach { (label, icon, index) ->
+                    AttachmentTile(stringResource(label), icon, Modifier.weight(1f)) {
                         showPopup = false
                         when (index) {
                             0 -> photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -138,9 +157,10 @@ internal fun AgentAttachmentPickerButton(
                             2 -> folderPicker.launch(null)
                             3 -> { pathInput = ""; showPathDialog = true }
                         }
-                    })
+                    }
                 }
             }
+            androidx.compose.foundation.layout.Spacer(Modifier.height(8.dp))
         }
     }
 
@@ -384,4 +404,27 @@ internal class InputPopupPositionProvider(
     }
 
     override fun getMargins(): PaddingValues = PaddingValues(vertical = ChatInputPopupMargin)
+}
+
+/** 附件小窗里的一格：实色方块（小窗圆角 24、内边距 8 → 方块圆角 16），图标在上、文字在下。 */
+@Composable
+private fun AttachmentTile(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier, onClick: () -> Unit) {
+    val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+    Column(
+        modifier
+            .heightIn(min = 76.dp)
+            .etaPressScale(press, pressedScale = 0.96f)
+            .clip(shape)
+            .background(io.github.mangi.eta.ui.theme.EtaTheme.colors.surfaceRaised)
+            .clickable(interactionSource = press, indication = androidx.compose.foundation.LocalIndication.current, onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(icon, null, Modifier.size(22.dp), tint = io.github.mangi.eta.ui.theme.EtaTheme.colors.textPrimary)
+        Text(label, style = io.github.mangi.eta.ui.theme.EtaTheme.type.footnote,
+            color = io.github.mangi.eta.ui.theme.EtaTheme.colors.textPrimary, maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+    }
 }

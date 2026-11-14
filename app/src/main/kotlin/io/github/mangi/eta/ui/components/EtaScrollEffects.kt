@@ -52,9 +52,9 @@ internal fun Modifier.etaScrollEdgeScale(topInset: Dp): Modifier = composed {
         val out = ((edge - top) / height).coerceIn(0f, 1f)
         val enter = if (viewport > 0f) ((top + height - viewport) / height).coerceIn(0f, 1f) else 0f
         if (out > 0f) {
-            val s = 1f - 0.08f * out * damp
+            val s = 1f - 0.04f * out * damp
             scaleX = s; scaleY = s
-            alpha = 1f - 0.55f * out
+            alpha = 1f - 0.35f * out
             transformOrigin = TransformOrigin(0.5f, 1f)
         } else if (enter > 0f) {
             val s = 1f - 0.05f * enter * damp

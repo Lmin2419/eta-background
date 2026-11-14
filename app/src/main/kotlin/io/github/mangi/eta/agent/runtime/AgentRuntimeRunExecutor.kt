@@ -402,6 +402,12 @@ internal class AgentRuntimeRunExecutor(
                 memoryContext = memoryContext,
                 additionalTools = runTools,
                 executionContext = executor.terminalExecutionContext,
+                // 主对话：用量到设定比例就在后台整理较早的对话（设置 → 上下文压缩）。
+                backgroundCompaction = if (request.operation == AgentRuntimeWire.OP_REWRITE_REPLY ||
+                    request.operation == AgentRuntimeWire.OP_COMPACT) null
+                else runCatching {
+                    runBlocking { io.github.mangi.eta.data.repository.RuntimeConfigRepository.backgroundCompactionPolicy(request.effectiveModelSessionId) }
+                }.getOrNull(),
             ) { event ->
                 timing.accept(event)
                 acceptEvent(

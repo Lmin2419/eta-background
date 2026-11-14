@@ -27,11 +27,23 @@ data class EtaMotion(val reduceMotion: Boolean = false) {
     val accelerate get() = Accelerate
     val dampingRatio: Float get() = 0.86f
     val stiffness: Float get() = 420f
+    /** 跟手：位置、尺寸。 */
+    fun <T> follow(): androidx.compose.animation.core.SpringSpec<T> =
+        androidx.compose.animation.core.spring(dampingRatio = FollowDamping, stiffness = FollowStiffness)
+    /** 弹出：按钮、对勾、爪印这类小东西冒出来。 */
+    fun <T> pop(): androidx.compose.animation.core.SpringSpec<T> =
+        androidx.compose.animation.core.spring(dampingRatio = PopDamping, stiffness = PopStiffness)
+    /** 页面切换（唯一超过 400ms 的动画）。 */
+    val page: Int get() = duration(480)
     val ringRotationMillis: Int get() = 1_100
     val auroraMillis: Int get() = 2_400
 
     companion object {
         val Default = EtaMotion()
+        const val FollowDamping = 0.86f
+        const val FollowStiffness = 420f
+        const val PopDamping = 0.62f
+        const val PopStiffness = 520f
         private val Standard = CubicBezierEasing(0.2f, 0f, 0f, 1f)
         private val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
         private val Accelerate = CubicBezierEasing(0.3f, 0f, 1f, 1f)

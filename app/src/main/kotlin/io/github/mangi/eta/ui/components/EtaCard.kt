@@ -27,7 +27,8 @@ internal fun EtaCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     CompositionLocalProvider(LocalSquircleEnabled provides false) {
-        val (cardModifier, cardColors) = etaGlassCard(modifier, colors)
+        val cardModifier = modifier.etaElevation(EtaElevation.E1, EtaTheme.shapes.radiusLg)
+        val cardColors = colors
         Card(
             modifier = cardModifier,
             cornerRadius = EtaCardDefaults.CornerRadius,
@@ -51,7 +52,8 @@ internal fun EtaCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     CompositionLocalProvider(LocalSquircleEnabled provides false) {
-        val (cardModifier, cardColors) = etaGlassCard(modifier, colors)
+        val cardModifier = modifier.etaElevation(EtaElevation.E1, EtaTheme.shapes.radiusLg)
+        val cardColors = colors
         Card(
             modifier = cardModifier,
             cornerRadius = EtaCardDefaults.CornerRadius,
@@ -65,17 +67,4 @@ internal fun EtaCard(
             content = content,
         )
     }
-}
-
-/**
- * 默认配色的卡片改为玻璃卡片：半透明白（深色为半透明灰）+ 高光边 + 顶部反光，透出页面的环境光；
- * 调用方自定义了卡片颜色（如提醒类卡片）时保持原样。
- */
-@Composable
-private fun etaGlassCard(modifier: Modifier, colors: CardColors): Pair<Modifier, CardColors> {
-    val default = CardDefaults.defaultColors()
-    if (colors.color != default.color) return modifier.etaElevation(EtaElevation.E1, EtaTheme.shapes.radiusLg) to colors
-    val shape = androidx.compose.foundation.shape.RoundedCornerShape(EtaCardDefaults.CornerRadius)
-    return modifier.etaGlass(shape, tint = EtaTheme.colors.surfaceRaised, elevation = EtaElevation.E1,
-        useLocalBackdrop = false, solidAlpha = 0.72f) to colors.copy(color = androidx.compose.ui.graphics.Color.Transparent)
 }

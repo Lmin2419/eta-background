@@ -20,6 +20,10 @@ data class AppearanceSettings(
     val swipeDismissEnabled: Boolean = true,
     val predictiveBackEnabled: Boolean = true,
     val interfaceScale: Float = DEFAULT_INTERFACE_SCALE,
+    /** 浮层玻璃的通透程度；「关闭」由 [blurEnabled] = false 表示。 */
+    val glassStrength: AppearanceGlassStrength = AppearanceGlassStrength.STANDARD,
+    /** 每条回复下方显示速度与用量小字。 */
+    val showTurnStats: Boolean = true,
 ) {
     fun normalized(): AppearanceSettings = copy(
         interfaceScale = normalizeInterfaceScale(interfaceScale),
@@ -91,3 +95,16 @@ fun normalizeInterfaceScale(value: Float): Float =
     } else {
         DEFAULT_INTERFACE_SCALE
     }
+
+/** 玻璃底色的不透明度：通透 0.50 / 标准 0.64 / 磨砂 0.80。 */
+@Serializable
+enum class AppearanceGlassStrength(val persistedValue: String, val tintAlpha: Float) {
+    CLEAR("clear", 0.50f),
+    STANDARD("standard", 0.64f),
+    FROSTED("frosted", 0.80f);
+
+    companion object {
+        fun fromPersistedValue(value: String?): AppearanceGlassStrength =
+            entries.firstOrNull { it.persistedValue == value } ?: STANDARD
+    }
+}

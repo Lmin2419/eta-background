@@ -2455,6 +2455,17 @@ internal class AgentAppState(
             -> updateMessages(runId, updateTimestamp = false) { messages ->
                 runMessageProjector.applyEvent(runId, event, messages)
             }
+            // 后台压缩开始/作废只改输入胶囊旁的小点，不锁输入、不进消息流。
+            is AgentEvent.ContextCompaction -> {
+                when (event.phase) {
+                    AgentEvent.ContextCompaction.PHASE_BACKGROUND_STARTED -> setBackgroundCompacting(runId, true)
+                    AgentEvent.ContextCompaction.PHASE_STARTED -> Unit
+                    else -> setBackgroundCompacting(runId, false)
+                }
+                if (!AgentEvent.ContextCompaction.isBackgroundPhase(event.phase)) {
+                    updateRunTrace(runId) { messages -> runMessageProjector.applyEvent(runId, event, messages) }
+                }
+            }
             else -> updateRunTrace(runId) { messages -> runMessageProjector.applyEvent(runId, event, messages) }
         }
     }
@@ -2765,6 +2776,12 @@ internal class AgentAppState(
     }
 
     private fun conversationIdForRun(runId: String): String? = runStore.conversationId(runId)
+
+    private fun setBackgroundCompacting(runId: String, value: Boolean) {
+        val conversationId = conversationIdForRun(runId) ?: return
+        val state = conversationsById[conversationId] ?: return
+        if (state.backgroundCompacting != value) updateConversation(conversationId, state.copy(backgroundCompacting = value))
+    }
 
     private fun conversationStateForRun(runId: String): AgentChatHomeUiState {
         val conversationId = conversationIdForRun(runId) ?: return emptyChatState(defaultThinkingEnabled)

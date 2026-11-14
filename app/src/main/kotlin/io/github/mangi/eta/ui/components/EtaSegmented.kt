@@ -31,9 +31,9 @@ internal fun EtaSegmented(
         label = "segmentPosition")
     val shape = EtaTheme.shapes.radiusFull
     Layout(modifier = modifier.fillMaxWidth().heightIn(min = 36.dp).clip(shape)
-        .etaGlass(EtaTheme.shapes.radiusFull, tint = EtaTheme.colors.surfaceSunken, elevation = null, useLocalBackdrop = false, solidAlpha = 0.8f).padding(3.dp).selectableGroup(),
+        .background(EtaTheme.colors.surfaceSunken).padding(3.dp).selectableGroup(),
         content = {
-            Box(Modifier.etaGlass(shape, elevation = EtaElevation.E1, useLocalBackdrop = false, solidAlpha = 0.96f))
+            Box(Modifier.etaElevation(EtaElevation.E1, shape).background(EtaTheme.colors.surfaceRaised, shape))
             items.forEachIndexed { index, label ->
                 Box(Modifier.clip(shape).selectable(selected = index == selectedIndex, enabled = enabled,
                     role = Role.Tab, onClick = { onSelectedIndexChange(index) }).padding(horizontal = 8.dp, vertical = 5.dp),

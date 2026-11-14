@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
@@ -65,16 +67,17 @@ import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
- * 单轮回答底部的轻量性能统计胶囊：
- * 平时仅展示最关键的速度/首字读数，点击弹出锚定统计卡片（模型用时、工具用时、TTFT、TPS）。
+ * 每条回复正文下方的一行统计小字：`52 tok/s · 首字 0.6s · 4.8s`（生成速度、平均首字时间、总用时，
+ * 没有数据的段省略）。11sp、等宽数字、最淡的文字色；点一下从这里展开本轮统计卡片。
  */
 @Composable
-internal fun TurnStatsPill(
+internal fun TurnStatsLine(
     usage: TokenUsageUi,
     modifier: Modifier = Modifier,
 ) {
     if (!usage.hasPerformanceStats) return
     var open by remember { mutableStateOf(false) }
+    var anchor by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
     val steps = (usage.stepCount ?: 1).coerceAtLeast(1)
     val llmMs = usage.llmMs ?: 0L
     val toolMs = usage.toolMs ?: 0L
@@ -87,83 +90,44 @@ internal fun TurnStatsPill(
         null
     }
     val speedText = tps?.let { "${formatTokensPerSecond(it)} tok/s" }
-    val pillLabel = when {
-        avgTtftMs != null && speedText != null -> "${formatStatDuration(avgTtftMs)} · $speedText"
-        speedText != null -> speedText
-        llmMs > 0L -> formatStatDuration(llmMs)
-        avgTtftMs != null -> "TTFT ${formatStatDuration(avgTtftMs)}"
-        else -> return
-    }
-    val interactionSource = remember { MutableInteractionSource() }
-    val restingTint = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.78f)
-    val activeBg = if (open) {
-        MiuixTheme.colorScheme.onSurface.copy(alpha = 0.06f)
-    } else {
-        Color.Transparent
-    }
-
-    Box(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .height(AnswerActionSize)
-                .clip(RoundedCornerShape(8.dp))
-                .background(activeBg, RoundedCornerShape(8.dp))
-                .then(
-                    run {
-                        Modifier
-                    },
-                )
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    role = Role.Button,
-                    onClick = { open = !open },
-                )
-                .padding(horizontal = 7.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-        ) {
-            Icon(
-                imageVector = ChatActionIcons.Gauge,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = restingTint,
-            )
-            Text(
-                text = pillLabel,
-                style = MiuixTheme.textStyles.footnote1.copy(
-                    fontSize = 12.sp,
-                    lineHeight = 18.sp,
-                    fontFeatureSettings = "tnum",
-                ),
-                color = restingTint,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-
-        if (open) {
-            ChatStatsPopoverPopup(onDismissRequest = { open = false }) {
-                StatsSectionHeader(
-                    icon = ChatActionIcons.Gauge,
-                    title = "会话统计",
-                    value = "1 轮 $steps 步",
-                )
-                StatsSectionDivider()
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (llmMs > 0L) {
-                        StatsDetailRow(label = "模型用时", value = formatStatDuration(llmMs))
-                    }
-                    if (toolMs > 0L) {
-                        StatsDetailRow(label = "工具调用用时", value = formatStatDuration(toolMs))
-                    }
-                    if (avgTtftMs != null && avgTtftMs > 0L) {
-                        StatsDetailRow(label = "首 token 平均（TTFT）", value = formatStatDuration(avgTtftMs))
-                    }
-                    if (speedText != null) {
-                        StatsDetailRow(label = "输出速度（TPS）", value = speedText)
-                    }
-                }
+    val ttftLabel = avgTtftMs?.takeIf { it > 0L }?.let { stringResource(R.string.turn_stats_ttft, formatStatShort(it)) }
+    val total = (llmMs + toolMs).takeIf { it > 0L }?.let(::formatStatShort)
+    val line = listOfNotNull(speedText, ttftLabel, total).joinToString(" · ")
+    if (line.isEmpty()) return
+    val colors = io.github.mangi.eta.ui.theme.EtaTheme.colors
+    val description = stringResource(R.string.turn_stats_open)
+    Text(
+        text = line,
+        style = io.github.mangi.eta.ui.theme.EtaTypography.tabular(io.github.mangi.eta.ui.theme.EtaTheme.type.micro),
+        color = colors.textQuiet,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+            .padding(top = 8.dp)
+            .onGloballyPositioned { anchor = it.boundsInWindow() }
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(onClickLabel = description, role = Role.Button) { open = true }
+            .padding(vertical = 4.dp),
+    )
+    ChatStatsPopoverPopup(show = open, anchor = anchor, onDismissRequest = { open = false }) {
+        StatsSectionHeader(
+            icon = ChatActionIcons.Gauge,
+            title = stringResource(R.string.turn_stats_title),
+            value = stringResource(R.string.turn_stats_steps, steps),
+        )
+        StatsSectionDivider()
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (llmMs > 0L) {
+                StatsDetailRow(label = stringResource(R.string.turn_stats_model_time), value = formatStatDuration(llmMs))
+            }
+            if (toolMs > 0L) {
+                StatsDetailRow(label = stringResource(R.string.turn_stats_tool_time), value = formatStatDuration(toolMs))
+            }
+            if (avgTtftMs != null && avgTtftMs > 0L) {
+                StatsDetailRow(label = stringResource(R.string.turn_stats_ttft_label), value = formatStatDuration(avgTtftMs))
+            }
+            if (speedText != null) {
+                StatsDetailRow(label = stringResource(R.string.turn_stats_speed_label), value = speedText)
             }
         }
     }
@@ -181,6 +145,9 @@ internal fun ContextUsageStatsPopoverPopup(
     canCompact: Boolean,
     onCompact: () -> Unit,
     onDismissRequest: () -> Unit,
+    show: Boolean = true,
+    anchor: androidx.compose.ui.geometry.Rect = androidx.compose.ui.geometry.Rect.Zero,
+    backgroundCompacting: Boolean = false,
 ) {
     val stats = usage.sessionStats
     val cacheHit = if (stats.promptTokens > 0 && stats.cachedTokens > 0) {
@@ -195,7 +162,15 @@ internal fun ContextUsageStatsPopoverPopup(
         null
     }
 
-    ChatStatsPopoverPopup(onDismissRequest = onDismissRequest) {
+    ChatStatsPopoverPopup(show = show, anchor = anchor, align = EtaPopoverAlign.End, onDismissRequest = onDismissRequest) {
+        if (backgroundCompacting) {
+            Text(
+                text = stringResource(R.string.context_background_compacting),
+                style = io.github.mangi.eta.ui.theme.EtaTheme.type.footnote,
+                color = io.github.mangi.eta.ui.theme.EtaTheme.colors.textSecondary,
+                modifier = Modifier.padding(bottom = 10.dp),
+            )
+        }
         StatsSectionHeader(
             icon = ChatActionIcons.Database,
             title = if (stats.hasTokenUsage) "Token 用量" else stringResource(R.string.ui_contextual_usage_d12810),
@@ -319,21 +294,16 @@ internal fun ContextUsageStatsPopoverPopup(
         if (canCompact) {
             Spacer(Modifier.height(12.dp))
             val compactLabel = stringResource(R.string.context_compact_action)
-            run {
-                TextButton(
-                    text = compactLabel,
-                    onClick = {
-                        onDismissRequest()
-                        onCompact()
-                    },
-                    minWidth = 0.dp,
-                    minHeight = 34.dp,
-                    cornerRadius = 17.dp,
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
-                    insideMargin = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+            EtaButton(
+                compactLabel,
+                onClick = {
+                    onDismissRequest()
+                    onCompact()
+                },
+                kind = EtaButtonKind.Tonal,
+                minHeight = 44.dp,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -341,38 +311,14 @@ internal fun ContextUsageStatsPopoverPopup(
 @Composable
 internal fun ChatStatsPopoverPopup(
     onDismissRequest: () -> Unit,
+    show: Boolean = true,
+    anchor: androidx.compose.ui.geometry.Rect = androidx.compose.ui.geometry.Rect.Zero,
+    align: EtaPopoverAlign = EtaPopoverAlign.Start,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val density = LocalDensity.current
-    val positionProvider = remember(density) { StatsPopoverPositionProvider(density) }
-
-    Popup(
-        popupPositionProvider = positionProvider,
-        onDismissRequest = onDismissRequest,
-        properties = PopupProperties(focusable = true),
-    ) {
-        val cardModifier = run {
-            Modifier
-                .widthIn(min = 256.dp, max = 328.dp)
-                .dropShadow(
-                    shape = RoundedCornerShape(18.dp),
-                    shadow = Shadow(radius = 16.dp, color = Color.Black, alpha = 0.12f),
-                )
-                .squircleSurface(
-                    color = MiuixTheme.colorScheme.surfaceContainer,
-                    cornerRadius = 18.dp,
-                )
-                .squircleBorder(
-                    width = 0.5.dp,
-                    color = MiuixTheme.colorScheme.outline.copy(alpha = 0.5f),
-                    cornerRadius = 18.dp,
-                )
-        }
-
-        Column(
-            modifier = cardModifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            content = content,
-        )
+    // 统计卡片是一枚玻璃小窗：从点击处展开、原路收回，背后内容被模糊。
+    EtaPopover(show, anchor, onDismissRequest, align = align, minWidth = 256.dp, maxWidth = 320.dp) {
+        Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), content = content)
     }
 }
 
@@ -521,36 +467,15 @@ private fun StatsOutputRow(
     }
 }
 
-private class StatsPopoverPositionProvider(
-    density: Density,
-) : PopupPositionProvider {
-    private val marginPx = with(density) { 12.dp.roundToPx() }
-    private val verticalGapPx = with(density) { 8.dp.roundToPx() }
-
-    override fun calculatePosition(
-        anchorBounds: IntRect,
-        windowSize: IntSize,
-        layoutDirection: LayoutDirection,
-        popupContentSize: IntSize,
-    ): IntOffset {
-        val minX = marginPx
-        val maxX = (windowSize.width - popupContentSize.width - marginPx).coerceAtLeast(minX)
-        val preferredX = if (layoutDirection == LayoutDirection.Rtl) {
-            anchorBounds.right - popupContentSize.width
-        } else {
-            anchorBounds.left
-        }
-        val x = preferredX.coerceIn(minX, maxX)
-
-        val aboveY = anchorBounds.top - popupContentSize.height - verticalGapPx
-        val belowY = anchorBounds.bottom + verticalGapPx
-        val y = if (aboveY >= marginPx || belowY + popupContentSize.height > windowSize.height - marginPx) {
-            aboveY.coerceAtLeast(marginPx)
-        } else {
-            belowY.coerceAtMost((windowSize.height - popupContentSize.height - marginPx).coerceAtLeast(marginPx))
-        }
-        return IntOffset(x, y)
+/** 统计小字用的短格式：`0.6s`、`12s`、`1m 12s`。 */
+internal fun formatStatShort(ms: Long): String {
+    val clamped = ms.coerceAtLeast(0L)
+    if (clamped < 10_000L) {
+        val tenths = (clamped / 100.0).roundToLong()
+        return "${tenths / 10L}.${tenths % 10L}s"
     }
+    val seconds = (clamped / 1_000.0).roundToLong()
+    return if (seconds < 60L) "${seconds}s" else "${seconds / 60L}m ${seconds % 60L}s"
 }
 
 internal fun formatStatDuration(ms: Long): String {

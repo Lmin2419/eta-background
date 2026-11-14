@@ -80,6 +80,7 @@ internal fun AgentHomeScreen(
                         messages = state.messages,
                         modelPickerState = modelPickerState,
                         isCompacting = state.isCompacting,
+                        backgroundCompacting = state.backgroundCompacting,
                         isBranching = isBranching,
                         input = state.input,
                         isStreaming = state.isStreaming,

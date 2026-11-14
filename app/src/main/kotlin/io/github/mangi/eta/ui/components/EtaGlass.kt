@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.ui.app.LocalBlurEnabled
@@ -52,27 +51,53 @@ internal fun rememberEtaGlassBackdrop(base: Color = EtaTheme.colors.canvas): Lay
 }
 
 internal object EtaGlassDefaults {
-    /** 有真实模糊时底色的不透明度：既能透出背后内容，文字又始终可读。 */
-    const val BlurTintAlpha = 0.62f
+    /** 有真实模糊时底色的不透明度（标准档）：既能透出背后内容，文字又始终可读。 */
+    const val BlurTintAlpha = 0.64f
+    /** 深色模式的标准档。 */
+    const val BlurTintAlphaDark = 0.55f
     /** 没有模糊时的磨砂底色不透明度。 */
     const val SolidTintAlpha = 0.92f
+    /** 小窗、窗口上面有大量文字，底色更实，背后的字不能透上来干扰阅读。 */
+    const val PopoverAlpha = 0.92f
+    const val WindowAlpha = 0.90f
     const val BlurRadius = 28f
 }
 
+/** 当前外观设置下的玻璃底色不透明度（通透 / 标准 / 磨砂）；深色模式略降，避免发灰。 */
+@Composable
+internal fun etaGlassTintAlpha(): Float {
+    val strength = io.github.mangi.eta.ui.app.LocalAppearanceSettings.current.glassStrength
+    val dark = EtaTheme.colors.isDark
+    return when (strength) {
+        io.github.mangi.eta.data.model.AppearanceGlassStrength.STANDARD -> if (dark) EtaGlassDefaults.BlurTintAlphaDark else EtaGlassDefaults.BlurTintAlpha
+        else -> if (dark) strength.tintAlpha - 0.09f else strength.tintAlpha
+    }
+}
+
+/** 真实模糊是否可用：设置里打开、设备支持、且不在省电模式。 */
+@Composable
+internal fun etaGlassBlurOn(): Boolean = LocalBlurEnabled.current && isRuntimeShaderSupported()
+
 /**
- * 玻璃边缘：上沿最亮、中段几乎透明、下沿再亮一点——像光从上方照进玻璃、在底边又折回来，
- * 让面板看起来有厚度。
+ * 玻璃边缘：上沿一道高光，向下很快消失——像光从上方照进玻璃。外圈另有一条极淡的深色细线，
+ * 在浅色底上把玻璃和背景分开（见 [etaGlass]）。
  */
 @Composable
 internal fun etaGlassEdge(): Brush {
-    val dark = EtaTheme.colors.canvas.luminance() < 0.5f
-    return if (dark) Brush.verticalGradient(0f to Color.White.copy(alpha = 0.24f), 0.5f to Color.White.copy(alpha = 0.04f), 1f to Color.White.copy(alpha = 0.12f))
-    else Brush.verticalGradient(0f to Color.White.copy(alpha = 0.95f), 0.5f to Color.White.copy(alpha = 0.18f), 1f to Color.White.copy(alpha = 0.55f))
+    val dark = EtaTheme.colors.isDark
+    return if (dark) Brush.verticalGradient(0f to Color.White.copy(alpha = 0.18f), 0.4f to Color.White.copy(alpha = 0.03f), 1f to Color.Transparent)
+    else Brush.verticalGradient(0f to Color.White.copy(alpha = 0.95f), 0.4f to Color.White.copy(alpha = 0.25f), 1f to Color.Transparent)
 }
 
+/** 外圈细线：浅色 rgba(0,0,0,0.07)，深色用很淡的白。 */
+@Composable
+internal fun etaGlassHairline(): Color =
+    if (EtaTheme.colors.isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.07f)
+
 /**
- * 玻璃面板。[tint] 是材质的底色（浅色模式偏白、深色模式偏灰），[elevation] 给一层很轻的投影让它「浮」起来。
- * [backdrop] 默认取页面提供的背景层；传 null 则用磨砂底色。
+ * 玻璃面板。[tint] 是材质的底色（默认 `surface`），[elevation] 给一层很轻的投影让它「浮」起来。
+ * [backdrop] 默认取页面提供的背景层；传 null 则用磨砂底色。[blurAlpha] 为 null 时跟随外观设置的玻璃档位；
+ * 小窗、窗口传更高的值，并且不会低于当前档位。
  */
 internal fun Modifier.etaGlass(
     shape: Shape,
@@ -82,13 +107,16 @@ internal fun Modifier.etaGlass(
     backdrop: LayerBackdrop? = null,
     useLocalBackdrop: Boolean = true,
     solidAlpha: Float = EtaGlassDefaults.SolidTintAlpha,
-    blurAlpha: Float = EtaGlassDefaults.BlurTintAlpha,
+    blurAlpha: Float? = null,
     interactionSource: androidx.compose.foundation.interaction.InteractionSource? = null,
 ): Modifier = composed {
-    val base = tint ?: EtaTheme.colors.surfaceRaised
+    val base = tint ?: EtaTheme.colors.surface
     val layer = backdrop ?: if (useLocalBackdrop) LocalEtaGlassBackdrop.current else null
-    val blurOn = LocalBlurEnabled.current && isRuntimeShaderSupported()
+    val blurOn = etaGlassBlurOn()
+    val strengthAlpha = etaGlassTintAlpha()
+    val alpha = blurAlpha?.coerceAtLeast(strengthAlpha) ?: strengthAlpha
     val edge = etaGlassEdge()
+    val hairline = etaGlassHairline()
     val sheen = etaGlassSheen()
     var m: Modifier = this
     if (elevation != null) m = m.etaElevation(elevation, shape)
@@ -97,7 +125,7 @@ internal fun Modifier.etaGlass(
             backdrop = layer,
             shape = shape,
             blurRadius = EtaGlassDefaults.BlurRadius,
-            colors = BlurColors(blendColors = listOf(BlendColorEntry(base.copy(alpha = blurAlpha)))),
+            colors = BlurColors(blendColors = listOf(BlendColorEntry(base.copy(alpha = alpha)))),
         )
     } else {
         m.background(base.copy(alpha = solidAlpha), shape)
@@ -108,7 +136,7 @@ internal fun Modifier.etaGlass(
         androidx.compose.animation.core.animateFloatAsState(if (down) 1f else 0f,
             androidx.compose.animation.core.tween(if (down) 90 else 260), label = "glassPress")
     }
-    val dark = EtaTheme.colors.canvas.luminance() < 0.5f
+    val dark = EtaTheme.colors.isDark
     m.drawWithCache {
         val outline = shape.createOutline(size, layoutDirection, this)
         onDrawBehind {
@@ -116,35 +144,12 @@ internal fun Modifier.etaGlass(
             val p = pressed?.value ?: 0f
             if (p > 0f) drawOutline(outline, Color.White.copy(alpha = (if (dark) 0.10f else 0.35f) * p))
         }
-    }.border(edgeWidth, edge, shape)
+    }.border(0.5.dp, hairline, shape).border(edgeWidth, edge, shape)
 }
 
-/** 上沿反光：顶部一抹很淡的白，向下 45% 处消失。 */
+/** 上沿反光：顶部一抹很淡的白，向下 45% 处消失（浅色 0.20，深色 0.05）。 */
 @Composable
 internal fun etaGlassSheen(): Brush {
-    val dark = EtaTheme.colors.canvas.luminance() < 0.5f
-    val top = if (dark) 0.07f else 0.35f
+    val top = if (EtaTheme.colors.isDark) 0.05f else 0.20f
     return Brush.verticalGradient(0f to Color.White.copy(alpha = top), 0.45f to Color.Transparent)
-}
-
-/**
- * 页面背景的环境光：画布底色上两团很淡的光晕（左上珊瑚、右下冷色），给玻璃材质提供透出的层次。
- * 只画在背景层，不影响内容；深色模式更暗更收敛。
- */
-internal fun Modifier.etaAmbientBackground(base: Color? = null): Modifier = composed {
-    val colors = EtaTheme.colors
-    val canvas = base ?: colors.canvas
-    val dark = colors.canvas.luminance() < 0.5f
-    val warm = colors.accent.copy(alpha = if (dark) 0.16f else 0.10f)
-    val cool = Color(if (dark) 0xFF5B6CFF else 0xFF8FA8FF).copy(alpha = if (dark) 0.12f else 0.10f)
-    drawWithCache {
-        val r = maxOf(size.width, size.height) * 0.75f
-        val warmBrush = Brush.radialGradient(listOf(warm, Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.1f, size.height * 0.04f), radius = r)
-        val coolBrush = Brush.radialGradient(listOf(cool, Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.95f, size.height * 0.85f), radius = r)
-        onDrawBehind {
-            drawRect(canvas)
-            drawRect(warmBrush)
-            drawRect(coolBrush)
-        }
-    }
 }

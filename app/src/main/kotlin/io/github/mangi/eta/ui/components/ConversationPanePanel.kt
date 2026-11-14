@@ -12,6 +12,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.compose.foundation.layout.*
+import io.github.mangi.eta.ui.theme.etaElevation
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -118,7 +119,7 @@ internal fun ConversationPanePanel(
     val sections = remember(state.conversations, state.groups, state.searchQuery, archived, today) { projectConversationSections(state, archived, today) }
     val groupNames = remember(state.groups) { state.groups.associate { it.id to it.name } }
     // 侧栏是浅灰底（与 Claude 一致），主页面纯白；选中行是更深一档的灰色胶囊。
-    Column(modifier.width(width).fillMaxHeight().etaAmbientBackground(EtaTheme.colors.surfaceSunken)
+    Column(modifier.width(width).fillMaxHeight().background(EtaTheme.colors.surfaceSunken)
         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))) {
         AnimatedContent(selecting, transitionSpec = { fadeIn(tween(motion.short, easing = motion.standard)) togetherWith fadeOut(tween(motion.exitDuration(180), easing = motion.accelerate)) }, label = "selectionToolbar") { mode ->
             if (mode) ConversationSelectionHeader(selectedIds.size, visibleIds.isNotEmpty() && selectedIds.containsAll(visibleIds),
@@ -130,9 +131,9 @@ internal fun ConversationPanePanel(
                 // 与 Claude 侧栏同一套结构：左上衬线大标题，右上圆形搜索；点搜索才展开搜索框。
                 Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.app_name), Modifier.weight(1f), style = EtaTheme.type.title1, color = EtaTheme.colors.textPrimary)
-                    CircleIconButton(Icons.Outlined.Search, stringResource(R.string.conversation_search_hint)) {
+                    CircleIconButton(Icons.Outlined.Search, stringResource(R.string.conversation_search_hint), glass = false, onClick = {
                         searching = !searching; if (!searching) onSearchChange("")
-                    }
+                    })
                 }
                 AnimatedVisibility(searching || state.searchQuery.isNotBlank()) {
                     EtaSearchField(state.searchQuery, onSearchChange, stringResource(R.string.conversation_search_hint),
@@ -244,7 +245,7 @@ internal fun ConversationPanePanel(
         // 底部：左边圆形设置按钮（有待处理权限时带提示点），右边黑色「新建会话」胶囊。
         Row(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box {
-                CircleIconButton(Icons.Outlined.Settings, stringResource(R.string.route_settings), onClick = onOpenSettings)
+                CircleIconButton(Icons.Outlined.Settings, stringResource(R.string.route_settings), onClick = onOpenSettings, glass = false)
                 if (workspace.permissionsPending > 0) Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(8.dp).background(EtaTheme.colors.attention, EtaTheme.shapes.radiusFull))
             }
             Spacer(Modifier.weight(1f))
@@ -319,12 +320,10 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
             while (index >= 0) { addStyle(SpanStyle(color = colors.accent), index, index + query.length); index = title.indexOf(query, index + query.length, ignoreCase = true) }
         }
     } }
-    val background by animateColorAsState(if (selected) colors.surfaceRaised else Color.Transparent, tween(EtaTheme.motion.short), label = "selectedConversation")
+    val background by animateColorAsState(if (selected) colors.textPrimary.copy(alpha = 0.06f) else Color.Transparent, tween(EtaTheme.motion.short), label = "selectedConversation")
     Row(modifier.fillMaxWidth().heightIn(min = 48.dp).clip(EtaTheme.shapes.radiusMd)
         .semantics { if (selecting) { this.selected = selected; role = Role.Checkbox } }
-        // 当前对话：一块带高光边的玻璃底，而不是平涂的色块。
-        .then(if (selected) Modifier.etaGlass(EtaTheme.shapes.radiusMd, elevation = null, useLocalBackdrop = false, solidAlpha = 0.82f)
-            else Modifier.background(background))
+        .background(background)
         .etaTouchScale().combinedClickable(onClick = onClick, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() })
         .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (selecting) ConversationSelectionMarker(selected)
@@ -394,10 +393,12 @@ private fun DesktopPaneRow(row: PaneDesktopSession, onClick: () -> Unit, modifie
 
 /** 圆形描边图标按钮（44dp），用于侧栏的搜索与设置。 */
 @Composable
-internal fun CircleIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
+internal fun CircleIconButton(icon: ImageVector, description: String, onClick: () -> Unit, glass: Boolean = true) {
     val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    Box(Modifier.size(44.dp).etaPressScale(press, pressedScale = 0.92f)
-        .etaGlass(EtaTheme.shapes.radiusFull, elevation = null, useLocalBackdrop = false, interactionSource = press)
+    // 对话页顶部是玻璃（模糊背后的消息）；侧栏里本身已在玻璃上，按钮用实色白圆，不叠玻璃。
+    Box(Modifier.requiredSize(44.dp).etaPressScale(press, pressedScale = 0.92f)
+        .then(if (glass) Modifier.etaGlass(EtaTheme.shapes.radiusFull, elevation = io.github.mangi.eta.ui.theme.EtaElevation.E1, interactionSource = press)
+            else Modifier.etaElevation(io.github.mangi.eta.ui.theme.EtaElevation.E1, EtaTheme.shapes.radiusFull).background(EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusFull))
         .clip(EtaTheme.shapes.radiusFull).clickable(interactionSource = press, indication = null, onClickLabel = description, onClick = onClick)
         .semantics { contentDescription = description; role = Role.Button }, contentAlignment = Alignment.Center) {
         Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary)

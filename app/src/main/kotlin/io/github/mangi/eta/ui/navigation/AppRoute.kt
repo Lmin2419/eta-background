@@ -37,6 +37,9 @@ sealed interface AppRoute : NavKey {
     data object ConversationTitleSettings : AppRoute
 
     @Serializable
+    data object ContextCompactionSettings : AppRoute
+
+    @Serializable
     data object AssistantOverlaySettings : AppRoute
 
     @Serializable

@@ -19,13 +19,16 @@ object EtaTypography {
     val display = serif(30, 38)
     val title1 = serif(26, 34)
     val title2 = serif(20, 28)
-    val topBarTitle = serif(18, 24)
+    // 小字号衬线发虚：顶栏小标题用无衬线。衬线只用于 display/title1/title2 与 Markdown H1/H2。
+    val topBarTitle = style(17, 24, FontWeight.SemiBold)
     val headline = style(17, 24, FontWeight.SemiBold)
     val body = style(16, 26)
     val rowTitle = style(16, 22, FontWeight.Medium)
     val subhead = style(14, 20)
     val footnote = style(13, 18)
     val caption = style(12, 16, FontWeight.Medium).copy(letterSpacing = 0.2.sp)
+    /** 统计小字、时间。 */
+    val micro = style(11, 14)
     val mono = style(13, 20).copy(fontFamily = EtaMonospace)
     val inlineCode = mono.copy(fontSize = 14.sp)
     val markdownH1 = serif(22, 30)

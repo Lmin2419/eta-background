@@ -25,7 +25,7 @@ internal fun EtaChoiceChip(text: String, selected: Boolean, onClick: () -> Unit,
     val container by animateColorAsState(if (selected) colors.accentSoft else colors.surfaceSunken,
         tween(EtaTheme.motion.micro), label = "chipContainer")
     Row(modifier.heightIn(min = 32.dp).alpha(if (enabled) 1f else 0.38f)
-        .semantics { this.selected = selected }.etaGlass(EtaTheme.shapes.radiusFull, tint = container, elevation = null, useLocalBackdrop = false, solidAlpha = if (selected) 1f else 0.82f, edgeWidth = 0.5.dp).clip(EtaTheme.shapes.radiusFull)
+        .semantics { this.selected = selected }.clip(EtaTheme.shapes.radiusFull).background(container)
         .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
         .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {

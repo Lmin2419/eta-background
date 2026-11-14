@@ -113,6 +113,7 @@ internal object AgentModelClient {
         toolFilter: ((JSONArray) -> JSONArray)? = null,
         onContextSnapshot: (AgentContextSnapshot) -> Unit = {},
         onTranscript: (List<ConversationMessage>) -> Unit = {},
+        backgroundCompaction: BackgroundCompactionPolicy? = null,
         onEvent: (AgentEvent) -> Unit = {}
     ): ModelResponse.Text {
         config.validate()
@@ -236,6 +237,7 @@ internal object AgentModelClient {
             roleplayContext = roleplayContext,
             initialSupplementIndex = initialSupplementIndex,
             toolsForRound = ::toolsForRound,
+            backgroundCompaction = backgroundCompaction.takeUnless { rewriteReply || compactOnly },
         )
         val result = try {
             if (compactOnly) loop.compactOnly() else loop.run()

@@ -2,6 +2,8 @@ package io.github.mangi.eta.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,3 +64,30 @@ internal fun Modifier.captureForTopBar(backdrop: LayerBackdrop?): Modifier =
 @Composable
 internal fun topBarContainerColor(backdrop: LayerBackdrop?): Color =
     if (backdrop == null) EtaTheme.colors.canvas else Color.Transparent
+
+/** 对话页滚动边缘向下多出的渐隐高度（不计入列表的顶部留白）。 */
+internal val ChatScrollEdgeTail = androidx.compose.ui.unit.Dp(24f)
+
+/**
+ * 对话页顶部的滚动边缘：没有整条顶栏，只有三个浮着的玻璃控件；控件下方一条从页面底色到透明的渐隐，
+ * 叠一层很轻的渐进模糊（半径 12）。消息滑到控件下面时渐渐变淡，而不是从按钮之间硬穿过去。
+ * 控件本身经 [LocalEtaGlassBackdrop] 拿到同一背景层做真模糊。
+ */
+@Composable
+internal fun ChatScrollEdge(backdrop: LayerBackdrop?, content: @Composable () -> Unit) {
+    val canvas = EtaTheme.colors.canvas
+    val fade = androidx.compose.ui.graphics.Brush.verticalGradient(
+        0f to canvas.copy(alpha = 0.94f), 0.55f to canvas.copy(alpha = 0.72f), 1f to canvas.copy(alpha = 0f),
+    )
+    val blur = if (backdrop != null) Modifier.progressiveTextureBlur(
+        backdrop = backdrop,
+        shape = RectangleShape,
+        gradient = ProgressiveBlur.Top.copy(curve = 1.6f),
+        blurRadius = 12f,
+        colors = BlurColors(blendColors = listOf(BlendColorEntry(canvas.copy(alpha = 0.08f)))),
+    ) else Modifier
+    androidx.compose.foundation.layout.Column(Modifier.then(blur).background(fade)) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalEtaGlassBackdrop provides backdrop) { content() }
+        androidx.compose.foundation.layout.Spacer(Modifier.fillMaxWidth().height(ChatScrollEdgeTail))
+    }
+}

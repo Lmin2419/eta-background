@@ -11,6 +11,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowUpward
@@ -50,6 +51,7 @@ internal fun ComposerActionButton(
     onHoldEnd: (Boolean) -> Unit,
     onAccessibleLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    plain: Boolean = false,
 ) {
     val click by rememberUpdatedState(onClick)
     val holdStart by rememberUpdatedState(onHoldStart)
@@ -59,17 +61,20 @@ internal fun ComposerActionButton(
     val supportsHold = action == ComposerAction.Queue || action == ComposerAction.Microphone
     val colors = EtaTheme.colors
     val motion = EtaTheme.motion
-    val background by animateColorAsState(when (action) {
-        ComposerAction.Send -> colors.accent
-        ComposerAction.Queue -> colors.accentSoft
-        ComposerAction.Stop -> colors.dangerSoft
+    // 发送键是一屏里唯一的珊瑚橘（brand）；停止是黑底白方块；排队中性灰；没有内容时是灰底淡箭头。
+    val background by animateColorAsState(when {
+        plain -> androidx.compose.ui.graphics.Color.Transparent
+        action == ComposerAction.Send -> colors.brand
+        action == ComposerAction.Queue -> colors.accentSoft
+        action == ComposerAction.Stop -> colors.textPrimary
         else -> colors.surfaceSunken
     }, tween(motion.short), label = "composerActionColor")
-    val foreground = when (action) {
-        ComposerAction.Send -> colors.onAccent
-        ComposerAction.Queue -> colors.onAccentSoft
-        ComposerAction.Stop -> colors.danger
-        else -> colors.textTertiary
+    val foreground = when {
+        plain -> colors.textSecondary
+        action == ComposerAction.Send -> colors.onBrand
+        action == ComposerAction.Queue -> colors.onAccentSoft
+        action == ComposerAction.Stop -> colors.canvas
+        else -> colors.textQuiet
     }
     val flash = remember { Animatable(0f) }
     var sent by remember { mutableIntStateOf(0) }
@@ -80,7 +85,8 @@ internal fun ComposerActionButton(
     val trigger = { if (action == ComposerAction.Send) sent++; haptics.tick(); click() }
     val latestTrigger by rememberUpdatedState(trigger)
     val aurora = colors.aurora
-    Box(modifier.size(48.dp)
+    // 固定尺寸：空间不够时让文字省略，按钮不变形（§2.3）。
+    Box(modifier.requiredSize(if (plain) 44.dp else 48.dp, 48.dp)
         .semantics {
             role = Role.Button
             contentDescription = label
@@ -117,8 +123,7 @@ internal fun ComposerActionButton(
                 }
             }
         }, contentAlignment = Alignment.Center) {
-        // 发送键：圆角方块（与输入卡片的大圆角呼应），不再是正圆。
-        Box(Modifier.size(40.dp).background(background, SendButtonShape).drawWithContent {
+        Box(Modifier.requiredSize(if (plain) 40.dp else 36.dp).background(background, SendButtonShape).drawWithContent {
             drawContent()
             if (flash.value > 0f) drawRoundRect(Brush.sweepGradient(*aurora.stops), alpha = flash.value, style = Stroke(2.dp.toPx()),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.minDimension / 2))
@@ -134,11 +139,15 @@ internal fun ComposerActionButton(
                 label = "composerActionIcon",
             ) { shown ->
                 Icon(when (shown) {
-                    ComposerAction.Send -> Icons.Outlined.ArrowUpward
+                    ComposerAction.Send, ComposerAction.Disabled -> Icons.Outlined.ArrowUpward
                     ComposerAction.Queue -> Icons.Outlined.Schedule
                     ComposerAction.Stop -> Icons.Outlined.Stop
                     else -> Icons.Outlined.Mic
-                }, null, Modifier.size(if (shown == ComposerAction.Stop) 20.dp else 24.dp), tint = foreground)
+                }, null, Modifier.size(when {
+                    plain -> 22.dp
+                    shown == ComposerAction.Stop -> 16.dp
+                    else -> 20.dp
+                }), tint = foreground)
             }
         }
     }

@@ -150,7 +150,7 @@ internal fun AgentAppShell(
                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
             ),
             topBar = {
-                if (currentRoute is AppRoute.Home && homeTopBar != null) TopBarBackdrop(backdrop) { homeTopBar() }
+                if (currentRoute is AppRoute.Home && homeTopBar != null) io.github.mangi.eta.ui.components.ChatScrollEdge(backdrop) { homeTopBar() }
                 else if (currentRoute !is AppRoute.Settings) {
                     TopBarBackdrop(backdrop) {
                         AgentTopBar(
@@ -499,6 +499,7 @@ private fun titleForRoute(route: AppRoute?): String = when (route) {
     is AppRoute.CommonTasks, is AppRoute.Tasks -> stringResource(R.string.eta_tasks)
     is AppRoute.Subagents -> "Subagent"
     is AppRoute.ConversationTitleSettings -> stringResource(R.string.conversation_title_settings_title)
+    is AppRoute.ContextCompactionSettings -> stringResource(R.string.compaction_settings_title)
     is AppRoute.AssistantOverlaySettings -> stringResource(R.string.assistant_overlay_settings_title)
     is AppRoute.Characters -> "角色"
     is AppRoute.CharacterDetail -> "角色详情"

@@ -85,6 +85,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -124,7 +126,7 @@ private val SendButtonVisualSize = ChatInputActionIconSize
 private val SendIconSize = 16.dp
 private val StopIconSize = 10.dp
 private val ThinkingIconSize = 21.dp
-private val InputContainerShape = RoundedCornerShape(24.dp)
+private val InputContainerShape = RoundedCornerShape(28.dp)
 
 /**
  * 电脑会话对输入器的定制：执行中的占位文字，以及发送时直接插队的入口。
@@ -188,6 +190,7 @@ internal fun AgentChatInputBar(
     onRemoveFileReference: (String) -> Unit,
     onCancelMessageEdit: () -> Unit,
     modifier: Modifier = Modifier,
+    backgroundCompacting: Boolean = false,
 ) {
     val remoteComposer = LocalRemoteComposer.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -457,6 +460,13 @@ internal fun AgentChatInputBar(
 
                         Spacer(modifier = Modifier.weight(1f))
 
+                        // 上下文圆环：用量 ≥ 30% 才出现；后台整理时旁边有呼吸小点。
+                        if (showContextUsage && remoteComposer == null &&
+                            ((contextUsage.progress ?: 0f) >= ContextRingThreshold || backgroundCompacting)) {
+                            AgentContextUsageButton(contextUsage, onCompactContext, canCompactContext && !isStreaming && !isCompacting,
+                                backgroundCompacting = backgroundCompacting)
+                        }
+
                         val action = resolveComposerAction(isStreaming, isCompacting, canSend)
                         val submitCurrentDraft: (Boolean) -> Unit = { interrupt ->
                             if (canSend && !isCompacting) {
@@ -492,18 +502,35 @@ internal fun AgentChatInputBar(
                             }
                             Spacer(modifier = Modifier.width(4.dp))
                         }
+                        // 话筒：点按听写，按住说话；与发送键分开，发送键只负责发送 / 停止 / 排队。
                         ComposerActionButton(
-                            action = action,
-                            label = when (action) {
+                            action = ComposerAction.Microphone,
+                            label = stringResource(if (speechState.active) R.string.speech_dictation_finish else R.string.speech_dictation),
+                            longPressLabel = stringResource(R.string.eta_hold_to_talk),
+                            onClick = { beginDictation() },
+                            onHoldStart = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                if (recognitionEnabled) { microphoneTapRequest = false; microphoneHold = true; requestMicrophone() }
+                            },
+                            onHoldEnd = { released ->
+                                if (microphoneHold) { microphoneHold = false; if (released) dictation.finish() else dictation.cancel() }
+                            },
+                            onAccessibleLongClick = { beginDictation() },
+                            plain = true,
+                        )
+                        val mainAction = if (action == ComposerAction.Microphone) ComposerAction.Disabled else action
+                        ComposerActionButton(
+                            action = mainAction,
+                            label = when (mainAction) {
                                 ComposerAction.Stop -> stringResource(R.string.chat_stop)
                                 ComposerAction.Queue -> stringResource(R.string.eta_queue_message)
                                 ComposerAction.Microphone -> stringResource(if (speechState.active) R.string.speech_dictation_finish else R.string.speech_dictation)
-                                ComposerAction.Disabled -> stringResource(R.string.context_compaction)
+                                ComposerAction.Disabled -> stringResource(if (isCompacting) R.string.context_compaction else R.string.chat_send)
                                 else -> stringResource(if (isEditingMessage && preserveFollowingMessages) R.string.chat_save_message else if (isEditingMessage) R.string.eta_edit_resend else R.string.chat_send)
                             },
-                            longPressLabel = stringResource(if (action == ComposerAction.Queue) R.string.eta_interrupt_send else R.string.eta_hold_to_talk),
+                            longPressLabel = stringResource(if (mainAction == ComposerAction.Queue) R.string.eta_interrupt_send else R.string.eta_hold_to_talk),
                             onClick = {
-                                when (action) {
+                                when (mainAction) {
                                     ComposerAction.Stop -> onStop()
                                     ComposerAction.Queue, ComposerAction.Send -> submitCurrentDraft(false)
                                     ComposerAction.Microphone -> beginDictation()
@@ -530,70 +557,51 @@ internal fun AgentChatInputBar(
 
 }
 
-/** Compact effort label; provider-specific options and dispatch remain unchanged. */
+/**
+ * 输入胶囊里的思考等级：一段文字「思考 · 标准」，点一下从这里展开一枚玻璃小窗选等级。
+ * 只有一个可选项或正在生成时不可点。
+ */
 @Composable
 private fun ThinkingEffortChip(
     effort: ReasoningEffort,
     options: List<ReasoningEffort>,
     enabled: Boolean,
-    popupAnchorTopPx: Int,
-    popupMaxHeight: Dp,
+    @Suppress("UNUSED_PARAMETER") popupAnchorTopPx: Int,
+    @Suppress("UNUSED_PARAMETER") popupMaxHeight: Dp,
     onEffortChange: (ReasoningEffort) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showPopup by remember { mutableStateOf(false) }
-    val active = effort != ReasoningEffort.OFF
+    var anchor by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
     val menuEnabled = enabled && options.size > 1
     LaunchedEffect(menuEnabled) {
         if (!menuEnabled) showPopup = false
     }
-    val popupPositionProvider = remember(popupAnchorTopPx) {
-        InputPopupPositionProvider(popupAnchorTopPx)
+    val level = stringResource(when (effort) {
+        ReasoningEffort.OFF -> R.string.eta_effort_off
+        ReasoningEffort.MINIMAL, ReasoningEffort.LOW -> R.string.eta_effort_quick
+        ReasoningEffort.HIGH, ReasoningEffort.XHIGH, ReasoningEffort.MAX -> R.string.eta_effort_deep
+        else -> R.string.eta_effort_standard
+    })
+    val label = stringResource(R.string.eta_effort_label, level)
+    val colors = EtaTheme.colors
+    Row(
+        modifier
+            .heightIn(min = ChatInputActionSize)
+            .onGloballyPositioned { anchor = it.boundsInWindow() }
+            .clip(EtaTheme.shapes.radiusFull)
+            .clickable(enabled = menuEnabled, role = androidx.compose.ui.semantics.Role.Button) { showPopup = true }
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(label, style = EtaTheme.type.footnote, color = if (menuEnabled) colors.textSecondary else colors.textQuiet,
+            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        if (menuEnabled) Icon(Icons.Outlined.ExpandMore, null, Modifier.size(16.dp), tint = colors.textQuiet)
     }
-    val contentColor by animateColorAsState(
-        targetValue = if (active) {
-            MiuixTheme.colorScheme.primary
-        } else {
-            MiuixTheme.colorScheme.onSurfaceVariantSummary
-        },
-        animationSpec = tween(EtaTheme.motion.short, easing = EtaTheme.motion.standard),
-        label = "thinking_content",
-    )
-    Box(modifier = modifier) {
-        EtaChoiceChip(
-            text = stringResource(when (effort) {
-                ReasoningEffort.OFF, ReasoningEffort.MINIMAL, ReasoningEffort.LOW -> R.string.eta_effort_quick
-                ReasoningEffort.HIGH, ReasoningEffort.XHIGH, ReasoningEffort.MAX -> R.string.eta_effort_deep
-                else -> R.string.eta_effort_standard
-            }),
-            leadingIcon = if (!active) Icons.Outlined.Bolt else if (effort in listOf(ReasoningEffort.HIGH, ReasoningEffort.XHIGH, ReasoningEffort.MAX)) Icons.Outlined.Psychology else Icons.Outlined.AutoAwesome,
-            selected = active,
-            enabled = menuEnabled,
-            onClick = { showPopup = true },
-            modifier = Modifier.padding(horizontal = 4.dp),
-        )
-        WindowListPopup(
-            show = showPopup && menuEnabled && popupAnchorTopPx > 0,
-            popupPositionProvider = popupPositionProvider,
-            alignment = PopupPositionProvider.Align.TopStart,
-            onDismissRequest = { showPopup = false },
-            maxHeight = popupMaxHeight,
-        ) {
-            val dismiss = LocalDismissState.current
-            ListPopupColumn {
-                options.forEachIndexed { index, option ->
-                    DropdownImpl(
-                        text = option.displayName,
-                        optionSize = options.size,
-                        isSelected = option == effort,
-                        index = index,
-                        onSelectedIndexChange = {
-                            onEffortChange(option)
-                            dismiss?.invoke()
-                        },
-                    )
-                }
-            }
+    EtaPopover(showPopup && menuEnabled, anchor, { showPopup = false }, title = label) {
+        options.forEach { option ->
+            EtaMenuItem(option.displayName, onClick = { onEffortChange(option); showPopup = false }, selected = option == effort)
         }
     }
 }

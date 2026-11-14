@@ -192,6 +192,7 @@ internal fun AgentChatBody(
     modifier: Modifier = Modifier,
     isBranching: Boolean = false,
     onBranchMessage: (String) -> Unit = {},
+    backgroundCompacting: Boolean = false,
 ) {
     val scrollState = rememberLazyListState(initialFirstVisibleItemIndex = messages.size + if (hasEarlierMessages) 1 else 0)
     val keyboard = LocalSoftwareKeyboardController.current
@@ -269,6 +270,7 @@ internal fun AgentChatBody(
             input = input,
             modelPickerState = modelPickerState,
             isCompacting = isCompacting,
+            backgroundCompacting = backgroundCompacting,
             isBranching = isBranching,
             contextUsage = contextUsage,
             isStreaming = isStreaming,
@@ -392,6 +394,7 @@ private fun AgentChatScaffold(
     onLoadEarlierMessages: () -> Unit,
     onHistoryViewportChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    backgroundCompacting: Boolean = false,
 ) {
 
     val glassBackdrop = rememberEtaGlassBackdrop(EtaTheme.colors.canvas)
@@ -441,13 +444,14 @@ private fun AgentChatScaffold(
                 onAttachFilePath = onAttachFilePath,
                 onRemoveFileReference = onRemoveFileReference,
                 onCancelMessageEdit = onCancelMessageEdit,
+                backgroundCompacting = backgroundCompacting,
             ) else Spacer(Modifier.height(12.dp).navigationBarsPadding().imePadding())
             }
         },
     ) { innerPadding ->
         val bottomPadding = innerPadding.calculateBottomPadding()
         // 发出第一条消息时问候语与建议淡出上移，消息随后升起，不再硬切。
-        Box(Modifier.fillMaxSize().then(if (glassBackdrop != null) Modifier.layerBackdrop(glassBackdrop) else Modifier).etaAmbientBackground()) {
+        Box(Modifier.fillMaxSize().then(if (glassBackdrop != null) Modifier.layerBackdrop(glassBackdrop) else Modifier).background(EtaTheme.colors.canvas)) {
         AnimatedVisibility(
             visible = !hasMessages,
             enter = fadeIn(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate)),
@@ -1157,6 +1161,7 @@ private fun AgentChatBottomBar(
     onAttachFilePath: (String) -> Unit,
     onRemoveFileReference: (String) -> Unit,
     onCancelMessageEdit: () -> Unit,
+    backgroundCompacting: Boolean = false,
 ) {
     ChatComposerSurface(showFade = showFade) {
         AgentChatInputBar(
@@ -1195,6 +1200,7 @@ private fun AgentChatBottomBar(
             onRemoveFileReference = onRemoveFileReference,
             onCancelMessageEdit = onCancelMessageEdit,
             modifier = Modifier.fillMaxWidth(),
+            backgroundCompacting = backgroundCompacting,
         )
     }
 }

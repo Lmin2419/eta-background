@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
@@ -78,7 +79,7 @@ fun MiuixScaffoldPage(
                         .fillMaxSize()
                         .horizontalCutoutPadding()
                         .captureForTopBar(backdrop)
-                        .etaAmbientBackground(containerColor)
+                        .background(containerColor)
                         .scrollEndHaptic()
                         .overScrollVertical()
                         .then(if (pull != null) Modifier.nestedScroll(pull.connection) else Modifier)

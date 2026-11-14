@@ -34,6 +34,7 @@ internal object SettingsDataStore {
     private val WEB_TOOLS_SETTINGS = stringPreferencesKey("web_tools_settings_v1")
     private val SUBAGENT_SETTINGS = stringPreferencesKey("subagent_settings_v1")
     private val CONVERSATION_TITLE_SETTINGS = stringPreferencesKey("conversation_title_settings_v1")
+    private val CONTEXT_COMPACTION_SETTINGS = stringPreferencesKey("context_compaction_settings_v1")
     private val ASSISTANT_OVERLAY_SETTINGS = stringPreferencesKey("assistant_overlay_settings_v1")
     private val speechJson = Json {
         ignoreUnknownKeys = true
@@ -126,6 +127,27 @@ internal object SettingsDataStore {
         dataStore.edit { it[CONVERSATION_TITLE_SETTINGS] = speechJson.encodeToString(settings) }
     }
 
+    fun contextCompactionSettingsFlow(): Flow<io.github.mangi.eta.data.model.ContextCompactionSettings> {
+        ensureInitialized()
+        return dataStore.data
+            .catch { cause ->
+                if (cause is IOException) emit(emptyPreferences()) else throw cause
+            }
+            .map { prefs ->
+                prefs[CONTEXT_COMPACTION_SETTINGS]?.let { raw ->
+                    runCatching { speechJson.decodeFromString<io.github.mangi.eta.data.model.ContextCompactionSettings>(raw) }.getOrNull()
+                }?.normalized() ?: io.github.mangi.eta.data.model.ContextCompactionSettings()
+            }
+    }
+
+    suspend fun contextCompactionSettings(): io.github.mangi.eta.data.model.ContextCompactionSettings =
+        contextCompactionSettingsFlow().first()
+
+    suspend fun setContextCompactionSettings(settings: io.github.mangi.eta.data.model.ContextCompactionSettings) {
+        ensureInitialized()
+        dataStore.edit { it[CONTEXT_COMPACTION_SETTINGS] = speechJson.encodeToString(settings.normalized()) }
+    }
+
     fun assistantOverlaySettingsFlow(): Flow<AssistantOverlaySettings> {
         ensureInitialized()
         return dataStore.data
@@ -167,6 +189,8 @@ internal object SettingsDataStore {
     private val APPEARANCE_PREDICTIVE_BACK_ENABLED =
         booleanPreferencesKey("appearance_predictive_back_enabled")
     private val APPEARANCE_INTERFACE_SCALE = floatPreferencesKey("appearance_interface_scale")
+    private val APPEARANCE_GLASS_STRENGTH = stringPreferencesKey("appearance_glass_strength")
+    private val APPEARANCE_SHOW_TURN_STATS = booleanPreferencesKey("appearance_show_turn_stats")
     private const val SELECTED_MODEL_BY_PROVIDER_PREFIX = "selected_model_id_by_provider."
 
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = STORE_NAME)
@@ -356,6 +380,8 @@ internal object SettingsDataStore {
             swipeDismissEnabled = this[APPEARANCE_SWIPE_DISMISS_ENABLED] ?: true,
             predictiveBackEnabled = this[APPEARANCE_PREDICTIVE_BACK_ENABLED] ?: true,
             interfaceScale = this[APPEARANCE_INTERFACE_SCALE] ?: 1f,
+            glassStrength = io.github.mangi.eta.data.model.AppearanceGlassStrength.fromPersistedValue(this[APPEARANCE_GLASS_STRENGTH]),
+            showTurnStats = this[APPEARANCE_SHOW_TURN_STATS] ?: true,
         ).normalized(),
     )
 
@@ -372,5 +398,7 @@ internal object SettingsDataStore {
         this[APPEARANCE_SWIPE_DISMISS_ENABLED] = settings.swipeDismissEnabled
         this[APPEARANCE_PREDICTIVE_BACK_ENABLED] = settings.predictiveBackEnabled
         this[APPEARANCE_INTERFACE_SCALE] = settings.interfaceScale
+        this[APPEARANCE_GLASS_STRENGTH] = settings.glassStrength.persistedValue
+        this[APPEARANCE_SHOW_TURN_STATS] = settings.showTurnStats
     }
 }

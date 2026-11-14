@@ -539,7 +539,7 @@ fun AgentAppRoot(
                     ) else Modifier.padding(padding))
             ) {
                 androidx.compose.runtime.CompositionLocalProvider(
-                    io.github.mangi.eta.ui.components.LocalTopBarInset provides if (underTopBar) padding.calculateTopPadding() else 0.dp,
+                    io.github.mangi.eta.ui.components.LocalTopBarInset provides if (underTopBar) (padding.calculateTopPadding() - io.github.mangi.eta.ui.components.ChatScrollEdgeTail).coerceAtLeast(0.dp) else 0.dp,
                 ) { content() }
             }
         }
@@ -696,6 +696,9 @@ fun AgentAppRoot(
             }
             entry<AppRoute.Subagents>(swipeDismiss = swipeDismiss) {
                 SubagentSettingsScreen(onBack = ::popRoute)
+            }
+            entry<AppRoute.ContextCompactionSettings>(swipeDismiss = swipeDismiss) {
+                io.github.mangi.eta.ui.screens.settings.ContextCompactionSettingsScreen(onBack = ::popRoute)
             }
             entry<AppRoute.ConversationTitleSettings>(swipeDismiss = swipeDismiss) {
                 ConversationTitleSettingsScreen(onBack = ::popRoute)

@@ -55,6 +55,41 @@ internal object RuntimeConfigRepository {
         SettingsDataStore.setConversationTitleSettings(settings)
     }
 
+    fun contextCompactionSettingsFlow() = SettingsDataStore.contextCompactionSettingsFlow()
+
+    suspend fun contextCompactionSettings() = SettingsDataStore.contextCompactionSettings()
+
+    suspend fun setContextCompactionSettings(settings: io.github.mangi.eta.data.model.ContextCompactionSettings) {
+        SettingsDataStore.setContextCompactionSettings(settings)
+    }
+
+    /**
+     * 后台压缩所用的模型配置。未指定或该模型已停用时返回 null（跟随对话模型，仍能复用提示缓存）；
+     * 否则照标题生成的做法关掉所有工具与自动压缩，思考等级未指定时取最低可用档位。
+     */
+    suspend fun compactionModelConfig(): io.github.mangi.eta.agent.model.AgentModelClient.ModelConfig? {
+        val settings = SettingsDataStore.contextCompactionSettings()
+        val customModelId = settings.modelId?.takeIf { it.isNotBlank() } ?: return null
+        ProviderRepository.ensureBuiltInsMerged()
+        val base = ProviderRepository.allProviders().enabledModel(customModelId)?.let { (provider, model) ->
+            buildRuntimeConfig(provider, model)
+        } ?: return null
+        return applyTitleGenerationSettings(base, ConversationTitleSettings(modelId = customModelId,
+            reasoningEffort = settings.reasoningEffort))
+    }
+
+    /** 主对话的后台压缩策略；关闭自动压缩或后台压缩时返回 null。 */
+    suspend fun backgroundCompactionPolicy(key: String): io.github.mangi.eta.agent.model.BackgroundCompactionPolicy? {
+        val settings = SettingsDataStore.contextCompactionSettings()
+        if (!settings.background) return null
+        return io.github.mangi.eta.agent.model.BackgroundCompactionPolicy(
+            key = key,
+            startRatio = settings.startPercent / 100.0,
+            keepRecentTurns = settings.keepRecentTurns,
+            modelConfig = runCatching { compactionModelConfig() }.getOrNull(),
+        )
+    }
+
     fun assistantOverlaySettingsFlow() = SettingsDataStore.assistantOverlaySettingsFlow()
 
     suspend fun setAssistantOverlaySettings(settings: AssistantOverlaySettings) {

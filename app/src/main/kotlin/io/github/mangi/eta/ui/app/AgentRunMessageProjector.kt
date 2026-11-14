@@ -60,7 +60,7 @@ internal class AgentRunMessageProjector(
         is AgentEvent.HostedToolStarted ->
             startHostedTool(runId, event, finalizeTextRound(runId, event.round, finalizeThinkingRound(runId, event.round, messages)))
         is AgentEvent.HostedToolFinished -> finishHostedTool(runId, event, messages)
-        is AgentEvent.ContextCompaction -> {
+        is AgentEvent.ContextCompaction -> if (AgentEvent.ContextCompaction.isBackgroundPhase(event.phase)) messages else {
             val id = "assistant-$runId-compaction-${event.operationId}"
             messages.filterNot { it.id == id } + SystemNoticeMessageUi(
                 id = id,

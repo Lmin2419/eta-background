@@ -202,6 +202,15 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit) {
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
+                    title = stringResource(R.string.appearance_turn_stats),
+                    summary = stringResource(R.string.appearance_turn_stats_summary),
+                    checked = appearance.showTurnStats,
+                    onCheckedChange = { enabled ->
+                        update { current -> current.copy(showTurnStats = enabled) }
+                    },
+                )
+                EtaPreferenceDivider(hasLeading = false)
+                EtaSwitchPreference(
                     title = stringResource(R.string.appearance_task_completion_alerts),
                     summary = stringResource(R.string.appearance_task_completion_alerts_summary),
                     checked = appearance.taskCompletionAlertsEnabled,
@@ -210,14 +219,33 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit) {
                     },
                 )
                 EtaPreferenceDivider(hasLeading = false)
-                EtaSwitchPreference(
-                    title = stringResource(R.string.appearance_blur),
-                    summary = stringResource(R.string.appearance_blur_summary),
-                    checked = appearance.blurEnabled && blurSupported,
-                    onCheckedChange = { enabled ->
-                        update { current -> current.copy(blurEnabled = enabled) }
-                    },
+                // 玻璃四档：通透 / 标准 / 磨砂 / 关闭（关闭 = 原「模糊效果」关）。
+                val glassLabels = listOf(
+                    stringResource(R.string.appearance_glass_clear),
+                    stringResource(R.string.appearance_glass_standard),
+                    stringResource(R.string.appearance_glass_frosted),
+                    stringResource(R.string.appearance_glass_off),
+                )
+                val glassSummaries = listOf(
+                    stringResource(R.string.appearance_glass_summary_clear),
+                    stringResource(R.string.appearance_glass_summary_standard),
+                    stringResource(R.string.appearance_glass_summary_frosted),
+                    stringResource(R.string.appearance_glass_summary_off),
+                )
+                val glassIndex = if (appearance.blurEnabled && blurSupported) appearance.glassStrength.ordinal else 3
+                EtaOverlayDropdownPreference(
+                    title = stringResource(R.string.appearance_glass),
+                    summary = glassSummaries[glassIndex],
+                    items = glassLabels,
+                    selectedIndex = glassIndex,
                     enabled = blurSupported,
+                    onSelectedIndexChange = { index ->
+                        update { current ->
+                            val strength = io.github.mangi.eta.data.model.AppearanceGlassStrength.entries.getOrNull(index)
+                            if (strength == null) current.copy(blurEnabled = false)
+                            else current.copy(blurEnabled = true, glassStrength = strength)
+                        }
+                    },
                 )
                 AnimatedVisibility(
                     visible = appearance.blurEnabled && blurSupported,

@@ -27,6 +27,12 @@ class EtaContrastTest {
         }
     }
 
+    @Test fun brandFillKeepsItsGlyphVisible() {
+        for (p in listOf(lightEtaColors(), darkEtaColors())) {
+            assertTrue("onBrand on brand: ${contrast(p.onBrand, p.brand)}", contrast(p.onBrand, p.brand) >= 3f)
+        }
+    }
+
     @Test fun statusSymbolsDoNotDisappearOnBrightDarkThemeFills() {
         for (p in listOf(lightEtaColors(), darkEtaColors())) {
             for (fill in listOf(p.attention, p.success, p.danger)) {

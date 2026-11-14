@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
@@ -44,10 +46,8 @@ import io.github.mangi.eta.ui.theme.etaElevation
 import top.yukonga.miuix.kmp.basic.Text
 
 /**
- * 长按消息出现的气泡菜单：背景变暗，菜单从被按的消息旁边（优先下方，放不下就上方）弹出，
- * 带一点回弹地从 0.9 倍放大。取代底部面板，手指不用移到屏幕底部。
- *
- * [anchor] 是消息在窗口中的位置；[alignEnd] 为真时菜单与消息右边对齐（用户消息）。
+ * 长按消息出现的菜单：一枚玻璃小窗（[EtaPopover]），从被按的消息旁边（优先下方，放不下就上方）
+ * 展开，背后不变暗，背后的内容被模糊。[anchor] 是消息在窗口中的位置；[alignEnd] 为真时与消息右边对齐（用户消息）。
  */
 @Composable
 internal fun EtaContextMenu(
@@ -57,66 +57,9 @@ internal fun EtaContextMenu(
     alignEnd: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    var visible by remember { mutableStateOf(false) }
-    val progress = remember { Animatable(0f) }
-    val motion = EtaTheme.motion
     val haptics = rememberEtaHaptics()
-    LaunchedEffect(show) {
-        if (show) {
-            if (!visible) haptics.longPress()
-            visible = true
-            progress.animateTo(1f, if (motion.reduceMotion) tween(motion.short) else spring(dampingRatio = 0.72f, stiffness = 520f))
-        } else if (visible) {
-            progress.animateTo(0f, tween(motion.exitDuration(motion.short), easing = motion.accelerate))
-            visible = false
-        }
-    }
-    if (!visible) return
-    Popup(
-        popupPositionProvider = FullWindow,
-        onDismissRequest = onDismiss,
-        properties = PopupProperties(focusable = true),
-    ) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .graphicsLayer { alpha = progress.value.coerceIn(0f, 1f) }
-                .background(Color.Black.copy(alpha = 0.28f))
-                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
-        ) {
-            val margin = with(androidx.compose.ui.platform.LocalDensity.current) { 12.dp.roundToPx() }
-            var below by remember { mutableStateOf(true) }
-            Layout(
-                content = {
-                    Column(
-                        Modifier
-                            .width(232.dp)
-                            .graphicsLayer {
-                                val p = progress.value
-                                val scale = if (motion.reduceMotion) 1f else 0.9f + 0.1f * p
-                                scaleX = scale; scaleY = scale
-                                transformOrigin = TransformOrigin(if (alignEnd) 1f else 0f, if (below) 0f else 1f)
-                            }
-                            .etaGlass(EtaTheme.shapes.radiusLg, elevation = EtaElevation.E3, useLocalBackdrop = false)
-                            .clip(EtaTheme.shapes.radiusLg)
-                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
-                            .padding(vertical = 6.dp),
-                        content = content,
-                    )
-                },
-            ) { measurables, constraints ->
-                val card = measurables.single().measure(Constraints(maxWidth = constraints.maxWidth, maxHeight = constraints.maxHeight))
-                val fitsBelow = anchor.bottom + margin + card.height <= constraints.maxHeight - margin
-                below = fitsBelow || anchor.top - margin - card.height < margin
-                val y = if (below) (anchor.bottom + margin).toInt().coerceAtMost(constraints.maxHeight - card.height - margin)
-                    else (anchor.top - margin - card.height).toInt()
-                val x = if (alignEnd) (anchor.right - card.width).toInt() else (anchor.left).toInt()
-                layout(constraints.maxWidth, constraints.maxHeight) {
-                    card.place(x.coerceIn(margin, (constraints.maxWidth - card.width - margin).coerceAtLeast(margin)), y.coerceAtLeast(margin))
-                }
-            }
-        }
-    }
+    LaunchedEffect(show) { if (show) haptics.longPress() }
+    EtaPopover(show, anchor, onDismiss, align = if (alignEnd) EtaPopoverAlign.End else EtaPopoverAlign.Start, content = content)
 }
 
 /**
@@ -130,27 +73,45 @@ internal fun EtaMenuItem(
     enabled: Boolean = true,
     destructive: Boolean = false,
     icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    selected: Boolean = false,
+    summary: String? = null,
 ) {
     val color = when {
         !enabled -> EtaTheme.colors.textTertiary
         destructive -> EtaTheme.colors.dangerText
         else -> EtaTheme.colors.textPrimary
     }
+    // 小窗圆角 24、内边距 8 → 条目圆角 16（同心圆角）。
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
     androidx.compose.foundation.layout.Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 6.dp)
             .heightIn(min = 46.dp)
-            .clip(EtaTheme.shapes.radiusMd)
+            .clip(shape)
+            .then(if (selected) Modifier.background(EtaTheme.colors.textPrimary.copy(alpha = 0.06f)) else Modifier)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text, style = EtaTheme.type.rowTitle, color = color, modifier = Modifier.weight(1f))
-        if (icon != null) top.yukonga.miuix.kmp.basic.Icon(icon, null, Modifier.padding(start = 12.dp).size(18.dp), tint = color)
+        Column(Modifier.weight(1f)) {
+            Text(text, style = EtaTheme.type.rowTitle, color = color, maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            if (summary != null) Text(summary, style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary, maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        }
+        when {
+            selected -> top.yukonga.miuix.kmp.basic.Icon(androidx.compose.material.icons.Icons.Outlined.Check, null,
+                Modifier.padding(start = 12.dp).size(18.dp), tint = EtaTheme.colors.textPrimary)
+            icon != null -> top.yukonga.miuix.kmp.basic.Icon(icon, null, Modifier.padding(start = 12.dp).size(18.dp), tint = color)
+        }
     }
 }
 
-private object FullWindow : PopupPositionProvider {
-    override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize) = IntOffset.Zero
+/** 小窗里的分隔：0.5dp，左右各内缩 12dp，与条目文字对齐。 */
+@Composable
+internal fun EtaMenuDivider() {
+    androidx.compose.foundation.layout.Box(
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
+            .height(0.5.dp).background(EtaTheme.colors.outline),
+    )
 }

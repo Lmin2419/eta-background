@@ -326,13 +326,11 @@ private fun SettingsPageContent(
                         iconTint = EtaPreferenceColors.Blue,
                     )
                     EtaPreferenceDivider()
-                    SwitchPref(
-                        context = context,
-                        prefs = agentPrefs,
-                        title = stringResource(R.string.settings_auto_compaction),
-                        key = Prefs.Keys.AGENT_AUTO_COMPACTION_ENABLED,
-                        icon = Icons.Outlined.Layers,
-                        iconTint = EtaPreferenceColors.Blue,
+                    // 自动压缩开关挪进「上下文压缩」页（与后台压缩、压缩模型放在一起）。
+                    EtaArrowPreference(
+                        title = stringResource(R.string.compaction_settings_title),
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.Layers, tint = EtaPreferenceColors.Blue) },
+                        onClick = { onNavigate(AppRoute.ContextCompactionSettings) },
                     )
                     EtaPreferenceDivider()
                     EtaArrowPreference(
@@ -1030,7 +1028,7 @@ private fun SystemizerConfirmDialog(
  * Runtime 开关始终使用 App 本地配置。
  */
 @Composable
-private fun SwitchPref(
+internal fun SwitchPref(
     context: Context,
     prefs: SharedPreferences?,
     title: String,
