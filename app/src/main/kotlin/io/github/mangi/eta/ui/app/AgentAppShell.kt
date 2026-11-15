@@ -141,11 +141,12 @@ internal fun AgentAppShell(
     // Only the shell's Miuix bar measures this behaviour. Without that measurement its collapse
     // range is unbounded and it would swallow every upward drag of the page beneath it.
     val usesShellTopBar = currentRoute !is AppRoute.Settings && !(currentRoute is AppRoute.Home && homeTopBar != null)
-    val backdrop = rememberTopBarBackdrop()
+    val backdrop = io.github.mangi.eta.ui.components.trackRenderSource("顶栏(Miuix)", rememberTopBarBackdrop())
     val topBarColor = topBarContainerColor(backdrop)
     // 对话页唯一的 COUI 背景源：挂在消息区上（AgentChatBody），顶部液态玻璃控件与输入框都从这里采样。
     val chatCouiSource = if (currentRoute is AppRoute.Home && homeTopBar != null && LocalBlurEnabled.current)
         com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-page") else null
+    io.github.mangi.eta.ui.components.trackRenderSource("对话页(COUI)", chatCouiSource)
     val pageContent: @Composable () -> Unit = {
         Scaffold(
             modifier = Modifier.fillMaxSize(),

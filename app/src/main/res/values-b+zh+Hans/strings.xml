@@ -1956,4 +1956,8 @@
   <string name="eta_task_done_notice">「%1$s」已完成</string>
   <string name="eta_task_failed_notice">「%1$s」出错了</string>
   <string name="eta_task_notice_open">查看</string>
+  <string name="appearance_render_diagnostics">渲染诊断</string>
+  <string name="appearance_render_diagnostics_summary">页面顶部显示帧数、超时帧和背景采样源，点一下复制报告</string>
+  <string name="eta_render_diag_line">%1$dHz · %2$d 帧 · 超时 %3$d · 平均 %4$sms · 采样源 %5$d</string>
+  <string name="eta_render_diag_copied">已复制诊断报告</string>
 </resources>

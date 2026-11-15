@@ -183,6 +183,7 @@ internal object SettingsDataStore {
     private val APPEARANCE_BLUR_ENABLED = booleanPreferencesKey("appearance_blur_enabled")
     private val APPEARANCE_RUNTIME_GLOW_ENABLED = booleanPreferencesKey("appearance_runtime_glow_enabled")
     private val APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED = booleanPreferencesKey("appearance_task_completion_alerts_enabled")
+    private val APPEARANCE_RENDER_DIAGNOSTICS = booleanPreferencesKey("appearance_render_diagnostics")
     private val APPEARANCE_TOP_BAR_BLUR_STYLE = stringPreferencesKey("appearance_top_bar_blur_style")
     private val APPEARANCE_SWIPE_DISMISS_ENABLED =
         booleanPreferencesKey("appearance_swipe_dismiss_enabled")
@@ -382,6 +383,7 @@ internal object SettingsDataStore {
             interfaceScale = this[APPEARANCE_INTERFACE_SCALE] ?: 1f,
             glassStrength = io.github.mangi.eta.data.model.AppearanceGlassStrength.fromPersistedValue(this[APPEARANCE_GLASS_STRENGTH]),
             showTurnStats = this[APPEARANCE_SHOW_TURN_STATS] ?: true,
+            renderDiagnosticsEnabled = this[APPEARANCE_RENDER_DIAGNOSTICS] ?: false,
         ).normalized(),
     )
 
@@ -400,5 +402,6 @@ internal object SettingsDataStore {
         this[APPEARANCE_INTERFACE_SCALE] = settings.interfaceScale
         this[APPEARANCE_GLASS_STRENGTH] = settings.glassStrength.persistedValue
         this[APPEARANCE_SHOW_TURN_STATS] = settings.showTurnStats
+        this[APPEARANCE_RENDER_DIAGNOSTICS] = settings.renderDiagnosticsEnabled
     }
 }

@@ -124,17 +124,23 @@ class Stage8LayoutTest {
         }
     }
 
-    @Test fun s10_3_allFourSuggestionSummariesAreCompleteAndRowsAreEqualHeight() {
+    @Test fun s10_3_suggestionChipsAreSingleLineEqualHeightAndCarryTheFullPrompt() {
         val owner = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(owner.get()) { HomeEmptyState(true, {}) }
         try {
             panel.advance(30)
-            val nodes = listOf(R.string.eta_prompt_coffee, R.string.eta_prompt_notifications,
-                R.string.eta_prompt_battery, R.string.eta_prompt_phones).map { text(panel, owner.get().getString(it)) }
-            // 阶段 10：建议改为单行列表，说明可省略，四行等高。
+            val titles = listOf(R.string.eta_example_coffee, R.string.eta_example_notifications,
+                R.string.eta_example_battery, R.string.eta_example_phones)
+            val prompts = listOf(R.string.eta_prompt_coffee, R.string.eta_prompt_notifications,
+                R.string.eta_prompt_battery, R.string.eta_prompt_phones)
+            val nodes = titles.map { text(panel, owner.get().getString(it)) }
+            // 07 第四期：建议是一排横滑胶囊，标题单行、等高；完整内容作为点击说明读出，点一下填进输入框。
             nodes.forEach { n -> assertEquals(1, layout(n).lineCount) }
             fun card(node: SemanticsNode): SemanticsNode = if (node.config.getOrNull(SemanticsActions.OnClick) != null) node else card(requireNotNull(node.parent))
             nodes.drop(1).forEach { assertEquals(card(nodes[0]).boundsInRoot.height, card(it).boundsInRoot.height, 1f) }
+            nodes.zip(prompts).forEach { (node, prompt) ->
+                assertEquals(owner.get().getString(prompt), card(node).config[SemanticsActions.OnClick].label)
+            }
         } finally { panel.close(); owner.pause().stop().destroy() }
     }
 

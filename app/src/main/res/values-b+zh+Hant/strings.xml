@@ -1852,4 +1852,8 @@
   <string name="eta_task_done_notice">「%1$s」已完成</string>
   <string name="eta_task_failed_notice">「%1$s」出錯了</string>
   <string name="eta_task_notice_open">查看</string>
+  <string name="appearance_render_diagnostics">渲染診斷</string>
+  <string name="appearance_render_diagnostics_summary">頁面頂部顯示幀數、逾時幀和背景取樣源，點一下複製報告</string>
+  <string name="eta_render_diag_line">%1$dHz · %2$d 幀 · 逾時 %3$d · 平均 %4$sms · 取樣源 %5$d</string>
+  <string name="eta_render_diag_copied">已複製診斷報告</string>
 </resources>

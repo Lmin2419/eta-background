@@ -107,8 +107,14 @@ class Stage7PolishTest {
                 assertEquals("", filled)
                 panel.capture("stage7_empty_${if (dark) "dark" else if (scale == 2f) "font200" else "light"}")
                 val view = panel.root() as View
-                panel.dragFinger(view.width * .5f, view.height * .85f, view.width * .5f, view.height * .25f)
-                val target = panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == owner.get().getString(R.string.eta_example_phones) } == true }
+                panel.dragFinger(view.width * .5f, view.height * .5f, view.width * .5f, view.height * .2f)
+                // 07 第四期：建议是输入框上方一排横滑胶囊，最后一枚要先横向滑过去。
+                fun chip(res: Int) = panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == owner.get().getString(res) } == true }
+                val rowY = chip(R.string.eta_example_coffee).boundsInRoot.center.y
+                panel.dragFinger(view.width * .9f, rowY, view.width * .1f, rowY)
+                panel.advance(120) // 等横滑惯性停下：滚动中的点按只会停住滚动，不算点击
+                val target = chip(R.string.eta_example_phones)
+                assertTrue("the last chip scrolled into view", target.boundsInRoot.right <= view.width)
                 panel.tapFinger(target.boundsInRoot.center.x, target.boundsInRoot.center.y)
                 assertEquals(owner.get().getString(R.string.eta_prompt_phones), filled)
             } finally { panel.close(); owner.pause().stop().destroy() }

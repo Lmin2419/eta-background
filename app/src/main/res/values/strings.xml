@@ -1980,4 +1980,8 @@
   <string name="eta_task_done_notice">“%1$s” is done</string>
   <string name="eta_task_failed_notice">“%1$s” ran into an error</string>
   <string name="eta_task_notice_open">Open</string>
+  <string name="appearance_render_diagnostics">Render diagnostics</string>
+  <string name="appearance_render_diagnostics_summary">Show frame rate, late frames and background sampling sources at the top of the page. Tap the line to copy a report</string>
+  <string name="eta_render_diag_line">%1$dHz · %2$d frames · %3$d late · avg %4$sms · %5$d sources</string>
+  <string name="eta_render_diag_copied">Diagnostics copied</string>
 </resources>

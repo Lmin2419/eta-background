@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,7 +29,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 @Composable
 internal fun EtaAppOverlayHost(content: @Composable () -> Unit) {
     Scaffold(Modifier.fillMaxSize(), contentWindowInsets = WindowInsets(0.dp)) {
-        val appBackdrop = rememberEtaGlassBackdrop()
+        val appBackdrop = trackRenderSource("应用浮层(Miuix)", rememberEtaGlassBackdrop())
         val overlay = remember { EtaOverlayController() }
         val reduceMotion = io.github.mangi.eta.ui.theme.EtaTheme.motion.reduceMotion
         androidx.compose.runtime.CompositionLocalProvider(
@@ -64,6 +65,10 @@ internal fun EtaAppOverlayHost(content: @Composable () -> Unit) {
                         .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
                         .padding(horizontal = 24.dp).padding(bottom = 84.dp))
                 }
+                val appearance = io.github.mangi.eta.ui.app.LocalAppearanceSettings.current
+                if (appearance.renderDiagnosticsEnabled) RenderDiagnosticsOverlay(appearance.blurEnabled,
+                    Modifier.align(androidx.compose.ui.Alignment.TopCenter)
+                        .windowInsetsPadding(WindowInsets.statusBars).padding(top = 62.dp))
             }
         }
     }

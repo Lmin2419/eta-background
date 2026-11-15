@@ -201,7 +201,7 @@ private fun LegacyMiuixScaffoldPage(
     EtaPreferenceTheme {
         val scrollBehavior = MiuixScrollBehavior()
         val pull = onRefresh?.let { rememberEtaPullRefreshState(refreshing, it) }
-        val backdrop = rememberTopBarBackdrop(containerColor)
+        val backdrop = trackRenderSource("设置顶栏(Miuix)", rememberTopBarBackdrop(containerColor))
 
         val inWindow = LocalEtaWindow.current != null
         Scaffold(
@@ -271,7 +271,7 @@ private fun LegacyMiuixScaffold(
 ) {
     EtaPreferenceTheme {
         val scrollBehavior = MiuixScrollBehavior()
-        val backdrop = rememberTopBarBackdrop()
+        val backdrop = trackRenderSource("设置顶栏(Miuix)", rememberTopBarBackdrop())
         val topBarColor = topBarContainerColor(backdrop)
 
         val inWindow = LocalEtaWindow.current != null

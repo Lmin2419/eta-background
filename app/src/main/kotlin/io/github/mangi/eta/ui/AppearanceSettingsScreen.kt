@@ -287,6 +287,15 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit) {
                     },
                 )
                 EtaPreferenceDivider(hasLeading = false)
+                EtaSwitchPreference(
+                    title = stringResource(R.string.appearance_render_diagnostics),
+                    summary = stringResource(R.string.appearance_render_diagnostics_summary),
+                    checked = appearance.renderDiagnosticsEnabled,
+                    onCheckedChange = { enabled ->
+                        update { current -> current.copy(renderDiagnosticsEnabled = enabled) }
+                    },
+                )
+                EtaPreferenceDivider(hasLeading = false)
                 EtaArrowPreference(
                     title = stringResource(R.string.appearance_interface_scale),
                     summary = stringResource(R.string.appearance_interface_scale_summary),

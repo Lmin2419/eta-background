@@ -112,6 +112,7 @@ fun AgentAppTheme(
                     EtaTheme(colors = etaColors) {
                         if (blurOn) {
                             com.itos.coui.menu.ProvideCouiMenuBackdrop(isolateContent = false) { windowSource ->
+                                io.github.mangi.eta.ui.components.trackRenderSource("整窗(COUI 菜单)", windowSource)
                                 androidx.compose.foundation.layout.Box(
                                     androidx.compose.ui.Modifier.fillMaxSize().then(windowSource),
                                 ) { content() }

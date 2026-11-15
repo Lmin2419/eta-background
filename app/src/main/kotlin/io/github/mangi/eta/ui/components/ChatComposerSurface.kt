@@ -19,7 +19,10 @@ internal fun ChatComposerSurface(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val canvas = EtaTheme.colors.canvas
-    val glass = LocalEtaGlassBackdrop.current != null
+    // 有玻璃（Miuix 模糊层或 COUI 液态玻璃源）时底部只铺一层淡渐变，输入胶囊透出背后的消息。
+    val glass = LocalEtaGlassBackdrop.current != null ||
+        (io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop.current != null &&
+            android.os.Build.VERSION.SDK_INT >= 34 && EtaCouiSupport.shaders)
     Column(
         modifier.fillMaxWidth().imePadding().drawWithCache {
             if (glass) {

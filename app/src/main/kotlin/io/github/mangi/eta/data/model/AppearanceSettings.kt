@@ -24,6 +24,8 @@ data class AppearanceSettings(
     val glassStrength: AppearanceGlassStrength = AppearanceGlassStrength.STANDARD,
     /** 每条回复下方显示速度与用量小字。 */
     val showTurnStats: Boolean = true,
+    /** 渲染诊断：页面顶部显示帧数、超时帧与背景采样源（07 第四期，默认关）。 */
+    val renderDiagnosticsEnabled: Boolean = false,
 ) {
     fun normalized(): AppearanceSettings = copy(
         interfaceScale = normalizeInterfaceScale(interfaceScale),

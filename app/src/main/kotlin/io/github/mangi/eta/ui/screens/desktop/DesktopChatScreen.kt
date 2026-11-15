@@ -508,8 +508,9 @@ private fun DesktopGlassTopBar(
     onTitle: (() -> Unit)?,
     trailing: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
 ) {
-    val source = if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders)
-        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "desktop-top") else null
+    val source = io.github.mangi.eta.ui.components.trackRenderSource("电脑会话顶部(COUI)",
+        if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders)
+            com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "desktop-top") else null)
     Box(Modifier.fillMaxWidth()) {
         if (source != null) Box(Modifier.matchParentSize().couiBackdrop(source).background(EtaTheme.colors.canvas))
         CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides source) {

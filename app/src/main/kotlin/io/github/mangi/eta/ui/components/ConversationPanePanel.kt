@@ -118,10 +118,9 @@ internal fun ConversationPanePanel(
     var menuTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
     // 长按对话的菜单从按住的位置展开（上游 COUI 菜单）。
     val paneMenuAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
-    // 底部玻璃栏采样的列表画面（上游侧栏的 COUI 背景采样）；关闭模糊或省电时不采样。
     // 底部玻璃栏采样的列表画面（上游侧栏的 COUI 背景采样）；关闭模糊或本机测试时不采样。
-    val paneBackdrop = if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && EtaCouiSupport.shaders)
-        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "conversation-pane") else null
+    val paneBackdrop = trackRenderSource("侧栏(COUI)", if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && EtaCouiSupport.shaders)
+        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "conversation-pane") else null)
     val selecting = selectedIds.isNotEmpty()
     val motion = EtaTheme.motion
     val visibleConversations = remember(state.conversations, state.searchQuery, archived) {
