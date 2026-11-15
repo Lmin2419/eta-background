@@ -521,7 +521,8 @@ fun AgentAppRoot(
                     onCharacter = { home.roleplay?.let { pushRoute(AppRoute.CharacterDetail(it.characterId)) } },
                     onModel = agentState::selectModel, onCompact = agentState::compactCurrentContext,
                     onExport = ::exportCurrentConversation, onManageModels = { pushRoute(AppRoute.ModelProviders) },
-                    conversationTitle = agentState.currentConversationTitle)
+                    conversationTitle = agentState.currentConversationTitle,
+                    currentConversationId = agentState.conversationPaneState.selectedConversationId)
             }) else null,
             homeCharacter = if (route is AppRoute.Home) agentState.homeState.roleplayChatUi() else null,
             onOpenCharacter = {

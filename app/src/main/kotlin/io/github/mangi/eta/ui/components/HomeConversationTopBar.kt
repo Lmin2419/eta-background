@@ -61,6 +61,7 @@ internal fun HomeConversationTopBar(
     @Suppress("UNUSED_PARAMETER") onExport: () -> Unit,
     onManageModels: () -> Unit,
     conversationTitle: String? = null,
+    currentConversationId: String? = null,
 ) {
     var settings by remember { mutableStateOf(false) }
     val pillAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
@@ -96,7 +97,7 @@ internal fun HomeConversationTopBar(
             }
             Box(Modifier.etaChromeScale()) { CircleIconButton(Icons.Outlined.Add, stringResource(R.string.action_new_conversation), onNew) }
         }
-        HomeTaskCapsule(runningTaskCount, onTasks)
+        HomeTaskCapsule(runningTaskCount, currentConversationId, onTasks)
     }
     ModelPopover(settings, pillAnchor, models, isStreaming || isCompacting,
         onDismiss = { settings = false },
@@ -226,9 +227,12 @@ private const val ModelMenuLimit = 8
  * 点一下从这里展开任务卡片（任务列表、停止、查看全部）。
  */
 @Composable
-private fun HomeTaskCapsule(runningTaskCount: Int, onTasks: () -> Unit) {
+private fun HomeTaskCapsule(runningTaskCount: Int, currentConversationId: String?, onTasks: () -> Unit) {
     val snapshots by io.github.mangi.eta.agent.runtime.AgentExecutionService.taskSnapshots.collectAsState()
-    val running = remember(snapshots) { snapshots.filter { !it.completed } }
+    // 当前对话自己的任务不进胶囊：顶部标题和对话里的「思考中」已经说明了。胶囊只提示别的对话还在后台跑。
+    val running = remember(snapshots, currentConversationId) {
+        snapshots.filter { !it.completed && (currentConversationId == null || it.conversationId != currentConversationId) }
+    }
     var open by remember { mutableStateOf(false) }
     val anchor = com.itos.coui.menu.rememberCouiMenuAnchor()
     LaunchedEffect(running.isEmpty()) { if (running.isEmpty()) open = false }
@@ -241,34 +245,42 @@ private fun HomeTaskCapsule(runningTaskCount: Int, onTasks: () -> Unit) {
         label = "taskCapsule",
     ) {
         val first = running.firstOrNull() ?: return@EtaAnimatedVisibility
-        val step = first.status.localizedText()
-        val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-        val capsule = androidx.compose.ui.graphics.Color(0xFF161616)
+        // 一个任务显示它的标题（一行），多个显示「N 个后台任务」。
+        val label = if (running.size == 1) first.title.taskLabel(24)
+            else stringResource(R.string.eta_background_tasks_count, running.size)
+        // 与顶部三个控件同一套液态玻璃（不再是深色胶囊），高 32dp。
         Box(Modifier.fillMaxWidth().padding(bottom = 4.dp), contentAlignment = Alignment.Center) {
-            Row(Modifier.height(32.dp).widthIn(max = 300.dp)
-                .couiMenuAnchor(anchor)
-                .etaPressScale(press, pressedScale = 0.96f)
-                .etaGlass(EtaTheme.shapes.radiusFull, tint = capsule, elevation = EtaElevation.E2, blurAlpha = 0.82f, solidAlpha = 0.9f)
-                .clip(EtaTheme.shapes.radiusFull)
-                .clickable(interactionSource = press, indication = null, role = Role.Button) { anchor.open { open = true } }
-                .padding(start = 10.dp, end = 12.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusRing(TaskVisualStatus.Running, size = 14.dp, contentDescription = null)
-                Text(first.title, style = EtaTheme.type.footnote.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium),
-                    color = androidx.compose.ui.graphics.Color(0xFFF5F5F3), maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false))
-                val tail = if (running.size > 1) "+${running.size - 1}" else step
-                if (!tail.isNullOrBlank()) Text(tail, style = EtaTheme.type.footnote, color = androidx.compose.ui.graphics.Color(0xFFA09E9A),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Box(Modifier.couiMenuAnchor(anchor)) {
+                io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
+                    modifier = Modifier.height(32.dp).width(IntrinsicSize.Max).widthIn(max = 280.dp),
+                    shape = EtaTheme.shapes.radiusFull,
+                    capsule = true,
+                    contentDescription = label,
+                    onClick = { anchor.open { open = true } },
+                ) {
+                    Row(Modifier.padding(start = 10.dp, end = 12.dp), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        StatusRing(TaskVisualStatus.Running, size = 12.dp, contentDescription = null)
+                        Text(label, style = EtaTheme.type.footnote.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium),
+                            color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false))
+                    }
+                }
             }
         }
     }
-    // 点胶囊：与上游一致的 COUI 菜单，列出正在跑的任务（点开预览），末项「查看全部」。
+    // 点胶囊：COUI 菜单列出后台任务（一行标题，点开预览），末项「查看全部」。
     EtaContextMenu(open, onDismiss = { open = false }, couiAnchor = anchor, header = stringResource(R.string.eta_tasks)) {
         running.take(6).forEach { task ->
-            EtaMenuItem(task.title, onClick = { open = false; io.github.mangi.eta.ui.screens.tasks.openTaskPreview(context, task) })
+            EtaMenuItem(task.title.taskLabel(16), onClick = { open = false; io.github.mangi.eta.ui.screens.tasks.openTaskPreview(context, task) })
         }
         EtaMenuDivider()
         EtaMenuItem(stringResource(R.string.eta_tasks_view_all), onClick = { open = false; onTasks() })
     }
+}
+
+/** 任务标题只取第一行，超过 [max] 个字截断加省略号：胶囊和菜单里都只占一行。 */
+internal fun String.taskLabel(max: Int): String {
+    val line = lineSequence().map(String::trim).firstOrNull { it.isNotEmpty() }.orEmpty()
+    return if (line.length > max) line.take(max).trimEnd() + "…" else line
 }
