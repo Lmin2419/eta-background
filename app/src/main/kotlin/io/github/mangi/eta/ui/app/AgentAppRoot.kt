@@ -1045,31 +1045,21 @@ fun AgentAppRoot(
 
     conversationRenameTarget?.let { conversation ->
         var renameInput by remember(conversation.id) { mutableStateOf(conversation.title) }
-        io.github.mangi.eta.ui.components.EtaWindowDialog(
-            show = true,
+        // 与上游一致的 COUI 输入对话框。
+        io.github.mangi.eta.ui.components.coui.EtaCouiInputDialog(
+            visible = true,
             title = stringResource(R.string.conversation_rename_title),
+            value = renameInput,
+            onValueChange = { renameInput = it },
+            placeholder = stringResource(R.string.conversation_rename_hint),
+            confirmText = stringResource(R.string.action_save),
+            confirmEnabled = renameInput.isNotBlank(),
+            onConfirm = {
+                agentState.renameConversation(conversation.id, renameInput)
+                conversationRenameTarget = null
+            },
             onDismissRequest = { conversationRenameTarget = null },
-        ) {
-            Column {
-                TextField(
-                    value = renameInput,
-                    onValueChange = { renameInput = it },
-                    label = stringResource(R.string.conversation_rename_hint),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                MiuixDialogActions(
-                    confirmText = stringResource(R.string.action_save),
-                    confirmEnabled = renameInput.isNotBlank(),
-                    onCancel = { conversationRenameTarget = null },
-                    onConfirm = {
-                        agentState.renameConversation(conversation.id, renameInput)
-                        conversationRenameTarget = null
-                    },
-                    modifier = Modifier.padding(top = 16.dp),
-                )
-            }
-        }
+        )
     }
 
     conversationDeleteTarget?.let { conversation ->

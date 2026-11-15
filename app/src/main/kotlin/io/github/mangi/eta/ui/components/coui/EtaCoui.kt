@@ -485,6 +485,51 @@ internal fun EtaCouiDialog(
     }
 }
 
+/**
+ * 上游的 COUI 输入对话框（CouiInputDialog）：标题、输入框（带清除钮）、底部「取消 / 确定」，材质模糊背后页面。
+ * [error] 不为空时显示在输入框下方（红色）。
+ */
+@Composable
+internal fun EtaCouiInputDialog(
+    visible: Boolean,
+    title: String?,
+    value: String,
+    onValueChange: (String) -> Unit,
+    confirmText: String,
+    onConfirm: () -> Unit,
+    onDismissRequest: () -> Unit,
+    message: String? = null,
+    placeholder: String? = null,
+    confirmEnabled: Boolean = true,
+    error: String? = null,
+    cancelText: String = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_cancel),
+) {
+    val dark = CouiTheme.isDark
+    var fieldValue by remember {
+        mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(value, androidx.compose.ui.text.TextRange(value.length)))
+    }
+    if (fieldValue.text != value) {
+        fieldValue = fieldValue.copy(text = value, selection = androidx.compose.ui.text.TextRange(value.length))
+    }
+    com.itos.coui.dialog.InputDialog(
+        visible = visible,
+        title = title,
+        message = message,
+        value = fieldValue,
+        onValueChange = { next -> fieldValue = next; if (next.text != value) onValueChange(next.text) },
+        placeholder = placeholder,
+        counter = error,
+        counterIsError = error != null,
+        clearContentDescription = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.page_clear_84fcd7),
+        confirmAction = etaPrimaryDialogAction(confirmText, onConfirm, confirmEnabled, false, dark),
+        dismissAction = com.itos.coui.dialog.CouiDialogAction(cancelText, onDismissRequest),
+        onDismissRequest = onDismissRequest,
+        dark = dark,
+        material = rememberEtaDialogMaterial(dark),
+        backdrop = rememberCouiWindowBackdrop(),
+    )
+}
+
 /** 上游的系统顶栏按钮样式：流体材质、阴影与轮廓光（Android 14+）。 */
 @Composable
 internal fun rememberEtaToolbarStyle(dark: Boolean = CouiTheme.isDark): com.itos.coui.topappbar.CouiToolbarStyle {

@@ -61,18 +61,20 @@ internal fun ConversationGroupDialogs(state: ConversationPaneUiState, actions: P
     if (editing != null) key(editing) {
         var value by remember { mutableStateOf(editing.name) }
         var error by remember { mutableStateOf<String?>(null) }
-        EtaWindowDialog(true, title = stringResource(if (editing.id == null) R.string.eta_new_group else R.string.eta_rename_group),
-            onDismissRequest = { dialogs.edit = null }) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TextField(value, onValueChange = { value = it; error = null }, label = stringResource(R.string.eta_group_name),
-                    singleLine = true, modifier = Modifier.fillMaxWidth())
-                error?.let { Text(it, style = EtaTheme.type.footnote, color = EtaTheme.colors.danger) }
-                MiuixDialogActions(confirmText = stringResource(R.string.action_save), onCancel = { dialogs.edit = null }, onConfirm = {
-                    error = if (editing.id == null) actions.createGroup(value, editing.moveIds) else actions.renameGroup(editing.id, value)
-                    if (error == null) { dialogs.edit = null; if (editing.id == null) onMoved() }
-                })
-            }
-        }
+        io.github.mangi.eta.ui.components.coui.EtaCouiInputDialog(
+            visible = true,
+            title = stringResource(if (editing.id == null) R.string.eta_new_group else R.string.eta_rename_group),
+            value = value,
+            onValueChange = { value = it; error = null },
+            placeholder = stringResource(R.string.eta_group_name),
+            error = error,
+            confirmText = stringResource(R.string.action_save),
+            onConfirm = {
+                error = if (editing.id == null) actions.createGroup(value, editing.moveIds) else actions.renameGroup(editing.id, value)
+                if (error == null) { dialogs.edit = null; if (editing.id == null) onMoved() }
+            },
+            onDismissRequest = { dialogs.edit = null },
+        )
     }
     val deleting = groups.firstOrNull { it.id == dialogs.deleteId }
     if (deleting != null) EtaWindowDialog(true, title = stringResource(R.string.eta_delete_group),

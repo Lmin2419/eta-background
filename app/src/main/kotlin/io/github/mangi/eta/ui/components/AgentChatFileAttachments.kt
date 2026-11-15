@@ -152,35 +152,22 @@ internal fun AgentAttachmentPickerButton(
         })
     }
 
-    EtaWindowDialog(
-        show = showPathDialog,
+    io.github.mangi.eta.ui.components.coui.EtaCouiInputDialog(
+        visible = showPathDialog,
         title = stringResource(R.string.ui_input_file_path_36d474),
-        summary = stringResource(R.string.ui_supports_files_and_folders_under_internal_storage_or_520786),
+        message = stringResource(R.string.ui_supports_files_and_folders_under_internal_storage_or_520786),
+        value = pathInput,
+        onValueChange = { pathInput = it },
+        placeholder = stringResource(R.string.ui_absolute_path_9ac6fc),
+        confirmText = stringResource(R.string.attachment_add),
+        confirmEnabled = pathInput.trim().startsWith('/'),
+        onConfirm = {
+            val path = pathInput.trim()
+            showPathDialog = false
+            onAttachFilePath(path)
+        },
         onDismissRequest = { showPathDialog = false },
-    ) {
-        Column {
-            TextField(
-                value = pathInput,
-                onValueChange = { pathInput = it },
-                label = stringResource(R.string.ui_absolute_path_9ac6fc),
-                useLabelAsPlaceholder = true,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            MiuixDialogActions(
-                confirmText = stringResource(R.string.attachment_add),
-                confirmEnabled = pathInput.trim().startsWith('/'),
-                onCancel = { showPathDialog = false },
-                onConfirm = {
-                    val path = pathInput.trim()
-                    showPathDialog = false
-                    onAttachFilePath(path)
-                },
-                modifier = Modifier.padding(top = 16.dp),
-            )
-        }
-    }
+    )
 }
 
 @Composable

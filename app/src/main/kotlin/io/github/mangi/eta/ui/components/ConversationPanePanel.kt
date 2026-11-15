@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -445,7 +446,16 @@ private fun PaneBottomDock(
     query: String, onSearchChange: (String) -> Unit, permissionsAttention: Boolean,
     onOpenPermissions: () -> Unit, onOpenSettings: () -> Unit, backdrop: com.itos.coui.backdrop.CouiBackdrop?,
 ) {
+    // 有液态玻璃时用上游 3.4.4 的 COUI 原生搜索栏：点开后右边两枚圆钮滑走、出现「取消」；否则用玻璃胶囊里的输入框。
+    val nativeSearch = remember(backdrop) {
+        backdrop != null && android.os.Build.VERSION.SDK_INT >= 34 &&
+            runCatching { com.itos.coui.effect.CouiFloatingRenderer.pair() }.isSuccess
+    }
     androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides backdrop) {
+        if (nativeSearch && backdrop != null) {
+            PaneNativeSearchDock(query, onSearchChange, permissionsAttention, onOpenPermissions, onOpenSettings, backdrop)
+            return@CompositionLocalProvider
+        }
         Row(Modifier.fillMaxWidth().height(PaneDockHeight).padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
@@ -467,8 +477,88 @@ private fun PaneBottomDock(
     }
 }
 
+/** 上游 ConversationPaneBottomDock 的 COUI 原生搜索栏：展开时右边圆钮淡出缩小并滑走，返回键收起并清空。 */
 @Composable
-internal fun CircleIconButton(icon: ImageVector, description: String, onClick: () -> Unit, glass: Boolean = true) {
+private fun PaneNativeSearchDock(
+    query: String, onSearchChange: (String) -> Unit, permissionsAttention: Boolean,
+    onOpenPermissions: () -> Unit, onOpenSettings: () -> Unit, backdrop: com.itos.coui.backdrop.CouiBackdrop,
+) {
+    var expanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val searchState = com.itos.coui.search.rememberCouiSearchBarState(expanded)
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    LaunchedEffect(query) { if (query.isNotEmpty() && !expanded) expanded = true }
+    NavigationBackHandler(rememberNavigationEventState(NavigationEventInfo.None), isBackEnabled = expanded,
+        onBackCompleted = { expanded = false; onSearchChange(""); keyboard?.hide() })
+    val progress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (expanded) 0f else 1f,
+        animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.86f, stiffness = 380f),
+        label = "paneDockButtons",
+    )
+    val sideMargin = 12.dp
+    val gap = 8.dp
+    androidx.compose.ui.layout.Layout(
+        modifier = Modifier.fillMaxWidth().heightIn(min = PaneDockHeight).padding(vertical = 12.dp),
+        content = {
+            // 按下标取子节点的布局：每个子项各包一层，内部多出节点也不会错位。
+            Box(Modifier.fillMaxWidth()) {
+                com.itos.coui.search.SearchBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    state = searchState,
+                    query = query,
+                    onQueryChange = onSearchChange,
+                    onExpandedChange = { next -> expanded = next; if (!next) onSearchChange("") },
+                    placeholder = stringResource(R.string.conversation_search_hint),
+                    cancelText = stringResource(R.string.action_cancel),
+                    clearDescription = stringResource(R.string.page_clear_84fcd7),
+                    backdrop = backdrop,
+                    onSearch = { keyboard?.hide() },
+                )
+            }
+            Row(
+                Modifier.graphicsLayer {
+                    val p = progress.coerceIn(0f, 1f)
+                    alpha = p
+                    val scale = 0.76f + 0.24f * p
+                    scaleX = scale; scaleY = scale
+                },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(gap),
+            ) {
+                Box {
+                    CircleIconButton(Icons.Outlined.VerifiedUser, stringResource(R.string.route_permissions),
+                        onClick = { if (!expanded) onOpenPermissions() })
+                    if (permissionsAttention) Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(8.dp)
+                        .background(EtaTheme.colors.attention, EtaTheme.shapes.radiusFull))
+                }
+                CircleIconButton(Icons.Outlined.Settings, stringResource(R.string.route_settings),
+                    onClick = { if (!expanded) onOpenSettings() })
+            }
+        },
+    ) { measurables, constraints ->
+        val buttons = measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
+        val side = sideMargin.roundToPx()
+        val gapPx = gap.roundToPx()
+        // SearchBar 自带 16dp 右边距，收起时只再留出圆钮和一个间距。
+        val reserved = ((buttons.width + side - (side - gapPx)) * progress).toInt().coerceAtLeast(0)
+        val search = measurables[0].measure(
+            androidx.compose.ui.unit.Constraints.fixedWidth((constraints.maxWidth - reserved).coerceAtLeast(1))
+                .copy(minHeight = 0, maxHeight = constraints.maxHeight),
+        )
+        val height = maxOf(search.height, buttons.height)
+        layout(constraints.maxWidth, height) {
+            search.placeRelative(0, (height - search.height) / 2)
+            if (progress > 0.01f) {
+                val slide = ((1f - progress) * (buttons.width + side) * 0.35f).toInt()
+                buttons.placeRelative(constraints.maxWidth - side - buttons.width + slide, (height - buttons.height) / 2)
+            }
+        }
+    }
+}
+
+@Composable
+internal fun CircleIconButton(icon: ImageVector, description: String, onClick: () -> Unit, glass: Boolean = true,
+    tint: Color? = null) {
+    val iconTint = tint ?: EtaTheme.colors.textPrimary
     if (glass) {
         // 对话页顶部：上游 COUI 的流体液态玻璃圆钮（边缘折光、内发光、按压回弹）。
         io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
@@ -477,7 +567,7 @@ internal fun CircleIconButton(icon: ImageVector, description: String, onClick: (
             capsule = false,
             contentDescription = description,
             onClick = onClick,
-        ) { Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary) }
+        ) { Icon(icon, null, Modifier.size(22.dp), tint = iconTint) }
         return
     }
     val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
@@ -487,7 +577,7 @@ internal fun CircleIconButton(icon: ImageVector, description: String, onClick: (
             else Modifier.etaElevation(io.github.mangi.eta.ui.theme.EtaElevation.E1, EtaTheme.shapes.radiusFull).background(EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusFull))
         .clip(EtaTheme.shapes.radiusFull).clickable(interactionSource = press, indication = null, onClickLabel = description, onClick = onClick)
         .semantics { contentDescription = description; role = Role.Button }, contentAlignment = Alignment.Center) {
-        Icon(icon, null, Modifier.size(22.dp), tint = EtaTheme.colors.textPrimary)
+        Icon(icon, null, Modifier.size(22.dp), tint = iconTint)
     }
 }
 

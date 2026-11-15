@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.runtime.Composable
@@ -62,6 +63,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.model.TaskVisualStatus
@@ -168,23 +170,41 @@ private fun AgentWorkHeader(
         working -> stringResource(R.string.work_analyzing)
         else -> workSummaryText(summary)
     }
+    // 与上游 3.4.2 一致的轻量摘要行：不再用绿色对勾圆圈，换成一枚小号灰色图标和更淡、更小的字，
+    // 让「已完成 · N 步」退到正文后面。进行中用强调色，失败用警示色。
+    val failed = !working && summary.failedCount > 0
+    val iconTint = when {
+        working -> EtaTheme.colors.accent
+        failed -> EtaTheme.colors.danger
+        else -> EtaTheme.colors.textTertiary
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = WorkRowHeight)
-            .clip(RoundedCornerShape(10.dp))
+            .heightIn(min = WorkHeaderHeight)
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(modifier = Modifier.width(WorkGutterWidth), contentAlignment = Alignment.Center) {
-            StatusRing(if (working) TaskVisualStatus.Running else if (summary.failedCount > 0) TaskVisualStatus.Failed else TaskVisualStatus.Success, size = 16.dp)
+            Icon(
+                imageVector = when {
+                    runningTool != null -> iconForTool(runningTool.toolName)
+                    working -> Icons.Outlined.Lightbulb
+                    failed -> Icons.Outlined.ErrorOutline
+                    else -> Icons.Outlined.Checklist
+                },
+                contentDescription = null,
+                modifier = Modifier.size(14.5.dp),
+                tint = iconTint,
+            )
         }
         Spacer(modifier = Modifier.width(WorkGutterGap))
         ShimmerText(
             text = text,
             active = working,
-            style = EtaTheme.type.footnote,
-            color = EtaTheme.colors.textSecondary,
+            style = EtaTheme.type.footnote.copy(fontSize = 13.5.sp),
+            color = if (failed) EtaTheme.colors.textSecondary else EtaTheme.colors.textTertiary,
             modifier = Modifier.weight(1f, fill = false),
         )
         ExpandChevron(
@@ -446,6 +466,8 @@ internal fun ExpandChevron(
 
 /** 时间线标题行与节点徽章共用的几何尺寸，保证图标中心与首行文字中线对齐。 */
 internal val WorkRowHeight: Dp = 32.dp
+/** 摘要行比步骤行矮一点（上游 30dp）。 */
+internal val WorkHeaderHeight: Dp = 30.dp
 internal val WorkGutterWidth: Dp = 24.dp
 internal val WorkGutterGap: Dp = 8.dp
 private val WorkNodeSize: Dp = 20.dp

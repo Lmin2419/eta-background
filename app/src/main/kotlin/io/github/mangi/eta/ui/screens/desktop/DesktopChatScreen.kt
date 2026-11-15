@@ -1,5 +1,15 @@
 package io.github.mangi.eta.ui.screens.desktop
 
+import androidx.compose.material.icons.automirrored.outlined.ArrowBackIos
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.windowInsetsPadding
+import com.itos.coui.backdrop.couiBackdrop
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -249,59 +259,44 @@ internal fun DesktopChatScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            AdaptiveTopAppBar(
-                title = state.title?.takeIf { it.isNotBlank() } ?: listTitle?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_untitled),
-                compact = true,
-                navigationIcon = { MiuixBackButton(onClick = onBack) },
-                actions = {
-                    // 这个会话会不会提醒你：铃铛一眼可见，点一下切换。
-                    if (!isChild) {
-                        val remind = linkPrefs.reminds(sessionId)
-                        EtaIconButton(onClick = { DesktopLinkSettings.setSessionReminders(sessionId, !remind) }) {
-                            Icon(
-                                if (remind) Icons.Outlined.NotificationsActive else Icons.Outlined.NotificationsOff,
-                                stringResource(R.string.desktop_session_remind),
-                                Modifier.size(22.dp),
-                                tint = if (remind) EtaTheme.colors.accent else EtaTheme.colors.textTertiary,
-                            )
-                        }
+            // 与手机对话同一套顶部：左边玻璃返回钮，中间玻璃胶囊（上行会话标题、下行「电脑 · 工作区」，
+            // 点一下打开会话设置，模型也在那里选），右边玻璃铃铛和子代理。
+            val title = state.title?.takeIf { it.isNotBlank() } ?: listTitle?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_untitled)
+            val subtitle = listOfNotNull(stringResource(R.string.desktop_title), workspaceTitle?.takeIf { it.isNotBlank() }).joinToString(" · ")
+            DesktopGlassTopBar(
+                title = title,
+                subtitle = subtitle,
+                onBack = onBack,
+                onTitle = if (!isChild) ({ showSettings = true }) else null,
+            ) {
+                if (!isChild) {
+                    val remind = linkPrefs.reminds(sessionId)
+                    io.github.mangi.eta.ui.components.CircleIconButton(
+                        if (remind) Icons.Outlined.NotificationsActive else Icons.Outlined.NotificationsOff,
+                        stringResource(R.string.desktop_session_remind),
+                        onClick = { DesktopLinkSettings.setSessionReminders(sessionId, !remind) },
+                        tint = if (remind) EtaTheme.colors.accent else EtaTheme.colors.textTertiary,
+                    )
+                }
+                if (!isChild && state.subagents.isNotEmpty()) {
+                    Box {
+                        io.github.mangi.eta.ui.components.CircleIconButton(Icons.Outlined.Hub,
+                            stringResource(R.string.desktop_subagents), onClick = ::openSubagents)
+                        Text(
+                            state.subagents.size.toString(),
+                            style = EtaTheme.type.caption,
+                            color = EtaTheme.colors.onAccent,
+                            modifier = Modifier.align(Alignment.TopEnd)
+                                .background(EtaTheme.colors.accent, EtaTheme.shapes.radiusFull)
+                                .padding(horizontal = 4.dp),
+                        )
                     }
-                    if (!isChild && state.subagents.isNotEmpty()) {
-                        Box {
-                            EtaIconButton(onClick = ::openSubagents) {
-                                Icon(Icons.Outlined.Hub, stringResource(R.string.desktop_subagents), Modifier.size(22.dp))
-                            }
-                            Text(
-                                state.subagents.size.toString(),
-                                style = EtaTheme.type.caption,
-                                color = EtaTheme.colors.onAccent,
-                                modifier = Modifier.align(Alignment.TopEnd)
-                                    .background(EtaTheme.colors.accent, EtaTheme.shapes.radiusFull)
-                                    .padding(horizontal = 4.dp),
-                            )
-                        }
-                    }
-                    if (!isChild) {
-                        Box(Modifier.padding(end = 8.dp)) {
-                            ModelPill(picker, locked = false, iconOnly = true) { showSettings = true }
-                        }
-                    } else {
-                        Box(Modifier.padding(end = 16.dp)) { DesktopRunningDot(state.running) }
-                    }
-                },
-            )
+                }
+                if (isChild) Box(Modifier.padding(horizontal = 12.dp)) { DesktopRunningDot(state.running) }
+            }
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
-            // 标题下一行小字：这是电脑上的会话，在哪个工作区。
-            Text(
-                text = listOfNotNull(stringResource(R.string.desktop_title), workspaceTitle?.takeIf { it.isNotBlank() }).joinToString(" · "),
-                style = EtaTheme.type.caption,
-                color = EtaTheme.colors.textTertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 4.dp),
-            )
             if (connection !is DesktopBridgeClient.State.Connected) {
                 DesktopConnectionBanner(connection, configured = true, onRetry = DesktopBridge::retry)
                 if (state.loaded) {
@@ -499,4 +494,64 @@ private fun encodeImage(context: Context, pending: PendingImageUi): DesktopImage
     if (base64.isEmpty()) return null
     val mediaType = header.removePrefix("data:").substringBefore(";").ifBlank { pending.mimeType }
     return DesktopImage(mediaType, base64)
+}
+
+/**
+ * 电脑会话页的顶部：与手机对话一致的液态玻璃控件。玻璃从身后一层页面底色采样（上游 COUI 的做法：
+ * 源是兄弟节点并带不透明底色），所以在页面最上方也是同一种质感。
+ */
+@Composable
+private fun DesktopGlassTopBar(
+    title: String,
+    subtitle: String,
+    onBack: () -> Unit,
+    onTitle: (() -> Unit)?,
+    trailing: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
+) {
+    val source = if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders)
+        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "desktop-top") else null
+    Box(Modifier.fillMaxWidth()) {
+        if (source != null) Box(Modifier.matchParentSize().couiBackdrop(source).background(EtaTheme.colors.canvas))
+        CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides source) {
+            androidx.compose.foundation.layout.Row(
+                Modifier.fillMaxWidth()
+                    .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.statusBars)
+                    .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.displayCutout
+                        .only(androidx.compose.foundation.layout.WindowInsetsSides.Horizontal))
+                    .heightIn(min = 60.dp)
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+            ) {
+                io.github.mangi.eta.ui.components.CircleIconButton(
+                    androidx.compose.material.icons.Icons.AutoMirrored.Outlined.ArrowBackIos,
+                    stringResource(R.string.action_back), onClick = onBack)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
+                        modifier = Modifier.heightIn(min = 44.dp)
+                            .width(androidx.compose.foundation.layout.IntrinsicSize.Max).widthIn(max = 260.dp),
+                        shape = EtaTheme.shapes.radiusFull,
+                        capsule = true,
+                        contentDescription = title,
+                        onClick = onTitle,
+                        wrapContent = true,
+                    ) {
+                        androidx.compose.foundation.layout.Column(
+                            Modifier.heightIn(min = 44.dp).padding(horizontal = 18.dp, vertical = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+                        ) {
+                            Text(title, style = EtaTheme.type.subhead.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, lineHeight = 18.sp),
+                                color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(subtitle, style = EtaTheme.type.caption.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Normal, lineHeight = 14.sp),
+                                color = EtaTheme.colors.textTertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                }
+                trailing()
+            }
+        }
+    }
 }
