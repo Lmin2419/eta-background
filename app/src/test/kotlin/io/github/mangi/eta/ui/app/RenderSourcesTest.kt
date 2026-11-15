@@ -2,6 +2,7 @@ package io.github.mangi.eta.ui.app
 
 import android.app.Application
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.draw.drawWithContent
 import io.github.mangi.eta.ui.components.EtaCouiSupport
 import io.github.mangi.eta.ui.components.EtaRenderDiagnostics
 import io.github.mangi.eta.ui.components.FrameWindow
@@ -24,17 +25,24 @@ class RenderSourcesTest {
         val previous = EtaCouiSupport.shaders
         EtaCouiSupport.shaders = true
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
+        // 只看组合：采样源在组合时创建、登记。不画页面——本机渲染器编译不了模糊着色器，
+        // 绘制时抛出的异常会弄坏 Compose 的全局快照通知，连累同一进程里后面的测试（ChatHistoryPagingTest）。
         val panel = Stage3TestPanel(controller.get(), blur = true) {
-            DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展")
+            androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.drawWithContent { }) {
+                DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展")
+            }
         }
         try {
-            runCatching { panel.advance(5) }
+            panel.advance(5)
             val names = EtaRenderDiagnostics.sources.keys
             assertTrue("chat page COUI source is registered: $names", "对话页(COUI)" in names)
             assertFalse("the Miuix message layer is skipped on the COUI path: $names", "消息区(Miuix)" in names)
         } finally {
             EtaCouiSupport.shaders = previous
             runCatching { panel.close() }; runCatching { controller.pause().stop().destroy() }
+            // 把关页面时排进主线程的界面调度跑完再结束：Compose 的界面调度器在同一进程里是静态的，
+            // 留着没跑的调度会让它以为「已经排过」，后面的测试（ChatHistoryPagingTest）的协程就再也轮不到。
+            org.robolectric.shadows.ShadowLooper.idleMainLooper()
         }
         assertTrue("sources are unregistered when the page leaves: ${EtaRenderDiagnostics.sources}",
             "对话页(COUI)" !in EtaRenderDiagnostics.sources)

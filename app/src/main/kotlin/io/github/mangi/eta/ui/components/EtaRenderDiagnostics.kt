@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,17 +35,25 @@ import top.yukonga.miuix.kmp.basic.Text
  * 以及最近 2 秒的帧数、超时帧和平均帧耗时。先在真机上量，再决定还能省掉哪些源。
  */
 internal object EtaRenderDiagnostics {
-    /** 名字 → 当前有几个在用。所有采样源创建处都登记，不论诊断开关开没开（只是一次计数）。 */
-    val sources = mutableStateMapOf<String, Int>()
+    /**
+     * 名字 → 当前有几个在用。所有采样源创建处都登记，不论诊断开关开没开（只是一次计数）。
+     * 普通的主线程 Map，不是 Compose 状态：每个页面进出都会写它，写 Compose 全局状态会白白触发全局快照通知
+     * （本机测试里还会让同一进程后面的测试收不到通知）。诊断条每 250ms 刷新时重新读。
+     */
+    private val counts = LinkedHashMap<String, Int>()
 
-    internal fun attach(name: String) { sources[name] = (sources[name] ?: 0) + 1 }
+    val sources: Map<String, Int> get() = counts.toMap()
+
+    internal fun attach(name: String) { counts[name] = (counts[name] ?: 0) + 1 }
 
     internal fun detach(name: String) {
-        val left = (sources[name] ?: 1) - 1
-        if (left <= 0) sources.remove(name) else sources[name] = left
+        val left = (counts[name] ?: 1) - 1
+        if (left <= 0) counts.remove(name) else counts[name] = left
     }
 
-    fun sourceSummary(): String = sources.entries.sortedBy { it.key }
+    fun total(): Int = counts.values.sum()
+
+    fun sourceSummary(): String = counts.entries.sortedBy { it.key }
         .joinToString("、") { (name, count) -> if (count > 1) "$name×$count" else name }
 }
 
@@ -122,7 +129,7 @@ internal fun RenderDiagnosticsOverlay(blurEnabled: Boolean, modifier: Modifier =
     }
     val sources = EtaRenderDiagnostics.sourceSummary()
     val line = stringResource(R.string.eta_render_diag_line, refreshHz.toInt(), stats.frames, stats.late,
-        "%.1f".format(stats.avgMs), EtaRenderDiagnostics.sources.values.sum())
+        "%.1f".format(stats.avgMs), EtaRenderDiagnostics.total())
     val copied = stringResource(R.string.eta_render_diag_copied)
     Text(
         line,
