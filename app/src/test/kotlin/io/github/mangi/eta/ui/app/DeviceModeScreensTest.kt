@@ -37,6 +37,10 @@ class DeviceModeScreensTest {
         DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展")
     }
 
+    @Test fun recheckAfterGivingUp() = check("home-recheck-light", DeviceModeScreens.capture("home-recheck-light") {
+        DeviceModeScreens.Home(DeviceModeScreens.gaveUpMessages, title = "安装 Python 依赖")
+    })
+
     @Test fun sidebarOpen() = variants("sidebar") {
         DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展", paneOpen = true)
     }

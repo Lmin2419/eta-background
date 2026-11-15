@@ -263,7 +263,10 @@ internal fun AgentChatBody(
     val draftRequest = remember { mutableStateOf<ChatDraftRequest?>(null) }
     val inlineEditor = messageEdit?.takeIf { edit -> messages.any { it.id == edit.targetMessageId && it is io.github.mangi.eta.ui.model.UserMessageUi } }
         ?.let { ChatInlineEditor(it.targetMessageId, input, it.preserveFollowingMessages, { text -> keepBottomAnchored = true; onSubmit(text) }, onCancelMessageEdit) }
-    CompositionLocalProvider(LocalChatDraftRequest provides draftRequest, LocalChatInlineEditor provides inlineEditor) {
+    val latestAnswerId = remember(messages) { messages.lastOrNull { it is io.github.mangi.eta.ui.model.AgentMessageUi }?.id }
+    val recheck = RecheckAction(latestAnswerId, enabled = !isStreaming && !isCompacting, submit = onSubmit)
+    CompositionLocalProvider(LocalChatDraftRequest provides draftRequest, LocalChatInlineEditor provides inlineEditor,
+        LocalRecheckAction provides recheck) {
     SpeechPlaybackHost {
         SpeechAutoReadAloud(messages = messages, isStreaming = isStreaming)
         AgentChatScaffold(

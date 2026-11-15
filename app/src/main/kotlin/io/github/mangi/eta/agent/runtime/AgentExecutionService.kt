@@ -360,6 +360,8 @@ internal class AgentExecutionService : Service() {
                     val task = cards[runId]?.takeIf { it.completed } ?: return@launch
                     // 用户正停在这个对话上：回复就在眼前，不再弹完成横幅（卡片照常留在状态栏）。
                     if (ForegroundConversation.isShowing(task.conversationId)) return@launch
+                    // 停在首页：首页顶部已经弹出「已完成 · 查看」提示条（HomeDoneNotice），不重复弹横幅。
+                    if (ForegroundConversation.homeVisible && task.conversationId != null) return@launch
                     val id = notificationIds[runId] ?: return@launch
                     val manager = context.getSystemService(NotificationManager::class.java)
                     if (!taskNotificationsEnabled(context) ||

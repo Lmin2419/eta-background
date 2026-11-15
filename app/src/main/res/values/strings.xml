@@ -1973,4 +1973,11 @@
   <string name="compaction_settings_keep_turns">%1$d turns</string>
   <string name="compaction_settings_note">When usage reaches the chosen share of the context window, earlier messages are summarised in the background and the most recent turns stay as they are. If it is not ready by 85%, the conversation waits for it; if it fails, compaction runs the usual way. The conversation history is sent to the chosen model\'s provider. A dedicated model cannot reuse the conversation model\'s prompt cache, and its context window should be at least as large as the conversation model\'s.</string>
   <string name="conversation_select_multiple">Select multiple</string>
+  <string name="eta_recheck_retry">Recheck error and retry</string>
+  <string name="eta_recheck_prompt">Don’t give up yet. Recheck the last real error message and fix it following the debugging rules: first look for small mistakes such as quotes and escaping, spaces and indentation, and line endings; make at least three more attempts aimed at that specific error, then tell me the result.</string>
+  <string name="eta_model_queued_next_turn">Switches to %1$s after this reply</string>
+  <string name="eta_model_next_turn">Next turn</string>
+  <string name="eta_task_done_notice">“%1$s” is done</string>
+  <string name="eta_task_failed_notice">“%1$s” ran into an error</string>
+  <string name="eta_task_notice_open">Open</string>
 </resources>

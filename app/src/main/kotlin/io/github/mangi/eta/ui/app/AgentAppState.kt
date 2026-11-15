@@ -254,7 +254,11 @@ internal class AgentAppState(
         } else {
             AgentModelPickerProjector.project(providers, defaultProviderId, defaultModelId)
         }
-        modelPickerState = pickerState.copy(isChanging = modelPickerState.isChanging)
+        val queuedId = selectedConversationId?.let(queuedModels::get)
+        modelPickerState = pickerState.copy(
+            isChanging = modelPickerState.isChanging,
+            queuedModel = queuedId?.let { id -> pickerState.providerGroups.firstNotNullOfOrNull { group -> group.models.firstOrNull { it.id == id } } },
+        )
         val effective = bound ?: providers.enabledModel(pickerState.selectedModel?.id)
         currentReasoningCapabilities = effective?.let { (provider, model) ->
             RuntimeConfigRepository.reasoningCapabilities(provider, model)
@@ -833,8 +837,27 @@ internal class AgentAppState(
         if (selectedConversationId != null) persistConversations()
     }
 
-    /** 聊天内切换同时改当前会话绑定与默认模型；默认模型供新会话和系统助手入口使用。 */
+    /** 回复进行中选的模型，按会话记着，这一轮结束后再换（不打断正在跑的这一轮）。 */
+    private var queuedModels: Map<String, String> = emptyMap()
+
+    /**
+     * 聊天内切换同时改当前会话绑定与默认模型；默认模型供新会话和系统助手入口使用。
+     * 回复进行中选的模型先记下来，这一轮回复完再换。
+     */
     fun selectModel(modelId: String) {
+        val conversationId = selectedConversationId
+        if (homeState.isConversationLoaded && homeState.isStreaming && conversationId != null && !modelPickerState.isChanging) {
+            if (modelPickerState.selectedModel?.id == modelId) {
+                queuedModels = queuedModels - conversationId
+            } else {
+                queuedModels = queuedModels + (conversationId to modelId)
+                val name = modelPickerState.providerGroups.firstNotNullOfOrNull { group -> group.models.firstOrNull { it.id == modelId } }?.displayName ?: modelId
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(appContext,
+                    appContext.getString(R.string.eta_model_queued_next_turn, name), Toast.LENGTH_SHORT)
+            }
+            refreshConversationModel()
+            return
+        }
         if (
             !homeState.isConversationLoaded ||
             homeState.isStreaming ||
@@ -2776,6 +2799,22 @@ internal class AgentAppState(
         }
         if (conversationId == selectedConversationId) {
             homeState = state
+        }
+        if (!state.isStreaming && conversationId in queuedModels) scope.launch { applyQueuedModel(conversationId) }
+    }
+
+    /** 这一轮回复结束：换成回复中选的模型。不在看的会话只改它绑定的模型，不动默认模型。 */
+    private fun applyQueuedModel(conversationId: String) {
+        val modelId = queuedModels[conversationId] ?: return
+        val state = conversationsById[conversationId] ?: return
+        if (state.isStreaming) return
+        queuedModels = queuedModels - conversationId
+        if (conversationId == selectedConversationId) {
+            selectModel(modelId)
+            refreshConversationModel()
+        } else {
+            conversationsById = conversationsById + (conversationId to state.copy(modelId = modelId))
+            persistConversations()
         }
     }
 

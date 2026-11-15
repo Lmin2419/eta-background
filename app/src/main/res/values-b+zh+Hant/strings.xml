@@ -1845,4 +1845,11 @@
   <string name="compaction_settings_keep_turns">%1$d 輪</string>
   <string name="compaction_settings_note">用量到設定比例時，在背景把較早的對話整理成摘要，最近幾輪原樣保留；到 85% 還沒整理好會等它，失敗時退回原來的壓縮方式。對話歷史會傳送給所選模型的服務商。指定專用模型後不能複用對話模型的提示快取，它的上下文視窗應不小於對話模型。</string>
   <string name="conversation_select_multiple">多選</string>
+  <string name="eta_recheck_retry">複核報錯再試</string>
+  <string name="eta_recheck_prompt">先別放棄。複核最後一條真實報錯，按排錯規則修：先查引號與轉義、空格與縮排、換行符這類小錯，針對這個具體報錯至少再試三次，然後告訴我結果。</string>
+  <string name="eta_model_queued_next_turn">這一輪回覆完後換成 %1$s</string>
+  <string name="eta_model_next_turn">下一輪</string>
+  <string name="eta_task_done_notice">「%1$s」已完成</string>
+  <string name="eta_task_failed_notice">「%1$s」出錯了</string>
+  <string name="eta_task_notice_open">查看</string>
 </resources>

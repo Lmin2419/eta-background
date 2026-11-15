@@ -62,6 +62,7 @@ internal fun HomeConversationTopBar(
     onManageModels: () -> Unit,
     conversationTitle: String? = null,
     currentConversationId: String? = null,
+    onOpenConversation: ((String) -> Unit)? = null,
 ) {
     var settings by remember { mutableStateOf(false) }
     val pillAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
@@ -89,7 +90,8 @@ internal fun HomeConversationTopBar(
             }
             Box((if (character == null) Modifier.weight(1f) else Modifier).etaChromeScale(0.88f)
                 .couiMenuAnchor(pillAnchor), contentAlignment = Alignment.Center) {
-                val locked = isStreaming || isCompacting || models.isChanging
+                // 回复进行中也能选模型：这一轮回复完后才换（AgentAppState.selectModel）；压缩和切换中仍锁住。
+                val locked = isCompacting || models.isChanging
                 val openModels = { if (locked) toast(lockedText) else pillAnchor.open { settings = true } }
                 // 与上游一致：对话有了标题时，中间上行标题、下行模型；新对话只显示模型胶囊。
                 if (character == null && !conversationTitle.isNullOrBlank()) ChatTitleCapsule(conversationTitle, models, locked, openModels)
@@ -97,11 +99,16 @@ internal fun HomeConversationTopBar(
             }
             Box(Modifier.etaChromeScale()) { CircleIconButton(Icons.Outlined.Add, stringResource(R.string.action_new_conversation), onNew) }
         }
+        if (onOpenConversation != null) HomeDoneNotice(currentConversationId, onOpenConversation)
         HomeTaskCapsule(runningTaskCount, currentConversationId, onTasks)
     }
-    ModelPopover(settings, pillAnchor, models, isStreaming || isCompacting,
+    ModelPopover(settings, pillAnchor, models, isCompacting,
         onDismiss = { settings = false },
-        onModel = { id -> settings = false; if (id != models.selectedModel?.id) { pendingModel = id; onModel(id) } },
+        onModel = { id ->
+            settings = false
+            if (id != models.selectedModel?.id) { pendingModel = id; onModel(id) }
+            else if (models.queuedModel != null) { pendingModel = null; onModel(id) } // 回复中改回当前模型：取消排着的切换
+        },
         onManageModels = { settings = false; onManageModels() })
 }
 
@@ -179,13 +186,15 @@ private fun ModelPopover(
     val scope = rememberCoroutineScope()
     val autoRead = speech?.tts != null && speech?.tts != TtsProvider.NONE
     val multipleGroups = models.providerGroups.size > 1
+    val nextTurn = stringResource(R.string.eta_model_next_turn)
     if (models.modelCount <= ModelMenuLimit) {
         // 模型不多：与上游一致的 COUI 菜单，从模型胶囊处展开。
         EtaContextMenu(show, onDismiss = onDismiss, couiAnchor = anchor) {
             models.providerGroups.forEachIndexed { groupIndex, group ->
                 group.models.forEachIndexed { index, model ->
                     if (multipleGroups && groupIndex > 0 && index == 0) EtaMenuDivider()
-                    EtaMenuItem(if (multipleGroups) "${group.providerName} · ${model.displayName}" else model.displayName,
+                    val name = if (multipleGroups) "${group.providerName} · ${model.displayName}" else model.displayName
+                    EtaMenuItem(if (model.id == models.queuedModel?.id) "$name · $nextTurn" else name,
                         onClick = { onModel(model.id) }, enabled = !busy && !models.isChanging,
                         selected = model.id == models.selectedModel?.id)
                 }
@@ -208,7 +217,8 @@ private fun ModelPopover(
                     if (groups.size > 1) Text(group.providerName, style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary,
                         modifier = Modifier.padding(start = 12.dp, top = 8.dp, bottom = 2.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     group.models.forEach { model ->
-                        EtaMenuItem(model.displayName, onClick = { onModel(model.id) },
+                        EtaMenuItem(if (model.id == models.queuedModel?.id) "${model.displayName} · $nextTurn" else model.displayName,
+                            onClick = { onModel(model.id) },
                             enabled = !busy && !models.isChanging, selected = model.id == models.selectedModel?.id)
                     }
                 }
@@ -278,6 +288,77 @@ private fun HomeTaskCapsule(runningTaskCount: Int, currentConversationId: String
         }
         EtaMenuDivider()
         EtaMenuItem(stringResource(R.string.eta_tasks_view_all), onClick = { open = false; onTasks() })
+    }
+}
+
+/**
+ * 别的对话里的任务刚结束：任务胶囊的位置先出现一枚「「标题」已完成 · 查看」，6 秒后收起，点一下打开那个对话。
+ * 停在首页时用它代替系统的完成横幅（AgentExecutionService.scheduleCompletionAlert）。
+ */
+@Composable
+private fun HomeDoneNotice(currentConversationId: String?, onOpenConversation: (String) -> Unit) {
+    val snapshots by io.github.mangi.eta.agent.runtime.AgentExecutionService.taskSnapshots.collectAsState()
+    val tracker = remember { DoneNoticeTracker() }
+    var notice by remember { mutableStateOf<io.github.mangi.eta.agent.runtime.TaskNotificationState?>(null) }
+    val latestConversation by rememberUpdatedState(currentConversationId)
+    LaunchedEffect(snapshots) { tracker.newlyFinished(snapshots, latestConversation)?.let { notice = it } }
+    LaunchedEffect(notice) { if (notice != null) { kotlinx.coroutines.delay(6_000); notice = null } }
+    LaunchedEffect(currentConversationId) { if (notice?.conversationId == currentConversationId) notice = null }
+    EtaAnimatedVisibility(
+        visible = notice != null,
+        enter = androidx.compose.animation.expandVertically(tween(260, easing = EtaTheme.motion.emphasizedDecelerate)) +
+            fadeIn(tween(200, delayMillis = 60)) + androidx.compose.animation.scaleIn(initialScale = 0.9f),
+        exit = fadeOut(tween(140)) + androidx.compose.animation.shrinkVertically(tween(200, easing = EtaTheme.motion.accelerate)),
+        label = "doneNotice",
+    ) {
+        var shown by remember { mutableStateOf(notice) }
+        if (notice != null) shown = notice
+        val task = shown ?: return@EtaAnimatedVisibility
+        val failed = task.isFailure()
+        val label = stringResource(if (failed) R.string.eta_task_failed_notice else R.string.eta_task_done_notice, task.title.taskLabel(14))
+        Box(Modifier.fillMaxWidth().padding(bottom = 4.dp), contentAlignment = Alignment.Center) {
+            io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
+                modifier = Modifier.height(32.dp).width(IntrinsicSize.Max).widthIn(max = 300.dp),
+                shape = EtaTheme.shapes.radiusFull,
+                capsule = true,
+                contentDescription = label,
+                onClick = { notice = null; task.conversationId?.let(onOpenConversation) },
+            ) {
+                Row(Modifier.padding(start = 10.dp, end = 12.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    StatusRing(if (failed) TaskVisualStatus.Failed else TaskVisualStatus.Success, size = 12.dp, contentDescription = null)
+                    Text(label, style = EtaTheme.type.footnote.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium),
+                        color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false))
+                    Text(stringResource(R.string.eta_task_notice_open), style = EtaTheme.type.footnote,
+                        color = EtaTheme.colors.accent, maxLines = 1)
+                }
+            }
+        }
+    }
+}
+
+private fun io.github.mangi.eta.agent.runtime.TaskNotificationState.isFailure(): Boolean = replyFailed ||
+    status == io.github.mangi.eta.agent.overlay.AgentOverlayStatus.RunFailed ||
+    status == io.github.mangi.eta.agent.overlay.AgentOverlayStatus.ContinuationUnavailable
+
+/**
+ * 找出「刚结束、属于别的对话」的任务：第一次看到的已完成卡片只记下不提示（打开应用时不翻旧账），
+ * 当前对话自己的、没有对话的、用户自己停掉的都不提示。
+ */
+internal class DoneNoticeTracker {
+    private var seen: Set<String>? = null
+
+    fun newlyFinished(snapshots: List<io.github.mangi.eta.agent.runtime.TaskNotificationState>, currentConversationId: String?):
+        io.github.mangi.eta.agent.runtime.TaskNotificationState? {
+        val completed = snapshots.filter { it.completed }
+        val previous = seen
+        seen = completed.mapTo(HashSet()) { it.runId }
+        if (previous == null) return null
+        return completed.lastOrNull {
+            it.runId !in previous && it.conversationId != null && it.conversationId != currentConversationId &&
+                it.status != io.github.mangi.eta.agent.overlay.AgentOverlayStatus.Stopped
+        }
     }
 }
 

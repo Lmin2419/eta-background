@@ -247,10 +247,18 @@ fun AgentAppRoot(
 
     // 告诉后台服务用户正在看哪个对话：在这个对话里完成的任务不再弹完成横幅。
     val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
-    val foregroundConversation = if (lifecycleState.isAtLeast(Lifecycle.State.RESUMED) && backStack.lastOrNull() == AppRoute.Home)
-        agentState.conversationPaneState.selectedConversationId else null
-    SideEffect { io.github.mangi.eta.agent.runtime.ForegroundConversation.id = foregroundConversation }
-    DisposableEffect(Unit) { onDispose { io.github.mangi.eta.agent.runtime.ForegroundConversation.id = null } }
+    val onHomeScreen = lifecycleState.isAtLeast(Lifecycle.State.RESUMED) && backStack.lastOrNull() == AppRoute.Home
+    val foregroundConversation = if (onHomeScreen) agentState.conversationPaneState.selectedConversationId else null
+    SideEffect {
+        io.github.mangi.eta.agent.runtime.ForegroundConversation.id = foregroundConversation
+        io.github.mangi.eta.agent.runtime.ForegroundConversation.homeVisible = onHomeScreen
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            io.github.mangi.eta.agent.runtime.ForegroundConversation.id = null
+            io.github.mangi.eta.agent.runtime.ForegroundConversation.homeVisible = false
+        }
+    }
 
     var tasksPanelOpen by rememberSaveable { mutableStateOf(false) }
     val wideHome = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() >= 840.dp }
@@ -530,7 +538,8 @@ fun AgentAppRoot(
                     onModel = agentState::selectModel, onCompact = agentState::compactCurrentContext,
                     onExport = ::exportCurrentConversation, onManageModels = { pushRoute(AppRoute.ModelProviders) },
                     conversationTitle = agentState.currentConversationTitle,
-                    currentConversationId = agentState.conversationPaneState.selectedConversationId)
+                    currentConversationId = agentState.conversationPaneState.selectedConversationId,
+                    onOpenConversation = ::selectConversation)
             }) else null,
             homeCharacter = if (route is AppRoute.Home) agentState.homeState.roleplayChatUi() else null,
             onOpenCharacter = {

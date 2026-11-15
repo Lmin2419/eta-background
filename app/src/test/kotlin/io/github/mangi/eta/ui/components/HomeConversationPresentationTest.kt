@@ -75,15 +75,17 @@ class HomeConversationPresentationTest {
         } finally { panel.close(); controller.pause().stop().destroy() }
     }
 
-    @Test fun busyModelPillReportsLockWithoutOpeningSettings() {
+    /** 07 第三期：回复进行中也能打开模型菜单，选中的模型这一轮回复完后才换（不再提示「锁定」）。 */
+    @Test fun modelPillStillOpensWhileReplying() {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val notices = mutableListOf<String>()
         val panel = Stage3TestPanel(controller.get()) { Stage3ChatFixture(streaming = true, onToast = { notices += it }) }
         try {
             panel.advance(20)
             panel.click(panel.nodes().first { it.config.getOrNull(SemanticsProperties.ContentDescription)?.contains("Example Model") == true })
-            assertEquals(listOf(controller.get().getString(R.string.eta_model_locked)), notices)
-            assertFalse(panel.nodes().any { it.config.getOrNull(SemanticsProperties.PaneTitle) == controller.get().getString(R.string.eta_chat_settings) })
+            panel.advance(10)
+            assertTrue("no lock notice while a reply is running: $notices", notices.isEmpty())
+            assertTrue(panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text.contains("Example Model") } == true })
         } finally { panel.close(); controller.pause().stop().destroy() }
     }
 

@@ -1949,4 +1949,11 @@
   <string name="compaction_settings_keep_turns">%1$d 轮</string>
   <string name="compaction_settings_note">用量到设定比例时，在后台把较早的对话整理成摘要，最近几轮原样保留；到 85% 还没整理好会等它，失败时退回原来的压缩方式。对话历史会发送给所选模型的服务商。指定专用模型后不能复用对话模型的提示缓存，它的上下文窗口应不小于对话模型。</string>
   <string name="conversation_select_multiple">多选</string>
+  <string name="eta_recheck_retry">复核报错再试</string>
+  <string name="eta_recheck_prompt">先别放弃。复核最后一条真实报错，按排错规则修：先查引号与转义、空格与缩进、换行符这类小错，针对这个具体报错至少再试三次，然后告诉我结果。</string>
+  <string name="eta_model_queued_next_turn">这一轮回复完后换成 %1$s</string>
+  <string name="eta_model_next_turn">下一轮</string>
+  <string name="eta_task_done_notice">「%1$s」已完成</string>
+  <string name="eta_task_failed_notice">「%1$s」出错了</string>
+  <string name="eta_task_notice_open">查看</string>
 </resources>

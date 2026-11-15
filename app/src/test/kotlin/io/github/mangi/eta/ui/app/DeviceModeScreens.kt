@@ -118,6 +118,12 @@ internal object DeviceModeScreens {
         AgentMessageUi("a2", "电脑同步这周主要做了两件事：会话列表在电脑上有变化时自动推送到手机；审批和提问可以直接在手机对话里回答。"),
     )
 
+    /** 最后一条回答像是放弃了：消息下方应出现「复核报错再试」（第三期）。 */
+    val gaveUpMessages: List<AgentChatMessageUi> = listOf(
+        UserMessageUi("u1", "帮我在终端里装一下 requests。"),
+        AgentMessageUi("a1", "试了两次都报错：pip 提示 externally-managed-environment，这个环境里暂时无法完成安装。"),
+    )
+
     val sampleConversations: List<ConversationSummaryUi> = listOf(
         conversation("c1", "整理本周工作进展", minutesAgo = 5),
         conversation("c2", "查一下明天的天气", minutesAgo = 90),

@@ -45,6 +45,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.automirrored.outlined.CallSplit
 import androidx.compose.material.icons.outlined.Check
@@ -650,6 +651,13 @@ private fun AgentMessageBlock(
                 if (showMessageActions) AnswerActionButton(Icons.Outlined.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
                 if (allowSpeech) SpeechReadAloudButton(message.id, message.content)
                 if (showMessageActions) AnswerActionButton(Icons.Outlined.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; couiAnchor.open { menu = true } }, messageActionsEnabled)
+                // 最新一条回答像是「做不到 / 失败」时：一键让它先复核报错再试（只在点的时候发）。
+                val recheck = LocalRecheckAction.current
+                val gaveUp = remember(message.content) { message.content.looksLikeGaveUp() }
+                if (recheck != null && showMessageActions && recheck.latestAnswerId == message.id && gaveUp) {
+                    val prompt = stringResource(R.string.eta_recheck_prompt)
+                    RecheckChip(enabled = recheck.enabled && messageActionsEnabled) { recheck.submit(prompt) }
+                }
             }
         }
     }
@@ -730,6 +738,28 @@ internal val AnswerActionSize = 40.dp
 private val AnswerActionCenterOffset = 11.dp
 
 /** 回答下方的轻量操作：图标显式着色，因此禁用态需要自己换成禁用色，否则看起来仍可点。 */
+/** 回答操作行末尾的「复核报错再试」小胶囊。 */
+@Composable
+private fun RecheckChip(enabled: Boolean, onClick: () -> Unit) {
+    val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Row(
+        Modifier.padding(start = 6.dp).heightIn(min = 32.dp)
+            .etaPressScale(press, pressedScale = 0.95f)
+            .clip(EtaTheme.shapes.radiusFull)
+            .background(EtaTheme.colors.surfaceSunken)
+            .clickable(interactionSource = press, indication = null, enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        // 与旁边「重新生成」的刷新图标区分开：复核报错用小虫图标。
+        Icon(Icons.Outlined.BugReport, null, Modifier.size(16.dp),
+            tint = if (enabled) EtaTheme.colors.textSecondary else EtaTheme.colors.textQuiet)
+        Text(stringResource(R.string.eta_recheck_retry), style = EtaTheme.type.footnote,
+            color = if (enabled) EtaTheme.colors.textSecondary else EtaTheme.colors.textQuiet, maxLines = 1)
+    }
+}
+
 @Composable
 internal fun AnswerActionButton(
     icon: ImageVector,

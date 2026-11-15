@@ -8,5 +8,9 @@ internal object ForegroundConversation {
     @Volatile
     var id: String? = null
 
+    /** 应用在前台且停在首页：别的对话的任务结束时由首页顶部的提示条告知，不再弹系统横幅。 */
+    @Volatile
+    var homeVisible: Boolean = false
+
     fun isShowing(conversationId: String?): Boolean = conversationId != null && conversationId == id
 }

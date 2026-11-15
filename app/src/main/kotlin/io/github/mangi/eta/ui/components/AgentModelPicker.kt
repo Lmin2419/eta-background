@@ -87,7 +87,8 @@ internal fun AgentModelPickerButton(
     // 每次打开面板换一个 key，搜索词、筛选与滚动位置都从头开始。
     var sheetSession by remember { mutableIntStateOf(0) }
     val selected = state.selectedModel
-    val enabled = !isStreaming && !state.isChanging && state.providerGroups.isNotEmpty()
+    // 回复进行中也能选：选中的模型这一轮回复完后才换（AgentAppState.selectModel）。
+    val enabled = !state.isChanging && state.providerGroups.isNotEmpty()
     LaunchedEffect(enabled) {
         if (!enabled) {
             showPopup = false
@@ -121,11 +122,18 @@ internal fun AgentModelPickerButton(
                 contentDescription = switchModelDescription
             },
         ) {
-            ModelBrandMark(
-                modelId = selected?.modelId,
-                sourceType = selected?.providerSourceType,
-                size = ChatInputActionIconSize,
-            )
+            Box {
+                ModelBrandMark(
+                    modelId = selected?.modelId,
+                    sourceType = selected?.providerSourceType,
+                    size = ChatInputActionIconSize,
+                )
+                // 已选好下一轮要换的模型：右上角一个小圆点。
+                if (state.queuedModel != null) Box(
+                    Modifier.align(Alignment.TopEnd).size(7.dp).clip(CircleShape)
+                        .background(io.github.mangi.eta.ui.theme.EtaTheme.colors.accent)
+                )
+            }
         }
 
         OverlayListPopup(
@@ -185,6 +193,7 @@ private fun ModelQuickList(
                     model = model,
                     selected = model.id == selectedId,
                     onClick = { select(model.id) },
+                    queued = model.id == state.queuedModel?.id && model.id != selectedId,
                 )
             }
         }
@@ -304,6 +313,7 @@ private fun ModelSheetContent(
                         selected = entry.model.id == selectedId,
                         onClick = { select(entry.model.id) },
                         horizontalPadding = 12.dp,
+                        queued = entry.model.id == state.queuedModel?.id && entry.model.id != selectedId,
                     )
                 }
             }
@@ -361,6 +371,7 @@ internal fun ModelPickerRow(
     onClick: () -> Unit,
     horizontalPadding: Dp = 8.dp,
     enabled: Boolean = true,
+    queued: Boolean = false,
 ) {
     val contentColor = if (selected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurface
     Row(
@@ -388,6 +399,11 @@ internal fun ModelPickerRow(
                             io.github.mangi.eta.ui.theme.EtaTheme.shapes.radiusFull).padding(horizontal = 6.dp, vertical = 2.dp))
                 }
             }
+        }
+        if (queued) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.eta_model_next_turn), style = io.github.mangi.eta.ui.theme.EtaTheme.type.caption,
+                color = io.github.mangi.eta.ui.theme.EtaTheme.colors.accent, maxLines = 1)
         }
         if (selected) {
             Spacer(modifier = Modifier.width(8.dp))

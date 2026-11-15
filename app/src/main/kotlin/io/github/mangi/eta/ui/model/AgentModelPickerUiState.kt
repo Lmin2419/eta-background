@@ -14,6 +14,8 @@ internal data class AgentModelPickerUiState(
     val providerGroups: List<AgentModelProviderGroupUi> = emptyList(),
     val selectedModel: AgentModelOptionUi? = null,
     val isChanging: Boolean = false,
+    /** 回复进行中选的模型：这一轮回复完后才换（etax/design/07 第三期）。 */
+    val queuedModel: AgentModelOptionUi? = null,
 )
 
 @Immutable
