@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import io.github.mangi.eta.ui.screens.desktop.listed
 import androidx.compose.runtime.key
@@ -243,6 +244,13 @@ fun AgentAppRoot(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
+
+    // 告诉后台服务用户正在看哪个对话：在这个对话里完成的任务不再弹完成横幅。
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
+    val foregroundConversation = if (lifecycleState.isAtLeast(Lifecycle.State.RESUMED) && backStack.lastOrNull() == AppRoute.Home)
+        agentState.conversationPaneState.selectedConversationId else null
+    SideEffect { io.github.mangi.eta.agent.runtime.ForegroundConversation.id = foregroundConversation }
+    DisposableEffect(Unit) { onDispose { io.github.mangi.eta.agent.runtime.ForegroundConversation.id = null } }
 
     var tasksPanelOpen by rememberSaveable { mutableStateOf(false) }
     val wideHome = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() >= 840.dp }

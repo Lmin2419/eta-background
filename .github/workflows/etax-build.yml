@@ -90,6 +90,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
+      - name: 保存真机模式截图
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: device-mode-screens
+          path: app/build/reports/device-mode/*.png
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: 保存失败检查报告
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

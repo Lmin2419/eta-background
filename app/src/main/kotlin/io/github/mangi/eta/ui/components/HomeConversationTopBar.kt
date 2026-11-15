@@ -114,15 +114,17 @@ private fun ChatTitleCapsule(title: String, state: AgentModelPickerUiState, lock
     val model = state.selectedModel
     val current = model?.displayName ?: stringResource(R.string.model_not_selected)
     val description = stringResource(R.string.model_switch_current, current)
+    // 高度随字号变：默认 44dp；字体放大时两行字装不下，胶囊跟着变高，不裁掉模型那一行。
     io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
-        modifier = Modifier.height(44.dp).width(IntrinsicSize.Max).widthIn(max = 240.dp),
+        modifier = Modifier.heightIn(min = 44.dp).width(IntrinsicSize.Max).widthIn(max = 240.dp),
         shape = EtaTheme.shapes.radiusFull,
         capsule = true,
         contentDescription = description,
         onClick = onClick,
+        wrapContent = true,
     ) {
-        Column(Modifier.padding(horizontal = 18.dp), horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
+        Column(Modifier.heightIn(min = 44.dp).padding(horizontal = 18.dp, vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text(title, style = EtaTheme.type.subhead.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, lineHeight = 18.sp),
                 color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {

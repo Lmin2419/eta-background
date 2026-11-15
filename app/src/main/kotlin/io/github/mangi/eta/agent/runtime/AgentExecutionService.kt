@@ -358,6 +358,8 @@ internal class AgentExecutionService : Service() {
                         context.getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY)?.state != Display.STATE_ON ||
                         context.getSystemService(KeyguardManager::class.java).isKeyguardLocked) return@launch
                     val task = cards[runId]?.takeIf { it.completed } ?: return@launch
+                    // 用户正停在这个对话上：回复就在眼前，不再弹完成横幅（卡片照常留在状态栏）。
+                    if (ForegroundConversation.isShowing(task.conversationId)) return@launch
                     val id = notificationIds[runId] ?: return@launch
                     val manager = context.getSystemService(NotificationManager::class.java)
                     if (!taskNotificationsEnabled(context) ||

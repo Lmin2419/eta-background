@@ -56,7 +56,8 @@ internal fun EtaDropdownPreference(
     @Suppress("UNUSED_VARIABLE") val unusedWindowChoice = useWindow
     EtaPreferenceRow(
         title = title,
-        summary = summary,
+        // 副标题只是当前选中的值时不再显示：右边已经写着这个值，不重复。
+        summary = summary?.takeUnless { it == items.getOrNull(selectedIndex)?.text },
         modifier = modifier
             .onGloballyPositioned { bounds = it.boundsInWindow() }
             .couiMenuAnchor(anchor),
