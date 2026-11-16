@@ -124,6 +124,8 @@ internal object DeviceModeScreens {
     /** 最后一条回答像是放弃了：消息下方应出现「复核报错再试」（第三期）。 */
     val gaveUpMessages: List<AgentChatMessageUi> = listOf(
         UserMessageUi("u1", "帮我在终端里装一下 requests。"),
+        // 09 第一期 1.4：「复核报错再试」只在用过工具的回合出现。
+        io.github.mangi.eta.ui.model.ToolActivityMessageUi("t1", "run_command", io.github.mangi.eta.ui.model.ToolActivityStatusUi.Failed, "pip install requests"),
         AgentMessageUi("a1", "试了两次都报错：pip 提示 externally-managed-environment，这个环境里暂时无法完成安装。"),
     )
 
@@ -185,6 +187,16 @@ internal object DeviceModeScreens {
                 onRegenerateMessage = {}, onSelectReplyCandidate = { _, _ -> }, onSuggestionClick = {}, onRunTraceClick = {}, onOpenBrowser = {},
                 modifier = Modifier.weight(1f))
         }
+    }
+
+    /** 首页左上角历史按钮带「完成未读」圆点（09 第一期 1.1）：先记一个别的对话跑完了。 */
+    @Composable
+    fun HomeWithUnseen() {
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            io.github.mangi.eta.agent.runtime.FinishedUnseen.record(io.github.mangi.eta.agent.runtime.TaskNotificationState(
+                "r-unseen", "c2", "查一下明天的天气", io.github.mangi.eta.agent.overlay.AgentOverlayStatus.ResultReady, completed = true))
+        }
+        Home(sampleMessages, title = "整理本周工作进展", paneOpen = false)
     }
 
     /** 终端页外壳：顶部是与对话页同一套玻璃控件（2026111602）；终端本体用一块深色占位。 */

@@ -254,6 +254,8 @@ fun AgentAppRoot(
     val foregroundConversation = if (onHomeScreen) agentState.conversationPaneState.selectedConversationId else null
     SideEffect {
         io.github.mangi.eta.agent.runtime.ForegroundConversation.id = foregroundConversation
+        // 打开了这个对话就算看过：清掉它的「完成未读」圆点。
+        foregroundConversation?.let(io.github.mangi.eta.agent.runtime.FinishedUnseen::clear)
         io.github.mangi.eta.agent.runtime.ForegroundConversation.homeVisible = onChatScreen
     }
     DisposableEffect(Unit) {
@@ -526,7 +528,8 @@ fun AgentAppRoot(
             onDismissHomeSidePanel = { tasksPanelOpen = false },
             homeSidePanel = if (route is AppRoute.Home && wideHome && tasksPanelOpen) ({
                 TasksScreen(commonTasks, { tasksPanelOpen = false }, ::runHomeTask, ::selectConversation,
-                    embedded = true, visible = backStack.lastOrNull() == AppRoute.Home, onArchivedConversation = ::openArchivedTask)
+                    embedded = true, visible = backStack.lastOrNull() == AppRoute.Home, onArchivedConversation = ::openArchivedTask,
+                    onOpenDesktopSession = { id -> tasksPanelOpen = false; pushRoute(AppRoute.DesktopChat(id)) })
             }) else null,
             homeTopBar = if (route is AppRoute.Home) ({
                 val home = agentState.homeState
@@ -751,7 +754,8 @@ fun AgentAppRoot(
             }
             entry<AppRoute.Tasks>(swipeDismiss = swipeDismiss) { route ->
                 TasksScreen(commonTasks, ::popRoute, ::runHomeTask, { id -> selectConversation(id); navigator.popToHome() },
-                    initialTab = route.tab, visible = navigator.current() == route, onArchivedConversation = ::openArchivedTask)
+                    initialTab = route.tab, visible = navigator.current() == route, onArchivedConversation = ::openArchivedTask,
+                    onOpenDesktopSession = { id -> pushRoute(AppRoute.DesktopChat(id)) })
             }
             entry<AppRoute.Characters>(swipeDismiss = swipeDismiss) {
                 LaunchedEffect(navigator.current() == AppRoute.Characters) {

@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.tasks
 
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.outlined.Computer
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.compose.foundation.*
@@ -51,10 +53,18 @@ import top.yukonga.miuix.kmp.basic.Text
 @Composable
 internal fun TasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRun: (CommonTask) -> Unit,
     onConversation: (String) -> Unit, initialTab: Int = -1, embedded: Boolean = false, visible: Boolean = true,
-    onArchivedConversation: (String, String) -> Unit = { _, _ -> }) {
+    onArchivedConversation: (String, String) -> Unit = { _, _ -> },
+    /** 「进行中」里的电脑会话点「查看」时打开（09 第一期 1.2：和任务胶囊看到的一致）。 */
+    onOpenDesktopSession: (String) -> Unit = {}) {
     val snapshots by AgentExecutionService.taskSnapshots.collectAsState()
     val active = remember(snapshots) { orderedActiveTasks(snapshots) }
-    var tab by rememberSaveable { mutableIntStateOf(initialTab.takeIf { it in 0..2 } ?: if (active.isNotEmpty()) 0 else 2) }
+    val desktopState by io.github.mangi.eta.agent.remote.DesktopBridge.sessions.collectAsState()
+    val desktopLink by io.github.mangi.eta.agent.remote.DesktopBridge.client.state.collectAsState()
+    val desktopRunning = remember(desktopState, desktopLink) {
+        io.github.mangi.eta.ui.components.desktopRunningSessions(desktopState,
+            desktopLink is io.github.mangi.eta.agent.remote.DesktopBridgeClient.State.Connected)
+    }
+    var tab by rememberSaveable { mutableIntStateOf(initialTab.takeIf { it in 0..2 } ?: if (active.isNotEmpty() || desktopRunning.isNotEmpty()) 0 else 2) }
     val context = LocalContext.current
     val lifecycle by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     var archive by remember { mutableStateOf(emptyList<CompletedTaskUi>()) }
@@ -79,9 +89,12 @@ internal fun TasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRun: (Co
         Box(Modifier.weight(1f)) {
             when (tab) {
                 0 -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    if (active.isEmpty()) item { ListEmptyState(stringResource(R.string.eta_tasks_empty), icon = Icons.Outlined.TaskAlt,
+                    if (active.isEmpty() && desktopRunning.isEmpty()) item { ListEmptyState(stringResource(R.string.eta_tasks_empty), icon = Icons.Outlined.TaskAlt,
                         action = { EtaButton(stringResource(R.string.eta_tasks_start_saved), { tab = 2 }) }) }
                     items(active, key = { it.runId }) { task -> ActiveTaskCard(task, visible, onConversation) }
+                    items(desktopRunning, key = { "desktop/${it.id}" }) { row ->
+                        DesktopRunningTaskCard(row.title?.takeIf(String::isNotBlank) ?: stringResource(R.string.desktop_untitled)) { onOpenDesktopSession(row.id) }
+                    }
                 }
                 1 -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (completed.isEmpty()) item { ListEmptyState(stringResource(R.string.eta_tasks_no_completed), icon = Icons.Outlined.TaskAlt) }
@@ -90,6 +103,19 @@ internal fun TasksScreen(store: CommonTasksStore, onBack: () -> Unit, onRun: (Co
                 else -> CommonTasksScreen(store, onBack, onRun, embedded = true)
             }
         }
+    }
+}
+
+/** 「进行中」里正在电脑上跑的会话：电脑图标、运行圈、标题、「查看」。 */
+@Composable
+private fun DesktopRunningTaskCard(title: String, onOpen: () -> Unit) {
+    Row(Modifier.fillMaxWidth().clip(EtaTheme.shapes.radiusLg).background(EtaTheme.colors.surface)
+        .clickable(onClick = onOpen).padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        io.github.mangi.eta.ui.components.StatusRing(TaskVisualStatus.Running, size = 14.dp)
+        Icon(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), Modifier.size(18.dp), tint = EtaTheme.colors.textSecondary)
+        Text(title, Modifier.weight(1f), style = EtaTheme.type.rowTitle, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        EtaButton(stringResource(R.string.eta_task_view), onOpen, size = EtaButtonSize.Small)
     }
 }
 

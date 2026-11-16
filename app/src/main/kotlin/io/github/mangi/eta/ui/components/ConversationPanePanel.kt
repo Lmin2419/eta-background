@@ -1,5 +1,9 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.foundation.border
 import androidx.compose.animation.*
 import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
@@ -73,7 +77,9 @@ internal data class PaneWorkspaceActions(
 )
 
 /** 侧栏里的一条电脑会话。[status] 只在运行中 / 需要你时有值。 */
-internal data class PaneDesktopSession(val id: String, val title: String, val updatedAt: Long, val status: TaskVisualStatus? = null)
+internal data class PaneDesktopSession(val id: String, val title: String, val updatedAt: Long, val status: TaskVisualStatus? = null,
+    /** 跑完了还没在手机上看过（DesktopBridge.unread）。 */
+    val unread: Boolean = false)
 internal data class PaneManagementActions(
     val delete: (Set<String>, (Int) -> Unit) -> Unit = { _, _ -> },
     val archive: (Set<String>) -> ConversationArchiveChange = { ConversationArchiveChange(emptySet(), 0, 0) },
@@ -133,6 +139,7 @@ internal fun ConversationPanePanel(
         onBackCompleted = { if (selecting) selectedIds = emptySet() else { archived = false; onSearchChange("") } })
     val snapshots by AgentExecutionService.taskSnapshots.collectAsState()
     val taskStatuses = remember(snapshots) { conversationTaskStatuses(snapshots) }
+    val finishedUnseen by io.github.mangi.eta.agent.runtime.FinishedUnseen.state.collectAsState()
     val today = LocalDate.now()
     val sections = remember(state.conversations, state.groups, state.searchQuery, archived, today) { projectConversationSections(state, archived, today) }
     val groupNames = remember(state.groups) { state.groups.associate { it.id to it.name } }
@@ -167,13 +174,15 @@ internal fun ConversationPanePanel(
             }
             // 功能入口是列表顶部的几行（图标 + 文字），随列表一起滚走；终端入口移到「设置」。
             if (!selecting && !archived && state.searchQuery.isBlank()) {
-                // 功能入口：一排实色白色方块（任务 / 角色 / 浏览器 / 电脑 / Kimi），图标在上、文字在下。
+                // 功能入口：一排实色白色方块，图标在上、文字在下。09 第一期 1.5：加「终端」（原来只能从设置里进）；
+                // 顺序按常用程度：任务、电脑、终端、浏览器、角色、Kimi。
                 item(key = "nav-grid") {
                     val tiles = buildList {
                         add(PaneTile(Icons.Outlined.TaskAlt, stringResource(R.string.eta_tasks), workspace.onTasks, workspace.runningCount))
-                        add(PaneTile(Icons.Outlined.PeopleAlt, stringResource(R.string.eta_characters), onOpenCharacters))
-                        add(PaneTile(Icons.Outlined.Language, stringResource(R.string.eta_browser), workspace.onBrowser))
                         workspace.onDesktop?.let { add(PaneTile(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), it, workspace.desktopRunning)) }
+                        add(PaneTile(Icons.Outlined.Terminal, stringResource(R.string.route_terminal), workspace.onTerminal))
+                        add(PaneTile(Icons.Outlined.Language, stringResource(R.string.eta_browser), workspace.onBrowser))
+                        add(PaneTile(Icons.Outlined.PeopleAlt, stringResource(R.string.eta_characters), onOpenCharacters))
                         workspace.onKimi?.let { add(PaneTile(Icons.Outlined.Code, workspace.kimiLabel, it,
                             onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null)) }
                     }
@@ -225,6 +234,7 @@ internal fun ConversationPanePanel(
                 items(section.visibleConversations, key = { it.id }) { conversation ->
                     ConversationTextRow(conversation, if (selecting) conversation.id in selectedIds else state.selectedConversationId == conversation.id, state.searchQuery,
                         taskStatuses[conversation.id] ?: TaskVisualStatus.Running.takeIf { conversation.isActiveRun }, selecting,
+                        unseen = finishedUnseen[conversation.id],
                         { if (selecting) selectedIds = if (conversation.id in selectedIds) selectedIds - conversation.id else selectedIds + conversation.id
                           else onConversationSelected(conversation.id) },
                         { _ -> if (selecting) selectedIds = selectedIds + conversation.id else paneMenuAnchor.open { menuTarget = conversation } },
@@ -348,7 +358,8 @@ internal fun conversationTaskStatuses(tasks: List<TaskNotificationState>): Map<S
 
 @Composable
 private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: Boolean, query: String, taskStatus: TaskVisualStatus?,
-    selecting: Boolean, onClick: () -> Unit, onLongClick: (androidx.compose.ui.geometry.Rect) -> Unit, groupName: String? = null, modifier: Modifier = Modifier) {
+    selecting: Boolean, unseen: Boolean? = null,
+    onClick: () -> Unit, onLongClick: (androidx.compose.ui.geometry.Rect) -> Unit, groupName: String? = null, modifier: Modifier = Modifier) {
     val haptic = LocalHapticFeedback.current
     var bounds by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
     val colors = EtaTheme.colors
@@ -383,6 +394,8 @@ private fun ConversationTextRow(conversation: ConversationSummaryUi, selected: B
         if (groupName != null && query.isNotBlank()) Text(groupName,
             Modifier.widthIn(max = 80.dp).background(colors.surfaceRaised, EtaTheme.shapes.radiusFull).padding(horizontal = 6.dp, vertical = 2.dp),
             style = EtaTheme.type.caption, color = colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // 跑完了还没看：时间前面一个圆点（出错是危险色）。运行中已有状态圈，不再加点。
+        if (unseen != null && taskStatus == null && !selecting) UnseenDot(if (unseen) UnseenLevel.Failed else UnseenLevel.Done)
         Text(conversation.timeLabel, style = EtaTheme.type.caption, color = colors.textTertiary, maxLines = 1)
     }
 }
@@ -426,6 +439,7 @@ private fun DesktopPaneRow(row: PaneDesktopSession, onClick: () -> Unit, modifie
         }
         Text(row.title.ifBlank { stringResource(R.string.desktop_untitled) }, Modifier.weight(1f), style = EtaTheme.type.rowTitle.copy(fontSize = 15.sp),
             color = colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (row.unread && row.status == null) UnseenDot(UnseenLevel.Done)
         val yesterday = stringResource(R.string.eta_yesterday)
         Text(remember(row.updatedAt, yesterday) { io.github.mangi.eta.ui.app.ConversationTimeLabels.label(row.updatedAt, yesterdayLabel = yesterday, recentLabel = "") },
             style = io.github.mangi.eta.ui.theme.EtaTypography.tabular(EtaTheme.type.caption), color = colors.textTertiary, maxLines = 1)
@@ -589,15 +603,22 @@ private class PaneTile(
     val onLongClick: (() -> Unit)? = null,
 )
 
+private const val PaneTilesPerRow = 4
+private val PaneTileWidth = 72.dp
+
 /** 侧栏顶部的一排功能方块：实色白块（圆角 16、E1），22dp 线条图标；有运行中的任务时右上角一个计数。 */
 @Composable
 private fun PaneTileRow(tiles: List<PaneTile>, modifier: Modifier = Modifier) {
     val colors = EtaTheme.colors
     val haptic = LocalHapticFeedback.current
     var stopTarget by remember { mutableStateOf<PaneTile?>(null) }
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // 不超过 4 个时等宽铺满一行；更多时每格固定 72dp、整行横滑（不再挤到标签被截断）。字号最多放大 1.3 倍。
+    val scrolls = tiles.size > PaneTilesPerRow
+    CappedFontScale {
+    Row(modifier.fillMaxWidth().then(if (scrolls) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         tiles.forEach { tile ->
-            Column(Modifier.weight(1f).clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).etaTouchScale(0.94f)
+            Column((if (scrolls) Modifier.width(PaneTileWidth) else Modifier.weight(1f)).clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).etaTouchScale(0.94f)
                 .combinedClickable(onClickLabel = tile.label, onClick = tile.onClick,
                     onLongClick = tile.onLongClick?.let { { haptic.performHapticFeedback(HapticFeedbackType.LongPress); stopTarget = tile } }),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -617,6 +638,7 @@ private fun PaneTileRow(tiles: List<PaneTile>, modifier: Modifier = Modifier) {
                     overflow = TextOverflow.Ellipsis)
             }
         }
+    }
     }
     val target = stopTarget
     if (target?.onLongClick != null) EtaSheet(true, title = target.label, onDismissRequest = { stopTarget = null }) {

@@ -333,7 +333,11 @@ internal class AgentExecutionService : Service() {
             refreshPending = false
             val service = instance
             if (service != null) service.refreshNotification() else publishCards(context, completedOnly = true)
-            if (firstCompletion) scheduleCompletionAlert(context.applicationContext, task.runId)
+            if (firstCompletion) {
+                // 侧栏与首页的「完成未读」圆点（提示条只停 6 秒，错过了靠它找回来）。不受「完成提示」开关影响。
+                cards[task.runId]?.let(FinishedUnseen::record)
+                scheduleCompletionAlert(context.applicationContext, task.runId)
+            }
         }
 
         internal fun onNotificationDismissed(context: Context, intent: Intent) = onMain {

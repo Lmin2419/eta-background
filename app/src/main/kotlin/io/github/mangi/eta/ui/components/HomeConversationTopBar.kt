@@ -84,7 +84,19 @@ internal fun HomeConversationTopBar(
         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))) {
         Row(Modifier.fillMaxWidth().heightIn(min = 60.dp).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.etaChromeScale()) { CircleIconButton(Icons.AutoMirrored.Outlined.ShortText, stringResource(R.string.action_conversation_history), onHistory) }
+            Box(Modifier.etaChromeScale()) {
+                CircleIconButton(Icons.AutoMirrored.Outlined.ShortText, stringResource(R.string.action_conversation_history), onHistory)
+                // 别的对话 / 电脑会话有跑完没看的、等你处理的：右上角一个圆点（打开那个对话才清掉）。
+                val localUnseen by io.github.mangi.eta.agent.runtime.FinishedUnseen.state.collectAsState()
+                val desktopUnread by io.github.mangi.eta.agent.remote.DesktopBridge.unread.collectAsState()
+                val approvals by io.github.mangi.eta.agent.remote.DesktopBridge.approvals.collectAsState()
+                val questions by io.github.mangi.eta.agent.remote.DesktopBridge.questions.collectAsState()
+                val level = remember(localUnseen, desktopUnread, approvals, questions, currentConversationId) {
+                    unseenSummary(localUnseen, desktopUnread, approvals.mapTo(HashSet()) { it.sessionId } + questions.map { it.sessionId },
+                        currentConversationId)
+                }
+                if (level != null) UnseenDot(level, Modifier.align(Alignment.TopEnd).padding(top = 2.dp, end = 2.dp))
+            }
             if (character != null) {
                 Row(Modifier.weight(1f).clip(EtaTheme.shapes.radiusMd).clickable(onClick = onCharacter).padding(horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

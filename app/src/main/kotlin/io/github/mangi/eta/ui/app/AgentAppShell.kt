@@ -182,12 +182,13 @@ internal fun AgentAppShell(
     val desktopLink by io.github.mangi.eta.agent.remote.DesktopBridge.client.state.collectAsState()
     val desktopApprovals by io.github.mangi.eta.agent.remote.DesktopBridge.approvals.collectAsState()
     val desktopQuestions by io.github.mangi.eta.agent.remote.DesktopBridge.questions.collectAsState()
-    val paneDesktop = remember(desktopList, desktopApprovals, desktopQuestions, onOpenDesktop != null) {
+    val desktopUnread by io.github.mangi.eta.agent.remote.DesktopBridge.unread.collectAsState()
+    val paneDesktop = remember(desktopList, desktopApprovals, desktopQuestions, desktopUnread, onOpenDesktop != null) {
         if (onOpenDesktop == null) emptyList() else {
             val needsYou = desktopApprovals.mapTo(HashSet()) { it.sessionId } + desktopQuestions.map { it.sessionId }
             desktopList.rows.filter { with(io.github.mangi.eta.ui.screens.desktop.DesktopListing) { it.isListed() } }
                 .sortedByDescending { it.updatedAt }.take(8).map { row ->
-                    io.github.mangi.eta.ui.components.PaneDesktopSession(row.id, row.title.orEmpty(), row.updatedAt, when {
+                    io.github.mangi.eta.ui.components.PaneDesktopSession(row.id, row.title.orEmpty(), row.updatedAt, unread = row.id in desktopUnread, status = when {
                         row.id in needsYou -> io.github.mangi.eta.ui.model.TaskVisualStatus.Attention
                         row.running -> io.github.mangi.eta.ui.model.TaskVisualStatus.Running
                         else -> null

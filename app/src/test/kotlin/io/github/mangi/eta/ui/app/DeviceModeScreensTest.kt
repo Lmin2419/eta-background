@@ -55,6 +55,11 @@ class DeviceModeScreensTest {
     /** 电脑会话页与首页统一：顶部玻璃控件浮在消息上，没有实底顶栏。 */
     @Test fun desktopChat() = variants("desktop-chat") { DeviceModeScreens.DesktopChat() }
 
+    @Test fun homeUnseenDot() {
+        try { check("home-unseen-light", DeviceModeScreens.capture("home-unseen-light") { DeviceModeScreens.HomeWithUnseen() }) }
+        finally { io.github.mangi.eta.agent.runtime.FinishedUnseen.resetForTest() }
+    }
+
     /** 选择文字面板的内容：整轮思考与回答在同一个可选区域（09 第零期 0.4）。 */
     @Test fun turnSelectionPanel() = variants("selection-panel", deviceMode = false) {
         androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()

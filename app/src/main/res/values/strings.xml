@@ -1985,4 +1985,6 @@
   <string name="eta_render_diag_line">%1$dHz · %2$d frames · %3$d late · avg %4$sms · %5$d sources</string>
   <string name="eta_render_diag_copied">Diagnostics copied</string>
   <string name="eta_turn_thinking_label">Thinking</string>
+  <string name="eta_copy_all">Copy all</string>
+  <string name="eta_copy_answer_only">Copy answer only</string>
 </resources>

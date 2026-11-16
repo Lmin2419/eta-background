@@ -36,4 +36,23 @@ class TurnTextSelectionTest {
         assertEquals(listOf(TurnSegment("上一轮的回答", thinking = false)), turnSegments(messages, "a0"))
         assertEquals(emptyList<TurnSegment>(), turnSegments(messages, "missing"))
     }
+
+    @Test fun oneTapCopyJoinsParagraphs() {
+        val segments = turnSegments(messages, "a2")
+        assertEquals("先想一想。\n\n中间说明。\n\n再想一想。\n\n最终回答。", turnPlainText(segments, includeThinking = true))
+        assertEquals("中间说明。\n\n最终回答。", turnPlainText(segments, includeThinking = false))
+    }
+
+    @Test fun theRecheckButtonNeedsToolUseInTheTurn() {
+        // 第二轮用过工具（read_file 成功）；第一轮是纯聊天。
+        assertEquals(true to false, turnToolSignal(messages, "a2"))
+        assertEquals(false to false, turnToolSignal(messages, "a0"))
+        val failed = messages.map { if (it is ToolActivityMessageUi) it.copy(status = ToolActivityStatusUi.Failed) else it }
+        assertEquals(true to true, turnToolSignal(failed, "a2"))
+        val action = { used: Boolean, lastFailed: Boolean -> RecheckAction("a2", true, {}, used, lastFailed) }
+        assertEquals(false, action(false, false).offers(answerGaveUp = true))   // 纯聊天里说「失败」不出现
+        assertEquals(true, action(true, true).offers(answerGaveUp = false))     // 最后一步失败时没说也出现
+        assertEquals(false, action(true, false).offers(answerGaveUp = false))
+        assertEquals(true, action(true, false).offers(answerGaveUp = true))
+    }
 }

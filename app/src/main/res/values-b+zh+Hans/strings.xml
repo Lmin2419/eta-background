@@ -1961,4 +1961,6 @@
   <string name="eta_render_diag_line">%1$dHz · %2$d 帧 · 超时 %3$d · 平均 %4$sms · 采样源 %5$d</string>
   <string name="eta_render_diag_copied">已复制诊断报告</string>
   <string name="eta_turn_thinking_label">思考</string>
+  <string name="eta_copy_all">复制全部</string>
+  <string name="eta_copy_answer_only">只复制回答</string>
 </resources>

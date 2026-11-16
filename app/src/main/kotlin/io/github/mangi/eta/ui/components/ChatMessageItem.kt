@@ -654,7 +654,7 @@ private fun AgentMessageBlock(
                 // 最新一条回答像是「做不到 / 失败」时：一键让它先复核报错再试（只在点的时候发）。
                 val recheck = LocalRecheckAction.current
                 val gaveUp = remember(message.content) { message.content.looksLikeGaveUp() }
-                if (recheck != null && showMessageActions && recheck.latestAnswerId == message.id && gaveUp) {
+                if (recheck != null && showMessageActions && recheck.latestAnswerId == message.id && recheck.offers(gaveUp)) {
                     val prompt = stringResource(R.string.eta_recheck_prompt)
                     RecheckChip(enabled = recheck.enabled && messageActionsEnabled) { recheck.submit(prompt) }
                 }

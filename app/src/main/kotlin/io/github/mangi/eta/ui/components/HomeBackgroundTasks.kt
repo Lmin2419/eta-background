@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.agent.runtime.finishedWithFailure
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -166,9 +167,36 @@ internal data class DoneNoticeItem(val key: String, val title: String, val faile
 
 internal fun io.github.mangi.eta.agent.runtime.TaskNotificationState.toDoneNotice(): DoneNoticeItem? {
     val conversation = conversationId ?: return null
-    val failed = replyFailed || status == io.github.mangi.eta.agent.overlay.AgentOverlayStatus.RunFailed ||
-        status == io.github.mangi.eta.agent.overlay.AgentOverlayStatus.ContinuationUnavailable
-    return DoneNoticeItem("local:$runId", title, failed, desktop = false, target = conversation)
+    return DoneNoticeItem("local:$runId", title, finishedWithFailure(), desktop = false, target = conversation)
+}
+
+/** 未读圆点的三种颜色：等你处理（注意色）> 出错未读（危险色）> 完成未读（强调色）。 */
+internal enum class UnseenLevel { Attention, Failed, Done }
+
+/**
+ * 首页左上角历史按钮上汇总的那个点：电脑上有等你审批或回答的会话、本机或电脑有跑完没看的。
+ * [currentConversationId] 是正在看的对话，不算。
+ */
+internal fun unseenSummary(localUnseen: Map<String, Boolean>, desktopUnread: Set<String>, desktopNeedsYou: Set<String>,
+    currentConversationId: String?): UnseenLevel? {
+    val local = localUnseen.filterKeys { it != currentConversationId }
+    return when {
+        desktopNeedsYou.isNotEmpty() -> UnseenLevel.Attention
+        local.values.any { it } -> UnseenLevel.Failed
+        local.isNotEmpty() || desktopUnread.isNotEmpty() -> UnseenLevel.Done
+        else -> null
+    }
+}
+
+/** 一个 8dp 的未读圆点。 */
+@Composable
+internal fun UnseenDot(level: UnseenLevel, modifier: Modifier = Modifier) {
+    val color = when (level) {
+        UnseenLevel.Attention -> EtaTheme.colors.attention
+        UnseenLevel.Failed -> EtaTheme.colors.danger
+        UnseenLevel.Done -> EtaTheme.colors.accent
+    }
+    Box(modifier.size(8.dp).clip(androidx.compose.foundation.shape.CircleShape).background(color))
 }
 
 /**
