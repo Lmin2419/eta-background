@@ -31,6 +31,7 @@ import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.mcp.McpServerManager
 import io.github.mangi.eta.agent.mcp.validateMcpEndpoint
 import io.github.mangi.eta.data.model.McpAuthorizationType
+import io.github.mangi.eta.data.model.McpDiscoveryTruncation
 import io.github.mangi.eta.data.model.McpProtocolMode
 import io.github.mangi.eta.data.model.McpServerSetting
 import io.github.mangi.eta.data.model.McpToolDefinition
@@ -306,6 +307,22 @@ internal fun McpServerDetailScreen(
                     ),
                     onClick = { showToken = true },
                 )
+            }
+        }
+        // 上游：工具目录超过上限被截断时明说原因（以前静默只导入前 128 个）。
+        server.toolsTruncationReason?.let { reason ->
+            item(key = "tools-truncated") {
+                EtaPreferenceGroup {
+                    EtaPreference(
+                        title = stringResource(R.string.mcp_tools_truncated_title, server.tools.size),
+                        summary = stringResource(when (reason) {
+                            io.github.mangi.eta.data.model.McpDiscoveryTruncation.TOOL_LIMIT -> R.string.mcp_tools_truncated_tool_limit
+                            io.github.mangi.eta.data.model.McpDiscoveryTruncation.PAGE_LIMIT -> R.string.mcp_tools_truncated_page_limit
+                            io.github.mangi.eta.data.model.McpDiscoveryTruncation.SIZE_LIMIT -> R.string.mcp_tools_truncated_size_limit
+                            io.github.mangi.eta.data.model.McpDiscoveryTruncation.CURSOR_LOOP -> R.string.mcp_tools_truncated_cursor_loop
+                        }),
+                    )
+                }
             }
         }
         item(key = "tools") {
