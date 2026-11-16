@@ -117,6 +117,23 @@ class DeviceModeScreensTest {
     @Test fun settings() = variants("settings", deviceMode = false) { DeviceModeScreens.Settings() }
 
     @Test fun appearanceSettings() = variants("appearance", deviceMode = false) { DeviceModeScreens.Appearance() }
+
+    /** 09 第三期 3.1：设置 › 模型预设（改名、删除在点一行弹出的菜单里）。 */
+    @Test fun modelPresets() {
+        kotlinx.coroutines.runBlocking {
+            io.github.mangi.eta.data.repository.ModelPresetRepository.save(listOf(
+                io.github.mangi.eta.data.model.ModelPreset("p1", "日常", "missing-a", io.github.mangi.eta.data.model.ReasoningEffort.OFF),
+                io.github.mangi.eta.data.model.ModelPreset("p2", "深度", "missing-b", io.github.mangi.eta.data.model.ReasoningEffort.HIGH),
+            ))
+        }
+        try {
+            check("model-presets-light", DeviceModeScreens.capture("model-presets-light", deviceMode = false) {
+                DeviceModeScreens.SettingsProviders { io.github.mangi.eta.ui.screens.settings.ModelPresetsScreen(onBack = {}) }
+            })
+        } finally {
+            kotlinx.coroutines.runBlocking { io.github.mangi.eta.data.repository.ModelPresetRepository.save(emptyList()) }
+        }
+    }
 }
 
 /** 宽屏（平板、横屏）：侧栏常驻在左边。 */

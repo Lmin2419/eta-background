@@ -66,8 +66,15 @@ internal fun HomeConversationTopBar(
     onOpenConversation: ((String) -> Unit)? = null,
     onOpenDesktopSession: ((String) -> Unit)? = null,
     onRename: (() -> Unit)? = null,
+    // 09 第三期 3.1：模型预设。onApplyPreset 为 null 时菜单里不出现预设一段。
+    presets: List<io.github.mangi.eta.data.model.ModelPreset> = emptyList(),
+    reasoningEffort: io.github.mangi.eta.data.model.ReasoningEffort? = null,
+    onApplyPreset: ((io.github.mangi.eta.data.model.ModelPreset) -> Unit)? = null,
+    onSavePreset: ((String) -> Unit)? = null,
 ) {
     var settings by remember { mutableStateOf(false) }
+    var savingPreset by remember { mutableStateOf(false) }
+    var presetName by remember { mutableStateOf("") }
     val pillAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
     var pendingModel by remember { mutableStateOf<String?>(null) }
     val toast = LocalChatToast.current
@@ -126,7 +133,26 @@ internal fun HomeConversationTopBar(
         onRename = onRename?.takeIf { titled }?.let { rename -> { settings = false; rename() } },
         onExport = if (titled && canExport) ({ settings = false; onExport() }) else null,
     )
-    ModelPopover(settings, pillAnchor, models, isCompacting, conversationActions,
+    val presetState = onApplyPreset?.let { apply ->
+        PresetMenuState(presets, reasoningEffort,
+            onApply = { preset -> settings = false; apply(preset) },
+            onSaveRequest = onSavePreset?.let { { settings = false; presetName = ""; savingPreset = true } })
+    }
+    if (onSavePreset != null) io.github.mangi.eta.ui.components.coui.EtaCouiInputDialog(
+        visible = savingPreset,
+        title = stringResource(R.string.model_presets_save_title),
+        value = presetName,
+        onValueChange = { presetName = it },
+        message = models.selectedModel?.displayName?.let { name ->
+            reasoningEffort?.let { "$name · ${reasoningEffortLevelText(it)}" } ?: name
+        },
+        placeholder = stringResource(R.string.model_presets_name_hint),
+        confirmText = stringResource(R.string.action_save),
+        confirmEnabled = presetName.isNotBlank(),
+        onConfirm = { savingPreset = false; onSavePreset(presetName.trim()) },
+        onDismissRequest = { savingPreset = false },
+    )
+    ModelPopover(settings, pillAnchor, models, isCompacting, conversationActions, presetState,
         onDismiss = { settings = false },
         onModel = { id ->
             settings = false
@@ -210,6 +236,7 @@ internal fun ModelPill(state: AgentModelPickerUiState, locked: Boolean, iconOnly
 private fun ModelPopover(
     show: Boolean, anchor: com.itos.coui.menu.CouiMenuAnchor, models: AgentModelPickerUiState, busy: Boolean,
     conversation: ConversationMenuActions,
+    presets: PresetMenuState?,
     onDismiss: () -> Unit, onModel: (String) -> Unit, onManageModels: () -> Unit,
 ) {
     val speech by remember { SpeechSettingsRepository.settingsFlow() }.collectAsState(initial = null)
@@ -220,6 +247,10 @@ private fun ModelPopover(
     if (models.modelCount <= ModelMenuLimit) {
         // 模型不多：与上游一致的 COUI 菜单，从模型胶囊处展开。
         EtaContextMenu(show, onDismiss = onDismiss, couiAnchor = anchor) {
+            if (presets != null) {
+                PresetMenuItems(presets, models, busy)
+                EtaMenuDivider()
+            }
             models.providerGroups.forEachIndexed { groupIndex, group ->
                 group.models.forEachIndexed { index, model ->
                     if (multipleGroups && groupIndex > 0 && index == 0) EtaMenuDivider()
@@ -247,6 +278,10 @@ private fun ModelPopover(
         EtaSheet(show, title = stringResource(R.string.model_picker_title), onDismissRequest = onDismiss) {
             EtaSearchField(query, { query = it }, stringResource(R.string.ui_search_model_df5586), Modifier.padding(bottom = 8.dp))
             Column(Modifier.verticalScroll(rememberScrollState())) {
+                if (presets != null && query.isBlank()) {
+                    PresetMenuItems(presets, models, busy)
+                    EtaMenuDivider()
+                }
                 groups.forEach { group ->
                     if (groups.size > 1) Text(group.providerName, style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary,
                         modifier = Modifier.padding(start = 12.dp, top = 8.dp, bottom = 2.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -266,6 +301,36 @@ private fun ModelPopover(
                 }
             }
         }
+    }
+}
+
+/** 标题胶囊菜单最上面的模型预设一段（09 第三期 3.1）。[onSaveRequest] 为 null 时不显示「存为预设…」。 */
+internal class PresetMenuState(
+    val presets: List<io.github.mangi.eta.data.model.ModelPreset>,
+    val effort: io.github.mangi.eta.data.model.ReasoningEffort?,
+    val onApply: (io.github.mangi.eta.data.model.ModelPreset) -> Unit,
+    val onSaveRequest: (() -> Unit)?,
+)
+
+/**
+ * 每个预设一项：标题是名字，说明是「模型名 · 思考强度」，模型和强度都对得上时打勾；
+ * 模型已停用时置灰并注明「模型不可用」。COUI 菜单没有说明行，名字和说明并成一行。
+ */
+@Composable
+private fun PresetMenuItems(state: PresetMenuState, models: AgentModelPickerUiState, busy: Boolean) {
+    val unavailable = stringResource(R.string.model_presets_unavailable)
+    val oneLine = LocalEtaMenuCollector.current != null
+    state.presets.forEach { preset ->
+        val model = models.providerGroups.firstNotNullOfOrNull { group -> group.models.firstOrNull { it.id == preset.modelId } }
+        val summary = (model?.displayName ?: unavailable) + " · " + reasoningEffortLevelText(preset.effort)
+        EtaMenuItem(if (oneLine) "${preset.name} · $summary" else preset.name,
+            onClick = { state.onApply(preset) },
+            enabled = model != null && !busy && !models.isChanging,
+            selected = io.github.mangi.eta.data.model.presetMatches(preset, models.selectedModel?.id, state.effort),
+            summary = if (oneLine) null else summary)
+    }
+    state.onSaveRequest?.let { save ->
+        EtaMenuItem(stringResource(R.string.model_presets_save), onClick = save, enabled = models.selectedModel != null && !busy)
     }
 }
 

@@ -590,13 +590,7 @@ private fun ThinkingEffortChip(
     LaunchedEffect(menuEnabled) {
         if (!menuEnabled) showPopup = false
     }
-    val level = stringResource(when (effort) {
-        ReasoningEffort.OFF -> R.string.eta_effort_off
-        ReasoningEffort.MINIMAL, ReasoningEffort.LOW -> R.string.eta_effort_quick
-        ReasoningEffort.HIGH, ReasoningEffort.XHIGH, ReasoningEffort.MAX -> R.string.eta_effort_deep
-        else -> R.string.eta_effort_standard
-    })
-    val label = stringResource(R.string.eta_effort_label, level)
+    val label = stringResource(R.string.eta_effort_label, reasoningEffortLevelText(effort))
     val colors = EtaTheme.colors
     Row(
         modifier
@@ -688,3 +682,12 @@ private fun PendingImageStrip(
         }
     }
 }
+
+/** 思考强度的短名（关、快速、标准、深入）：输入框的「思考 · …」、模型预设的说明共用。 */
+@Composable
+internal fun reasoningEffortLevelText(effort: ReasoningEffort): String = stringResource(when (effort) {
+    ReasoningEffort.OFF -> R.string.eta_effort_off
+    ReasoningEffort.MINIMAL, ReasoningEffort.LOW -> R.string.eta_effort_quick
+    ReasoningEffort.HIGH, ReasoningEffort.XHIGH, ReasoningEffort.MAX -> R.string.eta_effort_deep
+    else -> R.string.eta_effort_standard
+})

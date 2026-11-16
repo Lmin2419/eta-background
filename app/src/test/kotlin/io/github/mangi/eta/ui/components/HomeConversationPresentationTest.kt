@@ -169,6 +169,46 @@ class HomeConversationPresentationTest {
         }
     }
 
+    /** 09 第三期 3.1：标题胶囊菜单最上面一段是模型预设；点了走 onApplyPreset，模型停用的置灰。 */
+    @Test fun titleCapsuleMenuAppliesModelPresets() {
+        val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
+        val applied = mutableListOf<String>()
+        val base = Stage3Models.selectedModel!!
+        val models = listOf(base.copy(id = "m1", displayName = "Model 1"), base.copy(id = "m2", displayName = "Model 2"))
+        val presets = listOf(
+            io.github.mangi.eta.data.model.ModelPreset("p1", "Daily", "m1", io.github.mangi.eta.data.model.ReasoningEffort.OFF),
+            io.github.mangi.eta.data.model.ModelPreset("p2", "Deep", "m2", io.github.mangi.eta.data.model.ReasoningEffort.HIGH),
+            io.github.mangi.eta.data.model.ModelPreset("p3", "Gone", "removed", io.github.mangi.eta.data.model.ReasoningEffort.HIGH),
+        )
+        val panel = Stage3TestPanel(controller.get()) {
+            EtaAppOverlayHost {
+                HomeConversationTopBar(Stage3Models.copy(selectedModel = models.first(),
+                    providerGroups = listOf(Stage3Models.providerGroups.single().copy(models = models))),
+                    false, false, AgentContextUsageUi(12500, 128000), true, true, null,
+                    {}, {}, {}, {}, {}, {}, {}, {},
+                    presets = presets, reasoningEffort = io.github.mangi.eta.data.model.ReasoningEffort.OFF,
+                    onApplyPreset = { applied += it.id }, onSavePreset = {})
+            }
+        }
+        fun node(text: String) = panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == text } == true }
+        fun open() {
+            panel.click(panel.nodes().first { it.config.getOrNull(SemanticsProperties.ContentDescription)?.any { d -> "Model 1" in d } == true })
+            panel.advance(35)
+        }
+        try {
+            panel.advance(25)
+            open()
+            assertTrue(panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == controller.get().getString(R.string.model_presets_save) } == true })
+            panel.click(node("Deep")); panel.advance(35)
+            assertEquals(listOf("p2"), applied)
+            open()
+            // 模型已停用的预设不可点。
+            var target: SemanticsNode? = node("Gone")
+            while (target != null && target.config.getOrNull(SemanticsActions.OnClick) == null) target = target.parent
+            assertTrue("unavailable preset must be disabled", target == null || target.config.contains(SemanticsProperties.Disabled))
+        } finally { panel.close(); controller.pause().stop().destroy() }
+    }
+
     @Test fun assistantLongPressExposesCopyRegenerateAndDelete() {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(controller.get()) {

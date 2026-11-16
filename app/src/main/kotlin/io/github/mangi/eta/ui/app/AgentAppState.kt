@@ -840,6 +840,25 @@ internal class AgentAppState(
     /** 回复进行中选的模型，按会话记着，这一轮结束后再换（不打断正在跑的这一轮）。 */
     private var queuedModels: Map<String, String> = emptyMap()
 
+    /** 回复进行中选的模型预设带的思考强度，和 [queuedModels] 一起在这一轮结束后生效（09 第三期 3.1）。 */
+    private var queuedEfforts: Map<String, ReasoningEffort> = emptyMap()
+
+    /**
+     * 应用模型预设：先换模型再设思考强度——强度要按新模型的能力规整，顺序不能反。
+     * 回复进行中且模型要变时，两样都排到这一轮结束后。
+     */
+    fun applyPreset(preset: io.github.mangi.eta.data.model.ModelPreset) {
+        val conversationId = selectedConversationId
+        val modelChanges = modelPickerState.selectedModel?.id != preset.modelId
+        if (homeState.isConversationLoaded && homeState.isStreaming && conversationId != null && modelChanges) {
+            selectModel(preset.modelId)
+            if (conversationId in queuedModels) queuedEfforts = queuedEfforts + (conversationId to preset.effort)
+            return
+        }
+        selectModel(preset.modelId)
+        updateReasoningEffort(preset.effort)
+    }
+
     /**
      * 聊天内切换同时改当前会话绑定与默认模型；默认模型供新会话和系统助手入口使用。
      * 回复进行中选的模型先记下来，这一轮回复完再换。
@@ -847,6 +866,8 @@ internal class AgentAppState(
     fun selectModel(modelId: String) {
         val conversationId = selectedConversationId
         if (homeState.isConversationLoaded && homeState.isStreaming && conversationId != null && !modelPickerState.isChanging) {
+            // 手动选模型会替换掉排着的预设，预设带的思考强度一起作废（applyPreset 在这之后再记）。
+            queuedEfforts = queuedEfforts - conversationId
             if (modelPickerState.selectedModel?.id == modelId) {
                 queuedModels = queuedModels - conversationId
             } else {
@@ -2809,11 +2830,18 @@ internal class AgentAppState(
         val state = conversationsById[conversationId] ?: return
         if (state.isStreaming) return
         queuedModels = queuedModels - conversationId
+        val effort = queuedEfforts[conversationId]
+        queuedEfforts = queuedEfforts - conversationId
         if (conversationId == selectedConversationId) {
             selectModel(modelId)
             refreshConversationModel()
+            effort?.let(::updateReasoningEffort)
         } else {
-            conversationsById = conversationsById + (conversationId to state.copy(modelId = modelId))
+            // 不在看的会话：强度先原样记下，打开时 refreshConversationModel 按模型能力规整。
+            val next = state.copy(modelId = modelId).let { s ->
+                if (effort == null) s else s.copy(reasoningEffort = effort, thinkingEnabled = effort.enablesReasoning)
+            }
+            conversationsById = conversationsById + (conversationId to next)
             persistConversations()
         }
     }

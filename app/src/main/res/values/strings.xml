@@ -1992,4 +1992,14 @@
   <string name="eta_turn_duration_sec">%1$ds</string>
   <string name="appearance_fold_process">Fold finished process</string>
   <string name="appearance_fold_process_summary">After a reply finishes, its thinking and steps collapse into one line; tap to expand</string>
+  <string name="model_presets_title">Model presets</string>
+  <string name="model_presets_summary">Model and thinking combos for one-tap switching</string>
+  <string name="model_presets_save">Save as preset…</string>
+  <string name="model_presets_save_title">Save as preset</string>
+  <string name="model_presets_name_hint">Preset name, e.g. Daily or Deep work</string>
+  <string name="model_presets_saved">Saved preset “%1$s”</string>
+  <string name="model_presets_unavailable">Model unavailable</string>
+  <string name="model_presets_rename">Rename preset</string>
+  <string name="model_presets_empty">No presets yet. In a conversation, tap the title capsule and choose “Save as preset…” to save the current model and thinking level.</string>
+  <string name="model_presets_hint">Tap a preset to rename or delete it. Choosing a preset while a reply is running applies it from the next turn.</string>
 </resources>

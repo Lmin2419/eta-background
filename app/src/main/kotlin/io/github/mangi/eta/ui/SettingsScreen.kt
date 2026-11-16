@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.NotificationsActive
 import io.github.mangi.eta.data.repository.AppearanceSettingsRepository
 import io.github.mangi.eta.ui.app.LocalAppearanceSettings
@@ -337,6 +338,14 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.conversation_title_settings_title),
                         startAction = { EtaPreferenceIcon(Icons.Outlined.AutoAwesome, tint = EtaPreferenceColors.Blue) },
                         onClick = { onNavigate(AppRoute.ConversationTitleSettings) },
+                    )
+                    EtaPreferenceDivider()
+                    // 09 第三期 3.1：存好的「模型 + 思考强度」组合，标题胶囊菜单里一键切换。
+                    EtaArrowPreference(
+                        title = stringResource(R.string.model_presets_title),
+                        summary = stringResource(R.string.model_presets_summary),
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.Tune, tint = EtaPreferenceColors.Blue) },
+                        onClick = { onNavigate(AppRoute.ModelPresets) },
                     )
                     EtaPreferenceDivider()
                     EtaArrowPreference(

@@ -263,7 +263,7 @@
 | 一 闭环 | 2026111605 | `FinishedUnseen` 未读圆点（侧栏行、历史按钮汇总，电脑用 `DesktopBridge.unread`）；任务页「进行中」加电脑会话；选择文字一键复制；复核按钮看工具（`turnToolSignal`）；侧栏终端格子、超过 4 个横滑。任务页截图仍未加（要 `CommonTasksStore`） |
 | 二 2.1 过程收成一行 | 2026111606 | `foldFinishedTurns` + `TurnProcessRow`，外观开关默认开；展开集合 `rememberSaveable`；摘要行不算新消息、不升起；失败数紧跟「过程」以免大字体被省略 |
 | 二 2.2 标题胶囊总入口 | 2026111607 | 菜单与半窗加「重命名」「导出」（`ConversationMenuActions`），重命名复用 `conversationRenameTarget`；没有消息时不显示导出。同期 2026111606 补了提示条跟随页面颜色（真机反馈） |
-| 三 3.1 模型预设 | | |
+| 三 3.1 模型预设 | 2026111608 | 菜单最上面一段 + 「存为预设…」（`EtaCouiInputDialog`）；设置页改名删除；进行中排到下一轮（`queuedEfforts`）。COUI 菜单没有说明行，名字与「模型 · 强度」并成一行 |
 | 三 3.2 换模型重答 | | |
 | 四 工作台 | | |
 | 五 5.1 消息多选 | | |

@@ -1864,4 +1864,14 @@
   <string name="eta_turn_duration_sec">%1$d 秒</string>
   <string name="appearance_fold_process">過程收成一行</string>
   <string name="appearance_fold_process_summary">回覆完成後，思考和步驟收成一行，點一下展開</string>
+  <string name="model_presets_title">模型預設</string>
+  <string name="model_presets_summary">存好的「模型 + 思考強度」，標題膠囊裡一鍵切換</string>
+  <string name="model_presets_save">存為預設…</string>
+  <string name="model_presets_save_title">存為預設</string>
+  <string name="model_presets_name_hint">預設名字，比如「日常」「深度」</string>
+  <string name="model_presets_saved">已存為預設「%1$s」</string>
+  <string name="model_presets_unavailable">模型不可用</string>
+  <string name="model_presets_rename">重新命名預設</string>
+  <string name="model_presets_empty">還沒有預設。在對話裡點頂部標題膠囊，選「存為預設…」，就能把當前的模型和思考強度存下來。</string>
+  <string name="model_presets_hint">點一行可以改名或刪除。回覆進行中選預設，下一輪起生效。</string>
 </resources>

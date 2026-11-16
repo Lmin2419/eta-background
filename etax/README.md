@@ -53,6 +53,18 @@
 
 ## 版本更新记录
 
+<a id="release-2026111608"></a>
+
+### 2026111608 · 09 号方案第三期 3.1「模型预设」（3.3.5）
+
+- **一键切换「模型 + 思考强度」**：点顶部标题胶囊，菜单最上面一段是存好的预设，每项写着「模型名 · 思考强度」，当前模型和强度都对得上时打勾。点一下同时换模型和思考强度（先换模型，再按新模型的能力规整强度）。
+- **存为预设…**：这一段最后一项，输入名字就把当前的模型和思考强度存下来，比如「日常 = 小模型 · 关」「深度 = 大模型 · 深入」。
+- 回复进行中选预设：模型和思考强度一起排到这一轮结束后生效（和手动换模型一样不打断当前这一轮）；排队期间又手动选了别的模型，预设带的强度作废。
+- 预设里的模型被停用或删掉时，这一项置灰并注明「模型不可用」。
+- **设置 › 模型与对话 › 模型预设**：列出所有预设，点一行可以改名或删除。
+- 实现：`ModelPreset`、`ModelPresetRepository`（整个列表一条 JSON，坏数据当作空列表）、`AgentAppState.applyPreset`（`queuedEfforts` 跟着 `queuedModels` 在 `applyQueuedModel` 里一起生效）、思考强度短名抽成 `reasoningEffortLevelText` 与输入框共用。
+- 测试：`ModelPresetRepositoryTest`（增改删、坏 JSON、编解码、`presetMatches`）、`HomeConversationPresentationTest.titleCapsuleMenuAppliesModelPresets`；真机模式截图加 `model-presets-light`。
+
 <a id="release-2026111607"></a>
 
 ### 2026111607 · 09 号方案第二期 2.2「标题胶囊是这个对话的总入口」（3.3.5）

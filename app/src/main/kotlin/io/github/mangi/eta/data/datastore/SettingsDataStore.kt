@@ -36,6 +36,7 @@ internal object SettingsDataStore {
     private val CONVERSATION_TITLE_SETTINGS = stringPreferencesKey("conversation_title_settings_v1")
     private val CONTEXT_COMPACTION_SETTINGS = stringPreferencesKey("context_compaction_settings_v1")
     private val ASSISTANT_OVERLAY_SETTINGS = stringPreferencesKey("assistant_overlay_settings_v1")
+    private val MODEL_PRESETS = stringPreferencesKey("model_presets_v1")
     private val speechJson = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
@@ -105,6 +106,19 @@ internal object SettingsDataStore {
             } ?: SubagentSettings()
             preferences[SUBAGENT_SETTINGS] = speechJson.encodeToString(transform(current))
         }
+    }
+
+    /** 模型预设的原始 JSON（解析在 ModelPresetRepository，09 第三期 3.1）。 */
+    fun modelPresetsRawFlow(): Flow<String?> {
+        ensureInitialized()
+        return dataStore.data
+            .catch { cause -> if (cause is IOException) emit(emptyPreferences()) else throw cause }
+            .map { prefs -> prefs[MODEL_PRESETS] }
+    }
+
+    suspend fun setModelPresetsRaw(raw: String) {
+        ensureInitialized()
+        dataStore.edit { it[MODEL_PRESETS] = raw }
     }
 
     fun conversationTitleSettingsFlow(): Flow<ConversationTitleSettings> {

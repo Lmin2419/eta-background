@@ -535,6 +535,9 @@ fun AgentAppRoot(
                 val home = agentState.homeState
                 val models = agentState.modelPickerState
                 val usage = remember(home.messages, models.selectedModel) { latestContextUsage(home.messages, models.selectedModel) }
+                val modelPresets by remember { io.github.mangi.eta.data.repository.ModelPresetRepository.presetsFlow() }
+                    .collectAsState(initial = emptyList())
+                val presetScope = rememberCoroutineScope()
                 HomeConversationTopBar(models, home.isStreaming, home.isCompacting, usage,
                     home.canCompactContext, home.isConversationLoaded && home.messages.isNotEmpty(),
                     home.roleplayChatUi(),
@@ -550,6 +553,16 @@ fun AgentAppRoot(
                     onRename = {
                         val pane = agentState.conversationPaneState
                         conversationRenameTarget = pane.conversations.firstOrNull { it.id == pane.selectedConversationId }
+                    },
+                    presets = modelPresets,
+                    reasoningEffort = home.reasoningEffort,
+                    onApplyPreset = agentState::applyPreset,
+                    onSavePreset = { name ->
+                        val modelId = models.selectedModel?.id
+                        if (modelId != null) presetScope.launch {
+                            io.github.mangi.eta.data.repository.ModelPresetRepository.add(name, modelId, home.reasoningEffort)
+                            io.github.mangi.eta.ui.components.EtaToastCenter.show(context, resources.getString(R.string.model_presets_saved, name))
+                        }
                     })
             }) else null,
             homeCharacter = if (route is AppRoute.Home) agentState.homeState.roleplayChatUi() else null,
@@ -726,6 +739,9 @@ fun AgentAppRoot(
             }
             entry<AppRoute.ContextCompactionSettings>(swipeDismiss = swipeDismiss) {
                 io.github.mangi.eta.ui.screens.settings.ContextCompactionSettingsScreen(onBack = ::popRoute)
+            }
+            entry<AppRoute.ModelPresets>(swipeDismiss = swipeDismiss) {
+                io.github.mangi.eta.ui.screens.settings.ModelPresetsScreen(onBack = ::popRoute)
             }
             entry<AppRoute.ConversationTitleSettings>(swipeDismiss = swipeDismiss) {
                 ConversationTitleSettingsScreen(onBack = ::popRoute)
