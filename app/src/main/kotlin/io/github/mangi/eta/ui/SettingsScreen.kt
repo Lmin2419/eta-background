@@ -1,5 +1,9 @@
 package io.github.mangi.eta.ui
 
+import io.github.mangi.eta.ui.components.EtaOverlayDropdownPreference
+import io.github.mangi.eta.ui.model.AgentModelPickerProjector
+import io.github.mangi.eta.data.model.enabledModel
+import io.github.mangi.eta.data.model.ReasoningEffort
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Spacer
@@ -259,6 +263,81 @@ private fun SettingsPageContent(
     // LSPosed 数据库）；未就绪时保持 null，UI 禁止修改。
     var prefs by remember { mutableStateOf(Prefs.remotePreferencesForUi(EtaApp.serviceInstance)) }
     val agentPrefs = remember { Prefs.localAgentPreferences() }
+    val pickerState = remember(providers, selectedProviderId, selectedModelId) {
+        AgentModelPickerProjector.project(providers, selectedProviderId, selectedModelId)
+    }
+    val effectivePrimary = remember(providers, pickerState.selectedModel?.id) {
+        providers.enabledModel(pickerState.selectedModel?.id)
+    }
+    val effectiveCapabilities = remember(effectivePrimary) {
+        effectivePrimary?.let { (provider, model) ->
+            RuntimeConfigRepository.reasoningCapabilities(provider, model)
+        }
+    }
+    val effortOptions = remember(effectiveCapabilities) {
+        effectiveCapabilities?.selectableEfforts
+            ?.filter { it != ReasoningEffort.OFF }
+            .orEmpty()
+    }
+    val providerDefaultLabel = stringResource(R.string.conversation_title_settings_reasoning_provider_default)
+    val effortLabels = remember(effortOptions, providerDefaultLabel) {
+        effortOptions.map { effort ->
+            when (effort) {
+                ReasoningEffort.DEFAULT -> providerDefaultLabel
+                else -> effort.displayName
+            }
+        }
+    }
+    val defaultThinkingKey = Prefs.Keys.AGENT_THINKING_ENABLED
+    val defaultThinkingFallback = Prefs.Keys.BOOLEAN_DEFAULTS.getValue(defaultThinkingKey)
+    var defaultThinkingEnabled by remember(agentPrefs) {
+        mutableStateOf(
+            agentPrefs?.getBoolean(defaultThinkingKey, defaultThinkingFallback)
+                ?: enhancementHistory.checked(defaultThinkingKey, defaultThinkingFallback),
+        )
+    }
+    var savedDefaultEffort by remember(agentPrefs) {
+        mutableStateOf(Prefs.defaultReasoningEffort(agentPrefs))
+    }
+    DisposableEffect(agentPrefs) {
+        val targetPrefs = agentPrefs ?: return@DisposableEffect onDispose {}
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { changedPrefs, key ->
+            when (key) {
+                defaultThinkingKey -> {
+                    defaultThinkingEnabled = changedPrefs.getBoolean(defaultThinkingKey, defaultThinkingFallback)
+                }
+                Prefs.Keys.AGENT_DEFAULT_REASONING_EFFORT -> {
+                    savedDefaultEffort = Prefs.defaultReasoningEffort(changedPrefs)
+                }
+            }
+        }
+        targetPrefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { targetPrefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+    val effectiveSelectedEffort = remember(effectiveCapabilities, savedDefaultEffort) {
+        effectiveCapabilities?.normalize(savedDefaultEffort) ?: ReasoningEffort.DEFAULT
+    }
+    val selectedEffortIndex = remember(effortOptions, effectiveSelectedEffort) {
+        effortOptions.indexOf(effectiveSelectedEffort).takeIf { it >= 0 } ?: 0
+    }
+    val onDefaultEffortSelect: (Int) -> Unit = { index ->
+        val chosen = effortOptions.getOrNull(index)
+        val targetPrefs = agentPrefs
+        if (chosen != null && targetPrefs != null) {
+            if (putStringSync(targetPrefs, Prefs.Keys.AGENT_DEFAULT_REASONING_EFFORT, chosen.wireValue)) {
+                savedDefaultEffort = chosen
+            } else {
+                Toast.makeText(
+                    context.applicationContext,
+                    context.getString(R.string.settings_write_failed),
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+        }
+    }
+    val defaultEffortTitle = stringResource(R.string.settings_default_reasoning_effort)
+    val defaultEffortUnsupported = stringResource(R.string.conversation_title_settings_reasoning_unsupported)
+    val defaultEffortEnabled = agentPrefs != null && defaultThinkingEnabled && effortOptions.size > 1
     var powerAssistantTarget by remember(prefs) {
         mutableStateOf(prefs?.let(Prefs::powerAssistantTarget) ?: enhancementHistory.powerTarget())
     }
@@ -328,6 +407,25 @@ private fun SettingsPageContent(
                         icon = Icons.Outlined.Psychology,
                         iconTint = EtaPreferenceColors.Blue,
                     )
+                    EtaPreferenceDivider()
+                    // 上游：新对话默认用的思考深度（只列当前默认模型支持的档位；关了默认深度思考时不可选）。
+                    if (effortOptions.size > 1) {
+                        EtaOverlayDropdownPreference(
+                            title = defaultEffortTitle,
+                            items = effortLabels,
+                            selectedIndex = selectedEffortIndex,
+                            enabled = defaultEffortEnabled,
+                            onSelectedIndexChange = onDefaultEffortSelect,
+                            startAction = { EtaPreferenceIcon(Icons.Outlined.Tune, tint = EtaPreferenceColors.Blue) },
+                        )
+                    } else {
+                        EtaPreference(
+                            title = defaultEffortTitle,
+                            summary = defaultEffortUnsupported,
+                            enabled = false,
+                            startAction = { EtaPreferenceIcon(Icons.Outlined.Tune, tint = EtaPreferenceColors.Blue) },
+                        )
+                    }
                     EtaPreferenceDivider()
                     // 自动压缩开关挪进「上下文压缩」页（与后台压缩、压缩模型放在一起）。
                     EtaArrowPreference(

@@ -5,6 +5,7 @@ import io.github.mangi.eta.agent.model.AgentContextSnapshot
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.SystemClock
 import android.text.format.DateFormat
@@ -126,10 +127,11 @@ internal class AgentAppState(
     private var persistencePaused = false
     private val runtimeRecoveryInProgress = AtomicBoolean(false)
     private val runtimeReconcileMutex = Mutex()
-    private val defaultThinkingEnabled = agentBooleanForUi(Prefs.Keys.AGENT_THINKING_ENABLED)
     @Volatile
     private var conversationPersistence = AgentConversationPersistence(initialConversations)
     private var currentReasoningCapabilities: ModelReasoningCapabilities? = null
+    private var currentDraftReasoningCustomized = false
+    private var localPrefsListener: SharedPreferences.OnSharedPreferenceChangeListener? = null
     private var providers: List<ProviderSetting> = emptyList()
     private var defaultModelId: String? = null
     private var defaultProviderId: String? = null
@@ -168,7 +170,7 @@ internal class AgentAppState(
     private var lastPinTimestamp = initialConversations.conversationsById.values.mapNotNull { it.pinnedAt }.maxOrNull() ?: 0L
 
     var homeState by mutableStateOf(
-        selectedConversationId?.let(conversationsById::get) ?: emptyChatState(defaultThinkingEnabled)
+        selectedConversationId?.let(conversationsById::get) ?: emptyChatState(defaultReasoningEffort(null))
     )
         private set
 
@@ -207,6 +209,7 @@ internal class AgentAppState(
         }
         refreshConversationSummaries()
         observeRuntimeSelection()
+        observeDefaultReasoningPreferences()
         runtimeRecoveryInProgress.set(true)
         scope.launch {
             AssistantRunRecovery.changes.collect {
@@ -267,10 +270,63 @@ internal class AgentAppState(
             RuntimeConfigRepository.reasoningCapabilities(provider, model)
         }
         if (!homeState.isConversationLoaded) return
-        val resolved = homeState.withCurrentReasoningCapabilities()
+        val resolved = if (isUnboundBlankDraft() && !currentDraftReasoningCustomized) {
+            val effort = defaultReasoningEffort(currentReasoningCapabilities)
+            homeState.copy(
+                thinkingEnabled = effort.enablesReasoning,
+                reasoningEffort = effort,
+                availableReasoningEfforts = currentReasoningCapabilities?.selectableEfforts.orEmpty(),
+            )
+        } else {
+            homeState.withCurrentReasoningCapabilities()
+        }
         val conversationId = selectedConversationId
         if (conversationId == null) homeState = resolved
         else updateConversation(conversationId, resolved, updateTimestamp = false)
+    }
+
+    private fun isUnboundBlankDraft(): Boolean =
+        selectedConversationId == null &&
+            homeState.messages.isEmpty() &&
+            !homeState.hasEarlierMessages
+
+    private fun defaultReasoningEffort(
+        capabilities: ModelReasoningCapabilities? = currentReasoningCapabilities,
+    ): ReasoningEffort {
+        if (!agentBooleanForUi(Prefs.Keys.AGENT_THINKING_ENABLED)) {
+            return capabilities?.normalize(ReasoningEffort.OFF) ?: ReasoningEffort.OFF
+        }
+        val requested = Prefs.defaultReasoningEffort(Prefs.localAgentPreferences())
+        return capabilities?.normalize(requested) ?: requested
+    }
+
+    private fun observeDefaultReasoningPreferences() {
+        val prefs = Prefs.localAgentPreferences() ?: return
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key != Prefs.Keys.AGENT_THINKING_ENABLED &&
+                key != Prefs.Keys.AGENT_DEFAULT_REASONING_EFFORT
+            ) {
+                return@OnSharedPreferenceChangeListener
+            }
+            scope.launch(Dispatchers.Main.immediate) {
+                syncUnboundDraftDefaultReasoning()
+            }
+        }
+        localPrefsListener = listener
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        scope.coroutineContext[Job]?.invokeOnCompletion {
+            prefs.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+
+    private fun syncUnboundDraftDefaultReasoning() {
+        if (!homeState.isConversationLoaded || !isUnboundBlankDraft() || currentDraftReasoningCustomized) return
+        val effort = defaultReasoningEffort(currentReasoningCapabilities)
+        homeState = homeState.copy(
+            thinkingEnabled = effort.enablesReasoning,
+            reasoningEffort = effort,
+            availableReasoningEfforts = currentReasoningCapabilities?.selectableEfforts.orEmpty(),
+        )
     }
 
     private fun AgentChatHomeUiState.withCurrentReasoningCapabilities(): AgentChatHomeUiState {
@@ -383,9 +439,10 @@ internal class AgentAppState(
             conversationGroups = snapshot.groups
             conversationPersistence = AgentConversationPersistence(snapshot)
             fileAttachmentOwnerVersion += 1
+            currentDraftReasoningCustomized = false
             homeState = selectedConversationId
                 ?.let(conversationsById::get)
-                ?: emptyChatState(defaultThinkingEnabled)
+                ?: emptyChatState(defaultReasoningEffort(null))
             refreshConversationModel()
             conversationPaneState = conversationPaneState.copy(
                 selectedConversationId = selectedConversationId,
@@ -481,7 +538,7 @@ internal class AgentAppState(
                     }
                     val external = AssistantRunRecovery.payload(handoff) ?: return@forEach
                     val id = archiveConversationId(handoff.source, external.conversationKey)
-                    val existing = conversationsById[id] ?: emptyChatState(defaultThinkingEnabled)
+                    val existing = conversationsById[id] ?: emptyChatState(defaultReasoningEffort())
                     if (!AgentRuntimeHistoryReducer.wasApplied(existing, runId) &&
                         existing.messages.none { it.id == "user-$runId" }) {
                         updateConversation(id, AssistantConversationSeed.apply(existing, runId, external.userText).copy(archivedAt = null))
@@ -777,7 +834,7 @@ internal class AgentAppState(
         )
         val archivedEffort = payload.reasoningEffort
             ?: payload.thinkingEnabled?.let(ReasoningEffort::fromLegacy)
-            ?: ReasoningEffort.fromLegacy(defaultThinkingEnabled)
+            ?: defaultReasoningEffort(null)
         val existingState = AssistantConversationSeed.apply(
             conversationsById[conversationId] ?: emptyChatState(archivedEffort.enablesReasoning).copy(reasoningEffort = archivedEffort),
             runId, payload.userText,
@@ -831,6 +888,9 @@ internal class AgentAppState(
     fun updateReasoningEffort(effort: ReasoningEffort) {
         if (!homeState.isConversationLoaded) return
         val normalized = currentReasoningCapabilities?.normalize(effort) ?: ReasoningEffort.OFF
+        if (isUnboundBlankDraft()) {
+            currentDraftReasoningCustomized = true
+        }
         updateCurrentConversation(
             homeState.copy(
                 thinkingEnabled = normalized.enablesReasoning,
@@ -944,6 +1004,7 @@ internal class AgentAppState(
         cancelHistoryPageLoad()
         conversationSelectionJob?.cancel()
         fileAttachmentOwnerVersion += 1
+        currentDraftReasoningCustomized = false
         selectedConversationId = conversationId
         homeState = state
         conversationLoadFailed = false
@@ -1147,8 +1208,9 @@ internal class AgentAppState(
         conversationLoadFailed = false
         if (homeState.messageEdit != null) cancelMessageEdit()
         fileAttachmentOwnerVersion += 1
+        currentDraftReasoningCustomized = false
         selectedConversationId = null
-        homeState = emptyChatState(defaultThinkingEnabled)
+        homeState = emptyChatState(defaultReasoningEffort())
         refreshConversationModel()
         conversationPaneState = conversationPaneState.copy(
             selectedConversationId = null,
@@ -1241,8 +1303,9 @@ internal class AgentAppState(
         val transcript = if (text.isBlank()) emptyList() else listOf(
             AgentModelClient.ConversationMessage(role = "assistant", content = text, messageId = greetingId),
         )
+        currentDraftReasoningCustomized = false
         selectedConversationId = id
-        homeState = emptyChatState(defaultThinkingEnabled).withCurrentReasoningCapabilities().copy(
+        homeState = emptyChatState(defaultReasoningEffort()).withCurrentReasoningCapabilities().copy(
             roleplay = binding,
             history = transcript,
             journal = transcript,
@@ -1322,7 +1385,7 @@ internal class AgentAppState(
             conversationsById[it]?.archivedAt == null && it !in pendingConversationDeletes
         }
         selectedConversationId = nextId
-        homeState = nextId?.let(conversationsById::getValue) ?: emptyChatState(defaultThinkingEnabled)
+        homeState = nextId?.let(conversationsById::getValue) ?: emptyChatState(defaultReasoningEffort())
         if (nextId != null) selectConversationInternal(nextId, persistSelection = false) else refreshConversationModel()
     }
 
@@ -1847,8 +1910,9 @@ internal class AgentAppState(
             conversationTitles = conversationTitles - conversationId
             conversationUpdatedAt = conversationUpdatedAt - conversationId
             fileAttachmentOwnerVersion += 1
+            currentDraftReasoningCustomized = false
             selectedConversationId = null
-            homeState = emptyChatState(defaultThinkingEnabled)
+            homeState = emptyChatState(defaultReasoningEffort())
             refreshConversationModel()
             conversationPaneState = conversationPaneState.copy(selectedConversationId = null)
             refreshConversationSummaries()
@@ -2013,13 +2077,6 @@ internal class AgentAppState(
                     return@launch
                 }
             }
-            val permittedReasoningEffort = if (
-                agentBooleanForUi(Prefs.Keys.AGENT_THINKING_ENABLED)
-            ) {
-                runReasoningEffort
-            } else {
-                ReasoningEffort.OFF
-            }
             val config = RuntimeConfigRepository.runtimeConfigFor(runModelId)?.copy(
                 terminalTools = agentBooleanForUi(Prefs.Keys.AGENT_TERMINAL_TOOLS),
                 browserTools = agentBooleanForUi(Prefs.Keys.AGENT_BROWSER_TOOLS),
@@ -2029,8 +2086,8 @@ internal class AgentAppState(
                 deviceSensitiveActionTools =
                     agentBooleanForUi(Prefs.Keys.AGENT_DEVICE_SENSITIVE_ACTION_TOOLS),
                 subagentTools = agentBooleanForUi(Prefs.Keys.AGENT_SUBAGENT_ENABLED),
-                thinkingEnabled = permittedReasoningEffort.enablesReasoning,
-                reasoningEffort = permittedReasoningEffort,
+                thinkingEnabled = runReasoningEffort.enablesReasoning,
+                reasoningEffort = runReasoningEffort,
             )
             if (config == null) {
                 withContext(Dispatchers.Main) {
@@ -2816,7 +2873,8 @@ internal class AgentAppState(
     private fun moveCurrentDraftToNewConversation() {
         val draft = homeState
         selectedConversationId = null
-        homeState = emptyChatState(defaultThinkingEnabled).copy(
+        currentDraftReasoningCustomized = draft.reasoningEffort != defaultReasoningEffort()
+        homeState = emptyChatState(defaultReasoningEffort()).copy(
             input = draft.input,
             thinkingEnabled = draft.reasoningEffort.enablesReasoning,
             reasoningEffort = draft.reasoningEffort,
@@ -2880,8 +2938,8 @@ internal class AgentAppState(
     }
 
     private fun conversationStateForRun(runId: String): AgentChatHomeUiState {
-        val conversationId = conversationIdForRun(runId) ?: return emptyChatState(defaultThinkingEnabled)
-        return conversationsById[conversationId] ?: emptyChatState(defaultThinkingEnabled)
+        val conversationId = conversationIdForRun(runId) ?: return emptyChatState(defaultReasoningEffort())
+        return conversationsById[conversationId] ?: emptyChatState(defaultReasoningEffort())
     }
 
     private fun refreshConversationSummaries() {
@@ -3021,13 +3079,17 @@ internal class AgentAppState(
         )
 
         fun emptyChatState(thinkingEnabled: Boolean): AgentChatHomeUiState =
+            emptyChatState(ReasoningEffort.fromLegacy(thinkingEnabled))
+
+        fun emptyChatState(reasoningEffort: ReasoningEffort): AgentChatHomeUiState =
             AgentChatHomeUiState(
                 messages = emptyList(),
                 history = emptyList(),
                 journal = emptyList(),
                 input = "",
                 isStreaming = false,
-                thinkingEnabled = thinkingEnabled,
+                thinkingEnabled = reasoningEffort.enablesReasoning,
+                reasoningEffort = reasoningEffort,
             )
 
         fun newConversationId(): String = "conv-${UUID.randomUUID()}"

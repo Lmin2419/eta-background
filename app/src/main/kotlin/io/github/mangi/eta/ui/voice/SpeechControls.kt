@@ -116,10 +116,6 @@ import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibi
 import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaIconButton
 import io.github.mangi.eta.ui.components.StatusError
-import io.github.mangi.eta.ui.model.AgentChatMessageUi
-import io.github.mangi.eta.ui.model.AgentMessageUi
-import io.github.mangi.eta.ui.model.SystemNoticeCode
-import io.github.mangi.eta.ui.model.SystemNoticeMessageUi
 import io.github.mangi.eta.ui.theme.EtaMotion
 import kotlin.math.PI
 import kotlin.math.sin
