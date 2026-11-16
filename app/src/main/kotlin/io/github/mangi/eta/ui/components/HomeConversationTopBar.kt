@@ -54,17 +54,18 @@ internal fun HomeConversationTopBar(
     models: AgentModelPickerUiState, isStreaming: Boolean, isCompacting: Boolean,
     @Suppress("UNUSED_PARAMETER") usage: AgentContextUsageUi,
     @Suppress("UNUSED_PARAMETER") canCompact: Boolean,
-    @Suppress("UNUSED_PARAMETER") canExport: Boolean,
+    canExport: Boolean,
     character: RoleplayChatUi?,
     onHistory: () -> Unit, onNew: () -> Unit, onTasks: () -> Unit,
     onCharacter: () -> Unit, onModel: (String) -> Unit,
     @Suppress("UNUSED_PARAMETER") onCompact: () -> Unit,
-    @Suppress("UNUSED_PARAMETER") onExport: () -> Unit,
+    onExport: () -> Unit,
     onManageModels: () -> Unit,
     conversationTitle: String? = null,
     currentConversationId: String? = null,
     onOpenConversation: ((String) -> Unit)? = null,
     onOpenDesktopSession: ((String) -> Unit)? = null,
+    onRename: (() -> Unit)? = null,
 ) {
     var settings by remember { mutableStateOf(false) }
     val pillAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
@@ -119,7 +120,13 @@ internal fun HomeConversationTopBar(
         HomeTaskCapsule(currentConversationId, onTasks, onOpenConversation ?: {}, onOpenDesktopSession ?: {})
     }
     }
-    ModelPopover(settings, pillAnchor, models, isCompacting,
+    // 09 第二期 2.2：标题胶囊是「这个对话」的总入口——有标题时菜单里多「重命名」「导出」。
+    val titled = character == null && !conversationTitle.isNullOrBlank()
+    val conversationActions = ConversationMenuActions(
+        onRename = onRename?.takeIf { titled }?.let { rename -> { settings = false; rename() } },
+        onExport = if (titled && canExport) ({ settings = false; onExport() }) else null,
+    )
+    ModelPopover(settings, pillAnchor, models, isCompacting, conversationActions,
         onDismiss = { settings = false },
         onModel = { id ->
             settings = false
@@ -196,11 +203,13 @@ internal fun ModelPill(state: AgentModelPickerUiState, locked: Boolean, iconOnly
 
 /**
  * 点模型胶囊展开的小窗：按服务商分组的模型列表（多于 6 个时带搜索），末行「管理模型…」；
- * 配了语音朗读时多一项「自动朗读」。原底部面板里的「压缩」挪到上下文圆环，「导出」挪到侧栏长按。
+ * 配了语音朗读时多一项「自动朗读」。对话有标题时多「重命名」「导出」（09 第二期 2.2，侧栏长按里也有）；
+ * 原底部面板里的「压缩」挪到上下文圆环。
  */
 @Composable
 private fun ModelPopover(
     show: Boolean, anchor: com.itos.coui.menu.CouiMenuAnchor, models: AgentModelPickerUiState, busy: Boolean,
+    conversation: ConversationMenuActions,
     onDismiss: () -> Unit, onModel: (String) -> Unit, onManageModels: () -> Unit,
 ) {
     val speech by remember { SpeechSettingsRepository.settingsFlow() }.collectAsState(initial = null)
@@ -219,6 +228,10 @@ private fun ModelPopover(
                         onClick = { onModel(model.id) }, enabled = !busy && !models.isChanging,
                         selected = model.id == models.selectedModel?.id)
                 }
+            }
+            if (conversation.any) {
+                EtaMenuDivider()
+                ConversationMenuItems(conversation)
             }
             EtaMenuDivider()
             if (autoRead) EtaMenuItem(stringResource(R.string.eta_auto_read), selected = speech?.chatAutoSpeak == true, onClick = {
@@ -247,9 +260,24 @@ private fun ModelPopover(
                     speech?.let { value -> scope.launch { SpeechSettingsRepository.save(value.copy(chatAutoSpeak = !value.chatAutoSpeak)) } }
                 })
                 EtaMenuItem(stringResource(R.string.eta_manage_models_ellipsis), onClick = onManageModels)
+                if (conversation.any) {
+                    EtaMenuDivider()
+                    ConversationMenuItems(conversation)
+                }
             }
         }
     }
+}
+
+/** 标题胶囊菜单里「这个对话」的操作；为 null 的不显示（新对话没有标题时两项都不显示）。 */
+internal class ConversationMenuActions(val onRename: (() -> Unit)?, val onExport: (() -> Unit)?) {
+    val any: Boolean get() = onRename != null || onExport != null
+}
+
+@Composable
+private fun ConversationMenuItems(actions: ConversationMenuActions) {
+    actions.onRename?.let { EtaMenuItem(stringResource(R.string.action_rename), onClick = it) }
+    actions.onExport?.let { EtaMenuItem(stringResource(R.string.action_export), onClick = it) }
 }
 
 /** 与上游一致：模型不超过 8 个用菜单，更多时用带搜索的半窗。 */

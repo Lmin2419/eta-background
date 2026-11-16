@@ -128,6 +128,47 @@ class HomeConversationPresentationTest {
         } finally { panel.close(); controller.pause().stop().destroy() }
     }
 
+    /** 09 第二期 2.2：有标题时，标题胶囊菜单（小窗与半窗）里有「重命名」「导出」；新对话没有。 */
+    @Test fun titleCapsuleMenuRenamesAndExportsTheConversation() {
+        for (modelCount in listOf(2, 9)) {
+            val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
+            val actions = mutableListOf<String>()
+            val base = Stage3Models.selectedModel!!
+            val models = (1..modelCount).map { base.copy(id = "m$it", displayName = "Model $it") }
+            var title by mutableStateOf<String?>("修复登录校验")
+            val panel = Stage3TestPanel(controller.get()) {
+                EtaAppOverlayHost {
+                    HomeConversationTopBar(Stage3Models.copy(selectedModel = models.first(),
+                        providerGroups = listOf(Stage3Models.providerGroups.single().copy(models = models))),
+                        false, false, AgentContextUsageUi(12500, 128000), true, true, null,
+                        {}, {}, {}, {}, {}, {}, { actions += "export" }, {},
+                        conversationTitle = title, onRename = { actions += "rename" })
+                }
+            }
+            val rename = controller.get().getString(R.string.action_rename)
+            val export = controller.get().getString(R.string.action_export)
+            fun texts() = panel.nodes().flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty().map { t -> t.text } }
+            fun open() {
+                panel.click(panel.nodes().first { it.config.getOrNull(SemanticsProperties.ContentDescription)?.any { d -> "Model 1" in d } == true })
+                panel.advance(35)
+            }
+            fun clickText(text: String) {
+                panel.click(panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == text } == true })
+                panel.advance(35)
+            }
+            try {
+                panel.advance(25)
+                open(); clickText(rename)
+                open(); clickText(export)
+                assertEquals("models=$modelCount", listOf("rename", "export"), actions)
+                title = null; panel.advance(10)
+                open()
+                assertFalse("models=$modelCount: new conversation has no rename", rename in texts())
+                assertFalse("models=$modelCount: new conversation has no export", export in texts())
+            } finally { panel.close(); controller.pause().stop().destroy() }
+        }
+    }
+
     @Test fun assistantLongPressExposesCopyRegenerateAndDelete() {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(controller.get()) {

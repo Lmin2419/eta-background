@@ -546,7 +546,11 @@ fun AgentAppRoot(
                     conversationTitle = agentState.currentConversationTitle,
                     currentConversationId = agentState.conversationPaneState.selectedConversationId,
                     onOpenConversation = ::selectConversation,
-                    onOpenDesktopSession = { id -> conversationPaneOpen = false; pushRoute(AppRoute.DesktopChat(id)) })
+                    onOpenDesktopSession = { id -> conversationPaneOpen = false; pushRoute(AppRoute.DesktopChat(id)) },
+                    onRename = {
+                        val pane = agentState.conversationPaneState
+                        conversationRenameTarget = pane.conversations.firstOrNull { it.id == pane.selectedConversationId }
+                    })
             }) else null,
             homeCharacter = if (route is AppRoute.Home) agentState.homeState.roleplayChatUi() else null,
             onOpenCharacter = {
