@@ -79,7 +79,7 @@ internal fun NativeAssistantPreference(context: Context) {
             }
             EtaArrowPreference(title = stringResource(R.string.native_assistant_refresh), enabled = !state.busy,
                 onClick = { NativeAssistantSettings.refresh(context) })
-            EtaButton(text = stringResource(R.string.action_close), onClick = { show = false })
+            // 「关闭」只留对话框底部按钮栏那一个（EtaWindowDialog 自带），内容里不再重复一个。
         }
     }
 }

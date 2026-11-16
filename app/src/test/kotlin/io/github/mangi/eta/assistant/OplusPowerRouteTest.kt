@@ -30,9 +30,14 @@ class OplusPowerRouteTest {
     }
 
     @Test fun matchingModelWithoutMatchingFrameworkIsRejectedBeforeAnyWrite() {
-        assertFalse(OplusPowerContract.supported("PMA110", 37, 0, "different-framework"))
-        assertFalse(OplusPowerContract.supported("OTHER", 37, 0, OplusPowerContract.FRAMEWORK_SHA256))
-        assertFalse(OplusPowerContract.supported("PMA110", 37, 10, OplusPowerContract.FRAMEWORK_SHA256))
+        // 读得到框架代码却找不到长按广播：拒绝。机型或用户不对：拒绝。
+        assertFalse(OplusPowerContract.supported("PMA110", 37, 0, false))
+        assertFalse(OplusPowerContract.supported("OTHER", 37, 0, true))
+        assertFalse(OplusPowerContract.supported("PMA110", 38, 0, true))
+        assertFalse(OplusPowerContract.supported("PMA110", 37, 10, true))
+        // 系统小版本更新：框架 jar 变了但通道还在，或者代码被预编译剥离读不到——都照常支持。
+        assertTrue(OplusPowerContract.supported("PMA110", 37, 0, true))
+        assertTrue(OplusPowerContract.supported("PMA110", 37, 0, null))
         device.snapshot = original.copy(supported = false)
         code("COLOROS_FIRMWARE_UNSUPPORTED") { route.enable() }
         assertTrue(device.writes.isEmpty())
@@ -144,6 +149,13 @@ class OplusPowerRouteTest {
         code("CONFIGURATION_CHANGED") { route.restore() }
         assertEquals(count, device.writes.size)
         assertNotNull(store.saved)
+    }
+
+    /** 2026111608 真机反馈：系统小版本更新后构建指纹变了，属性与策略都还在，长按通道应继续可用。 */
+    @Test fun aMinorSystemUpdateKeepsTheRouteConfigured() {
+        route.enable()
+        device.snapshot = device.snapshot.copy(fingerprint = "firmware-a-minor-update")
+        assertTrue(route.configured(device.snapshot))
     }
 
     @Test fun newFirmwareDoesNotInheritOldWakeAcceptanceButCanRestoreOwnedValues() {

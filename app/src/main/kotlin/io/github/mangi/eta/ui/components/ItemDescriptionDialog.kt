@@ -32,11 +32,7 @@ internal fun ItemDescriptionDialog(
                 modifier = Modifier.fillMaxWidth().weight(1f, fill = false)
                     .verticalScroll(rememberScrollState()),
             )
-            EtaButton(
-                text = stringResource(R.string.action_close),
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            // 「关闭」在对话框底部按钮栏（EtaWindowDialog 自带），这里不再重复。
         }
     }
 }

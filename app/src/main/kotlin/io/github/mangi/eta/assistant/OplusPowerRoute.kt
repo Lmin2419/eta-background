@@ -5,12 +5,19 @@ internal object OplusPowerContract {
     const val ACTION = "oppo.intent.action.power.longpress"
     const val PROPERTY = "persist.sys.custom.enable.powerkeybroadcast"
     const val POLICY = "breeno_disable_key"
-    const val FRAMEWORK = "/system/framework/oplus-services.jar"
-    const val FRAMEWORK_SHA256 = "56a8ae52c2562d5da80c9737b1b04801cce4e6744d9efefc4c67b2270f9817a5"
+    /** 发出长按广播的厂商框架代码可能在这两个 jar 里。 */
+    val FRAMEWORKS = listOf("/system/framework/oplus-services.jar", "/system/framework/services.jar")
 
     fun isCandidate(model: String, sdk: Int) = model == "PMA110" && sdk == 37
-    fun supported(model: String, sdk: Int, user: Int, hash: String) =
-        isCandidate(model, sdk) && user == 0 && hash == FRAMEWORK_SHA256
+
+    /**
+     * 同一机型、同一 Android 大版本（SDK）就认。以前还要求 oplus-services.jar 的 SHA-256 与核对过的那一版完全一致，
+     * 系统小版本更新（框架 jar 必然变）后就判成「固件不匹配」、电源键失效（2026111608 真机反馈）。
+     * 现在改查框架里还有没有这条长按通道：[frameworkHasRoute] 为 false（读得到框架代码、却找不到长按广播）才拒绝；
+     * 读不到（代码被预编译剥离）时不据此拒绝，配置后仍要实际长按确认，随时可以恢复原配置。
+     */
+    fun supported(model: String, sdk: Int, user: Int, frameworkHasRoute: Boolean?) =
+        isCandidate(model, sdk) && user == 0 && frameworkHasRoute != false
 }
 
 internal data class OplusPowerSnapshot(val user: Int, val broadcast: String, val gate: String?, val supported: Boolean,
@@ -39,10 +46,10 @@ internal class OplusPowerRoute(
     private val store: OplusPowerStore,
     private val now: () -> AssistantTick,
 ) {
+    // 不再比对构建指纹：小版本更新后指纹会变，但属性与厂商策略都保留，长按通道照常可用。
+    // 大版本更新由 isCandidate 的 SDK 判断挡住；固件里没了这条通道时 supported 为 false。
     fun configured(snapshot: OplusPowerSnapshot): Boolean = snapshot.user == 0 && snapshot.supported &&
-        snapshot.broadcast == "1" && snapshot.gate == "1" && store.load()?.let {
-            it.appliedAt != null && it.original.fingerprint == snapshot.fingerprint
-        } == true
+        snapshot.broadcast == "1" && snapshot.gate == "1" && store.load()?.appliedAt != null
 
     fun enable() {
         if (store.load() != null) throw AssistantSetupFailure("RESTORE_FIRST")

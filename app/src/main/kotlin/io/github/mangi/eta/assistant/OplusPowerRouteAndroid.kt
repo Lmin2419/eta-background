@@ -73,8 +73,8 @@ internal object OplusPowerWake {
             DeviceToolContract.appUserId(context) == 0 &&
             context.getSystemService(UserManager::class.java)?.isUserUnlocked == true &&
             environmentAllowsWake(context) &&
-            OplusPowerBackupFile(context).load()?.let { it.appliedAt != null && it.original.supported &&
-                it.original.fingerprint == Build.FINGERPRINT } == true &&
+            // 系统小版本更新后构建指纹会变，这里不再要求与配置时一致（isCandidate 已限定机型与 Android 大版本）。
+            OplusPowerBackupFile(context).load()?.let { it.appliedAt != null && it.original.supported } == true &&
             VoiceInteractionService.isActiveService(context, ComponentName(context, EtaVoiceInteractionService::class.java))
     }.getOrDefault(false)
 

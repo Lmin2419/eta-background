@@ -28,8 +28,10 @@
 | Android / 安全补丁 | 17、SDK 37 / 2026-09-01 |
 | 系统指纹 | `OPPO/PMA110/OP61BDL1:17/CP2A.260605.016/B.30d6865-a9327b-aae421:user/release-keys` |
 | system 分区 SHA-256 | `09cab6f8321edd0215a6cddd02a944d96221d050536da9c4f252fe3e0e563db8` |
-| `oplus-services.jar` SHA-256（启用时校验） | `56a8ae52c2562d5da80c9737b1b04801cce4e6744d9efefc4c67b2270f9817a5` |
+| `oplus-services.jar` SHA-256（2026111609 前启用时校验，现已不校验） | `56a8ae52c2562d5da80c9737b1b04801cce4e6744d9efefc4c67b2270f9817a5` |
 | `oplus-framework.jar` SHA-256 | `d6da8dd5cb56b780a98e1ab26c7284a974295eee0b8ad0107765c4949a62a36f` |
+
+**2026111609 起不再锁死这一版固件**（真机反馈：系统小版本更新后框架 jar 与构建指纹都变了，开启时报「固件不匹配」，已开启的也不再接收长按广播，小布入口又被关着，长按没有反应）。现在：机型 PMA110 且 Android 大版本（SDK 37）不变即可；启用前在 `oplus-services.jar`、`services.jar` 的 `classes*.dex` 里查长按广播名 `oppo.intent.action.power.longpress`，读得到代码却找不到才拒绝，代码被预编译剥离读不到时不据此拒绝；接收广播和「已配置」判断不再比对构建指纹。配置后仍需实际长按确认，随时可以恢复原配置。
 
 关键方法为 `SinglePowerKeyMonitor.OplusPowerKeyRule.onLongPress`、`PhoneWindowManagerExtImpl.sendBroadcastByCustomizeKey/sendSpeechMessage/startSpeech`，以及 `OplusDevicePolicyManagerService.getData/setData/removeData/checkPermission`。长按广播在厂商后续检查前发送，因此 ETA 也检查上述限制；不声称覆盖所有 OEM 专用按键模式。静态分析确认该路线存在，不能代替手机实际事件投递、Root 实现和 UI 唤起验证。
 
