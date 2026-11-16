@@ -1859,4 +1859,9 @@
   <string name="eta_turn_thinking_label">思考</string>
   <string name="eta_copy_all">複製全部</string>
   <string name="eta_copy_answer_only">只複製回答</string>
+  <string name="eta_turn_process">過程</string>
+  <string name="eta_turn_duration_min_sec">%1$d 分 %2$d 秒</string>
+  <string name="eta_turn_duration_sec">%1$d 秒</string>
+  <string name="appearance_fold_process">過程收成一行</string>
+  <string name="appearance_fold_process_summary">回覆完成後，思考和步驟收成一行，點一下展開</string>
 </resources>

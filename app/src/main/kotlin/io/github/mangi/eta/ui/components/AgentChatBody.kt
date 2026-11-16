@@ -554,14 +554,26 @@ internal fun AgentConversationMessages(
 ) {
     // 上一版条目只作复用比对，不参与组合观察。
     val previousTimelineEntries = remember { arrayOf(emptyList<AgentTimelineEntry>()) }
-    val timelineEntries = remember(visibleMessages) {
+    val rawTimelineEntries = remember(visibleMessages) {
         visibleMessages.toTimelineEntries(previous = previousTimelineEntries[0])
     }
-    SideEffect { previousTimelineEntries[0] = timelineEntries }
+    SideEffect { previousTimelineEntries[0] = rawTimelineEntries }
+    // 09 第二期 2.1：已完成的回合，最终回答之前的思考与步骤收成一行（外观设置可关）。
+    // 下面的滚动定位、历史翻页、列表条目都用折叠后的同一个列表，条目 key 保持稳定。
+    val foldProcess = io.github.mangi.eta.ui.app.LocalAppearanceSettings.current.foldFinishedProcess && !assistantOverlay
+    var expandedTurns by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(emptySet<String>()) }
+    val previousFolded = remember { arrayOf(emptyList<AgentTimelineEntry>()) }
+    val timelineEntries = remember(rawTimelineEntries, isStreaming, expandedTurns, foldProcess) {
+        if (!foldProcess) rawTimelineEntries
+        else foldFinishedTurns(rawTimelineEntries, latestTurnRunning = isStreaming, expandedKeys = expandedTurns, previous = previousFolded[0])
+    }
+    SideEffect { previousFolded[0] = timelineEntries }
     // 新发出的消息（以及紧随其后的回复开头）从下方升起；首屏和历史消息不动。
     val seenTimelineKeys = remember { HashSet<Any>() }
     val freshTimelineKeys: Set<Any> = if (seenTimelineKeys.isEmpty()) emptySet()
-        else timelineEntries.takeLast(2).map<AgentTimelineEntry, Any> { it.key }.filterNotTo(HashSet()) { it in seenTimelineKeys }
+        // 回复完成时出现的过程摘要行替换的是原地的过程，不算新消息，不升起。
+        else timelineEntries.takeLast(2).filterNot { it is AgentTimelineEntry.TurnProcess }
+            .map<AgentTimelineEntry, Any> { it.key }.filterNotTo(HashSet()) { it in seenTimelineKeys }
     SideEffect { timelineEntries.forEach { seenTimelineKeys += it.key } }
     val activeWorkProcessKey = if (isStreaming) {
         (timelineEntries.lastOrNull() as? AgentTimelineEntry.WorkProcess)?.key
@@ -919,6 +931,13 @@ internal fun AgentConversationMessages(
                         )
                     }
 
+                    is AgentTimelineEntry.TurnProcess -> TurnProcessRow(
+                        summary = entry.summary,
+                        expanded = entry.expanded,
+                        onClick = { expandedTurns = if (entry.expanded) expandedTurns - entry.key else expandedTurns + entry.key },
+                        modifier = itemModifier,
+                    )
+
                     is AgentTimelineEntry.WorkProcess -> {
                         entry.messages.forEach { message ->
                             if (message is ThinkingMessageUi && message.isStreaming) {
@@ -1072,6 +1091,13 @@ internal sealed interface AgentTimelineEntry {
         override val key: String,
         val messages: List<AgentChatMessageUi>,
     ) : AgentTimelineEntry
+
+    /** 已完成一轮的过程摘要行（[foldFinishedTurns]）。 */
+    data class TurnProcess(
+        override val key: String,
+        val summary: TurnProcessSummary,
+        val expanded: Boolean,
+    ) : AgentTimelineEntry
 }
 
 /**
@@ -1115,6 +1141,7 @@ internal fun List<AgentChatMessageUi>.toTimelineEntries(
 
 private fun AgentTimelineEntry.contentType(): Any = when (this) {
     is AgentTimelineEntry.WorkProcess -> AgentTimelineEntry.WorkProcess::class
+    is AgentTimelineEntry.TurnProcess -> AgentTimelineEntry.TurnProcess::class
     is AgentTimelineEntry.Message -> message::class
 }
 

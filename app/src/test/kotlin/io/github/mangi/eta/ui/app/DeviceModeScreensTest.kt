@@ -5,6 +5,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.background
+import androidx.compose.ui.semantics.getOrNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -51,6 +52,22 @@ class DeviceModeScreensTest {
         DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展",
             models = models.copy(queuedModel = models.providerGroups.single().models.last()), streaming = true)
     })
+
+    /** 09 第二期 2.1：完成的一轮，思考和步骤收成一行；点一下展开。 */
+    @Test fun processFolded() {
+        check("home-fold-light", DeviceModeScreens.capture("home-fold-light") {
+            DeviceModeScreens.Home(DeviceModeScreens.processMessages, title = "修复登录校验")
+        })
+        check("home-fold-expanded-light", DeviceModeScreens.capture("home-fold-expanded-light", act = { panel ->
+            val row = panel.nodes().first { node ->
+                node.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text)
+                    ?.any { it.text.startsWith("过程") || it.text.startsWith("Process") } == true
+            }
+            panel.click(row)
+        }) {
+            DeviceModeScreens.Home(DeviceModeScreens.processMessages, title = "修复登录校验")
+        })
+    }
 
     /** 电脑会话页与首页统一：顶部玻璃控件浮在消息上，没有实底顶栏。 */
     @Test fun desktopChat() = variants("desktop-chat") { DeviceModeScreens.DesktopChat() }

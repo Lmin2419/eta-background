@@ -192,6 +192,7 @@ internal object SettingsDataStore {
     private val APPEARANCE_INTERFACE_SCALE = floatPreferencesKey("appearance_interface_scale")
     private val APPEARANCE_GLASS_STRENGTH = stringPreferencesKey("appearance_glass_strength")
     private val APPEARANCE_SHOW_TURN_STATS = booleanPreferencesKey("appearance_show_turn_stats")
+    private val APPEARANCE_FOLD_PROCESS = booleanPreferencesKey("appearance_fold_finished_process")
     private const val SELECTED_MODEL_BY_PROVIDER_PREFIX = "selected_model_id_by_provider."
 
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = STORE_NAME)
@@ -383,6 +384,7 @@ internal object SettingsDataStore {
             interfaceScale = this[APPEARANCE_INTERFACE_SCALE] ?: 1f,
             glassStrength = io.github.mangi.eta.data.model.AppearanceGlassStrength.fromPersistedValue(this[APPEARANCE_GLASS_STRENGTH]),
             showTurnStats = this[APPEARANCE_SHOW_TURN_STATS] ?: true,
+            foldFinishedProcess = this[APPEARANCE_FOLD_PROCESS] ?: true,
             renderDiagnosticsEnabled = this[APPEARANCE_RENDER_DIAGNOSTICS] ?: false,
         ).normalized(),
     )
@@ -402,6 +404,7 @@ internal object SettingsDataStore {
         this[APPEARANCE_INTERFACE_SCALE] = settings.interfaceScale
         this[APPEARANCE_GLASS_STRENGTH] = settings.glassStrength.persistedValue
         this[APPEARANCE_SHOW_TURN_STATS] = settings.showTurnStats
+        this[APPEARANCE_FOLD_PROCESS] = settings.foldFinishedProcess
         this[APPEARANCE_RENDER_DIAGNOSTICS] = settings.renderDiagnosticsEnabled
     }
 }

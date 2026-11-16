@@ -1987,4 +1987,9 @@
   <string name="eta_turn_thinking_label">Thinking</string>
   <string name="eta_copy_all">Copy all</string>
   <string name="eta_copy_answer_only">Copy answer only</string>
+  <string name="eta_turn_process">Process</string>
+  <string name="eta_turn_duration_min_sec">%1$dm %2$ds</string>
+  <string name="eta_turn_duration_sec">%1$ds</string>
+  <string name="appearance_fold_process">Fold finished process</string>
+  <string name="appearance_fold_process_summary">After a reply finishes, its thinking and steps collapse into one line; tap to expand</string>
 </resources>

@@ -217,6 +217,57 @@ private fun AgentWorkHeader(
     }
 }
 
+/**
+ * 已完成一轮的过程摘要行（09 第二期 2.1）：「过程 · 思考 2 次 · 12 步 · 2 分 14 秒」；有失败时「过程」后面先写「1 个失败」，用警示色。
+ * 样式与「已完成 · N 步」同一套（小号灰色图标、淡色小字、30dp 高），点一下展开或收起这一轮的全部过程。
+ */
+@Composable
+internal fun TurnProcessRow(summary: TurnProcessSummary, expanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val parts = buildList {
+        if (summary.thinking > 0) add(pluralStringResource(R.plurals.work_summary_thinking, summary.thinking, summary.thinking))
+        if (summary.steps > 0) add(pluralStringResource(R.plurals.work_summary_steps, summary.steps, summary.steps))
+        summary.seconds?.takeIf { it > 0 }?.let { add(turnDurationText(it)) }
+    }
+    val failed = summary.failed > 0
+    val failedText = if (failed) pluralStringResource(R.plurals.work_summary_failed, summary.failed, summary.failed) else ""
+    val danger = EtaTheme.colors.danger
+    // 失败数紧跟「过程」放在前面：大字体或窄屏一行放不下时，被省略的是用时而不是失败。
+    val label = stringResource(R.string.eta_turn_process)
+    val text = androidx.compose.ui.text.buildAnnotatedString {
+        append(label)
+        if (failed) {
+            append(" · ")
+            pushStyle(androidx.compose.ui.text.SpanStyle(color = danger))
+            append(failedText)
+            pop()
+        }
+        parts.forEach { append(" · "); append(it) }
+    }
+    Row(
+        // 与 AgentWorkProcess 同样的左右留白，图标和「已完成 · N 步」对齐。
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp).heightIn(min = WorkHeaderHeight)
+            .clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(modifier = Modifier.width(WorkGutterWidth), contentAlignment = Alignment.Center) {
+            Icon(if (failed) Icons.Outlined.ErrorOutline else Icons.Outlined.Checklist, contentDescription = null,
+                modifier = Modifier.size(14.5.dp), tint = if (failed) EtaTheme.colors.danger else EtaTheme.colors.textTertiary)
+        }
+        Spacer(modifier = Modifier.width(WorkGutterGap))
+        Text(text, style = EtaTheme.type.footnote.copy(fontSize = 13.5.sp),
+            color = EtaTheme.colors.textTertiary,
+            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+        ExpandChevron(expanded = expanded,
+            contentDescription = stringResource(if (expanded) R.string.work_collapse else R.string.work_expand),
+            modifier = Modifier.padding(start = 4.dp, end = 8.dp))
+    }
+}
+
+@Composable
+private fun turnDurationText(seconds: Int): String =
+    if (seconds >= 60) stringResource(R.string.eta_turn_duration_min_sec, seconds / 60, seconds % 60)
+    else stringResource(R.string.eta_turn_duration_sec, seconds)
+
 /** 一句话结果：「已完成 · 3 步」；有失败时「3 步 · 1 个失败」。 */
 @Composable
 private fun workSummaryText(summary: AgentWorkSummary): String {

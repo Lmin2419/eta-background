@@ -211,6 +211,15 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit) {
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
+                    title = stringResource(R.string.appearance_fold_process),
+                    summary = stringResource(R.string.appearance_fold_process_summary),
+                    checked = appearance.foldFinishedProcess,
+                    onCheckedChange = { enabled ->
+                        update { current -> current.copy(foldFinishedProcess = enabled) }
+                    },
+                )
+                EtaPreferenceDivider(hasLeading = false)
+                EtaSwitchPreference(
                     title = stringResource(R.string.appearance_task_completion_alerts),
                     summary = stringResource(R.string.appearance_task_completion_alerts_summary),
                     checked = appearance.taskCompletionAlertsEnabled,

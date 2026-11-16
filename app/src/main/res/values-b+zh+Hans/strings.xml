@@ -1963,4 +1963,9 @@
   <string name="eta_turn_thinking_label">思考</string>
   <string name="eta_copy_all">复制全部</string>
   <string name="eta_copy_answer_only">只复制回答</string>
+  <string name="eta_turn_process">过程</string>
+  <string name="eta_turn_duration_min_sec">%1$d 分 %2$d 秒</string>
+  <string name="eta_turn_duration_sec">%1$d 秒</string>
+  <string name="appearance_fold_process">过程收成一行</string>
+  <string name="appearance_fold_process_summary">回复完成后，思考和步骤收成一行，点一下展开</string>
 </resources>

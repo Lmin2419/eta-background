@@ -60,7 +60,7 @@ internal object DeviceModeScreens {
      * 设置类页面只能这样截；页面内容（行、开关、卡片）仍是真机那套。
      */
     fun capture(name: String, dark: Boolean = false, fontScale: Float = 1f, deviceMode: Boolean = true,
-        content: @Composable () -> Unit): Shot {
+        act: (Stage3TestPanel) -> Unit = {}, content: @Composable () -> Unit): Shot {
         val previous = EtaCouiSupport.shaders
         EtaCouiSupport.shaders = deviceMode
         System.setProperty("robolectric.pixelCopyRenderMode", "hardware")
@@ -68,6 +68,8 @@ internal object DeviceModeScreens {
         val panel = Stage3TestPanel(controller.get(), dark = dark, fontScale = fontScale, blur = false, content = content)
         try {
             panel.advance(45)
+            act(panel)
+            panel.advance(20)
             val window = controller.get().window
             val decor = window.decorView
             val bitmap = Bitmap.createBitmap(decor.width, decor.height, Bitmap.Config.ARGB_8888)
@@ -127,6 +129,19 @@ internal object DeviceModeScreens {
         // 09 第一期 1.4：「复核报错再试」只在用过工具的回合出现。
         io.github.mangi.eta.ui.model.ToolActivityMessageUi("t1", "run_command", io.github.mangi.eta.ui.model.ToolActivityStatusUi.Failed, "pip install requests"),
         AgentMessageUi("a1", "试了两次都报错：pip 提示 externally-managed-environment，这个环境里暂时无法完成安装。"),
+    )
+
+    /** 用过工具的一轮（09 第二期 2.1）：完成后思考、步骤、中间说明收成一行「过程 · …」。 */
+    val processMessages: List<AgentChatMessageUi> = listOf(
+        UserMessageUi("u1", "登录页输入带空格的密码总是提示格式错误，帮我修一下。"),
+        io.github.mangi.eta.ui.model.ThinkingMessageUi("k1", "先看一下登录页的报错：密码框校验把空格也算成了字符。", isStreaming = false, elapsedSeconds = 18),
+        io.github.mangi.eta.ui.model.ToolActivityMessageUi("t1", "read_file", io.github.mangi.eta.ui.model.ToolActivityStatusUi.Success, "LoginValidator.kt"),
+        io.github.mangi.eta.ui.model.ToolActivityMessageUi("t2", "edit_file", io.github.mangi.eta.ui.model.ToolActivityStatusUi.Success, "LoginValidator.kt"),
+        AgentMessageUi("n1", "改好了校验函数，接着跑一遍测试。"),
+        io.github.mangi.eta.ui.model.ThinkingMessageUi("k2", "确认没有别的地方依赖原来的行为。", isStreaming = false, elapsedSeconds = 116),
+        io.github.mangi.eta.ui.model.ToolActivityMessageUi("t3", "run_command", io.github.mangi.eta.ui.model.ToolActivityStatusUi.Failed, "./gradlew test"),
+        io.github.mangi.eta.ui.model.ToolActivityMessageUi("t4", "run_command", io.github.mangi.eta.ui.model.ToolActivityStatusUi.Success, "./gradlew test --offline"),
+        AgentMessageUi("a1", "修好了：密码去掉首尾空格后再校验，中间的空格照常算字符。测试 12 项全部通过（第一次因为没联网失败，离线重跑通过）。"),
     )
 
     val sampleConversations: List<ConversationSummaryUi> = listOf(
