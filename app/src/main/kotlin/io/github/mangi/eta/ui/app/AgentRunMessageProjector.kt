@@ -31,6 +31,7 @@ internal class AgentRunMessageProjector(
         runId: String,
         event: AgentEvent,
         messages: List<AgentChatMessageUi>,
+        replayEpochMs: Long? = null,
     ): List<AgentChatMessageUi> = when (event) {
         is AgentEvent.RunPerformance -> {
             val notice = SystemNoticeMessageUi(
@@ -50,7 +51,8 @@ internal class AgentRunMessageProjector(
             val settled = finalizeText(runId, finalizeThinking(runId, messages))
             if (settled.any { it.id == notice.id }) settled else settled + notice
         }
-        is AgentEvent.AssistantBlockStart -> startAssistantBlock(runId, event, messages)
+        is AgentEvent.AssistantBlockStart ->
+            startAssistantBlock(runId, event, messages, replayEpochMs = replayEpochMs)
         is AgentEvent.AssistantBlockDelta -> when (event.kind) {
             AgentEvent.AssistantBlockKind.TEXT ->
                 appendTextDelta(runId, event.round, event.index, event.delta, messages)
@@ -62,7 +64,14 @@ internal class AgentRunMessageProjector(
             AgentEvent.AssistantBlockKind.TEXT ->
                 finalizeTextBlock(runId, event.round, event.index, event.replacementContent, messages)
             AgentEvent.AssistantBlockKind.THINKING ->
-                finalizeThinkingBlock(runId, event.round, event.index, event.replacementContent, messages)
+                finalizeThinkingBlock(
+                    runId = runId,
+                    round = event.round,
+                    index = event.index,
+                    replacementContent = event.replacementContent,
+                    messages = messages,
+                    elapsedMs = event.elapsedMs,
+                )
             AgentEvent.AssistantBlockKind.TOOL_CALL -> messages
         }
         is AgentEvent.SearchSuggestions -> attachSearchSuggestions(runId, event, messages)
@@ -210,13 +219,23 @@ internal class AgentRunMessageProjector(
         runId: String,
         event: AgentEvent.AssistantBlockStart,
         messages: List<AgentChatMessageUi>,
-    ): List<AgentChatMessageUi> = transitionVisibleBlock(
-        runId = runId,
-        round = event.round,
-        kind = event.kind,
-        index = event.index,
-        messages = messages,
-    )
+        replayEpochMs: Long? = null,
+    ): List<AgentChatMessageUi> {
+        if (event.kind == AgentEvent.AssistantBlockKind.THINKING) {
+            recordThinkingStart(
+                thinkingId = thinkingMessageId(runId, event.round, event.index),
+                startedAtEpochMs = event.startedAtEpochMs,
+                replayEpochMs = replayEpochMs,
+            )
+        }
+        return transitionVisibleBlock(
+            runId = runId,
+            round = event.round,
+            kind = event.kind,
+            index = event.index,
+            messages = messages,
+        )
+    }
 
     fun appendTextDelta(
         runId: String,
@@ -322,20 +341,24 @@ internal class AgentRunMessageProjector(
                 id = thinkingId,
                 content = content,
                 isStreaming = false,
-                elapsedSeconds = elapsedSeconds(thinkingId),
+                elapsedSeconds = 0,
                 collapsed = true,
             )
         )
     }
 
-    fun finalizeThinking(runId: String, messages: List<AgentChatMessageUi>): List<AgentChatMessageUi> =
-        messages.map { message ->
-            if (message is ThinkingMessageUi && message.id.startsWith("$runId-thinking-")) {
+    fun finalizeThinking(runId: String, messages: List<AgentChatMessageUi>): List<AgentChatMessageUi> {
+        if (messages.none { it is ThinkingMessageUi && it.isStreaming && it.id.startsWith("$runId-thinking-") }) {
+            return messages
+        }
+        return messages.map { message ->
+            if (message is ThinkingMessageUi && message.isStreaming && message.id.startsWith("$runId-thinking-")) {
                 message.finished()
             } else {
                 message
             }
         }
+    }
 
     /** 终态不依赖各块结束事件全部到齐；缺少工具结果时只能标为未知，不能推断执行成功。 */
     fun finalizeRun(runId: String, messages: List<AgentChatMessageUi>): List<AgentChatMessageUi> =
@@ -356,8 +379,11 @@ internal class AgentRunMessageProjector(
         round: Int,
         messages: List<AgentChatMessageUi>,
     ): List<AgentChatMessageUi> {
+        if (messages.none { it is ThinkingMessageUi && it.isStreaming && isThinkingMessageForRound(it.id, runId, round) }) {
+            return messages
+        }
         return messages.map { message ->
-            if (message is ThinkingMessageUi && isThinkingMessageForRound(message.id, runId, round)) {
+            if (message is ThinkingMessageUi && message.isStreaming && isThinkingMessageForRound(message.id, runId, round)) {
                 message.finished()
             } else {
                 message
@@ -371,15 +397,33 @@ internal class AgentRunMessageProjector(
         index: Int,
         replacementContent: String?,
         messages: List<AgentChatMessageUi>,
+        elapsedMs: Long? = null,
     ): List<AgentChatMessageUi> {
         val thinkingId = thinkingMessageId(runId, round, index)
-        return messages.map { message ->
+        var changed = false
+        val next = messages.map { message ->
             if (message is ThinkingMessageUi && message.id == thinkingId) {
-                message.finished(replacementContent)
+                val updated = if (message.isStreaming) {
+                    message.finished(replacementContent, elapsedMs)
+                } else {
+                    thinkingStartedAt.remove(thinkingId)
+                    val nextContent = replacementContent ?: message.content
+                    val nextElapsed = elapsedMs
+                        ?.let { (it / 1000L).toInt().coerceAtLeast(0) }
+                        ?: message.elapsedSeconds
+                    if (nextContent != message.content || nextElapsed != message.elapsedSeconds) {
+                        message.copy(content = nextContent, elapsedSeconds = nextElapsed)
+                    } else {
+                        message
+                    }
+                }
+                if (updated !== message) changed = true
+                updated
             } else {
                 message
             }
         }
+        return if (changed) next else messages
     }
 
     fun finalizeText(
@@ -575,21 +619,43 @@ internal class AgentRunMessageProjector(
 
     /**
      * 思考块结束：用时在结束那一刻定格。已经结束的块再被收尾（下一轮开始、整个运行结束都会对全部思考块收尾）
-     * 只更新正文，不再按「现在 − 开始」重算——以前会重算，一次运行里越早的思考块显示的用时越长，
-     * 真机上每轮十来秒的思考显示成「用时 148 秒」；也不再把用户展开的块重新收起。
+     * 只更新正文和运行时给的权威用时，不再按「现在 − 开始」重算，也不再把用户展开的块重新收起
+     * （2026111623：越早的思考块显示的用时越长）。运行时带了权威用时（上游 e09b07a9，回放时也准）就用它。
      */
-    private fun ThinkingMessageUi.finished(authoritativeContent: String? = null): ThinkingMessageUi {
+    private fun ThinkingMessageUi.finished(
+        authoritativeContent: String? = null,
+        authoritativeElapsedMs: Long? = null,
+    ): ThinkingMessageUi {
+        val authoritativeSeconds = authoritativeElapsedMs?.let { (it / 1000L).toInt().coerceAtLeast(0) }
         if (!isStreaming) {
-            return if (authoritativeContent != null && authoritativeContent != content) copy(content = authoritativeContent) else this
+            val text = authoritativeContent ?: content
+            val seconds = authoritativeSeconds ?: elapsedSeconds
+            return if (text == content && seconds == elapsedSeconds) this else copy(content = text, elapsedSeconds = seconds)
         }
+        val startedAt = thinkingStartedAt.remove(id)
+        val settledElapsedSeconds = authoritativeSeconds
+            ?: startedAt?.let { ((nowElapsedRealtime() - it) / 1000L).toInt().coerceAtLeast(0) }
+            ?: elapsedSeconds
         return copy(
             content = authoritativeContent ?: content,
             isStreaming = false,
-            elapsedSeconds = thinkingStartedAt[id]?.let { startedAt ->
-                ((nowElapsedRealtime() - startedAt) / 1000).toInt().coerceAtLeast(0)
-            } ?: elapsedSeconds,
+            elapsedSeconds = settledElapsedSeconds,
             collapsed = true,
         )
+    }
+
+    private fun recordThinkingStart(
+        thinkingId: String,
+        startedAtEpochMs: Long?,
+        replayEpochMs: Long?,
+    ) {
+        val nowElapsed = nowElapsedRealtime()
+        val startedElapsed = if (replayEpochMs != null && startedAtEpochMs != null) {
+            nowElapsed - (replayEpochMs - startedAtEpochMs).coerceAtLeast(0L)
+        } else {
+            nowElapsed
+        }
+        thinkingStartedAt.putIfAbsent(thinkingId, startedElapsed)
     }
 
     private fun elapsedSeconds(thinkingId: String): Int {

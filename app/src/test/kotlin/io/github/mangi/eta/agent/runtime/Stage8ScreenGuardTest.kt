@@ -24,7 +24,7 @@ class Stage8ScreenGuardTest {
         val gui = GuiControlCoordinator()
         val control = AgentRunController()
         val run = gui.openRun("screen-guard", control)
-        val executor = AgentRuntimeRunExecutor(app, { AgentRuntimePolicy.Permissions(false, false, thinking = true) },
+        val executor = AgentRuntimeRunExecutor(app, { AgentRuntimePolicy.Permissions(false, false) },
             { it }, gui, { _, _ -> }, { _, _, _ -> })
         // Invoke the real beforeToolExecution callback without starting a network model run.
         // Select by signature, not the compiler's unstable lambda number. This leaves the

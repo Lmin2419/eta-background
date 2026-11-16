@@ -119,6 +119,7 @@ internal sealed interface AgentEvent {
         val index: Int,
         val blockId: String? = null,
         val name: String? = null,
+        val startedAtEpochMs: Long? = null,
     ) : AgentEvent {
         override fun toLogLine(): String =
             "assistant_block_start round=$round, kind=$kind, index=$index, " +
@@ -144,6 +145,7 @@ internal sealed interface AgentEvent {
         val name: String? = null,
         val contentChars: Int,
         val replacementContent: String? = null,
+        val elapsedMs: Long? = null,
     ) : AgentEvent {
         override fun toLogLine(): String =
             "assistant_block_end round=$round, kind=$kind, index=$index, " +

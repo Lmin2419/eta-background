@@ -687,7 +687,7 @@ internal class AgentAppState(
 
         if (!runStore.register(runId, conversationId, observed = false)) return false
         updateConversation(conversationId, existing.copy(isStreaming = true, isCompacting = checkpoint.operation == AgentRuntimeWire.OP_COMPACT))
-        restoreRunEvents(runId, checkpoint.events)
+        restoreRunEvents(runId, checkpoint.events, replayEpochMs = checkpoint.updatedAt)
         flushPendingRunDelta(runId)
         updateRunTrace(runId) { messages ->
             val finalizedThinking = runMessageProjector.finalizeThinking(runId, messages)
@@ -742,7 +742,7 @@ internal class AgentAppState(
             val client = AgentRuntimeClient(appContext, AndroidAgentLogger)
             val outcome = client.attachRun(
                 runId = runId,
-                onReplay = { events -> restoreRunEvents(runId, events) },
+                onReplay = { events -> restoreRunEvents(runId, events, replayEpochMs = System.currentTimeMillis()) },
                 onEvent = { event -> enqueueRunEvent(runId, event) },
             )
             when (outcome) {
@@ -2537,7 +2537,11 @@ internal class AgentAppState(
     private fun isReplyRewrite(runId: String): Boolean =
         conversationsById[conversationIdForRun(runId)]?.roleplayMessages?.pendingRewrites?.containsKey(runId) == true
 
-    private fun restoreRunEvents(runId: String, events: List<AgentEvent>) {
+    private fun restoreRunEvents(
+        runId: String,
+        events: List<AgentEvent>,
+        replayEpochMs: Long? = null,
+    ) {
         if (isReplyRewrite(runId)) return
         // 恢复是完整快照：先清除同一 run 的旧投影，再一次发布，避免历史增量重复追加
         // 或中途的 Running 状态使已结束的思考重新展开、播放动画。
@@ -2551,7 +2555,9 @@ internal class AgentAppState(
                         .mapTo(mutableSetOf()) { it.index },
                 )
             }
-            events.forEach { event -> applyRunEvent(runId, event, persistSupplement = false) }
+            events.forEach { event ->
+                applyRunEvent(runId, event, persistSupplement = false, replayEpochMs = replayEpochMs)
+            }
         }
     }
 
@@ -2567,6 +2573,7 @@ internal class AgentAppState(
         runId: String,
         event: AgentEvent,
         persistSupplement: Boolean = true,
+        replayEpochMs: Long? = null,
     ) {
         if (isReplyRewrite(runId)) {
             if (event is AgentEvent.RunStarted && runStore.isStopRequested(runId)) scope.launch(Dispatchers.IO) {
@@ -2588,7 +2595,7 @@ internal class AgentAppState(
             is AgentEvent.AssistantBlockDelta,
             is AgentEvent.SubagentProgress,
             -> updateMessages(runId, updateTimestamp = false) { messages ->
-                runMessageProjector.applyEvent(runId, event, messages)
+                runMessageProjector.applyEvent(runId, event, messages, replayEpochMs = replayEpochMs)
             }
             // 后台压缩开始/作废只改输入胶囊旁的小点，不锁输入、不进消息流。
             is AgentEvent.ContextCompaction -> {
@@ -2598,10 +2605,10 @@ internal class AgentAppState(
                     else -> setBackgroundCompacting(runId, false)
                 }
                 if (!AgentEvent.ContextCompaction.isBackgroundPhase(event.phase)) {
-                    updateRunTrace(runId) { messages -> runMessageProjector.applyEvent(runId, event, messages) }
+                    updateRunTrace(runId) { messages -> runMessageProjector.applyEvent(runId, event, messages, replayEpochMs = replayEpochMs) }
                 }
             }
-            else -> updateRunTrace(runId) { messages -> runMessageProjector.applyEvent(runId, event, messages) }
+            else -> updateRunTrace(runId) { messages -> runMessageProjector.applyEvent(runId, event, messages, replayEpochMs = replayEpochMs) }
         }
     }
 
