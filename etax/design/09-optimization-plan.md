@@ -3,22 +3,32 @@
 这份方案有两个读者：你（拍板要做哪些）和接手执行的模型（照着做）。每一项都写了现状、做法、验收和容易踩的坑，
 文件名和函数名都是 2026111603 这一版核实过的。标了「先核实」的地方，动手前必须先用 grep 确认。
 
-## 0. 判断：现在该优化什么
+## 0. 方向和总表
 
-界面骨架已经统一了：对话、电脑会话、终端是「浮在内容上的玻璃控件」，其余页面都是 COUI 大标题页，没有第三种。
-性能也有余量：OPPO PMA110（120Hz）开模糊每帧 5.8ms、GPU 4.0ms，帧预算是 8.3ms。所以下一步不该再加视觉效果。
+界面示意和给用户看的说明在方案页面：https://claude.ai/artifact/QMhpkDbLgpfQWXYRbKpSnx 。这份文件是执行细则。
 
-剩下的问题都在「闭环」上：
+三个方向：
+1. **首页是工作台**：打开应用先看到正在跑的、刚完成的、可以接着做的。
+2. **读结果，不读过程**：回复完成后，思考和步骤收成一行。
+3. **省着用**：模型和思考强度一键切；答得不好只把这一条换个模型重答；用了多少一眼看到。
 
-| 方面 | 问题 | 对应条目 |
-| --- | --- | --- |
-| 使用逻辑 | 别的对话、电脑会话完成时，提示条只停 6 秒，错过就没有任何痕迹（停在首页时连系统通知也不发） | 1.1 |
-| 页面 | 任务胶囊里有电脑会话，点「查看全部」进任务页却没有 | 1.2 |
-| 页面 | 终端只能从「侧栏 → 设置」里进，三步 | 1.5 |
-| 功能 | 选择文字要拖很长的选择柄；一次只能操作一条消息 | 1.3、2.1 |
-| 使用逻辑 | 「复核报错再试」靠关键词判断，普通聊天里说到「失败」也会出现 | 1.4 |
-| 使用逻辑 | 侧栏搜到对话内容，点开却停在底部，要自己翻 | 2.2 |
-| 工程 | 本机有 5 个固定失败的测试、一批已经走不到的旧代码，接手的模型容易被带偏 | 第零期 |
+性能有余量（OPPO PMA110、120Hz：开模糊每帧 5.8ms、GPU 4.0ms，帧预算 8.3ms），所以不需要为性能做改动。
+
+| 编号 | 内容 | 期 | 条目 |
+| --- | --- | --- | --- |
+| U2 | 一套状态点：运行中、等你处理、完成未读、出错未读 | 一 | 1.1、1.6 |
+| P3 | 任务页并入电脑会话 | 一 | 1.2 |
+| L2 | 选择文字一键复制 | 一 | 1.3 |
+| L3 | 「复核报错再试」只在用过工具的回合出现 | 一 | 1.4 |
+| P2 | 侧栏一行小格子，加终端 | 一 | 1.5、1.6 |
+| U1 | 整轮过程收成一行 | 二 | 2.1 |
+| L1 | 标题胶囊是「这个对话」的总入口 | 二 | 2.2 |
+| F1 | 模型预设 | 三 | 3.1 |
+| F2 | 换模型重答 | 三 | 3.2 |
+| P1 | 新对话页变成工作台 | 四 | 4.1 |
+| F4 | 消息多选 | 五 | 5.1 |
+| L4 | 搜索结果直达 | 五 | 5.2 |
+| F3 | 用量页 | 六 | 6.1 |
 
 ## 1. 不要做的事
 
@@ -63,7 +73,7 @@
   选择文字面板的内容（直接渲染 `TurnSelectionContent`，不经过半窗）。各出浅色、深色。
 - **验收**：CI 产物 `device-mode-screens` 里多出这几张，肉眼看过没有空白和裁切。
 
-## 3. 第一期 ·「不丢」（一个版本）
+## 3. 第一期 ·「闭环」（一个版本）
 
 ### 1.1 完成了一定看得到：未读圆点
 
@@ -110,14 +120,91 @@
   回调沿着 `workspace` 那个参数对象加一个字段，由 `AgentAppShell` 已有的 `onOpenTerminal` 传进来。
 - **验收**：侧栏截图（浅色、深色、200% 字体）格子排列整齐；有电脑、Kimi 格子时最多 6 个，先核实格子是怎么换行的。
 
-## 4. 第二期 ·「顺手」（每项一个版本，可以只做 2.1）
+### 1.6 第一期的两处补充
 
-### 2.1 消息多选：批量复制、分享、删除
+- **状态点分四种**（接 1.1）：运行中用已有的 `StatusRing(TaskVisualStatus.Running)`；电脑会话有待审批或待回答（`DesktopBridge.approvals`、`DesktopBridge.questions` 里有这个会话）时是橙点；
+  完成未读是强调色点；出错未读是红点（`FinishedUnseen` 里要同时记下是否出错）。左上角历史按钮只显示一个汇总的点，优先级是橙、红、强调色。颜色用 `EtaTheme.colors` 里已有的注意色、危险色、强调色。
+- **格子超过 4 个改横滑**（接 1.5）：`PaneTileRow` 现在是等宽的方块排成一行。格子数不超过 4 时不变；超过 4 时改成 `Row(Modifier.horizontalScroll(...))`，每格固定 72dp 宽。
+  顺序改为：任务、电脑、终端、浏览器、角色、Kimi。整行包一层 `CappedFontScale`，200% 字体时标签不再被截断。
+  注意：侧栏自己能横向拖动收起，格子行可横滑后，在格子上左滑会先滚格子，这和代码块的行为一致，可以接受；参考 `SidePaneGestureTest` 加一条测试确认侧栏别处仍能拖动收起。
+
+## 4. 第二期 ·「读起来轻」（两项各一个版本）
+
+### 2.1 整轮过程收成一行（U1）
+
+- **现状**：`List<AgentChatMessageUi>.toTimelineEntries()`（`AgentChatBody.kt`）把连续的思考、工具步骤合成 `AgentTimelineEntry.WorkProcess`，中间的说明文字和最终回答各是一条 `AgentTimelineEntry.Message`。
+  所以一轮回答里「思考 / 已完成 · N 步 / 说明」交替出现，最终回答排在最后。
+- **做法**：
+  1. `AgentTimelineEntry` 加一种 `TurnProcess(key, summary, expanded)`，只代表那一行摘要。
+  2. 新文件 `ui/components/TurnProcessFold.kt`，纯函数 `foldFinishedTurns(entries, latestTurnRunning, expandedKeys): List<AgentTimelineEntry>`：
+     按用户消息把条目分成轮；每一轮找最后一条 `AgentMessageUi`（最终回答）；它前面至少有一个 `WorkProcess` 时，在这一轮最前面放一条 `TurnProcess`，
+     并把「用户消息之后、最终回答之前」的条目去掉（key 在 `expandedKeys` 里时保留这些条目）。key 用 `"turn-" + 这一轮第一条过程条目的 key`。
+     正在进行的最后一轮不折叠；没有最终回答的轮（被停止、出错）不折叠。
+  3. 摘要：思考次数（`ThinkingMessageUi` 个数）、步骤数（`ToolActivityMessageUi` 个数）、失败步数、用时（各 `ThinkingMessageUi.elapsedSeconds` 之和，取不到就不显示）。
+     文字形如「过程 · 思考 2 次 · 12 步 · 2 分 14 秒」，有失败时加「· 1 步失败」并用危险色。
+  4. 在调用 `toTimelineEntries` 之后接上这个函数；展开的 key 集合用 `rememberSaveable` 存在 `AgentConversationMessages` 里。摘要行的样式照 `AgentWorkHeader`（30dp 高、小号灰字），点一下切换展开。
+  5. `AppearanceSettings` 加 `foldFinishedProcess: Boolean = true`，写法照 `showTurnStats`（`SettingsDataStore` 的键、读、写三处，`AppearanceSettingsScreen` 一行开关）。关掉时不调用折叠函数。
+- **注意**：这是全方案里最容易出问题的一项。历史翻页（`ChatHistoryPaging.kt`）按条目的 key 记阅读位置，传给它的必须是折叠之后的同一个列表。
+  动手前把 `AgentConversationMessages` 里所有用到 `timelineEntries` 的地方读一遍。`finalResultMessageIds`、`latestAnswerId`、`turnSegments` 都按消息算，不受影响。
+  `toTimelineEntries` 靠复用条目实例来跳过重组，折叠函数对没变的轮也要返回同一个 `TurnProcess` 实例（按 key 和摘要比较后复用）。
+- **验收**：纯函数单测：一轮里多组过程收成一条；进行中的不折；没有最终回答的不折；展开集合生效；历史前插后 key 不变。
+  `ChatHistoryPagingTest` 仍通过。真机模式截图 `home-fold-light`（收起）和展开各一张。
+
+### 2.2 标题胶囊是「这个对话」的总入口（L1）
+
+- **现状**：`HomeConversationTopBar.kt` 里的 `ModelPopover` 菜单只有模型、自动朗读、管理模型。`HomeConversationTopBar` 的 `onExport` 参数传进来了但没用。重命名、导出要去侧栏长按。
+- **做法**：对话有标题时，菜单在模型之后加一条分隔线和「重命名」「导出」两项（第五期再加「多选消息」）。导出直接用已有的 `onExport`。
+  重命名加一个参数 `onRename`，`AgentAppRoot` 里把 `conversationRenameTarget` 设成当前对话的那条 `ConversationSummaryUi`（已有的改名对话框会弹出）。
+  模型超过 8 个时走的是半窗，同样的两项加在半窗底部。新对话（没有标题）不显示这一段。
+- **验收**：用 `Stage3TestPanel` 打开菜单，点「重命名」「导出」各触发一次回调。
+
+## 5. 第三期 ·「省着用」上（两项各一个版本）
+
+### 3.1 模型预设（F1）
+
+- **做法**：
+  1. 数据：`data class ModelPreset(id, name, modelId, effort: ReasoningEffort)`，整个列表存成一条 JSON 字符串放进 `SettingsDataStore`；新建 `ModelPresetRepository`（读成 Flow、保存整个列表）。JSON 解析失败时当作空列表。
+  2. 应用：`AgentAppState.applyPreset(preset)`：先 `selectModel(preset.modelId)`，再 `updateReasoningEffort(preset.effort)`。顺序不能反，思考强度要按新模型的能力规整。
+     回复进行中时两样都排到下一轮：现有的 `queuedModels` 只记了模型，要同时记下思考强度，在 `applyQueuedModel` 里一起生效。
+  3. 界面：标题胶囊菜单最上面一段列出预设，每项标题是名字，说明是「模型名 · 思考强度」（`EtaMenuItem` 有 `summary` 参数），当前模型和强度都对得上时打勾。
+     这一段最后一项「存为预设…」用 `EtaCouiInputDialog` 问名字，把当前模型和思考强度存进去。预设里的模型已被停用时，这一项置灰并注明「模型不可用」。
+  4. 管理：设置的「模型与对话」一组里加一行「模型预设」，进去是列表，可以改名、删除。页面用 `MiuixScaffoldPage` 和现有的设置行组件。
+- **验收**：仓库单测（存取、坏 JSON）；`presetMatches(当前模型, 当前强度)` 纯函数单测；菜单里点预设触发 `applyPreset`。
+
+### 3.2 换模型重答（F2）
+
+- **现状**：`AgentAppState.regenerateMessage(messageId)` 已有；重新生成会产生多个候选，回答下面能左右切换（`candidateCount`、`selectReplyCandidate`）。
+- **做法**：
+  1. `AgentAppState` 加 `regenerateWithModel(messageId, modelId)`：前置条件和 `regenerateMessage` 相同；先把这个对话绑定的模型改掉
+     （`updateCurrentConversation(homeState.copy(modelId = modelId))`、`refreshConversationModel()`、`persistConversations()`），再调 `regenerateMessage(messageId)`。
+     **不要**调 `selectModel`，它会连全局默认模型一起改。
+  2. 新增 `AgentHomeAction.RegenerateWithModel(messageId, modelId)`，沿着现有 `onRegenerateMessage` 的路径接到 `AgentChatBody` 的新参数 `onRegenerateWithModel`（默认值为空表示不支持）。
+  3. 回答的长按菜单（`ChatMessageItem.kt` 的 `EtaContextMenu`）在「重新生成」下面加「换模型重答」，点了在同一个位置弹第二个菜单列出模型；超过 8 个时用半窗，写法照 `ModelPopover`。
+     模型列表由 `AgentChatBody` 用一个 `CompositionLocal` 提供。电脑会话不支持重新生成，那边不提供，菜单项不出现。
+- **验收**：先看有没有 `AgentAppState` 的现成测试可以照着写；没有就测到回调这一层。手机上：小模型答一次，换大模型重答，回答下面出现「2 / 2」可以切换，设置里的默认模型没变。
+
+## 6. 第四期 ·「工作台」（一个版本）
+
+### 4.1 新对话页变成工作台（P1）
+
+- **现状**：`HomeEmptyState.kt`：爪印、问候语、副标题，输入框上方一排建议胶囊。
+- **做法**：
+  1. `ChatHomeShortcuts` 加字段：`running: List<HomeBackgroundItem>`、`recent: List<ConversationSummaryUi>`、`onOpenConversation`、`onOpenDesktopSession`、`onOpenTasks`。
+     在构造 `ChatHomeShortcuts` 的地方填：`running` 用 0.3 拆出来的那套逻辑（本机未完成的任务加 `desktopRunningSessions`）；`recent` 取未归档、有标题的对话按更新时间取前 3 个。
+     数据从外面传进来而不是在 `HomeEmptyState` 里直接读全局状态，这样测试能注入。
+  2. 布局：`running` 和 `recent` 都为空时保持现在的样子。否则问候语缩成一行（去掉副标题和大爪印），下面依次是「正在进行」（最多 3 条，多了显示「全部任务」）、「接着做」（标题、时间、未读点）。
+     两段都用实色卡片（`EtaTheme.colors.surface`），行高和侧栏会话行一致。建议胶囊仍在输入框上方。角色对话的新对话页不变。
+  3. 这一页不显示顶部的任务胶囊：`HomeConversationTopBar` 加参数 `showBackgroundCapsule`，对话里没有消息时传假。完成提示条照常显示。
+- **验收**：真机模式截图：`home-new`（没有内容，与现在一致）、`home-workbench-light/dark/font200`（注入两条进行中、两条最近）。点各行触发对应回调的测试。
+
+## 7. 第五期 ·「批量与直达」（每项一个版本，可以只做 5.1）
+
+### 5.1 消息多选（F4）：批量复制、分享、删除
 
 - **现状**：长按一条消息出菜单，一次只能操作一条；整段对话只能整体导出。
 - **做法**：
   1. 状态放在 `AgentChatBody`：`Set<String>?`，为空表示不在多选。用一个 `CompositionLocal`（仿照 `LocalRecheckAction`）传给 `ChatMessageItem`。
-  2. 入口：用户消息和回答的长按菜单各加一项「多选」，点了就进入多选并选中这一条。回复进行中不能进入。
+  2. 入口：标题胶囊菜单的「多选消息」，以及用户消息和回答的长按菜单各加一项「多选」，点了就进入多选并选中这一条。回复进行中不能进入。
   3. 多选中：点用户消息或回答切换选中；思考、工具步骤不能单独选。**不改消息布局**：选中的消息铺一层强调色 10% 的圆角底，右上角一个 18dp 对勾。长按菜单和回答下面的按钮此时不响应。
   4. 底部：输入框的位置换成一条玻璃栏（`EtaFloatingSurface`，圆角与输入框相同）：「已选 N 条」、复制、分享、删除、取消。
      复制的格式由纯函数 `selectionPlainText(messages, ids, 用户称呼, 助手称呼)` 生成：按对话顺序，每条前面是「我：」或「胖小胖：」（角色对话用角色名），条与条之间空一行。
@@ -126,7 +213,7 @@
 - **验收**：`selectionPlainText` 单测；用 `Stage3TestPanel` 测进入、切换、返回退出；真机模式截图 `home-multiselect-light/dark`。
 - **注意**：底部玻璃栏要拿到和输入框同一个采样源（`LocalEtaCouiBackdrop`）；多选状态在切换对话时清掉。
 
-### 2.2 搜索结果直达命中的那条消息
+### 5.2 搜索结果直达命中的那条消息（L4）
 
 - **现状**：侧栏搜索能搜到对话内容（`AgentAppState.updateSearchQuery`），点结果只是打开对话，停在最底部。
 - **做法**：从搜索结果打开对话时把搜索词带进去。`AgentChatBody` 收到后在已加载的消息里从新到旧找第一条包含这个词的，滚动到它，并让它的底色高亮 1.5 秒。
@@ -135,36 +222,60 @@
   定位时要先把「保持贴底」关掉（`onBottomAnchorChanged(false)`），否则会被拉回底部。做之前先读 `ChatHistoryPaging.kt`。
 - **验收**：单测覆盖「在已加载的消息里找到」「要翻页才找到」「找不到」三种；手机上实际搜一个很早的词试。
 
-## 5. 以后再说（没排期，按价值排序）
+## 8. 第六期 ·「省着用」下（先调研，再做）
 
-1. 输入框里打「/」调出常用任务和技能。
-2. 新对话页最前面加「接着做」胶囊：最近一次对话、电脑上正在跑的会话。
+### 6.1 用量页（F3）
+
+- **目标**：设置里加「用量」：今天用了多少（输入、输出、缓存命中率）、最近 7 天柱状图、按模型分；可以设一条每日提醒线，超过时用提示条提醒一次。只算手机上的对话。
+- **先调研，写一段结论再动手**：
+  1. 每次模型请求的用量是在哪里落到消息上的（从 `TokenUsageUi` 的赋值处往回找，上游 3.4.3 的用量统计代码）。
+  2. 消息有没有时间和模型 id；能不能直接从已存的对话里按天、按模型汇总。
+  3. 应用重启后恢复运行（`recoverRuntimeRuns`）会不会把同一次请求的用量再应用一遍。
+- **两种做法，按调研结果选**：能从已存的对话汇总，就按需汇总，不新增存储。不能，就从这一版开始记账：每次请求结束记一笔（日期、模型、各项 token）到应用私有目录下按月分的 JSON 文件，
+  用「运行 id + 第几次请求」去重，之前的不补。不要为这个加 Room 表和数据库迁移。
+- **验收**：汇总或记账逻辑的单测（跨天、去重、坏文件）；页面截图；提醒线一天只提醒一次。
+
+## 9. 以后再说
+
+1. **定时运行常用任务**（比如每天 8 点汇总未读通知）。应用里现在没有任何定时机制，要设计后台启动、锁屏时怎么办、失败怎么通知。值得做，但要单独出方案。
+2. 输入框里打「/」调出常用任务和技能。
 3. 设置页搜索。
 4. 「记住这次的解决办法」：复核成功后，一键把教训写进记忆。
 5. 上游的全局助手唤出光效（`4101bc7`）：先录两边的对比再定。
-6. 省额度：简单问题自动用便宜模型，需要你先定规则。
 
-## 6. 需要你拍板（括号里是不回复时的默认做法）
+核实后去掉的：状态栏实时进度（`AgentExecutionService` 的任务通知已经用了 `Notification.ProgressStyle` 和 `setShortCriticalText`，不用做）；
+「这次对话改了哪些文件」面板（按上游约定工具记录不保存文件路径，没有数据）。
 
-1. 侧栏要不要加「终端」格子？（加）
-2. 多选时选中的样式：浅色底加右上角对勾，不在行首加勾选圈。（这样做，因为不改消息布局、不会让正文重新排版）
-3. 2.2「搜索直达」风险偏高，要不要做？（做，但放在最后单独一个版本，出问题不影响别的）
+## 10. 需要你拍板（括号里是不回复时的默认做法）
 
-## 7. 进度
+1. 过程收成一行：回复完成后默认收起还是展开？（收起，外观设置里可以关）
+2. 换模型重答之后，这个对话接着用新模型还是换回原来的？（接着用新模型，全局默认模型不变）
+3. 用量页要不要「每日提醒线」？（要，出厂不设值）
+4. 顺序：先「读起来轻」还是先「省着用」？（按期号；两期互不依赖，可以对调）
+5. 侧栏要不要加「终端」格子？（加）
+6. 多选时选中的样式：浅色底加右上角对勾，不在行首加勾选圈。（这样做，不会让正文重新排版）
+
+## 11. 进度
 
 | 期 | 版本 | 结果 |
 | --- | --- | --- |
-| 第零期 地基 | | |
-| 第一期 不丢 | | |
-| 2.1 消息多选 | | |
-| 2.2 搜索直达 | | |
+| 零 地基 | | |
+| 一 闭环 | | |
+| 二 2.1 过程收成一行 | | |
+| 二 2.2 标题胶囊总入口 | | |
+| 三 3.1 模型预设 | | |
+| 三 3.2 换模型重答 | | |
+| 四 工作台 | | |
+| 五 5.1 消息多选 | | |
+| 五 5.2 搜索直达 | | |
+| 六 用量页 | | |
 
-## 8. 给执行模型的守则
+## 12. 给执行模型的守则
 
 这些是前面二十多个版本踩出来的，和 `AGENTS.md` 一起读：
 
 1. **一期一个版本、一次提交**。提高 `app/build.gradle.kts` 的 `versionCode`（`yyyyMMdd` 加两位序号），在 `etax/README.md` 最上面写更新说明，
-   同步 `README.md`、`README_EN.md` 的版本号，并填上面第 7 节的进度表。
+   同步 `README.md`、`README_EN.md` 的版本号，并填上面第 11 节的进度表。
 2. **修问题先复现**。在本机复现出来（截图或失败的测试），改完用同一个测试证明，再出包。没复现就改，前面白白多出过三个版本。
 3. **界面改动先看真机模式截图再出包**（`DeviceModeScreens`，`EtaCouiSupport.shaders = true` 加硬件渲染）。截图里关了模糊，只看布局、深色、大字体。
 4. **同一时间只跑一个 Gradle**，否则内存不够会被杀。**Lint 运行期间不要改 Kotlin 源文件**，会让 Lint 分析崩掉。
