@@ -13,7 +13,6 @@ import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInWindow
 import io.github.mangi.eta.ui.theme.EtaElevation
-import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import io.github.mangi.eta.agent.overlay.localizedText
@@ -107,7 +106,8 @@ internal fun HomeTaskCapsule(currentConversationId: String?, onTasks: () -> Unit
             link is io.github.mangi.eta.agent.remote.DesktopBridgeClient.State.Connected, currentDesktopSessionId)
     }
     var open by remember { mutableStateOf(false) }
-    val anchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    // 胶囊在窗口里的位置：详情固定在胶囊正下方居中弹出，不跟着手指落点走（2026111610 真机反馈）。
+    var capsuleBounds by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
     LaunchedEffect(running.isEmpty()) { if (running.isEmpty()) open = false }
     val context = androidx.compose.ui.platform.LocalContext.current
     val untitled = stringResource(R.string.desktop_untitled)
@@ -123,13 +123,13 @@ internal fun HomeTaskCapsule(currentConversationId: String?, onTasks: () -> Unit
         val label = if (running.size == 1) first.title.ifBlank { untitled }.taskLabel(24)
             else stringResource(R.string.eta_background_tasks_count, running.size)
         Box(Modifier.fillMaxWidth().padding(bottom = 4.dp), contentAlignment = Alignment.Center) {
-            Box(Modifier.couiMenuAnchor(anchor)) {
+            Box(Modifier.onGloballyPositioned { capsuleBounds = it.boundsInWindow() }) {
                 io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
                     modifier = Modifier.height(32.dp).width(IntrinsicSize.Max).widthIn(max = 280.dp),
                     shape = EtaTheme.shapes.radiusFull,
                     capsule = true,
                     contentDescription = label,
-                    onClick = { anchor.open { open = true } },
+                    onClick = { open = !open },
                 ) {
                     Row(Modifier.padding(start = 10.dp, end = 12.dp), verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -144,8 +144,13 @@ internal fun HomeTaskCapsule(currentConversationId: String?, onTasks: () -> Unit
             }
         }
     }
-    // 点胶囊：COUI 菜单列出后台任务（一行标题，电脑会话带电脑图标），点某一项直接打开它；末项「查看全部」。
-    EtaContextMenu(open, onDismiss = { open = false }, couiAnchor = anchor, header = stringResource(R.string.eta_tasks)) {
+    // 点胶囊：玻璃小窗列出后台任务（一行标题，电脑会话带电脑图标），点某一项直接打开它；末项「查看全部」。
+    // 以前用 COUI 菜单，它从手指按下的位置展开，点胶囊偏左偏右详情就跟着偏；现在固定在胶囊正下方居中，
+    // 从胶囊下沿以跟手弹簧展开（0.9 → 1 + 淡入，变换原点在上沿中点），关闭原路收回。
+    EtaPopover(open, anchor = capsuleBounds, onDismiss = { open = false }, align = EtaPopoverAlign.Center,
+        title = stringResource(R.string.eta_tasks), minWidth = 240.dp, maxWidth = 300.dp) {
+        Text(stringResource(R.string.eta_tasks), style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary,
+            modifier = Modifier.padding(start = 12.dp, top = 6.dp, bottom = 2.dp))
         running.take(6).forEach { item ->
             when (item) {
                 is HomeBackgroundItem.Local -> EtaMenuItem(item.task.title.taskLabel(16), onClick = {

@@ -69,6 +69,44 @@ class DeviceModeScreensTest {
         })
     }
 
+    /** 2026111610 真机反馈：点任务胶囊，详情固定在胶囊正下方居中弹出（以前跟着手指落点偏左偏右）。 */
+    @Test fun taskCapsuleDetails() {
+        val context = org.robolectric.RuntimeEnvironment.getApplication()
+        val tasks = listOf(
+            io.github.mangi.eta.agent.runtime.TaskNotificationState("capsule-a", "c2", "查一下明天的天气",
+                io.github.mangi.eta.agent.overlay.AgentOverlayStatus.Reasoning),
+            io.github.mangi.eta.agent.runtime.TaskNotificationState("capsule-b", "c3", "把会议纪要改成待办清单",
+                io.github.mangi.eta.agent.overlay.AgentOverlayStatus.Reasoning),
+        )
+        io.github.mangi.eta.agent.runtime.AgentExecutionService.updateTasks(context, tasks)
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+        try {
+            check("task-capsule-open-light", DeviceModeScreens.capture("task-capsule-open-light", act = { panel ->
+                // 故意点胶囊靠左的位置：详情仍应在胶囊正下方居中。
+                val capsule = panel.nodes().first { node ->
+                    node.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.OnClick) != null &&
+                        node.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription)
+                            ?.any { it.contains("2") } == true && node.boundsInRoot.height < 140f
+                }
+                val b = capsule.boundsInRoot
+                val down = android.os.SystemClock.uptimeMillis()
+                panel.touch(android.view.MotionEvent.ACTION_DOWN, b.left + 8f, b.center.y, down)
+                panel.advance(2)
+                panel.touch(android.view.MotionEvent.ACTION_UP, b.left + 8f, b.center.y, down)
+                panel.advance(40)
+            }) {
+                // 与 App 一样放在浮层宿主里：小窗画在宿主层，不另开窗口。
+                io.github.mangi.eta.ui.components.EtaAppOverlayHost {
+                    DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展")
+                }
+            })
+        } finally {
+            io.github.mangi.eta.agent.runtime.AgentExecutionService.updateTasks(context, emptyList())
+            io.github.mangi.eta.agent.runtime.dismissRetainedTaskCardsForTest(context)
+            org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+        }
+    }
+
     /** 提示条跟随页面颜色：浅色页白色胶囊、深色页深灰胶囊（2026111606 用户反馈：浅色页上弹出黑胶囊不协调）。 */
     @Test fun toastFollowsPage() {
         for (dark in listOf(false, true)) {
