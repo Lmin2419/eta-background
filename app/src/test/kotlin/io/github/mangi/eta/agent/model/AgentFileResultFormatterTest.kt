@@ -40,6 +40,9 @@ class AgentFileResultFormatterTest {
     @Test
     fun editDoesNotPresentTheWholeRewrittenFileAsChangedBytes() {
         assertEquals("已替换 2 处", summarize("edit_file", """{"replacements":2,"bytes_written":90000}"""))
+        // 工具卡片显示改动落在哪几行（只有行号，不带内容）。
+        assertEquals("已替换 1 处 · 第 12–15 行", summarize("edit_file", """{"replacements":1,"first_line":12,"last_line":15,"change":"- a\n+ b"}"""))
+        assertEquals("已替换 1 处 · 第 7 行", summarize("edit_file", """{"replacements":1,"first_line":7,"last_line":7}"""))
     }
 
     @Test

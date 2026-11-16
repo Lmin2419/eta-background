@@ -265,8 +265,10 @@ internal fun AgentChatBody(
         ?.let { ChatInlineEditor(it.targetMessageId, input, it.preserveFollowingMessages, { text -> keepBottomAnchored = true; onSubmit(text) }, onCancelMessageEdit) }
     val latestAnswerId = remember(messages) { messages.lastOrNull { it is io.github.mangi.eta.ui.model.AgentMessageUi }?.id }
     val recheck = RecheckAction(latestAnswerId, enabled = !isStreaming && !isCompacting, submit = onSubmit)
+    // 「选择文字」取整轮的思考与回答（可以跨思考选段、一次复制）。
+    val segmentsOf = remember(messages) { { answerId: String -> turnSegments(messages, answerId) } }
     CompositionLocalProvider(LocalChatDraftRequest provides draftRequest, LocalChatInlineEditor provides inlineEditor,
-        LocalRecheckAction provides recheck) {
+        LocalRecheckAction provides recheck, LocalTurnSegments provides segmentsOf) {
     SpeechPlaybackHost {
         SpeechAutoReadAloud(messages = messages, isStreaming = isStreaming)
         AgentChatScaffold(

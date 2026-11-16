@@ -263,11 +263,12 @@ internal fun DesktopChatScreen(
             // 点一下打开会话设置，模型也在那里选），右边玻璃铃铛和子代理。
             val title = state.title?.takeIf { it.isNotBlank() } ?: listTitle?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_untitled)
             val subtitle = listOfNotNull(stringResource(R.string.desktop_title), workspaceTitle?.takeIf { it.isNotBlank() }).joinToString(" · ")
-            DesktopGlassTopBar(
+            io.github.mangi.eta.ui.components.GlassPageTopBar(
                 title = title,
                 subtitle = subtitle,
                 onBack = onBack,
                 onTitle = if (!isChild) ({ showSettings = true }) else null,
+                sourceName = "电脑会话顶部(COUI)",
             ) {
                 if (!isChild) {
                     val remind = linkPrefs.reminds(sessionId)
@@ -496,63 +497,3 @@ private fun encodeImage(context: Context, pending: PendingImageUi): DesktopImage
     return DesktopImage(mediaType, base64)
 }
 
-/**
- * 电脑会话页的顶部：与手机对话一致的液态玻璃控件。玻璃从身后一层页面底色采样（上游 COUI 的做法：
- * 源是兄弟节点并带不透明底色），所以在页面最上方也是同一种质感。
- */
-@Composable
-private fun DesktopGlassTopBar(
-    title: String,
-    subtitle: String,
-    onBack: () -> Unit,
-    onTitle: (() -> Unit)?,
-    trailing: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
-) {
-    val source = io.github.mangi.eta.ui.components.trackRenderSource("电脑会话顶部(COUI)",
-        if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders)
-            com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "desktop-top") else null)
-    Box(Modifier.fillMaxWidth()) {
-        if (source != null) Box(Modifier.matchParentSize().couiBackdrop(source).background(EtaTheme.colors.canvas))
-        CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides source) {
-            androidx.compose.foundation.layout.Row(
-                Modifier.fillMaxWidth()
-                    .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.statusBars)
-                    .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.displayCutout
-                        .only(androidx.compose.foundation.layout.WindowInsetsSides.Horizontal))
-                    .heightIn(min = 60.dp)
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
-            ) {
-                io.github.mangi.eta.ui.components.CircleIconButton(
-                    androidx.compose.material.icons.Icons.AutoMirrored.Outlined.ArrowBackIos,
-                    stringResource(R.string.action_back), onClick = onBack)
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    io.github.mangi.eta.ui.components.coui.EtaFloatingSurface(
-                        modifier = Modifier.heightIn(min = 44.dp)
-                            .width(androidx.compose.foundation.layout.IntrinsicSize.Max).widthIn(max = 260.dp),
-                        shape = EtaTheme.shapes.radiusFull,
-                        capsule = true,
-                        contentDescription = title,
-                        onClick = onTitle,
-                        wrapContent = true,
-                    ) {
-                        androidx.compose.foundation.layout.Column(
-                            Modifier.heightIn(min = 44.dp).padding(horizontal = 18.dp, vertical = 4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
-                        ) {
-                            Text(title, style = EtaTheme.type.subhead.copy(
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, lineHeight = 18.sp),
-                                color = EtaTheme.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(subtitle, style = EtaTheme.type.caption.copy(
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Normal, lineHeight = 14.sp),
-                                color = EtaTheme.colors.textTertiary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                }
-                trailing()
-            }
-        }
-    }
-}

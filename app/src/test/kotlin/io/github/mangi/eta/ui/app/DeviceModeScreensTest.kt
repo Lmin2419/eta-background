@@ -25,10 +25,10 @@ class DeviceModeScreensTest {
         assertTrue("$name must not be blank (ink=${shot.ink})", shot.ink > minInk)
     }
 
-    private fun variants(name: String, deviceMode: Boolean = true, content: @androidx.compose.runtime.Composable () -> Unit) {
-        check("$name-light", DeviceModeScreens.capture("$name-light", deviceMode = deviceMode, content = content))
-        check("$name-dark", DeviceModeScreens.capture("$name-dark", dark = true, deviceMode = deviceMode, content = content))
-        check("$name-font200", DeviceModeScreens.capture("$name-font200", fontScale = 2f, deviceMode = deviceMode, content = content))
+    private fun variants(name: String, deviceMode: Boolean = true, minInk: Int = 300, content: @androidx.compose.runtime.Composable () -> Unit) {
+        check("$name-light", DeviceModeScreens.capture("$name-light", deviceMode = deviceMode, content = content), minInk)
+        check("$name-dark", DeviceModeScreens.capture("$name-dark", dark = true, deviceMode = deviceMode, content = content), minInk)
+        check("$name-font200", DeviceModeScreens.capture("$name-font200", fontScale = 2f, deviceMode = deviceMode, content = content), minInk)
     }
 
     @Test fun homeNewConversation() = variants("home-new") { DeviceModeScreens.Home(emptyList(), title = null) }
@@ -47,6 +47,10 @@ class DeviceModeScreensTest {
         DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展",
             models = models.copy(queuedModel = models.providerGroups.single().models.last()), streaming = true)
     })
+
+    /** 终端页顶部换成玻璃控件（返回圆钮 + 标题胶囊）。 */
+    // 终端占位是深色底、少量浅色字，深色模式下「反差像素」本来就少，门槛放低。
+    @Test fun terminalTopBar() = variants("terminal", minInk = 60) { DeviceModeScreens.TerminalShell() }
 
     @Test fun sidebarOpen() = variants("sidebar") {
         DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展", paneOpen = true)

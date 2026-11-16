@@ -165,6 +165,7 @@ internal class AgentFileOperations(private val backend: FileToolBackend) {
         base("edit_file").put("path", result.stat.path).put("revision", result.stat.revision)
             .put("replacements", count).put("bytes_written", replacement.size).put("atomic", result.atomic)
             .put("change", editChangeSummary(original, oldText, newText, count))
+            .apply { editChangeLines(original, oldText, newText)?.let { put("first_line", it.first).put("last_line", it.last) } }
     }
 
     fun globFiles(path: String, pattern: String, limit: Int = 80, cursor: String? = null, includeHidden: Boolean = false): String =
@@ -268,16 +269,22 @@ internal fun editMismatchHint(original: String, oldText: String): String {
     return "；最相近的原文在第 ${best + 1} 行起（$why），请按下面的原文重写 old_text：\n" + snippet.take(1200)
 }
 
+/** 第一处替换后新内容所在的行号范围（从 1 开始）；找不到原文时为 null。 */
+internal fun editChangeLines(original: String, oldText: String, newText: String): IntRange? {
+    val first = original.indexOf(oldText)
+    if (first < 0) return null
+    val startLine = original.substring(0, first).count { it == '\n' } + 1
+    return startLine..(startLine + newText.count { it == '\n' })
+}
+
 /**
  * 改文件成功后的简短改动摘要（第一处）：「第 12–15 行（共 1 处）」加最多 6 行「- 旧 / + 新」，每行最多 160 字。
  * 让 Agent 能核对改动落在了预期位置。
  */
 internal fun editChangeSummary(original: String, oldText: String, newText: String, count: Int): String {
-    val first = original.indexOf(oldText)
-    if (first < 0) return ""
-    val startLine = original.substring(0, first).count { it == '\n' } + 1
-    val newLines = newText.split('\n')
-    val endLine = startLine + (newLines.size - 1).coerceAtLeast(0)
+    val lines = editChangeLines(original, oldText, newText) ?: return ""
+    val startLine = lines.first
+    val endLine = lines.last
     val range = if (endLine > startLine) "第 $startLine–$endLine 行" else "第 $startLine 行"
     val header = range + if (count > 1) "（共 $count 处，只列第一处）" else ""
     fun lines(prefix: String, text: String): List<String> {

@@ -26,6 +26,12 @@ class EditChangeSummaryTest {
         assertTrue(added.first().length <= 2 + 160 + 1)
     }
 
+    @Test fun lineRangeCoversTheNewText() {
+        assertEquals(3..4, editChangeLines(original, "val x = 1", "val x = 2\nval y = 3"))
+        assertEquals(3..3, editChangeLines(original, "val x = 1", "val x = 2"))
+        assertEquals(null, editChangeLines(original, "absent", "x"))
+    }
+
     @Test fun missingTextGivesNoSummary() {
         assertEquals("", editChangeSummary(original, "absent", "x", 1))
     }

@@ -662,11 +662,13 @@ private fun AgentMessageBlock(
         }
     }
     // 选择文字仍用底部面板（需要整段可选的大区域）；其余操作是贴着回答弹出的气泡菜单。
+    // 整轮的思考与回答在同一个可选区域里：可以从思考一直选到回答（手机对话、电脑会话一样）。
+    val segmentsOf = LocalTurnSegments.current
     EtaSheet(menu && selectingText, title = stringResource(R.string.eta_select_text), onDismissRequest = { menu = false; selectingText = false }) {
-        SelectionContainer {
-            Text(message.content, style = EtaTheme.type.body, modifier = Modifier.fillMaxWidth()
-                .heightIn(max = 420.dp).verticalScroll(rememberScrollState()))
+        val segments = remember(message.id, message.content, segmentsOf) {
+            segmentsOf?.invoke(message.id)?.takeIf { it.isNotEmpty() } ?: listOf(TurnSegment(message.content, thinking = false))
         }
+        TurnSelectionContent(segments)
     }
     EtaContextMenu(menu && !selectingText, onDismiss = { menu = false }, couiAnchor = couiAnchor) {
         EtaMenuItem(stringResource(R.string.eta_select_text), icon = Icons.Outlined.TextFields, onClick = { selectingText = true })

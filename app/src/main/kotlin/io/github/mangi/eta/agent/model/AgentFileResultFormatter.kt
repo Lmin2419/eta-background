@@ -9,7 +9,17 @@ internal object AgentFileResultFormatter {
         "write_file" -> summarizeWrite(json)
         "read_file" -> summarizeRead(json)
         "stat_file" -> summarizeStat(json)
-        "edit_file" -> json.nonNegativeLong("replacements")?.let { "已替换 $it 处" }
+        // 只带行号，不带改动内容（文件轨迹不把正文写进持久摘要）；内容在结果的 change 里给 Agent 核对。
+        "edit_file" -> json.nonNegativeLong("replacements")?.let { count ->
+            val first = json.nonNegativeLong("first_line")
+            val last = json.nonNegativeLong("last_line")
+            val where = when {
+                first == null -> ""
+                last != null && last > first -> " · 第 $first–$last 行"
+                else -> " · 第 $first 行"
+            }
+            "已替换 $count 处$where"
+        }
         "list_directory" -> json.optJSONArray("entries")?.let { entries ->
             if (entries.length() == 0) "目录为空"
             else withScope("已列出 ${entries.length()} 项内容", json, "还有更多")

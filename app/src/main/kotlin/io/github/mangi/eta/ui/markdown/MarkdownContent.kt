@@ -96,6 +96,31 @@ internal fun MarkdownContent(
     MarkdownBlockColumn(blocks = document.blocks, scope = scope, compact = false, modifier = modifier)
 }
 
+/**
+ * 独立滚动视口里的长篇静态 Markdown（上游 3.4.1 c6e46ff，记忆页 MEMORY.md 预览）：顶层块各占一个
+ * LazyColumn 条目，几十 KiB 的文档首帧只组合、测量视口里的几个块，进入页面不卡。
+ * （上游还把顶层列表拆成逐项条目；我们的列表组件不同，整块作为一项。）
+ */
+@Composable
+internal fun LazyMarkdownContent(
+    document: MarkdownDocument,
+    style: MarkdownStyle,
+    modifier: Modifier = Modifier,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
+) {
+    val scope = remember(style) { MarkdownRenderScope(style, reveal = null) }
+    val density = LocalDensity.current
+    androidx.compose.foundation.lazy.LazyColumn(modifier = modifier, contentPadding = contentPadding) {
+        document.blocks.forEachIndexed { index, block ->
+            val gap = markdownBlockGap(document.blocks.getOrNull(index - 1), block, style.tone)
+            item(key = block.offset) {
+                if (gap.value > 0f) Spacer(Modifier.height(with(density) { gap.toDp() }))
+                MarkdownBlockView(block, scope)
+            }
+        }
+    }
+}
+
 @Immutable
 private class MarkdownRenderScope(
     val style: MarkdownStyle,

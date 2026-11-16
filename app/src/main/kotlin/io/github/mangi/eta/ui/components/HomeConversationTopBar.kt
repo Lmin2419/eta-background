@@ -77,6 +77,8 @@ internal fun HomeConversationTopBar(
     }
     // 没有整条顶栏：左边历史、中间模型胶囊、右边新建——三枚等高 44dp 的玻璃控件浮在消息上面。
     // 后台有任务在跑时，控件下方居中出现一枚深色玻璃胶囊。
+    // 顶部控件的字最多放大 1.3 倍（CappedFontScale）：200% 字体时三个控件不挤、模型名不被截断。
+    CappedFontScale {
     Column(Modifier.fillMaxWidth()
         .windowInsetsPadding(WindowInsets.statusBars)
         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))) {
@@ -103,6 +105,7 @@ internal fun HomeConversationTopBar(
         }
         if (onOpenConversation != null) HomeDoneNotice(currentConversationId, onOpenConversation, onOpenDesktopSession ?: {})
         HomeTaskCapsule(currentConversationId, onTasks, onOpenConversation ?: {}, onOpenDesktopSession ?: {})
+    }
     }
     ModelPopover(settings, pillAnchor, models, isCompacting,
         onDismiss = { settings = false },

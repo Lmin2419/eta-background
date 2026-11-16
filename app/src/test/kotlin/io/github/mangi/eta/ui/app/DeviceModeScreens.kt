@@ -6,7 +6,9 @@ import android.os.Handler
 import android.os.Looper
 import android.view.PixelCopy
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -160,6 +162,28 @@ internal object DeviceModeScreens {
                 onAttachFilePath = {}, onRemoveFileReference = {}, onEditMessage = {}, onCancelMessageEdit = {}, onDeleteMessage = {},
                 onRegenerateMessage = {}, onSelectReplyCandidate = { _, _ -> }, onSuggestionClick = {}, onRunTraceClick = {}, onOpenBrowser = {},
                 modifier = Modifier.fillMaxSize().padding(padding))
+        }
+    }
+
+    /** 终端页外壳：顶部是与对话页同一套玻璃控件（2026111602）；终端本体用一块深色占位。 */
+    @Composable
+    fun TerminalShell() {
+        AgentAppShell(
+            currentRoute = AppRoute.Terminal, isCurrentRoute = true,
+            conversationPaneState = ConversationPaneUiState(emptyList(), null, ""),
+            isConversationPaneOpen = false, onBack = {}, onOpenConversationPane = {}, onDismissConversationPane = {},
+            onSearchConversations = {}, onNewConversation = {}, onOpenCommonTasks = {}, onOpenTerminal = {},
+            onLaunchKimiWeb = {}, kimiWebLabel = "", canStopKimiWeb = false, onStopKimiWeb = {}, onRefreshKimiWeb = {},
+            onOpenBrowser = {}, onSelectConversation = {}, onConversationRename = {}, onConversationExport = {},
+            onConversationDelete = {}, onOpenTools = {}, onOpenSkills = {}, onOpenCharacters = {},
+            onOpenPermissions = {}, onOpenSettings = {}, onOpenModelProviders = {},
+        ) { padding ->
+            androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().padding(padding)
+                .background(androidx.compose.ui.graphics.Color(0xFF1E1E1E))) {
+                androidx.compose.foundation.text.BasicText("~ $ ls\nREADME.md  app  etax",
+                    style = androidx.compose.ui.text.TextStyle(color = androidx.compose.ui.graphics.Color(0xFFE0E0E0)),
+                    modifier = Modifier.padding(16.dp))
+            }
         }
     }
 
