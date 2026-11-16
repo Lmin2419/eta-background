@@ -2047,4 +2047,6 @@
   <string name="appearance_glow_mark_top_bar">Top light bar</string>
   <string name="appearance_glow_mark_summary_camera">A small ring around the front camera. An expanded live capsule may cover it unless 胖小胖\'s accessibility service is on</string>
   <string name="appearance_glow_mark_summary_top_bar">A thin flowing light along the very top edge; it follows the rounded corners and fades out there, and stays above the live capsule</string>
+  <string name="settings_keep_screen_on">Keep screen on while running</string>
+  <string name="settings_keep_screen_on_summary">Prevent screen sleep while an agent task is running</string>
 </resources>

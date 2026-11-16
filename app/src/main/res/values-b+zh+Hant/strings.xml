@@ -1916,4 +1916,6 @@
   <string name="appearance_glow_mark_top_bar">頂部光條</string>
   <string name="appearance_glow_mark_summary_camera">鏡頭外圈亮一個小光圈。沒開胖小胖的無障礙時，流體雲展開會把它擋住</string>
   <string name="appearance_glow_mark_summary_top_bar">螢幕最上緣一道流動細光，兩端順著圓角淡出；在流體雲上方，不會被擋住</string>
+  <string name="settings_keep_screen_on">執行期間保持螢幕恆亮</string>
+  <string name="settings_keep_screen_on_summary">Agent 執行任務期間防止螢幕自動熄滅</string>
 </resources>

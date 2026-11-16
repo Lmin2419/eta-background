@@ -204,6 +204,7 @@ fun AgentAppRoot(
     var navigationResetKey by rememberSaveable { mutableIntStateOf(0) }
     val runtimeActive by AgentRuntimeService.keepScreenOn.collectAsState()
     val view = LocalView.current
+    // runtimeActive 已经按「运行期间保持屏幕常亮」开关算过。
     val keepScreenOn = backStack.lastOrNull() == AppRoute.Home &&
         agentState.homeState.isStreaming && runtimeActive
     DisposableEffect(view, keepScreenOn) {

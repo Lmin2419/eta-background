@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.NotificationsActive
 import io.github.mangi.eta.data.repository.AppearanceSettingsRepository
 import io.github.mangi.eta.ui.app.LocalAppearanceSettings
@@ -625,6 +626,17 @@ private fun SettingsPageContent(
                         onCheckedChange = { enabled -> coroutineScope.launch {
                             AppearanceSettingsRepository.update { it.copy(taskCompletionAlertsEnabled = enabled) }
                         } })
+                    EtaPreferenceDivider()
+                    // 上游：任务执行期间保持屏幕常亮（默认开）。
+                    SwitchPref(
+                        context = context,
+                        prefs = agentPrefs,
+                        title = stringResource(R.string.settings_keep_screen_on),
+                        summary = stringResource(R.string.settings_keep_screen_on_summary),
+                        key = Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED,
+                        icon = Icons.Outlined.LightMode,
+                        iconTint = EtaPreferenceColors.Indigo,
+                    )
                     EtaPreferenceDivider()
                     // 10 号方案第一期：回答前还有没解决的失败时，先让 Agent 复核一次再交卷。
                     EtaSwitchPreference(title = stringResource(R.string.completion_review_setting),

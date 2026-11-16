@@ -2,12 +2,13 @@ package io.github.mangi.eta.agent.runtime
 
 import android.app.Application
 import android.os.Looper
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.platform.ComposeView
 import io.github.mangi.eta.agent.model.AgentModelClient
 import io.github.mangi.eta.agent.overlay.AgentOverlayPhase
 import io.github.mangi.eta.agent.overlay.AgentOverlayState
 import io.github.mangi.eta.agent.overlay.AgentOverlayStatus
-import androidx.compose.runtime.MutableState
+import io.github.mangi.eta.config.Prefs
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -16,8 +17,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowPowerManager
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
@@ -310,7 +313,8 @@ class AgentRuntimeScreenOnTest {
     }
 
     @Test
-    fun pauseResumeAndCancellationUpdateBothAppAndGuiWindowState() {
+    fun pauseResumeAndCancellationUpdateWindowAndWakeLockState() {
+        ShadowPowerManager.reset()
         val serviceController = Robolectric.buildService(AgentRuntimeService::class.java).create()
         try {
             val service = serviceController.get()
@@ -321,25 +325,31 @@ class AgentRuntimeScreenOnTest {
             service.invoke("updateKeepScreenOn")
             assertTrue(AgentRuntimeService.keepScreenOn.value)
             assertTrue(capsule.keepScreenOn)
+            val wakeLock = ShadowPowerManager.getLatestWakeLock()
+            assertTrue(wakeLock.isHeld)
 
             service.invokeForRun("requestPause", session.runId)
             shadowOf(Looper.getMainLooper()).idle()
             assertFalse(AgentRuntimeService.keepScreenOn.value)
             assertFalse(capsule.keepScreenOn)
+            assertFalse(wakeLock.isHeld)
 
             service.invoke("requestResume")
             shadowOf(Looper.getMainLooper()).idle()
             assertTrue(AgentRuntimeService.keepScreenOn.value)
             assertTrue(capsule.keepScreenOn)
+            assertTrue(wakeLock.isHeld)
 
             session.controller.cancel()
             service.invoke("updateKeepScreenOn")
             assertFalse(AgentRuntimeService.keepScreenOn.value)
             assertFalse(capsule.keepScreenOn)
+            assertFalse(wakeLock.isHeld)
 
             service.invoke("requestResume")
             assertFalse(AgentRuntimeService.keepScreenOn.value)
             assertFalse(capsule.keepScreenOn)
+            assertFalse(wakeLock.isHeld)
         } finally {
             serviceController.destroy()
         }
@@ -433,19 +443,24 @@ class AgentRuntimeScreenOnTest {
 
     @Test
     fun completedRunStopsKeepingScreenOnBeforeServiceDestruction() {
+        ShadowPowerManager.reset()
         val serviceController = Robolectric.buildService(AgentRuntimeService::class.java).create()
         try {
             val service = serviceController.get()
             val session = service.registerRun("completed-run").session
             service.invoke("updateKeepScreenOn")
             assertTrue(AgentRuntimeService.keepScreenOn.value)
+            val wakeLock = ShadowPowerManager.getLatestWakeLock()
+            assertTrue(wakeLock.isHeld)
 
             session.complete(AgentRuntimeWire.RunResult(session.runId, true, "完成"))
             service.invoke("updateKeepScreenOn")
             assertFalse(AgentRuntimeService.keepScreenOn.value)
+            assertFalse(wakeLock.isHeld)
 
             service.invoke("requestResume")
             assertFalse(AgentRuntimeService.keepScreenOn.value)
+            assertFalse(wakeLock.isHeld)
         } finally {
             serviceController.destroy()
         }
@@ -498,28 +513,94 @@ class AgentRuntimeScreenOnTest {
     @Test
     fun destroyingServiceClearsActiveRunScreenRequest() {
         val serviceController = Robolectric.buildService(AgentRuntimeService::class.java).create()
-        try {
+        val wakeLock = try {
             val service = serviceController.get()
             service.registerRun("destroyed-run")
             service.invoke("updateKeepScreenOn")
             assertTrue(AgentRuntimeService.keepScreenOn.value)
+            ShadowPowerManager.getLatestWakeLock().also { assertTrue(it.isHeld) }
         } finally {
             serviceController.destroy()
         }
         assertFalse(AgentRuntimeService.keepScreenOn.value)
+        assertFalse(wakeLock.isHeld)
     }
 
     @Test
-    fun backgroundCompletionDoesNotClearGuiOwnersScreenRequest() {
+    fun anyActiveRunKeepsScreenOnRegardlessOfGuiOwnership() {
+        ShadowPowerManager.reset()
         val serviceController = Robolectric.buildService(AgentRuntimeService::class.java).create()
         try {
             val service = serviceController.get()
-            service.registerRun("gui-run")
-            val background = service.registerRun("background-run", ownsGui = false)
+            val background = service.registerRun("background-run", ownsGui = false).apply {
+                overlayState = overlayState.copy(status = AgentOverlayStatus.RunningTool("terminal_job"))
+            }
+            val guiCoordinator = service.field<GuiControlCoordinator>("guiControl")
+            service.assertExecutionStatus(background.overlayState.status, 1)
+            assertNull(guiCoordinator.state.value.ownerRunId)
+            service.invoke("updateKeepScreenOn")
+            assertTrue(AgentRuntimeService.keepScreenOn.value)
+            val wakeLock = ShadowPowerManager.getLatestWakeLock()
+            assertTrue(wakeLock.isHeld)
+
+            val guiRun = service.registerRun("gui-run", ownsGui = false).apply {
+                overlayState = overlayState.copy(status = AgentOverlayStatus.GeneratingAnswer)
+            }
+            val guiControl = guiCoordinator.openRun(guiRun.runId, guiRun.session.controller)
+            guiControl.withAction { }
+            service.assertExecutionStatus(AgentOverlayStatus.GeneratingAnswer, 2)
+            assertEquals(guiRun.runId, guiCoordinator.state.value.ownerRunId)
+            assertTrue(AgentRuntimeService.keepScreenOn.value)
+            assertTrue(wakeLock.isHeld)
+
+            guiControl.release()
+            service.assertExecutionStatus(background.overlayState.status, 2)
+            assertNull(guiCoordinator.state.value.ownerRunId)
+            assertTrue(AgentRuntimeService.keepScreenOn.value)
+            assertTrue(wakeLock.isHeld)
+
             background.session.complete(AgentRuntimeWire.RunResult(background.runId, true, "完成"))
             service.invoke("updateKeepScreenOn")
             assertTrue(AgentRuntimeService.keepScreenOn.value)
+            assertTrue(wakeLock.isHeld)
+
+            guiRun.session.complete(AgentRuntimeWire.RunResult(guiRun.runId, true, "完成"))
+            service.invoke("updateKeepScreenOn")
+            assertFalse(AgentRuntimeService.keepScreenOn.value)
+            assertFalse(wakeLock.isHeld)
         } finally {
+            serviceController.destroy()
+        }
+    }
+
+    @Test
+    fun keepScreenOnSettingToggleControlsActiveRunScreenRequest() {
+        ShadowPowerManager.reset()
+        val context = RuntimeEnvironment.getApplication()
+        Prefs.initLocal(context)
+        val prefs = checkNotNull(Prefs.localAgentPreferences())
+        prefs.edit().putBoolean(Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED, false).commit()
+
+        val serviceController = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        try {
+            val service = serviceController.get()
+            service.registerRun("toggled-run", ownsGui = false)
+            service.invoke("updateKeepScreenOn")
+            assertFalse(AgentRuntimeService.keepScreenOn.value)
+            assertNull(ShadowPowerManager.getLatestWakeLock())
+
+            prefs.edit().putBoolean(Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED, true).commit()
+            shadowOf(Looper.getMainLooper()).idle()
+            assertTrue(AgentRuntimeService.keepScreenOn.value)
+            val wakeLock = ShadowPowerManager.getLatestWakeLock()
+            assertTrue(wakeLock.isHeld)
+
+            prefs.edit().putBoolean(Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED, false).commit()
+            shadowOf(Looper.getMainLooper()).idle()
+            assertFalse(AgentRuntimeService.keepScreenOn.value)
+            assertFalse(wakeLock.isHeld)
+        } finally {
+            prefs.edit().remove(Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED).commit()
             serviceController.destroy()
         }
     }
@@ -597,6 +678,7 @@ class AgentRuntimeScreenOnTest {
             background.session.complete(AgentRuntimeWire.RunResult(background.runId, true, "完成"))
             service.assertTaskStatuses(emptyMap())
             assertTrue(guiCoordinator.state.value.userPaused)
+            assertFalse(AgentRuntimeService.keepScreenOn.value)
         } finally {
             serviceController.destroy()
         }
