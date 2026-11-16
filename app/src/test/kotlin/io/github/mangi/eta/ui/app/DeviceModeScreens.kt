@@ -138,7 +138,8 @@ internal object DeviceModeScreens {
     }
 
     @Composable
-    fun Home(messages: List<AgentChatMessageUi>, title: String?, paneOpen: Boolean = false) {
+    fun Home(messages: List<AgentChatMessageUi>, title: String?, paneOpen: Boolean = false,
+        models: io.github.mangi.eta.ui.model.AgentModelPickerUiState = Stage3Models, streaming: Boolean = false) {
         AgentAppShell(
             currentRoute = AppRoute.Home, isCurrentRoute = true,
             conversationPaneState = ConversationPaneUiState(sampleConversations, if (title != null) "c1" else null, ""),
@@ -149,7 +150,7 @@ internal object DeviceModeScreens {
             onConversationDelete = {}, onOpenTools = {}, onOpenSkills = {}, onOpenCharacters = {},
             onOpenPermissions = {}, onOpenSettings = {}, onOpenModelProviders = {},
             homeTopBar = {
-                HomeConversationTopBar(Stage3Models, false, false, AgentContextUsageUi(12500, 128000), true, messages.isNotEmpty(), null, 0,
+                HomeConversationTopBar(models, streaming, false, AgentContextUsageUi(12500, 128000), true, messages.isNotEmpty(), null, 0,
                     {}, {}, {}, {}, {}, {}, {}, {}, conversationTitle = title, currentConversationId = if (title != null) "c1" else null)
             },
         ) { padding ->

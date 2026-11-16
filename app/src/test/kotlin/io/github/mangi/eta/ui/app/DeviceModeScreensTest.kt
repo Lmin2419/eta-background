@@ -41,6 +41,13 @@ class DeviceModeScreensTest {
         DeviceModeScreens.Home(DeviceModeScreens.gaveUpMessages, title = "安装 Python 依赖")
     })
 
+    /** 回复中选了别的模型：标题胶囊第二行是「→ 新模型 · 下一轮」（2026111601）。 */
+    @Test fun modelQueuedForNextTurn() = check("home-queued-light", DeviceModeScreens.capture("home-queued-light") {
+        val models = io.github.mangi.eta.ui.components.Stage3Models
+        DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展",
+            models = models.copy(queuedModel = models.providerGroups.single().models.last()), streaming = true)
+    })
+
     @Test fun sidebarOpen() = variants("sidebar") {
         DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展", paneOpen = true)
     }

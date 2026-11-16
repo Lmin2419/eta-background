@@ -55,6 +55,8 @@ internal class DesktopReminders(private val context: Context, private val scope:
 
     private fun onTurn(turn: DesktopTurnEvent) {
         if (!wants(turn.sessionId)) return
+        // 停在胖小胖首页时，首页顶部已经弹出「已完成 · 查看」提示条（HomeDoneNotice），不再重复发通知。
+        if (io.github.mangi.eta.agent.runtime.ForegroundConversation.homeVisible) return
         when (turn.reason) {
             "completed" -> if (prefs.remindCompleted) post(
                 id = notificationId("turn", turn.sessionId),

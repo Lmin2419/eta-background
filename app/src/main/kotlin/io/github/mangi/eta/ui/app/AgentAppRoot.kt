@@ -539,7 +539,8 @@ fun AgentAppRoot(
                     onExport = ::exportCurrentConversation, onManageModels = { pushRoute(AppRoute.ModelProviders) },
                     conversationTitle = agentState.currentConversationTitle,
                     currentConversationId = agentState.conversationPaneState.selectedConversationId,
-                    onOpenConversation = ::selectConversation)
+                    onOpenConversation = ::selectConversation,
+                    onOpenDesktopSession = { id -> conversationPaneOpen = false; pushRoute(AppRoute.DesktopChat(id)) })
             }) else null,
             homeCharacter = if (route is AppRoute.Home) agentState.homeState.roleplayChatUi() else null,
             onOpenCharacter = {
