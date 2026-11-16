@@ -329,7 +329,6 @@
   <string name="ui_contextual_usage_d12810">上下文用量</string>
   <string name="ui_context_length_tokens_227860">上下文窗口（tokens）</string>
   <string name="ui_bright_screen_evokes_automatic_voice_input_4358fe">亮屏唤起自动语音输入</string>
-  <string name="ui_only_take_over_with_agent_prefix_d17556">仅以 /agent 前缀接管</string>
   <string name="ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d">只选模型或网关实际支持的档位</string>
   <string name="ui_preferences_and_strategies_2abd3c">偏好与策略</string>
   <string name="ui_stop_a17f70">停止</string>
@@ -351,7 +350,6 @@
   <string name="ui_available_capacity_743337">可用能力</string>
   <string name="ui_optional_tools_3097d6">可选工具</string>
   <string name="ui_name_1be7ae">名称</string>
-  <string name="ui_enable_vendor_assistant_custom_models_c8e465">启用厂商助手自定义模型</string>
   <string name="ui_enable_this_provider_683a76">启用此 Provider</string>
   <string name="ui_enable_terminal_file_tools_18bb43">启用终端/文件工具</string>
   <string name="ui_enable_web_browsing_tools_8b6b03">启用网页搜索、读取与浏览器</string>
@@ -874,7 +872,6 @@
   <string name="state_ui_the_target_with_the_same_name_is_not_a_user_skil_00474b">同名目标不是可安全替换的用户 Skill，现有文件未被覆盖。</string>
   <string name="state_ui_the_installation_failed_and_automatic_recovery_d_0d9e01">安装失败且自动恢复未完整完成。胖小胖已在应用私有目录保留恢复备份，请先检查 Skills 列表并停止继续安装。</string>
   <string name="state_ui_conversation_switched_selected_path_not_added_5bf91e">对话已切换，未添加所选路径</string>
-  <string name="state_ui_xiaobu_s_entrance_needs_to_be_set_to_always_allo_cc74cb">小布入口需要设为“始终允许”</string>
   <string name="state_ui_the_selected_file_is_not_a_valid_zip_package_bff052">所选文件不是有效的 ZIP Skill 包。</string>
   <string name="state_ui_the_selected_path_has_been_added_42b432">所选路径已经添加</string>
   <string name="state_ui_the_skill_pack_contains_an_unsafe_file_path_and__d8cfc0">Skill 包包含不安全的文件路径，未进行安装。</string>
@@ -1147,11 +1144,6 @@
   <string name="suggestion_open_wechat_prompt">帮我打开微信</string>
   <string name="suggestion_browse_web_prompt">打开 Agent 浏览器，搜索并总结今天的科技新闻要点</string>
   <string name="suggestion_memory_pressure_prompt">读取 /proc/meminfo 和 /proc/pressure/，重点分析 PSI（Pressure Stall Information）指标，总结当前内存压力和系统状态</string>
-  <string name="injected_image_data_limit">图片输入数据超过安全上限，请缩小图片后重试</string>
-  <string name="injected_image_count_limit">一次最多支持 %1$d 张图片，请减少图片数量后再试</string>
-  <string name="injected_image_input_limit">图片输入结构超过安全上限，请减少图片数量或简化图片数据后再试</string>
-  <string name="injected_image_cache_limit">图片引用数据过大，无法安全暂存，请重新选择图片或使用远程图片链接</string>
-  <string name="injected_image_unreadable">无法读取请求中的全部图片，请重新选择图片后再试</string>
   <string name="route_mcp_servers">MCP 服务器</string>
   <string name="route_mcp_server_detail">MCP 服务器</string>
   <string name="mcp_add_server">添加服务器</string>

@@ -959,29 +959,6 @@ private fun SettingsPageContent(
                 Text(stringResource(R.string.eta_assistant_details_summary), Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary)
             }
-            if (prefs != null || hasConnectedFramework) {
-                item(key = "assistant_vendor") {
-                    EtaListGroup(title = stringResource(R.string.ui_xiaobu_xiaoai_compatible_entrance_ae918a)) {
-                        SwitchPref(
-                            context = context,
-                            prefs = prefs,
-                            title = stringResource(R.string.ui_enable_vendor_assistant_custom_models_c8e465),
-                            key = Prefs.Keys.AGENT_CUSTOM_MODEL,
-                            icon = Icons.Outlined.Cloud,
-                            iconTint = EtaPreferenceColors.Orange,
-                        )
-                        EtaPreferenceDivider()
-                        SwitchPref(
-                            context = context,
-                            prefs = prefs,
-                            title = stringResource(R.string.ui_only_take_over_with_agent_prefix_d17556),
-                            key = Prefs.Keys.AGENT_REQUIRE_PREFIX,
-                            icon = Icons.Outlined.FilterAlt,
-                            iconTint = EtaPreferenceColors.Orange,
-                        )
-                    }
-                }
-            }
             if (prefs != null || hasConnectedFramework || capabilities.root.isGranted || hasUsedSystemizer) {
                 item(key = "assistant_google") {
                     EtaListGroup(title = "Gemini") {

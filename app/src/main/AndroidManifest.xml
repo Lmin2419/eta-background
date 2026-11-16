@@ -180,8 +180,7 @@
 
         <service
             android:name=".agent.runtime.AgentRuntimeService"
-            android:exported="true"
-            tools:ignore="ExportedService" />
+            android:exported="false" />
 
         <receiver
             android:name=".agent.runtime.TaskNotificationDismissReceiver"
