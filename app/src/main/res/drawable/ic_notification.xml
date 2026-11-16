@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Status-bar mark: 胖小胖 cat-head silhouette. Single colour; the system paints the alpha channel. -->
+<!-- Status-bar mark: the same paw print. Single colour; the system paints the alpha channel. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <group android:translateY="-0.9">
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:fillType="evenOdd"
-            android:pathData="M4.2,10.2 C3.9,8.2 4.4,6.4 5.6,5.4 C6.9,5.6 8.1,6.3 8.9,7.2 C9.9,6.9 10.9,6.8 12,6.8 C13.1,6.8 14.1,6.9 15.1,7.2 C15.9,6.3 17.1,5.6 18.4,5.4 C19.6,6.4 20.1,8.2 19.8,10.2 C21,11.3 21.6,12.7 21.6,14.2 C21.6,17.9 17.3,20.4 12,20.4 C6.7,20.4 2.4,17.9 2.4,14.2 C2.4,12.7 3,11.3 4.2,10.2 Z M7.2,13.4 a1.7,1.8 0 1,0 3.4,0 a1.7,1.8 0 1,0 -3.4,0 Z M13.4,13.4 a1.7,1.8 0 1,0 3.4,0 a1.7,1.8 0 1,0 -3.4,0 Z" />
+    <group android:scaleX="0.07317" android:scaleY="0.07317" android:translateX="-6.732" android:translateY="-7.793">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M256,268 C306,268 350,302 367,344 C381,380 364,414 334,414 C316,414 306,406 290,406 C276,406 268,414 256,414 C244,414 236,406 222,406 C206,406 196,414 178,414 C148,414 131,380 145,344 C162,302 206,268 256,268 Z M192.77,217.35 A37,45 -20 1,1 123.23,242.65 A37,45 -20 1,1 192.77,217.35 Z M254.72,167.49 A37,45 -7 1,1 181.28,176.51 A37,45 -7 1,1 254.72,167.49 Z M330.72,176.51 A37,45 7 1,1 257.28,167.49 A37,45 7 1,1 330.72,176.51 Z M388.77,242.65 A37,45 20 1,1 319.23,217.35 A37,45 20 1,1 388.77,242.65 Z" />
     </group>
 </vector>

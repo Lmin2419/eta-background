@@ -6,7 +6,6 @@ import androidx.compose.ui.graphics.Color
 import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.theme.EtaElevation
 import io.github.mangi.eta.ui.theme.etaElevation
-import top.yukonga.miuix.kmp.basic.SwitchDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -17,7 +16,6 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.window.WindowDialog
 
@@ -39,20 +37,20 @@ internal fun EtaWindowDialog(
     onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    EtaPreferenceTheme {
-        WindowDialog(
-            show = show, title = null, summary = null, modifier = modifier
-                .semantics { title?.let { paneTitle = it } }.etaElevation(EtaElevation.E3, EtaTheme.shapes.radiusXl),
-            backgroundColor = EtaTheme.colors.surfaceRaised,
-            onDismissRequest = onDismissRequest, onDismissFinished = onDismissFinished,
-            cornerRadius = 28.dp,
-            insideMargin = EtaControlDefaults.DialogInsideMargin,
-            outsideMargin = EtaControlDefaults.DialogOutsideMargin,
-            maxWidth = 360.dp,
-            content = { EtaDialogHeading(title, summary); content() },
-        )
+    // 与上游一致：COUI 对话框（从底部升起，材质模糊背后的页面），按钮在底部按钮栏。
+    io.github.mangi.eta.ui.components.coui.EtaCouiDialog(
+        show = show,
+        title = title,
+        message = summary,
+        onDismissRequest = { onDismissRequest?.invoke() },
+        closeText = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_close),
+        modifier = modifier,
+    ) { content() }
+    if (onDismissFinished != null) androidx.compose.runtime.LaunchedEffect(show) {
+        if (!show) { kotlinx.coroutines.delay(320); onDismissFinished() }
     }
 }
+
 
 @Composable
 internal fun EtaOverlayDialog(
@@ -64,20 +62,20 @@ internal fun EtaOverlayDialog(
     onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    EtaPreferenceTheme {
-        OverlayDialog(
-            show = show, title = null, summary = null, modifier = modifier
-                .semantics { title?.let { paneTitle = it } }.etaElevation(EtaElevation.E3, EtaTheme.shapes.radiusXl),
-            backgroundColor = EtaTheme.colors.surfaceRaised,
-            onDismissRequest = onDismissRequest, onDismissFinished = onDismissFinished,
-            cornerRadius = 28.dp,
-            insideMargin = EtaControlDefaults.DialogInsideMargin,
-            outsideMargin = EtaControlDefaults.DialogOutsideMargin,
-            maxWidth = 360.dp,
-            content = { EtaDialogHeading(title, summary); content() },
-        )
+    // 与上游一致：COUI 对话框（从底部升起，材质模糊背后的页面），按钮在底部按钮栏。
+    io.github.mangi.eta.ui.components.coui.EtaCouiDialog(
+        show = show,
+        title = title,
+        message = summary,
+        onDismissRequest = { onDismissRequest?.invoke() },
+        closeText = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_close),
+        modifier = modifier,
+    ) { content() }
+    if (onDismissFinished != null) androidx.compose.runtime.LaunchedEffect(show) {
+        if (!show) { kotlinx.coroutines.delay(320); onDismissFinished() }
     }
 }
+
 
 @Composable
 internal fun EtaSwitch(
@@ -85,28 +83,20 @@ internal fun EtaSwitch(
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-) = Switch(
-    checked = checked, onCheckedChange = onCheckedChange, enabled = enabled,
-    colors = SwitchDefaults.switchColors(
-        checkedThumbColor = Color.White, uncheckedThumbColor = Color.White,
-        disabledCheckedThumbColor = Color.White.copy(alpha = 0.38f),
-        disabledUncheckedThumbColor = Color.White.copy(alpha = 0.38f),
-        checkedTrackColor = EtaTheme.colors.accent, uncheckedTrackColor = EtaTheme.colors.outlineStrong,
-        disabledCheckedTrackColor = EtaTheme.colors.accent.copy(alpha = 0.38f),
-        disabledUncheckedTrackColor = EtaTheme.colors.outlineStrong.copy(alpha = 0.38f),
-    ),
-    modifier = modifier.layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
-        val width = 52.dp.roundToPx()
-        val height = 32.dp.roundToPx()
-        layout(width, height) {
-            placeable.placeWithLayer((width - placeable.width) / 2, (height - placeable.height) / 2) {
-                scaleX = width.toFloat() / placeable.width
-                scaleY = height.toFloat() / placeable.height
-            }
-        }
-    },
-)
+) {
+    // 与上游一致的 COUI 开关（拖动、回弹和触感都由它处理）。打开时轨道用正文色：浅色是黑、深色是浅色，不再满屏珊瑚橘。
+    val dark = com.itos.coui.theme.CouiTheme.isDark
+    com.itos.coui.switch.Switch(
+        modifier = modifier,
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        dark = dark,
+        // 圆点用页面底色：浅色模式白点配黑轨道，深色模式深色圆点配浅色轨道，两种状态都看得清。
+        colors = com.itos.coui.switch.CouiSwitchDefaults.colors(EtaTheme.colors.textPrimary, dark)
+            .copy(thumb = if (dark) EtaTheme.colors.canvas else Color.White),
+        enabled = enabled,
+    )
+}
 
 @Composable
 private fun EtaDialogHeading(title: String?, summary: String?) {

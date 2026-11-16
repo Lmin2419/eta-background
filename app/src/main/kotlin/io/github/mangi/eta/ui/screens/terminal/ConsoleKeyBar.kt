@@ -17,11 +17,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardReturn
-import androidx.compose.material.icons.rounded.ContentPaste
-import androidx.compose.material.icons.rounded.Keyboard
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
-import androidx.compose.material.icons.rounded.KeyboardHide
+import androidx.compose.material.icons.automirrored.outlined.KeyboardReturn
+import androidx.compose.material.icons.outlined.ContentPaste
+import androidx.compose.material.icons.outlined.Keyboard
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.KeyboardHide
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -122,11 +122,11 @@ private val BAR_KEYS: List<BarKey> = listOf(
     BarKey.Special(TerminalKey.TAB, label = "Tab"),
     BarKey.Ctrl,
     BarKey.Alt,
-    BarKey.Special(TerminalKey.LEFT, icon = Icons.Rounded.KeyboardArrowUp, iconRotation = -90f, repeatable = true),
-    BarKey.Special(TerminalKey.UP, icon = Icons.Rounded.KeyboardArrowUp, repeatable = true),
-    BarKey.Special(TerminalKey.DOWN, icon = Icons.Rounded.KeyboardArrowUp, iconRotation = 180f, repeatable = true),
-    BarKey.Special(TerminalKey.RIGHT, icon = Icons.Rounded.KeyboardArrowUp, iconRotation = 90f, repeatable = true),
-    BarKey.Special(TerminalKey.ENTER, icon = Icons.AutoMirrored.Rounded.KeyboardReturn),
+    BarKey.Special(TerminalKey.LEFT, icon = Icons.Outlined.KeyboardArrowUp, iconRotation = -90f, repeatable = true),
+    BarKey.Special(TerminalKey.UP, icon = Icons.Outlined.KeyboardArrowUp, repeatable = true),
+    BarKey.Special(TerminalKey.DOWN, icon = Icons.Outlined.KeyboardArrowUp, iconRotation = 180f, repeatable = true),
+    BarKey.Special(TerminalKey.RIGHT, icon = Icons.Outlined.KeyboardArrowUp, iconRotation = 90f, repeatable = true),
+    BarKey.Special(TerminalKey.ENTER, icon = Icons.AutoMirrored.Outlined.KeyboardReturn),
     BarKey.Special(TerminalKey.HOME, label = "Home"),
     BarKey.Special(TerminalKey.END, label = "End"),
     BarKey.Special(TerminalKey.PAGE_UP, label = "PgUp", repeatable = true),
@@ -201,7 +201,7 @@ internal fun ConsoleKeyBar(
                         onLongPress = modifierKeys::lockAlt,
                     )
                     BarKey.Paste -> KeyCap(
-                        icon = Icons.Rounded.ContentPaste,
+                        icon = Icons.Outlined.ContentPaste,
                         contentDescription = stringResource(R.string.terminal_key_paste),
                         onPress = onPaste,
                     )
@@ -216,7 +216,7 @@ internal fun ConsoleKeyBar(
                 .background(MiuixTheme.colorScheme.dividerLine),
         )
         KeyCap(
-            icon = if (keyboardVisible) Icons.Rounded.KeyboardHide else Icons.Rounded.Keyboard,
+            icon = if (keyboardVisible) Icons.Outlined.KeyboardHide else Icons.Outlined.Keyboard,
             contentDescription = stringResource(
                 if (keyboardVisible) R.string.terminal_keyboard_hide else R.string.terminal_keyboard_show,
             ),

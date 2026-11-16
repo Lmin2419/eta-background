@@ -3,10 +3,9 @@ package io.github.mangi.eta.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.UnfoldMore
+import androidx.compose.material.icons.outlined.UnfoldMore
 import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.DropdownColors
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -17,17 +16,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.DropdownDefaults
-import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
-import top.yukonga.miuix.kmp.popup.WindowDropdownPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -52,25 +50,28 @@ internal fun EtaDropdownPreference(
     val haptics = LocalHapticFeedback.current
     val color = if (available) EtaTheme.colors.textSecondary
         else MiuixTheme.colorScheme.disabledOnSurface
-    val entry = DropdownEntry(items.mapIndexed { index, item ->
-        item.copy(selected = index == selectedIndex, onClick = {
-            onSelectedIndexChange(index)
-            item.onClick?.invoke()
-        })
-    })
+    // 与上游设置页一致：选项用 COUI 菜单从这一行展开，当前项打勾。
+    val anchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    var bounds by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+    @Suppress("UNUSED_VARIABLE") val unusedWindowChoice = useWindow
     EtaPreferenceRow(
         title = title,
-        summary = summary,
-        modifier = modifier,
+        // 副标题只是当前选中的值时不再显示：右边已经写着这个值，不重复。
+        summary = summary?.takeUnless { it == items.getOrNull(selectedIndex)?.text },
+        modifier = modifier
+            .onGloballyPositioned { bounds = it.boundsInWindow() }
+            .couiMenuAnchor(anchor),
         bottomAction = bottomAction,
         startAction = startAction,
         enabled = available,
         holdDownState = holding && available,
         interaction = Modifier.clickable(enabled = available, role = Role.DropdownList) {
-            expanded = !expanded
-            if (expanded) {
-                holding = true
-                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+            anchor.open {
+                expanded = !expanded
+                if (expanded) {
+                    holding = true
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                }
             }
         },
     ) {
@@ -84,27 +85,28 @@ internal fun EtaDropdownPreference(
             )
         }
         Row {
-            Icon(Icons.Rounded.UnfoldMore, null, Modifier.size(20.dp), tint = color)
-            if (useWindow) {
-                WindowDropdownPopup(
-                    entry = entry,
-                    show = expanded && available,
-                    onDismiss = { expanded = false },
-                    onDismissFinished = { holding = false },
-                    maxHeight = null,
-                    dropdownColors = etaDropdownColors(),
-                )
-            } else {
-                OverlayDropdownPopup(
-                    entry = entry,
-                    show = expanded && available,
-                    onDismiss = { expanded = false },
-                    onDismissFinished = { holding = false },
-                    maxHeight = null,
-                    dropdownColors = etaDropdownColors(),
-                    renderInRootScaffold = true,
-                )
-            }
+            Icon(Icons.Outlined.UnfoldMore, null, Modifier.size(20.dp), tint = color)
+        }
+    }
+    EtaContextMenu(
+        show = expanded && available,
+        anchor = bounds,
+        onDismiss = { expanded = false; holding = false },
+        alignEnd = true,
+        couiAnchor = anchor,
+    ) {
+        items.forEachIndexed { index, item ->
+            EtaMenuItem(
+                text = item.text,
+                selected = index == selectedIndex,
+                summary = item.summary,
+                onClick = {
+                    expanded = false
+                    holding = false
+                    onSelectedIndexChange(index)
+                    item.onClick?.invoke()
+                },
+            )
         }
     }
 }
@@ -138,10 +140,3 @@ internal fun EtaOverlayDropdownPreference(
     summary = summary, startAction = startAction, enabled = enabled, useWindow = false,
     onSelectedIndexChange = onSelectedIndexChange,
 )
-
-@Composable
-private fun etaDropdownColors(): DropdownColors {
-    val colors = EtaTheme.colors
-    return DropdownColors(colors.textPrimary, colors.textSecondary, colors.surfaceRaised,
-        colors.onAccentSoft, colors.onAccentSoft, colors.accentSoft, colors.accent)
-}

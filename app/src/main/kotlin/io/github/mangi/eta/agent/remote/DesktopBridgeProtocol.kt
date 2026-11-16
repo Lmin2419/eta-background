@@ -6,6 +6,9 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
@@ -31,6 +34,7 @@ internal object DesktopBridgeProtocol {
                 files = json.array("files")?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }.orEmpty(),
                 source = json.string("source") ?: "user",
                 rpcId = json.string("rpcId"),
+                imageRefs = json.array("imageRefs")?.mapNotNull { it as? JsonObject }.orEmpty(),
             )
             "assistant" -> DesktopItem.Assistant(
                 seq = seq,
@@ -124,7 +128,91 @@ internal object DesktopBridgeProtocol {
             subagent = json.bool("subagent") == true,
             workspaceId = json.string("workspaceId"),
             pinned = json.bool("pinned") == true,
+            archived = json.bool("archived") == true,
         )
+    }
+
+    fun parseServerInfo(json: JsonObject): DesktopServerInfo {
+        val dsh = json["dsh"] as? JsonObject
+        return DesktopServerInfo(
+            version = json.string("version"),
+            runtime = json.string("runtime"),
+            host = json.string("host"),
+            features = json.array("features")?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }?.toSet().orEmpty(),
+            dshVersion = dsh?.string("version"),
+            dshApi = dsh?.array("api")?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }?.toSet(),
+            tunnel = (json["tunnel"] as? JsonObject)?.let(::parseTunnel),
+        )
+    }
+
+    fun parseTunnel(json: JsonObject): DesktopTunnel? =
+        json.string("state")?.let { DesktopTunnel(it, json.string("message")) }
+
+    fun parseQuestion(json: JsonObject): DesktopQuestion? {
+        val id = json.string("id") ?: return null
+        val items = parseQuestionItems(json["questions"])
+        if (items.isEmpty()) return null
+        return DesktopQuestion(
+            id = id,
+            sessionId = json.string("sessionId").orEmpty(),
+            callId = json.string("callId"),
+            timed = json.bool("timed") == true,
+            createdAt = json.long("createdAt") ?: 0L,
+            items = items,
+        )
+    }
+
+    fun parseQuestionItems(element: JsonElement?): List<DesktopQuestionItem> =
+        (element as? JsonArray)?.mapNotNull { entry ->
+            val json = entry as? JsonObject ?: return@mapNotNull null
+            val id = json.string("id") ?: return@mapNotNull null
+            DesktopQuestionItem(
+                id = id,
+                question = json.string("question").orEmpty(),
+                detail = json.string("detail"),
+                header = json.string("header"),
+                options = json.array("options")?.mapNotNull { option ->
+                    val o = option as? JsonObject ?: return@mapNotNull null
+                    o.string("label")?.let { DesktopQuestionOption(it, o.string("description")) }
+                }.orEmpty(),
+                multiSelect = json.bool("multiSelect") == true,
+                intent = (json["intent"] as? JsonObject)?.let { intent ->
+                    intent.string("kind")?.let { kind ->
+                        DesktopQuestionIntent(kind, intent.string("approve"), intent.string("reject"), intent.string("always"))
+                    }
+                },
+            )
+        }.orEmpty()
+
+    /** `questions` 投影：仍可回答的限时提问（`continued` 表示前台等待已结束，回答会作为新消息送达）。 */
+    fun parsePendingQuestions(element: JsonElement?): List<DesktopPendingQuestion> =
+        ((element as? JsonObject)?.get("active") as? JsonArray)?.mapNotNull { entry ->
+            val json = entry as? JsonObject ?: return@mapNotNull null
+            val callId = json.string("callId") ?: return@mapNotNull null
+            val items = parseQuestionItems(json["questions"])
+            if (items.isEmpty()) null else DesktopPendingQuestion(callId, json.string("state") == "continued", items)
+        }.orEmpty()
+
+    fun parseTurn(json: JsonObject): DesktopTurnEvent? {
+        val sessionId = json.string("sessionId") ?: return null
+        return DesktopTurnEvent(
+            sessionId = sessionId,
+            turn = json.int("turn") ?: 0,
+            reason = json.string("reason") ?: "completed",
+            message = json.string("message"),
+            text = json.string("text").orEmpty(),
+            time = json.long("time") ?: System.currentTimeMillis(),
+        )
+    }
+
+    fun answersJson(answers: List<DesktopQuestionAnswer>): JsonArray = buildJsonArray {
+        for (answer in answers) {
+            add(buildJsonObject {
+                put("id", answer.id)
+                put("selected", buildJsonArray { answer.selected.forEach { add(JsonPrimitive(it)) } })
+                answer.custom?.takeIf { it.isNotBlank() }?.let { put("custom", it) }
+            })
+        }
     }
 
     fun parseWorkspace(json: JsonObject): DesktopWorkspace? {
@@ -282,6 +370,8 @@ internal sealed interface DesktopItem {
         val files: List<String>,
         val source: String,
         val rpcId: String?,
+        /** 电脑上存好的图片附件引用（插件 0.5.0 起），手机按需取图预览。 */
+        val imageRefs: List<JsonObject> = emptyList(),
     ) : DesktopItem
 
     data class Assistant(
@@ -417,6 +507,68 @@ internal data class DesktopSessionRow(
     val subagent: Boolean,
     val workspaceId: String?,
     val pinned: Boolean,
+    val archived: Boolean = false,
+)
+
+/** 插件自报的信息：版本、运行在桌面版（desktop）还是独立 dsh 进程（node）。 */
+internal data class DesktopServerInfo(
+    val version: String?,
+    val runtime: String?,
+    val host: String?,
+    val features: Set<String>,
+    /** 电脑上 DSH 的版本；插件读不到时为空。 */
+    val dshVersion: String? = null,
+    /** DSH 提供的会话接口；空表示插件太旧，没有上报。 */
+    val dshApi: Set<String>? = null,
+    /** 插件管理的 frpc 通道状态（插件 0.5.0 起）。 */
+    val tunnel: DesktopTunnel? = null,
+) {
+    /** 插件是否支持某项能力；老插件不报能力列表时按不支持处理。 */
+    fun supports(feature: String): Boolean = feature in features
+}
+
+internal data class DesktopQuestionOption(val label: String, val description: String?)
+
+/** 提问的呈现意图：`plan-review` 是计划审阅，`approval` 是授权；其余按普通选择题显示。 */
+internal data class DesktopQuestionIntent(val kind: String, val approve: String?, val reject: String?, val always: String?)
+
+internal data class DesktopQuestionItem(
+    val id: String,
+    val question: String,
+    val detail: String?,
+    val header: String?,
+    val options: List<DesktopQuestionOption>,
+    val multiSelect: Boolean,
+    val intent: DesktopQuestionIntent?,
+) {
+    val isPlanReview: Boolean get() = intent?.kind == "plan-review"
+}
+
+/** Agent 正在等待回答的一次提问（一批问题），手机和桌面先答者生效。 */
+internal data class DesktopQuestion(
+    val id: String,
+    val sessionId: String,
+    val callId: String?,
+    val timed: Boolean,
+    val createdAt: Long,
+    val items: List<DesktopQuestionItem>,
+) {
+    val isPlanReview: Boolean get() = items.any { it.isPlanReview }
+}
+
+/** 投影里仍可回答的限时提问；[continued] 时只能经 `question.reply` 回答。 */
+internal data class DesktopPendingQuestion(val callId: String, val continued: Boolean, val items: List<DesktopQuestionItem>)
+
+internal data class DesktopQuestionAnswer(val id: String, val selected: List<String>, val custom: String? = null)
+
+/** 任一会话的一轮结束（插件全局推送），用于完成提醒。 */
+internal data class DesktopTurnEvent(
+    val sessionId: String,
+    val turn: Int,
+    val reason: String,
+    val message: String?,
+    val text: String,
+    val time: Long,
 )
 
 internal data class DesktopWorkspace(val id: String, val title: String, val path: String)
@@ -432,8 +584,23 @@ internal data class DesktopApproval(
 
 internal data class DesktopQueueItem(val id: String, val text: String, val steering: Boolean, val rpcId: String? = null)
 
+/** 一条正从插队队列交接到记录里的消息，以及它离开队列的时间。 */
+internal data class DesktopHandoff(val item: DesktopQueueItem, val at: Long)
+
 /** 手机刚发出、桌面还没确认的消息；[queued] 表示发送时会话正在运行，会进入待处理队列。 */
-internal data class DesktopEcho(val requestId: String, val text: String, val queued: Boolean)
+internal data class DesktopEcho(
+    val requestId: String,
+    val text: String,
+    val queued: Boolean,
+    /** 刚发出的图片（data URL），落定前先用本地图预览。 */
+    val images: List<String> = emptyList(),
+)
+
+/** 插件里 frpc 通道的状态：absent / starting / connected / error / stopped。 */
+internal data class DesktopTunnel(val state: String, val message: String?)
+
+/** 手机要发给电脑的一个文件：名字和原始字节的 base64。 */
+internal data class DesktopFile(val name: String, val base64: String)
 
 internal data class DesktopModelSelection(val provider: String, val model: String, val reasoningEffort: String?)
 

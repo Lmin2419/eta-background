@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import io.github.mangi.eta.ui.screens.desktop.listed
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +54,7 @@ import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.data.repository.RuntimeConfigRepository
 import io.github.mangi.eta.ui.AppearanceSettingsScreen
 import io.github.mangi.eta.ui.CommonTaskLaunchRequest
+import io.github.mangi.eta.ui.IncomingShareRequest
 import io.github.mangi.eta.ui.SettingsScreen
 import io.github.mangi.eta.ui.components.HomeConversationTopBar
 import io.github.mangi.eta.ui.components.EtaAppOverlayHost
@@ -98,6 +103,8 @@ import io.github.mangi.eta.ui.screens.mcp.McpServerDetailScreen
 import io.github.mangi.eta.ui.screens.mcp.McpServersScreen
 import io.github.mangi.eta.ui.screens.memory.AgentMemoryScreen
 import io.github.mangi.eta.ui.screens.permissions.PermissionHealthScreen
+import io.github.mangi.eta.ui.screens.settings.AssistantOverlaySettingsScreen
+import io.github.mangi.eta.ui.screens.settings.ConversationTitleSettingsScreen
 import io.github.mangi.eta.ui.screens.skills.AgentSkillsScreen
 import io.github.mangi.eta.ui.screens.tasks.CommonTasksScreen
 import io.github.mangi.eta.ui.screens.subagent.SubagentSettingsScreen
@@ -136,6 +143,8 @@ fun AgentAppRoot(
     onRequestedConversationOpened: () -> Unit = {},
     requestedArchivedConversation: ArchivedConversationRequest? = null,
     onArchivedConversationOpened: () -> Unit = {},
+    sharedContent: IncomingShareRequest? = null,
+    onSharedContentAccepted: () -> Unit = {},
     openSpeechSettings: Boolean = false,
     openTerminal: Boolean = false,
     onTerminalOpened: () -> Unit = {},
@@ -170,6 +179,26 @@ fun AgentAppRoot(
             onTerminalOpened()
         }
     }
+    // 已配对电脑时，主界面侧栏显示「电脑」入口和运行中数量（不会因此连接电脑）。
+    val appContext = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.mangi.eta.agent.remote.DesktopBridge.prepare(appContext) }
+    }
+    val desktopConfig by io.github.mangi.eta.agent.remote.DesktopBridge.config.collectAsState()
+    val desktopRows by io.github.mangi.eta.agent.remote.DesktopBridge.sessions.collectAsState()
+    // 电脑同步的通知：空字符串打开会话列表，否则直接打开那个电脑会话。
+    val desktopRequest by io.github.mangi.eta.agent.remote.DesktopLinkNav.requests.collectAsState()
+    LaunchedEffect(desktopRequest) {
+        val target = desktopRequest ?: return@LaunchedEffect
+        io.github.mangi.eta.agent.remote.DesktopLinkNav.consume()
+        val chat = target.takeIf { it.isNotEmpty() }?.let { AppRoute.DesktopChat(it) }
+        val top = backStack.lastOrNull()
+        if (chat != null && top == chat) return@LaunchedEffect
+        if (backStack.none { it == AppRoute.DesktopSessions }) backStack.add(AppRoute.DesktopSessions)
+        else while (backStack.size > 1 && backStack.last() != AppRoute.DesktopSessions) backStack.removeAt(backStack.lastIndex)
+        if (chat != null) backStack.add(chat)
+    }
+    // 设置类页面与上游一致，整页打开（大标题随滚动收缩）；选择类操作用小窗菜单和半窗。
     val navigator = remember(backStack) { AgentNavigator(backStack) }
     var navigationResetKey by rememberSaveable { mutableIntStateOf(0) }
     val runtimeActive by AgentRuntimeService.keepScreenOn.collectAsState()
@@ -216,6 +245,21 @@ fun AgentAppRoot(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // 告诉后台服务用户正在看哪个对话：在这个对话里完成的任务不再弹完成横幅。
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
+    val onHomeScreen = lifecycleState.isAtLeast(Lifecycle.State.RESUMED) && backStack.lastOrNull() == AppRoute.Home
+    val foregroundConversation = if (onHomeScreen) agentState.conversationPaneState.selectedConversationId else null
+    SideEffect {
+        io.github.mangi.eta.agent.runtime.ForegroundConversation.id = foregroundConversation
+        io.github.mangi.eta.agent.runtime.ForegroundConversation.homeVisible = onHomeScreen
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            io.github.mangi.eta.agent.runtime.ForegroundConversation.id = null
+            io.github.mangi.eta.agent.runtime.ForegroundConversation.homeVisible = false
+        }
+    }
+
     var tasksPanelOpen by rememberSaveable { mutableStateOf(false) }
     val wideHome = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() >= 840.dp }
     val taskCount by remember { AgentExecutionService.taskSnapshots.map { cards -> cards.count { !it.completed } }.distinctUntilChanged() }.collectAsState(0)
@@ -240,19 +284,19 @@ fun AgentAppRoot(
                 withContext(Dispatchers.IO) {
                     output.use { it.write(markdown.toByteArray(Charsets.UTF_8)) }
                 }
-                Toast.makeText(
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(
                     context,
                     resources.getString(R.string.conversation_exported),
                     Toast.LENGTH_SHORT,
-                ).show()
+                )
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Throwable) {
-                Toast.makeText(
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(
                     context,
                     resources.getString(R.string.conversation_export_failed),
                     Toast.LENGTH_LONG,
-                ).show()
+                )
             }
         }
     }
@@ -273,7 +317,7 @@ fun AgentAppRoot(
         // A newer navigation request can arrive while the file read is in flight.
         if (!onCommonTaskConsumed(request.requestId)) return@LaunchedEffect
         if (task == null) {
-            Toast.makeText(context, R.string.common_tasks_missing, Toast.LENGTH_LONG).show()
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(context, R.string.common_tasks_missing, Toast.LENGTH_LONG)
         } else if (agentState.startCommonTask(task.id, task.instruction, request.requestId)) {
             rememberTaskUse(task.id)
             requestExecutionNotifications()
@@ -310,6 +354,18 @@ fun AgentAppRoot(
             navigator.popToHome()
         }
         onAssistantConversationOpened(opened)
+    }
+
+    LaunchedEffect(sharedContent) {
+        val request = sharedContent ?: return@LaunchedEffect
+        focusManager.clearFocus()
+        conversationPaneOpen = false
+        if (backStack.lastOrNull() != AppRoute.Home) {
+            navigator.popToHome()
+            navigationResetKey++
+        }
+        agentState.acceptSharedContent(request)
+        onSharedContentAccepted()
     }
 
     fun pushRoute(
@@ -402,17 +458,20 @@ fun AgentAppRoot(
             onSearchConversations = { query -> agentState.updateSearchQuery(query) },
             onNewConversation = { createConversation() },
             onOpenCommonTasks = ::openTasks,
+            onOpenDesktop = if (desktopConfig?.isComplete == true) ({ pushRoute(AppRoute.DesktopSessions) }) else null,
+            desktopRunning = desktopRows.rows.count { it.running && it.listed },
+            onOpenDesktopSession = { id -> conversationPaneOpen = false; pushRoute(AppRoute.DesktopChat(id)) },
             onOpenTerminal = { pushRoute(AppRoute.Terminal) },
             onLaunchKimiWeb = {
                 requestExecutionNotifications()
                 if (appViewModel.kimiWebState.phase != KimiWebPhase.NOT_INSTALLED) {
                     appViewModel.launchKimiWeb { result ->
                         if (result is KimiWebLaunchResult.Failed) {
-                            Toast.makeText(
+                            io.github.mangi.eta.ui.components.EtaToastCenter.show(
                                 context,
                                 result.message(context),
                                 Toast.LENGTH_LONG,
-                            ).show()
+                            )
                         }
                     }
                 } else {
@@ -477,19 +536,32 @@ fun AgentAppRoot(
                     onTasks = ::openTasks,
                     onCharacter = { home.roleplay?.let { pushRoute(AppRoute.CharacterDetail(it.characterId)) } },
                     onModel = agentState::selectModel, onCompact = agentState::compactCurrentContext,
-                    onExport = ::exportCurrentConversation, onManageModels = { pushRoute(AppRoute.ModelProviders) })
+                    onExport = ::exportCurrentConversation, onManageModels = { pushRoute(AppRoute.ModelProviders) },
+                    conversationTitle = agentState.currentConversationTitle,
+                    currentConversationId = agentState.conversationPaneState.selectedConversationId,
+                    onOpenConversation = ::selectConversation,
+                    onOpenDesktopSession = { id -> conversationPaneOpen = false; pushRoute(AppRoute.DesktopChat(id)) })
             }) else null,
             homeCharacter = if (route is AppRoute.Home) agentState.homeState.roleplayChatUi() else null,
             onOpenCharacter = {
                 agentState.homeState.roleplay?.let { pushRoute(AppRoute.CharacterDetail(it.characterId)) }
             },
         ) { padding ->
+            // 对话页：内容延伸到玻璃顶栏下面，滚动时消息从顶栏后模糊透出；列表自己留出顶栏高度。
+            val underTopBar = route is AppRoute.Home
+            val layoutDirection = androidx.compose.ui.platform.LocalLayoutDirection.current
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
+                    .then(if (underTopBar) Modifier.padding(
+                        start = padding.calculateStartPadding(layoutDirection),
+                        end = padding.calculateEndPadding(layoutDirection),
+                        bottom = padding.calculateBottomPadding(),
+                    ) else Modifier.padding(padding))
             ) {
-                content()
+                androidx.compose.runtime.CompositionLocalProvider(
+                    io.github.mangi.eta.ui.components.LocalTopBarInset provides if (underTopBar) (padding.calculateTopPadding() - io.github.mangi.eta.ui.components.ChatScrollEdgeTail).coerceAtLeast(0.dp) else 0.dp,
+                ) { content() }
             }
         }
     }
@@ -502,16 +574,12 @@ fun AgentAppRoot(
     val swipeDismiss = swipeBackDirection.takeIf {
         LocalAppearanceSettings.current.swipeDismissEnabled
     }
+    // 对话页顶部按钮随消息滚动收缩/还原的共享进度（消息列表写、顶栏读）。
+    val chatChrome = remember { io.github.mangi.eta.ui.components.EtaChromeState() }
     EtaAppOverlayHost {
-    key(navigationResetKey) {
-        NavDisplay(
-            backStack = backStack,
-            transition = io.github.mangi.eta.ui.navigation.rememberEtaNavigationTransition(),
-            onBack = { popRoute() },
-            effects = NavDisplayEffects(
-                cornerClipRadius = rememberNavSystemCornerRadius(),
-            ),
-        ) {
+    androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalEtaChrome provides chatChrome) {
+    // 所有路由的页面内容只定义一次：整页导航与玻璃窗口里的导航共用。
+    val appEntries: top.yukonga.miuix.kmp.nav.core.NavEntryBuilder.() -> Unit = {
             entry<AppRoute.Home>(swipeDismiss = swipeDismiss) {
                 RoutedShell(route = AppRoute.Home) {
                     AgentHomeScreen(
@@ -526,6 +594,7 @@ fun AgentAppRoot(
                             onExportConversation = ::exportCurrentConversation,
                             onOpenSpeechSettings = { pushRoute(AppRoute.SpeechRecognition) },
                         ),
+                        isBranching = agentState.isBranchingCurrentConversation,
                         conversationKey = agentState.conversationPaneState.selectedConversationId,
                         focusInputRequest = pendingComposeId?.takeIf { it == agentState.conversationPaneState.selectedConversationId },
                         onInputFocusHandled = { pendingComposeId = null },
@@ -566,6 +635,8 @@ fun AgentAppRoot(
                                         messageRegenerateTarget = MessageMutationTarget(action.id, impact.laterTurnCount)
                                     }
                                 }
+                                is AgentHomeAction.BranchConversation ->
+                                    agentState.branchConversation(action.conversationId, action.messageId)
                                 is AgentHomeAction.SelectReplyCandidate -> agentState.selectReplyCandidate(action.id, action.index)
                                 AgentHomeAction.OpenTools -> pushRoute(AppRoute.Tools)
                                 AgentHomeAction.OpenSkills -> pushRoute(AppRoute.Skills)
@@ -640,6 +711,15 @@ fun AgentAppRoot(
             entry<AppRoute.Subagents>(swipeDismiss = swipeDismiss) {
                 SubagentSettingsScreen(onBack = ::popRoute)
             }
+            entry<AppRoute.ContextCompactionSettings>(swipeDismiss = swipeDismiss) {
+                io.github.mangi.eta.ui.screens.settings.ContextCompactionSettingsScreen(onBack = ::popRoute)
+            }
+            entry<AppRoute.ConversationTitleSettings>(swipeDismiss = swipeDismiss) {
+                ConversationTitleSettingsScreen(onBack = ::popRoute)
+            }
+            entry<AppRoute.AssistantOverlaySettings>(swipeDismiss = swipeDismiss) {
+                AssistantOverlaySettingsScreen(onBack = ::popRoute)
+            }
             entry<AppRoute.Skills>(swipeDismiss = swipeDismiss) {
                 LaunchedEffect(Unit) {
                     skills.refreshSkills()
@@ -665,17 +745,17 @@ fun AgentAppRoot(
             }
             entry<AppRoute.Tasks>(swipeDismiss = swipeDismiss) { route ->
                 TasksScreen(commonTasks, ::popRoute, ::runHomeTask, { id -> selectConversation(id); navigator.popToHome() },
-                    initialTab = route.tab, visible = backStack.lastOrNull() == route, onArchivedConversation = ::openArchivedTask)
+                    initialTab = route.tab, visible = navigator.current() == route, onArchivedConversation = ::openArchivedTask)
             }
             entry<AppRoute.Characters>(swipeDismiss = swipeDismiss) {
-                LaunchedEffect(backStack.lastOrNull() == AppRoute.Characters) {
-                    if (backStack.lastOrNull() == AppRoute.Characters) characterStore.loadLibrary()
+                LaunchedEffect(navigator.current() == AppRoute.Characters) {
+                    if (navigator.current() == AppRoute.Characters) characterStore.loadLibrary()
                 }
                 CharacterLibraryScreen(characterStore, { if (navigator.current() == AppRoute.Characters) pushRoute(it) }, ::popRoute)
             }
             entry<AppRoute.CharacterDetail>(swipeDismiss = swipeDismiss) { route ->
-                LaunchedEffect(route.characterId, backStack.lastOrNull() == route) {
-                    if (backStack.lastOrNull() == route) characterStore.loadDetail(route.characterId)
+                LaunchedEffect(route.characterId, navigator.current() == route) {
+                    if (navigator.current() == route) characterStore.loadDetail(route.characterId)
                 }
                 CharacterDetailScreen(route.characterId, characterStore, { if (navigator.current() == route) pushRoute(it) }, ::popRoute) { binding, greeting ->
                     if (navigator.current() == route) {
@@ -688,24 +768,24 @@ fun AgentAppRoot(
                 }
             }
             entry<AppRoute.CharacterEditor>(swipeDismiss = swipeDismiss) { route ->
-                LaunchedEffect(route.characterId, backStack.lastOrNull() == route) {
-                    if (backStack.lastOrNull() == route) characterStore.loadEditor(route.characterId)
+                LaunchedEffect(route.characterId, navigator.current() == route) {
+                    if (navigator.current() == route) characterStore.loadEditor(route.characterId)
                 }
                 CharacterEditorScreen(route.characterId, characterStore, ::popRoute) { id ->
                     if (navigator.current() == route) navigator.replace(AppRoute.CharacterDetail(id))
                 }
             }
             entry<AppRoute.CharacterPersona>(swipeDismiss = swipeDismiss) {
-                LaunchedEffect(backStack.lastOrNull() == AppRoute.CharacterPersona) {
-                    if (backStack.lastOrNull() == AppRoute.CharacterPersona) characterStore.loadPersona()
+                LaunchedEffect(navigator.current() == AppRoute.CharacterPersona) {
+                    if (navigator.current() == AppRoute.CharacterPersona) characterStore.loadPersona()
                 }
                 CharacterPersonaScreen(characterStore) {
                     if (navigator.current() == AppRoute.CharacterPersona) popRoute()
                 }
             }
             entry<AppRoute.CharacterMemory>(swipeDismiss = swipeDismiss) { route ->
-                LaunchedEffect(route.characterId, backStack.lastOrNull() == route) {
-                    if (backStack.lastOrNull() == route) characterStore.loadMemory(route.characterId)
+                LaunchedEffect(route.characterId, navigator.current() == route) {
+                    if (navigator.current() == route) characterStore.loadMemory(route.characterId)
                 }
                 CharacterMemoryScreen(route.characterId, characterStore, ::popRoute)
             }
@@ -949,55 +1029,51 @@ fun AgentAppRoot(
                     onBack = ::popRoute
                 )
             }
-        }
+    }
+    key(navigationResetKey) {
+        NavDisplay(
+            backStack = backStack,
+            transition = io.github.mangi.eta.ui.navigation.rememberEtaNavigationTransition(),
+            onBack = { popRoute() },
+            effects = NavDisplayEffects(
+                cornerClipRadius = rememberNavSystemCornerRadius(),
+            ),
+        ) { appEntries() }
+    }
     }
 
     characterStore.notice?.let { notice ->
-        WindowDialog(
+        io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
             title = "角色",
             summary = notice,
             onDismissRequest = characterStore::dismissNotice,
-        ) {
-            io.github.mangi.eta.ui.components.EtaButton(
-                text = "知道了", onClick = characterStore::dismissNotice, modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        ) {}
     }
 
     }
 
     conversationRenameTarget?.let { conversation ->
         var renameInput by remember(conversation.id) { mutableStateOf(conversation.title) }
-        WindowDialog(
-            show = true,
+        // 与上游一致的 COUI 输入对话框。
+        io.github.mangi.eta.ui.components.coui.EtaCouiInputDialog(
+            visible = true,
             title = stringResource(R.string.conversation_rename_title),
+            value = renameInput,
+            onValueChange = { renameInput = it },
+            placeholder = stringResource(R.string.conversation_rename_hint),
+            confirmText = stringResource(R.string.action_save),
+            confirmEnabled = renameInput.isNotBlank(),
+            onConfirm = {
+                agentState.renameConversation(conversation.id, renameInput)
+                conversationRenameTarget = null
+            },
             onDismissRequest = { conversationRenameTarget = null },
-        ) {
-            Column {
-                TextField(
-                    value = renameInput,
-                    onValueChange = { renameInput = it },
-                    label = stringResource(R.string.conversation_rename_hint),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                MiuixDialogActions(
-                    confirmText = stringResource(R.string.action_save),
-                    confirmEnabled = renameInput.isNotBlank(),
-                    onCancel = { conversationRenameTarget = null },
-                    onConfirm = {
-                        agentState.renameConversation(conversation.id, renameInput)
-                        conversationRenameTarget = null
-                    },
-                    modifier = Modifier.padding(top = 16.dp),
-                )
-            }
-        }
+        )
     }
 
     conversationDeleteTarget?.let { conversation ->
-        WindowDialog(
+        io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
             title = stringResource(R.string.conversation_delete_title),
             summary = stringResource(if (conversation.isActiveRun) R.string.conversation_stop_and_delete_message else R.string.conversation_delete_message),
@@ -1019,7 +1095,7 @@ fun AgentAppRoot(
     }
 
     messageDeleteTarget?.let { target ->
-        WindowDialog(
+        io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
             title = stringResource(R.string.conversation_delete_message_title),
             summary = if (target.laterTurnCount == 0) {
@@ -1046,7 +1122,7 @@ fun AgentAppRoot(
     }
 
     messageRegenerateTarget?.let { target ->
-        WindowDialog(
+        io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
             title = stringResource(R.string.conversation_regenerate_title),
             summary = if (target.laterTurnCount == 0) {

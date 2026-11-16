@@ -21,7 +21,7 @@ internal fun ListEmptyState(title: String, modifier: Modifier = Modifier, summar
     Column(modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
         icon?.let {
-            Box(Modifier.size(56.dp).background(colors.tileBackground(tint), EtaTheme.shapes.radiusMd), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(64.dp).background(colors.surfaceSunken, EtaTheme.shapes.radiusFull), contentAlignment = Alignment.Center) {
                 Icon(it, null, Modifier.size(28.dp), tint = colors.tileForeground(tint))
             }
             Spacer(Modifier.height(16.dp))

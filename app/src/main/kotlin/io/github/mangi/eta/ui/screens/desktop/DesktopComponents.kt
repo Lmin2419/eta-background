@@ -1,6 +1,10 @@
 package io.github.mangi.eta.ui.screens.desktop
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import io.github.mangi.eta.ui.components.StatusRing
+import io.github.mangi.eta.ui.model.TaskVisualStatus
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +53,8 @@ internal fun DesktopConnectionBanner(
     configured: Boolean,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    refreshing: Boolean = false,
+    onRefresh: (() -> Unit)? = null,
 ) {
     val (color, text) = when (state) {
         is DesktopBridgeClient.State.Connected ->
@@ -63,14 +69,18 @@ internal fun DesktopConnectionBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = EtaPreferenceDefaults.SidePadding + 4.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp)
+            .clip(EtaTheme.shapes.radiusMd)
+            .then(if (onRefresh != null) Modifier.clickable(onClickLabel = stringResource(R.string.desktop_refresh), onClick = onRefresh) else Modifier)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(8.dp).background(color, CircleShape))
+        if (refreshing) StatusRing(TaskVisualStatus.Running, size = 8.dp, contentDescription = null)
+        else Box(Modifier.size(8.dp).background(color, CircleShape))
         Spacer(Modifier.width(8.dp))
         Text(
             text = text,
-            style = MiuixTheme.textStyles.footnote1,
+            style = EtaTheme.type.caption,
             color = EtaTheme.colors.textSecondary,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -82,56 +92,23 @@ internal fun DesktopConnectionBanner(
     }
 }
 
-/** 按到达顺序依次弹出待审批操作；答完一个自动显示下一个。 */
-@Composable
-internal fun DesktopApprovalHost(approvals: List<DesktopApproval>, sessionId: String? = null) {
-    val approval = approvals.firstOrNull { sessionId == null || it.sessionId == sessionId } ?: return
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val resources = LocalResources.current
-    fun answer(allow: Boolean) {
-        scope.launch {
-            try {
-                DesktopBridge.answerApproval(approval.id, allow)
-            } catch (error: DesktopBridgeException) {
-                Toast.makeText(context, resources.getString(R.string.desktop_failed, error.message), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    EtaWindowDialog(
-        show = true,
-        title = stringResource(R.string.desktop_approval_title, approval.toolName),
-        onDismissRequest = null,
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            approval.reason?.let {
-                Text(
-                    text = it,
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp).verticalScroll(rememberScrollState()),
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                EtaButton(
-                    text = stringResource(R.string.desktop_approval_reject),
-                    onClick = { answer(false) },
-                    kind = EtaButtonKind.Destructive,
-                    modifier = Modifier.weight(1f),
-                )
-                EtaButton(
-                    text = stringResource(R.string.desktop_approval_allow),
-                    onClick = { answer(true) },
-                    kind = EtaButtonKind.Primary,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-    }
-}
-
 @Composable
 internal fun DesktopRunningDot(running: Boolean) {
     if (!running) return
     Box(Modifier.size(8.dp).background(StatusRunning, CircleShape))
 }
+
+/**
+ * 给用户看的失败说明。常见情况有明确的中文解释；电脑端内部错误多半是插件或 DSH 版本不匹配，
+ * 保留原文方便排查。
+ */
+internal fun DesktopBridgeException.display(resources: android.content.res.Resources): String = when (code) {
+    "not-queued" -> resources.getString(R.string.desktop_error_not_queued)
+    "busy" -> resources.getString(R.string.desktop_error_busy)
+    "not-live" -> resources.getString(R.string.desktop_error_not_live)
+    "unknown-op", "bad-request" -> resources.getString(R.string.desktop_error_old_plugin)
+    "internal", "gateway/internal" -> resources.getString(R.string.desktop_error_internal, message.orEmpty())
+    "offline", "timeout" -> message ?: resources.getString(R.string.desktop_error_offline)
+    else -> resources.getString(R.string.desktop_failed, message)
+}
+

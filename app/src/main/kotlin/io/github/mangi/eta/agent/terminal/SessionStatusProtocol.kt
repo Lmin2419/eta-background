@@ -41,13 +41,20 @@ internal object SessionStatusProtocol {
     data class Status(val exitCode: Int, val cwd: String?)
 }
 
-/** 有界输出收集器：读取线程持续排空管道，超过上限后丢弃后续内容并标记截断。 */
+/**
+ * 有界输出收集器：读取线程持续排空管道，超过上限后丢弃后续内容并标记截断。
+ * [keepTailBytes] > 0 时另外保留最后这么多字节：超长输出的结尾（编译错误、异常堆栈）不会丢。
+ */
 internal class ByteArrayOutputCollector {
     private val output = ByteArrayOutputStream()
     private var totalBytesRead = 0L
     private var truncated = false
+    private var tail: ByteArray? = null
+    private var tailStart = 0
+    private var tailSize = 0
 
-    fun readFrom(input: java.io.InputStream, maxBytes: Int = Int.MAX_VALUE) {
+    fun readFrom(input: java.io.InputStream, maxBytes: Int = Int.MAX_VALUE, keepTailBytes: Int = 0) {
+        if (keepTailBytes > 0) synchronized(this) { tail = ByteArray(keepTailBytes); tailStart = 0; tailSize = 0 }
         runCatching {
             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
             while (true) {
@@ -62,6 +69,7 @@ internal class ByteArrayOutputCollector {
                     if (read > allowed) {
                         truncated = true
                     }
+                    tail?.let { ring -> appendTail(ring, buffer, read) }
                 }
             }
         }.onFailure { throwable ->
@@ -69,7 +77,24 @@ internal class ByteArrayOutputCollector {
         }
     }
 
-    fun bytes(): ByteArray = synchronized(this) { output.toByteArray() }
+    private fun appendTail(ring: ByteArray, data: ByteArray, length: Int) {
+        for (i in 0 until length) {
+            val index = (tailStart + tailSize) % ring.size
+            ring[index] = data[i]
+            if (tailSize < ring.size) tailSize++ else tailStart = (tailStart + 1) % ring.size
+        }
+    }
+
+    fun bytes(): ByteArray = synchronized(this) {
+        val head = output.toByteArray()
+        val ring = tail
+        if (!truncated || ring == null || tailSize == 0) return@synchronized head
+        // 截断时：开头保留到上限减去结尾长度，再接上真正的结尾。
+        val tailBytes = ByteArray(tailSize) { ring[(tailStart + it) % ring.size] }
+        val keepHead = (head.size - tailSize).coerceAtLeast(head.size / 4)
+        val omitted = totalBytesRead - keepHead - tailSize
+        head.copyOf(keepHead) + "\n...[省略中间 $omitted 字节，以下为输出结尾]...\n".toByteArray() + tailBytes
+    }
 
     fun text(): String = bytes().decodeToString()
 
@@ -82,6 +107,8 @@ internal class ByteArrayOutputCollector {
             output.reset()
             totalBytesRead = 0
             truncated = false
+            tailStart = 0
+            tailSize = 0
         }
     }
 }

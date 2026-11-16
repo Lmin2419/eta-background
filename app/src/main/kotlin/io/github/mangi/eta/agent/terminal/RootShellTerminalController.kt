@@ -28,6 +28,7 @@ internal class RootShellTerminalController(
         const val USER_STORAGE = "/storage/emulated/0"
         const val MAX_TIMEOUT_SECONDS = 180
         const val MAX_OUTPUT_CHARS = 16_000
+
         const val MAX_COMMAND_OUTPUT_BYTES = 256 * 1024
     }
 
@@ -737,6 +738,7 @@ internal class RootShellTerminalController(
             stdin = null,
             environment = environment,
             maxOutputBytes = MAX_COMMAND_OUTPUT_BYTES,
+            keepTailBytes = 48 * 1024,
         )
         return ShellTextResult(
             exitCode = result.exitCode,
@@ -754,6 +756,7 @@ internal class RootShellTerminalController(
         stdin: ByteArray?,
         environment: TerminalEnvironment,
         maxOutputBytes: Int = Int.MAX_VALUE,
+        keepTailBytes: Int = 0,
     ): OneShotShellResult =
         runOneShotShell(
             processSupervisor = processSupervisor,
@@ -765,10 +768,10 @@ internal class RootShellTerminalController(
             linuxRootfsPath = rootfsPathFor(environment),
             linuxSharedMounts = sharedMountsFor(environment),
             maxOutputBytes = maxOutputBytes,
+            keepTailBytes = keepTailBytes,
         )
 
-    private fun String.truncateForJson(): String =
-        if (length <= MAX_OUTPUT_CHARS) this else take(MAX_OUTPUT_CHARS) + "\n...[truncated]"
+    private fun String.truncateForJson(): String = truncateKeepingTail(this, MAX_OUTPUT_CHARS)
 
     private fun errorJson(code: String, message: String): String =
         JSONObject()
@@ -815,4 +818,16 @@ internal class RootShellTerminalController(
         lateinit var waiterThread: Thread
     }
 
+}
+
+/**
+ * 超长输出保留开头一小段和结尾的大部分：编译错误、异常堆栈和脚本报错的真正原因通常在最后几行，
+ * 只保留开头会让模型看不到真实错误而误判「方案不行」。中间注明省略了多少字符。
+ */
+internal fun truncateKeepingTail(text: String, limit: Int): String {
+    if (text.length <= limit) return text
+    val head = limit / 5
+    val tail = limit - head
+    val omitted = text.length - head - tail
+    return text.take(head) + "\n...[省略中间 $omitted 字符，以下为输出结尾]...\n" + text.takeLast(tail)
 }

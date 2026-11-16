@@ -54,7 +54,7 @@ bash eta-background/deploy/desktop/setup-frpc.sh 'pxd://8.163.249.159:7000?frp=�
 powershell -ExecutionPolicy Bypass -File eta-background\deploy\desktop\setup-frpc.ps1 'pxd://8.163.249.159:7000?frp=…&token=…&port=17788'
 ```
 
-脚本会安装并校验 frpc，写入 `~/.dsh-bridge/frpc.toml` 和 dsh-bridge 的 token（`~/.dsh-bridge/token`），然后注册为登录后自动运行的后台服务（macOS 用 launchd，Linux 用 systemd 用户服务，Windows 用计划任务）。完成后**重启一次 `dsh web`**，让插件读取新的 token。
+脚本会安装并校验 frpc，写入 `~/.dsh-bridge/frpc.toml` 和 dsh-bridge 的 token（`~/.dsh-bridge/token`），然后注册为登录后自动运行的后台服务（macOS 用 launchd，Linux 用 systemd 用户服务，Windows 用计划任务）。完成后**完全退出并重新打开 DSH 桌面版**（只用网页版时重启 `dsh web`），让插件读取新的 token。插件本身的安装见 [dsh-bridge/README.md](../dsh-bridge/README.md)。
 
 ## 3. 手机
 

@@ -47,8 +47,14 @@ class ConversationBatchGestureTest {
         val c = n.boundsInRoot.center; val t = SystemClock.uptimeMillis()
         touch(MotionEvent.ACTION_DOWN, c.x, c.y, t); advance(45)
         touch(MotionEvent.ACTION_UP, c.x, c.y, t); advance(30)
+        // 长按先出玻璃小窗，「多选」进入批量选择（已在选择中时长按直接加选）。
+        find(ctx.getString(R.string.conversation_select_multiple))?.let { tapNode(it); advance(20) }
     }
     private fun Stage3TestPanel.tapNode(n: SemanticsNode) {
+        // 弹出菜单在独立窗口里，坐标触摸只发给主窗口；有点击语义时用语义点击。
+        var target: SemanticsNode? = n
+        while (target != null && target.config.getOrNull(SemanticsActions.OnClick) == null) target = target.parent
+        if (target != null) { click(target); advance(5); return }
         val c = n.boundsInRoot.center; tapFinger(c.x, c.y); advance(5)
     }
     private fun Stage3TestPanel.find(text: String): SemanticsNode? = nodes().firstOrNull {
@@ -140,6 +146,10 @@ class ConversationBatchGestureTest {
         }
         try {
             panel.advance(25)
+            // 阶段 12：侧栏搜索框点圆形搜索按钮才出现。
+            panel.nodes().firstOrNull { it.config.getOrNull(SemanticsActions.SetText) != null }
+                ?: run { panel.nodes().first { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription).orEmpty().contains(controller.get().getString(io.github.mangi.eta.R.string.conversation_search_hint)) && it.config.getOrNull(SemanticsActions.OnClick) != null }
+                    .config[SemanticsActions.OnClick].action?.invoke(); panel.advance(20) }
             panel.nodes().first { it.config.getOrNull(SemanticsActions.SetText) != null }.setInput("Match")
             panel.advance(5)
             panel.longPress(panel.require("Match Alpha"))
@@ -209,6 +219,10 @@ class ConversationBatchGestureTest {
             panel.advance(25)
             assertNotNull(panel.find("Alpha"))
             assertNull(panel.find("Beta"))
+            // 阶段 12：侧栏搜索框点圆形搜索按钮才出现。
+            panel.nodes().firstOrNull { it.config.getOrNull(SemanticsActions.SetText) != null }
+                ?: run { panel.nodes().first { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription).orEmpty().contains(controller.get().getString(io.github.mangi.eta.R.string.conversation_search_hint)) && it.config.getOrNull(SemanticsActions.OnClick) != null }
+                    .config[SemanticsActions.OnClick].action?.invoke(); panel.advance(20) }
             panel.nodes().first { it.config.getOrNull(SemanticsActions.SetText) != null }.setInput("Beta")
             panel.advance(5)
             assertNotNull(panel.find("Beta"))

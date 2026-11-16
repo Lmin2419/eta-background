@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { Bridge } from '../lib/bridge.js'
+import { Bridge, answerItems, projectionChanges, questionItems } from '../lib/bridge.js'
 import { startServer } from '../lib/server.js'
 
 const TOKEN = 'test-token-0123456789'
@@ -30,14 +30,25 @@ function channel() {
   }
 }
 
-function fakeController() {
+/**
+ * A scripted `sessionController`. `legacy` models DSH 0.2.1 and earlier: no
+ * `events`, `state` or `observeProjections`, history through `page`.
+ */
+function fakeController({ legacy = false } = {}) {
   const follow = channel()
-  const projections = channel()
+  const control = channel()
   const calls = []
-  return {
+  const inbox = { 'next-turn': [], 'next-step': [] }
+  const fake = {
     follow,
-    projections,
+    control,
     calls,
+    inbox,
+    /** Push one projection change the way this DSH generation frames it. */
+    project(sessionId, seq, changes) {
+      if (!legacy) control.push({ type: 'projection', sessionId, seq, changes })
+      else for (const change of changes) control.push({ type: 'projection', sessionId, seq, key: change.key, value: change.val })
+    },
     controller: {
       async list() {
         return { items: [{ sessionId: 's1', updatedAt: 5, running: false, blank: false, agentAvailable: false, projections: { kind: 'cached', asOfSeq: 1, values: { title: 'One' } } }] }
@@ -49,31 +60,57 @@ function fakeController() {
         calls.push(['events', request])
         return { records: [{ type: 'event', event: { type: 'turn/start', seq: 1, time: 1, data: { turn: 1 } } }], hasMore: false, cursor: 1 }
       },
+      async page(request) {
+        calls.push(['page', request])
+        return { records: [{ type: 'event', event: { type: 'turn/start', seq: 1, time: 1, data: { turn: 1 } } }], hasMore: false }
+      },
+      async updateQueue(request) {
+        calls.push(['updateQueue', request])
+        return { accepted: true }
+      },
+      control(signal) { return control.iterate(signal) },
       async modelCatalog() {
         return { default: { provider: 'deepseek', model: 'chat' }, routableProviders: ['deepseek'], groups: [{ id: 'deepseek', name: 'DeepSeek', models: [{ id: 'chat', name: 'Chat' }] }], failures: [] }
       },
       follow(request, signal) { calls.push(['follow', request]); return follow.iterate(signal) },
       async projections({ sessionId }) {
-        if (sessionId === 's1') return { kind: 'sequenced', asOfSeq: 1, values: { subagentCatalog: [{ id: 'c1', mode: 'continuable', label: 'scan', name: 'lister', createdAt: 3 }, { id: 'x', mode: 'external', createdAt: 4 }] } }
+        if (sessionId === 's1') return { kind: 'sequenced', asOfSeq: 1, values: { inbox, subagentCatalog: [{ id: 'c1', mode: 'continuable', label: 'scan', name: 'lister', createdAt: 3 }, { id: 'x', mode: 'external', createdAt: 4 }] } }
         return { kind: 'sequenced', asOfSeq: 1, values: { title: 'child', tokenUsage: { uncachedInputTokens: 1, outputTokens: 2, cacheReadTokens: 3, cacheWriteTokens: 0 }, subagentTiming: { settledMs: 50 } } }
       },
       async state({ sessionId }) { return { cursor: 1, active: true, running: sessionId === 'c1', queue: [], pendingInput: [] } },
-      observeProjections(_request, signal) { return projections.iterate(signal) },
     },
+  }
+  if (legacy) {
+    delete fake.controller.events
+    delete fake.controller.state
+  }
+  return fake
+}
+
+function fakeWorkspaces() {
+  return {
+    list: () => [{ id: 'w1', title: 'repo', path: '/repo', sessionIds: ['s1'] }],
+    archivedSessionIds: [],
+    pinnedSessionIds: ['s1'],
+    async archiveSession(id) {
+      if (id === 'busy') throw new (class WorkspaceActiveSessionError extends Error {})('active')
+      this.pinnedSessionIds = this.pinnedSessionIds.filter(item => item !== id)
+      this.archivedSessionIds = [...this.archivedSessionIds, id]
+    },
+    async unarchiveSession(id) { this.archivedSessionIds = this.archivedSessionIds.filter(item => item !== id) },
+    async pinSession(id) { this.pinnedSessionIds = [id, ...this.pinnedSessionIds] },
+    async unpinSession(id) { this.pinnedSessionIds = this.pinnedSessionIds.filter(item => item !== id) },
   }
 }
 
-const workspaces = {
-  list: () => [{ id: 'w1', title: 'repo', path: '/repo', sessionIds: ['s1'] }],
-  archivedSessionIds: [],
-  pinnedSessionIds: ['s1'],
-}
-
-async function setup() {
-  const fake = fakeController()
-  const bridge = new Bridge({ controller: fake.controller, workspaces, logger: quiet, version: 'test' })
-  const handle = await startServer({ bridge, token: TOKEN, host: '127.0.0.1', port: 0, logger: quiet })
-  return { fake, bridge, handle, url: `ws://127.0.0.1:${handle.port}/v1/ws` }
+async function setup({ legacy = false, ...extra } = {}) {
+  const fake = fakeController({ legacy })
+  const workspaces = fakeWorkspaces()
+  const bridge = new Bridge({ controller: fake.controller, workspaces, logger: quiet, version: 'test', ...extra })
+  const server = await startServer({ bridge, token: TOKEN, host: '127.0.0.1', port: 0, logger: quiet })
+  const stopFeed = bridge.startProjectionFeed()
+  const handle = { port: server.port, close: async () => { stopFeed(); await server.close() } }
+  return { fake, bridge, workspaces, handle, url: `ws://127.0.0.1:${handle.port}/v1/ws` }
 }
 
 /** Open a client that records every server message. */
@@ -128,7 +165,10 @@ test('rejects a wrong token', async () => {
 test('health endpoint is open', async () => {
   const { handle } = await setup()
   const res = await fetch(`http://127.0.0.1:${handle.port}/v1/health`)
-  assert.deepEqual(await res.json(), { ok: true, protocol: 1, version: 'test' })
+  assert.deepEqual(await res.json(), {
+    ok: true, protocol: 1, version: 'test', runtime: 'node',
+    dsh: { version: null, api: ['control', 'page', 'events', 'state', 'projections'] }, tunnel: null,
+  })
   await handle.close()
 })
 
@@ -195,8 +235,9 @@ test('follow streams snapshot, live deltas, items and projections', async () => 
   assert.deepEqual({ committed: end.committed, seq: end.seq }, { committed: true, seq: 4 })
 
   // Projection at the snapshot cut is dropped, a later one is forwarded.
-  fake.projections.push({ type: 'projection', seq: 3, changes: [{ key: 'title', val: 'stale' }] })
-  fake.projections.push({ type: 'projection', seq: 5, changes: [{ key: 'title', val: 'Two' }, { key: 'inbox', val: { 'next-turn': [{ id: 'q', content: [{ type: 'text', text: 'more' }] }], 'next-step': [] } }] })
+  fake.project('s1', 3, [{ key: 'title', val: 'stale' }])
+  fake.project('other', 9, [{ key: 'inbox', val: { 'next-turn': [], 'next-step': [] } }])
+  fake.project('s1', 5, [{ key: 'title', val: 'Two' }, { key: 'inbox', val: { 'next-turn': [{ id: 'q', content: [{ type: 'text', text: 'more' }] }], 'next-step': [] } }])
   const projection = await c.next(m => m.t === 'projection')
   assert.equal(projection.title, 'Two')
   assert.deepEqual(projection.queue, [{ id: 'q', text: 'more', placement: 'queued' }])
@@ -267,6 +308,269 @@ test('approval answered on desktop clears the phone card', async () => {
 test('approval without a phone passes straight through', async () => {
   const { bridge, handle } = await setup()
   assert.equal(await bridge.requestApproval({ agent: { id: 's' }, toolName: 'x' }, () => Promise.resolve('rejected')), 'rejected')
+  // With no phone a downstream failure is DSH's own outcome, not a wait for a phone.
+  await assert.rejects(bridge.requestApproval({ agent: { id: 's' }, toolName: 'x' }, () => Promise.reject(new Error('no ui'))), /no ui/)
+  assert.equal(bridge.pendingApprovals().length, 0)
+  await handle.close()
+})
+
+test('an approval raised before the phone connects is offered in hello', async () => {
+  const { bridge, handle, url } = await setup()
+  const pending = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'bash' }, () => new Promise(() => {}))
+  const c = await connect(url)
+  const hello = await c.call('hello')
+  assert.equal(hello.runtime, 'node')
+  assert.equal(hello.approvals.length, 1)
+  await c.call('approval.answer', { approvalId: hello.approvals[0].id, outcome: 'rejected' })
+  assert.equal(await pending, 'rejected')
+  c.ws.close()
+  await handle.close()
+})
+
+test('questions race phone and desktop; the phone answer is normalised per question', async () => {
+  const { bridge, handle, url } = await setup()
+  const c = await connect(url)
+  await c.call('hello')
+  let withdrawn = false
+  const request = {
+    agent: { id: 's1', session: { id: 's1' } },
+    wait: { callId: 'call-1', timed: true },
+    questions: [
+      { id: 'q1', question: 'Which?', options: [{ label: 'A' }, { label: 'B' }] },
+      { id: 'q2', question: 'Also?', options: [{ label: 'X' }, { label: 'Y' }], multiSelect: true },
+      { id: 'plan', question: 'Approve plan?', detail: '# Plan', options: [{ label: 'Approve' }, { label: 'Revise' }], intent: { kind: 'plan-review', approve: 'Approve' } },
+    ],
+  }
+  const next = () => new Promise((_resolve, reject) => {
+    request.signal.addEventListener('abort', () => { withdrawn = true; reject(new Error('withdrawn')) }, { once: true })
+  })
+  const pending = bridge.requestQuestion(request, next)
+  const ask = await c.next(m => m.t === 'question')
+  assert.equal(ask.question.callId, 'call-1')
+  assert.equal(ask.question.timed, true)
+  assert.equal(ask.question.questions[2].intent.kind, 'plan-review')
+  await c.call('question.answer', {
+    questionId: ask.question.id,
+    answers: [{ id: 'q1', selected: ['B', 'A'] }, { id: 'q2', selected: ['X', 'Z', 'Y'], custom: 'more' }],
+  })
+  assert.deepEqual(await pending, {
+    answers: [{ id: 'q1', selected: ['B'] }, { id: 'q2', selected: ['X', 'Y'], custom: 'more' }, { id: 'plan', selected: [] }],
+  })
+  assert.equal(withdrawn, true)
+  assert.equal((await c.next(m => m.t === 'question-done')).outcome, 'answered')
+  c.ws.close()
+  await handle.close()
+})
+
+test('a desktop countdown that ends is passed through as a timeout', async () => {
+  const { bridge, handle, url } = await setup()
+  const c = await connect(url)
+  await c.call('hello')
+  const timeout = Object.assign(new Error('timed out'), { code: 'ASK_TIMED_OUT' })
+  await assert.rejects(bridge.requestQuestion({ agent: { id: 's1' }, questions: [{ id: 'q', question: '?' }] }, () => Promise.reject(timeout)), /timed out/)
+  assert.equal((await c.next(m => m.t === 'question-done')).outcome, 'timeout')
+  await c.next(m => m.t === 'question')
+  // With a phone connected, a missing desktop answerer leaves the phone to answer.
+  const noUi = Object.assign(new Error('none'), { code: 'NO_PROVIDER' })
+  const pending = bridge.requestQuestion({ agent: { id: 's1' }, questions: [{ id: 'q', question: '?', options: [{ label: 'ok' }] }] }, () => Promise.reject(noUi))
+  const ask = await c.next(m => m.t === 'question')
+  await c.call('question.answer', { questionId: ask.question.id, answers: [{ id: 'q', selected: ['ok'] }] })
+  assert.deepEqual(await pending, { answers: [{ id: 'q', selected: ['ok'] }] })
+  c.ws.close()
+  await handle.close()
+})
+
+test('single-select custom text replaces the choice', () => {
+  const questions = questionItems([{ id: 'q', question: '?', options: [{ label: 'a' }] }, { question: 'no id' }, null])
+  assert.equal(questions.length, 1)
+  assert.deepEqual(answerItems([{ id: 'q', selected: ['a'], custom: '  mine ' }], questions), [{ id: 'q', selected: [], custom: 'mine' }])
+})
+
+test('archive, unarchive, pin and unpin go through the workspace registry', async () => {
+  const { handle, url, workspaces } = await setup()
+  const c = await connect(url)
+  await c.call('hello')
+  assert.deepEqual(await c.call('sessions.archive', { sessionId: 's1' }), { archived: true, pinned: false })
+  assert.deepEqual(await c.next(m => m.t === 'session-flags'), { t: 'session-flags', sessionId: 's1', archived: true, pinned: false })
+  const list = await c.call('sessions.list')
+  assert.equal(list.sessions[0].archived, true)
+  assert.equal(list.sessions[0].pinned, undefined)
+  assert.deepEqual(await c.call('sessions.unarchive', { sessionId: 's1' }), { archived: false, pinned: false })
+  assert.deepEqual(await c.call('sessions.pin', { sessionId: 's1' }), { archived: false, pinned: true })
+  assert.deepEqual(await c.call('sessions.unpin', { sessionId: 's1' }), { archived: false, pinned: false })
+  assert.deepEqual(workspaces.pinnedSessionIds, [])
+  await assert.rejects(c.call('sessions.archive', { sessionId: 'busy' }), err => err.code === 'busy')
+  c.ws.close()
+  await handle.close()
+})
+
+test('turn ends are announced with the last assistant text; subagents stay quiet', async () => {
+  const { bridge, handle, url } = await setup()
+  const c = await connect(url)
+  await c.call('hello')
+  const session = { id: 's1', header: {} }
+  bridge.onSessionEvent(session, { type: 'turn/start', data: { turn: 2 } })
+  bridge.onSessionEvent(session, { type: 'assistant/message', data: { message: { content: [{ type: 'text', text: 'All done.' }] } } })
+  bridge.onSessionEvent({ id: 'c1', header: { origin: 'subagent' } }, { type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } })
+  bridge.onSessionEvent(session, { type: 'turn/end', time: 9, data: { turn: 2, reason: { kind: 'completed' } } })
+  assert.deepEqual(await c.next(m => m.t === 'turn'), { t: 'turn', sessionId: 's1', turn: 2, reason: 'completed', text: 'All done.', time: 9 })
+  assert.equal(c.messages.some(m => m.t === 'turn' && m.sessionId === 'c1'), false)
+  c.ws.close()
+  await handle.close()
+})
+
+test('title changes reach phones that are not following the session', async () => {
+  const sessions = new Map([['child', { header: { origin: 'subagent' } }], ['s9', { header: {} }]])
+  const { fake, handle, url } = await setup({ sessionOf: id => sessions.get(id) })
+  const c = await connect(url)
+  await c.call('hello')
+  fake.project('s9', 7, [{ key: 'tokenUsage', val: {} }, { key: 'title', val: 'Fix login' }])
+  assert.deepEqual(await c.next(m => m.t === 'projection'), { t: 'projection', sessionId: 's9', seq: 7, title: 'Fix login' })
+  fake.project('child', 1, [{ key: 'title', val: 'hidden' }])
+  fake.project('s9', 8, [{ key: 'tokenUsage', val: {} }])
+  await new Promise(resolve => setTimeout(resolve, 50))
+  assert.equal(c.messages.some(m => m.t === 'projection'), false)
+  c.ws.close()
+  await handle.close()
+})
+
+test('DSH 0.2.1: queue and title changes arrive through the per-key control stream', async () => {
+  assert.deepEqual(projectionChanges({ type: 'projection', sessionId: 's', seq: 1, key: 'title', value: 'x' }), [{ key: 'title', val: 'x' }])
+  assert.deepEqual(projectionChanges({ type: 'baseline', value: {} }), [])
+  const { fake, bridge, handle, url } = await setup({ legacy: true })
+  assert.deepEqual(bridge.hostApi(), ['control', 'page', 'projections'])
+  const c = await connect(url)
+  await c.call('sessions.follow', { sessionId: 's1' })
+  fake.follow.push({ type: 'snapshot', header: { cwd: '/repo' }, cursor: 3, hasMore: true, records: [], projections: { asOfSeq: 3, values: {} } })
+  await c.next(m => m.t === 'snapshot')
+  fake.project('s1', 4, [{ key: 'inbox', val: { 'next-turn': [{ id: 'q', content: [{ type: 'text', text: 'wait' }], source: { kind: 'user', rpcId: 'r7' } }], 'next-step': [] } }])
+  const queued = await c.next(m => m.t === 'projection' && m.queue)
+  assert.deepEqual(queued.queue, [{ id: 'q', text: 'wait', placement: 'queued', rpcId: 'r7' }])
+  fake.project('s1', 5, [{ key: 'inbox', val: { 'next-turn': [], 'next-step': [] } }])
+  assert.deepEqual((await c.next(m => m.t === 'projection' && m.queue)).queue, [])
+  c.ws.close()
+  await handle.close()
+})
+
+test('DSH 0.2.1: older history pages through page() with the opening snapshot cut', async () => {
+  const { fake, handle, url } = await setup({ legacy: true })
+  const c = await connect(url)
+  await c.call('sessions.follow', { sessionId: 's1' })
+  fake.follow.push({ type: 'snapshot', header: {}, cursor: 42, hasMore: true, records: [], projections: { asOfSeq: 42, values: {} } })
+  await c.next(m => m.t === 'snapshot')
+  const older = await c.call('sessions.older', { sessionId: 's1', beforeSeq: 10 })
+  assert.deepEqual(older, { items: [{ k: 'turn_start', seq: 1, time: 1, turn: 1 }], hasMore: false, cursor: null })
+  const page = fake.calls.find(call => call[0] === 'page')[1]
+  assert.equal(page.throughSeq, 42)
+  assert.equal(page.beforeSeq, 10)
+  assert.deepEqual(page.address, { kind: 'session', sessionId: 's1' })
+  c.ws.close()
+  await handle.close()
+})
+
+test('DSH 0.2.1: the subagent directory reads running state from the live agent', async () => {
+  const agents = new Map([['c1', { status: 'running' }]])
+  const { handle, url } = await setup({ legacy: true, agentOf: id => agents.get(id) })
+  const c = await connect(url)
+  const dir = await c.call('sessions.subagents', { sessionId: 's1' })
+  assert.equal(dir.children[0].running, true)
+  assert.equal(dir.children[0].title, 'child')
+  c.ws.close()
+  await handle.close()
+})
+
+test('a queued message can be steered or removed by the request that sent it', async () => {
+  const { fake, handle, url } = await setup()
+  const c = await connect(url)
+  fake.inbox['next-turn'].push({ id: 'm1', content: [{ type: 'text', text: 'later' }], source: { kind: 'user', rpcId: 'r1' } })
+  assert.deepEqual(await c.call('sessions.queue', { sessionId: 's1', requestId: 'r1', action: 'steer' }), { accepted: true, itemId: 'm1' })
+  assert.deepEqual(fake.calls.find(call => call[0] === 'updateQueue')[1], { sessionId: 's1', itemId: 'm1', action: { kind: 'steer' } })
+  await assert.rejects(c.call('sessions.queue', { sessionId: 's1', requestId: 'gone', action: 'remove' }), err => err.code === 'not-queued')
+  await assert.rejects(c.call('sessions.queue', { sessionId: 's1', action: 'remove' }), /itemId or requestId is required/)
+  c.ws.close()
+  await handle.close()
+})
+
+test('workspace registry changes are pushed once per burst with membership and flags', async () => {
+  const { bridge, handle, url, workspaces } = await setup()
+  const c = await connect(url)
+  await c.call('hello')
+  workspaces.archivedSessionIds = ['old']
+  bridge.onWorkspacesChanged()
+  bridge.onWorkspacesChanged()
+  bridge.onSessionAdded({ sessionId: 's3', updatedAt: 1, running: false, blank: true, agentAvailable: true })
+  const push = await c.next(m => m.t === 'workspaces')
+  assert.deepEqual(push, {
+    t: 'workspaces',
+    workspaces: [{ id: 'w1', title: 'repo', path: '/repo', sessionIds: ['s1'] }],
+    archived: ['old'],
+    pinned: ['s1'],
+  })
+  await new Promise(resolve => setTimeout(resolve, 250))
+  assert.equal(c.messages.some(m => m.t === 'workspaces'), false)
+  c.ws.close()
+  await handle.close()
+})
+
+test('an approval the desktop cannot ask waits for the phone', async () => {
+  const { bridge, handle, url } = await setup()
+  // No phone: DSH's own fail-closed outcome passes through.
+  assert.equal(await bridge.requestApproval({ agent: { id: 's' }, toolName: 'x' }, () => Promise.resolve('unavailable')), 'unavailable')
+  const c = await connect(url)
+  await c.call('hello')
+  const pending = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'bash' }, () => Promise.resolve('unavailable'))
+  const ask = await c.next(m => m.t === 'approval')
+  await new Promise(resolve => setTimeout(resolve, 30))
+  assert.equal(bridge.pendingApprovals().length, 1)
+  await c.call('approval.answer', { approvalId: ask.approval.id, outcome: 'allowed-once' })
+  assert.equal(await pending, 'allowed-once')
+  c.ws.close()
+  await handle.close()
+})
+
+test('a phone-only approval is released when the phone stays away', async () => {
+  const { bridge, handle, url } = await setup({ phoneGraceMs: 60 })
+  const c = await connect(url)
+  await c.call('hello')
+  const phoneOnly = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'bash' }, () => Promise.resolve('unavailable'))
+  let desktopAnswer
+  const shared = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'edit' }, () => new Promise((resolve) => { desktopAnswer = resolve }))
+  await c.next(m => m.t === 'approval' && m.approval.toolName === 'edit')
+  c.ws.close()
+  assert.equal(await phoneOnly, 'unavailable')
+  // The one the desktop is still showing is untouched and answered there.
+  assert.equal(bridge.pendingApprovals().length, 1)
+  desktopAnswer('allowed-once')
+  assert.equal(await shared, 'allowed-once')
+  await handle.close()
+})
+
+test('stopping the bridge leaves desktop prompts alone and releases phone-only ones', async () => {
+  const { bridge, handle, url } = await setup()
+  const c = await connect(url)
+  await c.call('hello')
+  let desktopAnswer
+  const shared = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'edit' }, () => new Promise((resolve) => { desktopAnswer = resolve }))
+  const phoneOnly = bridge.requestApproval({ agent: { id: 's1' }, toolName: 'bash' }, () => Promise.resolve('unavailable'))
+  const noUi = Object.assign(new Error('none'), { code: 'NO_PROVIDER' })
+  const question = bridge.requestQuestion({ agent: { id: 's1' }, questions: [{ id: 'q', question: '?' }] }, () => Promise.reject(noUi))
+  await c.next(m => m.t === 'question')
+  await new Promise(resolve => setTimeout(resolve, 20))
+  bridge.dispose()
+  assert.equal(await phoneOnly, 'unavailable')
+  await assert.rejects(question, err => err.code === 'NO_PROVIDER')
+  desktopAnswer('rejected')
+  assert.equal(await shared, 'rejected')
+  await handle.close()
+})
+
+test('a client can lengthen its heartbeat within bounds', async () => {
+  const { handle, url } = await setup()
+  const c = await connect(url)
+  assert.deepEqual(await c.call('client.heartbeat', { intervalMs: 60_000 }), { intervalMs: 60_000 })
+  assert.deepEqual(await c.call('client.heartbeat', { intervalMs: 1 }), { intervalMs: 10_000 })
+  assert.deepEqual(await c.call('client.heartbeat', { intervalMs: 10_000_000 }), { intervalMs: 120_000 })
+  c.ws.close()
   await handle.close()
 })
 
@@ -308,9 +612,48 @@ test('snapshot forwards stats, usage, pressure and subagent projections', async 
   } } })
   const snap = await c.next(m => m.t === 'snapshot')
   assert.deepEqual([snap.stats, snap.usage, snap.pressure, snap.subagents, snap.timing], [{ turns: 1 }, { outputTokens: 2 }, { contextWindow: 9 }, [{ id: 'c' }], null])
-  fake.projections.push({ type: 'projection', seq: 5, changes: [{ key: 'tokenUsage', val: { outputTokens: 7 } }] })
+  fake.project('s1', 5, [{ key: 'tokenUsage', val: { outputTokens: 7 } }])
   const update = await c.next(m => m.t === 'projection')
   assert.deepEqual(update.usage, { outputTokens: 7 })
   c.ws.close()
   await handle.close()
+})
+
+// --- 0.5.0: frpc supervisor, phone files and image previews -------------------------------
+import { classifyLine, startTunnel } from '../lib/tunnel.js'
+import { mkdtempSync, writeFileSync as writeFile2, mkdirSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join as join2 } from 'node:path'
+import { EventEmitter } from 'node:events'
+
+test('frpc log lines map to tunnel states', () => {
+  assert.equal(classifyLine('2026/11/11 [I] [proxy_manager.go:1] [dsh] start proxy success')?.state, 'connected')
+  assert.equal(classifyLine('[E] login to the server failed: dial tcp: i/o timeout')?.state, 'error')
+  assert.equal(classifyLine('[I] something unrelated'), undefined)
+})
+
+test('tunnel is absent without frpc, supervised and stopped with it', async () => {
+  const home = mkdtempSync(join2(tmpdir(), 'tunnel-'))
+  const paths = { home, binary: join2(home, 'frpc'), config: join2(home, 'frpc.toml'), pidFile: join2(home, 'frpc.pid') }
+  const absent = startTunnel({ paths, logger: { info() {} } })
+  assert.equal(absent.state.state, 'absent')
+  absent.stop()
+  writeFile2(paths.binary, ''); writeFile2(paths.config, '')
+  const spawned = []
+  const spawnImpl = () => {
+    const proc = new EventEmitter()
+    proc.stdout = new EventEmitter(); proc.stderr = new EventEmitter()
+    proc.pid = 4242; proc.exitCode = null
+    proc.kill = () => { proc.killed = true }
+    spawned.push(proc)
+    return proc
+  }
+  const seen = []
+  const tunnel = startTunnel({ paths, spawnImpl, logger: { info() {} }, onChange: (s) => seen.push(s.state) })
+  assert.equal(spawned.length, 1)
+  spawned[0].stdout.emit('data', Buffer.from('[I] start proxy success\n'))
+  assert.equal(tunnel.state.state, 'connected')
+  tunnel.stop()
+  assert.equal(spawned[0].killed, true)
+  assert.deepEqual(seen, ['starting', 'connected', 'stopped'])
 })

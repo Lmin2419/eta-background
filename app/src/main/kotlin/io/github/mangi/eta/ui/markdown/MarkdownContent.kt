@@ -1,5 +1,11 @@
 package io.github.mangi.eta.ui.markdown
 
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
@@ -16,15 +22,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.CheckBox
-import androidx.compose.material.icons.rounded.CheckBoxOutlineBlank
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Feedback
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Lightbulb
-import androidx.compose.material.icons.rounded.Report
-import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.CheckBox
+import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Feedback
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.Report
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -88,6 +94,31 @@ internal fun MarkdownContent(
 ) {
     val scope = remember(style, reveal) { MarkdownRenderScope(style, reveal) }
     MarkdownBlockColumn(blocks = document.blocks, scope = scope, compact = false, modifier = modifier)
+}
+
+/**
+ * 独立滚动视口里的长篇静态 Markdown（上游 3.4.1 c6e46ff，记忆页 MEMORY.md 预览）：顶层块各占一个
+ * LazyColumn 条目，几十 KiB 的文档首帧只组合、测量视口里的几个块，进入页面不卡。
+ * （上游还把顶层列表拆成逐项条目；我们的列表组件不同，整块作为一项。）
+ */
+@Composable
+internal fun LazyMarkdownContent(
+    document: MarkdownDocument,
+    style: MarkdownStyle,
+    modifier: Modifier = Modifier,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
+) {
+    val scope = remember(style) { MarkdownRenderScope(style, reveal = null) }
+    val density = LocalDensity.current
+    androidx.compose.foundation.lazy.LazyColumn(modifier = modifier, contentPadding = contentPadding) {
+        document.blocks.forEachIndexed { index, block ->
+            val gap = markdownBlockGap(document.blocks.getOrNull(index - 1), block, style.tone)
+            item(key = block.offset) {
+                if (gap.value > 0f) Spacer(Modifier.height(with(density) { gap.toDp() }))
+                MarkdownBlockView(block, scope)
+            }
+        }
+    }
 }
 
 @Immutable
@@ -182,20 +213,25 @@ private fun MarkdownText(
 @Composable
 private fun MarkdownCodeBlock(block: MarkdownCode, scope: MarkdownRenderScope) {
     val style = scope.style
+    val shape = RoundedCornerShape(12.dp)
+    // 代码块：浅灰标题栏（左语言名、右复制）+ 细分隔线 + 代码区，整体一圈极细描边。
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .squircleSurface(color = style.codeBackground, cornerRadius = 10.dp),
+            .clip(shape)
+            .background(style.codeBackground)
+            .border(0.5.dp, style.dividerColor, shape),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 32.dp).padding(start = 12.dp, end = 4.dp),
+                .background(style.dividerColor.copy(alpha = 0.35f))
+                .heightIn(min = 34.dp).padding(start = 14.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = block.language ?: stringResource(R.string.markdown_code_block),
-                style = EtaTheme.type.caption,
+                text = block.language?.lowercase() ?: stringResource(R.string.markdown_code_block),
+                style = EtaTheme.type.mono.copy(fontSize = 12.sp),
                 color = style.secondaryColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -203,22 +239,25 @@ private fun MarkdownCodeBlock(block: MarkdownCode, scope: MarkdownRenderScope) {
             )
             CopyButton(text = block.text.text, tint = style.secondaryColor)
         }
+        Box(Modifier.fillMaxWidth().height(0.5.dp).background(style.dividerColor))
         // 代码不折行，长行横向滚动，保留缩进与对齐。
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
+                .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 12.dp),
         ) {
             MarkdownText(block, style.code, scope, softWrap = false)
         }
     }
 }
 
+/** 复制：图标 + 「复制」，点后变成对勾 +「已复制」1.4 秒，带缩放淡入。 */
 @Composable
 private fun CopyButton(text: String, tint: Color) {
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
+    val haptics = io.github.mangi.eta.ui.components.rememberEtaHaptics()
     var copied by remember { mutableStateOf(false) }
     LaunchedEffect(copied) {
         if (copied) {
@@ -226,21 +265,44 @@ private fun CopyButton(text: String, tint: Color) {
             copied = false
         }
     }
-    IconButton(
-        onClick = {
-            @Suppress("DEPRECATION")
-            clipboard.setText(AnnotatedString(text))
-            copied = true
-        },
-        minWidth = 32.dp,
-        minHeight = 32.dp,
+    val color = if (copied) EtaTheme.colors.accent else tint
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable {
+                @Suppress("DEPRECATION")
+                clipboard.setText(AnnotatedString(text))
+                if (!copied) haptics.confirm()
+                copied = true
+            }
+            .heightIn(min = 32.dp)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
-            contentDescription = stringResource(if (copied) R.string.copy_copied else R.string.copy_code),
-            modifier = Modifier.size(14.dp),
-            tint = if (copied) MiuixTheme.colorScheme.primary else tint,
-        )
+        androidx.compose.animation.AnimatedContent(
+            targetState = copied,
+            transitionSpec = {
+                (androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(160)) +
+                    androidx.compose.animation.scaleIn(androidx.compose.animation.core.spring(dampingRatio = 0.55f, stiffness = 700f), initialScale = 0.6f))
+                    .togetherWith(androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(100)))
+            },
+            label = "codeCopy",
+        ) { done ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (done) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = color,
+                )
+                Text(
+                    text = stringResource(if (done) R.string.copy_copied else R.string.ui_copy_4edd1d),
+                    style = EtaTheme.type.caption,
+                    color = color,
+                    modifier = Modifier.padding(start = 4.dp),
+                )
+            }
+        }
     }
 }
 
@@ -302,11 +364,11 @@ private fun MarkdownAlertBlock(block: MarkdownAlert, scope: MarkdownRenderScope)
 
 private val MarkdownAlertKind.icon: ImageVector
     get() = when (this) {
-        MarkdownAlertKind.Note -> Icons.Rounded.Info
-        MarkdownAlertKind.Tip -> Icons.Rounded.Lightbulb
-        MarkdownAlertKind.Important -> Icons.Rounded.Feedback
-        MarkdownAlertKind.Warning -> Icons.Rounded.Warning
-        MarkdownAlertKind.Caution -> Icons.Rounded.Report
+        MarkdownAlertKind.Note -> Icons.Outlined.Info
+        MarkdownAlertKind.Tip -> Icons.Outlined.Lightbulb
+        MarkdownAlertKind.Important -> Icons.Outlined.Feedback
+        MarkdownAlertKind.Warning -> Icons.Outlined.Warning
+        MarkdownAlertKind.Caution -> Icons.Outlined.Report
     }
 
 private val MarkdownAlertKind.label: Int
@@ -391,7 +453,7 @@ private fun RowScope.ListMarker(
             val lineHeight = with(LocalDensity.current) { style.body.lineHeight.toDp() }
             Box(markerModifier.height(lineHeight), contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = if (item.checked) Icons.Rounded.CheckBox else Icons.Rounded.CheckBoxOutlineBlank,
+                    imageVector = if (item.checked) Icons.Outlined.CheckBox else Icons.Outlined.CheckBoxOutlineBlank,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                     tint = if (item.checked) MiuixTheme.colorScheme.primary else style.markerColor,

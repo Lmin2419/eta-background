@@ -1,5 +1,7 @@
 # 01 · 设计语言「静流」· 胖小胖配色
 
+> **2026111406 起以 [05-liquid-glass-v2.md](05-liquid-glass-v2.md) 为准**：配色（纸白底、brand / onBrand / textQuiet）、玻璃使用范围（只用于浮着的控件）、小窗与玻璃窗口、悬浮侧栏、对话页顶部三控件与输入胶囊。本文与之冲突的描述均以 05 为准。
+
 > 一句话：**界面安静，AI 在动。** 平时只有暖白中性色和一个焦糖主色；只有 AI 正在工作的地方才出现暖色流光和动效。
 >
 > 2026-11-06 起 App 更名 **胖小胖**，采用配色 B「蜂蜜焦糖」（与金渐层猫图标统一）。下表为现行数值；原冷色「静流」数值已废弃。用户扫一眼就知道哪里在跑、哪里要他处理。
@@ -139,6 +141,10 @@ Markdown：h1 22/30、h2 19/28、h3 17/26 SemiBold；段落间距 12；列表项
 
 Compose 实现：`Modifier.shadow(elevation, shape, ambientColor, spotColor)` 近似；深色模式不画阴影，只画描边。
 
+### 6.1 玻璃材质（2026111402）
+
+浮在内容上方的导航层用玻璃材质（`EtaGlass.kt` 的 `etaGlass`）：背后内容模糊（半径 28）+ 半透明底色（有模糊 62%、无模糊 92%）+ 上亮下暗的 0.75dp 高光边 + 轻投影。用于顶栏（`TopBarBackdrop`，渐进或高斯模糊）、聊天输入胶囊、长按菜单、提示条、回到底部按钮、圆形图标按钮。卡片（`EtaCard` 默认配色）也是玻璃（无模糊、72% 底色），用户消息气泡为 86% 底色的玻璃；正文与列表文字保持实色，保证可读。页面背景用 `etaAmbientBackground`：画布上左上珊瑚（浅 10%/深 16%）、右下冷色（10%/12%）两团径向光晕。玻璃边缘之外再加顶部反光（白色由上沿 35%/深色 7% 渐隐至 45% 高度）。二级页大标题随折叠进度连续缩小（至 0.86 倍，以左下为原点）并淡出，小标题在 30%–70% 进度区间淡入上移。外观设置关闭「模糊」或设备不支持 RuntimeShader 时，全部退回磨砂实色。
+
 ## 7. 动效
 
 | Token | 时长 | 曲线 | 用于 |
@@ -152,7 +158,11 @@ Compose 实现：`Modifier.shadow(elevation, shape, ambientColor, spotColor)` �
 - 可拖拽的面板（侧栏、底部面板、助手面板）用弹簧：`dampingRatio = 0.86`，`stiffness = 420`。
 - 消息出现：上移 8dp + 淡入，`medium`。流式文字沿用现有平滑揭示（`SmoothTextReveal`），不改。
 - 运行中的状态环：弧线旋转一圈 1.1s 线性 + 流光渐变；只在可见时运行（沿用现有 `rememberDrawPhasePulse` 的做法，动画只使绘制失效，不触发重组）。
-- 触感：发送、开始接管、交还 AI、任务完成、长按菜单出现时给一次轻触感（沿用 `AgentHapticFeedback`）。
+- 触感：发送、开始接管、交还 AI、任务完成、长按菜单出现时给一次轻触感（沿用 `AgentHapticFeedback`）。App 界面内统一走 `EtaHaptics`（发送 / 开关 = tick，长按菜单 = long press，回复结束 / 复制 = confirm），设置 → 个性化 →「触感反馈」可关。
+- 按压回弹：可点的按钮、卡片、列表行按下时 `micro` 缩到 0.97（行 0.98），松手用弹簧（`dampingRatio = 0.55`，`stiffness = 600`）回到原大小（`etaPressScale` / `etaTouchScale`）。
+- 爪印动效（`EtaPaw.kt`）：「思考中」四颗脚趾依次按下，1.4s 一轮；首页掌心先落、脚趾间隔 70ms 弹出；下拉刷新脚趾随拉开进度逐颗出现，拉满轻振。启动画面同一动作（`avd_splash_paw`）。
+- 加载占位：浅灰圆角条加一道 1.3s 的柔光扫过（`etaShimmer`），用于首次加载列表、打开会话；减少动画时为静态灰条。
+- 提示条：底部黑色胶囊，带小爪印，弹簧浮现（`dampingRatio = 0.72`），短提示 2.2s、长提示 3.5s。
 - 「减少动画」（`Settings.Global.ANIMATOR_DURATION_SCALE == 0` 或系统无障碍设置）时：所有位移动画改为淡入淡出 ≤120ms；流光静止；状态环改为静态图形。
 
 ## 8. 状态语言（全局统一）
@@ -175,11 +185,11 @@ Compose 实现：`Modifier.shadow(elevation, shape, ambientColor, spotColor)` �
 - 只用 material-icons-extended 的 **Rounded** 家族（现有代码混用 Outlined/Rounded，统一为 Rounded；`ShortText`、`MoreHoriz` 等也换成 Rounded 版本）。
 - 尺寸：顶栏 24，列表/菜单 20，行内/徽章 16。
 - 图标颜色默认 `textSecondary`；选中或主操作用 `accent`；危险操作用 `danger`。
-- 品牌形象「胖小胖」：照着用户家的金渐层画的动漫猫头——圆脸长毛、小圆耳、琥珀金毛色（两眼间深金纹）、奶油色围脖、薄荷绿大眼 + 粗黑眼线 + 竖瞳、嘴角下撇、头微歪。源文件 `etax/design/brand/pangxiaopang.svg`，改猫只改这个 SVG，再运行 `python3 etax/design/brand/svg2vector.py` 生成矢量。资源：
-  - `ic_launcher_foreground`（生成）+ `ic_launcher_background`（蜂蜜蜜桃渐变底）：桌面图标，猫脸铺满可见区；
-  - `ic_eta_mark`（生成）：App 内品牌标志（空状态、助手头像），无底色，资源名沿用；
-  - `ic_launcher_monochrome` / `ic_notification`：单色猫头剪影（小圆耳 + 圆脸 + 眼睛镂空），主题图标与状态栏用，系统按 alpha 着色；
-  - `ic_task_phone`：后台任务通知大图标与预览窗占位，手机轮廓 + 猫头剪影，屏幕区域透明。
+- 品牌形象「胖小胖」（阶段 12）：一枚猫爪印——四颗脚趾肉垫 + 下沿三瓣的掌心肉垫。桌面图标为白底（向边缘极轻地过渡到 `#F2EFEB`）上的珊瑚橘肉垫（`#EB9A7B → #C95F3D` 径向渐变、柔和投影和高光），爪印约占可见区 2/3；源文件 `etax/design/brand/pangxiaopang-icon.svg`，导出为 `drawable-nodpi/ic_launcher_art.webp`（648px，含可见区外的出血边）。单色场景统一用同一枚爪印的剪影 `etax/design/brand/pangxiaopang-glyph.svg`；改形状时只改这两个源文件的路径，再同步到下列矢量。资源：
+  - `ic_launcher_art`（背景层，生成）+ 空的 `ic_launcher_foreground`：桌面图标；
+  - `ic_eta_mark`（矢量）：App 内品牌标志（空状态、助手头像、「思考中」动画），珊瑚橘爪印带高光，无底色；
+  - `ic_launcher_monochrome` / `ic_notification`：单色爪印剪影，主题图标与状态栏用，系统按 alpha 着色；
+  - `ic_task_phone`：后台任务通知大图标与预览窗占位，手机轮廓 + 珊瑚橘爪印，屏幕区域透明。
   minSdk 33 只用自适应图标，无 `mipmap-*dpi` 位图。`BrandIconRenderingTest` 会把它们按桌面遮罩、主题色、状态栏着色画成预览图（`build/reports/eta-icons/`）。
 - 名称：用户可见处一律「胖小胖」（三种语言相同）；包名 `io.github.mangi.etax`、内部代码名、备份文件格式不变；关于页保留对上游 Eta 的致谢。
 

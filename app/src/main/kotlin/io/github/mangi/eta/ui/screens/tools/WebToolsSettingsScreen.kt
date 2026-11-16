@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -163,7 +163,7 @@ private fun DeepSeekWebSection(store: WebToolsSettingsStore) {
                 title = stringResource(R.string.speech_advanced),
                 endActions = {
                     Icon(
-                        imageVector = Icons.Rounded.ExpandMore,
+                        imageVector = Icons.Outlined.ExpandMore,
                         contentDescription = stringResource(
                             if (advanced) R.string.speech_collapse else R.string.speech_expand,
                         ),
@@ -237,7 +237,7 @@ private fun CustomSearchSection(store: WebToolsSettingsStore) {
                 title = stringResource(R.string.web_tools_mapping_and_template),
                 endActions = {
                     Icon(
-                        imageVector = Icons.Rounded.ExpandMore,
+                        imageVector = Icons.Outlined.ExpandMore,
                         contentDescription = stringResource(
                             if (advanced) R.string.speech_collapse else R.string.speech_expand,
                         ),
@@ -345,7 +345,7 @@ private fun CustomFetchSection(store: WebToolsSettingsStore) {
                 title = stringResource(R.string.web_tools_mapping_and_template),
                 endActions = {
                     Icon(
-                        imageVector = Icons.Rounded.ExpandMore,
+                        imageVector = Icons.Outlined.ExpandMore,
                         contentDescription = stringResource(
                             if (advanced) R.string.speech_collapse else R.string.speech_expand,
                         ),
@@ -428,7 +428,7 @@ private fun WebToolsNote(text: String, modifier: Modifier = Modifier) {
 @Composable
 private fun WebToolsLoadingState(failure: String?) {
     if (failure != null) {
-        ListEmptyState(title = failure, icon = Icons.Rounded.ErrorOutline)
+        ListEmptyState(title = failure, icon = Icons.Outlined.ErrorOutline)
     } else {
         Box(
             modifier = Modifier
@@ -471,7 +471,7 @@ private fun WebToolsField(
             {
                 EtaIconButton(onClick = { visible = !visible }) {
                     Icon(
-                        imageVector = if (visible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                        imageVector = if (visible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                         contentDescription = stringResource(
                             if (visible) R.string.page_hide_bb0e7e else R.string.page_show_71b677,
                         ),

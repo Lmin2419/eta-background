@@ -19,9 +19,9 @@ fun Modifier.etaElevation(level: EtaElevation, shape: Shape): Modifier {
     }
     val (elevation, alpha) = when (level) {
         EtaElevation.E0 -> 0.dp to 0f
-        EtaElevation.E1 -> 2.dp to 0.06f
-        EtaElevation.E2 -> 8.dp to 0.10f
-        EtaElevation.E3 -> 24.dp to 0.18f
+        EtaElevation.E1 -> 2.dp to 0.05f
+        EtaElevation.E2 -> 10.dp to 0.10f
+        EtaElevation.E3 -> 24.dp to 0.16f
     }
     return shadow(elevation, shape, clip = false,
         ambientColor = colors.shadow.copy(alpha = alpha),

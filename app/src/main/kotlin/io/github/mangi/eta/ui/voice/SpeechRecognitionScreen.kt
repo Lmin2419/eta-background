@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CloudUpload
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -82,6 +82,8 @@ internal fun SpeechRecognitionScreen(onBack: () -> Unit, onOpenOss: () -> Unit) 
                                 AsrProvider.QWEN_REALTIME, AsrProvider.DOUBAO -> R.string.speech_asr_note_streaming
                                 AsrProvider.QWEN_FLASH -> R.string.speech_asr_note_flash
                                 AsrProvider.QWEN_FILE -> R.string.speech_asr_note_file
+                                AsrProvider.MIMO -> R.string.speech_asr_note_mimo
+                                AsrProvider.DEEPSEEK -> R.string.speech_asr_note_deepseek
                             },
                         ),
                     )
@@ -92,7 +94,7 @@ internal fun SpeechRecognitionScreen(onBack: () -> Unit, onOpenOss: () -> Unit) 
                     SpeechConnectionSection(store, synthesis = false)
                 }
             }
-            if (settings.asr != AsrProvider.SYSTEM && settings.asr != AsrProvider.DOUBAO) {
+            if (settings.asr != AsrProvider.SYSTEM && settings.asr != AsrProvider.DOUBAO && settings.asr != AsrProvider.MIMO && settings.asr != AsrProvider.DEEPSEEK) {
                 item(key = "language") {
                     EtaPreferenceGroup {
                         SpeechFieldColumn {
@@ -118,7 +120,7 @@ internal fun SpeechRecognitionScreen(onBack: () -> Unit, onOpenOss: () -> Unit) 
                             title = stringResource(R.string.speech_oss_title),
                             summary = settings.oss.bucket.ifBlank { stringResource(R.string.speech_oss_configure) },
                             startAction = {
-                                EtaPreferenceIcon(icon = Icons.Rounded.CloudUpload, tint = EtaPreferenceColors.Blue)
+                                EtaPreferenceIcon(icon = Icons.Outlined.CloudUpload, tint = EtaPreferenceColors.Blue)
                             },
                             onClick = onOpenOss,
                         )
@@ -145,7 +147,7 @@ internal fun SpeechRecognitionScreen(onBack: () -> Unit, onOpenOss: () -> Unit) 
 @Composable
 private fun SpeechResultSection(store: SpeechSettingsStore) {
     val settings = store.settings
-    val streaming = settings.asr != AsrProvider.QWEN_FLASH && settings.asr != AsrProvider.QWEN_FILE
+    val streaming = settings.asr == AsrProvider.QWEN_REALTIME || settings.asr == AsrProvider.DOUBAO
     val options = SpeechSettings.AUTO_SEND_SILENCE_OPTIONS
     Column {
         EtaPreferenceGroup {

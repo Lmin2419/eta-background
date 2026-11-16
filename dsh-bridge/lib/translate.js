@@ -1,6 +1,9 @@
 // Translate DeepSeek Harness session wire events into the small item vocabulary
 // the phone renders. Everything here is pure so it can be unit tested without DSH.
 
+/** Image previews offered per user message. */
+const MAX_IMAGE_REFS = 6
+
 export const TOOL_ARGS_LIMIT = 4000
 export const TOOL_RESULT_LIMIT = 6000
 const HIDDEN_USER_SOURCES = /-context$|^instructions?$|^system/
@@ -90,10 +93,15 @@ export function translateEvent(event) {
       // Harness-injected context (runtime/time snapshots, instructions) is model-only.
       if (typeof source.kind === 'string' && HIDDEN_USER_SOURCES.test(source.kind)) return null
       const files = []
+      const imageRefs = []
       let images = 0
       for (const block of content) {
         if (!isObject(block)) continue
-        if (block.type === 'image') images++
+        if (block.type === 'image') {
+          images++
+          // Durable attachment reference; the phone fetches the bytes with attachments.image.
+          if (isObject(block.attachment) && typeof block.attachment.attachmentId === 'string' && imageRefs.length < MAX_IMAGE_REFS) imageRefs.push(block.attachment)
+        }
         if (block.type === 'file') files.push(String(block.attachment?.name ?? 'file'))
       }
       const kind = typeof source.kind === 'string' ? source.kind : 'unknown'
@@ -117,6 +125,7 @@ export function translateEvent(event) {
         id: String(data.id ?? `u${event.seq}`),
         text: textOf(content),
         images,
+        ...(imageRefs.length > 0 ? { imageRefs } : {}),
         files,
         source: typeof source.kind === 'string' ? source.kind : 'unknown',
         ...(typeof source.rpcId === 'string' ? { rpcId: source.rpcId } : {}),

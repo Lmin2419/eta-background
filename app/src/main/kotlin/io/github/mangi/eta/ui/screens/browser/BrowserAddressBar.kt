@@ -24,13 +24,13 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -93,13 +93,13 @@ internal fun BrowserAddressBar(
         ) {
             Row {
                 BrowserControlButton(
-                    icon = Icons.AutoMirrored.Rounded.ArrowBack,
+                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
                     description = stringResource(if (snapshot.canGoBack) R.string.browser_back else R.string.action_back),
                     enabled = !snapshot.canGoBack || !actionPending,
                     onClick = if (snapshot.canGoBack) onBack else onExit,
                 )
                 BrowserControlButton(
-                    icon = Icons.AutoMirrored.Rounded.ArrowForward,
+                    icon = Icons.AutoMirrored.Outlined.ArrowForward,
                     description = stringResource(R.string.browser_forward),
                     enabled = snapshot.canGoForward && !actionPending,
                     onClick = onForward,
@@ -116,7 +116,7 @@ internal fun BrowserAddressBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = if (snapshot.url.startsWith("https://")) Icons.Rounded.Lock else Icons.Rounded.Language,
+                imageVector = if (snapshot.url.startsWith("https://")) Icons.Outlined.Lock else Icons.Outlined.Language,
                 contentDescription = null,
                 modifier = Modifier.size(15.dp),
                 tint = colors.onSurfaceVariantSummary,
@@ -210,7 +210,7 @@ private fun BrowserRefreshButton(
             label = "browser_refresh_icon",
         ) { isLoading ->
             Icon(
-                imageVector = if (isLoading) Icons.Rounded.Close else Icons.Rounded.Refresh,
+                imageVector = if (isLoading) Icons.Outlined.Close else Icons.Outlined.Refresh,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
                 tint = tint,
@@ -233,7 +233,7 @@ private fun BrowserSubmitAction(
             exit = fadeOut() + slideOutHorizontally { it / 2 },
         ) {
             BrowserControlButton(
-                icon = Icons.AutoMirrored.Rounded.ArrowForward,
+                icon = Icons.AutoMirrored.Outlined.ArrowForward,
                 description = stringResource(R.string.browser_search_or_address),
                 enabled = focused && canSubmit,
                 onClick = onGo,
@@ -248,7 +248,7 @@ private fun BrowserOverflowMenu(items: List<DropdownItem>) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         BrowserControlButton(
-            icon = Icons.Rounded.MoreVert,
+            icon = Icons.Outlined.MoreVert,
             description = stringResource(R.string.action_more),
             onClick = { expanded = true },
         )

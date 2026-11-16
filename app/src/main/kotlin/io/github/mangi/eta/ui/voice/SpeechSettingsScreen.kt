@@ -2,9 +2,9 @@ package io.github.mangi.eta.ui.voice
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.RecordVoiceOver
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,7 +52,7 @@ internal fun SpeechSettingsScreen(onBack: () -> Unit, onNavigate: (AppRoute) -> 
                     summary = if (current.recognitionEnabled) current.asr.label()
                         else stringResource(R.string.speech_recognition_disabled),
                     startAction = {
-                        EtaPreferenceIcon(icon = Icons.Rounded.Mic, tint = EtaPreferenceColors.Blue)
+                        EtaPreferenceIcon(icon = Icons.Outlined.Mic, tint = EtaPreferenceColors.Blue)
                     },
                     onClick = { onNavigate(AppRoute.SpeechRecognition) },
                 )
@@ -62,7 +62,7 @@ internal fun SpeechSettingsScreen(onBack: () -> Unit, onNavigate: (AppRoute) -> 
                     summary = current.tts.label(),
                     startAction = {
                         EtaPreferenceIcon(
-                            icon = Icons.AutoMirrored.Rounded.VolumeUp,
+                            icon = Icons.AutoMirrored.Outlined.VolumeUp,
                             tint = EtaPreferenceColors.Orange,
                         )
                     },
@@ -83,7 +83,7 @@ internal fun SpeechSettingsScreen(onBack: () -> Unit, onNavigate: (AppRoute) -> 
                         enabled = current.tts != TtsProvider.NONE,
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.RecordVoiceOver,
+                                icon = Icons.Outlined.RecordVoiceOver,
                                 tint = EtaPreferenceColors.Green,
                             )
                         },

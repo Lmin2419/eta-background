@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.compose.foundation.layout.fillMaxSize
 import io.github.mangi.eta.data.model.AppearanceAccentColor
 import io.github.mangi.eta.data.model.AppearancePaletteStyle
 import io.github.mangi.eta.data.model.AppearanceSettings
@@ -85,12 +86,43 @@ fun AgentAppTheme(
         }
         CompositionLocalProvider(
             LocalAppearanceSettings provides appearance,
-            LocalBlurEnabled provides appearance.blurEnabled,
+            // 系统省电模式下真模糊自动降为磨砂底色。
+            LocalBlurEnabled provides (appearance.blurEnabled && !rememberPowerSaveMode()),
             LocalTopBarBlurStyle provides appearance.topBarBlurStyle,
             LocalPlatformDensity provides platformDensity,
             LocalDensity provides appDensity,
         ) {
-            EtaTheme(colors = etaColors, content = content)
+            // 上游 3.4.x 的 COUI 组件（小窗菜单、半窗、按钮）在同一主题下工作：强调色沿用胖小胖的珊瑚色。
+            // ProvideCouiMenuBackdrop 记录整窗内容，菜单与半窗即使是独立窗口也能模糊背后的页面。
+            val blurOn = appearance.blurEnabled && top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported()
+            val couiScheme = remember(isDark, etaColors) {
+                (if (isDark) com.itos.coui.theme.CouiPresets.Dark else com.itos.coui.theme.CouiPresets.Light).copy(
+                    accent = etaColors.accent,
+                    accentOnSurface = etaColors.accent,
+                    checkboxAccent = etaColors.accent,
+                    menuCheckboxAccent = etaColors.accent,
+                    background = etaColors.canvas,
+                )
+            }
+            CompositionLocalProvider(
+                com.itos.coui.theme.LocalCouiDarkTheme provides isDark,
+                com.itos.coui.effect.LocalCouiContourGlowEnabled provides blurOn,
+            ) {
+                com.itos.coui.theme.CouiTheme(darkTheme = isDark, colorScheme = couiScheme) {
+                    EtaTheme(colors = etaColors) {
+                        if (blurOn) {
+                            com.itos.coui.menu.ProvideCouiMenuBackdrop(isolateContent = false) { windowSource ->
+                                io.github.mangi.eta.ui.components.trackRenderSource("整窗(COUI 菜单)", windowSource)
+                                androidx.compose.foundation.layout.Box(
+                                    androidx.compose.ui.Modifier.fillMaxSize().then(windowSource),
+                                ) { content() }
+                            }
+                        } else {
+                            content()
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -105,4 +137,26 @@ private fun AppearancePaletteStyle.toMiuixPaletteStyle(): ThemePaletteStyle = wh
     AppearancePaletteStyle.MONOCHROME -> ThemePaletteStyle.Monochrome
     AppearancePaletteStyle.FIDELITY -> ThemePaletteStyle.Fidelity
     AppearancePaletteStyle.CONTENT -> ThemePaletteStyle.Content
+}
+
+/** 系统省电模式；变化时重组。 */
+@androidx.compose.runtime.Composable
+private fun rememberPowerSaveMode(): Boolean {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val power = androidx.compose.runtime.remember(context) {
+        context.getSystemService(android.content.Context.POWER_SERVICE) as? android.os.PowerManager
+    }
+    val state = androidx.compose.runtime.remember(power) { androidx.compose.runtime.mutableStateOf(power?.isPowerSaveMode == true) }
+    androidx.compose.runtime.DisposableEffect(context, power) {
+        val receiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(c: android.content.Context?, intent: android.content.Intent?) {
+                state.value = power?.isPowerSaveMode == true
+            }
+        }
+        androidx.core.content.ContextCompat.registerReceiver(context, receiver,
+            android.content.IntentFilter(android.os.PowerManager.ACTION_POWER_SAVE_MODE_CHANGED),
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED)
+        onDispose { runCatching { context.unregisterReceiver(receiver) } }
+    }
+    return state.value
 }

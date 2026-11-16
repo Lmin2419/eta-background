@@ -39,11 +39,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.CloudDownload
-import androidx.compose.material.icons.rounded.RadioButtonUnchecked
-import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -114,7 +114,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.outlined.DeleteOutline
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 
 private val editableReasoningEfforts = listOf(
@@ -276,7 +276,7 @@ internal fun ProviderModelsTab(
                             enabled = !isFetching && !isMutatingModel,
                             startAction = {
                                 EtaPreferenceIcon(
-                                    icon = Icons.Rounded.CloudDownload,
+                                    icon = Icons.Outlined.CloudDownload,
                                     enabled = !isFetching && !isMutatingModel,
                                     tint = EtaPreferenceColors.Blue,
                                 )
@@ -334,7 +334,7 @@ internal fun ProviderModelsTab(
                             enabled = !isFetching && !isMutatingModel,
                             startAction = {
                                 EtaPreferenceIcon(
-                                    icon = Icons.Rounded.Add,
+                                    icon = Icons.Outlined.Add,
                                     enabled = !isFetching && !isMutatingModel,
                                     tint = EtaPreferenceColors.Blue,
                                 )
@@ -757,7 +757,7 @@ private fun ModelDeleteBar(
     ) {
         val tint = if (active) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.disabledOnSecondaryVariant
         Icon(
-            imageVector = Icons.Rounded.DeleteOutline,
+            imageVector = Icons.Outlined.DeleteOutline,
             contentDescription = null,
             tint = tint,
             modifier = Modifier.size(20.dp),
@@ -850,15 +850,15 @@ private fun ModelListItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 EtaIconButton(onClick = onEdit, enabled = enabled) {
                     Icon(
-                        imageVector = Icons.Rounded.Tune,
+                        imageVector = Icons.Outlined.Tune,
                         contentDescription = stringResource(R.string.ui_edit_model_parameters_ba4864),
                         tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
                     )
                 }
                 EtaIconButton(onClick = onSetCurrent, enabled = enabled) {
                     Icon(
-                        imageVector = if (isSelected) Icons.Rounded.Check
-                            else Icons.Rounded.RadioButtonUnchecked,
+                        imageVector = if (isSelected) Icons.Outlined.Check
+                            else Icons.Outlined.RadioButtonUnchecked,
                         contentDescription = if (isSelected) context.getString(R.string.page_current_model_a0af8f) else context.getString(R.string.page_set_as_current_model_183d7d),
                         tint = if (isSelected) {
                             MiuixTheme.colorScheme.primary
@@ -895,24 +895,34 @@ private fun ModelEditDialog(
             model.reasoningOverride != null || model.reasoningCapabilitiesOverride != null
         )
     }
+    // 上游 3.4.2：Gemini 原生连接也可手动开关并选择思考档位，是否支持交给服务端校验。
+    val initialCapabilities = if (nativeGemini) GeminiModelCapabilities.resolveReasoning(model)
+        else model.effectiveReasoningCapabilities
+    val availableEfforts = if (nativeGemini) GeminiModelCapabilities.configurableEfforts else editableReasoningEfforts
     var reasoningEnabled by remember(model.id, isNew) {
-        mutableStateOf(model.supportsReasoning)
+        mutableStateOf(
+            if (nativeGemini) model.reasoningOverride ?: initialCapabilities?.supportedEfforts.orEmpty().isNotEmpty()
+            else model.supportsReasoning
+        )
     }
     var selectedReasoningEfforts by remember(model.id, isNew) {
         mutableStateOf(
-            model.effectiveReasoningCapabilities
+            initialCapabilities
                 ?.selectableEfforts
                 ?.toSet()
                 .orEmpty() + ReasoningEffort.DEFAULT
         )
     }
     val contextError = contextWindowInputError(contextWindowOverrideText)
-    val geminiCapabilities = if (nativeGemini) GeminiModelCapabilities.requestReasoningCapabilities(modelId) else null
 
     fun resetAutomaticReasoning() {
         reasoningOverrideActive = false
-        reasoningEnabled = model.reasoning == true
-        selectedReasoningEfforts = model.reasoningCapabilities
+        val automaticCapabilities = if (nativeGemini) GeminiModelCapabilities.resolveReasoning(
+            model.copy(modelId = modelId, reasoningOverride = null, reasoningCapabilitiesOverride = null),
+        ) else model.reasoningCapabilities
+        reasoningEnabled = if (nativeGemini) automaticCapabilities?.supportedEfforts.orEmpty().isNotEmpty()
+            else model.reasoning == true
+        selectedReasoningEfforts = automaticCapabilities
             ?.selectableEfforts
             ?.toSet()
             .orEmpty() + ReasoningEffort.DEFAULT
@@ -924,11 +934,11 @@ private fun ModelEditDialog(
         contextWindowOverride = contextWindowOverrideText.trim()
             .takeIf(String::isNotEmpty)
             ?.toInt(),
-        reasoningOverride = reasoningEnabled.takeIf { reasoningOverrideActive && geminiCapabilities == null },
-        reasoningCapabilitiesOverride = if (reasoningOverrideActive && reasoningEnabled && geminiCapabilities == null) {
-            val canDisable = ReasoningEffort.OFF in selectedReasoningEfforts
+        reasoningOverride = reasoningEnabled.takeIf { reasoningOverrideActive },
+        reasoningCapabilitiesOverride = if (reasoningOverrideActive && reasoningEnabled) {
+            val canDisable = !nativeGemini && ReasoningEffort.OFF in selectedReasoningEfforts
             (model.effectiveReasoningCapabilities ?: ModelReasoningCapabilities()).copy(
-                supportedEfforts = editableReasoningEfforts.filter { effort ->
+                supportedEfforts = availableEfforts.filter { effort ->
                     effort != ReasoningEffort.OFF && effort in selectedReasoningEfforts
                 },
                 defaultEffort = model.effectiveReasoningCapabilities
@@ -1027,7 +1037,7 @@ private fun ModelEditDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable(enabled = !isSaving && geminiCapabilities == null) {
+                        .clickable(enabled = !isSaving) {
                             reasoningOverrideActive = true
                             reasoningEnabled = !reasoningEnabled
                         }
@@ -1036,15 +1046,13 @@ private fun ModelEditDialog(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (geminiCapabilities != null && !geminiCapabilities.mandatory) "思考档位使用 Default"
-                                else stringResource(R.string.ui_support_thinking_5b9e4c),
+                            text = if (nativeGemini) "配置思考档位" else stringResource(R.string.ui_support_thinking_5b9e4c),
                             style = MiuixTheme.textStyles.body1,
                             color = MiuixTheme.colorScheme.onSurface,
                         )
                         Text(
-                            text = if (geminiCapabilities != null) {
-                                if (geminiCapabilities.mandatory) "该模型必须思考，不支持 Off；Default 使用模型默认档位。"
-                                else "尚未确认该模型的思考档位；仅使用 Default，不发送自定义思考档位。"
+                            text = if (nativeGemini) {
+                                "关闭时仅使用 Default，不发送档位参数；不会关闭模型自身的思考。"
                             } else if (reasoningOverrideActive) {
                                 stringResource(R.string.page_covered_model_automatic_capabilities_3fa7d4)
                             } else {
@@ -1063,23 +1071,23 @@ private fun ModelEditDialog(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     EtaSwitch(
-                        checked = geminiCapabilities != null || reasoningEnabled,
+                        checked = reasoningEnabled,
                         onCheckedChange = { enabled ->
                             reasoningOverrideActive = true
                             reasoningEnabled = enabled
                         },
-                        enabled = !isSaving && geminiCapabilities == null,
+                        enabled = !isSaving,
                     )
                 }
-                if (geminiCapabilities != null || reasoningEnabled) {
+                if (reasoningEnabled) {
                     // Default 始终可用（交给模型或 Provider 决定），不作为可选项展示。
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.padding(top = 10.dp),
                     ) {
-                        (geminiCapabilities?.supportedEfforts ?: editableReasoningEfforts).forEach { effort ->
-                            val checked = geminiCapabilities != null || effort in selectedReasoningEfforts
+                        availableEfforts.forEach { effort ->
+                            val checked = effort in selectedReasoningEfforts
                             EtaChoiceChip(
                                 text = effort.displayName,
                                 selected = checked,
@@ -1091,13 +1099,13 @@ private fun ModelEditDialog(
                                         selectedReasoningEfforts + effort
                                     }
                                 },
-                                enabled = !isSaving && geminiCapabilities == null,
+                                enabled = !isSaving,
                             )
                         }
                     }
                 }
                 Text(
-                    text = if (nativeGemini) "Gemini 原生连接只发送已确认支持的思考档位。"
+                    text = if (nativeGemini) "可手动选择档位，是否支持由服务端校验。Default 始终可用。"
                         else stringResource(R.string.ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d),
                     style = MiuixTheme.textStyles.footnote2,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,

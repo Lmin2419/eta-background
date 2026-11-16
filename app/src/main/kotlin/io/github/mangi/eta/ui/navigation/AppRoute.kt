@@ -34,6 +34,15 @@ sealed interface AppRoute : NavKey {
     data object Subagents : AppRoute
 
     @Serializable
+    data object ConversationTitleSettings : AppRoute
+
+    @Serializable
+    data object ContextCompactionSettings : AppRoute
+
+    @Serializable
+    data object AssistantOverlaySettings : AppRoute
+
+    @Serializable
     data object Characters : AppRoute
 
     @Serializable
@@ -128,3 +137,14 @@ sealed interface AppRoute : NavKey {
 
 @Serializable
 enum class NewProviderType { OpenAiCompatible, Anthropic, Gemini }
+
+/** 呈现方式（etax/design/05 §4）：沉浸内容整页，设置类在对话上方的玻璃窗口里打开。 */
+enum class AppRoutePresentation { Page, Window }
+
+val AppRoute.presentation: AppRoutePresentation
+    get() = when (this) {
+        is AppRoute.Home, is AppRoute.Browser, is AppRoute.Terminal, is AppRoute.Workspace,
+        is AppRoute.LinuxFiles, is AppRoute.CharacterDetail, is AppRoute.CharacterEditor,
+        is AppRoute.DesktopChat -> AppRoutePresentation.Page
+        else -> AppRoutePresentation.Window
+    }

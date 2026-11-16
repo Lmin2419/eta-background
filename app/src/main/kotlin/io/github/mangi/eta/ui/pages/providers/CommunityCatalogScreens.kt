@@ -11,9 +11,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CloudOff
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.SearchOff
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -82,7 +82,7 @@ internal fun CommunityCatalogScreen(
                 onClick = store::refresh,
                 enabled = !store.loading && !store.refreshing,
             ) {
-                Icon(Icons.Rounded.Refresh, contentDescription = "刷新模型目录")
+                Icon(Icons.Outlined.Refresh, contentDescription = "刷新模型目录")
             }
         },
     ) {
@@ -142,7 +142,7 @@ internal fun CommunityCatalogScreen(
                 ListEmptyState(
                     title = if (catalog == null) "没有可用的目录" else "没有找到匹配的提供商",
                     summary = if (catalog == null) "点击右上角刷新后重试" else "试试其他名称或地址",
-                    icon = if (catalog == null) Icons.Rounded.CloudOff else Icons.Rounded.SearchOff,
+                    icon = if (catalog == null) Icons.Outlined.CloudOff else Icons.Outlined.SearchOff,
                 )
             }
         } else {

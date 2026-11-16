@@ -13,8 +13,8 @@ import okhttp3.Request
 import org.json.JSONObject
 
 internal fun supportsSpeechSession(provider: TtsProvider): Boolean = when (provider) {
-    TtsProvider.QWEN, TtsProvider.DOUBAO -> true
-    TtsProvider.NONE, TtsProvider.GEMINI, TtsProvider.MINIMAX -> false
+    TtsProvider.QWEN, TtsProvider.DOUBAO, TtsProvider.DEEPSEEK -> true
+    TtsProvider.NONE, TtsProvider.GEMINI, TtsProvider.MINIMAX, TtsProvider.MIMO -> false
 }
 
 /**
@@ -31,8 +31,9 @@ internal suspend fun streamSpeech(
     when (settings.tts) {
         TtsProvider.QWEN -> streamQwen(settings, credentials, chunks, onAudio)
         TtsProvider.DOUBAO -> streamDoubao(settings, credentials, chunks, onAudio)
+        TtsProvider.DEEPSEEK -> streamDeepSeekSpeech(settings.deepseekTts, credentials.deepseekTts, chunks, onAudio)
         TtsProvider.NONE -> throw SpeechFailure(SpeechErrorCode.CONFIGURATION, "请先选择语音播报服务")
-        TtsProvider.GEMINI, TtsProvider.MINIMAX ->
+        TtsProvider.GEMINI, TtsProvider.MINIMAX, TtsProvider.MIMO ->
             throw SpeechFailure(SpeechErrorCode.CONFIGURATION, "当前语音服务使用逐段流式合成")
     }
 }

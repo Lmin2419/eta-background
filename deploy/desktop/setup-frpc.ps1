@@ -1,4 +1,4 @@
-# 电脑端（Windows）：安装 frpc，把 dsh-bridge(127.0.0.1:7788) 映射到中转服务器，并写入配对 token。
+﻿# 电脑端（Windows）：安装 frpc，把 dsh-bridge(127.0.0.1:7788) 映射到中转服务器，并写入配对 token。
 #
 #   powershell -ExecutionPolicy Bypass -File setup-frpc.ps1 'pxd://服务器IP:7000?frp=…&token=…&port=17788'
 #
@@ -93,17 +93,18 @@ $configPath = Join-Path $HomeDir 'frpc.toml'
 & $Frpc verify -c $configPath | Out-Null
 Say "已写入 $configPath 与 dsh-bridge token"
 
+# dsh-bridge 0.5.0 起 frpc 由插件启动和停止（随 DSH 桌面版开关），不再注册开机任务。
 $taskName = 'PangxiaopangFrpc'
-$action = New-ScheduledTaskAction -Execute $Frpc -Argument "-c `"$configPath`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
-Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description 'frpc for pangxiaopang desktop bridge' | Out-Null
-Start-ScheduledTask -TaskName $taskName
-Say "已注册计划任务 $taskName（登录后自动运行，日志：$HomeDir\frpc.log）"
+if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+  Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+  Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+  Say "已删除旧的计划任务 $taskName（改由插件管理 frpc）"
+}
+Get-Process frpc -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $Frpc } | Stop-Process -Force -ErrorAction SilentlyContinue
+Say "frpc 将由 dsh-bridge 插件在 DSH 桌面版运行时自动启动"
 
 Write-Host ''
 Write-Host '完成。接下来：'
-Write-Host '  1. 重启 DeepSeek Harness（dsh web），让 dsh-bridge 读取新的 token'
+Write-Host '  1. 完全退出并重新打开 DeepSeek Harness 桌面版，让 dsh-bridge 读取新的 token'
 Write-Host "  2. 检查：浏览器打开 http://127.0.0.1:$LocalPort/v1/health 应返回 {`"ok`":true,...}"
 Write-Host '  3. 手机上粘贴服务器脚本打印的 pxp:// 配对码'

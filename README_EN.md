@@ -2,19 +2,19 @@
 
 [简体中文](README.md) · [English](README_EN.md) · [Version history and source map](etax/README.md) · [Build instructions](.github/RELEASING.md)
 
-胖小胖 (formerly "Eta 后台版") is a derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮吉 / Mangi-11](https://github.com/Mangi-11)**, based on upstream v3.3.5. From 2026-11-06 the app is shown as 胖小胖 with a golden-shaded cat icon. This repository maintains background virtual-display automation and related task, notification and lifecycle extensions. It is an independent distribution. The internal project name remains `Etax`; its Android package is `io.github.mangi.etax`.
+胖小胖 (formerly "Eta 后台版") is a derivative branch of **[Eta](https://github.com/Mangi-11/Eta), created by [蛮吉 / Mangi-11](https://github.com/Mangi-11)**, based on upstream v3.3.5. From 2026-11-06 the app is shown as 胖小胖 with a coral paw-print icon. This repository maintains background virtual-display automation and related task, notification and lifecycle extensions. It is an independent distribution. The internal project name remains `Etax`; its Android package is `io.github.mangi.etax`.
 
 A development candidate adds built-in Root configuration for the system assistant, with a durable backup, read-back checks, user-confirmed power-key wake and restoration. It does not depend on Vector or inject into system_server. Physical power-key routing on ColorOS remains unverified; this is not a fix claim for the earlier soft reboot. [Implementation and acceptance](etax/NATIVE_ASSISTANT.md).
 
 ## Latest test build
 
-**2026-11-09 · `3.3.5` 胖小胖 · versionCode `2026110901`**, with engine `20261105-e49-parallel-observe` unchanged.
+**2026-11-16 · `3.3.5` 胖小胖 · versionCode `2026111603`**, with engine `20261105-e49-parallel-observe` unchanged.
 
-Desktop sessions now carry the desktop's details: pick the model and reasoning effort from the top bar, and see total tokens, cache hit rate, running time and per-turn stats. Subagents live behind a subagent button inside their parent session instead of crowding the session list. Fixed a steered message showing twice on the phone, and the background-task notification's "Open conversation" opening the virtual screen. **Update the `dsh-bridge` plugin on the computer and restart DSH.**
+New: the desktop session page matches the phone chat (glass controls floating over the messages), text selection that spans thinking and answer paragraphs (phone and desktop sessions), a glass top bar on the terminal page, top controls that stay legible at large font sizes, a smooth memory page for long documents, and edit_file cards that show the changed lines; desktop sessions in the home task capsule and done notice, capsule items open their conversation, and the model queued during a reply shows as "next turn" on the title capsule; a render diagnostics switch (frames, late frames, sampling sources) and suggestion chips above the composer on the new-chat page; a one-tap "Recheck error and retry" when an answer gives up, model switches during a reply take effect next turn, a home-screen notice when another conversation finishes, and edit_file reports the changed lines; COUI search bar in the side pane and glass controls on the desktop session page; device-mode screenshots are checked before each release. Fixes the blank phone chat page (root cause: the popup menu took the chat page's slot in the side-pane layout) and the oval composer; settings, side pane and chat header rebuilt on upstream COUI (COUI page skeleton, switches and dropdown menus in settings; upstream push-style side pane with a liquid-glass bottom dock; "title + model" chat header); the agent now fixes small coding errors (escaping, whitespace, CRLF) before giving up; upstream COUI menus, bottom sheets and capsule buttons, COUI fluid liquid glass on the chat top controls and composer, per-reply speed stats and background context compaction with an optional dedicated model. Earlier: upstream context-compression cache reuse and usage stats, MiMo/DeepSeek voice, a separate model for the assistant overlay and cleaner read-aloud. Earlier upstream merges: auto-generated conversation titles, branching a new conversation from a reply, full-screen chat image viewer, share-to-chat from other apps, per-tool switches, automatic root re-check after reboot, plus Grok/Gemini fixes. The license follows upstream to GPL-3.0.
 
-The built-in relay `8.163.249.159` and `pxp://` pairing codes are unchanged. APK: **`Pangxiaopang-3.3.5-2026110901.apk`**.
+APK: **`Pangxiaopang-3.3.5-2026111603.apk`**.
 
-**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026110901)
+**[Download the signed test APK](https://github.com/Lmin2419/eta-background/releases)** · [Changelog](etax/README.md#release-2026111603)
 
 > Development baseline: `main` is the latest version. New work starts from `main`.
 
@@ -55,6 +55,6 @@ Application source lives in `app/`, background bridges in `app/src/main/java/com
 
 Credit to **蛮吉 (Mangi-11)** and the [Eta contributors](https://github.com/Mangi-11/Eta/graphs/contributors). Upstream: [Mangi-11/Eta](https://github.com/Mangi-11/Eta). Background branch: [Lmin2419/eta-background](https://github.com/Lmin2419/eta-background).
 
-This project retains **[PolyForm Noncommercial 1.0.0](LICENSE)** and the upstream copyright notice. It is source-available under a noncommercial license, not MIT/Apache or OSI-defined open source. Third-party components retain their own licenses.
+Upstream Eta moved to **[GPL-3.0](LICENSE)** in 3.4.1. This project now includes upstream 3.4.x code and follows GPL-3.0 as well, keeping the upstream copyright and attribution. You may use, modify and distribute it; distributed modified versions must publish their source under GPL-3.0. Third-party components retain their own licenses.
 
 Required Notice: Copyright © 2026 蛮吉 (Mangi-11).

@@ -24,11 +24,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -68,7 +68,8 @@ import io.github.mangi.eta.ui.model.AgentChatMessageUi
 import io.github.mangi.eta.ui.model.AgentMessageUi
 import io.github.mangi.eta.ui.model.SystemNoticeCode
 import io.github.mangi.eta.ui.model.SystemNoticeMessageUi
-import io.github.mangi.eta.ui.components.AnswerActionSize
+import io.github.mangi.eta.ui.components.AnswerActionButton
+import io.github.mangi.eta.ui.components.ChatActionIcons
 import io.github.mangi.eta.ui.components.ChatInputActionIconSize
 import io.github.mangi.eta.ui.components.ChatInputActionSize
 import io.github.mangi.eta.ui.components.EtaButton
@@ -118,7 +119,7 @@ internal fun rememberSpeechPermission(onGranted: () -> Unit): () -> Unit {
     val deniedMessage = stringResource(R.string.speech_mic_permission)
     val action by rememberUpdatedState(onGranted)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) action() else Toast.makeText(context, deniedMessage, Toast.LENGTH_SHORT).show()
+        if (granted) action() else io.github.mangi.eta.ui.components.EtaToastCenter.show(context, deniedMessage, Toast.LENGTH_SHORT)
     }
     return {
         if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
@@ -146,7 +147,7 @@ internal fun SpeechDictationButton(
         modifier = modifier,
     ) {
         Icon(
-            imageVector = if (state.active) Icons.Rounded.Check else Icons.Rounded.Mic,
+            imageVector = if (state.active) Icons.Outlined.Check else Icons.Outlined.Mic,
             contentDescription = stringResource(
                 if (state.active) R.string.speech_dictation_finish else R.string.speech_dictation,
             ),
@@ -216,7 +217,7 @@ internal fun SpeechInputFeedback(controller: SpeechInputController) {
                 }
                 EtaIconButton(onClick = controller::cancel, minWidth = 36.dp, minHeight = 36.dp) {
                     Icon(
-                        imageVector = Icons.Rounded.Close,
+                        imageVector = Icons.Outlined.Close,
                         contentDescription = stringResource(R.string.action_cancel),
                         modifier = Modifier.size(16.dp),
                         tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
@@ -356,19 +357,20 @@ internal fun SpeechPlaybackErrors(controller: SpeechPlaybackController) {
     val context = LocalContext.current
     val state by controller.state.collectAsState()
     LaunchedEffect(state.error) {
-        state.error?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+        state.error?.let { io.github.mangi.eta.ui.components.EtaToastCenter.show(context, it, Toast.LENGTH_LONG) }
     }
 }
 
-/** 朗读入口与相邻的消息操作共享同一套尺寸与弱化配色，播放中转为停止。 */
+/** 朗读入口与相邻的消息操作共享同一套尺寸与线性图标风格，播放中转为停止。 */
 @Composable
 internal fun SpeechReadAloudMenuItem(messageId: String, text: String, onInvoked: () -> Unit) {
     val controller = LocalSpeechPlayback.current ?: return
     if (!LocalSpeechPlaybackEnabled.current) return
     val state by controller.state.collectAsState()
     val active = state.messageId == messageId
-    io.github.mangi.eta.ui.components.EtaArrowPreference(
-        stringResource(if (active) R.string.speech_read_stop else R.string.speech_read_aloud), onClick = {
+    io.github.mangi.eta.ui.components.EtaMenuItem(
+        stringResource(if (active) R.string.speech_read_stop else R.string.speech_read_aloud),
+        icon = if (active) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp, onClick = {
             if (active) controller.stop() else controller.speak(messageId, text)
             onInvoked()
         })
@@ -380,22 +382,11 @@ internal fun SpeechReadAloudButton(messageId: String, text: String) {
     if (!LocalSpeechPlaybackEnabled.current) return
     val state by controller.state.collectAsState()
     val active = state.messageId == messageId
-    EtaIconButton(
+    // 与回答操作行的其它按钮同一尺寸与按压反馈。
+    io.github.mangi.eta.ui.components.AnswerActionButton(
+        icon = if (active) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp,
+        contentDescription = stringResource(if (active) R.string.speech_read_stop else R.string.speech_read_aloud),
         onClick = { if (active) controller.stop() else controller.speak(messageId, text) },
-        minWidth = AnswerActionSize,
-        minHeight = AnswerActionSize,
-    ) {
-        Icon(
-            imageVector = if (active) Icons.Rounded.Stop else Icons.AutoMirrored.Rounded.VolumeUp,
-            contentDescription = stringResource(
-                if (active) R.string.speech_read_stop else R.string.speech_read_aloud,
-            ),
-            modifier = Modifier.size(18.dp),
-            tint = if (active) {
-                MiuixTheme.colorScheme.primary
-            } else {
-                io.github.mangi.eta.ui.theme.EtaTheme.colors.textTertiary
-            },
-        )
-    }
+        tint = if (active) MiuixTheme.colorScheme.primary else null,
+    )
 }

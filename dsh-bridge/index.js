@@ -1,11 +1,13 @@
 // dsh-bridge: DeepSeek Harness plugin that mirrors desktop Sessions to the
 // 胖小胖 Android app over one authenticated WebSocket.
 
+import { startTunnel } from './lib/tunnel.js'
 import { randomBytes } from 'node:crypto'
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { Bridge } from './lib/bridge.js'
+import { Bridge, RUNTIME } from './lib/bridge.js'
 import { startServer } from './lib/server.js'
 
 export const name = 'dsh-bridge'
@@ -18,6 +20,26 @@ const VERSION = (() => {
     return '0.0.0'
   }
 })()
+
+/**
+ * Version of the DSH runtime this plugin is loaded into, read from the package
+ * the running entry script belongs to. Best effort: `null` when the layout is
+ * not recognised (the bridge itself relies on feature detection, not on this).
+ * @returns {string | null}
+ */
+export function detectDshVersion() {
+  const names = ['@deepseek-ai/dsh/package.json', '@deepseek-ai/dsh-api-session-controller/package.json', '@deepseek-ai/dsh-base/package.json']
+  for (const from of [process.argv[1], process.execPath]) {
+    if (typeof from !== 'string' || from.length === 0) continue
+    for (const name of names) {
+      try {
+        const version = JSON.parse(readFileSync(createRequire(from).resolve(name), 'utf8')).version
+        if (typeof version === 'string' && version.length > 0) return version
+      } catch { /* try the next location */ }
+    }
+  }
+  return null
+}
 
 /**
  * Resolve the shared secret: explicit config, then DSH_BRIDGE_TOKEN, then a
@@ -53,6 +75,16 @@ export function apply(ctx, config = {}) {
     controller: ctx.sessionController,
     workspaces: ctx.workspaceRegistry,
     subagents: undefined,
+    userQuestions: undefined,
+    agentOf: (sessionId) => {
+      const agents = typeof ctx.get === 'function' ? ctx.get('agents') : ctx.agents
+      return agents?.get?.(sessionId)
+    },
+    sessionOf: (sessionId) => {
+      const sessions = typeof ctx.get === 'function' ? ctx.get('sessions') : ctx.sessions
+      return sessions?.get?.(sessionId)
+    },
+    dshVersion: detectDshVersion(),
     logger,
     version: VERSION,
   }
@@ -63,14 +95,34 @@ export function apply(ctx, config = {}) {
       services.subagents = child.subagents
       child.effect(() => () => { services.subagents = undefined }, 'dsh-bridge: subagents')
     })
+    // Optional: answering continued questions needs the userQuestions service.
+    ctx.inject(['userQuestions'], (child) => {
+      services.userQuestions = child.userQuestions
+      child.effect(() => () => { services.userQuestions = undefined }, 'dsh-bridge: userQuestions')
+    })
+    // Optional: files from the phone are staged through the host's own upload service, and
+    // image previews read the stored attachment, so the desktop shows them natively.
+    ctx.inject(['fileUploads'], (child) => {
+      services.fileUploads = child.fileUploads
+      child.effect(() => () => { services.fileUploads = undefined }, 'dsh-bridge: fileUploads')
+    })
+    ctx.inject(['attachments'], (child) => {
+      services.attachments = child.attachments
+      child.effect(() => () => { services.attachments = undefined }, 'dsh-bridge: attachments')
+    })
   }
 
   ctx.on('api-session/added', summary => bridge.onSessionAdded(summary))
   ctx.on('api-session/status', (sessionId, running) => bridge.onStatus(sessionId, running))
   ctx.on('api-session/activity', (sessionId, updatedAt) => bridge.onActivity(sessionId, updatedAt))
   ctx.on('api-session/error', (sessionId, message) => bridge.onSessionError(sessionId, message))
-  // Prepended so the phone sees approvals even while the Web UI's forwarder holds them.
+  // Workspace registry writes: new or renamed workspaces, membership, archive and pin sets.
+  ctx.on('domain/changed', (change) => { if (change?.domain === 'workspace') bridge.onWorkspacesChanged() })
+  // Every Session's events, for turn-end reminders on the phone.
+  ctx.on('session/event', (session, event) => bridge.onSessionEvent(session, event), { global: true })
+  // Prepended so the phone sees approvals and questions even while the desktop UI's forwarder holds them.
   ctx.on('approval/request', (request, next) => bridge.requestApproval(request, next), true)
+  ctx.on('user-questions/request', (request, next) => bridge.requestQuestion(request, next), true)
 
   ctx.effect(async () => {
     const { token, source } = resolveToken(config)
@@ -81,8 +133,15 @@ export function apply(ctx, config = {}) {
       logger.error(`dsh-bridge: cannot listen on ${host}:${port}: ${error?.message ?? error}`)
       return () => bridge.dispose()
     }
-    logger.info(`dsh-bridge ${VERSION} listening on http://${host}:${handle.port} (token from ${source})`)
+    const stopFeed = bridge.startProjectionFeed()
+    // The relay tunnel runs only while the plugin does: one switch for the whole link.
+    const tunnel = startTunnel({ logger, onChange: (state) => bridge.onTunnelChanged(state) })
+    services.tunnel = () => tunnel.state
+    logger.info(`dsh-bridge ${VERSION} (${RUNTIME}, DSH ${services.dshVersion ?? 'unknown'}, api ${bridge.hostApi().join('+')}) listening on http://${host}:${handle.port} (token from ${source})`)
     return async () => {
+      tunnel.stop()
+      services.tunnel = undefined
+      stopFeed()
       bridge.dispose()
       await handle.close()
     }

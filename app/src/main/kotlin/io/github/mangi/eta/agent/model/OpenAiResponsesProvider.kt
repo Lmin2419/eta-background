@@ -31,29 +31,7 @@ internal object OpenAiResponsesProvider : AgentProviderClient {
         onEvent: (ProviderEvent) -> Unit,
     ): ProviderResponse {
         val config = request.effectiveConfig
-        require(config.openAiEndpointMode == OpenAiEndpointMode.RESPONSES) {
-            "当前 Provider 未配置为 Responses API"
-        }
-        val body = buildRequestJson(config, request.messages, request.effectiveTools)
-            .toString()
-            .toRequestBody(JSON_MEDIA_TYPE)
-        val headers = okhttp3.Headers.Builder()
-            .add("Content-Type", "application/json; charset=utf-8")
-            .add("Accept", "text/event-stream")
-            .apply {
-                if (config.apiKey.isNotBlank()) add("Authorization", "Bearer ${config.apiKey}")
-            }
-            .also {
-                ProviderRequestHeaders.mergeInto(
-                    it, config.baseUrl, config.customHeaders, request.sessionId, config.authMode,
-                )
-            }
-            .build()
-        val httpRequest = Request.Builder()
-            .url(ProviderUrls.openAiResponsesUrl(config.baseUrl))
-            .headers(headers)
-            .post(body)
-            .build()
+        val httpRequest = buildHttpRequest(request)
         runController.throwIfCancelled()
         onEvent(ProviderEvent.RequestStarted)
         return AuthorizedProviderHttp.executeStreaming(
@@ -77,11 +55,39 @@ internal object OpenAiResponsesProvider : AgentProviderClient {
         }
     }
 
+    internal fun buildHttpRequest(request: ProviderRequest): Request {
+        val config = request.effectiveConfig
+        require(config.openAiEndpointMode == OpenAiEndpointMode.RESPONSES) {
+            "当前 Provider 未配置为 Responses API"
+        }
+        val body = buildRequestJson(config, request.messages, request.effectiveTools, request.purpose)
+            .toString()
+            .toRequestBody(JSON_MEDIA_TYPE)
+        val headers = okhttp3.Headers.Builder()
+            .add("Content-Type", "application/json; charset=utf-8")
+            .add("Accept", "text/event-stream")
+            .apply {
+                if (config.apiKey.isNotBlank()) add("Authorization", "Bearer ${config.apiKey}")
+            }
+            .also {
+                ProviderRequestHeaders.mergeInto(
+                    it, config.baseUrl, config.customHeaders, request.sessionId, config.authMode, config.model,
+                )
+            }
+            .build()
+        return Request.Builder()
+            .url(ProviderUrls.openAiResponsesUrl(config.baseUrl))
+            .headers(headers)
+            .post(body)
+            .build()
+    }
+
     internal fun buildRequestJson(
         config: AgentModelClient.ModelConfig,
         messages: JSONArray,
         tools: JSONArray,
-    ): JSONObject = ResponsesRequestBuilder.build(config, messages, tools)
+        purpose: ProviderRequestPurpose = ProviderRequestPurpose.CHAT,
+    ): JSONObject = ResponsesRequestBuilder.build(config, messages, tools, purpose)
 
     internal fun readStreamingResponse(
         stream: java.io.InputStream?,
@@ -603,12 +609,13 @@ internal object OpenAiResponsesProvider : AgentProviderClient {
 
     private fun parseUsage(usage: JSONObject?): AgentTokenUsage? {
         usage ?: return null
+        val inputDetails = usage.optJSONObject("input_tokens_details") ?: usage.optJSONObject("prompt_tokens_details")
         return AgentTokenUsage(
             contextTokens = usage.intValue("total_tokens"),
             inputTokens = usage.intValue("input_tokens", "prompt_tokens"),
             outputTokens = usage.intValue("output_tokens", "completion_tokens"),
-            cachedTokens = usage.optJSONObject("input_tokens_details")?.intValue("cached_tokens")
-                ?: usage.optJSONObject("prompt_tokens_details")?.intValue("cached_tokens"),
+            cachedTokens = inputDetails?.intValue("cached_tokens"),
+            cacheWriteTokens = inputDetails?.intValue("cache_write_tokens"),
             reasoningTokens = usage.optJSONObject("output_tokens_details")?.intValue("reasoning_tokens")
                 ?: usage.optJSONObject("completion_tokens_details")?.intValue("reasoning_tokens"),
         ).takeUnless { it.isEmpty }

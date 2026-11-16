@@ -24,10 +24,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -159,7 +159,7 @@ internal fun SharedFoldersScreen(
                         endActions = {
                             EtaIconButton(onClick = { removeTarget = mount }) {
                                 Icon(
-                                    imageVector = Icons.Rounded.DeleteOutline,
+                                    imageVector = Icons.Outlined.DeleteOutline,
                                     contentDescription = stringResource(R.string.action_delete),
                                     modifier = Modifier.size(20.dp),
                                     tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -173,7 +173,7 @@ internal fun SharedFoldersScreen(
                     title = stringResource(R.string.shared_folders_add),
                     titleColor = BasicComponentDefaults.titleColor(color = MiuixTheme.colorScheme.primary),
                     startAction = {
-                        EtaPreferenceIcon(Icons.Rounded.Add, tint = MiuixTheme.colorScheme.primary)
+                        EtaPreferenceIcon(Icons.Outlined.Add, tint = MiuixTheme.colorScheme.primary)
                     },
                     onClick = {
                         if (TerminalRuntime.rootAvailable || Environment.isExternalStorageManager()) {
@@ -202,7 +202,7 @@ internal fun SharedFoldersScreen(
                         endActions = {
                             EtaIconButton(onClick = { notice = null }) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Close,
+                                    imageVector = Icons.Outlined.Close,
                                     contentDescription = stringResource(R.string.action_close),
                                     modifier = Modifier.size(18.dp),
                                     tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -498,7 +498,7 @@ private fun PickerRow(label: String, onClick: () -> Unit) {
             .padding(vertical = 10.dp, horizontal = 6.dp),
     ) {
         Icon(
-            imageVector = Icons.Rounded.Folder,
+            imageVector = Icons.Outlined.Folder,
             contentDescription = null,
             modifier = Modifier.size(18.dp),
             tint = EtaPreferenceColors.Orange,

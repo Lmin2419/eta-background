@@ -22,5 +22,9 @@ fun EtaTheme(
     motion: EtaMotion = rememberEtaMotion(),
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalEtaColors provides colors, LocalEtaMotion provides motion, content = content)
+    // 光标、选中文字的高亮与拖动手柄统一用珊瑚橘。
+    val selection = androidx.compose.foundation.text.selection.TextSelectionColors(
+        handleColor = colors.accent, backgroundColor = colors.accent.copy(alpha = 0.26f))
+    CompositionLocalProvider(LocalEtaColors provides colors, LocalEtaMotion provides motion,
+        androidx.compose.foundation.text.selection.LocalTextSelectionColors provides selection, content = content)
 }

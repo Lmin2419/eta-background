@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,7 +50,7 @@ internal fun CharacterEditorScreen(
                 onClick = { store.saveEditor(onSaved) },
                 enabled = !store.busy && store.draftName.isNotBlank(),
             ) {
-                Icon(Icons.Rounded.Check, contentDescription = "保存角色")
+                Icon(Icons.Outlined.Check, contentDescription = "保存角色")
             }
         },
     ) {
@@ -88,7 +88,7 @@ internal fun CharacterEditorScreen(
                     minHeight = 36.dp,
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Close,
+                        imageVector = Icons.Outlined.Close,
                         contentDescription = "移除此开场白",
                         tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )

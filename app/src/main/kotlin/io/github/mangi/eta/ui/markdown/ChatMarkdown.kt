@@ -48,6 +48,29 @@ internal fun StaticMarkdown(
 }
 
 /**
+ * 独立滚动视口里的长篇静态 Markdown（如 MEMORY.md 预览，上游 3.4.1）。解析完成前什么都不画
+ * ——几十 KiB 的整篇原文占位是一个巨大的段落，会在进入页面的动画里卡住主线程；解析后按视口虚拟化渲染。
+ */
+@Composable
+internal fun LazyStaticMarkdown(
+    content: String,
+    tone: MarkdownTone,
+    modifier: Modifier = Modifier,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(),
+) {
+    val style = rememberMarkdownStyle(tone)
+    val document = produceState(
+        initialValue = staticMarkdownDocumentCache.get(content, style.inline),
+        content,
+        style.inline,
+    ) {
+        value = staticMarkdownDocumentCache.get(content, style.inline)
+            ?: withContext(Dispatchers.Default) { staticMarkdownDocumentCache.parse(content, style.inline) }
+    }.value ?: return
+    LazyMarkdownContent(document = document, style = style, modifier = modifier, contentPadding = contentPadding)
+}
+
+/**
  * 流式内容的 Markdown。解析在后台串行进行，最新目标覆盖尚未开始的旧目标；
  * 正文语气接入逐字显现，思考语气直接显示每次解析结果。
  *

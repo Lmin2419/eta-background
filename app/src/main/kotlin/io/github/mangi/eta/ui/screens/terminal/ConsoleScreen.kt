@@ -18,7 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -298,7 +298,7 @@ private fun ConsoleGrid(
 
         if (state.exited || state.failMessage != null) {
             TerminalPlaceholder(
-                icon = Icons.Rounded.Terminal,
+                icon = Icons.Outlined.Terminal,
                 message = state.failMessage ?: stringResource(R.string.terminal_session_closed),
                 actionText = stringResource(R.string.terminal_reconnect),
                 onAction = onReconnect,

@@ -75,15 +75,17 @@ class HomeConversationPresentationTest {
         } finally { panel.close(); controller.pause().stop().destroy() }
     }
 
-    @Test fun busyModelPillReportsLockWithoutOpeningSettings() {
+    /** 07 第三期：回复进行中也能打开模型菜单，选中的模型这一轮回复完后才换（不再提示「锁定」）。 */
+    @Test fun modelPillStillOpensWhileReplying() {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val notices = mutableListOf<String>()
         val panel = Stage3TestPanel(controller.get()) { Stage3ChatFixture(streaming = true, onToast = { notices += it }) }
         try {
             panel.advance(20)
             panel.click(panel.nodes().first { it.config.getOrNull(SemanticsProperties.ContentDescription)?.contains("Example Model") == true })
-            assertEquals(listOf(controller.get().getString(R.string.eta_model_locked)), notices)
-            assertFalse(panel.nodes().any { it.config.getOrNull(SemanticsProperties.PaneTitle) == controller.get().getString(R.string.eta_chat_settings) })
+            panel.advance(10)
+            assertTrue("no lock notice while a reply is running: $notices", notices.isEmpty())
+            assertTrue(panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text.contains("Example Model") } == true })
         } finally { panel.close(); controller.pause().stop().destroy() }
     }
 
@@ -117,7 +119,8 @@ class HomeConversationPresentationTest {
             panel.capture("model-settings-search")
             clickText("Choice 9"); panel.advance(35)
             assertEquals(listOf("choice-9"), actions)
-            for ((id, action) in listOf(R.string.context_compact_action to "compact", R.string.action_export to "export", R.string.eta_manage_models to "manage")) {
+            // 「压缩」挪到上下文圆环、「导出」挪到侧栏长按；模型小窗里保留「管理模型…」。
+            for ((id, action) in listOf(R.string.eta_manage_models_ellipsis to "manage")) {
                 open(); search("no matching model")
                 clickText(controller.get().getString(id)); panel.advance(35)
                 assertEquals(action, actions.last())
@@ -139,8 +142,10 @@ class HomeConversationPresentationTest {
             panel.advance(45)
             panel.touch(android.view.MotionEvent.ACTION_UP, point.x, point.y, down)
             panel.advance(35)
+            // 阶段 11：长按菜单是贴着回答弹出的气泡（独立弹窗窗口），在所有窗口里找。
+            val texts = popupTexts()
             for (id in listOf(R.string.copy_answer, R.string.ui_regenerate_reply_84a7d9, R.string.ui_delete_3755f5))
-                assertTrue("Missing assistant action $id", panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == controller.get().getString(id) } == true })
+                assertTrue("Missing assistant action $id in $texts", controller.get().getString(id) in texts)
         } finally { panel.close(); controller.pause().stop().destroy() }
     }
 
@@ -182,5 +187,23 @@ class HomeConversationPresentationTest {
             try { panel.advance(50); panel.capture("conversation-${if (dark) "dark" else "light"}") }
             finally { panel.close(); controller.pause().stop().destroy() }
         }
+    }
+
+    /** 所有窗口（含弹窗）里 Compose 语义树上的文字。 */
+    private fun popupTexts(): List<String> {
+        val global = Class.forName("android.view.WindowManagerGlobal").getMethod("getInstance").invoke(null)
+        @Suppress("UNCHECKED_CAST")
+        val roots = global.javaClass.getMethod("getWindowViews").invoke(global) as List<android.view.View>
+        val out = mutableListOf<String>()
+        fun walk(view: android.view.View) {
+            if (view is androidx.compose.ui.platform.ViewRootForTest) {
+                view.semanticsOwner.getAllSemanticsNodes(mergingEnabled = false).forEach { node ->
+                    node.config.getOrNull(SemanticsProperties.Text)?.forEach { out += it.text }
+                }
+            }
+            if (view is android.view.ViewGroup) for (i in 0 until view.childCount) walk(view.getChildAt(i))
+        }
+        roots.forEach(::walk)
+        return out
     }
 }

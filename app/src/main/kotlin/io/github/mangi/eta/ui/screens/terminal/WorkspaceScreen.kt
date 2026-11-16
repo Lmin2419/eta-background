@@ -15,11 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.InsertDriveFile
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.DriveFolderUpload
-import androidx.compose.material.icons.rounded.Folder
-import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.DriveFolderUpload
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -146,7 +146,7 @@ internal fun WorkspaceScreen(onBack: () -> Unit) {
                                 InfiniteProgressIndicator(size = 20.dp)
                             }
                         } else {
-                            EtaPreferenceIcon(Icons.Rounded.DriveFolderUpload, tint = EtaPreferenceColors.Orange)
+                            EtaPreferenceIcon(Icons.Outlined.DriveFolderUpload, tint = EtaPreferenceColors.Orange)
                         }
                     },
                     onClick = { importLauncher.launch(arrayOf("*/*")) },
@@ -155,7 +155,7 @@ internal fun WorkspaceScreen(onBack: () -> Unit) {
                 EtaPreferenceDivider(hasLeading = true)
                 EtaArrowPreference(
                     title = stringResource(R.string.capability_workspace_public),
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.FolderOpen, tint = EtaPreferenceColors.Orange) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.FolderOpen, tint = EtaPreferenceColors.Orange) },
                     summary = if (publicAccess) stringResource(R.string.capability_workspace_public_granted) else stringResource(R.string.capability_workspace_public_summary),
                     onClick = {
                         try {
@@ -179,7 +179,7 @@ internal fun WorkspaceScreen(onBack: () -> Unit) {
                         endActions = {
                             EtaIconButton(onClick = { message = null }) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Close,
+                                    imageVector = Icons.Outlined.Close,
                                     contentDescription = stringResource(R.string.action_close),
                                     modifier = Modifier.size(18.dp),
                                     tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -204,7 +204,7 @@ internal fun WorkspaceScreen(onBack: () -> Unit) {
                 ) {
                     EtaArrowPreference(
                         title = stringResource(R.string.capability_workspace_parent),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.FolderOpen, tint = EtaPreferenceColors.Orange) },
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.FolderOpen, tint = EtaPreferenceColors.Orange) },
                         onClick = { path = path.substringBeforeLast('/', "") },
                     )
                 }
@@ -223,7 +223,7 @@ internal fun WorkspaceScreen(onBack: () -> Unit) {
                 ListEmptyState(
                     title = stringResource(R.string.capability_workspace_empty),
                     summary = stringResource(R.string.capability_workspace_empty_summary),
-                    icon = Icons.Rounded.FolderOpen,
+                    icon = Icons.Outlined.FolderOpen,
                 )
             }
             // 文件逐项进入 Lazy 列表，但画成一个连续分组，与其他设置页的分组列表一致。
@@ -242,7 +242,7 @@ internal fun WorkspaceScreen(onBack: () -> Unit) {
                             ),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = if (entry.directory) Icons.Rounded.Folder else Icons.AutoMirrored.Rounded.InsertDriveFile,
+                                icon = if (entry.directory) Icons.Outlined.Folder else Icons.AutoMirrored.Outlined.InsertDriveFile,
                                 enabled = !busy,
                                 tint = EtaPreferenceColors.Orange,
                             )

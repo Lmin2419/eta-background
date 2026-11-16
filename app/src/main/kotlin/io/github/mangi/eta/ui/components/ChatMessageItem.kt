@@ -1,5 +1,8 @@
 package io.github.mangi.eta.ui.components
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import io.github.mangi.eta.ui.theme.EtaMotion
 
 import android.graphics.BitmapFactory
@@ -15,8 +18,10 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,16 +45,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.ChevronLeft
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Compress
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Lightbulb
-import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.automirrored.outlined.CallSplit
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Compress
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.TextFields
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -93,15 +102,15 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.material.icons.rounded.Speed
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material.icons.rounded.Hub
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Hub
 import io.github.mangi.eta.ui.voice.SpeechReadAloudMenuItem
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.foundation.layout.BoxWithConstraints
 import io.github.mangi.eta.agent.model.AgentFileReferencePromptCodec
 import io.github.mangi.eta.agent.runtime.RunPerformanceSummary
@@ -136,9 +145,18 @@ import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-internal fun rememberDataUrlBitmap(dataUrl: String) = remember(dataUrl) {
-    decodeDataUrlBitmap(dataUrl)
+internal fun rememberDataUrlBitmap(dataUrl: String): ImageBitmap? {
+    val loader = LocalRemoteImageLoader.current
+    if (loader == null || !dataUrl.startsWith("dsh-image:")) return remember(dataUrl) { decodeDataUrlBitmap(dataUrl) }
+    // 电脑会话的图片：按需向电脑取图，在后台线程解码。
+    val bitmap by produceState<ImageBitmap?>(null, dataUrl) {
+        value = loader(dataUrl)?.let { url -> kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { decodeDataUrlBitmap(url) } }
+    }
+    return bitmap
 }
+
+/** 电脑会话提供的取图函数：把 `dsh-image:` 地址换成 data URL。本机会话为空。 */
+internal val LocalRemoteImageLoader = androidx.compose.runtime.staticCompositionLocalOf<(suspend (String) -> String?)?> { null }
 
 internal fun decodeDataUrlBitmap(dataUrl: String): ImageBitmap? {
     val base64 = dataUrl.substringAfter("base64,", "")
@@ -154,32 +172,8 @@ internal fun decodeDataUrlBitmap(dataUrl: String): ImageBitmap? {
  */
 @Composable
 fun AITypingIndicator(modifier: Modifier = Modifier) {
-    val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
-    val infiniteTransition = if (motion.reduceMotion) null else rememberInfiniteTransition(label = "dots")
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        repeat(3) { index ->
-            val delay = index * 150
-            val alpha = infiniteTransition?.animateFloat(
-                initialValue = 0.3f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(600, delayMillis = delay, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "alpha"
-            )
-            Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .graphicsLayer { this.alpha = alpha?.value ?: 1f }
-                    .background(MiuixTheme.colorScheme.onSurfaceVariantSummary, CircleShape)
-            )
-        }
-    }
+    // 等首个字时用胖小胖猫头的「思考」呼吸，取代三个跳动的点。
+    EtaThinkingMark(modifier.padding(vertical = 2.dp), size = 20.dp)
 }
 
 /**
@@ -218,11 +212,13 @@ internal fun ChatMessageItem(
     retainedStreamingState: StreamingMarkdownState? = null,
     showCopyAction: Boolean = true,
     showMessageActions: Boolean = false,
+    showBranchAction: Boolean = false,
     messageActionsEnabled: Boolean = true,
     isEditing: Boolean = false,
     onEditMessage: (String) -> Unit = {},
     onDeleteMessage: (String) -> Unit = {},
     onRegenerateMessage: (String) -> Unit = {},
+    onBranchMessage: (String) -> Unit = {},
     onSelectReplyCandidate: (String, Int) -> Unit = { _, _ -> },
 ) {
     when (message) {
@@ -242,6 +238,8 @@ internal fun ChatMessageItem(
             retainedStreamingState = retainedStreamingState,
             showCopyAction = showCopyAction,
             showMessageActions = showMessageActions,
+            showBranchAction = showBranchAction,
+            onBranch = { onBranchMessage(message.id) },
             messageActionsEnabled = messageActionsEnabled,
             onDelete = { onDeleteMessage(message.id) },
             onRegenerate = { onRegenerateMessage(message.id) },
@@ -324,40 +322,55 @@ private fun UserMessageBubble(
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     var menu by remember(message.id) { mutableStateOf(false) }
+    val couiAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    // 菜单打开时被按的气泡轻轻放大，提示「操作的是这一条」。
+    val pressScale = androidx.compose.animation.core.animateFloatAsState(if (menu) 1.03f else 1f,
+        androidx.compose.animation.core.spring(dampingRatio = 0.7f, stiffness = 500f), label = "userBubbleMenu")
     val haptic = LocalHapticFeedback.current
     LaunchedEffect(actionsEnabled) { if (!actionsEnabled) menu = false }
     val visiblePrompt = remember(message.content) { AgentFileReferencePromptCodec.parse(message.content) }
     val editor = LocalChatInlineEditor.current?.takeIf { it.messageId == message.id }
-    val shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = if (isEditing) 20.dp else 8.dp)
+    // 用户消息：统一 18dp 圆角、不带尾角，字号略小于回复正文，退到次要层级。
+    val shape = RoundedCornerShape(18.dp)
     BoxWithConstraints(modifier.fillMaxWidth().padding(horizontal = if (assistantOverlay) 16.dp else 20.dp, vertical = if (assistantOverlay) 4.dp else 0.dp)) {
         Column(Modifier.align(Alignment.CenterEnd).widthIn(max = maxWidth * 0.85f), horizontalAlignment = Alignment.End) {
             if (message.images.isNotEmpty()) Row(Modifier.horizontalScroll(rememberScrollState()).padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                message.images.forEach { url -> rememberDataUrlBitmap(url)?.let { bitmap ->
-                    Image(bitmap, stringResource(R.string.chat_image_attachment), Modifier.size(120.dp).clip(EtaTheme.shapes.radiusMd), contentScale = ContentScale.Crop)
+                // 点图片在原位放大到全屏，可左右翻页、双指缩放，下滑关闭。
+                val previewer = LocalChatImagePreviewer.current
+                val imageBounds = remember(message.id) { mutableMapOf<Int, androidx.compose.ui.geometry.Rect>() }
+                val viewLabel = stringResource(R.string.chat_view_image)
+                message.images.forEachIndexed { index, url -> rememberDataUrlBitmap(url)?.let { bitmap ->
+                    Image(bitmap, stringResource(R.string.chat_image_attachment), Modifier.size(120.dp)
+                        .onGloballyPositioned { imageBounds[index] = it.boundsInWindow() }
+                        .graphicsLayer { alpha = if (previewer?.isPresenting(message.id, index) == true) 0f else 1f }
+                        .clip(EtaTheme.shapes.radiusMd)
+                        .clickable(enabled = previewer != null, onClickLabel = viewLabel) {
+                            previewer?.open(message.images, index, message.id, { imageBounds[it] }, 12.dp)
+                        }, contentScale = ContentScale.Crop)
                 } }
             }
-            Column(Modifier.background(EtaTheme.colors.surfaceSunken, shape)
+            Column(Modifier.couiMenuAnchor(couiAnchor)
+                .graphicsLayer { val s = pressScale.value; scaleX = s; scaleY = s }
+                .background(EtaTheme.colors.surfaceSunken, shape)
                 .then(if (isEditing) Modifier.border(1.dp, EtaTheme.colors.accent, shape) else Modifier)
                 .combinedClickable(enabled = actionsEnabled, onClick = {}, onLongClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress); menu = true
-                }).padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress); couiAnchor.open { menu = true }
+                }).padding(horizontal = 14.dp, vertical = 10.dp)) {
                 if (visiblePrompt.references.isNotEmpty()) SentFileReferenceFlow(visiblePrompt.references,
                     Modifier.padding(bottom = if (visiblePrompt.request.isNotBlank()) 8.dp else 0.dp))
                 if (isEditing && editor != null) InlineUserMessageEditor(editor, message.images.isNotEmpty() || visiblePrompt.references.isNotEmpty())
-                else if (visiblePrompt.request.isNotBlank()) Text(visiblePrompt.request, style = if (assistantOverlay) EtaTheme.type.body.copy(fontSize = 15.sp, lineHeight = 24.sp) else EtaTheme.type.body, color = EtaTheme.colors.textPrimary)
+                else if (visiblePrompt.request.isNotBlank()) Text(visiblePrompt.request, style = EtaTheme.type.body.copy(fontSize = 15.sp, lineHeight = 24.sp), color = EtaTheme.colors.textPrimary)
                 if (message.isEdited) Text(stringResource(R.string.ui_edited_c36776), style = EtaTheme.type.caption,
                     color = EtaTheme.colors.textTertiary, modifier = Modifier.padding(top = 4.dp))
             }
         }
     }
-    EtaSheet(menu, title = stringResource(R.string.eta_message_actions), onDismissRequest = { menu = false }) {
-        Column {
-            EtaArrowPreference(stringResource(R.string.ui_copy_4edd1d), onClick = {
-                clipboardManager.setText(AnnotatedString(message.content)); menu = false
-            })
-            EtaArrowPreference(stringResource(R.string.ui_edit_a7f814), onClick = { menu = false; onEdit() })
-            EtaArrowPreference(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() })
-        }
+    EtaContextMenu(menu, onDismiss = { menu = false }, couiAnchor = couiAnchor) {
+        EtaMenuItem(stringResource(R.string.ui_copy_4edd1d), icon = Icons.Outlined.ContentCopy, onClick = {
+            clipboardManager.setText(AnnotatedString(message.content)); menu = false
+        })
+        EtaMenuItem(stringResource(R.string.ui_edit_a7f814), icon = Icons.Outlined.Edit, onClick = { menu = false; onEdit() })
+        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
     }
 }
 
@@ -421,7 +434,7 @@ private fun ContextCompactionMarker(
         Row(Modifier.background(EtaTheme.colors.surfaceSunken, EtaTheme.shapes.radiusFull).padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (message.running) StatusRing(TaskVisualStatus.Running, size = 12.dp)
-            else Icon(Icons.Rounded.Compress, null, Modifier.size(16.dp), tint = EtaTheme.colors.textTertiary)
+            else Icon(Icons.Outlined.Compress, null, Modifier.size(16.dp), tint = EtaTheme.colors.textTertiary)
             Text(message.detail?.takeIf(String::isNotBlank) ?: stringResource(R.string.context_compaction),
                 style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
@@ -441,10 +454,10 @@ private fun RunPerformanceMarker(message: SystemNoticeMessageUi, modifier: Modif
                 .clickable { expanded = !expanded }.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Rounded.Speed, null, Modifier.padding(end = 6.dp).size(16.dp), tint = EtaTheme.colors.textTertiary)
+            Icon(Icons.Outlined.Speed, null, Modifier.padding(end = 6.dp).size(16.dp), tint = EtaTheme.colors.textTertiary)
             Text(summary.title(chinese), style = EtaTheme.type.caption,
                 color = EtaTheme.colors.textTertiary, modifier = Modifier.weight(1f, fill = false))
-            Icon(Icons.Rounded.ChevronRight, contentDescription = null,
+            Icon(Icons.Outlined.ChevronRight, contentDescription = null,
                 modifier = Modifier.size(16.dp).graphicsLayer(rotationZ = if (expanded) 90f else 0f),
                 tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
@@ -466,10 +479,10 @@ private fun InfoMarker(message: SystemNoticeMessageUi, modifier: Modifier = Modi
     val title = parsed.optString("title")
     val details = parsed.optString("details")
     val icon = when (parsed.optString("icon")) {
-        "usage" -> Icons.Rounded.Speed
-        "subagent" -> Icons.Rounded.Hub
-        "schedule" -> Icons.Rounded.Schedule
-        else -> Icons.Rounded.Bolt
+        "usage" -> Icons.Outlined.Speed
+        "subagent" -> Icons.Outlined.Hub
+        "schedule" -> Icons.Outlined.Schedule
+        else -> Icons.Outlined.Bolt
     }
     var expanded by rememberSaveable(message.id) { mutableStateOf(false) }
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -482,7 +495,7 @@ private fun InfoMarker(message: SystemNoticeMessageUi, modifier: Modifier = Modi
             Text(title, style = EtaTheme.type.caption, color = EtaTheme.colors.textTertiary,
                 maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false))
-            if (details.isNotBlank()) Icon(Icons.Rounded.ChevronRight, contentDescription = null,
+            if (details.isNotBlank()) Icon(Icons.Outlined.ChevronRight, contentDescription = null,
                 modifier = Modifier.size(16.dp).graphicsLayer(rotationZ = if (expanded) 90f else 0f),
                 tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)
         }
@@ -504,6 +517,8 @@ private fun AgentMessageBlock(
     retainedStreamingState: StreamingMarkdownState?,
     showCopyAction: Boolean,
     showMessageActions: Boolean,
+    showBranchAction: Boolean = false,
+    onBranch: () -> Unit = {},
     messageActionsEnabled: Boolean,
     onDelete: () -> Unit,
     onRegenerate: () -> Unit,
@@ -549,11 +564,17 @@ private fun AgentMessageBlock(
 
     val character = LocalRoleplayChat.current.takeUnless { assistantOverlay }
     val isGreeting = character != null && message.id.startsWith(GreetingMessagePrefix)
+    val couiAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    // 长按出菜单时，这条回复轻轻「浮起」，菜单收起后落回。
+    val lift = androidx.compose.animation.core.animateFloatAsState(if (menu) 1.015f else 1f,
+        androidx.compose.animation.core.spring(dampingRatio = 0.6f, stiffness = 500f), label = "answerLift")
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .couiMenuAnchor(couiAnchor)
+            .graphicsLayer { val s = lift.value; scaleX = s; scaleY = s }
             .combinedClickable(enabled = showMessageActions && messageActionsEnabled && revealComplete,
-                onClick = {}, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); selectingText = false; menu = true })
+                onClick = {}, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); selectingText = false; couiAnchor.open { menu = true } })
             .padding(
                 horizontal = if (assistantOverlay) 16.dp else 20.dp,
                 vertical = if (assistantOverlay) 8.dp else 0.dp,
@@ -603,6 +624,13 @@ private fun AgentMessageBlock(
             SearchSuggestionsView(html = html, modifier = Modifier.padding(top = 8.dp))
         }
 
+        // 每条回复下方的统计小字（不受操作行只在最新回复显示的限制）；只有 2026111402 之后的回复有数据。
+        val showTurnStats = io.github.mangi.eta.ui.app.LocalAppearanceSettings.current.showTurnStats
+        if (showTurnStats && !assistantOverlay && !message.isStreaming && revealComplete &&
+            message.usage != null && message.usage.hasPerformanceStats) {
+            TurnStatsLine(usage = message.usage)
+        }
+
         // 回答显现完成后才出现操作行；淡入展开避免贴底滚动时整页突然跳动一行高度。
         AnimatedVisibility(
             visible = showCopyAction &&
@@ -612,36 +640,50 @@ private fun AgentMessageBlock(
             enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + expandVertically(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
             exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + shrinkVertically(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)),
         ) {
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (message.characterEditable && message.candidateCount > 1) CandidateSwitcher(
                     message.selectedCandidate, message.candidateCount, messageActionsEnabled, onSelectCandidate)
-                AnswerActionButton(if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+                AnswerActionButton(if (copied) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
                     stringResource(if (copied) R.string.copy_copied else R.string.copy_answer), {
                         clipboardManager.setText(AnnotatedString(message.content)); copied = true
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    }, tint = if (copied) EtaTheme.colors.accent else null)
-                if (showMessageActions) AnswerActionButton(Icons.Rounded.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
+                    }, tint = if (copied) EtaTheme.colors.textPrimary else null)
+                if (showMessageActions) AnswerActionButton(Icons.Outlined.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
                 if (allowSpeech) SpeechReadAloudButton(message.id, message.content)
-                if (showMessageActions) AnswerActionButton(Icons.Rounded.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; menu = true }, messageActionsEnabled)
+                if (showMessageActions) AnswerActionButton(Icons.Outlined.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; couiAnchor.open { menu = true } }, messageActionsEnabled)
+                // 最新一条回答像是「做不到 / 失败」时：一键让它先复核报错再试（只在点的时候发）。
+                val recheck = LocalRecheckAction.current
+                val gaveUp = remember(message.content) { message.content.looksLikeGaveUp() }
+                if (recheck != null && showMessageActions && recheck.latestAnswerId == message.id && gaveUp) {
+                    val prompt = stringResource(R.string.eta_recheck_prompt)
+                    RecheckChip(enabled = recheck.enabled && messageActionsEnabled) { recheck.submit(prompt) }
+                }
             }
         }
     }
-    EtaSheet(menu, title = stringResource(R.string.eta_message_actions), onDismissRequest = { menu = false }) {
-        if (selectingText) SelectionContainer {
-            Text(message.content, style = EtaTheme.type.body, modifier = Modifier.fillMaxWidth()
-                .heightIn(max = 420.dp).verticalScroll(rememberScrollState()))
-        } else Column {
-            EtaArrowPreference(stringResource(R.string.eta_select_text), onClick = { selectingText = true })
-            EtaArrowPreference(stringResource(R.string.copy_answer), onClick = {
-                clipboardManager.setText(AnnotatedString(message.content)); copied = true; menu = false
-            })
-            if (allowSpeech) SpeechReadAloudMenuItem(message.id, message.content) { menu = false }
-            EtaArrowPreference(stringResource(R.string.ui_regenerate_reply_84a7d9), enabled = messageActionsEnabled,
-                onClick = { menu = false; onRegenerate() })
-            if (message.characterEditable) EtaArrowPreference(stringResource(R.string.chat_edit_character_reply), onClick = { menu = false; onEdit() })
-            EtaArrowPreference(stringResource(R.string.ui_delete_3755f5), onClick = { menu = false; onDelete() })
-            EtaArrowPreference(stringResource(R.string.action_export), onClick = { menu = false; export() })
+    // 选择文字仍用底部面板（需要整段可选的大区域）；其余操作是贴着回答弹出的气泡菜单。
+    // 整轮的思考与回答在同一个可选区域里：可以从思考一直选到回答（手机对话、电脑会话一样）。
+    val segmentsOf = LocalTurnSegments.current
+    EtaSheet(menu && selectingText, title = stringResource(R.string.eta_select_text), onDismissRequest = { menu = false; selectingText = false }) {
+        val segments = remember(message.id, message.content, segmentsOf) {
+            segmentsOf?.invoke(message.id)?.takeIf { it.isNotEmpty() } ?: listOf(TurnSegment(message.content, thinking = false))
         }
+        TurnSelectionContent(segments)
+    }
+    EtaContextMenu(menu && !selectingText, onDismiss = { menu = false }, couiAnchor = couiAnchor) {
+        EtaMenuItem(stringResource(R.string.eta_select_text), icon = Icons.Outlined.TextFields, onClick = { selectingText = true })
+        EtaMenuItem(stringResource(R.string.copy_answer), icon = Icons.Outlined.ContentCopy, onClick = {
+            clipboardManager.setText(AnnotatedString(message.content)); copied = true; menu = false
+        })
+        if (allowSpeech) SpeechReadAloudMenuItem(message.id, message.content) { menu = false }
+        EtaMenuItem(stringResource(R.string.ui_regenerate_reply_84a7d9), icon = Icons.Outlined.Refresh, enabled = messageActionsEnabled,
+            onClick = { menu = false; onRegenerate() })
+        if (message.characterEditable) EtaMenuItem(stringResource(R.string.chat_edit_character_reply), icon = Icons.Outlined.Edit, onClick = { menu = false; onEdit() })
+        // 上游 3.4.1：从这条已完成的回复另开一个独立对话，原对话不受影响。
+        if (showBranchAction) EtaMenuItem(stringResource(R.string.conversation_branch), icon = Icons.AutoMirrored.Outlined.CallSplit, enabled = messageActionsEnabled,
+            onClick = { menu = false; onBranch() })
+        EtaMenuItem(stringResource(R.string.action_export), icon = Icons.Outlined.IosShare, onClick = { menu = false; export() })
+        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
     }
 }
 
@@ -698,6 +740,28 @@ internal val AnswerActionSize = 40.dp
 private val AnswerActionCenterOffset = 11.dp
 
 /** 回答下方的轻量操作：图标显式着色，因此禁用态需要自己换成禁用色，否则看起来仍可点。 */
+/** 回答操作行末尾的「复核报错再试」小胶囊。 */
+@Composable
+private fun RecheckChip(enabled: Boolean, onClick: () -> Unit) {
+    val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Row(
+        Modifier.padding(start = 6.dp).heightIn(min = 32.dp)
+            .etaPressScale(press, pressedScale = 0.95f)
+            .clip(EtaTheme.shapes.radiusFull)
+            .background(EtaTheme.colors.surfaceSunken)
+            .clickable(interactionSource = press, indication = null, enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        // 与旁边「重新生成」的刷新图标区分开：复核报错用小虫图标。
+        Icon(Icons.Outlined.BugReport, null, Modifier.size(16.dp),
+            tint = if (enabled) EtaTheme.colors.textSecondary else EtaTheme.colors.textQuiet)
+        Text(stringResource(R.string.eta_recheck_retry), style = EtaTheme.type.footnote,
+            color = if (enabled) EtaTheme.colors.textSecondary else EtaTheme.colors.textQuiet, maxLines = 1)
+    }
+}
+
 @Composable
 internal fun AnswerActionButton(
     icon: ImageVector,
@@ -706,22 +770,36 @@ internal fun AnswerActionButton(
     enabled: Boolean = true,
     tint: Color? = null,
 ) {
-    IconButton(
-        onClick = onClick,
-        enabled = enabled,
-        minWidth = AnswerActionSize,
-        minHeight = AnswerActionSize,
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .size(AnswerActionSize)
+            .clip(RoundedCornerShape(8.dp))
+            .etaPressScale(interactionSource, enabled, pressedScale = 0.88f)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(18.dp),
-            tint = when {
-                !enabled -> MiuixTheme.colorScheme.disabledOnSurface
-                tint != null -> tint
-                else -> EtaTheme.colors.textTertiary
+        // 图标切换（如复制 → 对勾）带一点缩放淡入，不是生硬替换。
+        val iconTint = when {
+            !enabled -> MiuixTheme.colorScheme.disabledOnSurface
+            tint != null -> tint
+            else -> EtaTheme.colors.textTertiary
+        }
+        androidx.compose.animation.AnimatedContent(
+            targetState = icon,
+            transitionSpec = {
+                (androidx.compose.animation.fadeIn(tween(160)) + androidx.compose.animation.scaleIn(androidx.compose.animation.core.spring(dampingRatio = 0.55f, stiffness = 700f), initialScale = 0.6f))
+                    .togetherWith(androidx.compose.animation.fadeOut(tween(100)) + androidx.compose.animation.scaleOut(tween(100), targetScale = 0.6f))
             },
-        )
+            label = "answerActionIcon",
+        ) { current ->
+            Icon(imageVector = current, contentDescription = contentDescription, modifier = Modifier.size(18.dp), tint = iconTint)
+        }
     }
 }
 
@@ -740,7 +818,7 @@ private fun CandidateSwitcher(
             .padding(horizontal = 2.dp),
     ) {
         AnswerActionButton(
-            icon = Icons.Rounded.ChevronLeft,
+            icon = Icons.Outlined.ChevronLeft,
             contentDescription = stringResource(R.string.chat_previous_candidate),
             onClick = { onSelect(selected - 1) },
             enabled = enabled && selected > 0,
@@ -754,7 +832,7 @@ private fun CandidateSwitcher(
             modifier = Modifier.widthIn(min = 28.dp),
         )
         AnswerActionButton(
-            icon = Icons.Rounded.ChevronRight,
+            icon = Icons.Outlined.ChevronRight,
             contentDescription = stringResource(R.string.chat_next_candidate),
             onClick = { onSelect(selected + 1) },
             enabled = enabled && selected < count - 1,
@@ -835,7 +913,7 @@ internal fun ThinkingRow(
         ) {
             if (!compact) {
                 Icon(
-                    imageVector = Icons.Rounded.Lightbulb,
+                    imageVector = Icons.Outlined.Lightbulb,
                     contentDescription = null,
                     modifier = Modifier
                         .size(15.dp)
@@ -995,7 +1073,7 @@ private fun RunTraceRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Rounded.Check,
+            imageVector = Icons.Outlined.Check,
             contentDescription = null,
             modifier = Modifier.size(15.dp),
             tint = MiuixTheme.colorScheme.primary,
@@ -1008,7 +1086,7 @@ private fun RunTraceRow(
             modifier = Modifier.weight(1f),
         )
         Icon(
-            imageVector = Icons.Rounded.ChevronRight,
+            imageVector = Icons.Outlined.ChevronRight,
             contentDescription = null,
             modifier = Modifier.size(14.dp),
             tint = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.7f),
@@ -1093,7 +1171,7 @@ private fun SuggestionChipsRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.AutoAwesome,
+                    imageVector = Icons.Outlined.AutoAwesome,
                     contentDescription = null,
                     modifier = Modifier.size(12.dp),
                     tint = MiuixTheme.colorScheme.primary

@@ -31,8 +31,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Notes
-import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.automirrored.outlined.Notes
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,7 +63,6 @@ import io.github.mangi.eta.ui.components.MiuixDialogActions
 import io.github.mangi.eta.ui.components.MiuixScaffold
 import io.github.mangi.eta.ui.layout.horizontalCutoutPadding
 import io.github.mangi.eta.ui.markdown.MarkdownTone
-import io.github.mangi.eta.ui.markdown.StaticMarkdown
 import io.github.mangi.eta.ui.model.AgentMemoryAction
 import io.github.mangi.eta.ui.model.AgentMemoryUiState
 import java.text.NumberFormat
@@ -107,7 +106,7 @@ internal fun AgentMemoryScreen(
                 enabled = !state.isLoading && !state.isSaving && state.draft.isNotEmpty(),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.DeleteOutline,
+                    imageVector = Icons.Outlined.DeleteOutline,
                     contentDescription = stringResource(R.string.ui_clear_all_memory_a43bd3),
                     tint = if (!state.isLoading && state.draft.isNotEmpty()) {
                         MiuixTheme.colorScheme.onSurface
@@ -234,7 +233,7 @@ private fun MemoryDocumentCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.Notes,
+                imageVector = Icons.AutoMirrored.Outlined.Notes,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
                 tint = colors.primary,
@@ -310,14 +309,13 @@ private fun MemoryPreview(content: String, onStartEditing: () -> Unit) {
         }
         return
     }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-    ) {
-        StaticMarkdown(content = content, tone = MarkdownTone.Answer, modifier = Modifier.fillMaxWidth())
-    }
+    // 长文档按视口虚拟化渲染（上游 3.4.1 c6e46ff）：进入记忆页不再因为整篇排版卡一下。
+    io.github.mangi.eta.ui.markdown.LazyStaticMarkdown(
+        content = content,
+        tone = MarkdownTone.Answer,
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+    )
 }
 
 /** 无边框整页编辑：与卡片同色，不再嵌一层灰色输入框；点到空白处也能把光标落进正文。 */

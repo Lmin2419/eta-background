@@ -18,12 +18,15 @@ internal data class AgentChatUiState(
     val isStreaming: Boolean,
     val isCompacting: Boolean = false,
     val thinkingEnabled: Boolean,
+    /** 后台正在整理较早的对话（不锁输入）。 */
+    val backgroundCompacting: Boolean = false,
     val reasoningEffort: ReasoningEffort = ReasoningEffort.fromLegacy(thinkingEnabled),
     val availableReasoningEfforts: List<ReasoningEffort> = emptyList(),
     val pendingImages: List<PendingImageUi> = emptyList(),
     val pendingFileReferences: List<PendingFileReferenceUi> = emptyList(),
     val queuedMessages: List<QueuedMessageUi> = emptyList(),
     val inputSyncVersion: Int = 0,
+    val focusInputOnSync: Boolean = true,
     val appliedRuntimeRunIds: List<String> = emptyList(),
     val messageEdit: MessageEditUiState? = null,
     val roleplay: RoleplayBinding? = null,
@@ -103,6 +106,9 @@ data class SystemNoticeMessageUi(
     val contextTokens: Int? = null,
     /** 仅运行期存在的进行中标记，不随消息持久化；恢复的历史通知始终视为已结束。 */
     val running: Boolean = false,
+    val usage: TokenUsageUi? = null,
+    val archiveId: String = "",
+    val tokensBefore: Int? = null,
 ) : AgentChatMessageUi
 
 @Immutable
@@ -112,13 +118,36 @@ data class TokenUsageUi(
     val outputTokens: Int? = null,
     val reasoningTokens: Int? = null,
     val cachedTokens: Int? = null,
+    val cacheWriteTokens: Int? = null,
+    val requestKind: String? = null,
+    val stepCount: Int? = null,
+    val llmMs: Long? = null,
+    val toolMs: Long? = null,
+    val ttftMs: Long? = null,
+    val ttftSteps: Int? = null,
+    val decodeMs: Long? = null,
+    val decodeTokens: Int? = null,
 ) {
     val isEmpty: Boolean
         get() = contextTokens == null &&
             inputTokens == null &&
             outputTokens == null &&
             reasoningTokens == null &&
-            cachedTokens == null
+            cachedTokens == null &&
+            cacheWriteTokens == null &&
+            stepCount == null &&
+            llmMs == null &&
+            toolMs == null &&
+            ttftMs == null &&
+            ttftSteps == null &&
+            decodeMs == null &&
+            decodeTokens == null
+
+    val hasPerformanceStats: Boolean
+        get() = (llmMs != null && llmMs > 0L) ||
+            (toolMs != null && toolMs > 0L) ||
+            (ttftMs != null && (ttftSteps ?: 1) > 0) ||
+            (decodeMs != null && decodeMs > 0L && (decodeTokens ?: outputTokens ?: 0) > 0)
 }
 
 @Immutable

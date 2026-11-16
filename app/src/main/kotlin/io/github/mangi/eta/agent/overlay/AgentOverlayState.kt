@@ -55,7 +55,8 @@ private fun AgentOverlayState.projectEvent(event: AgentEvent): AgentOverlayState
     is AgentEvent.ProviderResponseStarted -> if (status == AgentOverlayStatus.WaitingForModel)
         copy(status = AgentOverlayStatus.Reasoning) else this
     is AgentEvent.ModelRetryScheduled -> copy(round = event.round, detailText = event.displayMessage).thinkingUnlessWorking()
-    is AgentEvent.ContextCompaction -> copy(detailText = event.displayMessage).thinkingUnlessWorking()
+    is AgentEvent.ContextCompaction -> if (AgentEvent.ContextCompaction.isBackgroundPhase(event.phase)) this
+        else copy(detailText = event.displayMessage).thinkingUnlessWorking()
 
     is AgentEvent.AssistantBlockDelta -> when (event.kind) {
         AgentEvent.AssistantBlockKind.TEXT -> appendStreamingText(event)

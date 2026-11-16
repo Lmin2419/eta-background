@@ -1,158 +1,158 @@
 package io.github.mangi.eta.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Article
-import androidx.compose.material.icons.automirrored.rounded.Backspace
-import androidx.compose.material.icons.automirrored.rounded.ManageSearch
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.automirrored.rounded.StickyNote2
-import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.AccountTree
-import androidx.compose.material.icons.rounded.AdminPanelSettings
-import androidx.compose.material.icons.rounded.AdsClick
-import androidx.compose.material.icons.rounded.Alarm
-import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.rounded.Build
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.ChatBubble
-import androidx.compose.material.icons.rounded.Computer
-import androidx.compose.material.icons.rounded.Contacts
-import androidx.compose.material.icons.rounded.ContentPaste
-import androidx.compose.material.icons.rounded.ContentPasteGo
-import androidx.compose.material.icons.rounded.Description
-import androidx.compose.material.icons.rounded.DocumentScanner
-import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.EditNote
-import androidx.compose.material.icons.rounded.Extension
-import androidx.compose.material.icons.rounded.FindReplace
-import androidx.compose.material.icons.rounded.FolderOpen
-import androidx.compose.material.icons.rounded.Hub
-import androidx.compose.material.icons.rounded.Image
-import androidx.compose.material.icons.rounded.Insights
-import androidx.compose.material.icons.rounded.Key
-import androidx.compose.material.icons.rounded.Keyboard
-import androidx.compose.material.icons.rounded.KeyboardCommandKey
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.Layers
-import androidx.compose.material.icons.rounded.LocationOn
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.MonitorHeart
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.MyLocation
-import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.OpenWith
-import androidx.compose.material.icons.rounded.Phone
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Psychology
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material.icons.rounded.ScreenshotMonitor
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.ShoppingBag
-import androidx.compose.material.icons.rounded.Smartphone
-import androidx.compose.material.icons.rounded.SwapVert
-import androidx.compose.material.icons.rounded.Terminal
-import androidx.compose.material.icons.rounded.TouchApp
-import androidx.compose.material.icons.rounded.TravelExplore
-import androidx.compose.material.icons.rounded.WebAsset
-import androidx.compose.material.icons.rounded.Wifi
+import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.automirrored.outlined.Backspace
+import androidx.compose.material.icons.automirrored.outlined.ManageSearch
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.StickyNote2
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.AccountTree
+import androidx.compose.material.icons.outlined.AdminPanelSettings
+import androidx.compose.material.icons.outlined.AdsClick
+import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.ChatBubble
+import androidx.compose.material.icons.outlined.Computer
+import androidx.compose.material.icons.outlined.Contacts
+import androidx.compose.material.icons.outlined.ContentPaste
+import androidx.compose.material.icons.outlined.ContentPasteGo
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.DocumentScanner
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.FindReplace
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.outlined.Keyboard
+import androidx.compose.material.icons.outlined.KeyboardCommandKey
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.MonitorHeart
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.MyLocation
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.OpenWith
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.ScreenshotMonitor
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.outlined.Smartphone
+import androidx.compose.material.icons.outlined.SwapVert
+import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material.icons.outlined.TravelExplore
+import androidx.compose.material.icons.outlined.WebAsset
+import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.ui.graphics.vector.ImageVector
 
 internal fun iconForTool(toolId: String): ImageVector = when (toolId) {
-    "screen_open" -> Icons.Rounded.Layers
-    "screen_state", "screen_diag" -> Icons.Rounded.AdminPanelSettings
-    "screen_dump", "screen_list" -> Icons.Rounded.DocumentScanner
-    "screen_shot" -> Icons.Rounded.ScreenshotMonitor
-    "screen_tap", "screen_click" -> Icons.Rounded.AdsClick
-    "screen_swipe", "screen_drag" -> Icons.Rounded.OpenWith
-    "screen_press" -> Icons.Rounded.TouchApp
-    "screen_scroll" -> Icons.Rounded.SwapVert
-    "screen_text" -> Icons.Rounded.Keyboard
-    "screen_wait" -> Icons.Rounded.Schedule
-    "screen_finish" -> Icons.Rounded.Notifications
-    "observe", "observe_screen" -> Icons.Rounded.DocumentScanner
-    "click", "tap", "tap_element" -> Icons.Rounded.AdsClick
-    "tap_area" -> Icons.Rounded.MyLocation
-    "long_press", "long_press_element" -> Icons.Rounded.TouchApp
-    "swipe" -> Icons.Rounded.OpenWith
-    "scroll", "scroll_element" -> Icons.Rounded.SwapVert
-    "clipboard", "paste_text" -> Icons.Rounded.ContentPasteGo
-    "get_clipboard", "set_clipboard" -> Icons.Rounded.ContentPaste
-    "type_text", "input_text" -> Icons.Rounded.Keyboard
-    "replace_text" -> Icons.Rounded.FindReplace
-    "clear_text" -> Icons.AutoMirrored.Rounded.Backspace
-    "wait", "wait_text", "wait_for_text", "wait_for_package" -> Icons.Rounded.Schedule
-    "search_apps" -> Icons.Rounded.Search
-    "get_current_context" -> Icons.Rounded.Smartphone
-    "open_app", "launch_app" -> Icons.Rounded.Apps
-    "open_uri" -> Icons.AutoMirrored.Rounded.OpenInNew
-    "browser_use", "网页浏览" -> Icons.Rounded.Language
-    "web_search", "web_search_call", "网页搜索" -> Icons.Rounded.TravelExplore
-    "browser_read" -> Icons.AutoMirrored.Rounded.MenuBook
-    "fetch_url" -> Icons.AutoMirrored.Rounded.Article
-    "browser_interact" -> Icons.Rounded.AdsClick
-    "browser_screenshot" -> Icons.Rounded.ScreenshotMonitor
-    "file_search", "file_search_call", "文件搜索" -> Icons.AutoMirrored.Rounded.ManageSearch
-    "code_interpreter", "code_interpreter_call", "代码执行" -> Icons.Rounded.Terminal
-    "computer", "computer_call", "计算机操作" -> Icons.Rounded.Computer
-    "image_generation", "image_generation_call", "图像生成" -> Icons.Rounded.Image
-    "mcp_call", "MCP 工具" -> Icons.Rounded.Extension
+    "screen_open" -> Icons.Outlined.Layers
+    "screen_state", "screen_diag" -> Icons.Outlined.AdminPanelSettings
+    "screen_dump", "screen_list" -> Icons.Outlined.DocumentScanner
+    "screen_shot" -> Icons.Outlined.ScreenshotMonitor
+    "screen_tap", "screen_click" -> Icons.Outlined.AdsClick
+    "screen_swipe", "screen_drag" -> Icons.Outlined.OpenWith
+    "screen_press" -> Icons.Outlined.TouchApp
+    "screen_scroll" -> Icons.Outlined.SwapVert
+    "screen_text" -> Icons.Outlined.Keyboard
+    "screen_wait" -> Icons.Outlined.Schedule
+    "screen_finish" -> Icons.Outlined.Notifications
+    "observe", "observe_screen" -> Icons.Outlined.DocumentScanner
+    "click", "tap", "tap_element" -> Icons.Outlined.AdsClick
+    "tap_area" -> Icons.Outlined.MyLocation
+    "long_press", "long_press_element" -> Icons.Outlined.TouchApp
+    "swipe" -> Icons.Outlined.OpenWith
+    "scroll", "scroll_element" -> Icons.Outlined.SwapVert
+    "clipboard", "paste_text" -> Icons.Outlined.ContentPasteGo
+    "get_clipboard", "set_clipboard" -> Icons.Outlined.ContentPaste
+    "type_text", "input_text" -> Icons.Outlined.Keyboard
+    "replace_text" -> Icons.Outlined.FindReplace
+    "clear_text" -> Icons.AutoMirrored.Outlined.Backspace
+    "wait", "wait_text", "wait_for_text", "wait_for_package" -> Icons.Outlined.Schedule
+    "search_apps" -> Icons.Outlined.Search
+    "get_current_context" -> Icons.Outlined.Smartphone
+    "open_app", "launch_app" -> Icons.Outlined.Apps
+    "open_uri" -> Icons.AutoMirrored.Outlined.OpenInNew
+    "browser_use", "网页浏览" -> Icons.Outlined.Language
+    "web_search", "web_search_call", "网页搜索" -> Icons.Outlined.TravelExplore
+    "browser_read" -> Icons.AutoMirrored.Outlined.MenuBook
+    "fetch_url" -> Icons.AutoMirrored.Outlined.Article
+    "browser_interact" -> Icons.Outlined.AdsClick
+    "browser_screenshot" -> Icons.Outlined.ScreenshotMonitor
+    "file_search", "file_search_call", "文件搜索" -> Icons.AutoMirrored.Outlined.ManageSearch
+    "code_interpreter", "code_interpreter_call", "代码执行" -> Icons.Outlined.Terminal
+    "computer", "computer_call", "计算机操作" -> Icons.Outlined.Computer
+    "image_generation", "image_generation_call", "图像生成" -> Icons.Outlined.Image
+    "mcp_call", "MCP 工具" -> Icons.Outlined.Extension
     "memory_get", "memory_write", "character_memory_get", "character_memory_write" ->
-        Icons.Rounded.Psychology
-    "release_gui" -> Icons.Rounded.Smartphone
-    "common_task" -> Icons.Rounded.Apps
-    "screen_back", "press_key" -> Icons.Rounded.KeyboardCommandKey
-    "open_system_panel" -> Icons.Rounded.WebAsset
-    "read_image" -> Icons.Rounded.Image
+        Icons.Outlined.Psychology
+    "release_gui" -> Icons.Outlined.Smartphone
+    "common_task" -> Icons.Outlined.Apps
+    "screen_back", "press_key" -> Icons.Outlined.KeyboardCommandKey
+    "open_system_panel" -> Icons.Outlined.WebAsset
+    "read_image" -> Icons.Outlined.Image
     "skills_list", "skills_read", "skills_read_resource",
     "skills_list_curated", "skills_inspect_github", "skills_install_from_github",
-        -> Icons.Rounded.Extension
+        -> Icons.Outlined.Extension
     "set_alarm", "set_timer", "list_alarms", "list_active_timers" ->
-        Icons.Rounded.Alarm
+        Icons.Outlined.Alarm
     "device_status", "set_device_state", "get_device_environment" ->
-        Icons.Rounded.Smartphone
-    "network_info", "wifi_credentials" -> Icons.Rounded.Wifi
-    "media_control" -> Icons.Rounded.PlayArrow
-    "set_volume" -> Icons.AutoMirrored.Rounded.VolumeUp
-    "top_memory_apps", "top_storage_apps" -> Icons.Rounded.Layers
-    "read_sms_code" -> Icons.Rounded.Key
-    "recent_notifications", "search_notification_history" -> Icons.Rounded.Notifications
-    "get_setting", "set_setting" -> Icons.Rounded.Settings
-    "inspect_app", "app_state_control" -> Icons.Rounded.AdminPanelSettings
-    "get_logcat" -> Icons.Rounded.Description
-    "get_current_location", "search_saved_places" -> Icons.Rounded.LocationOn
-    "get_health_summary" -> Icons.Rounded.MonitorHeart
-    "recent_app_activity", "app_usage_summary" -> Icons.Rounded.Insights
-    "search_calendar_events" -> Icons.Rounded.CalendarMonth
-    "search_contacts" -> Icons.Rounded.Contacts
-    "search_call_history" -> Icons.Rounded.Phone
-    "search_messages" -> Icons.Rounded.ChatBubble
+        Icons.Outlined.Smartphone
+    "network_info", "wifi_credentials" -> Icons.Outlined.Wifi
+    "media_control" -> Icons.Outlined.PlayArrow
+    "set_volume" -> Icons.AutoMirrored.Outlined.VolumeUp
+    "top_memory_apps", "top_storage_apps" -> Icons.Outlined.Layers
+    "read_sms_code" -> Icons.Outlined.Key
+    "recent_notifications", "search_notification_history" -> Icons.Outlined.Notifications
+    "get_setting", "set_setting" -> Icons.Outlined.Settings
+    "inspect_app", "app_state_control" -> Icons.Outlined.AdminPanelSettings
+    "get_logcat" -> Icons.Outlined.Description
+    "get_current_location", "search_saved_places" -> Icons.Outlined.LocationOn
+    "get_health_summary" -> Icons.Outlined.MonitorHeart
+    "recent_app_activity", "app_usage_summary" -> Icons.Outlined.Insights
+    "search_calendar_events" -> Icons.Outlined.CalendarMonth
+    "search_contacts" -> Icons.Outlined.Contacts
+    "search_call_history" -> Icons.Outlined.Phone
+    "search_messages" -> Icons.Outlined.ChatBubble
     "search_media", "search_qq_chat_images", "search_wechat_chat_images" ->
-        Icons.Rounded.Image
-    "search_audio" -> Icons.Rounded.MusicNote
+        Icons.Outlined.Image
+    "search_audio" -> Icons.Outlined.MusicNote
     "search_recordings", "search_coloros_recordings", "search_recording_summaries" ->
-        Icons.Rounded.Mic
-    "search_files" -> Icons.Rounded.FolderOpen
-    "search_downloads" -> Icons.Rounded.Download
-    "search_clipboard_history" -> Icons.Rounded.ContentPaste
-    "search_notes", "search_coloros_notes" -> Icons.AutoMirrored.Rounded.StickyNote2
-    "search_system_memories", "search_coloros_memories" -> Icons.Rounded.Psychology
-    "search_personal_orders" -> Icons.Rounded.ShoppingBag
-    "terminal", "terminal_job", "terminal_daemon", "run_command" -> Icons.Rounded.Terminal
-    "subagent", "subagent_profile" -> Icons.Rounded.Hub
-    "read_file", "stat_file" -> Icons.Rounded.Description
-    "write_file", "edit_file" -> Icons.Rounded.EditNote
-    "list_directory", "glob_files", "grep_files" -> Icons.Rounded.FolderOpen
+        Icons.Outlined.Mic
+    "search_files" -> Icons.Outlined.FolderOpen
+    "search_downloads" -> Icons.Outlined.Download
+    "search_clipboard_history" -> Icons.Outlined.ContentPaste
+    "search_notes", "search_coloros_notes" -> Icons.AutoMirrored.Outlined.StickyNote2
+    "search_system_memories", "search_coloros_memories" -> Icons.Outlined.Psychology
+    "search_personal_orders" -> Icons.Outlined.ShoppingBag
+    "terminal", "terminal_job", "terminal_daemon", "run_command" -> Icons.Outlined.Terminal
+    "subagent", "subagent_profile" -> Icons.Outlined.Hub
+    "read_file", "stat_file" -> Icons.Outlined.Description
+    "write_file", "edit_file" -> Icons.Outlined.EditNote
+    "list_directory", "glob_files", "grep_files" -> Icons.Outlined.FolderOpen
     else -> when {
-        toolId in io.github.mangi.eta.agent.context.PersonalSearchTools.names -> Icons.Rounded.Insights
+        toolId in io.github.mangi.eta.agent.context.PersonalSearchTools.names -> Icons.Outlined.Insights
         toolId in io.github.mangi.eta.agent.model.AgentPhoneToolCatalog.names -> when {
-            "calendar" in toolId -> Icons.Rounded.CalendarMonth
-            "alarm" in toolId -> Icons.Rounded.Alarm
-            "note" in toolId -> Icons.AutoMirrored.Rounded.StickyNote2
-            else -> Icons.Rounded.Smartphone
+            "calendar" in toolId -> Icons.Outlined.CalendarMonth
+            "alarm" in toolId -> Icons.Outlined.Alarm
+            "note" in toolId -> Icons.AutoMirrored.Outlined.StickyNote2
+            else -> Icons.Outlined.Smartphone
         }
-        toolId.startsWith("mcp_") -> Icons.Rounded.Extension
-        else -> Icons.Rounded.Build
+        toolId.startsWith("mcp_") -> Icons.Outlined.Extension
+        else -> Icons.Outlined.Build
     }
 }

@@ -62,6 +62,8 @@ class EtaApp : Application(), XposedServiceHelper.OnServiceListener {
         ProviderRepository.init(this)
         McpServerRepository.init(this)
         XposedServiceHelper.registerListener(this)
+        // 电脑同步打开且已配对时恢复常驻连接（独立于胖小胖本机任务）。
+        applicationScope.launch { io.github.mangi.eta.agent.remote.DesktopLinkController.sync(this@EtaApp) }
         applicationScope.launch {
             try {
                 SpeechOssUpload(this@EtaApp).retryPending(this@EtaApp)

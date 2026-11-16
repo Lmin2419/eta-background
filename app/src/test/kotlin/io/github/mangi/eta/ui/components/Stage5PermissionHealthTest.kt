@@ -125,8 +125,9 @@ class Stage5PermissionHealthTest {
         val p = panel!!
         p.advance(30)
 
-        val readinessTitle = activity.getString(R.string.eta_background_ready)
-        val readinessNode = findNode(readinessTitle, p) ?: error("no readiness")
+        // 阶段 10：就绪卡标题改为一句状态。
+        val readinessNode = (listOf(activity.getString(R.string.eta_ready_checking_line), activity.getString(R.string.eta_ready_all_line)) +
+            (0..5).map { activity.getString(R.string.eta_ready_pending_line, it) }).firstNotNullOfOrNull { findNode(it, p) } ?: error("no readiness")
         val expected = expectedTitles(activity)
         val visibleRows = p.nodes().mapNotNull { node ->
             val texts = node.config.getOrNull(SemanticsProperties.Text) ?: return@mapNotNull null

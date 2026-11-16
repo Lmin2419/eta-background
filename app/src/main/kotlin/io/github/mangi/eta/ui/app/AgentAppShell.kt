@@ -18,15 +18,15 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ShortText
-import androidx.compose.material.icons.automirrored.rounded.VolumeOff
-import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.AddComment
-import androidx.compose.material.icons.rounded.BookmarkBorder
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.Stop
-import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.automirrored.outlined.ShortText
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.AddComment
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.mangi.eta.ui.components.LocalChatToast
 import io.github.mangi.eta.ui.components.LocalPaneWorkspace
@@ -44,6 +44,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.itos.coui.backdrop.couiBackdrop
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -127,6 +128,9 @@ internal fun AgentAppShell(
     onDismissHomeSidePanel: () -> Unit = {},
     runningTaskCount: Int = 0,
     permissionsPending: Int = 0,
+    onOpenDesktop: (() -> Unit)? = null,
+    desktopRunning: Int = 0,
+    onOpenDesktopSession: (String) -> Unit = {},
     showKimi: Boolean = false,
     paneManagement: io.github.mangi.eta.ui.components.PaneManagementActions = io.github.mangi.eta.ui.components.PaneManagementActions(),
     onOpenCharacter: () -> Unit = {},
@@ -136,9 +140,14 @@ internal fun AgentAppShell(
     val scrollBehavior = MiuixScrollBehavior()
     // Only the shell's Miuix bar measures this behaviour. Without that measurement its collapse
     // range is unbounded and it would swallow every upward drag of the page beneath it.
-    val usesShellTopBar = currentRoute !is AppRoute.Settings && !(currentRoute is AppRoute.Home && homeTopBar != null)
-    val backdrop = rememberTopBarBackdrop()
+    val usesShellTopBar = currentRoute !is AppRoute.Settings && !(currentRoute is AppRoute.Home && homeTopBar != null) &&
+        currentRoute !is AppRoute.Terminal
+    val backdrop = io.github.mangi.eta.ui.components.trackRenderSource("顶栏(Miuix)", rememberTopBarBackdrop())
     val topBarColor = topBarContainerColor(backdrop)
+    // 对话页唯一的 COUI 背景源：挂在消息区上（AgentChatBody），顶部液态玻璃控件与输入框都从这里采样。
+    val chatCouiSource = if (currentRoute is AppRoute.Home && homeTopBar != null && LocalBlurEnabled.current)
+        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-page") else null
+    io.github.mangi.eta.ui.components.trackRenderSource("对话页(COUI)", chatCouiSource)
     val pageContent: @Composable () -> Unit = {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -147,7 +156,16 @@ internal fun AgentAppShell(
                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
             ),
             topBar = {
-                if (currentRoute is AppRoute.Home && homeTopBar != null) TopBarBackdrop(backdrop) { homeTopBar() }
+                if (currentRoute is AppRoute.Home && homeTopBar != null) io.github.mangi.eta.ui.components.ChatScrollEdge(backdrop) {
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides chatCouiSource,
+                    ) { homeTopBar() }
+                }
+                // 终端页：与对话页、电脑会话页同一套液态玻璃顶部（返回圆钮 + 标题胶囊）。
+                else if (currentRoute is AppRoute.Terminal) io.github.mangi.eta.ui.components.GlassPageTopBar(
+                    title = stringResource(R.string.route_terminal), subtitle = null, onBack = onBack, onTitle = null,
+                    sourceName = "终端顶部(COUI)", balanceTrailing = true,
+                )
                 else if (currentRoute !is AppRoute.Settings) {
                     TopBarBackdrop(backdrop) {
                         AgentTopBar(
@@ -178,15 +196,41 @@ internal fun AgentAppShell(
                     .captureForTopBar(backdrop)
                     .then(if (usesShellTopBar) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier),
             ) {
-                content(padding)
+                // 背景源挂在对话页的消息区上（AgentChatBody），这里只往下传。
+                CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalChatCouiSource provides chatCouiSource) {
+                    content(padding)
+                }
             }
         }
     }
 
+    // 侧栏里直接列出电脑上最近的会话（与本机对话按时间混排，左侧小电脑图标区分）。
+    val desktopList by io.github.mangi.eta.agent.remote.DesktopBridge.sessions.collectAsState()
+    val desktopServer by io.github.mangi.eta.agent.remote.DesktopBridge.server.collectAsState()
+    val desktopLink by io.github.mangi.eta.agent.remote.DesktopBridge.client.state.collectAsState()
+    val desktopApprovals by io.github.mangi.eta.agent.remote.DesktopBridge.approvals.collectAsState()
+    val desktopQuestions by io.github.mangi.eta.agent.remote.DesktopBridge.questions.collectAsState()
+    val paneDesktop = remember(desktopList, desktopApprovals, desktopQuestions, onOpenDesktop != null) {
+        if (onOpenDesktop == null) emptyList() else {
+            val needsYou = desktopApprovals.mapTo(HashSet()) { it.sessionId } + desktopQuestions.map { it.sessionId }
+            desktopList.rows.filter { with(io.github.mangi.eta.ui.screens.desktop.DesktopListing) { it.isListed() } }
+                .sortedByDescending { it.updatedAt }.take(8).map { row ->
+                    io.github.mangi.eta.ui.components.PaneDesktopSession(row.id, row.title.orEmpty(), row.updatedAt, when {
+                        row.id in needsYou -> io.github.mangi.eta.ui.model.TaskVisualStatus.Attention
+                        row.running -> io.github.mangi.eta.ui.model.TaskVisualStatus.Running
+                        else -> null
+                    })
+                }
+        }
+    }
     CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalPaneManagement provides paneManagement, LocalChatToast provides { toast = it }, LocalPaneWorkspace provides PaneWorkspaceActions(
         onNewConversation, onOpenCommonTasks, onOpenTerminal, onOpenBrowser,
         onLaunchKimiWeb.takeIf { showKimi }, kimiWebLabel, canStopKimiWeb, onStopKimiWeb, onRefreshKimiWeb,
-        runningTaskCount, permissionsPending,
+        runningTaskCount, permissionsPending, onOpenDesktop, desktopRunning,
+        desktopSessions = paneDesktop,
+        desktopName = desktopServer?.host,
+        desktopOnline = desktopLink is io.github.mangi.eta.agent.remote.DesktopBridgeClient.State.Connected,
+        onOpenDesktopSession = onOpenDesktopSession,
     )) {
     Box(modifier = modifier.fillMaxSize()) {
         if (conversationPaneState != null && currentRoute is AppRoute.Home) {
@@ -244,7 +288,7 @@ private fun AgentTopBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onOpenConversationPane) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ShortText,
+                        imageVector = Icons.AutoMirrored.Outlined.ShortText,
                         modifier = Modifier.size(24.dp),
                         contentDescription = stringResource(R.string.action_conversation_history),
                     )
@@ -322,7 +366,7 @@ private fun TopBarOverflowMenu(
     Box {
         IconButton(onClick = { onRefreshKimiWeb(); showMenu = true }) {
             Icon(
-                imageVector = Icons.Rounded.MoreHoriz,
+                imageVector = Icons.Outlined.MoreHoriz,
                 modifier = Modifier.size(24.dp),
                 contentDescription = stringResource(R.string.action_more),
             )
@@ -358,7 +402,7 @@ private fun TopBarOverflowMenu(
                         text = newConversationText,
                         icon = { modifier ->
                             Icon(
-                                imageVector = Icons.Rounded.AddComment,
+                                imageVector = Icons.Outlined.AddComment,
                                 contentDescription = null,
                                 modifier = modifier.size(TopBarMenuIconSize),
                             )
@@ -368,7 +412,7 @@ private fun TopBarOverflowMenu(
                         text = openTerminalText,
                         icon = { modifier ->
                             Icon(
-                                imageVector = Icons.Rounded.Terminal,
+                                imageVector = Icons.Outlined.Terminal,
                                 contentDescription = null,
                                 modifier = modifier.size(TopBarMenuIconSize),
                             )
@@ -388,7 +432,7 @@ private fun TopBarOverflowMenu(
                         text = openBrowserText,
                         icon = { modifier ->
                             Icon(
-                                imageVector = Icons.Rounded.Language,
+                                imageVector = Icons.Outlined.Language,
                                 contentDescription = null,
                                 modifier = modifier.size(TopBarMenuIconSize),
                             )
@@ -397,7 +441,7 @@ private fun TopBarOverflowMenu(
                     DropdownItem(
                         text = commonTasksText,
                         icon = { modifier ->
-                            Icon(imageVector = Icons.Rounded.BookmarkBorder, contentDescription = null,
+                            Icon(imageVector = Icons.Outlined.BookmarkBorder, contentDescription = null,
                                 modifier = modifier.size(TopBarMenuIconSize))
                         },
                     ),
@@ -407,7 +451,7 @@ private fun TopBarOverflowMenu(
                             text = stopKimiWebText,
                             icon = { modifier ->
                                 Icon(
-                                    imageVector = Icons.Rounded.Stop,
+                                    imageVector = Icons.Outlined.Stop,
                                     contentDescription = null,
                                     modifier = modifier.size(TopBarMenuIconSize),
                                 )
@@ -422,8 +466,8 @@ private fun TopBarOverflowMenu(
                             text = autoReadText,
                             icon = { modifier ->
                                 Icon(
-                                    imageVector = if (autoReadEnabled) Icons.AutoMirrored.Rounded.VolumeUp
-                                        else Icons.AutoMirrored.Rounded.VolumeOff,
+                                    imageVector = if (autoReadEnabled) Icons.AutoMirrored.Outlined.VolumeUp
+                                        else Icons.AutoMirrored.Outlined.VolumeOff,
                                     contentDescription = null,
                                     modifier = modifier.size(TopBarMenuIconSize),
                                 )
@@ -472,6 +516,9 @@ private fun titleForRoute(route: AppRoute?): String = when (route) {
     is AppRoute.Skills -> stringResource(R.string.route_skills)
     is AppRoute.CommonTasks, is AppRoute.Tasks -> stringResource(R.string.eta_tasks)
     is AppRoute.Subagents -> "Subagent"
+    is AppRoute.ConversationTitleSettings -> stringResource(R.string.conversation_title_settings_title)
+    is AppRoute.ContextCompactionSettings -> stringResource(R.string.compaction_settings_title)
+    is AppRoute.AssistantOverlaySettings -> stringResource(R.string.assistant_overlay_settings_title)
     is AppRoute.Characters -> "角色"
     is AppRoute.CharacterDetail -> "角色详情"
     is AppRoute.CharacterEditor -> "编辑角色"

@@ -31,6 +31,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Modifier
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.focusProperties
@@ -59,7 +61,7 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private object ConversationPaneMetrics {
-    val PaneMaxWidth = 360.dp
+    val PaneMaxWidth = 340.dp
     val PaneWidthFraction = 0.84f
     const val ChatScrimAlpha = 0.16f
     const val SettleVisibilityThresholdPx = 0.5f
@@ -99,8 +101,8 @@ fun ConversationSidePaneScaffold(
                     onOpenTools, onOpenSkills, onOpenCharacters, onOpenPermissions,
                     Modifier.drawWithContent {
                         drawContent()
-                        drawLine(outline, androidx.compose.ui.geometry.Offset(size.width - 1.dp.toPx(), 0f),
-                            androidx.compose.ui.geometry.Offset(size.width - 1.dp.toPx(), size.height), 1.dp.toPx())
+                        drawLine(outline, androidx.compose.ui.geometry.Offset(size.width - 0.25.dp.toPx(), 0f),
+                            androidx.compose.ui.geometry.Offset(size.width - 0.25.dp.toPx(), size.height), 0.5.dp.toPx())
                     })
                 Box(Modifier.weight(1f)) { content() }
             }
@@ -217,10 +219,11 @@ fun ConversationSidePaneScaffold(
             onBackCompleted = closePane,
         )
 
+        // 与上游一致的推开式侧栏：侧栏从左侧滑入，同时把对话推向右边；底部是液态玻璃栏。
         Box(
             modifier = Modifier.fillMaxSize()
                 .clipToBounds()
-                .background(conversationPaneContainerColor())
+                .background(io.github.mangi.eta.ui.theme.EtaTheme.colors.canvas)
                 // 手势由共同容器拥有，侧栏和聊天舞台均可拖动；子级先处理滚动与选择。
                 .anchoredDraggable(
                     state = paneDragState,
@@ -237,7 +240,8 @@ fun ConversationSidePaneScaffold(
             Layout(
                 modifier = Modifier.fillMaxSize(),
                 content = {
-                    ConversationPanePanel(
+                    // 侧栏包在一个盒子里：侧栏内部即使多发出节点（弹窗、菜单），这里也始终只有「侧栏、对话页」两个子节点。
+                    Box { ConversationPanePanel(
                         state = state,
                         active = isRevealed && backHandlerEnabled && sceneLifecycleState == Lifecycle.State.RESUMED,
                         width = paneWidth,
@@ -257,7 +261,7 @@ fun ConversationSidePaneScaffold(
                             .focusProperties { onEnter = { if (!isRevealed) cancelFocusChange() } }
                             .focusGroup()
                             .then(if (!isRevealed) Modifier.clearAndSetSemantics {} else Modifier),
-                    )
+                    ) }
                     Box(
                         modifier = Modifier.fillMaxSize()
                             .drawWithContent {

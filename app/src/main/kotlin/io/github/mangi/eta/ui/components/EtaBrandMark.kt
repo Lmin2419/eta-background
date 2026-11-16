@@ -7,7 +7,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import io.github.mangi.eta.R
 
-/** The protected brand vector owns its gradient; never recolor it through Icon tint. */
+/** 静态的胖小胖爪印（`ic_eta_mark`），保持原色，不要用 Icon 着色。会动的版本见 EtaPaw.kt。 */
 @Composable
 internal fun EtaBrandMark(modifier: Modifier = Modifier) {
     Image(painterResource(R.drawable.ic_eta_mark), stringResource(R.string.app_name), modifier)

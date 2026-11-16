@@ -5,8 +5,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsActive
 import io.github.mangi.eta.data.repository.AppearanceSettingsRepository
 import io.github.mangi.eta.ui.app.LocalAppearanceSettings
 import io.github.mangi.eta.ui.components.EtaListGroup
@@ -25,48 +25,51 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.rounded.AccessibilityNew
-import androidx.compose.material.icons.rounded.AccountTree
-import androidx.compose.material.icons.rounded.BugReport
-import androidx.compose.material.icons.rounded.Cloud
-import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.Dashboard
-import androidx.compose.material.icons.rounded.Description
-import androidx.compose.material.icons.rounded.FilterAlt
-import androidx.compose.material.icons.rounded.GppMaybe
-import androidx.compose.material.icons.rounded.Hearing
-import androidx.compose.material.icons.rounded.Hub
-import androidx.compose.material.icons.rounded.ImportContacts
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Inventory
-import androidx.compose.material.icons.rounded.Inventory2
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.Layers
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.PowerSettingsNew
-import androidx.compose.material.icons.rounded.Psychology
-import androidx.compose.material.icons.rounded.Security
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.SettingsVoice
-import androidx.compose.material.icons.rounded.Smartphone
-import androidx.compose.material.icons.rounded.SportsBar
-import androidx.compose.material.icons.rounded.SupportAgent
-import androidx.compose.material.icons.rounded.SwipeUp
-import androidx.compose.material.icons.rounded.SystemUpdate
-import androidx.compose.material.icons.rounded.Computer
-import androidx.compose.material.icons.rounded.Terminal
-import androidx.compose.material.icons.rounded.TouchApp
-import androidx.compose.material.icons.rounded.TravelExplore
-import androidx.compose.material.icons.rounded.VerifiedUser
-import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.outlined.AccessibilityNew
+import androidx.compose.material.icons.outlined.AccountTree
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Dashboard
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.FilterAlt
+import androidx.compose.material.icons.outlined.GppMaybe
+import androidx.compose.material.icons.outlined.Hearing
+import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.outlined.ImportContacts
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Inventory
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Vibration
+import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.SettingsVoice
+import androidx.compose.material.icons.outlined.Smartphone
+import androidx.compose.material.icons.outlined.SportsBar
+import androidx.compose.material.icons.outlined.SupportAgent
+import androidx.compose.material.icons.outlined.SwipeUp
+import androidx.compose.material.icons.outlined.SystemUpdate
+import androidx.compose.material.icons.outlined.Computer
+import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material.icons.outlined.TravelExplore
+import androidx.compose.material.icons.outlined.VerifiedUser
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -152,8 +155,8 @@ private fun SettingsPageContent(
                 requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).bufferedWriter().use { it.write(report) }
             } }.isSuccess
             exportingDiagnostics = false
-            Toast.makeText(context, context.getString(if (saved) R.string.background_diagnostics_saved
-                else R.string.background_diagnostics_failed), Toast.LENGTH_SHORT).show()
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(context, context.getString(if (saved) R.string.background_diagnostics_saved
+                else R.string.background_diagnostics_failed), Toast.LENGTH_SHORT)
         }
     }
     val capabilities = rememberDeviceCapabilities()
@@ -179,7 +182,7 @@ private fun SettingsPageContent(
             context.startActivity(Intent(Settings.ACTION_VOICE_INPUT_SETTINGS))
         }.isFailure
         if (failed) {
-            Toast.makeText(context, context.getString(R.string.settings_open_assistant_failed), Toast.LENGTH_SHORT).show()
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(context, context.getString(R.string.settings_open_assistant_failed), Toast.LENGTH_SHORT)
         }
     }
 
@@ -203,17 +206,17 @@ private fun SettingsPageContent(
                 }.getOrNull()
                 checkingUpdate = false
                 when {
-                    release == null -> Toast.makeText(
+                    release == null -> io.github.mangi.eta.ui.components.EtaToastCenter.show(
                         context.applicationContext,
                         context.getString(R.string.ui_update_check_failed),
                         Toast.LENGTH_SHORT,
-                    ).show()
+                    )
                     AppUpdateChecker.isNewer(release.version, appVersionName) -> availableUpdate = release
-                    else -> Toast.makeText(
+                    else -> io.github.mangi.eta.ui.components.EtaToastCenter.show(
                         context.applicationContext,
                         context.getString(R.string.ui_update_already_latest),
                         Toast.LENGTH_SHORT,
-                    ).show()
+                    )
                 }
             }
         }
@@ -294,7 +297,7 @@ private fun SettingsPageContent(
     MiuixScaffoldPage(
         title = stringResource(if (assistantDetails) R.string.eta_more_assistant_settings else R.string.route_settings),
         onBack = onBack,
-        containerColor = EtaTheme.colors.canvas,
+        containerColor = EtaTheme.colors.surfaceSunken,
     ) {
         if (!assistantDetails) {
             item(key = "readiness") {
@@ -307,7 +310,7 @@ private fun SettingsPageContent(
                         summary = providerSummary,
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Cloud,
+                                icon = Icons.Outlined.Cloud,
                                 tint = EtaPreferenceColors.Blue,
                             )
                         },
@@ -319,24 +322,28 @@ private fun SettingsPageContent(
                         prefs = agentPrefs,
                         title = stringResource(R.string.ui_deep_thinking_enabled_by_default_c032d6),
                         key = Prefs.Keys.AGENT_THINKING_ENABLED,
-                        icon = Icons.Rounded.Psychology,
+                        icon = Icons.Outlined.Psychology,
                         iconTint = EtaPreferenceColors.Blue,
                     )
                     EtaPreferenceDivider()
-                    SwitchPref(
-                        context = context,
-                        prefs = agentPrefs,
-                        title = stringResource(R.string.settings_auto_compaction),
-                        key = Prefs.Keys.AGENT_AUTO_COMPACTION_ENABLED,
-                        icon = Icons.Rounded.Layers,
-                        iconTint = EtaPreferenceColors.Blue,
+                    // 自动压缩开关挪进「上下文压缩」页（与后台压缩、压缩模型放在一起）。
+                    EtaArrowPreference(
+                        title = stringResource(R.string.compaction_settings_title),
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.Layers, tint = EtaPreferenceColors.Blue) },
+                        onClick = { onNavigate(AppRoute.ContextCompactionSettings) },
+                    )
+                    EtaPreferenceDivider()
+                    EtaArrowPreference(
+                        title = stringResource(R.string.conversation_title_settings_title),
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.AutoAwesome, tint = EtaPreferenceColors.Blue) },
+                        onClick = { onNavigate(AppRoute.ConversationTitleSettings) },
                     )
                     EtaPreferenceDivider()
                     EtaArrowPreference(
                         title = stringResource(R.string.ui_memory_b55ff5),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.AutoMirrored.Rounded.MenuBook,
+                                icon = Icons.AutoMirrored.Outlined.MenuBook,
                                 tint = EtaPreferenceColors.Violet,
                             )
                         },
@@ -347,7 +354,7 @@ private fun SettingsPageContent(
                         title = "Subagent",
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Hub,
+                                icon = Icons.Outlined.Hub,
                                 tint = EtaPreferenceColors.Violet,
                             )
                         },
@@ -359,7 +366,7 @@ private fun SettingsPageContent(
                         summary = stringResource(R.string.desktop_settings_entry_summary),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Computer,
+                                icon = Icons.Outlined.Computer,
                                 tint = EtaPreferenceColors.Blue,
                             )
                         },
@@ -371,7 +378,7 @@ private fun SettingsPageContent(
                 EtaListGroup(title = stringResource(R.string.eta_settings_capabilities)) {
                     EtaArrowPreference(
                         title = stringResource(R.string.settings_tools_list),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.Dashboard, tint = EtaPreferenceColors.Teal) },
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.Dashboard, tint = EtaPreferenceColors.Teal) },
                         onClick = { onNavigate(AppRoute.Tools) },
                     )
                     EtaPreferenceDivider()
@@ -380,7 +387,7 @@ private fun SettingsPageContent(
                         prefs = agentPrefs,
                         title = stringResource(R.string.ui_enable_web_browsing_tools_8b6b03),
                         key = Prefs.Keys.AGENT_BROWSER_TOOLS,
-                        icon = Icons.Rounded.Language,
+                        icon = Icons.Outlined.Language,
                         iconTint = EtaPreferenceColors.Teal,
                     )
                     EtaPreferenceDivider()
@@ -388,7 +395,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.web_tools_settings_title),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.TravelExplore,
+                                icon = Icons.Outlined.TravelExplore,
                                 tint = EtaPreferenceColors.Teal,
                             )
                         },
@@ -400,7 +407,7 @@ private fun SettingsPageContent(
                         prefs = agentPrefs,
                         title = stringResource(R.string.ui_enable_device_direct_tools_e2d595),
                         key = Prefs.Keys.AGENT_DEVICE_DIRECT_TOOLS,
-                        icon = Icons.Rounded.Smartphone,
+                        icon = Icons.Outlined.Smartphone,
                         iconTint = EtaPreferenceColors.Teal,
                     )
                     EtaPreferenceDivider()
@@ -410,7 +417,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.ui_allow_reading_of_sensitive_device_information_feaec0),
                         summary = stringResource(R.string.eta_sensitive_read_summary),
                         key = Prefs.Keys.AGENT_DEVICE_SENSITIVE_READ_TOOLS,
-                        icon = Icons.Rounded.Visibility,
+                        icon = Icons.Outlined.Visibility,
                         iconTint = EtaPreferenceColors.Teal,
                     )
                     EtaPreferenceDivider()
@@ -420,7 +427,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.ui_allow_sensitive_device_operation_3d42ea),
                         summary = stringResource(R.string.eta_sensitive_action_summary),
                         key = Prefs.Keys.AGENT_DEVICE_SENSITIVE_ACTION_TOOLS,
-                        icon = Icons.Rounded.GppMaybe,
+                        icon = Icons.Outlined.GppMaybe,
                         iconTint = EtaPreferenceColors.Teal,
                     )
                     EtaPreferenceDivider()
@@ -430,7 +437,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.ui_enable_terminal_file_tools_18bb43),
                         summary = stringResource(R.string.eta_terminal_tools_summary),
                         key = Prefs.Keys.AGENT_TERMINAL_TOOLS,
-                        icon = Icons.Rounded.Terminal,
+                        icon = Icons.Outlined.Terminal,
                         iconTint = EtaPreferenceColors.Slate,
                     )
                     EtaPreferenceDivider()
@@ -438,18 +445,30 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.ui_linux_tool_environment_314d22),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Inventory2,
+                                icon = Icons.Outlined.Inventory2,
                                 tint = EtaPreferenceColors.Slate,
                             )
                         },
                         onClick = { onNavigate(AppRoute.LinuxEnvironment) },
                     )
                     EtaPreferenceDivider()
+                    // 终端入口从侧栏移到这里（阶段 12）。
+                    EtaArrowPreference(
+                        title = stringResource(R.string.route_terminal),
+                        startAction = {
+                            EtaPreferenceIcon(
+                                icon = Icons.Outlined.Terminal,
+                                tint = EtaPreferenceColors.Slate,
+                            )
+                        },
+                        onClick = { onNavigate(AppRoute.Terminal) },
+                    )
+                    EtaPreferenceDivider()
                     EtaArrowPreference(
                         title = stringResource(R.string.route_skills),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.ImportContacts,
+                                icon = Icons.Outlined.ImportContacts,
                                 tint = EtaPreferenceColors.Violet,
                             )
                         },
@@ -460,7 +479,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.route_mcp_servers),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.AccountTree,
+                                icon = Icons.Outlined.AccountTree,
                                 tint = EtaPreferenceColors.Teal,
                             )
                         },
@@ -471,7 +490,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.eta_characters),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.SportsBar,
+                                icon = Icons.Outlined.SportsBar,
                                 tint = EtaPreferenceColors.Pink,
                             )
                         },
@@ -485,7 +504,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.background_notifications_title),
                         summary = stringResource(if (taskNotificationsEnabled) R.string.background_notifications_enabled
                             else R.string.background_notifications_disabled),
-                        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.Notifications, tint = EtaPreferenceColors.Indigo) },
+                        startAction = { EtaPreferenceIcon(icon = Icons.Outlined.Notifications, tint = EtaPreferenceColors.Indigo) },
                         onClick = { context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                             .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)) },
                     )
@@ -493,7 +512,7 @@ private fun SettingsPageContent(
                     EtaSwitchPreference(title = stringResource(R.string.appearance_task_completion_alerts),
                         summary = stringResource(R.string.appearance_task_completion_alerts_summary),
                         checked = appearance.taskCompletionAlertsEnabled,
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.NotificationsActive, tint = EtaPreferenceColors.Indigo) },
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.NotificationsActive, tint = EtaPreferenceColors.Indigo) },
                         onCheckedChange = { enabled -> coroutineScope.launch {
                             AppearanceSettingsRepository.update { it.copy(taskCompletionAlertsEnabled = enabled) }
                         } })
@@ -501,7 +520,7 @@ private fun SettingsPageContent(
                     EtaArrowPreference(
                         title = stringResource(R.string.background_diagnostics_title),
                         summary = stringResource(R.string.background_diagnostics_summary),
-                        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.BugReport, tint = EtaPreferenceColors.Indigo) },
+                        startAction = { EtaPreferenceIcon(icon = Icons.Outlined.BugReport, tint = EtaPreferenceColors.Indigo) },
                         enabled = !exportingDiagnostics,
                         onClick = { exportDiagnostics.launch("Etax-diagnostics-${System.currentTimeMillis()}.json") },
                     )
@@ -513,7 +532,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.ui_eta_system_assistant_003e9b),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.SupportAgent,
+                                icon = Icons.Outlined.SupportAgent,
                                 tint = EtaPreferenceColors.Orange,
                             )
                         },
@@ -521,6 +540,12 @@ private fun SettingsPageContent(
                     )
                     EtaPreferenceDivider()
                     NativeAssistantPreference(context)
+                    EtaPreferenceDivider()
+                    EtaArrowPreference(
+                        title = stringResource(R.string.assistant_overlay_settings_title),
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.ChatBubbleOutline, tint = EtaPreferenceColors.Blue) },
+                        onClick = { onNavigate(AppRoute.AssistantOverlaySettings) },
+                    )
                     if (prefs != null || hasConnectedFramework) {
                         EtaPreferenceDivider()
                         EtaDropdownPreference(
@@ -540,16 +565,16 @@ private fun SettingsPageContent(
                                     powerAssistantTarget = target
                                     enhancementHistory.recordCommittedTarget(target)
                                 } else {
-                                    Toast.makeText(
+                                    io.github.mangi.eta.ui.components.EtaToastCenter.show(
                                         context.applicationContext,
                                         context.getString(R.string.settings_write_failed),
                                         Toast.LENGTH_SHORT,
-                                    ).show()
+                                    )
                                 }
                             },
                             startAction = {
                                 EtaPreferenceIcon(
-                                    icon = Icons.Rounded.PowerSettingsNew,
+                                    icon = Icons.Outlined.PowerSettingsNew,
                                     tint = EtaPreferenceColors.Orange,
                                     enabled = prefs != null,
                                 )
@@ -565,27 +590,27 @@ private fun SettingsPageContent(
                             title = stringResource(R.string.ui_automatically_set_default_assistant_f86963),
                             summary = stringResource(R.string.eta_auto_assistant_summary),
                             key = Prefs.Keys.ASSISTANT_AUTO_CONFIG,
-                            icon = Icons.Rounded.Settings,
+                            icon = Icons.Outlined.Settings,
                             iconTint = EtaPreferenceColors.Orange,
                         )
                     }
                     EtaPreferenceDivider()
                     EtaArrowPreference(title = stringResource(R.string.eta_more_assistant_settings),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.SettingsVoice, tint = EtaPreferenceColors.Orange) },
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.SettingsVoice, tint = EtaPreferenceColors.Orange) },
                         onClick = { onNavigate(AppRoute.AssistantSettings) })
                 }
             }
             item(key = "section_permissions") {
                 EtaListGroup(title = stringResource(R.string.eta_settings_permissions)) {
                     EtaArrowPreference(title = stringResource(R.string.ui_permission_health_3048bb),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.VerifiedUser, tint = EtaPreferenceColors.Green) },
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.VerifiedUser, tint = EtaPreferenceColors.Green) },
                         onClick = { onNavigate(AppRoute.Permissions) })
                     EtaPreferenceDivider()
                     EtaArrowPreference(
                         title = stringResource(R.string.ui_floating_window_permissions_076b77),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Layers,
+                                icon = Icons.Outlined.Layers,
                                 tint = EtaPreferenceColors.Green,
                             )
                         },
@@ -611,7 +636,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.ui_accessibility_enhancement_tools_8fd257),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.AccessibilityNew,
+                                icon = Icons.Outlined.AccessibilityNew,
                                 tint = EtaPreferenceColors.Green,
                             )
                         },
@@ -662,17 +687,17 @@ private fun SettingsPageContent(
                                             context.getString(R.string.accessibility_protection_rejected)
                                     }
                                     if (failureMessage != null) {
-                                        Toast.makeText(
+                                        io.github.mangi.eta.ui.components.EtaToastCenter.show(
                                             context.applicationContext,
                                             failureMessage,
                                             Toast.LENGTH_SHORT,
-                                        ).show()
+                                        )
                                     }
                                 }
                             },
                             startAction = {
                                 EtaPreferenceIcon(
-                                    icon = Icons.Rounded.VerifiedUser,
+                                    icon = Icons.Outlined.VerifiedUser,
                                     tint = EtaPreferenceColors.Green,
                                     enabled = prefs != null && !accessibilityProtectionPending,
                                 )
@@ -683,7 +708,7 @@ private fun SettingsPageContent(
                     EtaPreferenceDivider()
                     EtaArrowPreference(
                         title = stringResource(R.string.capability_enhancements),
-                        startAction = { EtaPreferenceIcon(Icons.Rounded.Security, tint = EtaPreferenceColors.Green) },
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.Security, tint = EtaPreferenceColors.Green) },
                         onClick = { onNavigate(AppRoute.SystemEnhance) },
                     )
                 }
@@ -694,7 +719,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.appearance_title),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Palette,
+                                icon = Icons.Outlined.Palette,
                                 tint = EtaPreferenceColors.Pink,
                             )
                         },
@@ -703,11 +728,22 @@ private fun SettingsPageContent(
                     EtaPreferenceDivider()
                     EtaArrowPreference(
                         title = stringResource(R.string.speech_settings_title),
-                        startAction = { EtaPreferenceIcon(icon = Icons.Rounded.Mic, tint = EtaPreferenceColors.Pink) },
+                        startAction = { EtaPreferenceIcon(icon = Icons.Outlined.Mic, tint = EtaPreferenceColors.Pink) },
                         onClick = { onNavigate(AppRoute.SpeechSettings) },
                     )
                     EtaPreferenceDivider()
                     LanguagePreference(iconTint = EtaPreferenceColors.Pink)
+                    EtaPreferenceDivider()
+                    val hapticsContext = androidx.compose.ui.platform.LocalContext.current
+                    val hapticsOn by remember(hapticsContext) {
+                        io.github.mangi.eta.ui.components.EtaHaptics.init(hapticsContext)
+                        io.github.mangi.eta.ui.components.EtaHaptics.enabled
+                    }.collectAsState()
+                    EtaSwitchPreference(title = stringResource(R.string.settings_haptics_title),
+                        summary = stringResource(R.string.settings_haptics_summary),
+                        checked = hapticsOn,
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.Vibration, tint = EtaPreferenceColors.Pink) },
+                        onCheckedChange = { io.github.mangi.eta.ui.components.EtaHaptics.setEnabled(hapticsContext, it) })
                 }
             }
             item(key = "section_data") {
@@ -716,7 +752,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.data_backup_title),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Description,
+                                icon = Icons.Outlined.Description,
                                 tint = EtaPreferenceColors.Slate,
                             )
                         },
@@ -731,7 +767,7 @@ private fun SettingsPageContent(
                         summary = appVersionSummary,
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Info,
+                                icon = Icons.Outlined.Info,
                                 tint = EtaPreferenceColors.Slate,
                             )
                         },
@@ -746,7 +782,7 @@ private fun SettingsPageContent(
                         },
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.SystemUpdate,
+                                icon = Icons.Outlined.SystemUpdate,
                                 tint = EtaPreferenceColors.Slate,
                                 enabled = !checkingUpdate,
                             )
@@ -759,7 +795,7 @@ private fun SettingsPageContent(
                         title = stringResource(R.string.ui_about_feedback_title),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.BugReport,
+                                icon = Icons.Outlined.BugReport,
                                 tint = EtaPreferenceColors.Slate,
                             )
                         },
@@ -771,7 +807,7 @@ private fun SettingsPageContent(
                         summary = stringResource(R.string.ui_about_github_star_hint),
                         startAction = {
                             EtaPreferenceIcon(
-                                icon = Icons.Rounded.Code,
+                                icon = Icons.Outlined.Code,
                                 tint = EtaPreferenceColors.Slate,
                             )
                         },
@@ -792,7 +828,7 @@ private fun SettingsPageContent(
                             prefs = prefs,
                             title = stringResource(R.string.ui_enable_vendor_assistant_custom_models_c8e465),
                             key = Prefs.Keys.AGENT_CUSTOM_MODEL,
-                            icon = Icons.Rounded.Cloud,
+                            icon = Icons.Outlined.Cloud,
                             iconTint = EtaPreferenceColors.Orange,
                         )
                         EtaPreferenceDivider()
@@ -801,7 +837,7 @@ private fun SettingsPageContent(
                             prefs = prefs,
                             title = stringResource(R.string.ui_only_take_over_with_agent_prefix_d17556),
                             key = Prefs.Keys.AGENT_REQUIRE_PREFIX,
-                            icon = Icons.Rounded.FilterAlt,
+                            icon = Icons.Outlined.FilterAlt,
                             iconTint = EtaPreferenceColors.Orange,
                         )
                     }
@@ -816,7 +852,7 @@ private fun SettingsPageContent(
                                 prefs = prefs,
                                 title = stringResource(R.string.ui_maintain_hey_google_detection_after_screen_rest_9d6877),
                                 key = Prefs.Keys.HOTWORD_SELF_HEAL,
-                                icon = Icons.Rounded.Hearing,
+                                icon = Icons.Outlined.Hearing,
                                 iconTint = EtaPreferenceColors.Orange,
                             )
                         }
@@ -827,7 +863,7 @@ private fun SettingsPageContent(
                                 prefs = prefs,
                                 title = stringResource(R.string.ui_lock_screen_evokes_automatic_voice_input_1cde18),
                                 key = Prefs.Keys.LOCKSCREEN_VOICE_COMMAND,
-                                icon = Icons.Rounded.Lock,
+                                icon = Icons.Outlined.Lock,
                                 iconTint = EtaPreferenceColors.Orange,
                             )
                         }
@@ -838,7 +874,7 @@ private fun SettingsPageContent(
                                 prefs = prefs,
                                 title = stringResource(R.string.ui_bright_screen_evokes_automatic_voice_input_4358fe),
                                 key = Prefs.Keys.SCREEN_ON_VOICE_COMMAND,
-                                icon = Icons.Rounded.SettingsVoice,
+                                icon = Icons.Outlined.SettingsVoice,
                                 iconTint = EtaPreferenceColors.Orange,
                             )
                         }
@@ -848,7 +884,7 @@ private fun SettingsPageContent(
                                 title = stringResource(R.string.ui_convert_google_apps_to_system_apps_0f6d89),
                                 startAction = {
                                     EtaPreferenceIcon(
-                                        icon = Icons.Rounded.Inventory,
+                                        icon = Icons.Outlined.Inventory,
                                         tint = EtaPreferenceColors.Orange,
                                         enabled = !installingSystemizer,
                                     )
@@ -876,7 +912,7 @@ private fun SettingsPageContent(
                             prefs = prefs,
                             title = stringResource(R.string.ui_long_press_on_the_gesture_bar_triggers_a_circle_to_s_b80117),
                             key = Prefs.Keys.GESTURE_BAR_CIRCLE_TO_SEARCH,
-                            icon = Icons.Rounded.SwipeUp,
+                            icon = Icons.Outlined.SwipeUp,
                             iconTint = EtaPreferenceColors.Orange,
                         )
                         EtaPreferenceDivider()
@@ -885,7 +921,7 @@ private fun SettingsPageContent(
                             prefs = prefs,
                             title = stringResource(R.string.ui_long_press_with_two_fingers_to_trigger_a_circle_sear_ab597a),
                             key = Prefs.Keys.DOUBLE_FINGER_CIRCLE_TO_SEARCH,
-                            icon = Icons.Rounded.TouchApp,
+                            icon = Icons.Outlined.TouchApp,
                             iconTint = EtaPreferenceColors.Orange,
                         )
                     }
@@ -894,7 +930,7 @@ private fun SettingsPageContent(
             if (!(prefs != null || hasConnectedFramework || capabilities.root.isGranted || hasUsedSystemizer)) {
                 item(key = "assistant_details_empty") {
                     ListEmptyState(title = stringResource(R.string.eta_assistant_details_unavailable),
-                        icon = Icons.Rounded.SettingsVoice,
+                        icon = Icons.Outlined.SettingsVoice,
                         action = { EtaButton(stringResource(R.string.capability_enhancements), { onNavigate(AppRoute.SystemEnhance) }) })
                 }
             }
@@ -926,11 +962,11 @@ private fun SettingsPageContent(
                         GoogleAppSystemizerInstaller(context.applicationContext).install()
                     }
                     installingSystemizer = false
-                    Toast.makeText(
+                    io.github.mangi.eta.ui.components.EtaToastCenter.show(
                         context.applicationContext,
                         result.toToastMessage(context),
                         Toast.LENGTH_LONG,
-                    ).show()
+                    )
                 }
             },
         )
@@ -992,7 +1028,7 @@ private fun SystemizerConfirmDialog(
  * Runtime 开关始终使用 App 本地配置。
  */
 @Composable
-private fun SwitchPref(
+internal fun SwitchPref(
     context: Context,
     prefs: SharedPreferences?,
     title: String,
@@ -1032,11 +1068,11 @@ private fun SwitchPref(
                     Prefs.reconcileAgentPreferences(EtaApp.serviceInstance)
                 }
             } else {
-                Toast.makeText(
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(
                     context.applicationContext,
                     context.getString(R.string.settings_write_failed),
                     Toast.LENGTH_SHORT,
-                ).show()
+                )
             }
         },
         startAction = {

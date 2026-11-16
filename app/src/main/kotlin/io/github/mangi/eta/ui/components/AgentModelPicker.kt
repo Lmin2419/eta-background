@@ -23,8 +23,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Dns
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,7 +65,6 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -88,7 +87,8 @@ internal fun AgentModelPickerButton(
     // 每次打开面板换一个 key，搜索词、筛选与滚动位置都从头开始。
     var sheetSession by remember { mutableIntStateOf(0) }
     val selected = state.selectedModel
-    val enabled = !isStreaming && !state.isChanging && state.providerGroups.isNotEmpty()
+    // 回复进行中也能选：选中的模型这一轮回复完后才换（AgentAppState.selectModel）。
+    val enabled = !state.isChanging && state.providerGroups.isNotEmpty()
     LaunchedEffect(enabled) {
         if (!enabled) {
             showPopup = false
@@ -122,11 +122,18 @@ internal fun AgentModelPickerButton(
                 contentDescription = switchModelDescription
             },
         ) {
-            ModelBrandMark(
-                modelId = selected?.modelId,
-                sourceType = selected?.providerSourceType,
-                size = ChatInputActionIconSize,
-            )
+            Box {
+                ModelBrandMark(
+                    modelId = selected?.modelId,
+                    sourceType = selected?.providerSourceType,
+                    size = ChatInputActionIconSize,
+                )
+                // 已选好下一轮要换的模型：右上角一个小圆点。
+                if (state.queuedModel != null) Box(
+                    Modifier.align(Alignment.TopEnd).size(7.dp).clip(CircleShape)
+                        .background(io.github.mangi.eta.ui.theme.EtaTheme.colors.accent)
+                )
+            }
         }
 
         OverlayListPopup(
@@ -146,7 +153,7 @@ internal fun AgentModelPickerButton(
             )
         }
 
-        OverlayBottomSheet(
+        EtaSheet(
             show = showSheet,
             title = stringResource(R.string.model_picker_title),
             onDismissRequest = { showSheet = false },
@@ -186,6 +193,7 @@ private fun ModelQuickList(
                     model = model,
                     selected = model.id == selectedId,
                     onClick = { select(model.id) },
+                    queued = model.id == state.queuedModel?.id && model.id != selectedId,
                 )
             }
         }
@@ -305,6 +313,7 @@ private fun ModelSheetContent(
                         selected = entry.model.id == selectedId,
                         onClick = { select(entry.model.id) },
                         horizontalPadding = 12.dp,
+                        queued = entry.model.id == state.queuedModel?.id && entry.model.id != selectedId,
                     )
                 }
             }
@@ -362,6 +371,7 @@ internal fun ModelPickerRow(
     onClick: () -> Unit,
     horizontalPadding: Dp = 8.dp,
     enabled: Boolean = true,
+    queued: Boolean = false,
 ) {
     val contentColor = if (selected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurface
     Row(
@@ -390,10 +400,15 @@ internal fun ModelPickerRow(
                 }
             }
         }
+        if (queued) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.eta_model_next_turn), style = io.github.mangi.eta.ui.theme.EtaTheme.type.caption,
+                color = io.github.mangi.eta.ui.theme.EtaTheme.colors.accent, maxLines = 1)
+        }
         if (selected) {
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
-                imageVector = Icons.Rounded.Check,
+                imageVector = Icons.Outlined.Check,
                 contentDescription = stringResource(R.string.ui_current_model_a0af8f),
                 modifier = Modifier.size(18.dp),
                 tint = contentColor,
@@ -426,7 +441,7 @@ internal fun ModelBrandMark(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Rounded.Dns,
+                imageVector = Icons.Outlined.Dns,
                 contentDescription = null,
                 modifier = Modifier.size(size * 0.56f),
                 tint = MiuixTheme.colorScheme.primary,

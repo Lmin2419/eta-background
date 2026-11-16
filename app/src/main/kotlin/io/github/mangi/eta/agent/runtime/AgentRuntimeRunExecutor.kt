@@ -32,6 +32,7 @@ import io.github.mangi.eta.agent.tool.AgentToolCapabilities
 import io.github.mangi.eta.agent.tool.PendingSkillConflictCapabilityParser
 import io.github.mangi.eta.agent.tool.ToolExecutionDecision
 import io.github.mangi.eta.agent.voice.EtaAssistantOverlayService
+import io.github.mangi.eta.config.Prefs
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.core.safeLogType
 import io.github.mangi.eta.data.repository.AgentMemoryRepository
@@ -151,14 +152,10 @@ internal class AgentRuntimeRunExecutor(
             } else {
                 AgentMemoryContext.DISABLED
             }
-            if (request.config.terminalTools) {
-                // 启动探测由 App 拥有；模型首轮等待其结果，避免把检测中的授权当成普通设备。
-                runBlocking {
-                    while (io.github.mangi.eta.agent.device.RootAccess.state.value.isChecking) {
-                        runController.throwIfCancelled()
-                        kotlinx.coroutines.delay(100)
-                    }
-                }
+            if (request.config.terminalTools || request.config.deviceDirectTools) {
+                // 启动探测由 App 拥有；模型首轮等待其结果，并在历史曾授权但临时未就绪时自动复检。
+                runController.throwIfCancelled()
+                io.github.mangi.eta.agent.device.RootAccess.awaitOrRetryIfPreviouslyGranted(appContext)
             }
             val pendingSkillConflict = PendingSkillConflictCapabilityParser.parse(request.history)
             val mcpSnapshot = runBlocking {
@@ -276,14 +273,25 @@ internal class AgentRuntimeRunExecutor(
             toolExecutor = routingExecutor
             toolsBinding = runController.register(routingExecutor::close)
             timing.preparationFinished(skillContext.installedSkills.size)
-            val historyTool = conversationId?.let { id ->
-                ConversationHistoryTool {
-                    val checkpoint = runBlocking { EtaDatabase.get(appContext).conversationDao().contextCheckpoint(id) }
-                    val journal = AgentConversationCodec.decodeTranscript(checkpoint?.journalJson)
-                        .ifEmpty { AgentConversationCodec.decodeTranscript(checkpoint?.historyJson) }
-                    journal + session.transcript
+            val historyTool = if (request.operation == AgentRuntimeWire.OP_CHAT) {
+                val id = conversationId
+                if (id != null) {
+                    ConversationHistoryTool {
+                        val checkpoint = runBlocking { EtaDatabase.get(appContext).conversationDao().contextCheckpoint(id) }
+                        val journal = AgentConversationCodec.decodeTranscript(checkpoint?.journalJson)
+                            .ifEmpty { AgentConversationCodec.decodeTranscript(checkpoint?.historyJson) }
+                        journal + session.transcript
+                    }
+                } else {
+                    val baseHistory = request.history + listOfNotNull(
+                        request.prompt.takeIf { it.isNotBlank() || request.images.isNotEmpty() }?.let { prompt ->
+                            AgentModelClient.buildUserHistoryMessage(prompt, request.images)
+                                .copy(messageId = "user-${request.runId}")
+                        },
+                    )
+                    ConversationHistoryTool { baseHistory + session.transcript }
                 }
-            }
+            } else null
             val subagentAllowed = {
                 request.config.subagentTools && currentPermissions().subagentTools
             }
@@ -315,7 +323,16 @@ internal class AgentRuntimeRunExecutor(
             val runTools = JSONArray(mcpTools.toString()).also { tools ->
                 if (subagentAllowed()) AgentSubagentToolCatalog.appendSchemas(tools)
                 if (historyTool != null) tools.put(AgentConversationToolCatalog.schema())
-                if (characterMemoryTools != null && memoryEnabled) CharacterMemoryTools.appendSchemas(tools)
+                if (characterMemoryTools != null && memoryEnabled) {
+                    val temp = JSONArray().also(CharacterMemoryTools::appendSchemas)
+                    for (index in 0 until temp.length()) {
+                        val schema = temp.getJSONObject(index)
+                        val name = schema.getJSONObject("function").getString("name")
+                        if (Prefs.isToolEnabled(name)) {
+                            tools.put(schema)
+                        }
+                    }
+                }
             }
             val runToolExecutor = AgentModelClient.ToolExecutor { call ->
                 if (call.name in AgentSubagentToolCatalog.names) {
@@ -335,7 +352,17 @@ internal class AgentRuntimeRunExecutor(
                 } else if (call.name == AgentConversationToolCatalog.READ_HISTORY && historyTool != null) {
                     historyTool.execute(call)
                 } else if (call.name in CharacterMemoryTools.NAMES && characterMemoryTools != null) {
-                    characterMemoryTools.execute(call)
+                    if (!Prefs.isToolEnabled(call.name)) {
+                        AgentModelClient.ToolResult(
+                            JSONObject()
+                                .put("ok", false)
+                                .put("code", "TOOL_DISABLED")
+                                .put("message", "工具 ${call.name} 已在工具列表中关闭，本次未执行")
+                                .toString(),
+                        )
+                    } else {
+                        characterMemoryTools.execute(call)
+                    }
                 } else routingExecutor.execute(call).also { result ->
                     if (call.name == "memory_write") {
                         runCatching { JSONObject(result.content) }.getOrNull()
@@ -375,6 +402,12 @@ internal class AgentRuntimeRunExecutor(
                 memoryContext = memoryContext,
                 additionalTools = runTools,
                 executionContext = executor.terminalExecutionContext,
+                // 主对话：用量到设定比例就在后台整理较早的对话（设置 → 上下文压缩）。
+                backgroundCompaction = if (request.operation == AgentRuntimeWire.OP_REWRITE_REPLY ||
+                    request.operation == AgentRuntimeWire.OP_COMPACT) null
+                else runCatching {
+                    runBlocking { io.github.mangi.eta.data.repository.RuntimeConfigRepository.backgroundCompactionPolicy(request.effectiveModelSessionId) }
+                }.getOrNull(),
             ) { event ->
                 timing.accept(event)
                 acceptEvent(

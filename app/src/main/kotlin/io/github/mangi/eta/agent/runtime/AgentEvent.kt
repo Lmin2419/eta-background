@@ -26,18 +26,41 @@ internal sealed interface AgentEvent {
         val tokensBefore: Int? = null,
         val tokensAfter: Int? = null,
         val reasonCode: String = "",
+        val usage: AgentTokenUsage? = null,
+        val archiveId: String = "",
     ) : AgentEvent {
         val displayMessage: String get() = when (phase) {
             PHASE_STARTED -> RUNNING_DETAIL
-            PHASE_COMPLETED -> "上下文已压缩，用量将在下一次模型响应后更新。"
+            PHASE_BACKGROUND_STARTED -> "正在后台整理较早的对话。"
+            PHASE_BACKGROUND_DISCARDED -> "后台整理结果已作废，原始上下文已保留。"
+            PHASE_COMPLETED -> {
+                val archiveTag = archiveId.takeIf { it.isNotBlank() }?.let { "（$it）" }.orEmpty()
+                "上下文已压缩$archiveTag，用量将在下一次模型响应后更新。"
+            }
             else -> "上下文压缩失败，原始上下文已保留。"
         }
-        override fun toLogLine(): String =
-            "context_compaction phase=${phase.toSafeLogToken()}, before=$tokensBefore, after=$tokensAfter, code=${reasonCode.toSafeLogToken()}"
+        override fun toLogLine(): String = buildString {
+            append("context_compaction phase=").append(phase.toSafeLogToken())
+            append(", before=").append(tokensBefore)
+            append(", after=").append(tokensAfter)
+            append(", code=").append(reasonCode.toSafeLogToken())
+            if (archiveId.isNotBlank()) append(", archive_id=").append(archiveId.toSafeLogToken())
+            usage?.let { u ->
+                append(", in=").append(u.inputTokens)
+                append(", cache=").append(u.cachedTokens)
+                append(", cache_write=").append(u.cacheWriteTokens)
+                append(", out=").append(u.outputTokens)
+            }
+        }
 
         companion object {
             const val PHASE_STARTED = "started"
             const val PHASE_COMPLETED = "completed"
+            /** 后台开始整理较早的对话；前台不锁输入、不显示「正在压缩」（etax/design/05 §6）。 */
+            const val PHASE_BACKGROUND_STARTED = "background_started"
+            /** 后台结果作废（被压范围被编辑/删除，或后台失败）；只用于收起界面上的后台小点。 */
+            const val PHASE_BACKGROUND_DISCARDED = "background_discarded"
+            fun isBackgroundPhase(phase: String) = phase == PHASE_BACKGROUND_STARTED || phase == PHASE_BACKGROUND_DISCARDED
             /** 进行中的展示文案同时是 UI 判定运行态的依据，改动必须与 UI 侧同步。 */
             const val RUNNING_DETAIL = "正在压缩上下文…"
         }
@@ -153,7 +176,9 @@ internal sealed interface AgentEvent {
         val usage: AgentTokenUsage
     ) : AgentEvent {
         override fun toLogLine(): String =
-            "usage_received round=$round, ctx=${usage.contextTokens}, in=${usage.inputTokens}, out=${usage.outputTokens}, reasoning=${usage.reasoningTokens}, cache=${usage.cachedTokens}"
+            "usage_received round=$round, kind=${(usage.requestKind ?: AgentTokenUsage.REQUEST_KIND_CHAT).toSafeLogToken()}, " +
+                "ctx=${usage.contextTokens}, in=${usage.inputTokens}, out=${usage.outputTokens}, " +
+                "reasoning=${usage.reasoningTokens}, cache=${usage.cachedTokens}, cache_write=${usage.cacheWriteTokens}"
     }
 
     data class UserSupplementReceived(

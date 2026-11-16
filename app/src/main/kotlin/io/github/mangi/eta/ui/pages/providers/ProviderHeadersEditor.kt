@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,7 +49,7 @@ internal fun LazyListScope.providerHeadersEditor(
                 summary = "可覆盖 User-Agent；认证与传输请求头由系统管理。",
                 endActions = {
                     Icon(
-                        imageVector = Icons.Rounded.ExpandMore,
+                        imageVector = Icons.Outlined.ExpandMore,
                         contentDescription = if (expanded) "收起" else "展开",
                         tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
                         modifier = Modifier.rotate(chevronRotation),
@@ -81,7 +81,7 @@ internal fun LazyListScope.providerHeadersEditor(
                     titleColor = BasicComponentDefaults.titleColor(color = MiuixTheme.colorScheme.primary),
                     startAction = {
                         Icon(
-                            imageVector = Icons.Rounded.Add,
+                            imageVector = Icons.Outlined.Add,
                             contentDescription = null,
                             tint = MiuixTheme.colorScheme.primary,
                         )
@@ -125,7 +125,7 @@ private fun ProviderHeaderRow(
                 trailingIcon = {
                     EtaIconButton(onClick = { visible = !visible }) {
                         Icon(
-                            imageVector = if (visible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                            imageVector = if (visible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                             contentDescription = if (visible) {
                                 stringResource(R.string.page_hide_bb0e7e)
                             } else {
@@ -139,7 +139,7 @@ private fun ProviderHeaderRow(
         }
         EtaIconButton(onClick = onRemove) {
             Icon(
-                imageVector = Icons.Rounded.Delete,
+                imageVector = Icons.Outlined.Delete,
                 contentDescription = stringResource(R.string.ui_delete_3755f5),
                 tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
             )

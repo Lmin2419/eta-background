@@ -21,8 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Lightbulb
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -47,7 +47,6 @@ import io.github.mangi.eta.ui.model.ToolActivityMessageUi
 import io.github.mangi.eta.ui.model.ToolActivityStatusUi
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -129,7 +128,7 @@ internal fun SubagentActivityRow(
                 )
             }
             Icon(
-                imageVector = Icons.Rounded.ChevronRight,
+                imageVector = Icons.Outlined.ChevronRight,
                 contentDescription = "查看 Subagent 详情",
                 modifier = Modifier
                     .padding(start = 6.dp, end = 8.dp)
@@ -139,7 +138,7 @@ internal fun SubagentActivityRow(
         }
     }
 
-    OverlayBottomSheet(
+    EtaSheet(
         show = showInspector,
         title = taskTitle,
         onDismissRequest = { showInspector = false },
@@ -291,7 +290,7 @@ private fun SubagentInspectorContent(
                         val isLastStep = index == snapshot.steps.lastIndex && !running
                         WorkTimelineNode(
                             icon = if (step.kind == SubagentStepSnapshot.KIND_THINKING) {
-                                Icons.Rounded.Lightbulb
+                                Icons.Outlined.Lightbulb
                             } else {
                                 iconForTool(step.toolName)
                             },
@@ -309,7 +308,7 @@ private fun SubagentInspectorContent(
                 }
                 if (running && snapshot.steps.none { it.status == SubagentStepSnapshot.STATUS_RUNNING }) {
                     WorkTimelineNode(
-                        icon = Icons.Rounded.Lightbulb,
+                        icon = Icons.Outlined.Lightbulb,
                         tone = WorkNodeTone.Running,
                         isLast = true,
                         connectTop = snapshot.steps.isNotEmpty(),

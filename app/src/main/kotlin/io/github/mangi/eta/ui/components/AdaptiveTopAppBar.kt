@@ -10,6 +10,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -39,22 +40,37 @@ fun AdaptiveTopAppBar(
         derivedStateOf { pinned || (state?.collapsedFraction ?: 0f) >= 1f / 3f }
     }
     val outline = EtaTheme.colors.outline
+    // 页面在顶部时顶栏与页面连成一片；内容滚到顶栏下面时，底部淡入一条细线。
+    val scrolled by remember(state) { derivedStateOf { state == null || state.contentOffset < 0f || state.heightOffset < 0f } }
+    val lineAlpha = androidx.compose.animation.core.animateFloatAsState(if (scrolled) 1f else 0f,
+        androidx.compose.animation.core.tween(EtaTheme.motion.short), label = "topBarLine")
     Layout(
         modifier = modifier.fillMaxWidth().background(color)
             .drawWithContent {
                 drawContent()
-                if (state == null || state.contentOffset < 0f || state.heightOffset < 0f)
-                    drawLine(outline, Offset(0f, size.height - 0.5.dp.toPx()), Offset(size.width, size.height - 0.5.dp.toPx()), 1.dp.toPx())
+                val a = lineAlpha.value
+                if (a > 0.01f) {
+                    val y = size.height - 0.25.dp.toPx()
+                    drawLine(outline.copy(alpha = outline.alpha * a), Offset(0f, y), Offset(size.width, y), 0.5.dp.toPx())
+                }
             }
-            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
+            // 玻璃窗口里不加状态栏内边距（窗口本身在状态栏下方 24dp）。
+            .then(if (LocalEtaWindow.current == null) Modifier.windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top)) else Modifier)
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
             .clipToBounds().pointerInput(Unit) { detectTapGestures { /* Preserve top-bar tap consumption. */ } },
         content = {
             Box(Modifier.padding(start = 8.dp), contentAlignment = Alignment.Center) { navigationIcon() }
             Row(Modifier.padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically, content = actions)
-            Box {
-                if (collapsed) Text(title, style = EtaTheme.type.topBarTitle, color = EtaTheme.colors.textPrimary,
+            // 小标题始终在位，随折叠进度淡入并从下方滑入；大标题同时缩小、上移、淡出——
+            // 两者跟手连续变化，往回滑则反向还原（不再在 1/3 处突然切换）。
+            Box(Modifier.graphicsLayer {
+                val f = if (pinned) 1f else (state?.collapsedFraction ?: 0f)
+                val t = ((f - 0.3f) / 0.4f).coerceIn(0f, 1f)
+                alpha = t
+                translationY = (1f - t) * 10.dp.toPx()
+            }.then(if (collapsed) Modifier else Modifier.clearAndSetSemantics {})) {
+                Text(title, style = EtaTheme.type.topBarTitle, color = EtaTheme.colors.textPrimary,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.semantics { heading() })
             }
             Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 8.dp, bottom = 16.dp)
@@ -90,7 +106,12 @@ fun AdaptiveTopAppBar(
             val titleX = ((constraints.maxWidth - small.width) / 2).coerceIn(nav.width, (constraints.maxWidth - actionsPlaceable.width - small.width).coerceAtLeast(nav.width))
             small.placeRelative(titleX, (toolbarHeight - small.height) / 2)
             if (!pinned) large.placeRelativeWithLayer(0, toolbarHeight + offset) {
-                alpha = 1f - ((state?.collapsedFraction ?: 0f) * 3f).coerceIn(0f, 1f)
+                val f = (state?.collapsedFraction ?: 0f).coerceIn(0f, 1f)
+                alpha = 1f - (f * 1.8f).coerceIn(0f, 1f)
+                val scale = 1f - 0.14f * f
+                scaleX = scale; scaleY = scale
+                // 以左下角为原点缩小，看起来像大字「收」进顶栏。
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 1f)
             }
             bottom.placeRelative(0, toolbarHeight + titleHeight)
         }

@@ -69,7 +69,7 @@ internal fun AgentBrowserScreen(
         if (!addressFocused) address = TextFieldValue(snapshot.host.ifBlank { snapshot.displayUrl })
     }
     LaunchedEffect(snapshot.error) {
-        snapshot.error?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+        snapshot.error?.let { io.github.mangi.eta.ui.components.EtaToastCenter.show(context, it, Toast.LENGTH_SHORT) }
     }
 
     fun launchBrowserAction(action: () -> Unit) {
@@ -82,7 +82,7 @@ internal fun AgentBrowserScreen(
                 throw cancelled
             } catch (failure: Exception) {
                 AndroidAgentLogger.warn("Browser user action failed: type=${failure.safeLogType()}")
-                Toast.makeText(context, R.string.browser_user_action_failed, Toast.LENGTH_SHORT).show()
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(context, R.string.browser_user_action_failed, Toast.LENGTH_SHORT)
             } finally {
                 actionPending = false
             }
@@ -133,7 +133,7 @@ internal fun AgentBrowserScreen(
                     try {
                         context.startActivity(Intent(Intent.ACTION_VIEW, snapshot.url.toUri()))
                     } catch (_: android.content.ActivityNotFoundException) {
-                        Toast.makeText(context, noExternalAppMessage, Toast.LENGTH_SHORT).show()
+                        io.github.mangi.eta.ui.components.EtaToastCenter.show(context, noExternalAppMessage, Toast.LENGTH_SHORT)
                     }
                 }
             },

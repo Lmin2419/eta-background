@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Face
-import androidx.compose.material.icons.rounded.FileUpload
-import androidx.compose.material.icons.rounded.SearchOff
-import androidx.compose.material.icons.rounded.TheaterComedy
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Face
+import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.SearchOff
+import androidx.compose.material.icons.outlined.TheaterComedy
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,10 +62,10 @@ internal fun CharacterLibraryScreen(
         onBack = onBack,
         actions = {
             EtaIconButton(onClick = importCard, enabled = !store.busy) {
-                Icon(Icons.Rounded.FileUpload, contentDescription = "导入角色卡")
+                Icon(Icons.Outlined.FileUpload, contentDescription = "导入角色卡")
             }
             EtaIconButton(onClick = createCharacter, enabled = !store.busy) {
-                Icon(Icons.Rounded.Add, contentDescription = "创建角色")
+                Icon(Icons.Outlined.Add, contentDescription = "创建角色")
             }
         },
     ) {
@@ -95,7 +95,7 @@ internal fun CharacterLibraryScreen(
                     ListEmptyState(
                         title = "还没有角色",
                         summary = "创建一个角色，或导入 PNG、JSON 角色卡开始对话",
-                        icon = Icons.Rounded.TheaterComedy,
+                        icon = Icons.Outlined.TheaterComedy,
                         action = {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 EtaButton(
@@ -118,7 +118,7 @@ internal fun CharacterLibraryScreen(
                     ListEmptyState(
                         title = "没有找到匹配的角色",
                         summary = "换个关键词试试，搜索会匹配名称与标签",
-                        icon = Icons.Rounded.SearchOff,
+                        icon = Icons.Outlined.SearchOff,
                     )
                 }
             }
@@ -161,7 +161,7 @@ internal fun CharacterLibraryScreen(
             EtaPreferenceGroup {
                 EtaArrowPreference(
                     title = "我的人设",
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Face, tint = EtaPreferenceColors.Pink) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.Face, tint = EtaPreferenceColors.Pink) },
                     summary = "角色对你的称呼与你在故事中的身份",
                     onClick = { onNavigate(AppRoute.CharacterPersona) },
                 )

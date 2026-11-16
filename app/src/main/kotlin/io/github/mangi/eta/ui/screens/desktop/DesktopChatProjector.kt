@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.screens.desktop
 
+import io.github.mangi.eta.agent.remote.DesktopBridge
 import io.github.mangi.eta.agent.remote.DesktopBlock
 import io.github.mangi.eta.agent.remote.DesktopItem
 import io.github.mangi.eta.agent.remote.DesktopLiveBlock
@@ -66,21 +67,28 @@ internal object DesktopChatProjector {
         val clock: (Long) -> String = ::defaultClock,
     )
 
-    fun messages(state: DesktopSessionState, labels: Labels = Labels()): List<AgentChatMessageUi> {
+    fun messages(state: DesktopSessionState, labels: Labels = Labels()): List<AgentChatMessageUi> =
+        merge(committed(state.items, labels), state)
+
+    /**
+     * 已写进记录的部分。只取决于记录本身，界面按记录缓存它：
+     * 流式输出每秒几十次的增量不会让整段历史（含每个工具参数的解析）重算。
+     */
+    fun committed(items: List<DesktopItem>, labels: Labels = Labels()): List<AgentChatMessageUi> {
         val results = HashMap<String, DesktopItem.ToolResult>()
-        for (item in state.items) if (item is DesktopItem.ToolResult) results[item.callId] = item
+        for (item in items) if (item is DesktopItem.ToolResult) results[item.callId] = item
         // 轮次结束后仍没有结果的工具（被打断）显示为未知，而不是一直转圈。
-        val endedTurns = state.items.filterIsInstance<DesktopItem.TurnEnd>().map { it.seq }
+        val lastTurnEnd = items.lastOrNull { it is DesktopItem.TurnEnd }?.seq ?: -1L
         val turns = HashMap<Int, TurnAccumulator>()
         var currentTurn: TurnAccumulator? = null
         val toolStarts = HashMap<String, Long>()
-        val out = ArrayList<AgentChatMessageUi>(state.items.size + 8)
-        for (item in state.items) {
+        val out = ArrayList<AgentChatMessageUi>(items.size + 8)
+        for (item in items) {
             when (item) {
                 is DesktopItem.User -> out += userMessage(item, labels)
                 is DesktopItem.Trigger -> out += triggerMarker(item, labels)
                 is DesktopItem.Assistant -> {
-                    val turnClosed = endedTurns.any { it > item.seq }
+                    val turnClosed = lastTurnEnd > item.seq
                     out += assistantMessages(item, results, turnClosed)
                     turns.getOrPut(item.turn) { TurnAccumulator(item.turn) }.addAssistant(item)
                 }
@@ -101,12 +109,21 @@ internal object DesktopChatProjector {
                 is DesktopItem.Title -> Unit
             }
         }
+        return out.distinctBy { it.id }
+    }
+
+    /** 在已记录的消息后面接上还没落定的部分：刚发出的回显、正在生成的内容、已插队待送达的消息。 */
+    fun merge(committed: List<AgentChatMessageUi>, state: DesktopSessionState): List<AgentChatMessageUi> {
+        val steering = state.steering
+        if (state.live == null && steering.isEmpty() && state.echoes.none { !it.queued }) return committed
+        val out = ArrayList<AgentChatMessageUi>(committed.size + 8)
+        out += committed
         for (echo in state.echoes) {
-            if (!echo.queued) out += UserMessageUi(id = "echo-${echo.requestId}", content = echo.text)
+            if (!echo.queued) out += UserMessageUi(id = "echo-${echo.requestId}", content = echo.text, images = echo.images)
         }
         state.live?.let { live -> out += liveMessages(live.attemptId, live.blocks) }
         // 已插队的消息：桌面把它显示为已发出、等当前这一步结束送达的气泡，手机同样放在对话末尾。
-        for (item in state.steering) out += UserMessageUi(id = "steer-${item.id}", content = item.text)
+        for (item in steering) out += UserMessageUi(id = "steer-${item.id}", content = item.text)
         // 列表 key 必须唯一：持久条目与临时行短暂并存时，以持久条目为准。
         return out.distinctBy { it.id }
     }
@@ -238,12 +255,14 @@ internal object DesktopChatProjector {
 
     private fun userMessage(item: DesktopItem.User, labels: Labels): UserMessageUi {
         val extras = buildList {
-            if (item.images > 0) add("[${labels.image} ×${item.images}]")
+            // 有附件引用的图片直接显示缩略图；老插件只报数量时保留文字标记。
+            val unseen = item.images - item.imageRefs.size
+            if (unseen > 0) add("[${labels.image} ×$unseen]")
             item.files.forEach { add("[${labels.attachment}] $it") }
         }
         val text = item.text.ifBlank { if (item.source == "retry") labels.retryPrompt else "" }
         val content = (listOf(text) + extras).filter { it.isNotBlank() }.joinToString("\n")
-        return UserMessageUi(id = "u-${item.seq}", content = content)
+        return UserMessageUi(id = "u-${item.seq}", content = content, images = item.imageRefs.map(DesktopBridge::imageAddress))
     }
 
     private fun assistantMessages(

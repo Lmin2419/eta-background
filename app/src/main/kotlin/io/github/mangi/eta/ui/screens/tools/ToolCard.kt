@@ -1,13 +1,16 @@
 package io.github.mangi.eta.ui.screens.tools
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +47,8 @@ internal fun ToolCard(
     modifier: Modifier = Modifier,
 ) {
     var showDescription by remember(tool.id) { mutableStateOf(false) }
+    // 上游 3.4.1：每个本机工具可单独关闭；关闭后不再提供给模型，误调用也会被拒绝。
+    var toolEnabled by remember(tool.id) { mutableStateOf(io.github.mangi.eta.config.Prefs.isToolEnabled(tool.id)) }
     val description = if (!rootGranted && tool.id == "terminal") {
         stringResource(R.string.capability_terminal_ordinary_summary)
     } else {
@@ -68,7 +73,7 @@ internal fun ToolCard(
             {
                 EtaIconButton(onClick = { showDescription = true }) {
                     Icon(
-                        imageVector = Icons.Rounded.Info,
+                        imageVector = Icons.Outlined.Info,
                         contentDescription = stringResource(R.string.ui_description_named, tool.title),
                         modifier = Modifier.size(18.dp),
                         tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
@@ -96,12 +101,22 @@ internal fun ToolCard(
             )
             if (action != null) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                     tint = MiuixTheme.colorScheme.primary,
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            io.github.mangi.eta.ui.components.EtaSwitch(
+                checked = toolEnabled,
+                onCheckedChange = { enabled ->
+                    if (io.github.mangi.eta.config.Prefs.setToolEnabled(tool.id, enabled, io.github.mangi.eta.EtaApp.serviceInstance)) {
+                        toolEnabled = enabled
+                    }
+                },
+                modifier = Modifier.semantics { contentDescription = tool.title },
+            )
         }
     }
     if (showDescription) {

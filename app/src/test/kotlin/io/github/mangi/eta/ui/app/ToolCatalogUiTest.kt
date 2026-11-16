@@ -1,11 +1,11 @@
 package io.github.mangi.eta.ui.app
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Article
-import androidx.compose.material.icons.rounded.Build
-import androidx.compose.material.icons.rounded.Extension
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.TravelExplore
+import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.TravelExplore
 import io.github.mangi.eta.agent.model.AgentToolCatalog
 import io.github.mangi.eta.agent.tool.AgentToolCapabilities
 import io.github.mangi.eta.agent.tool.RootRequirement
@@ -52,18 +52,18 @@ class ToolCatalogUiTest {
         val cardIds = buildToolsState(RuntimeEnvironment.getApplication()).groups
             .flatMap { it.tools }.map { it.id }
         (runtimeNames + cardIds).distinct().forEach { name ->
-            assertNotEquals(name, Icons.Rounded.Build, iconForTool(name))
+            assertNotEquals(name, Icons.Outlined.Build, iconForTool(name))
         }
     }
 
     @Test
     fun hostedSearchNamesAndDynamicMcpNamesUseTheirToolIcons() {
-        assertEquals(Icons.Rounded.TravelExplore, iconForTool("网页搜索"))
+        assertEquals(Icons.Outlined.TravelExplore, iconForTool("网页搜索"))
         assertEquals(iconForTool("网页搜索"), iconForTool("web_search"))
-        assertEquals(Icons.Rounded.Language, iconForTool("browser_use"))
-        assertEquals(Icons.AutoMirrored.Rounded.Article, iconForTool("fetch_url"))
-        assertEquals(Icons.Rounded.Extension, iconForTool("mcp_server_search_012345"))
-        assertEquals(Icons.Rounded.Build, iconForTool("unknown_tool"))
+        assertEquals(Icons.Outlined.Language, iconForTool("browser_use"))
+        assertEquals(Icons.AutoMirrored.Outlined.Article, iconForTool("fetch_url"))
+        assertEquals(Icons.Outlined.Extension, iconForTool("mcp_server_search_012345"))
+        assertEquals(Icons.Outlined.Build, iconForTool("unknown_tool"))
     }
 
     @Test

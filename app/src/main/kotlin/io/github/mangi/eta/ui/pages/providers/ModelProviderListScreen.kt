@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.RadioButtonUnchecked
-import androidx.compose.material.icons.rounded.Storefront
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -93,7 +93,7 @@ internal fun ModelProviderListScreen(
                 EtaArrowPreference(
                     title = "从目录添加",
                     summary = "浏览可用提供商并选择模型",
-                    startAction = { EtaPreferenceIcon(Icons.Rounded.Storefront, tint = EtaPreferenceColors.Blue) },
+                    startAction = { EtaPreferenceIcon(Icons.Outlined.Storefront, tint = EtaPreferenceColors.Blue) },
                     onClick = { onNavigate(AppRoute.CommunityCatalog) },
                 )
                 EtaPreferenceDivider()
@@ -246,7 +246,7 @@ private fun ProviderListItem(
         endActions = {
             EtaIconButton(onClick = onSelect) {
                 Icon(
-                    imageVector = if (isSelected) Icons.Rounded.Check else Icons.Rounded.RadioButtonUnchecked,
+                    imageVector = if (isSelected) Icons.Outlined.Check else Icons.Outlined.RadioButtonUnchecked,
                     contentDescription = if (isSelected) {
                         stringResource(R.string.provider_selected)
                     } else {

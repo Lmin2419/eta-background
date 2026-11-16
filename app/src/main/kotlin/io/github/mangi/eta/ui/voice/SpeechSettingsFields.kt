@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +46,8 @@ internal fun AsrProvider.label(): String = stringResource(
         AsrProvider.QWEN_FLASH -> R.string.speech_asr_qwen_flash
         AsrProvider.QWEN_FILE -> R.string.speech_asr_qwen_file
         AsrProvider.DOUBAO -> R.string.speech_asr_doubao
+        AsrProvider.MIMO -> R.string.speech_asr_mimo
+        AsrProvider.DEEPSEEK -> R.string.speech_asr_deepseek
     },
 )
 
@@ -57,6 +59,8 @@ internal fun TtsProvider.label(): String = stringResource(
         TtsProvider.DOUBAO -> R.string.speech_tts_doubao
         TtsProvider.GEMINI -> R.string.speech_tts_gemini
         TtsProvider.MINIMAX -> R.string.speech_tts_minimax
+        TtsProvider.MIMO -> R.string.speech_tts_mimo
+        TtsProvider.DEEPSEEK -> R.string.speech_tts_deepseek
     },
 )
 
@@ -75,7 +79,7 @@ internal fun SpeechNote(text: String, modifier: Modifier = Modifier) {
 @Composable
 internal fun SpeechLoadingState(failure: String?) {
     if (failure != null) {
-        ListEmptyState(title = failure, icon = Icons.Rounded.ErrorOutline)
+        ListEmptyState(title = failure, icon = Icons.Outlined.ErrorOutline)
     } else {
         Box(
             modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
@@ -119,7 +123,7 @@ internal fun SpeechField(
             {
                 EtaIconButton(onClick = { visible = !visible }) {
                     Icon(
-                        imageVector = if (visible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                        imageVector = if (visible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                         contentDescription = stringResource(
                             if (visible) R.string.page_hide_bb0e7e else R.string.page_show_71b677,
                         ),

@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -40,7 +40,7 @@ internal fun AgentConversationLoadState(
                     style = EtaTheme.type.subhead,
                 )
             } else {
-                ListEmptyState(title = stringResource(R.string.conversation_load_failed), icon = Icons.Rounded.ErrorOutline,
+                ListEmptyState(title = stringResource(R.string.conversation_load_failed), icon = Icons.Outlined.ErrorOutline,
                     action = { EtaButton(text = stringResource(R.string.action_retry), onClick = onRetry) })
             }
         }

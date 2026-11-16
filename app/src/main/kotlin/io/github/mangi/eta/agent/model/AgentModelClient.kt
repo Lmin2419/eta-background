@@ -113,6 +113,7 @@ internal object AgentModelClient {
         toolFilter: ((JSONArray) -> JSONArray)? = null,
         onContextSnapshot: (AgentContextSnapshot) -> Unit = {},
         onTranscript: (List<ConversationMessage>) -> Unit = {},
+        backgroundCompaction: BackgroundCompactionPolicy? = null,
         onEvent: (AgentEvent) -> Unit = {}
     ): ModelResponse.Text {
         config.validate()
@@ -162,6 +163,7 @@ internal object AgentModelClient {
                 commonTasksWritable = roleplayContext == null,
                 capabilities = capabilities,
                 localWebSearch = !config.usesHostedWebSearch,
+                disabledTools = Prefs.disabledTools(),
             )
             for (index in 0 until additionalTools.length()) {
                 tools.put(additionalTools.opt(index))
@@ -235,6 +237,7 @@ internal object AgentModelClient {
             roleplayContext = roleplayContext,
             initialSupplementIndex = initialSupplementIndex,
             toolsForRound = ::toolsForRound,
+            backgroundCompaction = backgroundCompaction.takeUnless { rewriteReply || compactOnly },
         )
         val result = try {
             if (compactOnly) loop.compactOnly() else loop.run()
@@ -366,6 +369,7 @@ internal object AgentModelClient {
         val compactedUserTurns: Int = 0,
         val summaryThroughUserTurn: Int = 0,
         val messageId: String = "",
+        val compactionArchiveId: String = "",
     )
 
     fun interface ToolExecutor {

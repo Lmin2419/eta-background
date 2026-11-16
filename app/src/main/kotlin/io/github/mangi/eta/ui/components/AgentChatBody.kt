@@ -13,6 +13,9 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import com.itos.coui.backdrop.couiBackdrop
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
@@ -39,11 +42,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowDownward
-import androidx.compose.material.icons.rounded.DocumentScanner
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.RocketLaunch
-import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.outlined.ArrowDownward
+import androidx.compose.material.icons.outlined.DocumentScanner
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.RocketLaunch
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.theme.EtaElevation
@@ -56,6 +59,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -86,6 +90,9 @@ import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.browser.BrowserSessionSnapshot
 import io.github.mangi.eta.data.model.ReasoningEffort
+import io.github.mangi.eta.data.repository.ConversationBranchBoundary
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import io.github.mangi.eta.ui.model.branchMessageOutline
 import io.github.mangi.eta.ui.app.AgentConversationRevisionReducer
 import io.github.mangi.eta.ui.app.LocalBlurEnabled
 import io.github.mangi.eta.ui.markdown.StreamingMarkdownStateCache
@@ -186,6 +193,9 @@ internal fun AgentChatBody(
     onHistoryViewportChanged: (Boolean) -> Unit = {},
     isDrawerOpen: Boolean = false,
     modifier: Modifier = Modifier,
+    isBranching: Boolean = false,
+    onBranchMessage: (String) -> Unit = {},
+    backgroundCompacting: Boolean = false,
 ) {
     val scrollState = rememberLazyListState(initialFirstVisibleItemIndex = messages.size + if (hasEarlierMessages) 1 else 0)
     val keyboard = LocalSoftwareKeyboardController.current
@@ -227,7 +237,16 @@ internal fun AgentChatBody(
     }
     var sentFromKeyboard by remember { mutableStateOf(false) }
     var keepBottomAnchored by rememberSaveable { mutableStateOf(true) }
+    // 发送后把这一轮的用户消息停在屏幕上方、回复在下面展开（不再一直贴底）；计数器每次发送递增。
+    var pinTurnRequest by remember { mutableIntStateOf(0) }
 
+    // 一轮回复完整结束时轻轻振动一下（只在从「生成中」变为结束时，不在打开旧会话时）。
+    val haptics = rememberEtaHaptics()
+    var wasStreaming by remember { mutableStateOf(false) }
+    LaunchedEffect(isStreaming) {
+        if (wasStreaming && !isStreaming) haptics.confirm()
+        wasStreaming = isStreaming
+    }
     LaunchedEffect(isStreaming) {
         if (isStreaming && sentFromKeyboard) {
             keyboard?.hide()
@@ -244,7 +263,12 @@ internal fun AgentChatBody(
     val draftRequest = remember { mutableStateOf<ChatDraftRequest?>(null) }
     val inlineEditor = messageEdit?.takeIf { edit -> messages.any { it.id == edit.targetMessageId && it is io.github.mangi.eta.ui.model.UserMessageUi } }
         ?.let { ChatInlineEditor(it.targetMessageId, input, it.preserveFollowingMessages, { text -> keepBottomAnchored = true; onSubmit(text) }, onCancelMessageEdit) }
-    CompositionLocalProvider(LocalChatDraftRequest provides draftRequest, LocalChatInlineEditor provides inlineEditor) {
+    val latestAnswerId = remember(messages) { messages.lastOrNull { it is io.github.mangi.eta.ui.model.AgentMessageUi }?.id }
+    val recheck = RecheckAction(latestAnswerId, enabled = !isStreaming && !isCompacting, submit = onSubmit)
+    // 「选择文字」取整轮的思考与回答（可以跨思考选段、一次复制）。
+    val segmentsOf = remember(messages) { { answerId: String -> turnSegments(messages, answerId) } }
+    CompositionLocalProvider(LocalChatDraftRequest provides draftRequest, LocalChatInlineEditor provides inlineEditor,
+        LocalRecheckAction provides recheck, LocalTurnSegments provides segmentsOf) {
     SpeechPlaybackHost {
         SpeechAutoReadAloud(messages = messages, isStreaming = isStreaming)
         AgentChatScaffold(
@@ -254,6 +278,8 @@ internal fun AgentChatBody(
             input = input,
             modelPickerState = modelPickerState,
             isCompacting = isCompacting,
+            backgroundCompacting = backgroundCompacting,
+            isBranching = isBranching,
             contextUsage = contextUsage,
             isStreaming = isStreaming,
             reasoningEffort = reasoningEffort,
@@ -267,12 +293,13 @@ internal fun AgentChatBody(
             messageEdit = messageEdit,
             showEmptySuggestions = !isKeyboardVisible,
             keepBottomAnchored = keepBottomAnchored,
+            pinTurnRequest = pinTurnRequest,
             onBottomAnchorChanged = { keepBottomAnchored = it },
             onSubmit = { text ->
                 sentFromKeyboard = true
-                // 发送即重新锚定底部：用户从历史上方直接发送时，同帧内 isStreaming 与
-                // 新消息一起到位，立即回到底部并恢复后续的流式平滑跟底。
-                keepBottomAnchored = true
+                // 发送后新一轮停在顶部：先不跟底，新消息出现后滚到它，回复在其下展开。
+                keepBottomAnchored = false
+                pinTurnRequest++
                 onSubmit(text)
             },
             onInterruptAndSubmit = { text ->
@@ -301,6 +328,7 @@ internal fun AgentChatBody(
             onCancelMessageEdit = onCancelMessageEdit,
             onDeleteMessage = onDeleteMessage,
             onRegenerateMessage = onRegenerateMessage,
+            onBranchMessage = onBranchMessage,
             onSelectReplyCandidate = onSelectReplyCandidate,
             onSuggestionClick = { prompt -> draftRequest.value = ChatDraftRequest(prompt, (draftRequest.value?.sequence ?: 0L) + 1L) },
             onRunTraceClick = onRunTraceClick,
@@ -326,6 +354,7 @@ private fun AgentChatScaffold(
     input: String,
     modelPickerState: AgentModelPickerUiState,
     isCompacting: Boolean,
+    isBranching: Boolean,
     contextUsage: AgentContextUsageUi,
     isStreaming: Boolean,
     reasoningEffort: ReasoningEffort,
@@ -339,6 +368,7 @@ private fun AgentChatScaffold(
     messageEdit: MessageEditUiState?,
     showEmptySuggestions: Boolean,
     keepBottomAnchored: Boolean,
+    pinTurnRequest: Int,
     onBottomAnchorChanged: (Boolean) -> Unit,
     onSubmit: (String) -> Unit,
     onInterruptAndSubmit: (String) -> Unit,
@@ -360,6 +390,7 @@ private fun AgentChatScaffold(
     onCancelMessageEdit: () -> Unit,
     onDeleteMessage: (String) -> Unit,
     onRegenerateMessage: (String) -> Unit,
+    onBranchMessage: (String) -> Unit,
     onSelectReplyCandidate: (String, Int) -> Unit,
     onSuggestionClick: (String) -> Unit,
     onRunTraceClick: () -> Unit,
@@ -371,8 +402,20 @@ private fun AgentChatScaffold(
     onLoadEarlierMessages: () -> Unit,
     onHistoryViewportChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    backgroundCompacting: Boolean = false,
 ) {
 
+    // 消息区的 COUI 背景源：顶部控件和输入框都从这里采样（它们是消息区的兄弟节点，不在源里面）。
+    // 首页由外壳创建并传入，顶部控件共用；其他页面用自己的。
+    val sharedSource = io.github.mangi.eta.ui.components.coui.LocalChatCouiSource.current
+    val ownSource = trackRenderSource("消息区(COUI)", if (sharedSource == null && LocalBlurEnabled.current)
+        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-messages") else null)
+    val messageCouiBackdrop = sharedSource ?: ownSource
+    // 07 第四期·采样源精简：Android 14+ 走 COUI 液态玻璃时，输入框和顶部控件都从 COUI 源采样，
+    // 消息区不再额外录一份 Miuix 模糊层（只给 Android 13 及以下的旧玻璃用）。
+    val couiGlassActive = messageCouiBackdrop != null && android.os.Build.VERSION.SDK_INT >= 34 && EtaCouiSupport.shaders
+    val glassBackdrop = trackRenderSource("消息区(Miuix)",
+        if (couiGlassActive) null else rememberEtaGlassBackdrop(EtaTheme.colors.canvas))
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
@@ -383,6 +426,8 @@ private fun AgentChatScaffold(
             bottom = 0.dp,
         ),
         bottomBar = {
+            androidx.compose.runtime.CompositionLocalProvider(LocalEtaGlassBackdrop provides glassBackdrop,
+                io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides messageCouiBackdrop) {
             if (LocalChatInlineEditor.current == null) AgentChatBottomBar(
                 showFade = hasMessages,
                 messageBackdrop = null,
@@ -418,25 +463,39 @@ private fun AgentChatScaffold(
                 onAttachFilePath = onAttachFilePath,
                 onRemoveFileReference = onRemoveFileReference,
                 onCancelMessageEdit = onCancelMessageEdit,
+                backgroundCompacting = backgroundCompacting,
             ) else Spacer(Modifier.height(12.dp).navigationBarsPadding().imePadding())
+            }
         },
     ) { innerPadding ->
         val bottomPadding = innerPadding.calculateBottomPadding()
-        if (!hasMessages) {
+        // 发出第一条消息时问候语与建议淡出上移，消息随后升起，不再硬切。
+        Box(Modifier.fillMaxSize().then(if (glassBackdrop != null) Modifier.layerBackdrop(glassBackdrop) else Modifier)
+            .then(if (messageCouiBackdrop != null) Modifier.couiBackdrop(messageCouiBackdrop) else Modifier)
+            .background(EtaTheme.colors.canvas)) {
+        AnimatedVisibility(
+            visible = !hasMessages,
+            enter = fadeIn(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate)),
+            exit = fadeOut(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.medium), easing = EtaTheme.motion.accelerate)) +
+                slideOutVertically(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.medium), easing = EtaTheme.motion.accelerate)) { -it / 12 },
+            label = "emptyChat",
+        ) {
             EmptyChatState(
                 showSuggestions = showEmptySuggestions,
                 onSuggestionClick = onSuggestionClick,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = bottomPadding),
+                    .padding(top = LocalTopBarInset.current, bottom = bottomPadding),
             )
-        } else {
+        }
+        if (hasMessages) {
             AgentConversationMessages(
                 visibleMessages = visibleMessages,
                 scrollState = scrollState,
                 isStreaming = isStreaming,
                 bottomInset = bottomPadding,
                 keepBottomAnchored = keepBottomAnchored,
+                pinTurnRequest = pinTurnRequest,
                 onBottomAnchorChanged = onBottomAnchorChanged,
                 onSuggestionClick = onSuggestionClick,
                 onRunTraceClick = onRunTraceClick,
@@ -444,8 +503,9 @@ private fun AgentChatScaffold(
                 onEditMessage = onEditMessage,
                 onDeleteMessage = onDeleteMessage,
                 onRegenerateMessage = onRegenerateMessage,
+                onBranchMessage = onBranchMessage,
                 onSelectReplyCandidate = onSelectReplyCandidate,
-                messageActionsEnabled = !isStreaming && messageEdit == null,
+                messageActionsEnabled = !isStreaming && !isCompacting && !isBranching && messageEdit == null,
                 editTargetMessageId = messageEdit?.targetMessageId,
                 currentBrowserMessageId = currentBrowserMessageId,
                 hasEarlierMessages = hasEarlierMessages,
@@ -456,6 +516,7 @@ private fun AgentChatScaffold(
                 modifier = Modifier
                     .fillMaxSize(),
             )
+        }
         }
     }
 }
@@ -469,6 +530,7 @@ internal fun AgentConversationMessages(
     bottomInset: Dp,
     keepBottomAnchored: Boolean,
     onBottomAnchorChanged: (Boolean) -> Unit,
+    pinTurnRequest: Int = 0,
     assistantOverlay: Boolean = false,
     onSuggestionClick: (String) -> Unit = {},
     onRunTraceClick: () -> Unit = {},
@@ -476,6 +538,7 @@ internal fun AgentConversationMessages(
     onEditMessage: (String) -> Unit = {},
     onDeleteMessage: (String) -> Unit = {},
     onRegenerateMessage: (String) -> Unit = {},
+    onBranchMessage: (String) -> Unit = {},
     onSelectReplyCandidate: (String, Int) -> Unit = { _, _ -> },
     messageActionsEnabled: Boolean = false,
     editTargetMessageId: String? = null,
@@ -493,6 +556,11 @@ internal fun AgentConversationMessages(
         visibleMessages.toTimelineEntries(previous = previousTimelineEntries[0])
     }
     SideEffect { previousTimelineEntries[0] = timelineEntries }
+    // 新发出的消息（以及紧随其后的回复开头）从下方升起；首屏和历史消息不动。
+    val seenTimelineKeys = remember { HashSet<Any>() }
+    val freshTimelineKeys: Set<Any> = if (seenTimelineKeys.isEmpty()) emptySet()
+        else timelineEntries.takeLast(2).map<AgentTimelineEntry, Any> { it.key }.filterNotTo(HashSet()) { it in seenTimelineKeys }
+    SideEffect { timelineEntries.forEach { seenTimelineKeys += it.key } }
     val activeWorkProcessKey = if (isStreaming) {
         (timelineEntries.lastOrNull() as? AgentTimelineEntry.WorkProcess)?.key
     } else {
@@ -502,6 +570,14 @@ internal fun AgentConversationMessages(
     // 流式进行中当前这一轮尚未收尾，此时的“最后一条正文”只是中间步骤，不标记。
     val finalResultMessageIds = remember(visibleMessages, isStreaming) {
         resolveFinalResultMessageIds(visibleMessages, isStreaming = isStreaming)
+    }
+    // 操作行（复制、重试、更多）只常显在最新一条回复下；更早的回复长按出同样的菜单，
+    // 长会话里不再每条都挂一排图标。
+    val latestAnswerId = remember(visibleMessages, finalResultMessageIds) {
+        visibleMessages.lastOrNull { it is AgentMessageUi && (it.characterEditable || it.id in finalResultMessageIds) }?.id
+    }
+    val branchMessageIds = remember(visibleMessages, isStreaming) {
+        ConversationBranchBoundary.eligibleMessageIds(visibleMessages.branchMessageOutline(), running = isStreaming)
     }
     // 流式消息的渲染会话按 id 提升到列表层持有：item 滚出视口被 LazyColumn 销毁后，
     // 滑回时复用同一解析会话与打字机进度，避免整段内容重新解析并重放显现动画。
@@ -539,13 +615,44 @@ internal fun AgentConversationMessages(
     val densityScale = LocalDensity.current.density
     val coroutineScope = rememberCoroutineScope()
 
+    // 新一轮停在顶部：发送请求到达后，等这条用户消息出现，滚到它；尾部垫一屏高的空白让它
+    // 能停在顶部。回复长到超过一屏时撤掉空白（它在屏幕外，撤掉不会跳），之后由用户自己滚动。
+    var pinnedKey by remember { mutableStateOf<String?>(null) }
+    var handledPinRequest by remember { mutableIntStateOf(pinTurnRequest) }
+    val lastUserKey = timelineEntries.lastOrNull { (it as? AgentTimelineEntry.Message)?.message is io.github.mangi.eta.ui.model.UserMessageUi }?.key
+    LaunchedEffect(pinTurnRequest, lastUserKey) {
+        if (pinTurnRequest == handledPinRequest || lastUserKey == null) return@LaunchedEffect
+        handledPinRequest = pinTurnRequest
+        pinnedKey = lastUserKey
+        onBottomAnchorChanged(false)
+        val index = timelineEntries.indexOfFirst { it.key == lastUserKey }
+        if (index >= 0) {
+            withFrameNanos { }
+            scrollState.animateScrollToItem(index + earlierMessagesItemCount, scrollOffset = -(12 * densityScale).toInt())
+        }
+    }
+    LaunchedEffect(pinnedKey) {
+        val key = pinnedKey ?: return@LaunchedEffect
+        snapshotFlow {
+            val info = scrollState.layoutInfo
+            val pinned = info.visibleItemsInfo.firstOrNull { it.key == key }
+            val lastContent = info.visibleItemsInfo.lastOrNull { it.key != ChatBottomSentinelKey }
+            val viewport = info.viewportEndOffset - info.afterContentPadding
+            // 回复已经填满一屏（或这条消息已滚出视野），垫高就不再需要。
+            pinned == null && info.visibleItemsInfo.none { it.key == key } && info.totalItemsCount > 0 ||
+                (pinned != null && lastContent != null && lastContent.offset + lastContent.size > viewport)
+        }.first { it }
+        pinnedKey = null
+    }
+
     LaunchedEffect(
         isListMeasured,
         isUserDragging,
         isAtBottom,
         keepBottomAnchored,
+        pinnedKey,
     ) {
-        if (!isListMeasured) return@LaunchedEffect
+        if (!isListMeasured || pinnedKey != null) return@LaunchedEffect
         val next = resolveKeepBottomAnchored(
             current = keepBottomAnchored,
             isUserDragging = isUserDragging,
@@ -732,6 +839,12 @@ internal fun AgentConversationMessages(
         }
     }
 
+    val chrome = LocalEtaChrome.current
+    val chromeRange = with(androidx.compose.ui.platform.LocalDensity.current) { 140.dp.toPx() }
+    val chromeScroll = remember(chrome, chromeRange) {
+        if (chrome == null) Modifier else Modifier.nestedScroll(chrome.connection(chromeRange))
+    }
+    LaunchedEffect(chrome) { chrome?.reset() }
     // 滚动层保持整屏，输入器作为后绘制浮层；输入器高度进入列表的
     // afterContentPadding，确保跟到底部时最后一行停在输入器上方。
     Box(modifier = modifier.clipToBounds()) {
@@ -742,9 +855,10 @@ internal fun AgentConversationMessages(
                 .align(Alignment.TopCenter).widthIn(max = 720.dp).fillMaxSize()
                 .scrollEndHaptic()
                 .nestedScroll(historyPaging.scrollConnection)
+                .then(chromeScroll)
                 .overScrollVertical(),
             contentPadding = PaddingValues(
-                top = 16.dp,
+                top = LocalTopBarInset.current + 16.dp,
                 bottom = bottomInset + 16.dp,
             ),
             overscrollEffect = null,
@@ -770,7 +884,7 @@ internal fun AgentConversationMessages(
                     // 历史轮次被编辑、删除或重新生成时必须立即退出；退出动画会让已从
                     // 状态中裁掉的旧消息继续绘制，并与同位置的新流式消息短暂重叠。
                     fadeOutSpec = null,
-                )
+                ).etaRiseIn(remember { entry.key in freshTimelineKeys })
                 when (entry) {
                     is AgentTimelineEntry.Message -> {
                         val message = entry.message
@@ -788,11 +902,12 @@ internal fun AgentConversationMessages(
                             showBrowserShortcut = message is ToolActivityMessageUi &&
                                 message.toolName == "browser_use" &&
                                 message.id == currentBrowserMessageId,
-                            showCopyAction = message !is AgentMessageUi ||
-                                message.characterEditable || message.id in finalResultMessageIds,
+                            showCopyAction = message !is AgentMessageUi || message.id == latestAnswerId,
                             showMessageActions = message.id in finalResultMessageIds ||
                                 (message is AgentMessageUi && message.characterEditable),
                             messageActionsEnabled = messageActionsEnabled,
+                            showBranchAction = !assistantOverlay && message.id in branchMessageIds,
+                            onBranchMessage = onBranchMessage,
                             isEditing = message.id == editTargetMessageId,
                             onEditMessage = onEditMessage,
                             onDeleteMessage = onDeleteMessage,
@@ -839,10 +954,14 @@ internal fun AgentConversationMessages(
                 }
             }
             item(key = ChatBottomSentinelKey) {
+                // 新一轮停在顶部时，哨兵临时垫高一屏，让那条消息能滚到顶部。
+                val pinSpace = if (pinnedKey != null) with(LocalDensity.current) {
+                    (scrollState.layoutInfo.viewportSize.height).toDp()
+                } else 0.dp
                 Spacer(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(1.dp),
+                        .height(1.dp + pinSpace),
                 )
             }
         }
@@ -863,11 +982,12 @@ internal fun AgentConversationMessages(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = bottomInset + 12.dp),
-            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + scaleIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard), initialScale = 0.82f),
+            // 回到底部按钮：淡入并带一点回弹地从 0.8 倍弹出。
+            enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)) + scaleIn(spring(dampingRatio = 0.6f, stiffness = 520f), initialScale = 0.8f),
             exit = fadeOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate)) + scaleOut(tween(EtaMotion.Default.exitDuration(260), easing = EtaMotion.Default.accelerate), targetScale = 0.86f),
         ) {
             IconButton(
-                modifier = Modifier.etaElevation(EtaElevation.E2, CircleShape).drawWithContent {
+                modifier = Modifier.etaGlass(CircleShape, elevation = EtaElevation.E2, useLocalBackdrop = false).drawWithContent {
                     drawContent()
                     if (isStreaming) drawCircle(etaAccent, 3.dp.toPx(), androidx.compose.ui.geometry.Offset(size.width - 3.dp.toPx(), 3.dp.toPx()))
                 },
@@ -877,12 +997,12 @@ internal fun AgentConversationMessages(
                         scrollState.animateScrollToItem(bottomItemIndex)
                     }
                 },
-                backgroundColor = EtaTheme.colors.surfaceRaised,
+                backgroundColor = Color.Transparent,
                 minWidth = 36.dp,
                 minHeight = 36.dp,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.ArrowDownward,
+                    imageVector = Icons.Outlined.ArrowDownward,
                     contentDescription = stringResource(R.string.ui_back_to_bottom_32282e),
                     modifier = Modifier.size(20.dp),
                     tint = EtaTheme.colors.textPrimary,
@@ -1062,6 +1182,7 @@ private fun AgentChatBottomBar(
     onAttachFilePath: (String) -> Unit,
     onRemoveFileReference: (String) -> Unit,
     onCancelMessageEdit: () -> Unit,
+    backgroundCompacting: Boolean = false,
 ) {
     ChatComposerSurface(showFade = showFade) {
         AgentChatInputBar(
@@ -1100,6 +1221,7 @@ private fun AgentChatBottomBar(
             onRemoveFileReference = onRemoveFileReference,
             onCancelMessageEdit = onCancelMessageEdit,
             modifier = Modifier.fillMaxWidth(),
+            backgroundCompacting = backgroundCompacting,
         )
     }
 }
@@ -1134,6 +1256,7 @@ internal fun shouldRequestInitialBottom(
 ): Boolean = isStreaming && keepBottomAnchored && !isUserDragging
 
 @Composable
-private fun EmptyChatState(showSuggestions: Boolean, onSuggestionClick: (String) -> Unit, modifier: Modifier = Modifier) {
-    HomeEmptyState(showSuggestions, onSuggestionClick, modifier)
+private fun EmptyChatState(showSuggestions: Boolean, onSuggestionClick: (String) -> Unit, modifier: Modifier = Modifier,
+    onContentBottom: (Float) -> Unit = {}) {
+    HomeEmptyState(showSuggestions, onSuggestionClick, modifier, onContentBottom)
 }

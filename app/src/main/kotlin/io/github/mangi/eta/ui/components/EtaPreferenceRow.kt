@@ -29,7 +29,7 @@ import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.outlined.ChevronRight
 import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -56,7 +56,7 @@ internal fun EtaArrowPreference(
             Spacer(Modifier.width(8.dp))
             val direction = LocalLayoutDirection.current
             Icon(
-                imageVector = Icons.Rounded.ChevronRight,
+                imageVector = Icons.Outlined.ChevronRight,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp).graphicsLayer {
                     scaleX = if (direction == LayoutDirection.Rtl) -1f else 1f
@@ -119,8 +119,8 @@ internal fun EtaPreferenceRow(
     ) {
         Layout(
             modifier = Modifier.fillMaxWidth()
-                .heightIn(min = if (summary != null) 64.dp else EtaPreferenceDefaults.RowMinHeight)
-                .padding(horizontal = EtaPreferenceDefaults.SidePadding, vertical = 12.dp),
+                .heightIn(min = EtaPreferenceDefaults.RowMinHeight)
+                .padding(horizontal = EtaPreferenceDefaults.SidePadding, vertical = EtaPreferenceDefaults.RowVerticalPadding),
             content = {
                 if (startAction != null) Box(contentAlignment = Alignment.Center) { startAction() }
                 Column {
@@ -135,7 +135,9 @@ internal fun EtaPreferenceRow(
                         )
                         if (summary != null) Text(
                             text = summary,
-                            style = EtaTheme.type.subhead,
+                            // 与 COUI 列表副标题一致：13sp，与标题间隔 2dp。
+                            modifier = Modifier.padding(top = com.itos.coui.layout.CouiPageDefaults.summarySpacing),
+                            style = EtaTheme.type.footnote,
                             color = if (enabled) summaryColor.color else summaryColor.disabledColor,
                         )
                     }

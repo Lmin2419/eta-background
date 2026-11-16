@@ -12,7 +12,7 @@ import androidx.compose.ui.semantics.contentDescription
 import io.github.mangi.eta.ui.theme.EtaElevation
 import io.github.mangi.eta.ui.theme.etaElevation
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,12 +105,12 @@ internal fun EtaPreviewWindow(ui: PreviewPresentation, picture: TaskPreviewImage
                 }
             }
             EtaIconButton(onClick = onZoom, enabled = controls.zoomEnabled, modifier = Modifier.testTag("preview_zoom")) {
-                Icon(if (ui.expanded) Icons.Rounded.CloseFullscreen else Icons.Rounded.OpenInFull,
+                Icon(if (ui.expanded) Icons.Outlined.CloseFullscreen else Icons.Outlined.OpenInFull,
                     stringResource(if (ui.expanded) R.string.preview_collapse else R.string.preview_expand),
                     tint = colors.textPrimary, modifier = Modifier.size(20.dp))
             }
             EtaIconButton(onClick = onClose, modifier = Modifier.testTag("preview_close")) {
-                Icon(Icons.Rounded.Close, stringResource(R.string.action_close), tint = colors.textPrimary, modifier = Modifier.size(20.dp))
+                Icon(Icons.Outlined.Close, stringResource(R.string.action_close), tint = colors.textPrimary, modifier = Modifier.size(20.dp))
             }
         }
         Box(Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(16.dp))
@@ -192,15 +192,15 @@ internal fun previewActionLabel(action: PreviewAction, mode: PreviewMode): Strin
 private fun PreviewSecondaryAction(action: PreviewAction, mode: PreviewMode, enabled: Boolean,
     label: String = previewActionLabel(action, mode), size: Dp = 48.dp, onClick: () -> Unit) {
     val icon = when (action) {
-        PreviewAction.TakeOver -> Icons.Rounded.TouchApp
-        PreviewAction.Pause -> Icons.Rounded.Pause
-        PreviewAction.Resume -> Icons.Rounded.PlayArrow
-        PreviewAction.ReturnToAi -> Icons.Rounded.SmartToy
-        PreviewAction.Back -> Icons.Rounded.ArrowBack
-        PreviewAction.OpenApp -> Icons.Rounded.OpenInNew
-        PreviewAction.Close -> Icons.Rounded.Close
-        PreviewAction.OpenConversation -> Icons.Rounded.ChatBubbleOutline
-        PreviewAction.Wait -> Icons.Rounded.HourglassEmpty
+        PreviewAction.TakeOver -> Icons.Outlined.TouchApp
+        PreviewAction.Pause -> Icons.Outlined.Pause
+        PreviewAction.Resume -> Icons.Outlined.PlayArrow
+        PreviewAction.ReturnToAi -> Icons.Outlined.SmartToy
+        PreviewAction.Back -> Icons.Outlined.ArrowBack
+        PreviewAction.OpenApp -> Icons.Outlined.OpenInNew
+        PreviewAction.Close -> Icons.Outlined.Close
+        PreviewAction.OpenConversation -> Icons.Outlined.ChatBubbleOutline
+        PreviewAction.Wait -> Icons.Outlined.HourglassEmpty
     }
     EtaIconButton(onClick, enabled = enabled,
         modifier = Modifier.size(size).border(1.dp, EtaTheme.colors.outlineStrong, CircleShape).testTag("preview_secondary")) {

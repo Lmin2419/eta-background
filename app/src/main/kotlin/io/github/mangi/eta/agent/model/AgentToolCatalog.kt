@@ -1,7 +1,8 @@
 package io.github.mangi.eta.agent.model
 
-import org.json.JSONArray
 import io.github.mangi.eta.agent.tool.AgentToolCapabilities
+import io.github.mangi.eta.config.Prefs
+import org.json.JSONArray
 
 /** 声明模型可见的工具及其 JSON Schema；不包含任何执行逻辑。 */
 internal object AgentToolCatalog {
@@ -18,6 +19,7 @@ internal object AgentToolCatalog {
         commonTasksWritable: Boolean = true,
         capabilities: AgentToolCapabilities = AgentToolCapabilities(rootAvailable = true),
         localWebSearch: Boolean = true,
+        disabledTools: Set<String> = emptySet(),
     ): JSONArray =
         capabilities.project(JSONArray().also { tools ->
             AgentContextAppToolCatalog.appendTo(tools)
@@ -45,5 +47,19 @@ internal object AgentToolCatalog {
                 AgentTerminalToolCatalog.appendTo(tools)
                 AgentFileToolCatalog.appendTo(tools)
             }
-        }).also(AgentUnifiedOperationCatalog::decorate)
+        }).let { projected ->
+            if (disabledTools.isEmpty()) {
+                projected
+            } else {
+                JSONArray().also { filtered ->
+                    for (index in 0 until projected.length()) {
+                        val tool = projected.getJSONObject(index)
+                        val name = tool.getJSONObject("function").getString("name")
+                        if (Prefs.isToolEnabledInSet(name, disabledTools)) {
+                            filtered.put(tool)
+                        }
+                    }
+                }
+            }
+        }.also(AgentUnifiedOperationCatalog::decorate)
 }

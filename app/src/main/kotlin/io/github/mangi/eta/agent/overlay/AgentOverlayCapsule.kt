@@ -5,9 +5,9 @@ import io.github.mangi.eta.ui.theme.EtaMotion
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.ExpandLess
-import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import io.github.mangi.eta.ui.components.StatusRing
@@ -57,10 +57,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -244,7 +246,7 @@ internal fun AgentOverlayCapsule(
                     }
 
                     }
-                    Icon(if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                    Icon(if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
                         contentDescription = null, tint = palette.textPrimary, modifier = Modifier.size(18.dp))
                 }
 
@@ -283,39 +285,46 @@ internal fun AgentOverlayCapsule(
                                     )
                                 }
                             }
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(stringResource(R.string.overlay_open_conversation), modifier = Modifier.clickable(onClick = onOpenConversation)
-                                    .heightIn(min = 48.dp).wrapContentHeight().padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
-                                Text(stringResource(R.string.overlay_supplement), modifier = Modifier.clickable { setSupplementMode(true) }
-                                    .heightIn(min = 48.dp).wrapContentHeight().padding(vertical = 10.dp), color = palette.accent, fontSize = 12.sp)
-                            }
+                            // 打开对话、补充输入与查看/暂停/停止同一排、同一种按钮，不再是两行两套样式。
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
                             ) {
                                 CapsuleAction(
-                                    icon = Icons.Rounded.Visibility,
+                                    icon = Icons.AutoMirrored.Outlined.Chat,
+                                    label = stringResource(R.string.overlay_open_conversation_short),
+                                    tint = MiuixTheme.colorScheme.onSurface,
+                                    onClick = onOpenConversation,
+                                )
+                                CapsuleAction(
+                                    icon = Icons.Outlined.EditNote,
+                                    label = stringResource(R.string.overlay_supplement_short),
+                                    tint = MiuixTheme.colorScheme.onSurface,
+                                    onClick = { setSupplementMode(true) },
+                                )
+                                CapsuleAction(
+                                    icon = Icons.Outlined.Visibility,
                                     label = stringResource(R.string.task_notice_view),
                                     tint = MiuixTheme.colorScheme.onSurface,
                                     onClick = onOpenPreview,
                                 )
                                 if (state.phase == AgentOverlayPhase.RUNNING) {
                                     CapsuleAction(
-                                        icon = Icons.Rounded.Pause,
+                                        icon = Icons.Outlined.Pause,
                                         label = stringResource(R.string.overlay_pause),
                                         tint = MiuixTheme.colorScheme.onSurface,
                                         onClick = onPause,
                                     )
                                 } else if (state.phase == AgentOverlayPhase.PAUSED) {
                                     CapsuleAction(
-                                        icon = Icons.Rounded.PlayArrow,
+                                        icon = Icons.Outlined.PlayArrow,
                                         label = stringResource(R.string.overlay_resume),
                                         tint = MiuixTheme.colorScheme.primary,
                                         onClick = onResume,
                                     )
                                 }
                                 CapsuleAction(
-                                    icon = Icons.Rounded.Stop,
+                                    icon = Icons.Outlined.Stop,
                                     label = stringResource(R.string.action_stop),
                                     tint = MiuixTheme.colorScheme.error,
                                     onClick = onStop,

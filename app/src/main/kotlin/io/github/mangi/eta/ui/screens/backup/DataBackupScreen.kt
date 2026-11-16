@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Description
-import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,11 +63,11 @@ internal fun DataBackupScreen(
     fun showFailure(throwable: Throwable) {
         if (throwable is CancellationException) throw throwable
         AndroidAgentLogger.error("Agent backup UI failed: type=${throwable.safeLogType()}\n${throwable.safeStackTrace()}")
-        Toast.makeText(
+        io.github.mangi.eta.ui.components.EtaToastCenter.show(
             context,
             throwable.message ?: context.getString(R.string.data_backup_failed),
             Toast.LENGTH_LONG,
-        ).show()
+        )
     }
 
     val exportLauncher = rememberLauncherForActivityResult(
@@ -80,7 +80,7 @@ internal fun DataBackupScreen(
                 val output = context.contentResolver.openOutputStream(uri)
                     ?: error(context.getString(R.string.data_backup_file_open_failed))
                 val summary = output.use { onExport(it) }
-                Toast.makeText(
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(
                     context,
                     context.getString(
                         R.string.data_backup_exported,
@@ -88,7 +88,7 @@ internal fun DataBackupScreen(
                         summary.providerCount,
                     ),
                     Toast.LENGTH_SHORT,
-                ).show()
+                )
             } catch (throwable: Throwable) {
                 showFailure(throwable)
             } finally {
@@ -133,7 +133,7 @@ internal fun DataBackupScreen(
                     enabled = !busy,
                     startAction = {
                         BackupIcon(
-                            icon = Icons.Rounded.Download,
+                            icon = Icons.Outlined.Download,
                             loading = busy,
                         )
                     },
@@ -148,7 +148,7 @@ internal fun DataBackupScreen(
                     enabled = !busy,
                     startAction = {
                         BackupIcon(
-                            icon = Icons.Rounded.Description,
+                            icon = Icons.Outlined.Description,
                             loading = false,
                         )
                     },
@@ -194,7 +194,7 @@ internal fun DataBackupScreen(
                             val input = context.contentResolver.openInputStream(uri)
                                 ?: error(context.getString(R.string.data_backup_file_open_failed))
                             val summary = input.use { onImport(it) }
-                            Toast.makeText(
+                            io.github.mangi.eta.ui.components.EtaToastCenter.show(
                                 context,
                                 context.getString(
                                     R.string.data_backup_imported,
@@ -202,7 +202,7 @@ internal fun DataBackupScreen(
                                     summary.providerCount,
                                 ),
                                 Toast.LENGTH_SHORT,
-                            ).show()
+                            )
                         } catch (throwable: Throwable) {
                             showFailure(throwable)
                         } finally {

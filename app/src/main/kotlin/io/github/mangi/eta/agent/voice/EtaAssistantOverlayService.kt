@@ -616,7 +616,9 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
                 phase = EtaVoicePhase.ERROR
                 status = EtaVoiceStatus.Failed(event.reason)
             }
-            is AgentEvent.ContextCompaction,
+            is AgentEvent.ContextCompaction -> if (!AgentEvent.ContextCompaction.isBackgroundPhase(event.phase)) {
+                status = EtaVoiceStatus.Reasoning
+            }
             is AgentEvent.ModelRetryScheduled,
             is AgentEvent.ProviderRequestStarted,
             -> status = EtaVoiceStatus.Reasoning

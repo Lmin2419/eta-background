@@ -26,7 +26,7 @@ import org.robolectric.Shadows.shadowOf
 import top.yukonga.miuix.kmp.squircle.LocalSquircleEnabled
 
 /** Uses the same native rendering and frame clock for the before/after comparison. */
-internal class Stage3TestPanel(activity: ComponentActivity, dark: Boolean = false, fontScale: Float = 1f, reduceMotion: Boolean = true, content: @Composable () -> Unit) {
+internal class Stage3TestPanel(activity: ComponentActivity, dark: Boolean = false, fontScale: Float = 1f, reduceMotion: Boolean = true, blur: Boolean = true, content: @Composable () -> Unit) {
     private val clock = BroadcastFrameClock()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate + clock)
     private val recomposer = Recomposer(scope.coroutineContext)
@@ -35,7 +35,7 @@ internal class Stage3TestPanel(activity: ComponentActivity, dark: Boolean = fals
         scope.launch { recomposer.runRecomposeAndApplyChanges() }
         view.setParentCompositionContext(recomposer)
         view.setContent {
-            AgentAppTheme(AppearanceSettings(themeMode = if (dark) io.github.mangi.eta.data.model.AppearanceThemeMode.DARK else io.github.mangi.eta.data.model.AppearanceThemeMode.LIGHT), false) {
+            AgentAppTheme(AppearanceSettings(themeMode = if (dark) io.github.mangi.eta.data.model.AppearanceThemeMode.DARK else io.github.mangi.eta.data.model.AppearanceThemeMode.LIGHT, blurEnabled = blur), false) {
                 EtaTheme(colors = EtaTheme.colors, motion = EtaMotion(reduceMotion)) {
                     CompositionLocalProvider(LocalSquircleEnabled provides false,
                         androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(androidx.compose.ui.platform.LocalDensity.current.density, fontScale)) {
@@ -52,9 +52,22 @@ internal class Stage3TestPanel(activity: ComponentActivity, dark: Boolean = fals
         return null
     }
     fun root(): ViewRootForTest = findRoot(view) ?: error("No Compose root")
+    /** 主窗口在前，其后是弹出窗口（COUI 菜单、半窗是独立窗口）。 */
+    fun roots(): List<ViewRootForTest> {
+        val main = root()
+        val others = runCatching {
+            val manager = org.robolectric.util.ReflectionHelpers.callStaticMethod<Any>(Class.forName("android.view.WindowManagerGlobal"), "getInstance")
+            val views = org.robolectric.util.ReflectionHelpers.getField<List<View>>(manager, "mViews")
+            views.mapNotNull { findRoot(it) }.filter { it !== main }
+        }.getOrDefault(emptyList())
+        return listOf(main) + others
+    }
     fun nodes(): List<SemanticsNode> {
         fun visit(node: SemanticsNode): List<SemanticsNode> = listOf(node) + node.children.flatMap(::visit)
-        return visit(root().semanticsOwner.unmergedRootSemanticsNode)
+        return roots().flatMap { root ->
+            if (root !== root()) runCatching { root.measureAndLayoutForTest() }
+            visit(root.semanticsOwner.unmergedRootSemanticsNode)
+        }
     }
     fun advance(frames: Int = 1) = repeat(frames) {
         Snapshot.sendApplyNotifications()

@@ -335,7 +335,8 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                     } else {
                         val runtimeConfig = runBlocking {
                             if (AgentRuntimeRequestConfigResolver.usesDefaultRuntimeConfig(request)) {
-                                RuntimeConfigRepository.currentRuntimeConfig()
+                                // 上游 3.4.3：浮窗助手可单独指定模型与思考等级，未指定时回落到当前模型。
+                                RuntimeConfigRepository.assistantOverlayRuntimeConfig()
                             } else {
                                 RuntimeConfigRepository.oauthRuntimeConfigFor(
                                     providerId = request.config.providerId,

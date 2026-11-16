@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Dns
-import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -100,12 +100,12 @@ internal fun ProviderIcon(
 
     when (provider) {
         is CustomProviderSetting -> EtaPreferenceIcon(
-            icon = Icons.Rounded.Dns,
+            icon = Icons.Outlined.Dns,
             modifier = modifier,
             tint = EtaPreferenceColors.Blue,
         )
         else -> EtaPreferenceIcon(
-            icon = Icons.Rounded.Language,
+            icon = Icons.Outlined.Language,
             modifier = modifier,
             tint = EtaPreferenceColors.Blue,
         )

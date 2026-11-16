@@ -99,7 +99,7 @@ internal fun PendingReplyIndicator(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(modifier = Modifier.width(WorkGutterWidth), contentAlignment = Alignment.Center) {
-            StatusRing(TaskVisualStatus.Running, size = 16.dp, contentDescription = null)
+            EtaThinkingMark(size = 18.dp)
         }
         Spacer(modifier = Modifier.width(WorkGutterGap))
         ShimmerText(

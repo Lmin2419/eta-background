@@ -140,10 +140,12 @@ class SettingsReorganizationTest {
                 panel.scrollDownUntil({ sourceCode in panel.visibleTexts() }, maxSteps = 36),
             )
 
-            val firstGroup = context.getString(R.string.eta_background_ready)
+            // 阶段 10：就绪卡标题改为一句状态（检查中 / 全部就绪 / 还差 N 项）。
+            val readinessLines = setOf(context.getString(R.string.eta_ready_checking_line), context.getString(R.string.eta_ready_all_line)) +
+                (0..5).map { context.getString(R.string.eta_ready_pending_line, it) }
             assertTrue(
                 "top readiness area not restored after dragging back",
-                panel.scrollUpUntil({ firstGroup in panel.visibleTexts() }, maxSteps = 40),
+                panel.scrollUpUntil({ panel.visibleTexts().any { it in readinessLines } }, maxSteps = 40),
             )
         } finally {
             panel.close()
@@ -363,7 +365,7 @@ class SettingsReorganizationTest {
     private fun expectedTitles(context: Context): List<String> = listOf(
         context.getString(R.string.ui_model_provider_e8c7f5), // 0
         context.getString(R.string.ui_deep_thinking_enabled_by_default_c032d6), // 1
-        context.getString(R.string.settings_auto_compaction), // 2
+        context.getString(R.string.compaction_settings_title), // 2（自动压缩开关挪进「上下文压缩」页）
         context.getString(R.string.ui_memory_b55ff5), // 3
         "Subagent", // 4
         context.getString(R.string.route_skills), // 5

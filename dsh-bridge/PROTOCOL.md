@@ -4,8 +4,9 @@
 
 - 地址：`wss://<你的域名>/v1/ws`（插件本身只监听 `ws://127.0.0.1:7788/v1/ws`，TLS 由服务器上的 Caddy 终止）
 - 认证：握手请求头 `Authorization: Bearer <token>`，不对返回 401
-- 心跳：服务端每 15 秒发一次 WebSocket ping，45 秒没收到任何数据就断开；客户端也应自己 ping
-- 健康检查：`GET /v1/health` → `{"ok":true,"protocol":1,"version":"0.2.0"}`（无需认证，用于确认穿透通了；`version` 是插件版本，0.1.0 不带此字段）
+- 心跳：服务端默认每 15 秒发一次 WebSocket ping，连续 3 个间隔没收到任何数据就断开；客户端可以用 `client.heartbeat` 调整自己连接的间隔（10–120 秒），后台时放长以省电
+- 健康检查：`GET /v1/health` → `{"ok":true,"protocol":1,"version":"0.4.0","runtime":"desktop","dsh":{"version":"0.2.1-rc.2","api":["control","page","projections"]}}`（无需认证，用于确认穿透通了；`version` 是插件版本，`runtime` 为 `desktop` 表示运行在 DSH 桌面版里、`node` 表示独立的 `dsh` 进程；`dsh.api` 是这个 DSH 提供的会话接口，0.2.2 起多出 `events`、`state`、`observeProjections`）
+- 兼容：插件 0.4.0 支持 DSH 0.2.1 和 0.2.2。所有会话的投影变化都来自全局 `control()` 流（两种帧格式都认），历史分页优先用 `events`，没有时用 `page`
 
 ## 请求 / 响应
 
@@ -18,15 +19,17 @@
 
 | op | 参数 | data |
 |---|---|---|
-| `hello` | – | `{server, protocol, version, host, platform, approvals:[Approval]}` |
+| `hello` | – | `{server, protocol, version, host, platform, runtime, dsh:{version, api}, approvals:[Approval], questions:[Question], features}` |
+| `client.heartbeat` | `intervalMs` | `{intervalMs}`（实际生效值） |
 | `ping` | – | `{now}` |
-| `sessions.list` | – | `{sessions:[SessionRow], workspaces:[{id,title,path}]}`（已归档的会话不返回） |
+| `sessions.list` | – | `{sessions:[SessionRow], workspaces:[{id,title,path}]}`（从 0.3.0 起归档会话也返回，带 `archived`） |
 | `sessions.search` | `query` | `{items:[{sessionId,snippet}], hasMore}` |
 | `sessions.create` | `workspaceId?` 或 `cwd?`、`agentPreset?` | `{sessionId}` |
-| `sessions.prompt` | `sessionId`、`text`、`mode?:"queue"\|"steer"`、`requestId?`、`images?:[{mediaType,data(base64),name?}]`、`timeZone?` | `{accepted, requestId}` |
+| `sessions.prompt` | `sessionId`、`text`、`mode?:"queue"\|"steer"`、`requestId?`、`images?:[{mediaType,data(base64),name?}]`、`files?:[{name,data(base64)}]`（0.5.0，经 DSH `fileUploads` 成为原生附件，最多 8 个）、`timeZone?` | `{accepted, requestId}` |
+| `attachments.image`（0.5.0） | `ref`（用户消息 `imageRefs` 里的附件引用） | `{mediaType, data(base64)}`，单张上限 8 MB |
 | `sessions.cancel` | `sessionId` | `{accepted}` |
 | `sessions.rename` | `sessionId`、`title` | `{title, seq}` |
-| `sessions.queue` | `sessionId`、`itemId`、`action:"remove"\|"steer"\|{edit:text}` | `{accepted}`（`steer` 后条目带 `steering:true` 留在队列里，直到下一步被模型取走） |
+| `sessions.queue` | `sessionId`、`itemId` 或 `requestId`（发送时的请求号，用于刚发出、还不知道条目 id 的消息）、`action:"remove"\|"steer"\|{edit:text}` | `{accepted}`（`steer` 后条目带 `steering:true` 留在队列里，直到下一步被模型取走） |
 | `sessions.follow` | `sessionId`、`afterSeq?`、`parentId?`、`mode?` | `{following:true}`，随后推送 `snapshot` 和增量。带 `parentId` 时按子代理地址订阅（`mode` 取自 `sessions.subagents`） |
 | `sessions.unfollow` | `sessionId` | `{following:false}` |
 | `sessions.older` | `sessionId`、`beforeSeq`、`parentId?`、`mode?` | `{items:[Item], hasMore, cursor}` |
@@ -35,9 +38,12 @@
 | `subagents.interrupt` | `childSessionId` | `{accepted}` |
 | `models.list` | – | `{default:{provider,model}, groups:[{id,name,models:[{id,name,reasoning?}]}], failures}` |
 | `sessions.selectModel` | `sessionId`、`provider`、`model`、`reasoningEffort?` | `{selected}` |
+| `sessions.archive` / `sessions.unarchive` / `sessions.pin` / `sessions.unpin` | `sessionId` | `{archived, pinned}`；同时向所有连接推送 `session-flags`。错误码：`busy`（运行中不能归档）、`archived`（已归档不能置顶）、`not-found` |
+| `question.answer` | `questionId`、`answers:[{id, selected:[label], custom?}]` | `{accepted}`；回答一个正在等待的提问，未作答的问题按跳过处理 |
+| `question.reply` | `sessionId`、`callId`、`answers` | `{accepted}`；回答已转为「稍后回答」的限时提问（`questions` 投影里 `state:"continued"`），需要会话处于活动状态，否则返回 `not-live` |
 | `approval.answer` | `approvalId`、`outcome:"allowed-once"\|"rejected"\|"cancelled"` | `{accepted}` |
 
-`SessionRow`：`{id, title|null, updatedAt, running, blank, live, cwd?, parentId?, subagent?, workspaceId?, pinned?}`
+`SessionRow`：`{id, title|null, updatedAt, running, blank, live, cwd?, parentId?, subagent?, workspaceId?, pinned?, archived?}`。`blank` 是桌面预建的空白「新对话」，桌面侧栏不显示；`archived` 的会话从 0.3.0 起也会返回，由手机放进「已归档」
 
 `Subagent`：`{id, mode:"one-shot"\|"continuable"\|"external"\|"unknown", label?, name?, createdAt, title?, running?, usage?, timing?}`（`usage`/`timing` 结构同下方统计字段；`external` 子代理只有前几项）
 
@@ -57,11 +63,19 @@
 | `error` | `sessionId, message` | 轮次外的错误 |
 | `approval` | `approval:Approval` | 需要审批 |
 | `approval-done` | `approvalId, outcome` | 审批已结束（手机、桌面或超时任一方） |
+| `question` | `question:Question` | Agent 提问（`ask_user_question`、计划审阅、提问形式的授权）；手机和桌面同时显示，先答者生效 |
+| `question-done` | `questionId, outcome:"answered"\|"timeout"\|"cancelled"` | 提问已结束；`timeout` 表示限时等待结束，问题转为可稍后回答 |
+| `turn` | `sessionId, turn, reason, message?, text, time` | 任一普通会话（不含子代理）的一轮结束；`text` 是该轮最后一段回复（最多 600 字），用于完成提醒 |
+| `session-flags` | `sessionId, archived, pinned` | 会话被归档、取消归档、置顶或取消置顶 |
+| `workspaces` | `workspaces:[{id,title,path,sessionIds}], archived, pinned` | 电脑上的工作区登记变化（新建、改名、排序、会话归属、归档、置顶），整份替换 |
+| `projection`（未订阅的会话） | `sessionId, seq, title` | 任一会话的标题变化（自动生成或改名）推给所有连接，列表随之更新 |
 | `follow-error` / `follow-end` | `sessionId, error?` | 订阅失败或结束，客户端应重新 `follow` |
 
 `Approval`：`{id, sessionId, toolName, callId?, reason?, displayReason?:{en, zh?}, createdAt}`
 
 队列条目：`{id, text, steering, rpcId?, ...}`
+
+`Question`：`{id, sessionId, callId?, timed, createdAt, questions:[{id, question, detail?, header?, options:[{label, description?}], multiSelect, intent?}]}`。`intent.kind` 为 `plan-review` 时 `detail` 是待审阅的计划（Markdown），`intent.approve` 是批准选项；为 `approval` 时 `intent.approve`/`reject`/`always?` 是三个操作对应的选项
 
 统计字段（直接转发 DSH 投影，字段名不变）：
 
@@ -72,6 +86,7 @@
 | `pressure` | `contextPressure` | `{pressureTokens, projectedTokens, contextWindow}` |
 | `subagents` | `subagentCatalog` | `[{id, mode, label, name, createdAt}]` |
 | `timing` | `subagentTiming` | `{settledMs, active?:{since, through}, lastTurnCompleted?}` |
+| `questions` | `userQuestions` | `{active:[{callId, state:"open"\|"continued", questions}]}`：仍可回答的限时提问 |
 
 ## 条目 Item
 
@@ -91,3 +106,9 @@
 | `title` | `title` |
 
 DSH 注入给模型的上下文消息（`runtime-context`、`time-context` 等）不推送。
+
+## 0.5.0 增补
+
+- 用户消息条目可带 `imageRefs:[ref]`（最多 6 个），手机用 `attachments.image` 按需取图。
+- `hello` 与 `/v1/health` 增加 `tunnel:{state, message?, since}`；状态变化推送 `{t:"tunnel", state, message?, since}`。
+- `features` 增加 `image-preview`、`files`、`tunnel`。

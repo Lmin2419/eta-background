@@ -26,7 +26,8 @@ internal fun EtaIconTile(
 ) {
     val colors = EtaTheme.colors
     Box(modifier.size(size).alpha(if (enabled) 1f else 0.38f)
-        .background(colors.tileBackground(tint), EtaTheme.shapes.radiusSm), contentAlignment = Alignment.Center) {
+        .background(colors.tileBackground(tint), EtaTheme.shapes.radiusSm),
+        contentAlignment = Alignment.Center) {
         Icon(icon, contentDescription, Modifier.size(iconSize), tint = colors.tileForeground(tint))
     }
 }

@@ -14,9 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.MoreHoriz
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -51,7 +51,7 @@ internal fun ConversationSelectionHeader(
     ) {
         EtaIconButton(onClick = onCancel) {
             Icon(
-                imageVector = Icons.Rounded.Close,
+                imageVector = Icons.Outlined.Close,
                 contentDescription = stringResource(R.string.action_cancel),
                 tint = colors.textPrimary,
             )
@@ -131,7 +131,7 @@ internal fun ConversationSelectionBar(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Rounded.MoreHoriz,
+                imageVector = Icons.Outlined.MoreHoriz,
                 contentDescription = stringResource(R.string.eta_more),
                 tint = colors.accent,
             )
@@ -160,7 +160,7 @@ internal fun ConversationSelectionMarker(selected: Boolean) {
     ) {
         if (selected) {
             Icon(
-                imageVector = Icons.Rounded.Check,
+                imageVector = Icons.Outlined.Check,
                 contentDescription = null,
                 tint = colors.onAccent,
                 modifier = Modifier.size(14.dp).graphicsLayer { scaleX = scale; scaleY = scale },

@@ -76,7 +76,8 @@ class Stage81PreviewRenderingTest {
             Box(Modifier.fillMaxSize().background(EtaTheme.colors.canvas), contentAlignment = Alignment.TopCenter) {
                 // Production preview is always dark, including over a light host.
                 AgentAppTheme(AppearanceSettings(themeMode = AppearanceThemeMode.DARK), false) {
-                    tonal = EtaTheme.colors.accentSoft.toArgb()
+                    // 次按钮与上游一致：COUI 次按钮浅灰底（深色 #353535）。
+                    tonal = (if (EtaTheme.colors.isDark) androidx.compose.ui.graphics.Color(0xFF353535) else androidx.compose.ui.graphics.Color(0xFFEBEBEB)).toArgb()
                     hintColor = (if (case.status == TaskVisualStatus.Failed) EtaTheme.colors.danger else EtaTheme.colors.textSecondary).toArgb()
                     Box(Modifier.width(244.dp).height(480.dp).padding(top = 8.dp)) {
                         EtaPreviewWindow(ui, picture, { actions += it }, {}, {})

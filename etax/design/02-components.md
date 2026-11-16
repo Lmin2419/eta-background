@@ -1,5 +1,7 @@
 # 02 · 组件规范
 
+> **2026111406 起以 [05-liquid-glass-v2.md](05-liquid-glass-v2.md) 为准**：配色（纸白底、brand / onBrand / textQuiet）、玻璃使用范围（只用于浮着的控件）、小窗与玻璃窗口、悬浮侧栏、对话页顶部三控件与输入胶囊。本文与之冲突的描述均以 05 为准。
+
 数值全部引用 [01-design-language.md](01-design-language.md) 的 token。每个组件写明：外观、状态、交互、对应的现有代码（改哪里）。
 
 **原则：先改现有的 `Eta*` 包装组件，再改页面。** 现有 `EtaCard`、`EtaPreferenceRow`、`EtaArrowPreference`、`EtaSwitch`、`EtaChoiceChip`、`EtaTextButton`、`EtaWindowDialog`、`ListEmptyState`、`SectionHeader`、`MiuixScaffoldPage`、`AdaptiveTopAppBar` 已被 15+ 个页面使用，改它们就能让大部分二级页面自动换装。

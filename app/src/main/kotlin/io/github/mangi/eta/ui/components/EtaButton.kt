@@ -48,7 +48,8 @@ internal fun EtaButton(
 ) {
     val palette = EtaTheme.colors
     val (background, foreground) = when (kind) {
-        EtaButtonKind.Primary -> palette.accent to palette.onAccent
+        // 主按钮是黑底白字（深色模式反过来），与 Claude 一致；珊瑚色只用于发送键和品牌元素。
+        EtaButtonKind.Primary -> palette.textPrimary to palette.canvas
         EtaButtonKind.Tonal -> palette.accentSoft to palette.onAccentSoft
         EtaButtonKind.Secondary -> Color.Transparent to palette.textPrimary
         EtaButtonKind.Ghost -> Color.Transparent to palette.accent
@@ -60,16 +61,30 @@ internal fun EtaButton(
         ?: foreground.copy(alpha = if (enabled) 1f else 0.38f)
     val source = interactionSource ?: remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    val motion = EtaTheme.motion
-    val scale = animateFloatAsState(if (pressed && enabled && !motion.reduceMotion) 0.97f else 1f,
-        tween(motion.micro, easing = motion.standard), label = "buttonPress")
     val shape = RoundedCornerShape(cornerRadius)
     val small = size == EtaButtonSize.Small
     val height = if (small && minHeight == EtaControlDefaults.ButtonMinHeight) 32.dp else minHeight
     val padding = if (small && insideMargin == EtaControlDefaults.ButtonPadding) PaddingValues(horizontal = 12.dp, vertical = 6.dp) else insideMargin
     val pressedColor = palette.pressed
+    // 默认样式的按钮与上游一致：COUI 胶囊按钮（按下回弹、触点聚光、轮廓光）。
+    if (colors == null && textStyle == null && !loading && kind != EtaButtonKind.Ghost) {
+        io.github.mangi.eta.ui.components.coui.EtaCouiButton(
+            text = text,
+            onClick = onClick,
+            modifier = modifier.widthIn(min = minWidth),
+            enabled = enabled,
+            role = when (kind) {
+                EtaButtonKind.Primary -> io.github.mangi.eta.ui.components.coui.EtaCouiButtonRole.Primary
+                EtaButtonKind.Destructive -> io.github.mangi.eta.ui.components.coui.EtaCouiButtonRole.Destructive
+                else -> io.github.mangi.eta.ui.components.coui.EtaCouiButtonRole.Secondary
+            },
+            minHeight = height,
+            contentPadding = padding,
+        )
+        return
+    }
     Box(
-        modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value }
+        modifier.etaPressScale(source, enabled && !loading)
             .heightIn(min = height).widthIn(min = minWidth)
             .clip(shape).background(container)
             .then(if (kind == EtaButtonKind.Secondary && colors == null) Modifier.border(1.dp, palette.outlineStrong, shape) else Modifier)
