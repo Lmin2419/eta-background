@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -162,6 +163,27 @@ internal object DeviceModeScreens {
                 onAttachFilePath = {}, onRemoveFileReference = {}, onEditMessage = {}, onCancelMessageEdit = {}, onDeleteMessage = {},
                 onRegenerateMessage = {}, onSelectReplyCandidate = { _, _ -> }, onSuggestionClick = {}, onRunTraceClick = {}, onOpenBrowser = {},
                 modifier = Modifier.fillMaxSize().padding(padding))
+        }
+    }
+
+    /** 电脑会话页：与首页同一套——顶部玻璃控件浮在消息上（2026111603）。 */
+    @Composable
+    fun DesktopChat() {
+        io.github.mangi.eta.ui.screens.desktop.DesktopChatFrame(
+            title = "整理本周工作进展", subtitle = "电脑 · eta-background", onBack = {}, onTitle = {}, underTopBar = true,
+            trailing = {
+                io.github.mangi.eta.ui.components.CircleIconButton(androidx.compose.material.icons.Icons.Outlined.NotificationsActive,
+                    "提醒", onClick = {}, tint = io.github.mangi.eta.ui.theme.EtaTheme.colors.accent)
+            },
+        ) {
+            AgentChatBody(sampleMessages + sampleMessages.map {
+                    when (it) { is UserMessageUi -> it.copy(id = it.id + "b"); is AgentMessageUi -> it.copy(id = it.id + "b"); else -> it }
+                }, Stage3Models, false, "", false, ReasoningEffort.OFF, listOf(ReasoningEffort.OFF),
+                emptyList(), emptyList(), messageEdit = null, onReasoningEffortChange = {}, onCompactContext = {}, canCompactContext = false,
+                onModelSelected = {}, onSubmit = {}, onStop = {}, onAttachImage = {}, onRemoveImage = {}, onAttachFiles = {}, onAttachFolder = {},
+                onAttachFilePath = {}, onRemoveFileReference = {}, onEditMessage = {}, onCancelMessageEdit = {}, onDeleteMessage = {},
+                onRegenerateMessage = {}, onSelectReplyCandidate = { _, _ -> }, onSuggestionClick = {}, onRunTraceClick = {}, onOpenBrowser = {},
+                modifier = Modifier.weight(1f))
         }
     }
 

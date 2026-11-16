@@ -256,20 +256,20 @@ internal fun DesktopChatScreen(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            // 与手机对话同一套顶部：左边玻璃返回钮，中间玻璃胶囊（上行会话标题、下行「电脑 · 工作区」，
-            // 点一下打开会话设置，模型也在那里选），右边玻璃铃铛和子代理。
-            val title = state.title?.takeIf { it.isNotBlank() } ?: listTitle?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_untitled)
-            val subtitle = listOfNotNull(stringResource(R.string.desktop_title), workspaceTitle?.takeIf { it.isNotBlank() }).joinToString(" · ")
-            io.github.mangi.eta.ui.components.GlassPageTopBar(
-                title = title,
-                subtitle = subtitle,
-                onBack = onBack,
-                onTitle = if (!isChild) ({ showSettings = true }) else null,
-                sourceName = "电脑会话顶部(COUI)",
-            ) {
+    // 和手机对话首页一样：消息延伸到顶部控件下面，控件和输入框共用消息区的 COUI 采样源（液态玻璃透出背后的消息），
+    // 顶部是同一条渐隐 + 轻微渐进模糊（ChatScrollEdge），不再是一条实底的顶栏。见 DesktopChatFrame。
+    // 与手机对话同一套顶部：左边玻璃返回钮，中间玻璃胶囊（上行会话标题、下行「电脑 · 工作区」，
+    // 点一下打开会话设置，模型也在那里选），右边玻璃铃铛和子代理。
+    val title = state.title?.takeIf { it.isNotBlank() } ?: listTitle?.takeIf { it.isNotBlank() } ?: stringResource(R.string.desktop_untitled)
+    val subtitle = listOfNotNull(stringResource(R.string.desktop_title), workspaceTitle?.takeIf { it.isNotBlank() }).joinToString(" · ")
+    DesktopChatFrame(
+        title = title,
+        subtitle = subtitle,
+        onBack = onBack,
+        onTitle = if (!isChild) ({ showSettings = true }) else null,
+        // 连着电脑、会话已加载时消息延伸到顶部控件下面；断线横幅、加载中仍从顶栏下方开始。
+        underTopBar = connection is DesktopBridgeClient.State.Connected && state.loaded,
+        trailing = {
                 if (!isChild) {
                     val remind = linkPrefs.reminds(sessionId)
                     io.github.mangi.eta.ui.components.CircleIconButton(
@@ -294,10 +294,8 @@ internal fun DesktopChatScreen(
                     }
                 }
                 if (isChild) Box(Modifier.padding(horizontal = 12.dp)) { DesktopRunningDot(state.running) }
-            }
         },
-    ) { padding ->
-        Column(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
+    ) {
             if (connection !is DesktopBridgeClient.State.Connected) {
                 DesktopConnectionBanner(connection, configured = true, onRetry = DesktopBridge::retry)
                 if (state.loaded) {
@@ -312,7 +310,7 @@ internal fun DesktopChatScreen(
             if (!state.loaded && state.error == null) {
                 // 打开会话时用占位条代替转圈，内容到了直接替换。
                 io.github.mangi.eta.ui.components.EtaSkeletonChat(Modifier.weight(1f))
-                return@Column
+                return@DesktopChatFrame
             }
             if (!state.loaded) {
                 Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
@@ -325,7 +323,7 @@ internal fun DesktopChatScreen(
                         )
                     }
                 }
-                return@Column
+                return@DesktopChatFrame
             }
             val remoteComposer = remember(sessionId, isChild) {
                 RemoteComposer(
@@ -416,7 +414,6 @@ internal fun DesktopChatScreen(
             )
             }
             }
-        }
     }
     DesktopQuestionSheet(
         ask = asks.firstOrNull { it.key == openAsk },
@@ -497,3 +494,48 @@ private fun encodeImage(context: Context, pending: PendingImageUi): DesktopImage
     return DesktopImage(mediaType, base64)
 }
 
+/**
+ * 电脑会话页的外框，与手机对话首页同一套做法：顶部是浮在消息上的玻璃控件（[GlassPageTopBar]），
+ * 下方一条从页面底色到透明的渐隐叠轻微渐进模糊（[ChatScrollEdge]）；消息延伸到控件下面（[underTopBar]），
+ * 列表自己留出顶栏高度（LocalTopBarInset）；顶部控件和输入框共用消息区的 COUI 采样源（LocalChatCouiSource）。
+ */
+@Composable
+internal fun DesktopChatFrame(
+    title: String,
+    subtitle: String,
+    onBack: () -> Unit,
+    onTitle: (() -> Unit)?,
+    underTopBar: Boolean,
+    trailing: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+) {
+    val edgeBackdrop = io.github.mangi.eta.ui.components.trackRenderSource("电脑会话顶部渐隐(Miuix)",
+        io.github.mangi.eta.ui.components.rememberTopBarBackdrop())
+    val pageSource = io.github.mangi.eta.ui.components.trackRenderSource("电脑会话页(COUI)",
+        if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders)
+            com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "desktop-page") else null)
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = EtaTheme.colors.canvas,
+        topBar = {
+            io.github.mangi.eta.ui.components.ChatScrollEdge(edgeBackdrop) {
+                CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides pageSource) {
+                    io.github.mangi.eta.ui.components.GlassPageTopBar(
+                        title = title, subtitle = subtitle, onBack = onBack, onTitle = onTitle,
+                        sourceName = "电脑会话顶部(COUI)", ownBackdrop = false, trailing = trailing,
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        val topPadding = padding.calculateTopPadding()
+        Column(Modifier.fillMaxSize().then(io.github.mangi.eta.ui.components.captureForTopBarModifier(edgeBackdrop))
+            .padding(top = if (underTopBar) 0.dp else topPadding)) {
+            CompositionLocalProvider(
+                io.github.mangi.eta.ui.components.coui.LocalChatCouiSource provides pageSource,
+                io.github.mangi.eta.ui.components.LocalTopBarInset provides
+                    if (underTopBar) (topPadding - io.github.mangi.eta.ui.components.ChatScrollEdgeTail).coerceAtLeast(0.dp) else 0.dp,
+            ) { content() }
+        }
+    }
+}

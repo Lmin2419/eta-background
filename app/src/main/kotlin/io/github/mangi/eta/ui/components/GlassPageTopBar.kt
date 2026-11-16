@@ -62,14 +62,20 @@ internal fun GlassPageTopBar(
     onTitle: (() -> Unit)?,
     sourceName: String,
     balanceTrailing: Boolean = false,
+    /**
+     * 为真（终端）时自带一层页面底色的采样源，顶部是一条实底；为假（电脑会话）时浮在内容上，
+     * 用页面通过 LocalEtaCouiBackdrop 提供的消息区采样源——和手机对话首页一样，消息从控件下面模糊透出。
+     */
+    ownBackdrop: Boolean = true,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
-    val source = trackRenderSource(sourceName,
+    val own = if (ownBackdrop) trackRenderSource(sourceName,
         if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && EtaCouiSupport.shaders)
-            com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = sourceName) else null)
+            com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = sourceName) else null) else null
+    val source = if (ownBackdrop) own else io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop.current
     CappedFontScale {
         Box(Modifier.fillMaxWidth()) {
-            if (source != null) Box(Modifier.matchParentSize().couiBackdrop(source).background(EtaTheme.colors.canvas))
+            if (own != null) Box(Modifier.matchParentSize().couiBackdrop(own).background(EtaTheme.colors.canvas))
             CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides source) {
                 Row(
                     Modifier.fillMaxWidth()

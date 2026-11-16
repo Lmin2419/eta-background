@@ -61,6 +61,9 @@ internal fun TopBarBackdrop(backdrop: LayerBackdrop?, color: Color = EtaTheme.co
 internal fun Modifier.captureForTopBar(backdrop: LayerBackdrop?): Modifier =
     if (backdrop == null) this else layerBackdrop(backdrop)
 
+/** 给别的包的页面用：等同于 `Modifier.captureForTopBar(backdrop)`。 */
+internal fun captureForTopBarModifier(backdrop: LayerBackdrop?): Modifier = Modifier.captureForTopBar(backdrop)
+
 @Composable
 internal fun topBarContainerColor(backdrop: LayerBackdrop?): Color =
     if (backdrop == null) EtaTheme.colors.canvas else Color.Transparent

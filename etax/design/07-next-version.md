@@ -30,6 +30,7 @@
 | 4 打磨 | 2026111417 | 新对话建议改为输入框上方横滑胶囊；侧栏手势与横滑实测无冲突（`SidePaneGestureTest`）；渲染诊断开关（`EtaRenderDiagnostics`，所有采样源创建处用 `trackRenderSource` 登记）；COUI 路径下不再录消息区 Miuix 层 |
 | 反馈 | 2026111601 | 标题胶囊「→ 新模型 · 下一轮」；任务胶囊点对话任务直接打开对话；电脑会话进任务胶囊与「已完成 · 查看」 |
 | 5 收尾 | 2026111602 | 「选择文字」整轮思考与回答同一可选区域（`TurnSelectionContent`）；改文件卡片显示改动行号；终端页玻璃顶部（`GlassPageTopBar`）；顶部控件字号最多 1.3 倍（`CappedFontScale`）；记忆页长文档虚拟化（上游 c6e46ff）；上游对照表 08 |
+| 统一 | 2026111603 | 电脑会话页顶部浮在消息上（`DesktopChatFrame`：ChatScrollEdge + 共用消息区 COUI 源），不再是实底顶栏 |
 
 ## 采样源（首页，Android 14+、模糊开）
 

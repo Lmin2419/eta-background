@@ -48,6 +48,9 @@ class DeviceModeScreensTest {
             models = models.copy(queuedModel = models.providerGroups.single().models.last()), streaming = true)
     })
 
+    /** 电脑会话页与首页统一：顶部玻璃控件浮在消息上，没有实底顶栏。 */
+    @Test fun desktopChat() = variants("desktop-chat") { DeviceModeScreens.DesktopChat() }
+
     /** 终端页顶部换成玻璃控件（返回圆钮 + 标题胶囊）。 */
     // 终端占位是深色底、少量浅色字，深色模式下「反差像素」本来就少，门槛放低。
     @Test fun terminalTopBar() = variants("terminal", minInk = 60) { DeviceModeScreens.TerminalShell() }
