@@ -554,6 +554,7 @@ fun AgentAppRoot(
                         val pane = agentState.conversationPaneState
                         conversationRenameTarget = pane.conversations.firstOrNull { it.id == pane.selectedConversationId }
                     },
+                    showBackgroundCapsule = home.messages.isNotEmpty(),
                     presets = modelPresets,
                     reasoningEffort = home.reasoningEffort,
                     onApplyPreset = agentState::applyPreset,
@@ -616,6 +617,14 @@ fun AgentAppRoot(
                             onRunTask = ::runHomeTask, onOpenSettings = { pushRoute(AppRoute.Settings) },
                             onExportConversation = ::exportCurrentConversation,
                             onOpenSpeechSettings = { pushRoute(AppRoute.SpeechRecognition) },
+                            recent = remember(agentState.conversationPaneState.conversations, agentState.conversationPaneState.selectedConversationId) {
+                                val current = agentState.conversationPaneState.selectedConversationId
+                                agentState.conversationPaneState.conversations.asSequence()
+                                    .filter { it.archivedAt == null && it.title.isNotBlank() && it.id != current && it.characterName == null }
+                                    .sortedByDescending { it.updatedAtMillis }.take(3).toList()
+                            },
+                            onOpenConversation = ::selectConversation,
+                            onOpenDesktopSession = { id -> pushRoute(AppRoute.DesktopChat(id)) },
                         ),
                         isBranching = agentState.isBranchingCurrentConversation,
                         conversationKey = agentState.conversationPaneState.selectedConversationId,

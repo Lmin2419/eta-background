@@ -1876,4 +1876,6 @@
   <string name="model_presets_hint">點一行可以改名或刪除。回覆進行中選預設，下一輪起生效。</string>
   <string name="regenerate_with_model">換模型重答</string>
   <string name="regenerate_with_model_ellipsis">換模型重答…</string>
+  <string name="home_workbench_running">正在進行</string>
+  <string name="home_workbench_recent">接著做</string>
 </resources>

@@ -71,6 +71,8 @@ internal fun HomeConversationTopBar(
     reasoningEffort: io.github.mangi.eta.data.model.ReasoningEffort? = null,
     onApplyPreset: ((io.github.mangi.eta.data.model.ModelPreset) -> Unit)? = null,
     onSavePreset: ((String) -> Unit)? = null,
+    // 09 第四期 4.1：新对话页自己列出「正在进行」，顶部不再重复任务胶囊；完成提示条照常。
+    showBackgroundCapsule: Boolean = true,
 ) {
     var settings by remember { mutableStateOf(false) }
     var savingPreset by remember { mutableStateOf(false) }
@@ -124,7 +126,7 @@ internal fun HomeConversationTopBar(
             Box(Modifier.etaChromeScale()) { CircleIconButton(Icons.Outlined.Add, stringResource(R.string.action_new_conversation), onNew) }
         }
         if (onOpenConversation != null) HomeDoneNotice(currentConversationId, onOpenConversation, onOpenDesktopSession ?: {})
-        HomeTaskCapsule(currentConversationId, onTasks, onOpenConversation ?: {}, onOpenDesktopSession ?: {})
+        if (showBackgroundCapsule) HomeTaskCapsule(currentConversationId, onTasks, onOpenConversation ?: {}, onOpenDesktopSession ?: {})
     }
     }
     // 09 第二期 2.2：标题胶囊是「这个对话」的总入口——有标题时菜单里多「重命名」「导出」。

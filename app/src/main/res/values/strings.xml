@@ -2004,4 +2004,6 @@
   <string name="model_presets_hint">Tap a preset to rename or delete it. Choosing a preset while a reply is running applies it from the next turn.</string>
   <string name="regenerate_with_model">Regenerate with model</string>
   <string name="regenerate_with_model_ellipsis">Regenerate with model…</string>
+  <string name="home_workbench_running">In progress</string>
+  <string name="home_workbench_recent">Pick up where you left off</string>
 </resources>

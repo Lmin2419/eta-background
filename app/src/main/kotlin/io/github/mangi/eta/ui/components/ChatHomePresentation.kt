@@ -17,6 +17,11 @@ internal data class ChatHomeShortcuts(
     val onOpenSettings: () -> Unit = {},
     val onExportConversation: () -> Unit = {},
     val onOpenSpeechSettings: () -> Unit = {},
+    // 09 第四期 4.1：新对话页「接着做」——未归档、有标题的最近 3 个对话；点一行打开。
+    // 「正在进行」直接读全局任务状态（rememberBackgroundItems），只在新对话页组合，不会让对话列表跟着任务进度重组。
+    val recent: List<io.github.mangi.eta.ui.model.ConversationSummaryUi> = emptyList(),
+    val onOpenConversation: (String) -> Unit = {},
+    val onOpenDesktopSession: (String) -> Unit = {},
 )
 internal val LocalChatHomeShortcuts = staticCompositionLocalOf { ChatHomeShortcuts() }
 

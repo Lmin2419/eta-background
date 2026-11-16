@@ -171,7 +171,9 @@ internal object DeviceModeScreens {
             onOpenPermissions = {}, onOpenSettings = {}, onOpenModelProviders = {},
             homeTopBar = {
                 HomeConversationTopBar(models, streaming, false, AgentContextUsageUi(12500, 128000), true, messages.isNotEmpty(), null,
-                    {}, {}, {}, {}, {}, {}, {}, {}, conversationTitle = title, currentConversationId = if (title != null) "c1" else null)
+                    {}, {}, {}, {}, {}, {}, {}, {}, conversationTitle = title, currentConversationId = if (title != null) "c1" else null,
+                    // 与 AgentAppRoot 一致：新对话页（没有消息）不显示顶部任务胶囊，工作台里已经列出。
+                    showBackgroundCapsule = messages.isNotEmpty())
             },
         ) { padding ->
             AgentChatBody(messages, Stage3Models, false, "", false, ReasoningEffort.OFF, listOf(ReasoningEffort.OFF, ReasoningEffort.HIGH),
@@ -181,6 +183,31 @@ internal object DeviceModeScreens {
                 onRegenerateMessage = {}, onSelectReplyCandidate = { _, _ -> }, onSuggestionClick = {}, onRunTraceClick = {}, onOpenBrowser = {},
                 modifier = Modifier.fillMaxSize().padding(padding))
         }
+    }
+
+    /** 09 第四期 4.1：新对话页工作台——注入两条进行中的任务（先调 [seedWorkbenchTasks]）和两条最近对话。 */
+    @Composable
+    fun HomeWorkbench() {
+        val recent = sampleConversations.drop(1).take(2).mapIndexed { i, c -> c.copy(timeLabel = if (i == 0) "13:20" else "昨天") }
+        androidx.compose.runtime.CompositionLocalProvider(
+            io.github.mangi.eta.ui.components.LocalChatHomeShortcuts provides io.github.mangi.eta.ui.components.ChatHomeShortcuts(recent = recent),
+        ) { Home(emptyList(), title = null) }
+    }
+
+    fun seedWorkbenchTasks(context: android.content.Context) {
+        io.github.mangi.eta.agent.runtime.AgentExecutionService.updateTasks(context, listOf(
+            io.github.mangi.eta.agent.runtime.TaskNotificationState("wb-a", "c5", "整理本周工作进展",
+                io.github.mangi.eta.agent.overlay.AgentOverlayStatus.Reasoning),
+            io.github.mangi.eta.agent.runtime.TaskNotificationState("wb-b", "c6", "旅行行程规划",
+                io.github.mangi.eta.agent.overlay.AgentOverlayStatus.Reasoning),
+        ))
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+    }
+
+    fun clearWorkbenchTasks(context: android.content.Context) {
+        io.github.mangi.eta.agent.runtime.AgentExecutionService.updateTasks(context, emptyList())
+        io.github.mangi.eta.agent.runtime.dismissRetainedTaskCardsForTest(context)
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
     }
 
     /** 电脑会话页：与首页同一套——顶部玻璃控件浮在消息上（2026111603）。 */

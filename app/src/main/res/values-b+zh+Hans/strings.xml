@@ -1980,4 +1980,6 @@
   <string name="model_presets_hint">点一行可以改名或删除。回复进行中选预设，下一轮起生效。</string>
   <string name="regenerate_with_model">换模型重答</string>
   <string name="regenerate_with_model_ellipsis">换模型重答…</string>
+  <string name="home_workbench_running">正在进行</string>
+  <string name="home_workbench_recent">接着做</string>
 </resources>

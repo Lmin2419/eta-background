@@ -253,6 +253,43 @@ class HomeConversationPresentationTest {
         }
     }
 
+    /** 09 第四期 4.1：新对话页工作台的每一行都走对应的回调；没有任务和最近对话时不出现。 */
+    @Test fun homeWorkbenchRowsOpenTheirTargets() {
+        val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
+        val context = controller.get()
+        val opened = mutableListOf<String>()
+        io.github.mangi.eta.agent.runtime.AgentExecutionService.updateTasks(context, listOf(
+            io.github.mangi.eta.agent.runtime.TaskNotificationState("wb-run", "other", "Running elsewhere",
+                io.github.mangi.eta.agent.overlay.AgentOverlayStatus.Reasoning)))
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+        val recent = listOf(ConversationSummaryUi("r1", "Recent one", "", "13:20", 2L, ConversationModeUi.Chat),
+            ConversationSummaryUi("r2", "Recent two", "", "Yesterday", 1L, ConversationModeUi.Chat))
+        var shortcuts by mutableStateOf(ChatHomeShortcuts(recent = recent, onOpenConversation = { opened += "conv:$it" },
+            onOpenDesktopSession = { opened += "desk:$it" }, onOpenTasks = { opened += "tasks" }))
+        val panel = Stage3TestPanel(context) {
+            EtaAppOverlayHost { CompositionLocalProvider(LocalChatHomeShortcuts provides shortcuts) { HomeEmptyState(true, {}) } }
+        }
+        fun texts() = panel.nodes().flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty().map { t -> t.text } }
+        fun clickText(text: String) { panel.click(panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == text } == true }); panel.advance(5) }
+        try {
+            panel.advance(40)
+            assertTrue(context.getString(R.string.home_workbench_running) in texts())
+            clickText("Running elsewhere"); clickText("Recent two")
+            assertEquals(listOf("conv:other", "conv:r2"), opened)
+            // 没有任务、没有最近对话：保持原来的空白页（不出现两段标题）。
+            io.github.mangi.eta.agent.runtime.AgentExecutionService.updateTasks(context, emptyList())
+            io.github.mangi.eta.agent.runtime.dismissRetainedTaskCardsForTest(context)
+            org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+            shortcuts = shortcuts.copy(recent = emptyList()); panel.advance(20)
+            assertFalse(context.getString(R.string.home_workbench_running) in texts())
+            assertFalse(context.getString(R.string.home_workbench_recent) in texts())
+        } finally {
+            io.github.mangi.eta.agent.runtime.AgentExecutionService.updateTasks(context, emptyList())
+            io.github.mangi.eta.agent.runtime.dismissRetainedTaskCardsForTest(context)
+            panel.close(); controller.pause().stop().destroy()
+        }
+    }
+
     @Test fun assistantLongPressExposesCopyRegenerateAndDelete() {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(controller.get()) {

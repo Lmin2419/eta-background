@@ -97,14 +97,8 @@ internal fun backgroundItems(
 @Composable
 internal fun HomeTaskCapsule(currentConversationId: String?, onTasks: () -> Unit,
     onOpenConversation: (String) -> Unit, onOpenDesktopSession: (String) -> Unit, currentDesktopSessionId: String? = null) {
-    val snapshots by io.github.mangi.eta.agent.runtime.AgentExecutionService.taskSnapshots.collectAsState()
-    val desktop by io.github.mangi.eta.agent.remote.DesktopBridge.sessions.collectAsState()
-    val link by io.github.mangi.eta.agent.remote.DesktopBridge.client.state.collectAsState()
     // 当前对话自己的任务不进胶囊：顶部标题和对话里的「思考中」已经说明了。胶囊只提示别的对话、电脑上还在跑的。
-    val running: List<HomeBackgroundItem> = remember(snapshots, currentConversationId, desktop, link, currentDesktopSessionId) {
-        backgroundItems(snapshots, currentConversationId, desktop,
-            link is io.github.mangi.eta.agent.remote.DesktopBridgeClient.State.Connected, currentDesktopSessionId)
-    }
+    val running = rememberBackgroundItems(currentConversationId, currentDesktopSessionId)
     var open by remember { mutableStateOf(false) }
     // 胶囊在窗口里的位置：详情固定在胶囊正下方居中弹出，不跟着手指落点走（2026111610 真机反馈）。
     var capsuleBounds by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
@@ -164,6 +158,18 @@ internal fun HomeTaskCapsule(currentConversationId: String?, onTasks: () -> Unit
         }
         EtaMenuDivider()
         EtaMenuItem(stringResource(R.string.eta_tasks_view_all), onClick = { open = false; onTasks() })
+    }
+}
+
+/** 别的对话、电脑上还在跑的任务（任务胶囊与新对话页「正在进行」共用）。 */
+@Composable
+internal fun rememberBackgroundItems(currentConversationId: String?, currentDesktopSessionId: String? = null): List<HomeBackgroundItem> {
+    val snapshots by io.github.mangi.eta.agent.runtime.AgentExecutionService.taskSnapshots.collectAsState()
+    val desktop by io.github.mangi.eta.agent.remote.DesktopBridge.sessions.collectAsState()
+    val link by io.github.mangi.eta.agent.remote.DesktopBridge.client.state.collectAsState()
+    return remember(snapshots, currentConversationId, desktop, link, currentDesktopSessionId) {
+        backgroundItems(snapshots, currentConversationId, desktop,
+            link is io.github.mangi.eta.agent.remote.DesktopBridgeClient.State.Connected, currentDesktopSessionId)
     }
 }
 

@@ -38,6 +38,14 @@ class DeviceModeScreensTest {
 
     @Test fun homeNewConversation() = variants("home-new") { DeviceModeScreens.Home(emptyList(), title = null) }
 
+    /** 09 第四期 4.1：有在跑的任务、最近的对话时，新对话页是工作台（问候一行 +「正在进行」「接着做」）。 */
+    @Test fun homeWorkbench() {
+        val context = org.robolectric.RuntimeEnvironment.getApplication()
+        DeviceModeScreens.seedWorkbenchTasks(context)
+        try { variants("home-workbench") { DeviceModeScreens.HomeWorkbench() } }
+        finally { DeviceModeScreens.clearWorkbenchTasks(context) }
+    }
+
     @Test fun homeConversation() = variants("home-chat") {
         DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展")
     }
