@@ -341,7 +341,10 @@ internal fun DesktopChatScreen(
                     aboveInput = { aboveInput.value() },
                 )
             }
-            CompositionLocalProvider(LocalRemoteComposer provides remoteComposer, LocalRemoteImageLoader provides DesktopBridge::image) {
+            // 电脑会话的多选是自己的一份，不和首页对话共用（09 第五期 5.1）。
+            val desktopSelection = androidx.compose.runtime.remember(sessionId) { io.github.mangi.eta.ui.components.MessageSelectionState() }
+            CompositionLocalProvider(LocalRemoteComposer provides remoteComposer, LocalRemoteImageLoader provides DesktopBridge::image,
+                io.github.mangi.eta.ui.components.LocalMessageSelection provides desktopSelection) {
             io.github.mangi.eta.ui.components.ChatImagePreviewHost {
             AgentChatBody(
                 isBranching = false,

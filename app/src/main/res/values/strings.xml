@@ -2006,4 +2006,16 @@
   <string name="regenerate_with_model_ellipsis">Regenerate with model…</string>
   <string name="home_workbench_running">In progress</string>
   <string name="home_workbench_recent">Pick up where you left off</string>
+  <string name="message_selection_start">Select messages</string>
+  <string name="message_selection_menu">Select</string>
+  <string name="message_selection_share">Share</string>
+  <string name="message_selection_user">Me</string>
+  <plurals name="message_selection_count">
+    <item quantity="one">%d selected</item>
+    <item quantity="other">%d selected</item>
+  </plurals>
+  <plurals name="message_selection_copied">
+    <item quantity="one">Copied %d message</item>
+    <item quantity="other">Copied %d messages</item>
+  </plurals>
 </resources>

@@ -57,6 +57,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.produceState
@@ -331,9 +332,15 @@ private fun UserMessageBubble(
     LaunchedEffect(actionsEnabled) { if (!actionsEnabled) menu = false }
     val visiblePrompt = remember(message.content) { AgentFileReferencePromptCodec.parse(message.content) }
     val editor = LocalChatInlineEditor.current?.takeIf { it.messageId == message.id }
+    // 09 第五期 5.1：多选中点一下切换选中，长按菜单不响应；选中的铺一层浅色底、右上角对勾（不改布局）。
+    val selection = LocalMessageSelection.current
+    val selecting = selection?.active == true
+    val isSelected = selection?.selected?.contains(message.id) == true
     // 用户消息：统一 18dp 圆角、不带尾角，字号略小于回复正文，退到次要层级。
     val shape = RoundedCornerShape(18.dp)
-    BoxWithConstraints(modifier.fillMaxWidth().padding(horizontal = if (assistantOverlay) 16.dp else 20.dp, vertical = if (assistantOverlay) 4.dp else 0.dp)) {
+    BoxWithConstraints(modifier.fillMaxWidth().selectionHighlight(isSelected)
+        .then(if (selecting && selection != null) Modifier.clickable { selection.toggle(message.id) } else Modifier)
+        .padding(horizontal = if (assistantOverlay) 16.dp else 20.dp, vertical = if (assistantOverlay) 4.dp else 0.dp)) {
         Column(Modifier.align(Alignment.CenterEnd).widthIn(max = maxWidth * 0.85f), horizontalAlignment = Alignment.End) {
             if (message.images.isNotEmpty()) Row(Modifier.horizontalScroll(rememberScrollState()).padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 // 点图片在原位放大到全屏，可左右翻页、双指缩放，下滑关闭。
@@ -354,9 +361,11 @@ private fun UserMessageBubble(
                 .graphicsLayer { val s = pressScale.value; scaleX = s; scaleY = s }
                 .background(EtaTheme.colors.surfaceSunken, shape)
                 .then(if (isEditing) Modifier.border(1.dp, EtaTheme.colors.accent, shape) else Modifier)
-                .combinedClickable(enabled = actionsEnabled, onClick = {}, onLongClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress); couiAnchor.open { menu = true }
-                }).padding(horizontal = 14.dp, vertical = 10.dp)) {
+                .combinedClickable(enabled = actionsEnabled || selecting, onClick = { if (selecting) selection?.toggle(message.id) },
+                    onLongClick = {
+                        if (selecting) return@combinedClickable
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress); couiAnchor.open { menu = true }
+                    }).padding(horizontal = 14.dp, vertical = 10.dp)) {
                 if (visiblePrompt.references.isNotEmpty()) SentFileReferenceFlow(visiblePrompt.references,
                     Modifier.padding(bottom = if (visiblePrompt.request.isNotBlank()) 8.dp else 0.dp))
                 if (isEditing && editor != null) InlineUserMessageEditor(editor, message.images.isNotEmpty() || visiblePrompt.references.isNotEmpty())
@@ -371,6 +380,8 @@ private fun UserMessageBubble(
             clipboardManager.setText(AnnotatedString(message.content)); menu = false
         })
         EtaMenuItem(stringResource(R.string.ui_edit_a7f814), icon = Icons.Outlined.Edit, onClick = { menu = false; onEdit() })
+        if (selection != null) EtaMenuItem(stringResource(R.string.message_selection_menu), icon = Icons.Outlined.Checklist,
+            onClick = { menu = false; selection.start(message.id) })
         EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
     }
 }
@@ -566,6 +577,9 @@ private fun AgentMessageBlock(
     val character = LocalRoleplayChat.current.takeUnless { assistantOverlay }
     val isGreeting = character != null && message.id.startsWith(GreetingMessagePrefix)
     val couiAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    val selection = LocalMessageSelection.current
+    val selecting = selection?.active == true
+    val isSelected = selection?.selected?.contains(message.id) == true
     // 长按出菜单时，这条回复轻轻「浮起」，菜单收起后落回。
     val lift = androidx.compose.animation.core.animateFloatAsState(if (menu) 1.015f else 1f,
         androidx.compose.animation.core.spring(dampingRatio = 0.6f, stiffness = 500f), label = "answerLift")
@@ -574,8 +588,10 @@ private fun AgentMessageBlock(
             .fillMaxWidth()
             .couiMenuAnchor(couiAnchor)
             .graphicsLayer { val s = lift.value; scaleX = s; scaleY = s }
-            .combinedClickable(enabled = showMessageActions && messageActionsEnabled && revealComplete,
-                onClick = {}, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); selectingText = false; couiAnchor.open { menu = true } })
+            .selectionHighlight(isSelected)
+            .then(if (selecting && selection != null) Modifier.clickable { selection.toggle(message.id) }
+                else Modifier.combinedClickable(enabled = showMessageActions && messageActionsEnabled && revealComplete,
+                    onClick = {}, onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); selectingText = false; couiAnchor.open { menu = true } }))
             .padding(
                 horizontal = if (assistantOverlay) 16.dp else 20.dp,
                 vertical = if (assistantOverlay) 8.dp else 0.dp,
@@ -649,9 +665,9 @@ private fun AgentMessageBlock(
                         clipboardManager.setText(AnnotatedString(message.content)); copied = true
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     }, tint = if (copied) EtaTheme.colors.textPrimary else null)
-                if (showMessageActions) AnswerActionButton(Icons.Outlined.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled)
+                if (showMessageActions) AnswerActionButton(Icons.Outlined.Refresh, stringResource(R.string.ui_regenerate_reply_84a7d9), onRegenerate, messageActionsEnabled && !selecting)
                 if (allowSpeech) SpeechReadAloudButton(message.id, message.content)
-                if (showMessageActions) AnswerActionButton(Icons.Outlined.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; couiAnchor.open { menu = true } }, messageActionsEnabled)
+                if (showMessageActions) AnswerActionButton(Icons.Outlined.MoreHoriz, stringResource(R.string.eta_message_actions), { selectingText = false; couiAnchor.open { menu = true } }, messageActionsEnabled && !selecting)
                 // 最新一条回答像是「做不到 / 失败」时：一键让它先复核报错再试（只在点的时候发）。
                 val recheck = LocalRecheckAction.current
                 val gaveUp = remember(message.content) { message.content.looksLikeGaveUp() }
@@ -694,6 +710,8 @@ private fun AgentMessageBlock(
         // 上游 3.4.1：从这条已完成的回复另开一个独立对话，原对话不受影响。
         if (showBranchAction) EtaMenuItem(stringResource(R.string.conversation_branch), icon = Icons.AutoMirrored.Outlined.CallSplit, enabled = messageActionsEnabled,
             onClick = { menu = false; onBranch() })
+        if (selection != null) EtaMenuItem(stringResource(R.string.message_selection_menu), icon = Icons.Outlined.Checklist,
+            enabled = messageActionsEnabled, onClick = { menu = false; selection.start(message.id) })
         EtaMenuItem(stringResource(R.string.action_export), icon = Icons.Outlined.IosShare, onClick = { menu = false; export() })
         EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
     }

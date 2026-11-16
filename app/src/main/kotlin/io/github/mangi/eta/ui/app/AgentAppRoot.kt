@@ -270,6 +270,8 @@ fun AgentAppRoot(
     val taskCount by remember { AgentExecutionService.taskSnapshots.map { cards -> cards.count { !it.completed } }.distinctUntilChanged() }.collectAsState(0)
     var conversationPaneOpen by rememberSaveable { mutableStateOf(false) }
     var conversationRenameTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
+    // 09 第五期 5.1：消息多选的状态放在根上，标题胶囊菜单和消息列表共用。
+    val messageSelection = remember { io.github.mangi.eta.ui.components.MessageSelectionState() }
     var conversationDeleteTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
     var conversationExportTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
     var messageDeleteTarget by remember { mutableStateOf<MessageMutationTarget?>(null) }
@@ -555,6 +557,7 @@ fun AgentAppRoot(
                         conversationRenameTarget = pane.conversations.firstOrNull { it.id == pane.selectedConversationId }
                     },
                     showBackgroundCapsule = home.messages.isNotEmpty(),
+                    onSelectMessages = { messageSelection.start() }.takeIf { !home.isStreaming && home.messages.isNotEmpty() },
                     presets = modelPresets,
                     reasoningEffort = home.reasoningEffort,
                     onApplyPreset = agentState::applyPreset,
@@ -601,7 +604,8 @@ fun AgentAppRoot(
     // 对话页顶部按钮随消息滚动收缩/还原的共享进度（消息列表写、顶栏读）。
     val chatChrome = remember { io.github.mangi.eta.ui.components.EtaChromeState() }
     EtaAppOverlayHost {
-    androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalEtaChrome provides chatChrome) {
+    androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalEtaChrome provides chatChrome,
+        io.github.mangi.eta.ui.components.LocalMessageSelection provides messageSelection) {
     // 所有路由的页面内容只定义一次：整页导航与玻璃窗口里的导航共用。
     val appEntries: top.yukonga.miuix.kmp.nav.core.NavEntryBuilder.() -> Unit = {
             entry<AppRoute.Home>(swipeDismiss = swipeDismiss) {

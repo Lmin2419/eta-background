@@ -266,7 +266,7 @@
 | 三 3.1 模型预设 | 2026111608 | 菜单最上面一段 + 「存为预设…」（`EtaCouiInputDialog`）；设置页改名删除；进行中排到下一轮（`queuedEfforts`）。COUI 菜单没有说明行，名字与「模型 · 强度」并成一行 |
 | 三 3.2 换模型重答 | 2026111611 | `regenerateWithModel` 只改对话绑定模型；长按菜单「换模型重答…」→ 同一锚点的第二个菜单（超过 8 个用半窗），`LocalRegenerateWithModel` 提供，电脑会话不提供；后面有轮次时复用重新生成的确认框（`MessageMutationTarget.modelId`）。同期 2026111609 修了系统小更新后电源键失效，2026111610 改了任务胶囊详情的位置与动画（真机反馈） |
 | 四 工作台 | 2026111612 | 「正在进行」与任务胶囊共用 `rememberBackgroundItems`，在新对话页里读全局任务状态（不从外面传：避免任务进度变化时整页对话重组），测试用 `AgentExecutionService.updateTasks` 注入；`recent` 与回调走 `ChatHomeShortcuts` |
-| 五 5.1 消息多选 | | |
+| 五 5.1 消息多选 | 2026111613 | 复制、分享、取消；**删除没做**（现有删除是从这一轮起往后全删，批量删要先改语义）。状态 `MessageSelectionState` 放在 App 根（标题胶囊与列表共用），电脑会话页另用一份；外观用 `selectionHighlight` 在绘制时铺底和对勾，不改布局 |
 | 五 5.2 搜索直达 | | |
 | 六 用量页 | | |
 

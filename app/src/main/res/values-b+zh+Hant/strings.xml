@@ -1878,4 +1878,14 @@
   <string name="regenerate_with_model_ellipsis">換模型重答…</string>
   <string name="home_workbench_running">正在進行</string>
   <string name="home_workbench_recent">接著做</string>
+  <string name="message_selection_start">多選訊息</string>
+  <string name="message_selection_menu">多選</string>
+  <string name="message_selection_share">分享</string>
+  <string name="message_selection_user">我</string>
+  <plurals name="message_selection_count">
+    <item quantity="other">已選 %d 則</item>
+  </plurals>
+  <plurals name="message_selection_copied">
+    <item quantity="other">已複製 %d 則</item>
+  </plurals>
 </resources>

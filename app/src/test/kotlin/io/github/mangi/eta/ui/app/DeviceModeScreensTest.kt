@@ -115,6 +115,19 @@ class DeviceModeScreensTest {
         }
     }
 
+    /** 09 第五期 5.1：消息多选——选中的消息浅色底 + 右上角对勾，输入框换成「已选 N 条 · 复制 · 分享 · 取消」。 */
+    @Test fun messageMultiSelect() {
+        for (dark in listOf(false, true)) {
+            val name = if (dark) "home-multiselect-dark" else "home-multiselect-light"
+            val state = io.github.mangi.eta.ui.components.MessageSelectionState()
+            check(name, DeviceModeScreens.capture(name, dark = dark, act = { state.start("u1"); state.toggle("a1") }) {
+                androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalMessageSelection provides state) {
+                    DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展")
+                }
+            })
+        }
+    }
+
     /** 提示条跟随页面颜色：浅色页白色胶囊、深色页深灰胶囊（2026111606 用户反馈：浅色页上弹出黑胶囊不协调）。 */
     @Test fun toastFollowsPage() {
         for (dark in listOf(false, true)) {

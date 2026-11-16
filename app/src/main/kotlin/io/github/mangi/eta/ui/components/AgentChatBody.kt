@@ -242,6 +242,13 @@ internal fun AgentChatBody(
 
     // 一轮回复完整结束时轻轻振动一下（只在从「生成中」变为结束时，不在打开旧会话时）。
     val haptics = rememberEtaHaptics()
+    // 09 第五期 5.1：消息多选。切换对话、开始回复、离开这一页时清掉；返回键先退出多选。
+    val selection = LocalMessageSelection.current ?: remember { MessageSelectionState() }
+    val selectionKey = LocalChatHomeShortcuts.current.conversationId
+    LaunchedEffect(selectionKey) { selection.clear() }
+    LaunchedEffect(isStreaming) { if (isStreaming) selection.clear() }
+    androidx.compose.runtime.DisposableEffect(selection) { onDispose { selection.clear() } }
+    EtaOverlayBackHandler(selection.active) { selection.clear() }
     var wasStreaming by remember { mutableStateOf(false) }
     LaunchedEffect(isStreaming) {
         if (wasStreaming && !isStreaming) haptics.confirm()
@@ -270,7 +277,7 @@ internal fun AgentChatBody(
     // 「选择文字」取整轮的思考与回答（可以跨思考选段、一次复制）。
     val segmentsOf = remember(messages) { { answerId: String -> turnSegments(messages, answerId) } }
     CompositionLocalProvider(LocalChatDraftRequest provides draftRequest, LocalChatInlineEditor provides inlineEditor,
-        LocalRecheckAction provides recheck, LocalTurnSegments provides segmentsOf) {
+        LocalRecheckAction provides recheck, LocalTurnSegments provides segmentsOf, LocalMessageSelection provides selection) {
     SpeechPlaybackHost {
         SpeechAutoReadAloud(messages = messages, isStreaming = isStreaming)
         AgentChatScaffold(
@@ -430,7 +437,9 @@ private fun AgentChatScaffold(
         bottomBar = {
             androidx.compose.runtime.CompositionLocalProvider(LocalEtaGlassBackdrop provides glassBackdrop,
                 io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides messageCouiBackdrop) {
-            if (LocalChatInlineEditor.current == null) AgentChatBottomBar(
+            val selected = LocalMessageSelection.current?.selected
+            if (selected != null) MessageSelectionBottomBar(visibleMessages, selected, hasMessages)
+            else if (LocalChatInlineEditor.current == null) AgentChatBottomBar(
                 showFade = hasMessages,
                 messageBackdrop = null,
                 input = input,
@@ -1173,6 +1182,38 @@ internal fun resolveFinalResultMessageIds(
         lastAgentMessageId?.let(ids::add)
     }
     return ids
+}
+
+/** 多选时替换输入框：玻璃栏放在输入框的位置，同一个采样源、同样的底部留白。 */
+@Composable
+private fun MessageSelectionBottomBar(messages: List<AgentChatMessageUi>, selected: Set<String>, showFade: Boolean) {
+    val selection = LocalMessageSelection.current ?: return
+    val context = androidx.compose.ui.platform.LocalContext.current
+    @Suppress("DEPRECATION")
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    val userName = stringResource(R.string.message_selection_user)
+    val assistantName = LocalRoleplayChat.current?.characterName ?: stringResource(R.string.app_name)
+    val copied = androidx.compose.ui.res.pluralStringResource(R.plurals.message_selection_copied, selected.size, selected.size)
+    val shareTitle = stringResource(R.string.message_selection_share)
+    fun text() = selectionPlainText(messages, selected, userName, assistantName)
+    ChatComposerSurface(showFade = showFade) {
+        MessageSelectionBar(selected.size,
+            onCopy = {
+                clipboard.setText(androidx.compose.ui.text.AnnotatedString(text()))
+                EtaToastCenter.show(context, copied)
+                selection.clear()
+            },
+            onShare = {
+                val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                    .putExtra(android.content.Intent.EXTRA_TEXT, text())
+                runCatching { context.startActivity(android.content.Intent.createChooser(send, shareTitle)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                selection.clear()
+            },
+            onCancel = selection::clear,
+            modifier = Modifier.padding(horizontal = 12.dp).padding(top = 8.dp, bottom = 12.dp).navigationBarsPadding(),
+        )
+    }
 }
 
 @Composable

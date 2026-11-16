@@ -73,6 +73,8 @@ internal fun HomeConversationTopBar(
     onSavePreset: ((String) -> Unit)? = null,
     // 09 第四期 4.1：新对话页自己列出「正在进行」，顶部不再重复任务胶囊；完成提示条照常。
     showBackgroundCapsule: Boolean = true,
+    // 09 第五期 5.1：标题胶囊菜单里的「多选消息」。
+    onSelectMessages: (() -> Unit)? = null,
 ) {
     var settings by remember { mutableStateOf(false) }
     var savingPreset by remember { mutableStateOf(false) }
@@ -134,6 +136,7 @@ internal fun HomeConversationTopBar(
     val conversationActions = ConversationMenuActions(
         onRename = onRename?.takeIf { titled }?.let { rename -> { settings = false; rename() } },
         onExport = if (titled && canExport) ({ settings = false; onExport() }) else null,
+        onSelectMessages = onSelectMessages?.takeIf { titled }?.let { select -> { settings = false; select() } },
     )
     val presetState = onApplyPreset?.let { apply ->
         PresetMenuState(presets, reasoningEffort,
@@ -337,14 +340,16 @@ private fun PresetMenuItems(state: PresetMenuState, models: AgentModelPickerUiSt
 }
 
 /** 标题胶囊菜单里「这个对话」的操作；为 null 的不显示（新对话没有标题时两项都不显示）。 */
-internal class ConversationMenuActions(val onRename: (() -> Unit)?, val onExport: (() -> Unit)?) {
-    val any: Boolean get() = onRename != null || onExport != null
+internal class ConversationMenuActions(val onRename: (() -> Unit)?, val onExport: (() -> Unit)?,
+    val onSelectMessages: (() -> Unit)? = null) {
+    val any: Boolean get() = onRename != null || onExport != null || onSelectMessages != null
 }
 
 @Composable
 private fun ConversationMenuItems(actions: ConversationMenuActions) {
     actions.onRename?.let { EtaMenuItem(stringResource(R.string.action_rename), onClick = it) }
     actions.onExport?.let { EtaMenuItem(stringResource(R.string.action_export), onClick = it) }
+    actions.onSelectMessages?.let { EtaMenuItem(stringResource(R.string.message_selection_start), onClick = it) }
 }
 
 /** 与上游一致：模型不超过 8 个用菜单，更多时用带搜索的半窗。 */
