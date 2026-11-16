@@ -41,7 +41,7 @@ android {
         minSdk = 33
         targetSdk = 37
         // versionCode 规则：yyyyMMdd + 两位当日序号（01 起），发版时随 versionName 一起手动递增。
-        versionCode = 2026111603
+        versionCode = 2026111604
         versionName = "3.3.5"
 
         ndk {
@@ -132,6 +132,10 @@ android {
             // This limit applies only to host tests, never to the Android app process.
             it.maxHeapSize = "2g"
             it.maxParallelForks = 1
+            // 测试进程固定用 UTF-8 语言环境：系统是 POSIX/C 时 JVM 的文件名编码（sun.jnu.encoding）是 ASCII，
+            // 中文文件名和子进程输出会变成 ??（本机的 AgentFileOperationsTest、BackgroundTerminalJobsTest）。
+            it.environment("LANG", "C.UTF-8")
+            it.environment("LC_ALL", "C.UTF-8")
             it.jvmArgs(
                 "--add-opens=java.base/java.lang=ALL-UNNAMED",
                 "--add-opens=java.base/java.util=ALL-UNNAMED",

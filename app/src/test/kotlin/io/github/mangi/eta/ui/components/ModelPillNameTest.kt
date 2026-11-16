@@ -47,7 +47,7 @@ class ModelPillNameTest {
         val state = AgentModelPickerUiState(selectedModel = model)
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(controller.get()) {
-            HomeConversationTopBar(state, false, false, AgentContextUsageUi(null, null), false, false, null, 1,
+            HomeConversationTopBar(state, false, false, AgentContextUsageUi(null, null), false, false, null,
                 {}, {}, {}, {}, {}, {}, {}, {})
         }
         try {

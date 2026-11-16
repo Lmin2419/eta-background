@@ -35,7 +35,7 @@ internal fun Stage3ChatFixture(messages: List<AgentChatMessageUi> = emptyList(),
     CompositionLocalProvider(LocalChatHomeShortcuts provides shortcuts, LocalChatToast provides onToast) {
         Scaffold(contentWindowInsets = WindowInsets(0.dp)) {
             Column(Modifier.fillMaxSize().background(EtaTheme.colors.canvas)) {
-                HomeConversationTopBar(Stage3Models, streaming, false, AgentContextUsageUi(12500, 128000), true, messages.isNotEmpty(), null, 0,
+                HomeConversationTopBar(Stage3Models, streaming, false, AgentContextUsageUi(12500, 128000), true, messages.isNotEmpty(), null,
                     {}, {}, {}, {}, {}, {}, {}, {})
                 AgentChatBody(messages, Stage3Models, false, "", streaming, ReasoningEffort.OFF, listOf(ReasoningEffort.OFF, ReasoningEffort.HIGH),
                     emptyList(), emptyList(), messageEdit = null, onReasoningEffortChange = {}, onCompactContext = {}, canCompactContext = true,
@@ -98,7 +98,7 @@ class HomeConversationPresentationTest {
             EtaAppOverlayHost {
                 HomeConversationTopBar(Stage3Models.copy(selectedModel = selected,
                     providerGroups = listOf(Stage3Models.providerGroups.single().copy(models = models))),
-                    false, false, AgentContextUsageUi(12500, 128000), true, true, null, 0,
+                    false, false, AgentContextUsageUi(12500, 128000), true, true, null,
                     {}, {}, {}, {}, { id -> actions += id; selected = models.first { it.id == id } },
                     { actions += "compact" }, { actions += "export" }, { actions += "manage" })
             }

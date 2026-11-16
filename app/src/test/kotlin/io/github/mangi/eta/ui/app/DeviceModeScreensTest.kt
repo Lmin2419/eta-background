@@ -1,6 +1,10 @@
 package io.github.mangi.eta.ui.app
 
 import android.app.Application
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.background
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -50,6 +54,19 @@ class DeviceModeScreensTest {
 
     /** 电脑会话页与首页统一：顶部玻璃控件浮在消息上，没有实底顶栏。 */
     @Test fun desktopChat() = variants("desktop-chat") { DeviceModeScreens.DesktopChat() }
+
+    /** 选择文字面板的内容：整轮思考与回答在同一个可选区域（09 第零期 0.4）。 */
+    @Test fun turnSelectionPanel() = variants("selection-panel", deviceMode = false) {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()
+            .background(io.github.mangi.eta.ui.theme.EtaTheme.colors.surface).padding(16.dp)) {
+            io.github.mangi.eta.ui.components.TurnSelectionContent(listOf(
+                io.github.mangi.eta.ui.components.TurnSegment("先看一下登录页的报错：密码框校验把空格也算成了字符。", thinking = true),
+                io.github.mangi.eta.ui.components.TurnSegment("我先读一下校验函数，再改。", thinking = false),
+                io.github.mangi.eta.ui.components.TurnSegment("改完要跑一遍测试，确认没有别的地方依赖原来的行为。", thinking = true),
+                io.github.mangi.eta.ui.components.TurnSegment("修好了：去掉首尾空格后再校验，测试 12 项全部通过。", thinking = false),
+            ))
+        }
+    }
 
     /** 终端页顶部换成玻璃控件（返回圆钮 + 标题胶囊）。 */
     // 终端占位是深色底、少量浅色字，深色模式下「反差像素」本来就少，门槛放低。

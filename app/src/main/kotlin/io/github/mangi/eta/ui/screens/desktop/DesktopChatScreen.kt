@@ -99,6 +99,10 @@ internal fun DesktopChatScreen(
     parentId: String? = null,
     mode: String? = null,
     onOpenSubagent: (DesktopSubagent) -> Unit = {},
+    /** 顶部任务胶囊 / 完成提示条里点手机对话、别的电脑会话、「查看全部」时打开。 */
+    onOpenConversation: (String) -> Unit = {},
+    onOpenDesktopSession: (String) -> Unit = {},
+    onOpenTasks: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -269,6 +273,10 @@ internal fun DesktopChatScreen(
         onTitle = if (!isChild) ({ showSettings = true }) else null,
         // 连着电脑、会话已加载时消息延伸到顶部控件下面；断线横幅、加载中仍从顶栏下方开始。
         underTopBar = connection is DesktopBridgeClient.State.Connected && state.loaded,
+        sessionId = sessionId,
+        onOpenConversation = onOpenConversation,
+        onOpenDesktopSession = onOpenDesktopSession,
+        onOpenTasks = onOpenTasks,
         trailing = {
                 if (!isChild) {
                     val remind = linkPrefs.reminds(sessionId)
@@ -507,6 +515,10 @@ internal fun DesktopChatFrame(
     onTitle: (() -> Unit)?,
     underTopBar: Boolean,
     trailing: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
+    sessionId: String? = null,
+    onOpenConversation: (String) -> Unit = {},
+    onOpenDesktopSession: (String) -> Unit = {},
+    onOpenTasks: () -> Unit = {},
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
     val edgeBackdrop = io.github.mangi.eta.ui.components.trackRenderSource("电脑会话顶部渐隐(Miuix)",
@@ -524,6 +536,16 @@ internal fun DesktopChatFrame(
                         title = title, subtitle = subtitle, onBack = onBack, onTitle = onTitle,
                         sourceName = "电脑会话顶部(COUI)", ownBackdrop = false, trailing = trailing,
                     )
+                    // 与手机对话首页一样：控件下方是任务胶囊（手机上在跑的任务、别的电脑会话）和「已完成 · 查看」提示条。
+                    // 正在看的这个电脑会话不进胶囊、不弹提示。
+                    io.github.mangi.eta.ui.components.CappedFontScale {
+                        androidx.compose.foundation.layout.Column {
+                            io.github.mangi.eta.ui.components.HomeDoneNotice(null, onOpenConversation, onOpenDesktopSession,
+                                currentDesktopSessionId = sessionId)
+                            io.github.mangi.eta.ui.components.HomeTaskCapsule(null, onOpenTasks, onOpenConversation, onOpenDesktopSession,
+                                currentDesktopSessionId = sessionId)
+                        }
+                    }
                 }
             }
         },

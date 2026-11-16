@@ -153,7 +153,7 @@ internal object DeviceModeScreens {
             onConversationDelete = {}, onOpenTools = {}, onOpenSkills = {}, onOpenCharacters = {},
             onOpenPermissions = {}, onOpenSettings = {}, onOpenModelProviders = {},
             homeTopBar = {
-                HomeConversationTopBar(models, streaming, false, AgentContextUsageUi(12500, 128000), true, messages.isNotEmpty(), null, 0,
+                HomeConversationTopBar(models, streaming, false, AgentContextUsageUi(12500, 128000), true, messages.isNotEmpty(), null,
                     {}, {}, {}, {}, {}, {}, {}, {}, conversationTitle = title, currentConversationId = if (title != null) "c1" else null)
             },
         ) { padding ->

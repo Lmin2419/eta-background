@@ -19,7 +19,7 @@ class TerminalPrivateStorageTest {
         val marker = File(oldRootfs, LinuxEnvironmentPaths.READY_MARKER).apply { writeText("existing-root-environment") }
         assertTrue(legacy.setWritable(false, false))
         try {
-            assertFalse(legacy.canWrite())
+            assertFalse(legacy.ownerWritable())
             val workspace = TerminalPrivateStorage.workspace(files)
             val environment = TerminalPrivateStorage.prootEnvironment(files, LinuxDistribution.DEBIAN)
 
@@ -28,7 +28,7 @@ class TerminalPrivateStorageTest {
             File(workspace, "ordinary.txt").writeText("app-data")
             assertEquals("app-data", File(workspace, "ordinary.txt").readText())
             assertEquals("existing-root-environment", marker.readText())
-            assertFalse(legacy.canWrite())
+            assertFalse(legacy.ownerWritable())
             assertFalse(File(legacy, "proot").exists())
             assertFalse(File(legacy, "workspace").exists())
         } finally {
@@ -70,3 +70,8 @@ class TerminalPrivateStorageTest {
         assertEquals(LinuxExecutionBackend.CHROOT, LinuxEnvironmentPaths.backendOf(null))
     }
 }
+
+/** 属主写权限位是否还在。root 不受权限限制（canWrite() 恒为真），所以直接看权限位；非 POSIX 文件系统退回 canWrite()。 */
+private fun java.io.File.ownerWritable(): Boolean = runCatching {
+    java.nio.file.Files.getPosixFilePermissions(toPath()).contains(java.nio.file.attribute.PosixFilePermission.OWNER_WRITE)
+}.getOrElse { canWrite() }

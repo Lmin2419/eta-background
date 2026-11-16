@@ -248,10 +248,13 @@ fun AgentAppRoot(
     // 告诉后台服务用户正在看哪个对话：在这个对话里完成的任务不再弹完成横幅。
     val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
     val onHomeScreen = lifecycleState.isAtLeast(Lifecycle.State.RESUMED) && backStack.lastOrNull() == AppRoute.Home
+    // 首页和电脑会话页顶部都有任务胶囊与「已完成 · 查看」提示条：停在这两处时不再重复弹系统横幅 / 电脑完成通知。
+    val onChatScreen = lifecycleState.isAtLeast(Lifecycle.State.RESUMED) &&
+        (backStack.lastOrNull() == AppRoute.Home || backStack.lastOrNull() is AppRoute.DesktopChat)
     val foregroundConversation = if (onHomeScreen) agentState.conversationPaneState.selectedConversationId else null
     SideEffect {
         io.github.mangi.eta.agent.runtime.ForegroundConversation.id = foregroundConversation
-        io.github.mangi.eta.agent.runtime.ForegroundConversation.homeVisible = onHomeScreen
+        io.github.mangi.eta.agent.runtime.ForegroundConversation.homeVisible = onChatScreen
     }
     DisposableEffect(Unit) {
         onDispose {
@@ -531,7 +534,7 @@ fun AgentAppRoot(
                 val usage = remember(home.messages, models.selectedModel) { latestContextUsage(home.messages, models.selectedModel) }
                 HomeConversationTopBar(models, home.isStreaming, home.isCompacting, usage,
                     home.canCompactContext, home.isConversationLoaded && home.messages.isNotEmpty(),
-                    home.roleplayChatUi(), runningTaskCount = taskCount,
+                    home.roleplayChatUi(),
                     onHistory = { conversationPaneOpen = true }, onNew = ::createConversation,
                     onTasks = ::openTasks,
                     onCharacter = { home.roleplay?.let { pushRoute(AppRoute.CharacterDetail(it.characterId)) } },
@@ -703,6 +706,9 @@ fun AgentAppRoot(
                     parentId = route.parentId,
                     mode = route.mode,
                     onOpenSubagent = { child -> pushRoute(AppRoute.DesktopChat(child.id, route.sessionId, child.mode)) },
+                    onOpenConversation = ::selectConversation,
+                    onOpenDesktopSession = { id -> pushRoute(AppRoute.DesktopChat(id)) },
+                    onOpenTasks = ::openTasks,
                 )
             }
             entry<AppRoute.DesktopBridgeSettings>(swipeDismiss = swipeDismiss) {

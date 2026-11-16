@@ -106,7 +106,7 @@ class HomeChatRenderTest {
                 onConversationDelete = {}, onOpenTools = {}, onOpenSkills = {}, onOpenCharacters = {},
                 onOpenPermissions = {}, onOpenSettings = {}, onOpenModelProviders = {},
                 homeTopBar = {
-                    HomeConversationTopBar(Stage3Models, false, false, AgentContextUsageUi(12500, 128000), true, true, null, 0,
+                    HomeConversationTopBar(Stage3Models, false, false, AgentContextUsageUi(12500, 128000), true, true, null,
                         {}, {}, {}, {}, {}, {}, {}, {})
                 },
             ) { padding ->

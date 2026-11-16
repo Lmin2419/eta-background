@@ -143,8 +143,9 @@ fun MiuixScaffold(
     }
     EtaPreferenceTheme {
         // 自带内容的二级页同样用 COUI 骨架：紧凑顶栏（返回键是液态玻璃圆钮），内容从顶栏下面滚过并被模糊。
-        // 旧的 Miuix 滚动行为仍传给内容（内容里的 nestedScroll 不依赖顶栏）。
-        val scrollBehavior = MiuixScrollBehavior()
+        // 内容仍会把这个 Miuix 滚动行为挂到列表上，但 COUI 顶栏不量它的折叠范围：不关掉的话它会吞掉所有往上推的手势，
+        // 列表滑不动（2026111603 服务商详情页、记忆页）。所以传一个不折叠的（canScroll = false）。
+        val scrollBehavior = MiuixScrollBehavior(canScroll = { false })
         val dark = com.itos.coui.theme.CouiTheme.isDark
         val barColors = com.itos.coui.topappbar.CouiTopAppBarDefaults.colors(titleColor = EtaTheme.colors.textPrimary, dark = dark)
         com.itos.coui.layout.Scaffold(

@@ -44,6 +44,19 @@ class HomeBackgroundItemsTest {
         assertTrue("cached list is not trusted", desktopRunningSessions(state.copy(cached = true), connected = true).isEmpty())
     }
 
+    /** 2026111603 反馈：电脑会话页也要看到手机上在跑的任务；正在看的那个电脑会话不进胶囊。 */
+    @Test fun theDesktopPageListsPhoneTasksAndOtherDesktopSessions() {
+        val phone = TaskNotificationState("r1", "c1", "整理纪要", AgentOverlayStatus.Reasoning)
+        val done = TaskNotificationState("r2", "c2", "已完成", AgentOverlayStatus.ResultReady, completed = true)
+        val desktop = DesktopSessionsState(rows = listOf(row("a"), row("b")), loaded = true)
+        val items = backgroundItems(listOf(phone, done), currentConversationId = null, desktop = desktop, connected = true,
+            currentDesktopSessionId = "a")
+        assertEquals(listOf("整理纪要", "电脑会话 b"), items.map { it.title })
+        // 手机对话页：正在看的对话不列，电脑会话全列。
+        assertEquals(listOf("电脑会话 a", "电脑会话 b"),
+            backgroundItems(listOf(phone), "c1", desktop, connected = true, currentDesktopSessionId = null).map { it.title })
+    }
+
     @Test fun desktopTurnsBecomeDoneOrFailedNotices() {
         val rows = listOf(row("a"), row("sub", subagent = true))
         val done = desktopDoneNotice(turn("a", "completed"), rows)!!
@@ -71,7 +84,7 @@ class HomeBackgroundItemsTest {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val queued = Stage3Models.providerGroups.single().models.last()
         val panel = Stage3TestPanel(controller.get()) {
-            HomeConversationTopBar(Stage3Models.copy(queuedModel = queued), true, false, AgentContextUsageUi(1, 128000), true, true, null, 0,
+            HomeConversationTopBar(Stage3Models.copy(queuedModel = queued), true, false, AgentContextUsageUi(1, 128000), true, true, null,
                 {}, {}, {}, {}, {}, {}, {}, {}, conversationTitle = "整理纪要")
         }
         try {

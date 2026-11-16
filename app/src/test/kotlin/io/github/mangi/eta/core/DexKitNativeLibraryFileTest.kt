@@ -24,7 +24,7 @@ class DexKitNativeLibraryFileTest {
         val library = DexKitNativeLibraryFile.extract(apk.path, cache, listOf("x86_64", "arm64-v8a"))
 
         assertEquals("library64", library.readText())
-        assertFalse(library.canWrite())
+        assertFalse(library.ownerWritable())
         assertEquals(library, DexKitNativeLibraryFile.extract(apk.path, cache, listOf("arm64-v8a")))
     }
 
@@ -64,7 +64,7 @@ class DexKitNativeLibraryFileTest {
         val repaired = DexKitNativeLibraryFile.extract(apk.path, cache, listOf("arm64-v8a"))
 
         assertArrayEquals("library-one".toByteArray(), repaired.readBytes())
-        assertFalse(repaired.canWrite())
+        assertFalse(repaired.ownerWritable())
         assertEquals(listOf("libdexkit.so"), repaired.parentFile!!.list()!!.toList())
     }
 
@@ -103,3 +103,8 @@ class DexKitNativeLibraryFileTest {
         }
     }
 }
+
+/** 属主写权限位是否还在。root 不受权限限制（canWrite() 恒为真），所以直接看权限位；非 POSIX 文件系统退回 canWrite()。 */
+private fun java.io.File.ownerWritable(): Boolean = runCatching {
+    java.nio.file.Files.getPosixFilePermissions(toPath()).contains(java.nio.file.attribute.PosixFilePermission.OWNER_WRITE)
+}.getOrElse { canWrite() }
