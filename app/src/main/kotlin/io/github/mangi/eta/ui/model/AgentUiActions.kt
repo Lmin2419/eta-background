@@ -25,6 +25,8 @@ sealed interface AgentHomeAction {
     data object CancelMessageEdit : AgentHomeAction
     data class DeleteMessage(val id: String) : AgentHomeAction
     data class RegenerateMessage(val id: String) : AgentHomeAction
+    /** 换一个模型重答这一条（09 第三期 3.2）：只改这个对话绑定的模型，全局默认模型不变。 */
+    data class RegenerateWithModel(val id: String, val modelId: String) : AgentHomeAction
     data class BranchConversation(val conversationId: String, val messageId: String) : AgentHomeAction
     data class SelectReplyCandidate(val id: String, val index: Int) : AgentHomeAction
     data object OpenTools : AgentHomeAction

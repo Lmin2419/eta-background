@@ -75,6 +75,11 @@ internal fun AgentHomeScreen(
                     LocalChatHomeShortcuts provides homeShortcuts,
                     LocalRoleplayChat provides state.roleplayChatUi(),
                     LocalAgentBrowserSession provides browser,
+                    io.github.mangi.eta.ui.components.LocalRegenerateWithModel provides remember(modelPickerState, onAction) {
+                        io.github.mangi.eta.ui.components.RegenerateWithModelSupport(modelPickerState) { id, modelId ->
+                            onAction(AgentHomeAction.RegenerateWithModel(id, modelId))
+                        }
+                    },
                 ) {
                     AgentChatBody(
                         messages = state.messages,

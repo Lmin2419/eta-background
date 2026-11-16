@@ -209,6 +209,50 @@ class HomeConversationPresentationTest {
         } finally { panel.close(); controller.pause().stop().destroy() }
     }
 
+    /** 09 第三期 3.2：长按回答 →「换模型重答…」→ 在原位置选模型，回调带上这条回答和选的模型；不提供时没有这一项。 */
+    @Test fun assistantLongPressRegeneratesWithAnotherModel() {
+        for (supported in listOf(true, false)) {
+            val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
+            val picked = mutableListOf<Pair<String, String>>()
+            val base = Stage3Models.selectedModel!!
+            val models = Stage3Models.copy(selectedModel = base.copy(id = "m1", displayName = "Model 1"),
+                providerGroups = listOf(Stage3Models.providerGroups.single().copy(models = listOf(
+                    base.copy(id = "m1", displayName = "Model 1"), base.copy(id = "m2", displayName = "Model 2")))))
+            val support = RegenerateWithModelSupport(models) { id, model -> picked += id to model }
+            val panel = Stage3TestPanel(controller.get()) {
+                EtaAppOverlayHost {
+                    CompositionLocalProvider(LocalRegenerateWithModel provides support.takeIf { supported }) {
+                        Box(Modifier.padding(top = 64.dp)) {
+                            ChatMessageItem(AgentMessageUi("answer", "A completed answer"), {}, {}, {}, false, showMessageActions = true)
+                        }
+                    }
+                }
+            }
+            val label = controller.get().getString(R.string.regenerate_with_model_ellipsis)
+            fun clickText(text: String) {
+                panel.click(panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == text } == true })
+                panel.advance(35)
+            }
+            try {
+                panel.advance(25)
+                val point = panel.nodes().first { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == "A completed answer" } == true }.boundsInRoot.center
+                val down = android.os.SystemClock.uptimeMillis()
+                panel.touch(android.view.MotionEvent.ACTION_DOWN, point.x, point.y, down)
+                panel.advance(45)
+                panel.touch(android.view.MotionEvent.ACTION_UP, point.x, point.y, down)
+                panel.advance(35)
+                if (!supported) {
+                    assertFalse("desktop sessions must not offer it", label in popupTexts())
+                    continue
+                }
+                assertTrue("missing $label in ${popupTexts()}", label in popupTexts())
+                clickText(label)
+                clickText("Model 2")
+                assertEquals(listOf("answer" to "m2"), picked)
+            } finally { panel.close(); controller.pause().stop().destroy() }
+        }
+    }
+
     @Test fun assistantLongPressExposesCopyRegenerateAndDelete() {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         val panel = Stage3TestPanel(controller.get()) {

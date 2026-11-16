@@ -57,6 +57,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.Composable
@@ -670,6 +671,12 @@ private fun AgentMessageBlock(
         }
         TurnSelectionContent(segments)
     }
+    // 09 第三期 3.2：换模型重答——在长按菜单原来的位置再弹一个模型列表（模型多时是半窗）。
+    val regenerateWith = LocalRegenerateWithModel.current
+    var choosingModel by remember(message.id) { mutableStateOf(false) }
+    if (regenerateWith != null) RegenerateModelChooser(choosingModel, couiAnchor, regenerateWith.models,
+        onPick = { modelId -> choosingModel = false; regenerateWith.onRegenerate(message.id, modelId) },
+        onDismiss = { choosingModel = false })
     EtaContextMenu(menu && !selectingText, onDismiss = { menu = false }, couiAnchor = couiAnchor) {
         EtaMenuItem(stringResource(R.string.eta_select_text), icon = Icons.Outlined.TextFields, onClick = { selectingText = true })
         EtaMenuItem(stringResource(R.string.copy_answer), icon = Icons.Outlined.ContentCopy, onClick = {
@@ -678,6 +685,11 @@ private fun AgentMessageBlock(
         if (allowSpeech) SpeechReadAloudMenuItem(message.id, message.content) { menu = false }
         EtaMenuItem(stringResource(R.string.ui_regenerate_reply_84a7d9), icon = Icons.Outlined.Refresh, enabled = messageActionsEnabled,
             onClick = { menu = false; onRegenerate() })
+        if (regenerateWith != null && regenerateWith.models.providerGroups.any { it.models.isNotEmpty() }) {
+            EtaMenuItem(stringResource(R.string.regenerate_with_model_ellipsis), icon = Icons.Outlined.SwapHoriz,
+                enabled = messageActionsEnabled && !regenerateWith.models.isChanging,
+                onClick = { menu = false; choosingModel = true })
+        }
         if (message.characterEditable) EtaMenuItem(stringResource(R.string.chat_edit_character_reply), icon = Icons.Outlined.Edit, onClick = { menu = false; onEdit() })
         // 上游 3.4.1：从这条已完成的回复另开一个独立对话，原对话不受影响。
         if (showBranchAction) EtaMenuItem(stringResource(R.string.conversation_branch), icon = Icons.AutoMirrored.Outlined.CallSplit, enabled = messageActionsEnabled,

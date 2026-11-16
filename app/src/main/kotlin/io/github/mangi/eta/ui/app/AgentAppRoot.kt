@@ -658,6 +658,14 @@ fun AgentAppRoot(
                                         messageRegenerateTarget = MessageMutationTarget(action.id, impact.laterTurnCount)
                                     }
                                 }
+                                is AgentHomeAction.RegenerateWithModel -> {
+                                    val impact = agentState.messageRevisionImpact(action.id)
+                                    if (agentState.homeState.roleplay != null || impact?.laterTurnCount == 0) {
+                                        agentState.regenerateWithModel(action.id, action.modelId)
+                                    } else if (impact != null) {
+                                        messageRegenerateTarget = MessageMutationTarget(action.id, impact.laterTurnCount, action.modelId)
+                                    }
+                                }
                                 is AgentHomeAction.BranchConversation ->
                                     agentState.branchConversation(action.conversationId, action.messageId)
                                 is AgentHomeAction.SelectReplyCandidate -> agentState.selectReplyCandidate(action.id, action.index)
@@ -1171,7 +1179,8 @@ fun AgentAppRoot(
                 destructive = true,
                 onCancel = { messageRegenerateTarget = null },
                 onConfirm = {
-                    agentState.regenerateMessage(target.messageId)
+                    target.modelId?.let { agentState.regenerateWithModel(target.messageId, it) }
+                        ?: agentState.regenerateMessage(target.messageId)
                     messageRegenerateTarget = null
                 },
             )
@@ -1182,4 +1191,6 @@ fun AgentAppRoot(
 private data class MessageMutationTarget(
     val messageId: String,
     val laterTurnCount: Int,
+    /** 换模型重答时选的模型；为 null 是普通的重新生成。 */
+    val modelId: String? = null,
 )

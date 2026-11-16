@@ -1857,6 +1857,22 @@ internal class AgentAppState(
         persistConversations()
     }
 
+    /**
+     * 换一个模型重答这一条（09 第三期 3.2）：先把这个对话绑定的模型改掉，再走普通的重新生成，新回答作为又一个候选，
+     * 回答下面可以左右切换。之后这个对话接着用新模型；不调 [selectModel]，全局默认模型不变。
+     */
+    fun regenerateWithModel(messageId: String, modelId: String) {
+        if (homeState.isStreaming || homeState.messageEdit != null || isBranchingCurrentConversation) return
+        if (selectedConversationId == null || modelPickerState.isChanging) return
+        if (providers.enabledModel(modelId) == null) return
+        if (homeState.modelId != modelId) {
+            updateCurrentConversation(homeState.copy(modelId = modelId))
+            refreshConversationModel()
+            persistConversations()
+        }
+        regenerateMessage(messageId)
+    }
+
     fun regenerateMessage(messageId: String) {
         if (homeState.isStreaming || homeState.messageEdit != null || isBranchingCurrentConversation) return
         val conversationId = selectedConversationId ?: return

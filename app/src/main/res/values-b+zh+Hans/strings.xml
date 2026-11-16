@@ -1978,4 +1978,6 @@
   <string name="model_presets_rename">重命名预设</string>
   <string name="model_presets_empty">还没有预设。在对话里点顶部标题胶囊，选「存为预设…」，就能把当前的模型和思考强度存下来。</string>
   <string name="model_presets_hint">点一行可以改名或删除。回复进行中选预设，下一轮起生效。</string>
+  <string name="regenerate_with_model">换模型重答</string>
+  <string name="regenerate_with_model_ellipsis">换模型重答…</string>
 </resources>

@@ -53,6 +53,16 @@
 
 ## 版本更新记录
 
+<a id="release-2026111611"></a>
+
+### 2026111611 · 09 号方案第三期 3.2「换模型重答」（3.3.5）
+
+- **答得不好，只把这一条换个模型重答**：长按回答，「重新生成」下面多一项「换模型重答…」，在原位置再弹出模型列表（模型超过 8 个时是带搜索的半窗），选一个就用它重答这一条。新回答作为又一个候选，回答下面可以左右切换（如「2 / 2」）。
+- 之后这个对话接着用新模型（标题胶囊上显示的就是它）；**设置里的默认模型不变**，新对话仍用原来的默认模型。
+- 后面还有别的轮次时，和「重新生成」一样先确认会清掉后面的内容。电脑会话不支持重新生成，那边不出现这一项。
+- 实现：`AgentAppState.regenerateWithModel` 先改这个对话绑定的模型（`refreshConversationModel` 按新模型规整思考强度）再走 `regenerateMessage`，不调 `selectModel`；`AgentHomeAction.RegenerateWithModel`；模型列表与回调由 `LocalRegenerateWithModel` 提供，`RegenerateModelChooser` 复用长按菜单的锚点。
+- 测试：`HomeConversationPresentationTest.assistantLongPressRegeneratesWithAnotherModel`（长按 → 换模型重答 → 选模型，回调带上回答与模型；不提供时没有这一项）。
+
 <a id="release-2026111610"></a>
 
 ### 2026111610 · 真机反馈：任务胶囊的详情位置与动画（3.3.5）
