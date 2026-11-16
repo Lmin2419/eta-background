@@ -2049,4 +2049,5 @@
   <string name="appearance_glow_mark_summary_top_bar">A thin flowing light along the very top edge; it follows the rounded corners and fades out there, and stays above the live capsule</string>
   <string name="settings_keep_screen_on">Keep screen on while running</string>
   <string name="settings_keep_screen_on_summary">Prevent screen sleep while an agent task is running</string>
+  <string name="chat_queue_steer_images_deferred">Messages with images will be sent next after the current task finishes</string>
 </resources>
