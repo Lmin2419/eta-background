@@ -35,10 +35,12 @@ internal fun EtaToast(
         }
     }
     val colors = EtaTheme.colors
-    val foreground = colors.toastForeground
+    // 跟随页面（2026111606 用户反馈）：浅色页是白色玻璃胶囊配深色字，深色页是深灰胶囊配浅色字，
+    // 不再是浅色页上突兀的黑胶囊。靠阴影和描边与页面分开；爪印用强调色。
+    val foreground = colors.textPrimary
     var displayed by remember { mutableStateOf(message.orEmpty()) }
     SideEffect { if (message != null) displayed = message }
-    // 黑色胶囊提示条：左边一枚小爪印，从下方带一点弹性浮上来，淡出时往下沉。
+    // 胶囊提示条：左边一枚小爪印，从下方带一点弹性浮上来，淡出时往下沉。
     val motion = EtaTheme.motion
     AnimatedVisibility(message != null, modifier.padding(bottom = 12.dp),
         enter = fadeIn(tween(motion.short)) + slideInVertically(
@@ -46,23 +48,23 @@ internal fun EtaToast(
             scaleIn(tween(motion.short), initialScale = 0.94f),
         exit = fadeOut(tween(motion.short)) + slideOutVertically(tween(motion.short)) { it / 2 }) {
         Row(Modifier.heightIn(min = 44.dp)
-            .etaGlass(EtaTheme.shapes.radiusFull, tint = colors.toastBackground, elevation = io.github.mangi.eta.ui.theme.EtaElevation.E2, blurAlpha = 0.8f)
+            .etaGlass(EtaTheme.shapes.radiusFull, tint = colors.surfaceRaised, elevation = io.github.mangi.eta.ui.theme.EtaElevation.E2, blurAlpha = 0.8f)
             .padding(start = 14.dp, end = 16.dp, top = if (actionLabel != null && onAction != null) 6.dp else 10.dp,
                 bottom = if (actionLabel != null && onAction != null) 6.dp else 10.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
             horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(io.github.mangi.eta.R.drawable.ic_notification), null,
-                Modifier.size(16.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(foreground.copy(alpha = 0.9f)))
+                Modifier.size(16.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(colors.accent))
             Text(displayed, Modifier.weight(1f, fill = false), color = foreground, style = EtaTheme.type.subhead)
             if (actionLabel != null && onAction != null) EtaButton(actionLabel, onAction,
                 kind = EtaButtonKind.Ghost, size = EtaButtonSize.Small,
-                colors = TextButtonColors(Color.Transparent, Color.Transparent, colors.toastAction, colors.toastAction))
+                colors = TextButtonColors(Color.Transparent, Color.Transparent, colors.accent, colors.accent))
         }
     }
 }
 
 /**
- * App 内的全局提示：界面在前台时，以黑色胶囊提示条显示在底部；App 不在前台时退回系统 Toast。
+ * App 内的全局提示：界面在前台时，以跟随页面颜色的胶囊提示条显示在底部；App 不在前台时退回系统 Toast。
  * 调用方式与 Toast.makeText(...).show() 相同（文字或字符串资源 + 时长）。
  */
 internal object EtaToastCenter {

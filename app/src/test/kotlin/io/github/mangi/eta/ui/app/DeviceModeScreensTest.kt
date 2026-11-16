@@ -69,6 +69,21 @@ class DeviceModeScreensTest {
         })
     }
 
+    /** 提示条跟随页面颜色：浅色页白色胶囊、深色页深灰胶囊（2026111606 用户反馈：浅色页上弹出黑胶囊不协调）。 */
+    @Test fun toastFollowsPage() {
+        for (dark in listOf(false, true)) {
+            val name = if (dark) "toast-dark" else "toast-light"
+            check(name, DeviceModeScreens.capture(name, dark = dark) {
+                androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()) {
+                    DeviceModeScreens.Home(DeviceModeScreens.sampleMessages, title = "整理本周工作进展")
+                    io.github.mangi.eta.ui.components.EtaToast("已切换到 Example Model", {},
+                        androidx.compose.ui.Modifier.align(androidx.compose.ui.Alignment.BottomCenter).padding(bottom = 120.dp),
+                        durationMillis = 60_000)
+                }
+            })
+        }
+    }
+
     /** 电脑会话页与首页统一：顶部玻璃控件浮在消息上，没有实底顶栏。 */
     @Test fun desktopChat() = variants("desktop-chat") { DeviceModeScreens.DesktopChat() }
 
