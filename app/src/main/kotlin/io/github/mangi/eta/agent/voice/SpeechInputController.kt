@@ -28,6 +28,8 @@ internal data class SpeechInputState(
     val systemIssue: EtaSpeechIssue? = null,
     val configureAvailable: Boolean = false,
     val downloadAvailable: Boolean = false,
+    /** 上游：输入栏长按话筒进入按住说话，松手直接发送。 */
+    val holdToTalk: Boolean = false,
 ) {
     val active: Boolean get() = phase != EtaSpeechPhase.IDLE
 }
@@ -40,6 +42,8 @@ internal class SpeechInputController(
     private val afterCapture: () -> Unit = {},
     private val refiner: SpeechTranscriptRefiner = SpeechTranscriptRefiner(),
     private val onResult: (String) -> Unit,
+    /** 按住说话识别完成后直接交给这里发送；为空时和轻点听写一样走 [onResult]。 */
+    private val onHoldResult: ((String) -> Unit)? = null,
 ) {
     private val mutableState = MutableStateFlow(SpeechInputState())
     val state = mutableState.asStateFlow()
@@ -62,7 +66,7 @@ internal class SpeechInputController(
     fun start(settings: SpeechSettings? = null, credentials: SpeechCredentials? = null, holdToTalk: Boolean = false) {
         cancel()
         val session = generation
-        mutableState.value = SpeechInputState(phase = EtaSpeechPhase.STARTING, progress = "正在连接")
+        mutableState.value = SpeechInputState(phase = EtaSpeechPhase.STARTING, progress = "正在连接", holdToTalk = holdToTalk)
         job = scope.launch(Dispatchers.Main.immediate) {
             try {
                 val rawConfig = settings ?: SpeechSettingsRepository.settings()
@@ -96,13 +100,15 @@ internal class SpeechInputController(
                                 recording = launch {
                                     try {
                                         audio.record(
-                                            onReady = { update { it.copy(phase = EtaSpeechPhase.LISTENING, progress = "正在聆听，点击完成结束") } },
+                                            onReady = { update { it.copy(phase = EtaSpeechPhase.LISTENING,
+                                                progress = if (it.holdToTalk) "松开发送，移出取消" else "正在聆听，点击完成结束") } },
                                             onLevel = { level -> update { it.copy(level = level) } },
                                         )
                                     } finally {
                                         if (generation == session) releaseCapture()
                                     }
-                                    update { it.copy(phase = EtaSpeechPhase.RECOGNIZING, level = 0f, progress = "正在识别") }
+                                    update { it.copy(phase = EtaSpeechPhase.RECOGNIZING, level = 0f,
+                                        progress = if (it.holdToTalk) "正在识别并发送" else "正在识别") }
                                 }
                             }
                             Unit
@@ -126,10 +132,7 @@ internal class SpeechInputController(
                     }
                     if (text.isBlank()) throw SpeechFailure(SpeechErrorCode.NO_SPEECH, "没有识别到语音，请重试")
                     val final = refined(session, text)
-                    if (generation == session) {
-                        cancel()
-                        onResult(final)
-                    }
+                    if (generation == session) complete(final)
                 }
             } catch (error: Exception) {
                 if (error is CancellationException && error !is kotlinx.coroutines.TimeoutCancellationException) throw error
@@ -151,14 +154,22 @@ internal class SpeechInputController(
 
     /** 系统识别结果从回调到达，纠错需要挂起，因此在会话自身的协程外单独交付。 */
     private fun deliver(session: Long, text: String) {
-        if (!refineTranscript) { cancel(); onResult(text); return }
+        if (!refineTranscript) { complete(text); return }
         pendingSystemResult = null
         finishRequested = true
         lease?.close(); lease = null
         delivery = scope.launch(Dispatchers.Main.immediate) {
             val final = refined(session, text)
-            if (generation == session) { cancel(); onResult(final) }
+            if (generation == session) complete(final)
         }
+    }
+
+    /** 交付识别结果：按住说话时直接发送（[onHoldResult]），否则填进输入框（[onResult]）。 */
+    private fun complete(text: String) {
+        val holdMode = mutableState.value.holdToTalk
+        cancel()
+        val hold = onHoldResult
+        if (holdMode && hold != null) hold(text) else onResult(text)
     }
 
     /** 纠错失败不影响交付；只有纠错仍属于当前会话时才展示进度。 */
@@ -221,7 +232,8 @@ internal class SpeechInputController(
         if (mutableState.value.phase == EtaSpeechPhase.STARTING) { cancel(); return }
         // stopListening may synchronously deliver an error/result. Publish the waiting
         // state first so a terminal callback cannot be overwritten with a phantom busy state.
-        mutableState.value = mutableState.value.copy(phase = EtaSpeechPhase.RECOGNIZING, progress = "正在识别", level = 0f)
+        val progressText = if (mutableState.value.holdToTalk) "正在识别并发送" else "正在识别"
+        mutableState.value = mutableState.value.copy(phase = EtaSpeechPhase.RECOGNIZING, progress = progressText, level = 0f)
         recorder?.finish()
         system?.finish()
     }

@@ -17,6 +17,7 @@ import io.github.mangi.eta.ui.components.EtaAnimatedContent as AnimatedContent
 import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -224,12 +225,39 @@ internal fun AgentChatInputBar(
     }
     val speechSettings by remember { SpeechSettingsRepository.settingsFlow() }.collectAsState(initial = null)
     val recognitionEnabled = speechSettings?.recognitionEnabled == true
-    val dictation = rememberSpeechInput { recognized ->
-        textFieldState.edit {
-            val range = selection
-            replace(range.min, range.max, recognized)
-            selection = TextRange(range.min + recognized.length)
-        }
+    val dictation = rememberSpeechInput(
+        onHoldResult = { recognized ->
+            val spoken = recognized.trim()
+            if (spoken.isEmpty()) return@rememberSpeechInput
+            val draft = textFieldState.text.toString()
+            val toSubmit = if (draft.isBlank()) {
+                spoken
+            } else {
+                textFieldState.edit {
+                    val range = selection
+                    replace(range.min, range.max, spoken)
+                    selection = TextRange(range.min + spoken.length)
+                }
+                textFieldState.text.toString().trim()
+            }
+            textFieldState.clearText()
+            onSubmit(toSubmit)
+        },
+        onResult = { recognized ->
+            textFieldState.edit {
+                val range = selection
+                replace(range.min, range.max, recognized)
+                selection = TextRange(range.min + recognized.length)
+            }
+        },
+    )
+    val dictationState by dictation.state.collectAsState()
+    var holdCancelling by remember { mutableStateOf(false) }
+    val isHoldingSpeech =
+        dictationState.active && dictationState.holdToTalk &&
+            dictationState.phase != io.github.mangi.eta.agent.voice.EtaSpeechPhase.RECOGNIZING
+    LaunchedEffect(isHoldingSpeech) {
+        if (!isHoldingSpeech) holdCancelling = false
     }
     LaunchedEffect(isEditingMessage, recognitionEnabled) { dictation.cancel() }
     val draftRequest = LocalChatDraftRequest.current?.value
@@ -283,7 +311,7 @@ internal fun AgentChatInputBar(
     ) {
         ConversationLiveTasks(shortcuts.conversationId, shortcuts.onOpenTasks)
         remoteComposer?.aboveInput?.invoke()
-        if (recognitionEnabled) SpeechInputFeedback(dictation)
+        if (recognitionEnabled) SpeechInputFeedback(dictation, holdCancelling = holdCancelling)
         AnimatedVisibility(
             visible = queuedMessages.isNotEmpty(),
             enter = fadeIn(tween(EtaMotion.Default.short, easing = EtaMotion.Default.standard)),
@@ -396,8 +424,20 @@ internal fun AgentChatInputBar(
                     val inputTextStyle = EtaTheme.type.body
                     val character = LocalRoleplayChat.current
                     if (textFieldState.text.isBlank()) {
+                        val hintColor by animateColorAsState(
+                            targetValue = when {
+                                isHoldingSpeech && holdCancelling -> StatusError
+                                isHoldingSpeech -> MiuixTheme.colorScheme.primary
+                                else -> MiuixTheme.colorScheme.onSurfaceVariantSummary
+                            },
+                            animationSpec = tween(durationMillis = 150),
+                            label = "input_hint_color",
+                        )
                         Text(
                             text = when {
+                                isHoldingSpeech && holdCancelling ->
+                                    stringResource(R.string.speech_hold_release_to_cancel)
+                                isHoldingSpeech -> stringResource(R.string.voice_release_to_send)
                                 // 角色对话的占位文字跟随角色，避免“交给 Eta”打断沉浸感。
                                 character != null && isStreaming ->
                                     stringResource(R.string.chat_character_typing, character.characterName)
