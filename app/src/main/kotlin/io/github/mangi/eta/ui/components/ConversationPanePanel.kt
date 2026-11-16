@@ -62,9 +62,7 @@ import top.yukonga.miuix.kmp.basic.Text
 
 internal data class PaneWorkspaceActions(
     val onNew: () -> Unit = {}, val onTasks: () -> Unit = {}, val onTerminal: () -> Unit = {},
-    val onBrowser: () -> Unit = {}, val onKimi: (() -> Unit)? = null,
-    val kimiLabel: String = "Kimi Code", val canStopKimi: Boolean = false,
-    val onStopKimi: () -> Unit = {}, val onRefreshKimi: () -> Unit = {},
+    val onBrowser: () -> Unit = {},
     val runningCount: Int = 0, val permissionsPending: Int = 0,
     /** 已配对电脑时显示「电脑」入口；[desktopRunning] 是电脑上正在运行的会话数。 */
     val onDesktop: (() -> Unit)? = null, val desktopRunning: Int = 0,
@@ -175,7 +173,7 @@ internal fun ConversationPanePanel(
             // 功能入口是列表顶部的几行（图标 + 文字），随列表一起滚走；终端入口移到「设置」。
             if (!selecting && !archived && state.searchQuery.isBlank()) {
                 // 功能入口：一排实色白色方块，图标在上、文字在下。09 第一期 1.5：加「终端」（原来只能从设置里进）；
-                // 顺序按常用程度：任务、电脑、终端、浏览器、角色、Kimi。
+                // 顺序按常用程度：任务、电脑、终端、浏览器、角色。
                 item(key = "nav-grid") {
                     val tiles = buildList {
                         add(PaneTile(Icons.Outlined.TaskAlt, stringResource(R.string.eta_tasks), workspace.onTasks, workspace.runningCount))
@@ -183,8 +181,6 @@ internal fun ConversationPanePanel(
                         add(PaneTile(Icons.Outlined.Terminal, stringResource(R.string.route_terminal), workspace.onTerminal))
                         add(PaneTile(Icons.Outlined.Language, stringResource(R.string.eta_browser), workspace.onBrowser))
                         add(PaneTile(Icons.Outlined.PeopleAlt, stringResource(R.string.eta_characters), onOpenCharacters))
-                        workspace.onKimi?.let { add(PaneTile(Icons.Outlined.Code, workspace.kimiLabel, it,
-                            onLongClick = if (workspace.canStopKimi) workspace.onStopKimi else null)) }
                     }
                     PaneTileRow(tiles, Modifier.padding(top = 4.dp, bottom = 12.dp))
                 }

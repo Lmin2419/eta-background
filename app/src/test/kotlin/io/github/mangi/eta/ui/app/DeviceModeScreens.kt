@@ -165,7 +165,7 @@ internal object DeviceModeScreens {
             conversationPaneState = ConversationPaneUiState(sampleConversations, if (title != null) "c1" else null, ""),
             isConversationPaneOpen = paneOpen, onBack = {}, onOpenConversationPane = {}, onDismissConversationPane = {},
             onSearchConversations = {}, onNewConversation = {}, onOpenCommonTasks = {}, onOpenTerminal = {},
-            onLaunchKimiWeb = {}, kimiWebLabel = "", canStopKimiWeb = false, onStopKimiWeb = {}, onRefreshKimiWeb = {},
+
             onOpenBrowser = {}, onSelectConversation = {}, onConversationRename = {}, onConversationExport = {},
             onConversationDelete = {}, onOpenTools = {}, onOpenSkills = {}, onOpenCharacters = {},
             onOpenPermissions = {}, onOpenSettings = {}, onOpenModelProviders = {},
@@ -249,7 +249,7 @@ internal object DeviceModeScreens {
             conversationPaneState = ConversationPaneUiState(emptyList(), null, ""),
             isConversationPaneOpen = false, onBack = {}, onOpenConversationPane = {}, onDismissConversationPane = {},
             onSearchConversations = {}, onNewConversation = {}, onOpenCommonTasks = {}, onOpenTerminal = {},
-            onLaunchKimiWeb = {}, kimiWebLabel = "", canStopKimiWeb = false, onStopKimiWeb = {}, onRefreshKimiWeb = {},
+
             onOpenBrowser = {}, onSelectConversation = {}, onConversationRename = {}, onConversationExport = {},
             onConversationDelete = {}, onOpenTools = {}, onOpenSkills = {}, onOpenCharacters = {},
             onOpenPermissions = {}, onOpenSettings = {}, onOpenModelProviders = {},

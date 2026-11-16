@@ -237,7 +237,6 @@ fun AgentAppRoot(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 RootAccess.refresh(context)
-                appViewModel.refreshKimiWeb()
                 permissionHealth.refreshPermissionHealth()
                 agentState.refreshRuntimeResults()
             }
@@ -482,26 +481,6 @@ fun AgentAppRoot(
             desktopRunning = desktopRows.rows.count { it.running && it.listed },
             onOpenDesktopSession = { id -> conversationPaneOpen = false; pushRoute(AppRoute.DesktopChat(id)) },
             onOpenTerminal = { pushRoute(AppRoute.Terminal) },
-            onLaunchKimiWeb = {
-                requestExecutionNotifications()
-                if (appViewModel.kimiWebState.phase != KimiWebPhase.NOT_INSTALLED) {
-                    appViewModel.launchKimiWeb { result ->
-                        if (result is KimiWebLaunchResult.Failed) {
-                            io.github.mangi.eta.ui.components.EtaToastCenter.show(
-                                context,
-                                result.message(context),
-                                Toast.LENGTH_LONG,
-                            )
-                        }
-                    }
-                } else {
-                    pushRoute(AppRoute.LinuxEnvironment)
-                }
-            },
-            kimiWebLabel = appViewModel.kimiWebState.actionLabel(context),
-            canStopKimiWeb = appViewModel.kimiWebState.canStop,
-            onStopKimiWeb = appViewModel::stopKimiWeb,
-            onRefreshKimiWeb = appViewModel::refreshKimiWeb,
             onOpenBrowser = { openConversationBrowser() },
             onSelectConversation = { conversationId -> selectConversation(conversationId) },
             onConversationRename = { conversation ->
@@ -539,7 +518,6 @@ fun AgentAppRoot(
             onOpenModelProviders = { pushRoute(AppRoute.ModelProviders) },
             runningTaskCount = taskCount,
             permissionsPending = permissionHealth.permissionHealthState.items.count { it.status != PermissionStatusUi.Available },
-            showKimi = appViewModel.kimiWebState.phase != KimiWebPhase.NOT_INSTALLED,
             onDismissHomeSidePanel = { tasksPanelOpen = false },
             homeSidePanel = if (route is AppRoute.Home && wideHome && tasksPanelOpen) ({
                 TasksScreen(commonTasks, { tasksPanelOpen = false }, ::runHomeTask, ::selectConversation,

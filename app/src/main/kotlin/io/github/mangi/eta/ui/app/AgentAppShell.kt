@@ -105,11 +105,6 @@ internal fun AgentAppShell(
     onNewConversation: () -> Unit,
     onOpenCommonTasks: () -> Unit,
     onOpenTerminal: () -> Unit,
-    onLaunchKimiWeb: () -> Unit,
-    kimiWebLabel: String,
-    canStopKimiWeb: Boolean,
-    onStopKimiWeb: () -> Unit,
-    onRefreshKimiWeb: () -> Unit,
     onOpenBrowser: () -> Unit,
     onSelectConversation: (String) -> Unit,
     onConversationRename: (ConversationSummaryUi) -> Unit,
@@ -131,7 +126,6 @@ internal fun AgentAppShell(
     onOpenDesktop: (() -> Unit)? = null,
     desktopRunning: Int = 0,
     onOpenDesktopSession: (String) -> Unit = {},
-    showKimi: Boolean = false,
     paneManagement: io.github.mangi.eta.ui.components.PaneManagementActions = io.github.mangi.eta.ui.components.PaneManagementActions(),
     onOpenCharacter: () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
@@ -198,7 +192,6 @@ internal fun AgentAppShell(
     }
     CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalPaneManagement provides paneManagement, LocalChatToast provides { toast = it }, LocalPaneWorkspace provides PaneWorkspaceActions(
         onNewConversation, onOpenCommonTasks, onOpenTerminal, onOpenBrowser,
-        onLaunchKimiWeb.takeIf { showKimi }, kimiWebLabel, canStopKimiWeb, onStopKimiWeb, onRefreshKimiWeb,
         runningTaskCount, permissionsPending, onOpenDesktop, desktopRunning,
         desktopSessions = paneDesktop,
         desktopName = desktopServer?.host,

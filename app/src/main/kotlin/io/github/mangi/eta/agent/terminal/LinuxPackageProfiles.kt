@@ -117,26 +117,6 @@ internal object LinuxPackageProfiles {
         ),
     )
 
-    /**
-     * Kimi Code 使用 npm 分发，运行在 Node profile 之上；可选原生扩展由 npm 按平台安装。
-     * 始终安装最新正式版（升级重装即可）；--prefix /usr/local 让 kimi 进入 PATH 首位，
-     * 与 Node 归档自身的 prefix 无关。国内镜像优先，官方 registry 兜底。
-     */
-    private const val KIMI_INSTALL_SCRIPT =
-        "npm install -g --prefix /usr/local --registry=https://registry.npmmirror.com " +
-            "@moonshot-ai/kimi-code@latest || " +
-            "npm install -g --prefix /usr/local @moonshot-ai/kimi-code@latest"
-
-    val KIMI = LinuxPackageProfile(
-        id = "kimi",
-        markerName = AlpineEnvironmentPaths.KIMI_TOOLS_MARKER,
-        revision = AlpineEnvironmentPaths.KIMI_TOOLS_REVISION,
-        dependsOn = NODE,
-        specs = mapOf(
-            LinuxDistribution.ALPINE to LinuxPackageSpec(setupScript = KIMI_INSTALL_SCRIPT),
-            LinuxDistribution.DEBIAN to LinuxPackageSpec(setupScript = KIMI_INSTALL_SCRIPT),
-        ),
-    )
     /** Optional reader dependencies, installed explicitly; no Chromium download here. */
     val WEB_HTTP = LinuxPackageProfile(
         id = "web_http",
@@ -185,7 +165,7 @@ internal object LinuxPackageProfiles {
             ),
         ),
     )
-    val ALL = listOf(PYTHON, NODE, SSH, KIMI, WEB_HTTP, WEB_BROWSER)
+    val ALL = listOf(PYTHON, NODE, SSH, WEB_HTTP, WEB_BROWSER)
 }
 
 internal fun linuxPackageProfileReady(rootfs: File, profile: LinuxPackageProfile): Boolean {

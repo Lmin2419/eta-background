@@ -82,7 +82,6 @@ internal object PackageProfileInstallCommands {
         }
         val setup = buildString {
             spec.setupScript?.let { append(it).append('\n') }
-            if (profile == LinuxPackageProfiles.KIMI) append("kimi --version >/dev/null\nkimi web --help >/dev/null\n")
         }
         if (setup.isNotBlank()) {
             val step = if (profile == LinuxPackageProfiles.WEB_BROWSER) PackageProfileInstallStep.BROWSER_DOWNLOAD
