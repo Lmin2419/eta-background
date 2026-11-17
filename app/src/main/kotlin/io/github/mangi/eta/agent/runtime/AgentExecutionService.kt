@@ -198,9 +198,9 @@ internal class AgentExecutionService : Service() {
         if (leases.closeOwnerIfIdle(owner)) {
             if (foregroundActive) {
                 foregroundActive = false
-                // 前台卡片若是已完成的卡就留着；若还是「运行中」的卡（任务已结束、卡片没来得及换），
+                // 前台这条通知现在属于一张已完成的卡就留着；没有卡片认领它（任务已结束、卡片被撤掉），
                 // 留下来就成了永远停在「生成回答中」的陈旧卡片，所以连通知一起撤掉。
-                val keep = posted[foregroundId]?.completed == true
+                val keep = cards.values.firstOrNull { notificationIds[it.runId] == foregroundId }?.completed == true
                 stopForeground(if (keep) STOP_FOREGROUND_DETACH else STOP_FOREGROUND_REMOVE)
                 posted.remove(foregroundId)
             }
@@ -248,6 +248,8 @@ internal class AgentExecutionService : Service() {
             }
         }
         private val notificationIds = mutableMapOf<String, Int>()
+        /** 运行卡片被撤掉时的编号，留给紧随其后的「已完成」原地更新（见 [idFor]）。 */
+        private val tombstones = linkedMapOf<String, Int>()
         private val posted = mutableMapOf<Int, TaskNotificationState>()
         private var phoneIcon: Icon? = null
 
@@ -276,20 +278,14 @@ internal class AgentExecutionService : Service() {
             if (Looper.myLooper() == Looper.getMainLooper()) block() else mainHandler.post(block)
         }
 
-        /** 任务卡片的编号；通用的「执行中」卡片固定用 [NOTIFICATION_ID]，任务卡片从不复用它。 */
-        private fun idFor(runId: String): Int = notificationIds.getOrPut(runId) { nextId++ }
-
         /**
-         * 撤掉一张「运行中」卡片的编号（任务完成换新编号前调用）。不是前台卡片就直接取消；
-         * 是前台卡片时 Android 不让取消，交给接下来的 refreshNotification：换前台或停前台时一并撤掉。
+         * 任务卡片的编号。任务结束时会有先后顺序的竞态：任务列表先把卡片撤掉，「已完成」随后才到。
+         * 撤掉时记下编号（[tombstones]），「已完成」回来就落在同一条通知上原地更新，
+         * 不会另开一条、把旧的「生成回答中」留在通知栏里。
          */
-        private fun retireLiveId(context: Context, runId: String) {
-            val oldId = notificationIds.remove(runId) ?: return
-            posted.remove(oldId)
-            val service = instance
-            if (service == null || !service.foregroundActive || service.foregroundId != oldId) {
-                context.getSystemService(NotificationManager::class.java).cancel(oldId)
-            }
+        private fun idFor(runId: String): Int = notificationIds.getOrPut(runId) {
+            tombstones.remove(runId)
+                ?: if (notificationIds.isEmpty() && NOTIFICATION_ID !in tombstones.values) NOTIFICATION_ID else nextId++
         }
 
         /** 通知上点了暂停 / 停止，但运行时已经没有这个任务：收掉它的卡片和那条通知。 */
@@ -317,7 +313,7 @@ internal class AgentExecutionService : Service() {
                 })
         }
 
-        private fun removeCard(context: Context, runId: String) {
+        private fun removeCard(context: Context, runId: String, tombstone: Boolean = false) {
             completionJobs.remove(runId)?.cancel()
             completionAlertCards.remove(runId)
             cards.remove(runId)
@@ -325,6 +321,10 @@ internal class AgentExecutionService : Service() {
             notificationIds.remove(runId)?.let { id ->
                 context.getSystemService(NotificationManager::class.java).cancel(id)
                 posted.remove(id)
+                if (tombstone) {
+                    tombstones[runId] = id
+                    while (tombstones.size > 16) tombstones.remove(tombstones.keys.first())
+                }
             }
         }
 
@@ -332,7 +332,8 @@ internal class AgentExecutionService : Service() {
         fun updateTasks(context: Context, snapshot: List<TaskNotificationState>) = onMain {
             val liveIds = snapshot.map { it.runId }.toSet()
             val removed = cards.values.filter { !it.completed && it.runId !in liveIds }.map { it.runId }
-            removed.forEach { removeCard(context, it) }
+            // 「已完成」可能紧跟着到：记下编号，让它回到同一条通知上。
+            removed.forEach { removeCard(context, it, tombstone = true) }
             var changed = removed.isNotEmpty()
             snapshot.forEach { task ->
                 if (task.runId !in completedRuns && cards[task.runId]?.completed != true && cards[task.runId] != task) {
@@ -355,9 +356,6 @@ internal class AgentExecutionService : Service() {
             val firstCompletion = completedRuns.add(task.runId)
             while (completedRuns.size > 64) completedRuns.remove(completedRuns.first())
             val replyFailed = previous?.takeIf { it.conversationId == task.conversationId }?.replyFailed == true
-            // 完成卡换一个新编号发，运行卡片单独撤掉：同一条通知从「实况（流体云）」改回普通时，
-            // ColorOS 不一定收起胶囊，旧的「生成回答中」会一直挂着（电脑会话的流体云早就这么处理）。
-            if (previous?.completed != true) retireLiveId(context, task.runId)
             cards[task.runId] = task.copy(completed = true, paused = false, replyFailed = replyFailed)
             idFor(task.runId)
             cards.values.filter { it.completed }.dropLast(3).map { it.runId }.forEach { removeCard(context, it) }

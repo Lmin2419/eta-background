@@ -61,34 +61,45 @@ class AgentExecutionServiceTest {
     fun finishRaceNeverLeavesARunningCardBehind() {
         val context = RuntimeEnvironment.getApplication()
         val runId = "test:finish-race"
+        val earlier = "test:finish-race-earlier"
+        // 和真机一样：通知栏里先有一张别的任务的卡片（上一个被停止的任务），编号不再是默认的那个。
+        assertTrue(AgentExecutionService.acquire(context, "run:$earlier") {})
+        val first = TaskNotificationState(runId = earlier, conversationId = "c-race", title = "后台帮我看一下",
+            status = AgentOverlayStatus.RunningTool("tap"))
+        AgentExecutionService.updateTasks(context, listOf(first))
         assertTrue(AgentExecutionService.acquire(context, "run:$runId") {})
         val running = TaskNotificationState(runId = runId, conversationId = "c-race", title = "继续",
             status = AgentOverlayStatus.GeneratingAnswer, step = 6)
+        AgentExecutionService.completeTask(context, first.copy(status = AgentOverlayStatus.Stopped))
+        AgentExecutionService.release("run:$earlier")
         AgentExecutionService.updateTasks(context, listOf(running))
         shadowOf(Looper.getMainLooper()).idle()
         val controller = Robolectric.buildService(AgentExecutionService::class.java).create()
         try {
             assertTrue(shadowOf(controller.get()).lastForegroundNotification!!.extras.getBoolean("android.requestPromotedOngoing"))
+            val runningId = shadowOf(controller.get()).lastForegroundNotificationId
             AgentExecutionService.updateTasks(context, emptyList())
             AgentExecutionService.release("run:$runId")
             AgentExecutionService.completeTask(context, running.copy(status = AgentOverlayStatus.ResultReady, streamPreview = "好了"))
             shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(2))
-            // 前台卡片是陈旧的运行卡片：停前台时连通知一起撤掉，而不是分离后留在通知栏。
-            assertTrue(shadowOf(controller.get()).notificationShouldRemoved)
             val active = context.getSystemService(NotificationManager::class.java).activeNotifications
+            // 「已完成」落回原来那条通知上（原地更新），而不是另开一条、把运行卡片留在通知栏。
+            val mine = active.filter { it.notification.extras.getCharSequence(Notification.EXTRA_TITLE)?.contains("继续") == true }
+            assertEquals(listOf(runningId), mine.map { it.id })
             assertTrue(active.none { it.notification.extras.getBoolean("android.requestPromotedOngoing") })
             assertTrue(active.none { it.notification.flags and Notification.FLAG_ONGOING_EVENT != 0 })
-            assertEquals(1, active.size)
+            assertEquals(2, active.size)
         } finally {
             dismissCompleted(context, runId)
+            dismissCompleted(context, earlier)
             controller.destroy()
         }
     }
 
-    /** 正常完成：完成卡换新编号发、运行卡片撤掉（ColorOS 不会把「实况」改回普通的同一条通知收起流体云）。 */
+    /** 两个任务同时在跑：一个先完成，它的卡片原地变成已完成，另一个的运行卡片不受影响。 */
     @Test
     @Config(sdk = [36])
-    fun completedCardReplacesTheLiveCardUnderANewId() {
+    fun completingOneTaskLeavesTheOtherRunningCardAlone() {
         val context = RuntimeEnvironment.getApplication()
         val runId = "test:complete-new-id"
         val other = "test:still-running"
@@ -112,7 +123,8 @@ class AgentExecutionServiceTest {
             val active = manager.activeNotifications
             val done = active.filter { it.notification.flags and Notification.FLAG_ONGOING_EVENT == 0 }
             assertEquals(1, done.size)
-            assertFalse(done.single().id in liveIds)
+            assertTrue(done.single().id in liveIds)
+            assertEquals(2, active.size)
             // 剩下唯一的运行卡片是另一件事的。
             assertEquals(1, active.count { it.notification.extras.getBoolean("android.requestPromotedOngoing") })
         } finally {

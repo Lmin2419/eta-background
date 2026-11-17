@@ -98,7 +98,11 @@ internal class EtaChromeState {
 
 internal val LocalEtaChrome = staticCompositionLocalOf<EtaChromeState?> { null }
 
-/** 顶栏元素随 [LocalEtaChrome] 收缩：最多缩到 [minScale]，并略微变淡。 */
+/**
+ * 顶栏元素随 [LocalEtaChrome] 收缩：最多缩到 [minScale]。
+ * 不再跟着变淡（2026111620）：透明度小于 1 会让这一层先画到按钮大小的离屏缓冲里，
+ * 液态玻璃按钮伸出边界的柔和阴影被齐边裁掉，滑动后按钮四周就多出一圈「边框」。
+ */
 internal fun Modifier.etaChromeScale(minScale: Float = 0.86f): Modifier = composed {
     val chrome = LocalEtaChrome.current ?: return@composed this
     if (EtaTheme.motion.reduceMotion) return@composed this
@@ -107,6 +111,5 @@ internal fun Modifier.etaChromeScale(minScale: Float = 0.86f): Modifier = compos
     graphicsLayer {
         val s = 1f - (1f - minScale) * c.value
         scaleX = s; scaleY = s
-        alpha = 1f - 0.12f * c.value
     }
 }
