@@ -23,6 +23,7 @@ import io.github.mangi.eta.ui.components.ListEmptyState
 import io.github.mangi.eta.ui.components.PermissionHealthCard
 import io.github.mangi.eta.ui.model.PermissionHealthUiState
 import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.mangi.eta.ui.components.StatusSuccess
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -92,6 +93,8 @@ import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.accessibility.AccessibilityProtectionClient
 import io.github.mangi.eta.agent.accessibility.AgentAccessibilityService
 import io.github.mangi.eta.agent.runtime.AgentExecutionService
+import io.github.mangi.eta.agent.voice.AssistantEntryDispatch
+import io.github.mangi.eta.agent.voice.AssistantRoleHelper
 import io.github.mangi.eta.agent.runtime.RuntimeDiagnostics
 import io.github.mangi.eta.config.PowerAssistantTarget
 import io.github.mangi.eta.config.Prefs
@@ -185,11 +188,26 @@ private fun SettingsPageContent(
         mutableStateOf(AccessibilityProtectionClient.isEnabled(context))
     }
     var accessibilityProtectionPending by remember { mutableStateOf(false) }
+    var assistantRoleStatus by remember(context) {
+        mutableStateOf(AssistantRoleHelper.queryStatus(context))
+    }
+    val assistantRoleLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) {
+        assistantRoleStatus = AssistantRoleHelper.queryStatus(context)
+    }
     val openAssistantSettings: () -> Unit = {
-        val failed = runCatching {
-            context.startActivity(Intent(Settings.ACTION_VOICE_INPUT_SETTINGS))
-        }.isFailure
-        if (failed) {
+        if (!AssistantRoleHelper.openSystemSettings(context)) {
+            io.github.mangi.eta.ui.components.EtaToastCenter.show(context, context.getString(R.string.settings_open_assistant_failed), Toast.LENGTH_SHORT)
+        }
+    }
+    val requestOrOpenAssistantSettings: () -> Unit = {
+        val dispatch = AssistantRoleHelper.dispatchPrimaryEntry(
+            context = context,
+            status = assistantRoleStatus,
+            launchRoleRequest = assistantRoleLauncher::launch,
+        )
+        if (dispatch == AssistantEntryDispatch.FAILED) {
             io.github.mangi.eta.ui.components.EtaToastCenter.show(context, context.getString(R.string.settings_open_assistant_failed), Toast.LENGTH_SHORT)
         }
     }
@@ -238,6 +256,7 @@ private fun SettingsPageContent(
                 accessibilityGranted = isAgentAccessibilityEnabled(context)
                 accessibilityProtectionEnabled =
                     AccessibilityProtectionClient.isEnabled(context)
+                assistantRoleStatus = AssistantRoleHelper.queryStatus(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -669,14 +688,47 @@ private fun SettingsPageContent(
                 EtaListGroup(title = stringResource(R.string.eta_settings_assistant)) {
                     EtaArrowPreference(
                         title = stringResource(R.string.ui_eta_system_assistant_003e9b),
+                        summary = when {
+                            assistantRoleStatus.isDefaultAssistant ->
+                                stringResource(R.string.assistant_role_summary_default)
+                            assistantRoleStatus.roleAvailable ->
+                                stringResource(R.string.page_choose_eta_as_your_default_digital_assistant_4a73a9)
+                            else -> null
+                        },
                         startAction = {
                             EtaPreferenceIcon(
                                 icon = Icons.Outlined.SupportAgent,
                                 tint = EtaPreferenceColors.Orange,
                             )
                         },
-                        onClick = openAssistantSettings,
+                        endActions = {
+                            Text(
+                                text = stringResource(
+                                    if (assistantRoleStatus.isDefaultAssistant) {
+                                        R.string.assistant_role_status_default
+                                    } else {
+                                        R.string.assistant_role_status_unset
+                                    },
+                                ),
+                                fontSize = MiuixTheme.textStyles.body2.fontSize,
+                                color = if (assistantRoleStatus.isDefaultAssistant) {
+                                    StatusSuccess
+                                } else {
+                                    MiuixTheme.colorScheme.onSurfaceVariantActions
+                                },
+                            )
+                        },
+                        onClick = requestOrOpenAssistantSettings,
                     )
+                    if (!assistantRoleStatus.isDefaultAssistant && assistantRoleStatus.roleAvailable) {
+                        EtaPreferenceDivider()
+                        EtaArrowPreference(
+                            title = stringResource(R.string.assistant_role_system_settings_title),
+                            summary = stringResource(R.string.assistant_role_system_settings_summary),
+                            startAction = { EtaPreferenceIcon(Icons.Outlined.Tune, tint = EtaPreferenceColors.Blue) },
+                            onClick = openAssistantSettings,
+                        )
+                    }
                     EtaPreferenceDivider()
                     NativeAssistantPreference(context)
                     EtaPreferenceDivider()

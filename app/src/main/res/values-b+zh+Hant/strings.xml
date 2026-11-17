@@ -1919,4 +1919,9 @@
   <string name="appearance_glow_mark_summary_top_bar">螢幕最上緣一道流動細光，兩端順著圓角淡出；在流體雲上方，不會被擋住</string>
   <string name="settings_keep_screen_on">執行期間保持螢幕恆亮</string>
   <string name="settings_keep_screen_on_summary">Agent 執行任務期間防止螢幕自動熄滅</string>
+  <string name="assistant_role_status_default">已設為預設</string>
+  <string name="assistant_role_status_unset">未設為預設</string>
+  <string name="assistant_role_summary_default">已是系統預設數位助理，點擊開啟系統設定</string>
+  <string name="assistant_role_system_settings_title">系統預設助理設定</string>
+  <string name="assistant_role_system_settings_summary">若系統彈窗未生效，可前往系統設定手動選擇</string>
 </resources>

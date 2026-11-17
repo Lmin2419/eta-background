@@ -2023,4 +2023,9 @@
   <string name="appearance_glow_mark_summary_top_bar">屏幕最上沿一道流动细光，两端顺着圆角淡出；在流体云上方，不会被挡住</string>
   <string name="settings_keep_screen_on">运行期间保持屏幕常亮</string>
   <string name="settings_keep_screen_on_summary">Agent 执行任务期间防止屏幕自动熄灭</string>
+  <string name="assistant_role_status_default">已设为默认</string>
+  <string name="assistant_role_status_unset">未设为默认</string>
+  <string name="assistant_role_summary_default">已是系统默认数字助理，点击打开系统设置</string>
+  <string name="assistant_role_system_settings_title">系统默认助理设置</string>
+  <string name="assistant_role_system_settings_summary">如果系统弹窗未生效，可前往系统设置手动选择</string>
 </resources>

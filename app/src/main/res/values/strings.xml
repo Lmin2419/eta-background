@@ -2050,4 +2050,9 @@
   <string name="settings_keep_screen_on">Keep screen on while running</string>
   <string name="settings_keep_screen_on_summary">Prevent screen sleep while an agent task is running</string>
   <string name="chat_queue_steer_images_deferred">Messages with images will be sent next after the current task finishes</string>
+  <string name="assistant_role_status_default">Set as default</string>
+  <string name="assistant_role_status_unset">Not set</string>
+  <string name="assistant_role_summary_default">Active default assistant, tap to open system settings</string>
+  <string name="assistant_role_system_settings_title">System default assistant settings</string>
+  <string name="assistant_role_system_settings_summary">Open system settings to switch or manage manually</string>
 </resources>
