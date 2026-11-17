@@ -181,6 +181,19 @@ internal sealed interface AgentEvent {
                 "reasoning=${usage.reasoningTokens}, cache=${usage.cachedTokens}, cache_write=${usage.cacheWriteTokens}"
     }
 
+    /**
+     * 交卷前自检触发了一次（etax/design/10 第一期）：模型准备交卷时还有没解决的失败，运行时让它先复核再答。
+     * [failures] 是列给模型的失败条数，[reason] 是 [io.github.mangi.eta.agent.model.CompletionGate.Reason.wire]。
+     */
+    data class CompletionReview(
+        val round: Int,
+        val failures: Int,
+        val reason: String,
+    ) : AgentEvent {
+        override fun toLogLine(): String =
+            "completion_review round=$round, failures=$failures, reason=${reason.toSafeLogToken()}"
+    }
+
     data class UserSupplementReceived(
         val index: Int,
         val text: String

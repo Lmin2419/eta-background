@@ -16,6 +16,8 @@ data class AppearanceSettings(
     val blurEnabled: Boolean = true,
     val runtimeGlowEnabled: Boolean = true,
     val taskCompletionAlertsEnabled: Boolean = true,
+    /** 回答前自动复核（etax/design/10 第一期）：还有没解决的失败时，先让 Agent 复核一次再交卷。 */
+    val completionReviewEnabled: Boolean = true,
     val topBarBlurStyle: AppearanceTopBarBlurStyle = AppearanceTopBarBlurStyle.GAUSSIAN,
     val swipeDismissEnabled: Boolean = true,
     val predictiveBackEnabled: Boolean = true,

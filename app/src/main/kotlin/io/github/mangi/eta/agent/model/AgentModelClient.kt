@@ -114,6 +114,8 @@ internal object AgentModelClient {
         onContextSnapshot: (AgentContextSnapshot) -> Unit = {},
         onTranscript: (List<ConversationMessage>) -> Unit = {},
         backgroundCompaction: BackgroundCompactionPolicy? = null,
+        /** 交卷前自检（etax/design/10 第一期）。主对话按设置传入；子代理与改写回复不做。 */
+        completionReview: Boolean = false,
         onEvent: (AgentEvent) -> Unit = {}
     ): ModelResponse.Text {
         config.validate()
@@ -238,6 +240,7 @@ internal object AgentModelClient {
             initialSupplementIndex = initialSupplementIndex,
             toolsForRound = ::toolsForRound,
             backgroundCompaction = backgroundCompaction.takeUnless { rewriteReply || compactOnly },
+            completionReview = completionReview && !rewriteReply && !compactOnly,
         )
         val result = try {
             if (compactOnly) loop.compactOnly() else loop.run()

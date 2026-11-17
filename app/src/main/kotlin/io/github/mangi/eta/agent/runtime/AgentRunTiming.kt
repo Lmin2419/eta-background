@@ -31,6 +31,7 @@ internal class AgentRunTiming(
     private var firstDeltaSamples = 0
     private val toolTimingsMs = mutableMapOf<String, Long>()
     private var timedToolCalls = 0
+    private var completionReviews = 0
     private var finished: RunPerformanceSummary? = null
 
     @Synchronized fun preparationFinished(skillCount: Int) {
@@ -89,6 +90,7 @@ internal class AgentRunTiming(
                     if (slowTools.size > 3) slowTools.removeAt(3)
                 }
             }
+            is AgentEvent.CompletionReview -> completionReviews++
             is AgentEvent.RunFinished, is AgentEvent.RunFailed -> { requestAt = null; preparing = false }
             else -> Unit
         }
@@ -107,6 +109,7 @@ internal class AgentRunTiming(
             firstDeltaTotalMs = firstDeltaTotalMs, firstDeltaSamples = firstDeltaSamples, slowTools = slowTools.toList(),
             toolTimingsMs = toolTimingsMs.toMap(), timedToolCalls = timedToolCalls,
             firstDeltaIncludesTools = true,
+            completionReviews = completionReviews,
         ).also { finished = it; activeTools.clear() }
     }
 

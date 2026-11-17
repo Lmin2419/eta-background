@@ -197,6 +197,7 @@ internal object SettingsDataStore {
     private val APPEARANCE_BLUR_ENABLED = booleanPreferencesKey("appearance_blur_enabled")
     private val APPEARANCE_RUNTIME_GLOW_ENABLED = booleanPreferencesKey("appearance_runtime_glow_enabled")
     private val APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED = booleanPreferencesKey("appearance_task_completion_alerts_enabled")
+    private val AGENT_COMPLETION_REVIEW_ENABLED = booleanPreferencesKey("agent_completion_review_enabled")
     private val APPEARANCE_RENDER_DIAGNOSTICS = booleanPreferencesKey("appearance_render_diagnostics")
     private val APPEARANCE_TOP_BAR_BLUR_STYLE = stringPreferencesKey("appearance_top_bar_blur_style")
     private val APPEARANCE_SWIPE_DISMISS_ENABLED =
@@ -390,6 +391,7 @@ internal object SettingsDataStore {
             blurEnabled = this[APPEARANCE_BLUR_ENABLED] ?: true,
             runtimeGlowEnabled = this[APPEARANCE_RUNTIME_GLOW_ENABLED] ?: true,
             taskCompletionAlertsEnabled = this[APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED] ?: true,
+            completionReviewEnabled = this[AGENT_COMPLETION_REVIEW_ENABLED] ?: true,
             topBarBlurStyle = AppearanceTopBarBlurStyle.fromPersistedValue(
                 this[APPEARANCE_TOP_BAR_BLUR_STYLE],
             ),
@@ -412,6 +414,7 @@ internal object SettingsDataStore {
         this[APPEARANCE_BLUR_ENABLED] = settings.blurEnabled
         this[APPEARANCE_RUNTIME_GLOW_ENABLED] = settings.runtimeGlowEnabled
         this[APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED] = settings.taskCompletionAlertsEnabled
+        this[AGENT_COMPLETION_REVIEW_ENABLED] = settings.completionReviewEnabled
         this[APPEARANCE_TOP_BAR_BLUR_STYLE] = settings.topBarBlurStyle.persistedValue
         this[APPEARANCE_SWIPE_DISMISS_ENABLED] = settings.swipeDismissEnabled
         this[APPEARANCE_PREDICTIVE_BACK_ENABLED] = settings.predictiveBackEnabled

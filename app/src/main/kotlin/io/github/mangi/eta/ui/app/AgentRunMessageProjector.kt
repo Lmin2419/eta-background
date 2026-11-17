@@ -15,6 +15,10 @@ import io.github.mangi.eta.ui.model.ToolActivityStatusUi
 import io.github.mangi.eta.ui.model.UserMessageUi
 
 internal class AgentRunMessageProjector(
+    /** 「已自动复核」小胶囊的标题与详情（etax/design/10 第一期）；App 里从字符串资源取，测试用默认中文。 */
+    private val reviewLabels: (failures: Int) -> Pair<String, String> = { failures ->
+        "已自动复核" to "回答前发现 $failures 个没解决的失败，已让它先排查、能修就修，再给结论。"
+    },
     private val nowElapsedRealtime: () -> Long = { SystemClock.elapsedRealtime() },
 ) {
     private val thinkingStartedAt = mutableMapOf<String, Long>()
@@ -36,6 +40,16 @@ internal class AgentRunMessageProjector(
             if (messages.any { it == notice }) messages else messages.filterNot { it.id == notice.id } + notice
         }
         is AgentEvent.GuiControlChanged -> messages
+        is AgentEvent.CompletionReview -> {
+            val (title, details) = reviewLabels(event.failures)
+            val notice = SystemNoticeMessageUi(
+                id = "assistant-$runId-review-${event.round}", code = SystemNoticeCode.Marker,
+                detail = org.json.JSONObject().put("icon", "review").put("title", title).put("details", details).toString(),
+            )
+            // 复核前那段回答已经显示出来了，先把它定稿，复核后的新回答接在胶囊下面。
+            val settled = finalizeText(runId, finalizeThinking(runId, messages))
+            if (settled.any { it.id == notice.id }) settled else settled + notice
+        }
         is AgentEvent.AssistantBlockStart -> startAssistantBlock(runId, event, messages)
         is AgentEvent.AssistantBlockDelta -> when (event.kind) {
             AgentEvent.AssistantBlockKind.TEXT ->

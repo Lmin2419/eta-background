@@ -57,6 +57,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.TextFields
@@ -98,6 +99,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.mangi.eta.R
+import io.github.mangi.eta.agent.model.looksLikeGaveUp
 import io.github.mangi.eta.ui.theme.EtaTheme
 import io.github.mangi.eta.ui.model.TaskVisualStatus
 import androidx.compose.ui.focus.focusRequester
@@ -494,6 +496,7 @@ private fun InfoMarker(message: SystemNoticeMessageUi, modifier: Modifier = Modi
         "usage" -> Icons.Outlined.Speed
         "subagent" -> Icons.Outlined.Hub
         "schedule" -> Icons.Outlined.Schedule
+        "review" -> Icons.Outlined.FactCheck
         else -> Icons.Outlined.Bolt
     }
     var expanded by rememberSaveable(message.id) { mutableStateOf(false) }

@@ -130,8 +130,8 @@
 
 | 期 | 版本 | 结果 |
 | --- | --- | --- |
-| 零 先量 | | |
-| 一 交卷前自检 | | |
+| 零 先量 | 2026111614 | 运行诊断加 `recentRuns`（`RuntimeDiagnostics.recordRun`，`files/run_digests.json` 最近 20 条）；`RunPerformanceSummary` 加 `completion_reviews`。基线数据还没有：需要在手机上跑第 9 节的任务后导出 |
+| 一 交卷前自检 | 2026111614 | `CompletionGate` + `AgentEvent.CompletionReview`（界面一行「已自动复核」小胶囊）；复核提示带 `_eta_observation`，不进对话记录；`looksLikeGaveUp` 挪到 `agent/model/GiveUpHeuristic.kt`；`AgentModelClient.complete(completionReview)` 默认关，只有主对话按设置打开（子代理、改写回复不做）；不触发的错误码：TOOL_DISABLED、SUBAGENT_DISABLED、SUBAGENT_CANCELLED、NO_PROGRESS、APP_TAKEN_OVER、TOOL_NOT_AVAILABLE |
 | 二 工具报错讲人话 | | |
 | 三 只读查询一起跑 | | |
 | 四 界面操作少几轮 | | |

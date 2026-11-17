@@ -1992,4 +1992,10 @@
   <plurals name="message_selection_copied">
     <item quantity="other">已复制 %d 条</item>
   </plurals>
+  <string name="completion_review_marker">已自动复核</string>
+  <string name="completion_review_setting">回答前自动复核</string>
+  <string name="completion_review_setting_summary">有失败的步骤还没解决时，先让它排查一次、能修就修，再给你结论（每次最多一次）</string>
+  <plurals name="completion_review_details">
+    <item quantity="other">回答前还有 %d 个失败没解决，已让它先排查、能修就修，再给结论。</item>
+  </plurals>
 </resources>

@@ -1888,4 +1888,10 @@
   <plurals name="message_selection_copied">
     <item quantity="other">已複製 %d 則</item>
   </plurals>
+  <string name="completion_review_marker">已自動複核</string>
+  <string name="completion_review_setting">回答前自動複核</string>
+  <string name="completion_review_setting_summary">有失敗的步驟還沒解決時，先讓它排查一次、能修就修，再給你結論（每次最多一次）</string>
+  <plurals name="completion_review_details">
+    <item quantity="other">回答前還有 %d 個失敗沒解決，已讓它先排查、能修就修，再給結論。</item>
+  </plurals>
 </resources>

@@ -97,7 +97,10 @@ internal class EtaAssistantOverlayService : Service(), LifecycleOwner, SavedStat
         Thread(runnable, "EtaAssistantRuntimeCancel")
     }
     private val runtimeClient = AgentRuntimeClient(this, AndroidAgentLogger)
-    private val runMessageProjector = AgentRunMessageProjector()
+    private val runMessageProjector = AgentRunMessageProjector(reviewLabels = { failures ->
+        getString(io.github.mangi.eta.R.string.completion_review_marker) to
+            resources.getQuantityString(io.github.mangi.eta.R.plurals.completion_review_details, failures, failures)
+    })
     private val eventCoalescer = AgentRunEventCoalescer()
     private var deltaFlushJob: Job? = null
     private var speechLevel by mutableFloatStateOf(0f)

@@ -26,6 +26,8 @@ internal data class RunPerformanceSummary(
     val timedToolCalls: Int = 0,
     /** False for archived summaries measured before tool-call output was included. */
     val firstDeltaIncludesTools: Boolean = false,
+    /** 交卷前自检触发的次数（etax/design/10 第一期）；旧记录没有这一项时为 0。 */
+    val completionReviews: Int = 0,
 ) {
     data class SlowTool(val name: String, val elapsedMs: Long)
 
@@ -41,6 +43,7 @@ internal data class RunPerformanceSummary(
         .put("first_delta_includes_tools", firstDeltaIncludesTools)
         .put("tool_timings_ms", JSONObject(ToolTimingMetadata.sanitize(toolTimingsMs, aggregate = true)))
         .put("timed_tool_calls", timedToolCalls.coerceAtLeast(0))
+        .put("completion_reviews", completionReviews.coerceAtLeast(0))
         .put("slow_tools", JSONArray().also { array ->
             slowTools.take(3).forEach { array.put(JSONObject().put("name", it.name).put("elapsed_ms", it.elapsedMs)) }
         }).toString()
@@ -110,6 +113,7 @@ internal data class RunPerformanceSummary(
                 toolTimingsMs = ToolTimingMetadata.readTotals(json.optJSONObject("tool_timings_ms")),
                 timedToolCalls = json.optInt("timed_tool_calls", 0).also { require(it >= 0) },
                 firstDeltaIncludesTools = json.optBoolean("first_delta_includes_tools", false),
+                completionReviews = json.optInt("completion_reviews", 0).coerceAtLeast(0),
             )
         }.getOrNull()
     }

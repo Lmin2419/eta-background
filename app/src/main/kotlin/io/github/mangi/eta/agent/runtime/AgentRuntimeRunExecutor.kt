@@ -1,5 +1,6 @@
 package io.github.mangi.eta.agent.runtime
 
+import io.github.mangi.eta.agent.model.looksLikeGaveUp
 import android.content.Context
 import io.github.mangi.eta.agent.accessibility.AgentAccessibilityKeeper
 import io.github.mangi.eta.agent.browser.BrowserSessionRegistry
@@ -408,6 +409,10 @@ internal class AgentRuntimeRunExecutor(
                 else runCatching {
                     runBlocking { io.github.mangi.eta.data.repository.RuntimeConfigRepository.backgroundCompactionPolicy(request.effectiveModelSessionId) }
                 }.getOrNull(),
+                // 10 号方案第一期：交卷前自检，设置里「回答前自动复核」默认开。读不到设置时按开处理。
+                completionReview = runCatching {
+                    runBlocking { io.github.mangi.eta.data.repository.AppearanceSettingsRepository.settings().completionReviewEnabled }
+                }.getOrDefault(true),
             ) { event ->
                 timing.accept(event)
                 acceptEvent(
@@ -489,6 +494,12 @@ internal class AgentRuntimeRunExecutor(
         // Metrics must never control completion, add model input, or prevent publishing a result.
         runCatching {
             val event = AgentEvent.RunPerformance(timing.finish())
+            // 10 号方案第零期：留最近 20 次运行的数字，「导出运行诊断」里能看到，用来对比优化前后。
+            RuntimeDiagnostics.recordRun(
+                appContext, event.summary,
+                outcome = when { cancelled -> "cancelled"; response != null -> "ok"; else -> "failed" },
+                gaveUp = response?.content?.looksLikeGaveUp() == true,
+            )
             if (!session.isTerminal) {
                 acceptEvent(session, event, archivedEvents, entrySurfaceGuard, checkpointRecorder)
             } else {

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.NotificationsActive
 import io.github.mangi.eta.data.repository.AppearanceSettingsRepository
@@ -524,6 +525,15 @@ private fun SettingsPageContent(
                         startAction = { EtaPreferenceIcon(Icons.Outlined.NotificationsActive, tint = EtaPreferenceColors.Indigo) },
                         onCheckedChange = { enabled -> coroutineScope.launch {
                             AppearanceSettingsRepository.update { it.copy(taskCompletionAlertsEnabled = enabled) }
+                        } })
+                    EtaPreferenceDivider()
+                    // 10 号方案第一期：回答前还有没解决的失败时，先让 Agent 复核一次再交卷。
+                    EtaSwitchPreference(title = stringResource(R.string.completion_review_setting),
+                        summary = stringResource(R.string.completion_review_setting_summary),
+                        checked = appearance.completionReviewEnabled,
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.FactCheck, tint = EtaPreferenceColors.Indigo) },
+                        onCheckedChange = { enabled -> coroutineScope.launch {
+                            AppearanceSettingsRepository.update { it.copy(completionReviewEnabled = enabled) }
                         } })
                     EtaPreferenceDivider()
                     EtaArrowPreference(

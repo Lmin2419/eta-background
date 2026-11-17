@@ -2018,4 +2018,11 @@
     <item quantity="one">Copied %d message</item>
     <item quantity="other">Copied %d messages</item>
   </plurals>
+  <string name="completion_review_marker">Self-checked before answering</string>
+  <string name="completion_review_setting">Self-check before answering</string>
+  <string name="completion_review_setting_summary">When a step failed and wasn\'t fixed, the agent re-checks the error and retries once before giving you its conclusion</string>
+  <plurals name="completion_review_details">
+    <item quantity="one">%d failed step wasn\'t resolved before answering, so it re-checked and retried first.</item>
+    <item quantity="other">%d failed steps weren\'t resolved before answering, so it re-checked and retried first.</item>
+  </plurals>
 </resources>

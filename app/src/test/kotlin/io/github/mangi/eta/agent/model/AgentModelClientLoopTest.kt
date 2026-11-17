@@ -912,6 +912,61 @@ class AgentModelClientLoopTest {
         assertEquals(1, events.filterIsInstance<AgentEvent.ToolStarted>().size)
     }
 
+    /** 10 号方案第一期：工具失败后模型说「做不到」，运行时先让它复核一次；复核提示不进对话记录。 */
+    @Test
+    fun completionReviewAsksOnceBeforeAcceptingAGiveUpAfterAFailedTool() {
+        val provider = ScriptedProvider(listOf(
+            { _, _ -> assistant(finishReason = "tool_calls", toolCalls = listOf(toolCall("run-1", "get_current_context", "{}"))) },
+            { _, _ -> assistant(content = "运行失败了，这个做不到。", finishReason = "stop") },
+            { request, _ ->
+                val last = request.messages.getJSONObject(request.messages.length() - 1)
+                assertEquals("user", last.getString("role"))
+                assertTrue(last.toString().contains("交卷前复核"))
+                assertTrue(last.toString().contains("FILE_NOT_FOUND"))
+                assistant(finishReason = "tool_calls", toolCalls = listOf(toolCall("run-2", "get_current_context", "{}")))
+            },
+            { _, _ -> assistant(content = "路径少了一个字母，改过来后读到了：一切正常。", finishReason = "stop") },
+        ))
+        val events = mutableListOf<AgentEvent>()
+        var calls = 0
+        val response = AgentModelClient.complete(
+            config = modelConfig(), prompt = "读一下配置", provider = provider, onEvent = events::add,
+            completionReview = true,
+            toolExecutor = AgentModelClient.ToolExecutor {
+                calls++
+                if (calls == 1) AgentModelClient.ToolResult("""{"ok":false,"code":"FILE_NOT_FOUND","message":"no such file: confg.json"}""")
+                else AgentModelClient.ToolResult("""{"ok":true}""")
+            },
+        )
+        assertEquals("路径少了一个字母，改过来后读到了：一切正常。", response.content)
+        val review = events.filterIsInstance<AgentEvent.CompletionReview>().single()
+        assertEquals("last_tool_failed", review.reason)
+        assertEquals(1, review.failures)
+        // 复核提示只在请求上下文里，不进对话记录（不会被算成一轮用户消息）。
+        assertTrue(response.transcript.none { it.content.contains("交卷前复核") })
+        assertEquals(0, response.transcript.count { it.role == "user" && it.messageId.contains("supplement") })
+    }
+
+    @Test
+    fun completionReviewHappensAtMostOncePerRunAndIsOffByDefault() {
+        fun failingRun(review: Boolean): Pair<Int, Int> {
+            val provider = ScriptedProvider(listOf(
+                { _, _ -> assistant(finishReason = "tool_calls", toolCalls = listOf(toolCall("a", "get_current_context", "{}"))) },
+                { _, _ -> assistant(content = "失败了，无法完成。", finishReason = "stop") },
+                { _, _ -> assistant(finishReason = "tool_calls", toolCalls = listOf(toolCall("b", "get_current_context", "{}"))) },
+                { _, _ -> assistant(content = "还是失败，无法完成：权限不足。", finishReason = "stop") },
+            ))
+            val events = mutableListOf<AgentEvent>()
+            AgentModelClient.complete(
+                config = modelConfig(), prompt = "试试", provider = provider, onEvent = events::add, completionReview = review,
+                toolExecutor = AgentModelClient.ToolExecutor { AgentModelClient.ToolResult("""{"ok":false,"code":"PERMISSION_DENIED"}""") },
+            )
+            return provider.requests.size to events.filterIsInstance<AgentEvent.CompletionReview>().size
+        }
+        assertEquals(4 to 1, failingRun(review = true))
+        assertEquals(2 to 0, failingRun(review = false))
+    }
+
     private class ScriptedProvider(
         private val responses: List<(ProviderRequest, AgentRunController) -> JSONObject>,
     ) : AgentProviderClient {

@@ -725,6 +725,13 @@ internal object AgentRuntimeWire {
                 event.usage?.takeUnless { it.isEmpty }?.let { putTokenUsage(it, prefix = "compaction_usage_") }
             }
 
+            is AgentEvent.CompletionReview -> {
+                putString(KEY_TYPE, "completion_review")
+                putInt("round", event.round)
+                putInt("failures", event.failures)
+                putString("reason", event.reason)
+            }
+
             is AgentEvent.ModelRetryScheduled -> {
                 putString(KEY_TYPE, "model_retry_scheduled")
                 putInt("round", event.round)
@@ -895,6 +902,11 @@ internal object AgentRuntimeWire {
             reasonCode = bundle.getString("reason_code").orEmpty(),
             usage = bundle.getTokenUsage(prefix = "compaction_usage_").takeUnless { it.isEmpty },
             archiveId = bundle.getString("compaction_archive_id").orEmpty(),
+        )
+        "completion_review" -> AgentEvent.CompletionReview(
+            round = bundle.getInt("round"),
+            failures = bundle.getInt("failures"),
+            reason = bundle.getString("reason").orEmpty(),
         )
         "model_retry_scheduled" -> AgentEvent.ModelRetryScheduled(
             round = bundle.getInt("round"),

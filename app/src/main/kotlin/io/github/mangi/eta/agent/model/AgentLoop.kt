@@ -42,6 +42,8 @@ internal class AgentLoop(
     private val roleplayContext: RoleplayRunContext? = null,
     initialSupplementIndex: Int = 0,
     backgroundCompaction: BackgroundCompactionPolicy? = null,
+    /** 交卷前自检（etax/design/10 第一期）；设置里「回答前自动复核」关掉时为 false。 */
+    private val completionReview: Boolean = true,
 ) {
     data class Result(
         val content: String,
@@ -72,6 +74,9 @@ internal class AgentLoop(
         background = backgroundCompaction,
     )
     private var supplementIndex = initialSupplementIndex
+    /** 这一轮用户请求里每个工具调用结果的摘要；交卷前自检用。用户中途补充指令时清空。 */
+    private val outcomeLog = mutableListOf<ToolOutcomeSummary>()
+    private var reviewed = false
 
     fun contextSnapshot(): AgentContextSnapshot? = context.snapshot()
 
@@ -231,6 +236,7 @@ internal class AgentLoop(
 
             if (toolCalls.isNotEmpty()) {
                 val outcomes = executeToolBatch(round, toolCalls, providerResponse.stopReason)
+                outcomes.forEach { outcomeLog += ToolOutcomeSummary.of(it.call.name, it.result.content) }
                 outcomes.forEach { outcome ->
                     appendMessage(AgentConversationCodec.toolResultMessage(outcome.call, outcome.result))
                 }
@@ -253,6 +259,23 @@ internal class AgentLoop(
             if (content.isBlank() || content == "null") {
                 val finishReason = assistantMessage.optString("finish_reason")
                 error("模型接口第 $round 轮返回为空${finishReason.takeIf { it.isNotBlank() }?.let { "：$it" }.orEmpty()}")
+            }
+
+            // 交卷前自检：还有没解决的失败、像是放弃了、或说「已完成」而最后一步界面动作没确认时，先复核一次再交卷。
+            // 复核提示只放进本次请求的上下文（不进对话记录，不算一轮用户消息），每轮用户请求最多一次。
+            if (purpose == ProviderRequestPurpose.CHAT && completionReview) {
+                val review = CompletionGate.review(outcomeLog, content, reviewed)
+                if (review != null) {
+                    reviewed = true
+                    messages.put(
+                        AgentConversationCodec.userTextMessage(review.prompt())
+                            .put("_eta_observation", true)
+                            .put("_eta_completion_review", true),
+                    )
+                    onEvent(AgentEvent.CompletionReview(round, review.failures.size, review.reason.wire))
+                    round += 1
+                    continue
+                }
             }
 
             publishTranscript()
@@ -305,6 +328,7 @@ internal class AgentLoop(
         appendMessage(steeringMessage(supplement))
         context.userAppended()
         turnMetrics.reset()
+        startNewUserTurn()
         return true
     }
 
@@ -313,7 +337,14 @@ internal class AgentLoop(
         appendMessage(steeringMessage(supplement))
         context.userAppended()
         turnMetrics.reset()
+        startNewUserTurn()
         return true
+    }
+
+    /** 用户补充了指令就是新的一轮请求：之前的失败不再算这轮的，自检次数也重新计。 */
+    private fun startNewUserTurn() {
+        outcomeLog.clear()
+        reviewed = false
     }
 
     private fun steeringPrompt(supplement: String): String =

@@ -111,7 +111,10 @@ internal class AgentAppState(
     private val titleGenerator: ConversationTitleGenerator = ConversationTitleGenerator(),
 ) {
     private val appContext = context.applicationContext
-    private val runMessageProjector = AgentRunMessageProjector()
+    private val runMessageProjector = AgentRunMessageProjector(reviewLabels = { failures ->
+        appContext.getString(io.github.mangi.eta.R.string.completion_review_marker) to
+            appContext.resources.getQuantityString(io.github.mangi.eta.R.plurals.completion_review_details, failures, failures)
+    })
     private val runStore = AgentRunStore(scope) { runId, event -> applyRunEvent(runId, event) }
     private val pendingConversationDeletes = mutableSetOf<String>()
     private class DeleteBatch(val ids: MutableSet<String>, val waiting: MutableSet<String>, val onComplete: (Int) -> Unit)
