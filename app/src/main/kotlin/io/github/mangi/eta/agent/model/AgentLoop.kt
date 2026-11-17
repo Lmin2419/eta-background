@@ -393,8 +393,21 @@ internal class AgentLoop(
                 if (parallelBatch.size == 1) {
                     outcomes += executeTool(round, parallelBatch.single())
                 } else {
-                    outcomes += executeParallelSubagents(round, parallelBatch)
+                    outcomes += executeParallel(round, parallelBatch, maxParallel = Int.MAX_VALUE, cancelledCode = "SUBAGENT_CANCELLED")
                 }
+            } else if (ToolConcurrency.isReadOnly(current.name) && current.name in availableToolNames) {
+                // 10 号方案第三期：连续的只读查询一起跑（最多 4 个同时），结果按原顺序返回。
+                val readBatch = mutableListOf<AgentModelClient.ToolCall>()
+                while (
+                    index < toolCalls.size &&
+                    ToolConcurrency.isReadOnly(toolCalls[index].name) &&
+                    toolCalls[index].name in availableToolNames
+                ) {
+                    readBatch += toolCalls[index].copy(round = round)
+                    index += 1
+                }
+                outcomes += if (readBatch.size == 1) listOf(executeTool(round, readBatch.single()))
+                    else executeParallel(round, readBatch, maxParallel = ToolConcurrency.MAX_PARALLEL, cancelledCode = "CANCELLED")
             } else {
                 outcomes += executeTool(round, current.copy(round = round))
                 index += 1
@@ -403,10 +416,14 @@ internal class AgentLoop(
         return outcomes
     }
 
-    private fun executeParallelSubagents(
+    /** 一批互不依赖的调用并行执行：子代理不限数量，只读查询最多 [maxParallel] 个同时；结果按原顺序返回。 */
+    private fun executeParallel(
         round: Int,
         calls: List<AgentModelClient.ToolCall>,
+        maxParallel: Int,
+        cancelledCode: String,
     ): List<ToolOutcome> {
+        val permits = kotlinx.coroutines.sync.Semaphore(maxParallel.coerceIn(1, calls.size))
         runController.throwIfCancelled()
         calls.forEach { toolCall ->
             synchronized(toolBatchLock) {
@@ -425,6 +442,7 @@ internal class AgentLoop(
             supervisorScope {
                 calls.map { toolCall ->
                     async {
+                        permits.acquire()
                         val toolStartMs = monotonicNowMs()
                         val rawResult = try {
                             toolExecutor.execute(toolCall)
@@ -433,7 +451,7 @@ internal class AgentLoop(
                                 AgentModelClient.ToolResult(
                                     content = JSONObject()
                                         .put("ok", false)
-                                        .put("code", "SUBAGENT_CANCELLED")
+                                        .put("code", cancelledCode)
                                         .put("message", "已停止")
                                         .toString(),
                                 )
@@ -446,6 +464,8 @@ internal class AgentLoop(
                                         .toString(),
                                 )
                             }
+                        } finally {
+                            permits.release()
                         }
                         val elapsedMs = (monotonicNowMs() - toolStartMs).coerceAtLeast(0L)
                         synchronized(toolBatchLock) {

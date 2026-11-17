@@ -990,6 +990,46 @@ class AgentModelClientLoopTest {
         assertTrue(toolMessages[1].getString("hint").startsWith(ToolFailureAnnotator.REPEAT_HINT))
     }
 
+    /** 10 号方案第三期：同一轮里连续的只读查询一起跑，结果按原顺序回到上下文；中间夹着写操作就分成两批。 */
+    @Test
+    fun consecutiveReadOnlyCallsRunInParallelAndKeepTheirOrder() {
+        val provider = ScriptedProvider(
+            assistant(finishReason = "tool_calls", toolCalls = listOf(
+                toolCall("r1", "read_file", """{"path":"a"}"""),
+                toolCall("r2", "read_file", """{"path":"b"}"""),
+                toolCall("r3", "list_directory", """{"path":"."}"""),
+                toolCall("w1", "write_file", """{"path":"c","content":"x"}"""),
+                toolCall("r4", "read_file", """{"path":"c"}"""),
+            )),
+            assistant(content = "读完了。", finishReason = "stop"),
+        )
+        val running = java.util.concurrent.atomic.AtomicInteger(0)
+        val peak = java.util.concurrent.atomic.AtomicInteger(0)
+        val order = java.util.Collections.synchronizedList(mutableListOf<String>())
+        val started = System.nanoTime()
+        AgentModelClient.complete(
+            config = modelConfig().copy(terminalTools = true), prompt = "读几个文件", provider = provider,
+            capabilitiesProvider = { AgentToolCapabilities(rootAvailable = true) },
+            toolExecutor = AgentModelClient.ToolExecutor { call ->
+                val now = running.incrementAndGet()
+                peak.accumulateAndGet(now) { a, b -> maxOf(a, b) }
+                Thread.sleep(300)
+                order += call.id
+                running.decrementAndGet()
+                AgentModelClient.ToolResult("""{"ok":true,"id":"${call.id}"}""")
+            },
+        )
+        val elapsedMs = (System.nanoTime() - started) / 1_000_000
+        // 前三个只读并行（约 300ms），写一个（300ms），最后一个读（300ms）：远小于串行的 1500ms。
+        assertEquals(3, peak.get())
+        assertTrue("elapsed=$elapsedMs", elapsedMs < 1_300)
+        // 写操作在前三个读之后、最后一个读之前执行。
+        assertEquals(listOf("w1", "r4"), order.takeLast(2))
+        val toolIds = (0 until provider.requests.last().length()).map(provider.requests.last()::getJSONObject)
+            .filter { it.optString("role") == "tool" }.map { it.getString("tool_call_id") }
+        assertEquals(listOf("r1", "r2", "r3", "w1", "r4"), toolIds)
+    }
+
     private class ScriptedProvider(
         private val responses: List<(ProviderRequest, AgentRunController) -> JSONObject>,
     ) : AgentProviderClient {
