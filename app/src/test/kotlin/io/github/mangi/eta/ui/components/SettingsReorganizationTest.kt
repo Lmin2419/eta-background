@@ -52,8 +52,8 @@ class SettingsReorganizationTest {
         initEnvironment(context)
 
         val titles = expectedTitles(context)
-        val expectedMain = titles.filterIndexed { index, _ -> index !in 21..26 }
-        val expectedMore = titles.filterIndexed { index, _ -> index in 21..26 }
+        val expectedMain = titles.filterIndexed { index, _ -> index !in 21..22 }
+        val expectedMore = titles.filterIndexed { index, _ -> index in 21..22 }
         val groupTitles = mainGroupTitles(context)
 
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
@@ -178,7 +178,7 @@ class SettingsReorganizationTest {
             )
 
             val enhance = context.getString(R.string.capability_enhancements)
-            expectedTitles(context).slice(21..26).forEach {
+            expectedTitles(context).slice(21..22).forEach {
                 assertTrue("unexpected cold enhancement: $it", it !in coldPanel.visibleTexts())
             }
             assertTrue(
@@ -201,12 +201,12 @@ class SettingsReorganizationTest {
         }
         try {
             warmPanel.advance(40)
-            val vendorTitle = context.getString(R.string.ui_maintain_hey_google_detection_after_screen_rest_9d6877)
+            val vendorTitle = context.getString(R.string.ui_long_press_on_the_gesture_bar_triggers_a_circle_to_s_b80117)
             val titleNode = warmPanel.nodes().first { vendorTitle in it.textValues() }
             assertTrue("disconnected framework options must remain disabled",
                 generateSequence(titleNode) { it.parent }.any { it.config.contains(SemanticsProperties.Disabled) })
             val seen = warmPanel.collectScrollingTexts(maxSteps = 14)
-            val expectedMore = expectedTitles(context).filterIndexed { index, _ -> index in 21..26 }
+            val expectedMore = expectedTitles(context).filterIndexed { index, _ -> index in 21..22 }
             expectedMore.forEach { title ->
                 assertTrue("warm more page missing: $title. seen=$seen", title in seen)
             }
@@ -384,10 +384,6 @@ class SettingsReorganizationTest {
         context.getString(R.string.native_assistant_title), // 18
         context.getString(R.string.ui_long_press_the_power_button_1958d0), // 19
         context.getString(R.string.ui_automatically_set_default_assistant_f86963), // 20
-        context.getString(R.string.ui_maintain_hey_google_detection_after_screen_rest_9d6877), // 23
-        context.getString(R.string.ui_lock_screen_evokes_automatic_voice_input_1cde18), // 24
-        context.getString(R.string.ui_bright_screen_evokes_automatic_voice_input_4358fe), // 25
-        context.getString(R.string.ui_convert_google_apps_to_system_apps_0f6d89), // 26
         context.getString(R.string.ui_long_press_on_the_gesture_bar_triggers_a_circle_to_s_b80117), // 27
         context.getString(R.string.ui_long_press_with_two_fingers_to_trigger_a_circle_sear_ab597a), // 28
         context.getString(R.string.appearance_title), // 29
