@@ -15,8 +15,10 @@ data class AppearanceSettings(
     val pureBlackEnabled: Boolean = false,
     val blurEnabled: Boolean = true,
     val runtimeGlowEnabled: Boolean = true,
-    /** 流光亮度：柔和 / 标准；「关闭」由 [runtimeGlowEnabled] = false 表示。 */
-    val runtimeGlowIntensity: AppearanceGlowIntensity = AppearanceGlowIntensity.STANDARD,
+    /** 流光亮度：柔和 / 标准；「关闭」由 [runtimeGlowEnabled] = false 表示。2026111618 起默认柔和。 */
+    val runtimeGlowIntensity: AppearanceGlowIntensity = AppearanceGlowIntensity.SOFT,
+    /** 流光样式：智能（操作屏幕时四周细光、后台只亮摄像头小光圈）/ 整圈。 */
+    val runtimeGlowStyle: AppearanceGlowStyle = AppearanceGlowStyle.SMART,
     val taskCompletionAlertsEnabled: Boolean = true,
     /** 回答前自动复核（etax/design/10 第一期）：还有没解决的失败时，先让 Agent 复核一次再交卷。 */
     val completionReviewEnabled: Boolean = true,
@@ -38,6 +40,20 @@ data class AppearanceSettings(
     )
 }
 
+/** 屏幕流光的样式（2026111618）。 */
+@Serializable
+enum class AppearanceGlowStyle(val persistedValue: String) {
+    /** AI 操作你的屏幕时四周一圈细光；后台干活时只在摄像头外圈亮小光圈；开始、结束各提示一下。 */
+    SMART("smart"),
+    /** 任务运行期间屏幕四周一直亮。 */
+    FULL("full");
+
+    companion object {
+        fun fromPersistedValue(value: String?): AppearanceGlowStyle =
+            entries.firstOrNull { it.persistedValue == value } ?: SMART
+    }
+}
+
 /**
  * 屏幕流光的亮度档位。柔和档光带更细、更透明，适合嫌标准档太显眼但又想看到运行状态的时候。
  */
@@ -56,7 +72,7 @@ enum class AppearanceGlowIntensity(
 
     companion object {
         fun fromPersistedValue(value: String?): AppearanceGlowIntensity =
-            entries.firstOrNull { it.persistedValue == value } ?: STANDARD
+            entries.firstOrNull { it.persistedValue == value } ?: SOFT
     }
 }
 

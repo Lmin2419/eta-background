@@ -2000,7 +2000,12 @@
   <string name="appearance_glow_soft">柔和</string>
   <string name="appearance_glow_standard">标准</string>
   <string name="appearance_glow_off">关闭</string>
-  <string name="appearance_glow_summary_soft">任务运行时屏幕边缘一圈细而淡的光，看得到但不抢眼。</string>
-  <string name="appearance_glow_summary_standard">助手唤醒和任务执行时，屏幕边缘显示明亮的流动光效。</string>
+  <string name="appearance_glow_summary_soft">光更细更淡，看得到但不抢眼。</string>
+  <string name="appearance_glow_summary_standard">光更亮更宽。</string>
   <string name="appearance_glow_summary_off">不显示边缘光。任务状态仍会在胶囊和通知里显示。</string>
+  <string name="appearance_glow_smart">智能</string>
+  <string name="appearance_glow_full">整圈</string>
+  <string name="appearance_glow_brightness">流光亮度</string>
+  <string name="appearance_glow_summary_smart">AI 操作你的屏幕时亮一圈细光；在后台干活时只在摄像头周围亮个小光圈；开始和结束各提示一下。</string>
+  <string name="appearance_glow_summary_full">任务运行期间屏幕四周一直亮着。</string>
 </resources>

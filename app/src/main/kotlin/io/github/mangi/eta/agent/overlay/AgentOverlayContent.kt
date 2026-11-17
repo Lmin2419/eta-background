@@ -135,6 +135,12 @@ internal fun AgentOverlayGlow(
     state: AgentOverlayState,
     corners: ScreenCornerRadii,
     intensity: io.github.mangi.eta.data.model.AppearanceGlowIntensity = io.github.mangi.eta.data.model.AppearanceGlowIntensity.STANDARD,
+    /** 智能流光：EDGE = 屏幕四周细光（AI 在操作屏幕），CAMERA = 摄像头外圈小光圈（后台干活）。 */
+    presence: GlowPresence = GlowPresence.EDGE,
+    /** 摄像头开孔在屏幕上的位置；null 时小光圈退到顶边正中。 */
+    cameraCutout: android.graphics.RectF? = null,
+    /** 窗口出现时先跑一遍「开始」流光。 */
+    startSweep: Boolean = false,
 ) {
     val phase = state.phase
     if (phase != AgentOverlayPhase.RUNNING && phase != AgentOverlayPhase.PAUSED) return
@@ -142,8 +148,14 @@ internal fun AgentOverlayGlow(
     val running = phase == AgentOverlayPhase.RUNNING
     val pausedAccent = overlayPhaseAccent(AgentOverlayPhase.PAUSED)
     var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { shown = true }
+    val sweep = remember { androidx.compose.animation.core.Animatable(if (startSweep && !motion.reduceMotion) 0f else 1f) }
+    LaunchedEffect(Unit) {
+        shown = true
+        if (sweep.value < 1f) sweep.animateTo(1f, tween(AmbientGlowPolicy.START_SWEEP_MS, easing = LinearEasing))
+    }
     val reveal by animateFloatAsState(if (shown) 1f else 0f, tween(motion.long, easing = motion.emphasizedDecelerate), label = "edge_reveal")
+    // 边框与小光圈之间淡入淡出地切换（AI 开始 / 停止操作屏幕时）。
+    val edgeWeight by animateFloatAsState(if (presence == GlowPresence.EDGE) 1f else 0f, tween(motion.medium, easing = motion.standard), label = "edge_weight")
 
     val rotation = if (running && !motion.reduceMotion) {
         val transition = rememberInfiniteTransition(label = "edge_light")
@@ -154,54 +166,78 @@ internal fun AgentOverlayGlow(
             label = "edge_rotation",
         )
     } else null
+    val colors = remember { EdgeLightColors.map { it.toArgb() }.toIntArray() }
 
     Box(
         modifier = Modifier.fillMaxSize().drawBehind {
             val density = this.density
-            val inset = 1.5f * density
-            // 光带沿屏幕轮廓的连续曲线走：路径向内收 inset，转角同步减小，保证与屏幕边缘等距。
-            val edge = Path().apply {
-                addSquircleRect(
-                    width = size.width - inset * 2,
-                    height = size.height - inset * 2,
-                    cornerRadius = (corners.radius - inset).coerceAtLeast(0f),
-                )
-                translate(Offset(inset, inset))
-            }.asAndroidPath()
+            val edge = screenEdgePath(size.width, size.height, corners, density)
+            val angle = rotation?.value ?: 0f
+            // 开始流光跑的时候，常驻光效跟着它慢慢亮起来，不抢它的风头。
+            val settle = reveal * (0.25f + 0.75f * sweep.value)
             drawIntoCanvas { canvas ->
+                val native = canvas.nativeCanvas
+                native.drawStartSweep(edge, size.width, sweep.value, colors, intensity, density)
+                val ring = AmbientGlowPolicy.cameraRing(cameraCutout, size.width, density)
                 if (!running) {
                     val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                         style = android.graphics.Paint.Style.STROKE
                         strokeWidth = intensity.lineWidthDp * density
-                        color = pausedAccent.copy(alpha = 0.58f * intensity.lineAlpha * reveal).toArgb()
+                        color = pausedAccent.copy(alpha = 0.58f * intensity.lineAlpha * reveal * edgeWeight).toArgb()
                     }
-                    canvas.nativeCanvas.drawPath(edge, paint)
+                    if (edgeWeight > 0f) native.drawPath(edge, paint)
+                    native.drawCameraRing(ring, colors, 0f, intensity, density, reveal * (1f - edgeWeight),
+                        pausedColor = pausedAccent.toArgb())
                     return@drawIntoCanvas
                 }
-                val shader = android.graphics.SweepGradient(
-                    size.width / 2f, size.height / 2f, EdgeLightColors.map { it.toArgb() }.toIntArray(), null,
-                ).apply {
-                    setLocalMatrix(android.graphics.Matrix().apply { setRotate(rotation?.value ?: 0f, size.width / 2f, size.height / 2f) })
+                if (edgeWeight > 0f) {
+                    val (halo, line) = strokePaints(edgeShader(colors, size.width, size.height, angle), 0, intensity, density, settle * edgeWeight)
+                    native.drawPath(edge, halo)
+                    native.drawPath(edge, line)
                 }
-                // 外层柔光与内层亮线共用同一个旋转渐变，光带看起来是一体流动的。
-                val halo = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                    style = android.graphics.Paint.Style.STROKE
-                    strokeWidth = intensity.haloWidthDp * density
-                    maskFilter = android.graphics.BlurMaskFilter(intensity.haloWidthDp * 0.85f * density, android.graphics.BlurMaskFilter.Blur.NORMAL)
-                    this.shader = shader
-                    alpha = (intensity.haloAlpha * reveal * 255).toInt()
-                }
-                val line = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                    style = android.graphics.Paint.Style.STROKE
-                    strokeWidth = intensity.lineWidthDp * density
-                    this.shader = shader
-                    alpha = (intensity.lineAlpha * reveal * 255).toInt()
-                }
-                canvas.nativeCanvas.drawPath(edge, halo)
-                canvas.nativeCanvas.drawPath(edge, line)
+                if (edgeWeight < 1f) native.drawCameraRing(ring, colors, angle * 2f, intensity, density, settle * (1f - edgeWeight))
             }
         }
     )
+}
+
+/**
+ * 结束提示：任务都结束后，屏幕四周细光亮起再暗下去一次，然后调用 [onFinished] 收起窗口。
+ */
+@Composable
+internal fun AgentOverlayEndPulse(
+    corners: ScreenCornerRadii,
+    intensity: io.github.mangi.eta.data.model.AppearanceGlowIntensity,
+    onFinished: () -> Unit,
+) {
+    val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
+    val progress = remember { androidx.compose.animation.core.Animatable(0f) }
+    val colors = remember { EdgeLightColors.map { it.toArgb() }.toIntArray() }
+    LaunchedEffect(Unit) {
+        if (!motion.reduceMotion) progress.animateTo(1f, tween(AmbientGlowPolicy.END_PULSE_MS, easing = LinearEasing))
+        onFinished()
+    }
+    Box(
+        modifier = Modifier.fillMaxSize().drawBehind {
+            val edge = screenEdgePath(size.width, size.height, corners, density)
+            drawIntoCanvas { canvas ->
+                canvas.nativeCanvas.drawEndPulse(edge, size.width, size.height, progress.value, colors, intensity, density)
+            }
+        }
+    )
+}
+
+/** 光带沿屏幕轮廓的连续曲线走：路径向内收一点，转角同步减小，保证与屏幕边缘等距。 */
+private fun screenEdgePath(width: Float, height: Float, corners: ScreenCornerRadii, density: Float): android.graphics.Path {
+    val inset = 1.5f * density
+    return Path().apply {
+        addSquircleRect(
+            width = width - inset * 2,
+            height = height - inset * 2,
+            cornerRadius = (corners.radius - inset).coerceAtLeast(0f),
+        )
+        translate(Offset(inset, inset))
+    }.asAndroidPath()
 }
 
 @Composable

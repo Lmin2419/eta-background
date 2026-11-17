@@ -46,6 +46,7 @@ import io.github.mangi.eta.agent.media.AgentImageCodec
 import io.github.mangi.eta.agent.model.AgentModelClient
 import io.github.mangi.eta.agent.overlay.AgentHapticFeedback
 import io.github.mangi.eta.agent.overlay.AgentOverlayGlow
+import io.github.mangi.eta.agent.overlay.AgentOverlayEndPulse
 import io.github.mangi.eta.agent.overlay.ScreenCornerRadii
 import io.github.mangi.eta.agent.overlay.AgentOverlayCapsule
 import io.github.mangi.eta.agent.overlay.AgentOverlayClearance
@@ -110,7 +111,13 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private var windowManager: WindowManager? = null
     private var glowView: ComposeView? = null
     private var runtimeGlowEnabled = true
-    private val runtimeGlowIntensity = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.data.model.AppearanceGlowIntensity.STANDARD)
+    private val runtimeGlowIntensity = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.data.model.AppearanceGlowIntensity.SOFT)
+    private var runtimeGlowStyle = io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART
+    // 智能流光：AI 在操作屏幕时四周细光，后台干活时摄像头小光圈（AmbientGlowPolicy）。
+    private val glowPresence = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.agent.overlay.GlowPresence.CAMERA)
+    // 当前光效窗口是真的在画流光（而不是只为保持亮屏的 1×1 空窗口）。
+    private var glowWindowVisual = false
+    private var endPulseView: ComposeView? = null
     // Fail closed until the persisted preference is loaded; this controls only the legacy fallback.
     private var taskCompletionAlertsEnabled = false
     private var capsuleView: ComposeView? = null
@@ -176,6 +183,10 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             AppearanceSettingsRepository.settingsFlow().collect { appearance ->
                 taskCompletionAlertsEnabled = appearance.taskCompletionAlertsEnabled
                 runtimeGlowIntensity.value = appearance.runtimeGlowIntensity
+                if (runtimeGlowStyle != appearance.runtimeGlowStyle) {
+                    runtimeGlowStyle = appearance.runtimeGlowStyle
+                    publishExecutionState()
+                }
                 if (runtimeGlowEnabled != appearance.runtimeGlowEnabled) {
                     runtimeGlowEnabled = appearance.runtimeGlowEnabled
                     glowView?.let { view -> runCatching { windowManager?.removeView(view) } }
@@ -229,6 +240,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         resultCardView?.let { view -> runCatching { windowManager?.removeView(view) } }
         capsuleView?.let { view -> runCatching { windowManager?.removeView(view) } }
         glowView?.let { view -> runCatching { windowManager?.removeView(view) } }
+        removeEndPulse()
         resultCardView = null
         capsuleView = null
         glowView = null
@@ -1145,6 +1157,10 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         }
         val selected = active.firstOrNull { it.runId == guiControl.state.value.ownerRunId }
             ?: displayedRun?.takeIf { it in active } ?: active.lastOrNull()
+        val guiNow = guiControl.state.value
+        val operatingScreen = !guiNow.userPaused && guiNow.ownerRunId?.let(runs::get)?.session
+            ?.let { !it.isTerminal && !it.controller.isPaused && !it.controller.isCancelled } == true
+        glowPresence.value = io.github.mangi.eta.agent.overlay.AmbientGlowPolicy.presence(runtimeGlowStyle, operatingScreen)
         if (selected != null) {
             if (displayedRun !== selected) bindDisplayedRun(selected)
             state.value = selected.overlayState.copy(status = taskStatus(selected),
@@ -1167,6 +1183,9 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             // Foreground history may keep the legacy result context, never a running
             // glow. Background tools can also share names with foreground tools.
             ambientState.value = ambientState.value.copy(phase = AgentOverlayPhase.FINISHED)
+            // 流光正亮着时任务全部结束：四周细光亮起再暗下去一次，作为「结束」提示。
+            if (glowView != null && glowWindowVisual && runtimeGlowEnabled && isMainDisplayOn() &&
+                !MainActivity.isInForeground) showEndPulse()
             glowView?.let { view -> runCatching { windowManager?.removeView(view) } }
             glowView = null
             glowParams = null
@@ -1229,8 +1248,12 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             !it.session.isTerminal && !it.queued && !it.session.controller.isPaused && !it.session.controller.isCancelled
         }
         if ((showGlow || keepScreenOn.value) && glowView == null) {
+            val corners = screenCornerRadii()
+            val cutout = cameraCutoutBounds()
+            val sweep = runtimeGlowStyle == io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART
             val glow = createOverlayComposeView {
-                if (showGlow) AgentOverlayGlow(state = ambientState.value, corners = screenCornerRadii(), intensity = runtimeGlowIntensity.value)
+                if (showGlow) AgentOverlayGlow(state = ambientState.value, corners = corners, intensity = runtimeGlowIntensity.value,
+                    presence = glowPresence.value, cameraCutout = cutout, startSweep = sweep)
             }
             val glowLp = glowLayoutParams().apply {
                 // Keep the existing foreground-only screen-on behavior when visuals are off.
@@ -1245,6 +1268,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             }.onSuccess {
                 glowView = glow
                 glowParams = glowLp
+                glowWindowVisual = showGlow
             }
         }
 
@@ -1573,6 +1597,49 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         }
     }
 
+    /** 「结束」提示：单独一个触摸穿透的全屏窗口，播完一次呼吸就自己收起。 */
+    private fun showEndPulse() {
+        if (endPulseView != null) return
+        val wm = windowManager ?: return
+        val corners = screenCornerRadii()
+        val intensity = runtimeGlowIntensity.value
+        val view = createOverlayComposeView {
+            AgentOverlayEndPulse(corners, intensity) { mainHandler.post { removeEndPulse() } }
+        }
+        runCatching { wm.addView(view, glowLayoutParams()) }
+            .onSuccess { endPulseView = view }
+            .onFailure { throwable ->
+                AndroidAgentLogger.warnThrottled("runtime_end_pulse_add_view_failed") {
+                    "Agent runtime end pulse addView failed: type=${throwable.safeLogType()}"
+                }
+            }
+    }
+
+    private fun removeEndPulse() {
+        endPulseView?.let { view -> runCatching { (windowManager ?: (overlayContext().getSystemService(Context.WINDOW_SERVICE) as? WindowManager))?.removeView(view) } }
+        endPulseView = null
+    }
+
+    /**
+     * 摄像头开孔在屏幕上的位置（光效窗口与屏幕原点重合，坐标可直接用）。只取靠上的那个开孔；
+     * 没有开孔时返回 null，小光圈退到顶边正中。
+     */
+    private fun cameraCutoutBounds(): android.graphics.RectF? {
+        val display = (overlayContext().getSystemService(Context.DISPLAY_SERVICE) as? android.hardware.display.DisplayManager)
+            ?.getDisplay(android.view.Display.DEFAULT_DISPLAY) ?: return null
+        val cutout = runCatching { display.cutout }.getOrNull() ?: return null
+        val path = runCatching { cutout.cutoutPath }.getOrNull()
+        val bounds = android.graphics.RectF()
+        if (path != null && !path.isEmpty) {
+            path.computeBounds(bounds, true)
+        } else {
+            val rect = cutout.boundingRectTop.takeUnless { it.isEmpty }
+                ?: cutout.boundingRects.minByOrNull { it.top } ?: return null
+            bounds.set(rect)
+        }
+        return bounds.takeUnless { it.isEmpty }
+    }
+
     /**
      * 屏幕四角的物理圆角半径。光效窗口覆盖整屏，直接取 Display 上报的值；
      * 部分 ROM 不上报时用 0，兜底按常见大圆角机型估一个保守值，宁可略小也不让光带越出屏幕。
@@ -1669,6 +1736,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     }
 
     private fun removeOverlayWindows() {
+        removeEndPulse()
         mainHandler.removeCallbacksAndMessages(hideToken)
         mainHandler.removeCallbacks(restoreCapsule)
         capsuleYielded.value = false

@@ -1896,7 +1896,12 @@
   <string name="appearance_glow_soft">柔和</string>
   <string name="appearance_glow_standard">標準</string>
   <string name="appearance_glow_off">關閉</string>
-  <string name="appearance_glow_summary_soft">任務執行時螢幕邊緣一圈細而淡的光，看得到但不搶眼。</string>
-  <string name="appearance_glow_summary_standard">助手喚醒和任務執行時，螢幕邊緣顯示明亮的流動光效。</string>
+  <string name="appearance_glow_summary_soft">光更細更淡，看得到但不搶眼。</string>
+  <string name="appearance_glow_summary_standard">光更亮更寬。</string>
   <string name="appearance_glow_summary_off">不顯示邊緣光。任務狀態仍會在膠囊和通知裡顯示。</string>
+  <string name="appearance_glow_smart">智慧</string>
+  <string name="appearance_glow_full">整圈</string>
+  <string name="appearance_glow_brightness">流光亮度</string>
+  <string name="appearance_glow_summary_smart">AI 操作你的螢幕時亮一圈細光；在背景工作時只在相機周圍亮個小光圈；開始和結束各提示一下。</string>
+  <string name="appearance_glow_summary_full">任務執行期間螢幕四周一直亮著。</string>
 </resources>
