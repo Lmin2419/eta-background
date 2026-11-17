@@ -964,6 +964,18 @@ internal class TaskScreenSession(
                 outcome = capture(options, autoScreenshot = rechecks == LATE_CHANGE_CHECKS)
             }
             if (rechecks > 0) result.put("late_change_checks", rechecks)
+            // 回看没读成（页面正在切换时读树、截图偶尔失败）：隔 0.3 秒再读一次。还是不行就在结果里写明，
+            // 让模型先 observe_screen，而不是拿旧截图的坐标去点、被「必须先观察」拒掉。
+            if (outcome is Capture.Failed && !controller.isCancelled) {
+                controller.awaitRetryDelay(AFTER_RETRY_DELAY_MS)
+                outcome = capture(options, autoScreenshot = true)
+            }
+            if (outcome is Capture.Failed) {
+                result.put("after_unavailable", true)
+                    .put("next_step", "画面没读到，下一步先 observe_screen")
+                runCatching { JSONObject(outcome.result.content).optString("code") }.getOrNull()
+                    ?.takeIf { it.isNotBlank() }?.let { result.put("after_error", it) }
+            }
             if (outcome is Capture.Done) {
                 attachment = outcome.attachment
                 val after = result.optJSONObject("after") ?: JSONObject()
@@ -1257,6 +1269,7 @@ internal class TaskScreenSession(
         /** 动作后等页面静下来的上限；静了就提前继续。 */
         const val AFTER_SETTLE_MS = 800
         const val LAUNCH_SETTLE_MS = 1_500
+        const val AFTER_RETRY_DELAY_MS = 300L
         const val LATE_CHANGE_CHECKS = 2
         const val LATE_CHANGE_DELAY_MS = 600L
         private const val MIN_READABLE_FOR_RECHECK = 6

@@ -573,8 +573,16 @@ internal class AgentRunMessageProjector(
         thinkingStartedAt.keys.removeAll { it.startsWith("$runId-thinking-") }
     }
 
-    private fun ThinkingMessageUi.finished(authoritativeContent: String? = null): ThinkingMessageUi =
-        copy(
+    /**
+     * 思考块结束：用时在结束那一刻定格。已经结束的块再被收尾（下一轮开始、整个运行结束都会对全部思考块收尾）
+     * 只更新正文，不再按「现在 − 开始」重算——以前会重算，一次运行里越早的思考块显示的用时越长，
+     * 真机上每轮十来秒的思考显示成「用时 148 秒」；也不再把用户展开的块重新收起。
+     */
+    private fun ThinkingMessageUi.finished(authoritativeContent: String? = null): ThinkingMessageUi {
+        if (!isStreaming) {
+            return if (authoritativeContent != null && authoritativeContent != content) copy(content = authoritativeContent) else this
+        }
+        return copy(
             content = authoritativeContent ?: content,
             isStreaming = false,
             elapsedSeconds = thinkingStartedAt[id]?.let { startedAt ->
@@ -582,6 +590,7 @@ internal class AgentRunMessageProjector(
             } ?: elapsedSeconds,
             collapsed = true,
         )
+    }
 
     private fun elapsedSeconds(thinkingId: String): Int {
         val startedAt = thinkingStartedAt.getOrPut(thinkingId, nowElapsedRealtime)

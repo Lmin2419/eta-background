@@ -222,6 +222,35 @@ class TaskScreenSessionSpeedTest {
         assertEquals(2, again.getInt("late_change_checks"))
     }
 
+    /** 动作后的回看第一次没读成（页面切换中）：隔一下再读一次，after 照常可用；两次都失败就写明下一步先观察。 */
+    @Test fun aFailedLookAfterAnActionIsRetriedOnce() {
+        for (failures in listOf(setOf(4), setOf(4, 5))) {
+            val backend = Backend()
+            var dumps = 0
+            val flaky = object : ScreenToolBackend {
+                override fun execute(name: String, arguments: String): String {
+                    if (name == "screen_dump" && ++dumps in failures) return """{"ok":false,"code":"WINDOW_NOT_READY"}"""
+                    return backend.execute(name, arguments)
+                }
+            }
+            val tools = TaskScreenSession(runId = "speed-retry-${failures.size}", controller = AgentRunController(), backend = flaky,
+                readScreenshot = { AgentModelClient.ToolResult("{}") })
+            tools.run("launch_app", JSONObject().put("package_name", "app.one").put("execution_location", "background")) // 第 1 次读树
+            val id = tools.run("observe_screen").getString("observation_id") // 第 2 次
+            // 第 3 次是动作前核对，第 4 次是动作后回看。
+            val tapped = tools.run("tap_element", JSONObject().put("index", 0).put("observation_id", id))
+            assertTrue(tapped.toString(), tapped.getBoolean("ok"))
+            if (failures.size == 1) {
+                assertTrue(tapped.toString(), tapped.getJSONObject("after").has("observation_id"))
+                assertFalse(tapped.has("after_unavailable"))
+            } else {
+                assertFalse(tapped.has("after"))
+                assertTrue(tapped.getBoolean("after_unavailable"))
+                assertEquals("WINDOW_NOT_READY", tapped.getString("after_error"))
+            }
+        }
+    }
+
     @Test fun relocationAndSparsenessRules() {
         val target = NodeRelocation.Identity("Button", "", "确定", "", NodeRelocation.Box(0, 0, 200, 100))
         assertEquals(NodeRelocation.Result.At(1), NodeRelocation.find(target,

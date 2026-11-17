@@ -271,6 +271,27 @@ class AgentRunMessageProjectorTest {
         assertEquals(10, messages.filterIsInstance<ThinkingMessageUi>().single { it.id.startsWith("run-other-") }.elapsedSeconds)
     }
 
+    /** 2026111623 真机反馈：越早的思考块「用时」越长（148、137、127…秒），其实每轮只有十来秒。 */
+    @Test
+    fun finishedThinkingKeepsItsDurationWhenLaterRoundsAndTheRunEnd() {
+        var now = 1_000L
+        val projector = AgentRunMessageProjector(nowElapsedRealtime = { now })
+        val runId = "run-frozen"
+        var messages: List<AgentChatMessageUi> = listOf(UserMessageUi(id = "user-$runId", content = "查距离"))
+        messages = projector.appendReasoningDelta(runId, round = 1, index = 0, delta = "先打开地图", messages)
+        now = 9_000L
+        messages = projector.finalizeThinkingRound(runId, round = 1, messages)
+        messages = projector.appendReasoningDelta(runId, round = 2, index = 0, delta = "点搜索框", messages)
+        now = 14_000L
+        messages = projector.finalizeThinkingRound(runId, round = 2, messages)
+        now = 120_000L
+        messages = projector.finalizeThinkingRound(runId, round = 1, messages)
+        messages = projector.finalizeRun(runId, messages)
+        val thinking = messages.filterIsInstance<ThinkingMessageUi>()
+        assertEquals(listOf(8, 5), thinking.map { it.elapsedSeconds })
+        assertTrue(thinking.none { it.isStreaming })
+    }
+
     @Test
     fun projectsReasoningAndToolsByRoundAndToolCallId() {
         var now = 1_000L
