@@ -86,7 +86,10 @@ internal fun markdownBlockGap(previous: MarkdownBlock?, current: MarkdownBlock, 
     val gap = when {
         current is MarkdownHeading && previous is MarkdownHeading -> 8f
         current is MarkdownHeading -> if (current.level <= 2) 22f else 18f
+        previous is MarkdownHeading && current is MarkdownMath -> 10f
         previous is MarkdownHeading -> 8f
+        previous is MarkdownMath && current is MarkdownMath -> 12f
+        previous is MarkdownMath || current is MarkdownMath -> 14f
         previous is MarkdownParagraph && current is MarkdownParagraph -> 12f
         else -> 14f
     }
