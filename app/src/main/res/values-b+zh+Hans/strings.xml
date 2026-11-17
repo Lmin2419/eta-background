@@ -1484,7 +1484,6 @@
   <string name="chat_queue_images_only">[%1$d 张图片]</string>
   <string name="chat_queue_files_only">[%1$d 个文件]</string>
     <string name="appearance_runtime_glow">运行时屏幕流光</string>
-    <string name="appearance_runtime_glow_summary">显示助手唤醒及任务执行时的屏幕边缘光效，修改后立即生效。</string>
   <string name="tools_background_group">后台应用操作</string>
   <string name="tool_background_open">打开后台应用</string>
   <string name="tool_background_open_description">明确要求后台执行时使用虚拟屏。需要 Root 和无障碍服务；最多两个不同应用并行，其他任务排队。后台可在息屏后继续，锁屏时不执行前台操作；联网仍受系统省电策略影响。</string>
@@ -1998,4 +1997,10 @@
   <plurals name="completion_review_details">
     <item quantity="other">回答前还有 %d 个失败没解决，已让它先排查、能修就修，再给结论。</item>
   </plurals>
+  <string name="appearance_glow_soft">柔和</string>
+  <string name="appearance_glow_standard">标准</string>
+  <string name="appearance_glow_off">关闭</string>
+  <string name="appearance_glow_summary_soft">任务运行时屏幕边缘一圈细而淡的光，看得到但不抢眼。</string>
+  <string name="appearance_glow_summary_standard">助手唤醒和任务执行时，屏幕边缘显示明亮的流动光效。</string>
+  <string name="appearance_glow_summary_off">不显示边缘光。任务状态仍会在胶囊和通知里显示。</string>
 </resources>

@@ -1520,7 +1520,6 @@
   <string name="chat_queue_images_only">[%1$d images]</string>
   <string name="chat_queue_files_only">[%1$d files]</string>
     <string name="appearance_runtime_glow">Runtime edge glow</string>
-    <string name="appearance_runtime_glow_summary">Show screen edge lighting during assistant wake and task execution. Changes take effect immediately.</string>
     <string name="background_task_preparing">Preparing task</string>
     <string name="background_task_waiting_gui">Waiting for foreground control</string>
     <string name="background_preview_paused">You\'re in control</string>
@@ -2025,4 +2024,10 @@
     <item quantity="one">%d failed step wasn\'t resolved before answering, so it re-checked and retried first.</item>
     <item quantity="other">%d failed steps weren\'t resolved before answering, so it re-checked and retried first.</item>
   </plurals>
+  <string name="appearance_glow_soft">Soft</string>
+  <string name="appearance_glow_standard">Standard</string>
+  <string name="appearance_glow_off">Off</string>
+  <string name="appearance_glow_summary_soft">A thin, faint edge line while tasks run. Visible but unobtrusive.</string>
+  <string name="appearance_glow_summary_standard">Bright flowing edge light during assistant wake and task execution.</string>
+  <string name="appearance_glow_summary_off">No edge light. Task status is still shown in the capsule and notification.</string>
 </resources>

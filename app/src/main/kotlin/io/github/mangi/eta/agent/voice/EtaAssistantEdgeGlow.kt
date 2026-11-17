@@ -56,6 +56,7 @@ internal fun EtaAssistantEdgeGlow(
     active: Boolean,
     onEntranceFinished: () -> Unit,
     modifier: Modifier = Modifier,
+    strength: Float = 1f,
 ) {
     val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
     var firstWakeComplete by remember { mutableStateOf(false) }
@@ -87,7 +88,7 @@ internal fun EtaAssistantEdgeGlow(
         }
     }
     Canvas(modifier.fillMaxSize()) {
-        val alpha = opacity.value
+        val alpha = opacity.value * strength
         if (alpha <= 0f) return@Canvas
         val width = size.width
         val height = size.height

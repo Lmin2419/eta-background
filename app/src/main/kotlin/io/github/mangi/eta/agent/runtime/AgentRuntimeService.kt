@@ -110,6 +110,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private var windowManager: WindowManager? = null
     private var glowView: ComposeView? = null
     private var runtimeGlowEnabled = true
+    private val runtimeGlowIntensity = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.data.model.AppearanceGlowIntensity.STANDARD)
     // Fail closed until the persisted preference is loaded; this controls only the legacy fallback.
     private var taskCompletionAlertsEnabled = false
     private var capsuleView: ComposeView? = null
@@ -174,6 +175,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         serviceScope.launch {
             AppearanceSettingsRepository.settingsFlow().collect { appearance ->
                 taskCompletionAlertsEnabled = appearance.taskCompletionAlertsEnabled
+                runtimeGlowIntensity.value = appearance.runtimeGlowIntensity
                 if (runtimeGlowEnabled != appearance.runtimeGlowEnabled) {
                     runtimeGlowEnabled = appearance.runtimeGlowEnabled
                     glowView?.let { view -> runCatching { windowManager?.removeView(view) } }
@@ -1228,7 +1230,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         }
         if ((showGlow || keepScreenOn.value) && glowView == null) {
             val glow = createOverlayComposeView {
-                if (showGlow) AgentOverlayGlow(state = ambientState.value, corners = screenCornerRadii())
+                if (showGlow) AgentOverlayGlow(state = ambientState.value, corners = screenCornerRadii(), intensity = runtimeGlowIntensity.value)
             }
             val glowLp = glowLayoutParams().apply {
                 // Keep the existing foreground-only screen-on behavior when visuals are off.

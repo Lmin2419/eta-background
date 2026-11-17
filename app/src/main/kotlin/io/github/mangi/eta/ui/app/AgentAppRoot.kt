@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.mangi.eta.EtaApp
 import io.github.mangi.eta.R
@@ -269,6 +270,8 @@ fun AgentAppRoot(
     val wideHome = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() >= 840.dp }
     val taskCount by remember { AgentExecutionService.taskSnapshots.map { cards -> cards.count { !it.completed } }.distinctUntilChanged() }.collectAsState(0)
     var conversationPaneOpen by rememberSaveable { mutableStateOf(false) }
+    // 从哪个对话点「+」来到工作台：工作台上按返回回到这里（WorkbenchBack）。
+    var workbenchReturnId by rememberSaveable { mutableStateOf<String?>(null) }
     var conversationRenameTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
     // 09 第五期 5.1：消息多选的状态放在根上，标题胶囊菜单和消息列表共用。
     val messageSelection = remember { io.github.mangi.eta.ui.components.MessageSelectionState() }
@@ -390,6 +393,7 @@ fun AgentAppRoot(
     }
 
     fun selectConversation(conversationId: String) {
+        workbenchReturnId = null
         tasksPanelOpen = false
         focusManager.clearFocus()
         agentState.selectConversation(conversationId)
@@ -398,10 +402,19 @@ fun AgentAppRoot(
     }
 
     fun createConversation() {
+        workbenchReturnId = WorkbenchBack.returnTargetOnNew(agentState.conversationPaneState.selectedConversationId, workbenchReturnId)
         tasksPanelOpen = false
         focusManager.clearFocus()
         agentState.createConversation()
         navigator.popToHome()
+        conversationPaneOpen = false
+    }
+
+    /** 对话里按返回：回到工作台。这次不记来处，工作台上再按返回就退出，不会来回打转。 */
+    fun backToWorkbench() {
+        workbenchReturnId = null
+        focusManager.clearFocus()
+        agentState.createConversation()
         conversationPaneOpen = false
     }
 
@@ -609,6 +622,29 @@ fun AgentAppRoot(
     // 所有路由的页面内容只定义一次：整页导航与玻璃窗口里的导航共用。
     val appEntries: top.yukonga.miuix.kmp.nav.core.NavEntryBuilder.() -> Unit = {
             entry<AppRoute.Home>(swipeDismiss = swipeDismiss) {
+                // 放在首页内容之前注册：侧栏、任务面板、多选、看图这些后注册的返回处理优先。
+                val homeLifecycle by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+                val selectedId = agentState.conversationPaneState.selectedConversationId
+                // 对话被删掉后来处作废（选中别的对话时 selectConversation 已清掉）。
+                LaunchedEffect(selectedId) { if (selectedId != null) workbenchReturnId = null }
+                androidx.navigationevent.compose.NavigationBackHandler(
+                    androidx.navigationevent.compose.rememberNavigationEventState(androidx.navigationevent.NavigationEventInfo.None),
+                    isBackEnabled = homeLifecycle == Lifecycle.State.RESUMED && navigator.current() == AppRoute.Home &&
+                        !conversationPaneOpen && !tasksPanelOpen && (selectedId != null || workbenchReturnId != null),
+                    onBackCompleted = {
+                        val action = WorkbenchBack.decide(selectedId, workbenchReturnId) { id ->
+                            agentState.conversationPaneState.conversations.any { it.id == id }
+                        }
+                        when (action) {
+                            WorkbenchBack.Action.ToWorkbench -> backToWorkbench()
+                            is WorkbenchBack.Action.ToConversation -> selectConversation(action.id)
+                            WorkbenchBack.Action.Exit -> {
+                                workbenchReturnId = null
+                                (context as? Activity)?.moveTaskToBack(true)
+                            }
+                        }
+                    },
+                )
                 RoutedShell(route = AppRoute.Home) {
                     AgentHomeScreen(
                         state = agentState.homeState,

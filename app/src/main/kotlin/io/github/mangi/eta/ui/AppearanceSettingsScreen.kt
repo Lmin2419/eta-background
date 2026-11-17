@@ -192,12 +192,29 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit) {
         }
         item(key = "appearance_interface_card") {
             EtaPreferenceGroup(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
-                EtaSwitchPreference(
+                // 流光三档：柔和 / 标准 / 关闭（关闭 = 原开关关）。
+                val glowLabels = listOf(
+                    stringResource(R.string.appearance_glow_soft),
+                    stringResource(R.string.appearance_glow_standard),
+                    stringResource(R.string.appearance_glow_off),
+                )
+                val glowSummaries = listOf(
+                    stringResource(R.string.appearance_glow_summary_soft),
+                    stringResource(R.string.appearance_glow_summary_standard),
+                    stringResource(R.string.appearance_glow_summary_off),
+                )
+                val glowIndex = if (appearance.runtimeGlowEnabled) appearance.runtimeGlowIntensity.ordinal else 2
+                EtaOverlayDropdownPreference(
                     title = stringResource(R.string.appearance_runtime_glow),
-                    summary = stringResource(R.string.appearance_runtime_glow_summary),
-                    checked = appearance.runtimeGlowEnabled,
-                    onCheckedChange = { enabled ->
-                        update { current -> current.copy(runtimeGlowEnabled = enabled) }
+                    summary = glowSummaries[glowIndex],
+                    items = glowLabels,
+                    selectedIndex = glowIndex,
+                    onSelectedIndexChange = { index ->
+                        update { current ->
+                            val intensity = io.github.mangi.eta.data.model.AppearanceGlowIntensity.entries.getOrNull(index)
+                            if (intensity == null) current.copy(runtimeGlowEnabled = false)
+                            else current.copy(runtimeGlowEnabled = true, runtimeGlowIntensity = intensity)
+                        }
                     },
                 )
                 EtaPreferenceDivider(hasLeading = false)

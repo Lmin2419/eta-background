@@ -59,9 +59,15 @@ class BrandPolishRenderingTest {
                         Text("助手边缘流光", Modifier.padding(16.dp), color = EtaTheme.colors.textSecondary)
                         EtaAssistantEdgeGlow(true, {})
                     }
-                    Box(Modifier.fillMaxWidth().height(140.dp).background(EtaTheme.colors.surface)) {
-                        Text("任务边缘流光", Modifier.padding(16.dp), color = EtaTheme.colors.textSecondary)
-                        AgentOverlayGlow(AgentOverlayState.Initial, ScreenCornerRadii(20f, 20f, 20f, 20f))
+                    // 2026111617：任务流光「标准」与「柔和」两档并排对照。
+                    Row(Modifier.fillMaxWidth().height(140.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        io.github.mangi.eta.data.model.AppearanceGlowIntensity.entries.reversed().forEach { intensity ->
+                            Box(Modifier.weight(1f).fillMaxHeight().background(EtaTheme.colors.surface)) {
+                                Text("任务流光 · ${if (intensity == io.github.mangi.eta.data.model.AppearanceGlowIntensity.SOFT) "柔和" else "标准"}",
+                                    Modifier.padding(16.dp), color = EtaTheme.colors.textSecondary)
+                                AgentOverlayGlow(AgentOverlayState.Initial, ScreenCornerRadii(20f, 20f, 20f, 20f), intensity)
+                            }
+                        }
                     }
                 }
             }

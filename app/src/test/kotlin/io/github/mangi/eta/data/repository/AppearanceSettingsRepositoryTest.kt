@@ -26,6 +26,7 @@ class AppearanceSettingsRepositoryTest {
             themeMode = AppearanceThemeMode.DARK,
             monetEnabled = true,
             runtimeGlowEnabled = false,
+            runtimeGlowIntensity = io.github.mangi.eta.data.model.AppearanceGlowIntensity.SOFT,
             taskCompletionAlertsEnabled = false,
             accentColor = AppearanceAccentColor.TEAL,
             interfaceScale = 0.9f,

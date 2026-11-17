@@ -15,6 +15,8 @@ data class AppearanceSettings(
     val pureBlackEnabled: Boolean = false,
     val blurEnabled: Boolean = true,
     val runtimeGlowEnabled: Boolean = true,
+    /** 流光亮度：柔和 / 标准；「关闭」由 [runtimeGlowEnabled] = false 表示。 */
+    val runtimeGlowIntensity: AppearanceGlowIntensity = AppearanceGlowIntensity.STANDARD,
     val taskCompletionAlertsEnabled: Boolean = true,
     /** 回答前自动复核（etax/design/10 第一期）：还有没解决的失败时，先让 Agent 复核一次再交卷。 */
     val completionReviewEnabled: Boolean = true,
@@ -34,6 +36,28 @@ data class AppearanceSettings(
     fun normalized(): AppearanceSettings = copy(
         interfaceScale = normalizeInterfaceScale(interfaceScale),
     )
+}
+
+/**
+ * 屏幕流光的亮度档位。柔和档光带更细、更透明，适合嫌标准档太显眼但又想看到运行状态的时候。
+ */
+@Serializable
+enum class AppearanceGlowIntensity(
+    val persistedValue: String,
+    val haloAlpha: Float,
+    val haloWidthDp: Float,
+    val lineAlpha: Float,
+    val lineWidthDp: Float,
+    /** 语音面板唤醒光效整体透明度倍数。 */
+    val wakeAlpha: Float,
+) {
+    SOFT("soft", haloAlpha = 0.22f, haloWidthDp = 8f, lineAlpha = 0.6f, lineWidthDp = 2f, wakeAlpha = 0.5f),
+    STANDARD("standard", haloAlpha = 0.55f, haloWidthDp = 14f, lineAlpha = 0.95f, lineWidthDp = 3f, wakeAlpha = 1f);
+
+    companion object {
+        fun fromPersistedValue(value: String?): AppearanceGlowIntensity =
+            entries.firstOrNull { it.persistedValue == value } ?: STANDARD
+    }
 }
 
 @Serializable

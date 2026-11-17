@@ -118,11 +118,13 @@ internal fun EtaFloatingSurface(
             contentAlignment = Alignment.Center) { content() }
     }) else content
     val view = LocalView.current
-    val renderer = remember {
-        if (Build.VERSION.SDK_INT >= 34 && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders) runCatching { CouiFloatingRenderer.standalone() }.getOrNull() else null
-    }
+    // 玻璃能不能画要看三件事：有背景源、着色器渲染器建好了、视图已经挂到屏幕上。
+    // 以前后两件只在第一次组合时看一眼：那一刻没就绪（冷启动、页面刚切换），控件就一直是退回的实色样式，
+    // 直到整页重建。现在都做成可观察的状态，就绪后自动换回液态玻璃。
+    val hasDisplay = rememberViewHasDisplay(view)
+    val renderer = rememberFloatingRenderer()
     val accent = io.github.mangi.eta.ui.theme.EtaTheme.colors.accent
-    if (Build.VERSION.SDK_INT >= 34 && backdrop != null && renderer != null && view.display != null) {
+    if (Build.VERSION.SDK_INT >= 34 && backdrop != null && renderer != null && hasDisplay) {
         ProvideCouiBackdrop(backdrop) {
             EtaApi34FloatingSurface(modifier, shape, capsule, backdrop, renderer, dark, focused, accent,
                 contentDescription, onClick, filledContent, wrapContent, cornerRadius)
@@ -140,6 +142,51 @@ internal fun EtaFloatingSurface(
         ) { filledContent() }
     }
 }
+
+/** 视图是否已挂到某个屏幕上；挂上之后会触发重组。 */
+@Composable
+private fun rememberViewHasDisplay(view: android.view.View): Boolean {
+    val state = remember(view) { mutableStateOf(view.display != null) }
+    androidx.compose.runtime.DisposableEffect(view) {
+        val listener = object : android.view.View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: android.view.View) { state.value = v.display != null }
+            override fun onViewDetachedFromWindow(v: android.view.View) = Unit
+        }
+        view.addOnAttachStateChangeListener(listener)
+        // 组合提交时再看一次：第一次组合和挂上屏幕之间的空档里，监听器可能已经错过了。
+        state.value = view.display != null
+        onDispose { view.removeOnAttachStateChangeListener(listener) }
+    }
+    return state.value
+}
+
+private fun newFloatingRenderer(): CouiFloatingRenderer? =
+    if (Build.VERSION.SDK_INT >= 34 && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders) {
+        runCatching { CouiFloatingRenderer.standalone() }
+            .onFailure { error ->
+                io.github.mangi.eta.core.AndroidAgentLogger.warnThrottled("coui_floating_renderer_failed") {
+                    "COUI floating renderer unavailable: ${error.javaClass.simpleName}"
+                }
+            }
+            .getOrNull()
+    } else null
+
+/** 着色器渲染器；偶尔建失败（如 GPU 正忙）时，接下来几帧再试，不让控件永久退回实色。 */
+@Composable
+private fun rememberFloatingRenderer(): CouiFloatingRenderer? {
+    val state = remember { mutableStateOf(newFloatingRenderer()) }
+    if (state.value == null && Build.VERSION.SDK_INT >= 34 && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders) {
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            repeat(RENDERER_RETRY_FRAMES) {
+                androidx.compose.runtime.withFrameNanos { }
+                newFloatingRenderer()?.let { state.value = it; return@LaunchedEffect }
+            }
+        }
+    }
+    return state.value
+}
+
+private const val RENDERER_RETRY_FRAMES = 3
 
 @RequiresApi(34)
 @Composable

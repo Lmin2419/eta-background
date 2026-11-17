@@ -1379,7 +1379,6 @@
   <string name="chat_queue_images_only">[%1$d 張圖片]</string>
   <string name="chat_queue_files_only">[%1$d 個檔案]</string>
     <string name="appearance_runtime_glow">執行時螢幕流光</string>
-    <string name="appearance_runtime_glow_summary">顯示助手喚醒及任務執行時的螢幕邊緣光效，修改後立即生效。</string>
   <string name="tools_background_group">背景應用程式操作</string>
   <string name="tool_background_open">開啟背景應用程式</string>
   <string name="tool_background_open_description">明確要求背景執行時使用虛擬螢幕。需要 Root 和無障礙服務；最多兩個不同應用程式並行，其他工作排隊。背景可在螢幕關閉後繼續；鎖屏不操作前臺，網路仍受省電策略影響。</string>
@@ -1894,4 +1893,10 @@
   <plurals name="completion_review_details">
     <item quantity="other">回答前還有 %d 個失敗沒解決，已讓它先排查、能修就修，再給結論。</item>
   </plurals>
+  <string name="appearance_glow_soft">柔和</string>
+  <string name="appearance_glow_standard">標準</string>
+  <string name="appearance_glow_off">關閉</string>
+  <string name="appearance_glow_summary_soft">任務執行時螢幕邊緣一圈細而淡的光，看得到但不搶眼。</string>
+  <string name="appearance_glow_summary_standard">助手喚醒和任務執行時，螢幕邊緣顯示明亮的流動光效。</string>
+  <string name="appearance_glow_summary_off">不顯示邊緣光。任務狀態仍會在膠囊和通知裡顯示。</string>
 </resources>

@@ -131,7 +131,11 @@ internal data class ScreenCornerRadii(val topLeft: Float, val topRight: Float, v
 }
 
 @Composable
-internal fun AgentOverlayGlow(state: AgentOverlayState, corners: ScreenCornerRadii) {
+internal fun AgentOverlayGlow(
+    state: AgentOverlayState,
+    corners: ScreenCornerRadii,
+    intensity: io.github.mangi.eta.data.model.AppearanceGlowIntensity = io.github.mangi.eta.data.model.AppearanceGlowIntensity.STANDARD,
+) {
     val phase = state.phase
     if (phase != AgentOverlayPhase.RUNNING && phase != AgentOverlayPhase.PAUSED) return
     val motion = io.github.mangi.eta.ui.theme.EtaTheme.motion
@@ -168,8 +172,8 @@ internal fun AgentOverlayGlow(state: AgentOverlayState, corners: ScreenCornerRad
                 if (!running) {
                     val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                         style = android.graphics.Paint.Style.STROKE
-                        strokeWidth = 3f * density
-                        color = pausedAccent.copy(alpha = 0.55f * reveal).toArgb()
+                        strokeWidth = intensity.lineWidthDp * density
+                        color = pausedAccent.copy(alpha = 0.58f * intensity.lineAlpha * reveal).toArgb()
                     }
                     canvas.nativeCanvas.drawPath(edge, paint)
                     return@drawIntoCanvas
@@ -182,16 +186,16 @@ internal fun AgentOverlayGlow(state: AgentOverlayState, corners: ScreenCornerRad
                 // 外层柔光与内层亮线共用同一个旋转渐变，光带看起来是一体流动的。
                 val halo = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                     style = android.graphics.Paint.Style.STROKE
-                    strokeWidth = 14f * density
-                    maskFilter = android.graphics.BlurMaskFilter(12f * density, android.graphics.BlurMaskFilter.Blur.NORMAL)
+                    strokeWidth = intensity.haloWidthDp * density
+                    maskFilter = android.graphics.BlurMaskFilter(intensity.haloWidthDp * 0.85f * density, android.graphics.BlurMaskFilter.Blur.NORMAL)
                     this.shader = shader
-                    alpha = (0.55f * reveal * 255).toInt()
+                    alpha = (intensity.haloAlpha * reveal * 255).toInt()
                 }
                 val line = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                     style = android.graphics.Paint.Style.STROKE
-                    strokeWidth = 3f * density
+                    strokeWidth = intensity.lineWidthDp * density
                     this.shader = shader
-                    alpha = (0.95f * reveal * 255).toInt()
+                    alpha = (intensity.lineAlpha * reveal * 255).toInt()
                 }
                 canvas.nativeCanvas.drawPath(edge, halo)
                 canvas.nativeCanvas.drawPath(edge, line)

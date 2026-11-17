@@ -196,6 +196,7 @@ internal object SettingsDataStore {
     private val APPEARANCE_PURE_BLACK_ENABLED = booleanPreferencesKey("appearance_pure_black_enabled")
     private val APPEARANCE_BLUR_ENABLED = booleanPreferencesKey("appearance_blur_enabled")
     private val APPEARANCE_RUNTIME_GLOW_ENABLED = booleanPreferencesKey("appearance_runtime_glow_enabled")
+    private val APPEARANCE_RUNTIME_GLOW_INTENSITY = stringPreferencesKey("appearance_runtime_glow_intensity")
     private val APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED = booleanPreferencesKey("appearance_task_completion_alerts_enabled")
     private val AGENT_COMPLETION_REVIEW_ENABLED = booleanPreferencesKey("agent_completion_review_enabled")
     private val APPEARANCE_RENDER_DIAGNOSTICS = booleanPreferencesKey("appearance_render_diagnostics")
@@ -390,6 +391,7 @@ internal object SettingsDataStore {
             pureBlackEnabled = this[APPEARANCE_PURE_BLACK_ENABLED] ?: false,
             blurEnabled = this[APPEARANCE_BLUR_ENABLED] ?: true,
             runtimeGlowEnabled = this[APPEARANCE_RUNTIME_GLOW_ENABLED] ?: true,
+            runtimeGlowIntensity = io.github.mangi.eta.data.model.AppearanceGlowIntensity.fromPersistedValue(this[APPEARANCE_RUNTIME_GLOW_INTENSITY]),
             taskCompletionAlertsEnabled = this[APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED] ?: true,
             completionReviewEnabled = this[AGENT_COMPLETION_REVIEW_ENABLED] ?: true,
             topBarBlurStyle = AppearanceTopBarBlurStyle.fromPersistedValue(
@@ -413,6 +415,7 @@ internal object SettingsDataStore {
         this[APPEARANCE_PURE_BLACK_ENABLED] = settings.pureBlackEnabled
         this[APPEARANCE_BLUR_ENABLED] = settings.blurEnabled
         this[APPEARANCE_RUNTIME_GLOW_ENABLED] = settings.runtimeGlowEnabled
+        this[APPEARANCE_RUNTIME_GLOW_INTENSITY] = settings.runtimeGlowIntensity.persistedValue
         this[APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED] = settings.taskCompletionAlertsEnabled
         this[AGENT_COMPLETION_REVIEW_ENABLED] = settings.completionReviewEnabled
         this[APPEARANCE_TOP_BAR_BLUR_STYLE] = settings.topBarBlurStyle.persistedValue
