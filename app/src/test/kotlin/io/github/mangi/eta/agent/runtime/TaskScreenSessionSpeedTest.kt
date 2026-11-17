@@ -148,7 +148,8 @@ class TaskScreenSessionSpeedTest {
         tools.run("observe_screen")
         val waited = tools.run("wait", JSONObject().put("duration_ms", 8000))
         assertTrue(waited.getBoolean("ok"))
-        assertTrue(backend.last("screen_wait").getInt("timeout_ms") <= 4000)
+        assertTrue(backend.last("screen_wait").getInt("timeout_ms") <= 1000)
+        assertEquals(1, backend.names().count { it == "screen_wait" }) // 页面一静就返回，不再等满 8 秒
         assertTrue(waited.getJSONObject("after").has("observation_id"))
     }
 

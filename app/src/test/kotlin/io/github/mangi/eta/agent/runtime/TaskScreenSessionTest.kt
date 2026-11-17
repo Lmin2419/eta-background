@@ -492,7 +492,12 @@ class TaskScreenSessionTest {
     fun cancellationOfOneTaskDoesNotTerminateAnother() {
         val firstController = AgentRunController()
         val secondController = AgentRunController()
-        val first = session(FakeBackend(), firstController)
+        // 页面一直没静下来（比如在放视频）：等待会一段一段地等，任务被停止时要马上结束。
+        val busy = FakeBackend().apply {
+            waitResult = """{"ok":false,"code":"UI_NOT_QUIET"}"""
+            onExecute = { name -> if (name == "screen_wait") Thread.sleep(20) }
+        }
+        val first = session(busy, firstController)
         val second = session(FakeBackend(), secondController)
         first.execute(call("launch_app", """{"package_name":"app.one","execution_location":"background"}"""))
         val entered = CountDownLatch(1)

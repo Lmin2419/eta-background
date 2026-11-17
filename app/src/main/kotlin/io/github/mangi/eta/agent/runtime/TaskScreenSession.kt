@@ -653,12 +653,22 @@ internal class TaskScreenSession(
         val duration = args.optInt("duration_ms", 1_000).coerceIn(100, 30_000)
         controller.throwIfCancelled()
         val startedAt = System.nanoTime()
-        val idle = backendResult("screen_wait", JSONObject().put("timeout_ms", duration.coerceAtMost(4_000)))
-        val waited = ((System.nanoTime() - startedAt) / 1_000_000L).toInt()
-        // 引擎不支持静止等待时退回死等，保持原来的语义。
-        if (!idle.optBoolean("ok") && idle.optString("code") != "TIMEOUT" && waited < duration) {
-            controller.awaitRetryDelay((duration - waited).toLong())
+        fun elapsed() = ((System.nanoTime() - startedAt) / 1_000_000L).toInt()
+        // 分段等（每段最多 1 秒）：页面静了就提前返回，每段之后都检查任务是否被停止。
+        var settled = false
+        while (elapsed() < duration) {
+            val idle = backendResult("screen_wait", JSONObject().put("timeout_ms", (duration - elapsed()).coerceIn(1, 1_000)))
+            controller.throwIfCancelled()
+            if (idle.optBoolean("ok")) { settled = true; break }
+            val code = idle.optString("code")
+            if (code != "UI_NOT_QUIET" && code != "TIMEOUT") {
+                // 引擎不支持静止等待：退回可被停止打断的死等，保持原来的语义。
+                if (elapsed() < duration) controller.awaitRetryDelay((duration - elapsed()).toLong())
+                break
+            }
         }
+        controller.throwIfCancelled()
+        val idle = JSONObject().put("ok", settled)
         val result = JSONObject()
             .put("ok", true)
             .put("tool", "wait")
