@@ -128,5 +128,6 @@
 | 一 动作后自动回看 | 2026111621 | `TaskScreenSession.withAfter`：动作（含结果不明）后 idle 等待 ≤800ms + 读树，登记新观察放进 `after`；wait / wait_for_text / wait_for_package 也带 |
 | 二 只核对目标元素 | 2026111621 | `locateLive` + `NodeRelocation`（类名/viewId/文字/描述一致，偏移 ≤ max(48px, 宽 5%)；两个一样且距离相近判为不唯一）；坐标点按命中的最小元素比对；包名变了拒绝 |
 | 三 少走弯路 | 2026111621 | 按键、焦点输入免 `observation_id`；submit = 写入后 `screen_key 66`；append 读回再写；后台 wait 走 idle；后台 wait_for_package 轮询后台屏包名。open_uri、系统面板、PASTE 仍不支持，改在说明里写明（没有从工具目录里隐藏）。**用户追加：程序自己决定树还是截图**（`ScreenSparseness`，前后台都用） |
-| 四 系统提示瘦身 | 2026111621（部分） | 只删 / 合并了被本版淘汰的界面规则，工具说明同步。整体从 7 千多字降到 4 千以内仍需真机逐类对比，未做 |
+| 四 系统提示瘦身 | 2026111621（部分）、2026111622 | 1621 删掉被淘汰的界面规则；1622 全部重写压缩：全开配置 6495→3997 字（−38%），只聊天 4234→2591 字（−39%），关键约束都保留，测试卡住的句子基本原样。先量：诊断加 `avg_input_tokens` / `avg_cached_tokens`（只算主对话请求，累计值按段计）。真机前后对比待用户导出诊断 |
 | 五 文件工具提速 | 2026111621 | `FileToolBackend.resolveStat`（Shell 后端一次进程）；写入后在同一 Shell 取元数据；`edit_file` 靠写入时的哈希比对，去掉两次版本号 stat。edit 7→3 次 Shell，write 3→2 次 |
+| 实验 界面轮低思考 | 2026111622 | 设置 › 后台执行「界面操作后少想一点（实验）」，默认关。上一轮工具全是界面操作时，下一轮降到 low（没有就 minimal）；只对有档位的模型生效，不关思考、不碰开/关两档的模型；用户补充指令后恢复原强度。`GuiRoundEffort` + `AgentLoop.lightGuiRounds` |

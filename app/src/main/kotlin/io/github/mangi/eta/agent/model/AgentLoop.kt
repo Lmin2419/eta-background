@@ -44,6 +44,8 @@ internal class AgentLoop(
     backgroundCompaction: BackgroundCompactionPolicy? = null,
     /** 交卷前自检（etax/design/10 第一期）；设置里「回答前自动复核」关掉时为 false。 */
     private val completionReview: Boolean = true,
+    /** 11 号方案实验：上一轮全是界面操作时，这一轮用较低思考强度（只降档，不关思考）。 */
+    private val lightGuiRounds: Boolean = false,
 ) {
     data class Result(
         val content: String,
@@ -63,6 +65,8 @@ internal class AgentLoop(
     private var pendingToolImageMessage: JSONObject? = null
     private val turnMetrics = TurnMetricsAccumulator()
     private var precedingTools: JSONArray? = null
+    /** 上一轮的工具调用全是看屏、点按、等待这类界面操作。 */
+    private var previousRoundAllGui = false
     private val context = AgentContextSession(
         config, messages, systemCount, operationId, provider, runController,
         { sensitiveToolCallIds }, onEvent, onContextSnapshot, { transcript.length() },
@@ -109,7 +113,8 @@ internal class AgentLoop(
 
         while (true) {
             runController.throwIfCancelled()
-            if (purpose.allowsTools) appendPendingSteeringMessage()
+            // 用户中途补充了指令：这一轮按原强度好好想。
+            if (purpose.allowsTools && appendPendingSteeringMessage()) previousRoundAllGui = false
 
             // 带签名的工具链沿用发出调用时的请求前缀，工具链完成后再刷新目录。
             val roundTools = if (SignedToolContext.hasPendingResponse(messages)) {
@@ -136,7 +141,10 @@ internal class AgentLoop(
             val completedRound = try {
                 modelRetry.complete(
                     initialRound = round,
-                    request = ProviderRequest(config, requestMessages, roundTools, sessionId, purpose),
+                    request = ProviderRequest(
+                        if (lightGuiRounds && previousRoundAllGui) GuiRoundEffort.lower(config) else config,
+                        requestMessages, roundTools, sessionId, purpose,
+                    ),
                     provider = provider,
                     controller = runController,
                     onEvent = { event ->
@@ -236,6 +244,8 @@ internal class AgentLoop(
                 onEvent(AgentEvent.UsageReceived(round = round, usage = accumulatedUsage))
             }
 
+            previousRoundAllGui = toolCalls.isNotEmpty() &&
+                toolCalls.all { io.github.mangi.eta.agent.runtime.GuiRounds.isScreenTool(it.name) }
             if (toolCalls.isNotEmpty()) {
                 val outcomes = executeToolBatch(round, toolCalls, providerResponse.stopReason)
                 outcomes.forEach { outcomeLog += ToolOutcomeSummary.of(it.call.name, it.result.content) }

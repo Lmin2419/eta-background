@@ -2046,4 +2046,6 @@
   <string name="camera_ring_auto">Auto</string>
   <string name="camera_ring_reset">Restore automatic</string>
   <string name="camera_ring_reset_summary">Use the camera position reported by the system again</string>
+  <string name="light_gui_round_effort_setting">Lighter thinking after screen steps (experiment)</string>
+  <string name="light_gui_round_effort_setting_summary">After a round that only looked at, tapped or waited on the screen, the next round uses a lower reasoning level so it answers sooner. Only models with selectable levels are affected. Off by default</string>
 </resources>

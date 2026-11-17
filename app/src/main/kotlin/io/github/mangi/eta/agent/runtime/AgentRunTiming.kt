@@ -34,8 +34,26 @@ internal class AgentRunTiming(
     private var completionReviews = 0
     // 11 号方案第零期：失败原因、用到界面的轮数、只看不动的轮数。
     private val failureCodes = linkedMapOf<String, Int>()
+    // 11 号方案第四期：每次请求的输入 token 和命中缓存的 token（量化系统提示瘦身的效果）。
+    // 每轮结束发来的用量是「这一轮用户请求到目前为止」的累计值，用户中途补充指令时从零重计；
+    // 所以按段记最后一次累计值，段落切换（步数没有增加）时把上一段并入总数。
+    private var stepsCommitted = 0
+    private var inputCommitted = 0L
+    private var cachedCommitted = 0L
+    private var segmentSteps = 0
+    private var segmentInput = 0L
+    private var segmentCached = 0L
     private val roundTools = linkedMapOf<Int, MutableSet<String>>()
     private var finished: RunPerformanceSummary? = null
+
+    private fun commitUsageSegment() {
+        stepsCommitted += segmentSteps
+        inputCommitted += segmentInput
+        cachedCommitted += segmentCached
+        segmentSteps = 0
+        segmentInput = 0
+        segmentCached = 0
+    }
 
     @Synchronized fun preparationFinished(skillCount: Int) {
         if (finished != null) return
@@ -99,6 +117,19 @@ internal class AgentRunTiming(
                 }
             }
             is AgentEvent.CompletionReview -> completionReviews++
+            is AgentEvent.UsageReceived -> {
+                val usage = event.usage
+                val steps = usage.stepCount
+                val input = usage.inputTokens
+                if ((usage.requestKind ?: AgentTokenUsage.REQUEST_KIND_CHAT) == AgentTokenUsage.REQUEST_KIND_CHAT &&
+                    steps != null && steps > 0 && input != null && input > 0
+                ) {
+                    if (steps <= segmentSteps) commitUsageSegment()
+                    segmentSteps = steps
+                    segmentInput = input.toLong()
+                    segmentCached = (usage.cachedTokens ?: 0).toLong().coerceIn(0L, segmentInput)
+                }
+            }
             is AgentEvent.RunFinished, is AgentEvent.RunFailed -> { requestAt = null; preparing = false }
             else -> Unit
         }
@@ -119,6 +150,8 @@ internal class AgentRunTiming(
             firstDeltaIncludesTools = true,
             completionReviews = completionReviews,
             failureCodes = failureCodes.toMap(),
+            avgInputTokens = commitUsageSegment().let { if (stepsCommitted > 0) (inputCommitted / stepsCommitted).toInt() else 0 },
+            avgCachedTokens = if (stepsCommitted > 0) (cachedCommitted / stepsCommitted).toInt() else 0,
             guiRounds = roundTools.values.count { tools -> tools.any(GuiRounds::isScreenTool) },
             observeOnlyRounds = roundTools.values.count { tools ->
                 tools.any(GuiRounds::isScreenTool) && tools.filter(GuiRounds::isScreenTool).all(GuiRounds::isLookOnly)

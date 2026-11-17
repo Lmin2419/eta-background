@@ -120,7 +120,7 @@ class AgentPromptBuilderTest {
         assertTrue(granted.contains("Root 授权已确认"))
         assertTrue(ungranted.first().contains("这不代表设备不支持 Root"))
         for (contents in ungranted + granted) {
-            assertTrue(contents.contains("identity=user 是显式选择"))
+            assertTrue(contents.contains("identity=user 是显式选 App 身份"))
             assertTrue(contents.contains("terminal(action=check_root)"))
         }
     }
@@ -250,7 +250,7 @@ class AgentPromptBuilderTest {
             messages.roles(),
         )
         assertEquals("自定义系统约束", messages.getJSONObject(0).getString("content"))
-        assertTrue(messages.systemContents().any { it.contains("只有系统保护后端可用时才会请求有限重绑") })
+        assertTrue(messages.systemContents().any { it.contains("ACCESSIBILITY_UNAVAILABLE 一类表示动作未执行") })
         assertTrue(messages.systemContents().any { it.contains("不要改用坐标或 Shell 重放") })
         assertTrue(messages.systemContents().any { it.contains("通用 GUI 工具完成输入和点击发送") })
         assertTrue(messages.systemContents().any { it.contains("不追加二次确认") })
@@ -266,11 +266,11 @@ class AgentPromptBuilderTest {
         assertTrue(messages.systemContents().any { it.contains("include_screenshot=true") })
         assertTrue(messages.systemContents().any { it.contains("动作结果的 after 带新的 observation_id") })
         assertTrue(messages.systemContents().any { it.contains("禁止把新截图与旧节点混用") })
-        assertTrue(messages.systemContents().any { it.contains("不要仅因截断请求截图") })
-        assertTrue(messages.systemContents().any { it.contains("主动调用当前已公开的只读工具获取证据") })
-        assertTrue(messages.systemContents().any { it.contains("工具已向你公开表示对应能力已由用户开启") })
-        assertTrue(messages.systemContents().any { it.contains("从多个相关来源按时间和代表性取样") })
-        assertTrue(messages.systemContents().any { it.contains("系统记忆") })
+        assertTrue(messages.systemContents().any { it.contains("树被截断时提高 max_nodes") })
+        assertTrue(messages.systemContents().any { it.contains("需要证据就调已公开的只读工具") })
+        assertTrue(messages.systemContents().any { it.contains("不重复问授权") })
+        assertTrue(messages.systemContents().any { it.contains("个性化分析多来源按时间取样") })
+        assertTrue(messages.systemContents().any { it.contains("不凭单条记录归纳") })
         assertTrue(messages.systemContents().any { it.contains("已知路径、已知格式执行有界只读查询") })
         assertTrue(messages.systemContents().any { it.contains("相关应用私有文件与数据库") })
         assertTrue(messages.systemContents().any { it.contains("执行有界查询，不修改源数据") })

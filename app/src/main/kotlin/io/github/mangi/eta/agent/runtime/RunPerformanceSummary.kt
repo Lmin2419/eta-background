@@ -33,6 +33,9 @@ internal data class RunPerformanceSummary(
     /** 用到屏幕工具的模型轮数，以及其中只观察 / 等待、没有动作的轮数。 */
     val guiRounds: Int = 0,
     val observeOnlyRounds: Int = 0,
+    /** 每次对话请求的平均输入 token 与其中命中缓存的部分（11 号方案第四期）。 */
+    val avgInputTokens: Int = 0,
+    val avgCachedTokens: Int = 0,
 ) {
     /** 观察过期一类的失败次数。 */
     val staleFailures: Int get() = failureCodes.filterKeys(GuiRounds::isStale).values.sum()
@@ -54,6 +57,7 @@ internal data class RunPerformanceSummary(
         .put("completion_reviews", completionReviews.coerceAtLeast(0))
         .put("failure_codes", JSONObject(failureCodes))
         .put("gui_rounds", guiRounds.coerceAtLeast(0)).put("observe_only_rounds", observeOnlyRounds.coerceAtLeast(0))
+        .put("avg_input_tokens", avgInputTokens.coerceAtLeast(0)).put("avg_cached_tokens", avgCachedTokens.coerceAtLeast(0))
         .put("slow_tools", JSONArray().also { array ->
             slowTools.take(3).forEach { array.put(JSONObject().put("name", it.name).put("elapsed_ms", it.elapsedMs)) }
         }).toString()
@@ -129,6 +133,8 @@ internal data class RunPerformanceSummary(
                 }.orEmpty(),
                 guiRounds = json.optInt("gui_rounds", 0).coerceAtLeast(0),
                 observeOnlyRounds = json.optInt("observe_only_rounds", 0).coerceAtLeast(0),
+                avgInputTokens = json.optInt("avg_input_tokens", 0).coerceAtLeast(0),
+                avgCachedTokens = json.optInt("avg_cached_tokens", 0).coerceAtLeast(0),
             )
         }.getOrNull()
     }

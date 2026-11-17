@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.FactCheck
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.NotificationsActive
 import io.github.mangi.eta.data.repository.AppearanceSettingsRepository
@@ -534,6 +535,15 @@ private fun SettingsPageContent(
                         startAction = { EtaPreferenceIcon(Icons.Outlined.FactCheck, tint = EtaPreferenceColors.Indigo) },
                         onCheckedChange = { enabled -> coroutineScope.launch {
                             AppearanceSettingsRepository.update { it.copy(completionReviewEnabled = enabled) }
+                        } })
+                    EtaPreferenceDivider()
+                    // 11 号方案实验：点完、等完之后看结果那一轮少想一点，默认关。
+                    EtaSwitchPreference(title = stringResource(R.string.light_gui_round_effort_setting),
+                        summary = stringResource(R.string.light_gui_round_effort_setting_summary),
+                        checked = appearance.lightGuiRoundEffort,
+                        startAction = { EtaPreferenceIcon(Icons.Outlined.Speed, tint = EtaPreferenceColors.Indigo) },
+                        onCheckedChange = { enabled -> coroutineScope.launch {
+                            AppearanceSettingsRepository.update { it.copy(lightGuiRoundEffort = enabled) }
                         } })
                     EtaPreferenceDivider()
                     EtaArrowPreference(

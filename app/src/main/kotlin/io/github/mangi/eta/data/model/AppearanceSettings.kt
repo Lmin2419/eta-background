@@ -27,6 +27,8 @@ data class AppearanceSettings(
     val taskCompletionAlertsEnabled: Boolean = true,
     /** 回答前自动复核（etax/design/10 第一期）：还有没解决的失败时，先让 Agent 复核一次再交卷。 */
     val completionReviewEnabled: Boolean = true,
+    /** 11 号方案实验：紧跟在纯界面操作之后的一轮用较低思考强度。默认关。 */
+    val lightGuiRoundEffort: Boolean = false,
     val topBarBlurStyle: AppearanceTopBarBlurStyle = AppearanceTopBarBlurStyle.GAUSSIAN,
     val swipeDismissEnabled: Boolean = true,
     val predictiveBackEnabled: Boolean = true,

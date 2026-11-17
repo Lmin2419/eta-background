@@ -116,6 +116,8 @@ internal object AgentModelClient {
         backgroundCompaction: BackgroundCompactionPolicy? = null,
         /** 交卷前自检（etax/design/10 第一期）。主对话按设置传入；子代理与改写回复不做。 */
         completionReview: Boolean = false,
+        /** 11 号方案实验：紧跟纯界面操作的那一轮降低思考强度。主对话按设置传入。 */
+        lightGuiRounds: Boolean = false,
         onEvent: (AgentEvent) -> Unit = {}
     ): ModelResponse.Text {
         config.validate()
@@ -241,6 +243,7 @@ internal object AgentModelClient {
             toolsForRound = ::toolsForRound,
             backgroundCompaction = backgroundCompaction.takeUnless { rewriteReply || compactOnly },
             completionReview = completionReview && !rewriteReply && !compactOnly,
+            lightGuiRounds = lightGuiRounds && !rewriteReply && !compactOnly,
         )
         val result = try {
             if (compactOnly) loop.compactOnly() else loop.run()

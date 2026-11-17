@@ -2019,4 +2019,6 @@
   <string name="camera_ring_auto">自动</string>
   <string name="camera_ring_reset">恢复自动</string>
   <string name="camera_ring_reset_summary">按系统报告的摄像头位置重新算</string>
+  <string name="light_gui_round_effort_setting">界面操作后少想一点（实验）</string>
+  <string name="light_gui_round_effort_setting_summary">上一轮只是看屏幕、点按或等待时，下一轮改用较低的思考强度，出字更快。只对能选思考档位的模型生效，默认关闭</string>
 </resources>

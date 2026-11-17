@@ -47,6 +47,24 @@ class RunDigestTest {
         assertEquals(finished.failureCodes, RunPerformanceSummary.fromJson(finished.toJson())!!.failureCodes)
     }
 
+    /** 11 号方案第四期：每轮发来的用量是本轮请求的累计值，用户中途补充指令时从零重计。 */
+    @Test fun timingAveragesInputTokensPerRequestFromCumulativeUsage() {
+        val timing = AgentRunTiming(io.github.mangi.eta.core.AndroidAgentLogger) { 0L }
+        fun usage(steps: Int, input: Int, cached: Int) = timing.accept(AgentEvent.UsageReceived(steps,
+            AgentTokenUsage(inputTokens = input, cachedTokens = cached, requestKind = AgentTokenUsage.REQUEST_KIND_CHAT, stepCount = steps)))
+        usage(1, 4_000, 0)
+        usage(2, 9_000, 3_000) // 第 2 次请求 5000，命中 3000
+        usage(1, 6_000, 5_000) // 用户补充指令后重新计数
+        // 压缩之类的其他请求不算进来。
+        timing.accept(AgentEvent.UsageReceived(9, AgentTokenUsage(inputTokens = 99_000, requestKind = "compaction", stepCount = 1)))
+        val finished = timing.finish()
+        assertEquals(5_000, finished.avgInputTokens) // (9000 + 6000) / 3
+        assertEquals(2_666, finished.avgCachedTokens) // (3000 + 5000) / 3
+        val digest = RuntimeDiagnostics.runDigest(finished, "ok", gaveUp = false, atMillis = 0)
+        assertEquals(5_000, digest.getInt("avg_input_tokens"))
+        assertEquals(2_666, RunPerformanceSummary.fromJson(finished.toJson())!!.avgCachedTokens)
+    }
+
     @Test fun digestKeepsOnlyNumbersAndToolNames() {
         val digest = RuntimeDiagnostics.runDigest(summary, "ok", gaveUp = false, atMillis = 1_763_340_123_456)
         assertEquals(1_763_340_120_000, digest.getLong("at"))

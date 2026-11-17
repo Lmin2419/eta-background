@@ -48,6 +48,7 @@ internal object RuntimeDiagnostics {
                 .associate { it.key to it.value }))
             .put("gui_rounds", summary.guiRounds).put("observe_only_rounds", summary.observeOnlyRounds)
             .put("stale", summary.staleFailures)
+            .put("avg_input_tokens", summary.avgInputTokens).put("avg_cached_tokens", summary.avgCachedTokens)
             .put("slow_tools", JSONArray().apply {
                 summary.slowTools.take(3).forEach { put(JSONObject().put("name", it.name).put("elapsed_ms", it.elapsedMs)) }
             })

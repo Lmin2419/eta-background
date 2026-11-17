@@ -204,6 +204,7 @@ internal object SettingsDataStore {
     private val APPEARANCE_CAMERA_RING_HEIGHT = floatPreferencesKey("appearance_camera_ring_height_dp")
     private val APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED = booleanPreferencesKey("appearance_task_completion_alerts_enabled")
     private val AGENT_COMPLETION_REVIEW_ENABLED = booleanPreferencesKey("agent_completion_review_enabled")
+    private val AGENT_LIGHT_GUI_ROUND_EFFORT = booleanPreferencesKey("agent_light_gui_round_effort")
     private val APPEARANCE_RENDER_DIAGNOSTICS = booleanPreferencesKey("appearance_render_diagnostics")
     private val APPEARANCE_TOP_BAR_BLUR_STYLE = stringPreferencesKey("appearance_top_bar_blur_style")
     private val APPEARANCE_SWIPE_DISMISS_ENABLED =
@@ -404,6 +405,7 @@ internal object SettingsDataStore {
             cameraRingHeightDp = this[APPEARANCE_CAMERA_RING_HEIGHT] ?: 0f,
             taskCompletionAlertsEnabled = this[APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED] ?: true,
             completionReviewEnabled = this[AGENT_COMPLETION_REVIEW_ENABLED] ?: true,
+            lightGuiRoundEffort = this[AGENT_LIGHT_GUI_ROUND_EFFORT] ?: false,
             topBarBlurStyle = AppearanceTopBarBlurStyle.fromPersistedValue(
                 this[APPEARANCE_TOP_BAR_BLUR_STYLE],
             ),
@@ -433,6 +435,7 @@ internal object SettingsDataStore {
         this[APPEARANCE_CAMERA_RING_HEIGHT] = settings.cameraRingHeightDp
         this[APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED] = settings.taskCompletionAlertsEnabled
         this[AGENT_COMPLETION_REVIEW_ENABLED] = settings.completionReviewEnabled
+        this[AGENT_LIGHT_GUI_ROUND_EFFORT] = settings.lightGuiRoundEffort
         this[APPEARANCE_TOP_BAR_BLUR_STYLE] = settings.topBarBlurStyle.persistedValue
         this[APPEARANCE_SWIPE_DISMISS_ENABLED] = settings.swipeDismissEnabled
         this[APPEARANCE_PREDICTIVE_BACK_ENABLED] = settings.predictiveBackEnabled

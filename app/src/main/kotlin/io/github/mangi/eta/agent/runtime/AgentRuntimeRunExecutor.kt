@@ -413,6 +413,9 @@ internal class AgentRuntimeRunExecutor(
                 completionReview = runCatching {
                     runBlocking { io.github.mangi.eta.data.repository.AppearanceSettingsRepository.settings().completionReviewEnabled }
                 }.getOrDefault(true),
+                lightGuiRounds = runCatching {
+                    runBlocking { io.github.mangi.eta.data.repository.AppearanceSettingsRepository.settings().lightGuiRoundEffort }
+                }.getOrDefault(false),
             ) { event ->
                 timing.accept(event)
                 acceptEvent(
