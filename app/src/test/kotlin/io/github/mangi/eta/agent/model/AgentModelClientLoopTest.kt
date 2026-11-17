@@ -967,6 +967,29 @@ class AgentModelClientLoopTest {
         assertEquals(2 to 0, failingRun(review = false))
     }
 
+    /** 10 号方案第二期：工具抛异常时，给模型的结果带异常类名、retryable、hint；同样的调用第二次失败加重复提醒。 */
+    @Test
+    fun failedToolResultsCarryHintsAndRepeatWarnings() {
+        val provider = ScriptedProvider(
+            assistant(finishReason = "tool_calls", toolCalls = listOf(toolCall("a", "get_current_context", """{"x":1}"""))),
+            assistant(finishReason = "tool_calls", toolCalls = listOf(toolCall("b", "get_current_context", """{"x":1}"""))),
+            assistant(content = "两次都超时，先到这里。", finishReason = "stop"),
+        )
+        AgentModelClient.complete(
+            config = modelConfig(), prompt = "查一下", provider = provider,
+            toolExecutor = AgentModelClient.ToolExecutor { throw java.net.SocketTimeoutException("read timed out") },
+        )
+        val toolMessages = (0 until provider.requests.last().length()).map(provider.requests.last()::getJSONObject)
+            .filter { it.optString("role") == "tool" }.map { JSONObject(it.getString("content")) }
+        assertEquals(2, toolMessages.size)
+        assertEquals("SocketTimeoutException: read timed out", toolMessages[0].getString("message"))
+        assertTrue(toolMessages[0].getBoolean("retryable"))
+        assertTrue(toolMessages[0].getString("hint").isNotBlank())
+        assertFalse(toolMessages[0].has("repeat_failures"))
+        assertEquals(2, toolMessages[1].getInt("repeat_failures"))
+        assertTrue(toolMessages[1].getString("hint").startsWith(ToolFailureAnnotator.REPEAT_HINT))
+    }
+
     private class ScriptedProvider(
         private val responses: List<(ProviderRequest, AgentRunController) -> JSONObject>,
     ) : AgentProviderClient {

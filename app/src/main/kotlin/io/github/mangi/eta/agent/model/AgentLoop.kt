@@ -77,6 +77,8 @@ internal class AgentLoop(
     /** 这一轮用户请求里每个工具调用结果的摘要；交卷前自检用。用户中途补充指令时清空。 */
     private val outcomeLog = mutableListOf<ToolOutcomeSummary>()
     private var reviewed = false
+    /** 失败结果补 retryable / hint、重复失败提醒（etax/design/10 第二期）。 */
+    private val failureAnnotator = ToolFailureAnnotator()
 
     fun contextSnapshot(): AgentContextSnapshot? = context.snapshot()
 
@@ -424,7 +426,7 @@ internal class AgentLoop(
                 calls.map { toolCall ->
                     async {
                         val toolStartMs = monotonicNowMs()
-                        val result = try {
+                        val rawResult = try {
                             toolExecutor.execute(toolCall)
                         } catch (throwable: Exception) {
                             if (runController.isCancelled) {
@@ -440,13 +442,14 @@ internal class AgentLoop(
                                     content = JSONObject()
                                         .put("ok", false)
                                         .put("code", "TOOL_ERROR")
-                                        .put("message", throwable.message ?: throwable.javaClass.simpleName)
+                                        .put("message", throwable.describe())
                                         .toString(),
                                 )
                             }
                         }
                         val elapsedMs = (monotonicNowMs() - toolStartMs).coerceAtLeast(0L)
                         synchronized(toolBatchLock) {
+                            val result = failureAnnotator.annotate(toolCall, rawResult)
                             if (result.sensitive || AgentSensitiveToolPolicy.isSensitive(toolCall.name)) {
                                 sensitiveToolCallIds += toolCall.id
                             }
@@ -454,8 +457,8 @@ internal class AgentLoop(
                                 turnMetrics.recordToolMs(elapsedMs)
                                 emitToolFinished(round, toolCall, result)
                             }
+                            ToolOutcome(toolCall, result)
                         }
-                        ToolOutcome(toolCall, result)
                     }
                 }.awaitAll()
             }
@@ -489,7 +492,7 @@ internal class AgentLoop(
         )
 
         val toolStartMs = monotonicNowMs()
-        val result = try {
+        val rawResult = try {
             toolExecutor.execute(roundCall)
         } catch (throwable: Exception) {
             runController.throwIfCancelled()
@@ -497,10 +500,11 @@ internal class AgentLoop(
                 content = JSONObject()
                     .put("ok", false)
                     .put("code", "TOOL_ERROR")
-                    .put("message", throwable.message ?: throwable.javaClass.simpleName)
+                    .put("message", throwable.describe())
                     .toString(),
             )
         }
+        val result = failureAnnotator.annotate(roundCall, rawResult)
         turnMetrics.recordToolMs((monotonicNowMs() - toolStartMs).coerceAtLeast(0L))
         if (result.sensitive || AgentSensitiveToolPolicy.isSensitive(roundCall.name)) {
             sensitiveToolCallIds += roundCall.id
@@ -525,14 +529,14 @@ internal class AgentLoop(
                 command = traceFormatter.displayCommand(toolCall),
             )
         )
-        val result = AgentModelClient.ToolResult(
+        val result = failureAnnotator.annotate(toolCall, AgentModelClient.ToolResult(
             content = JSONObject()
                 .put("ok", false)
                 .put("code", code)
                 .put("message", message)
                 .toString(),
             sensitive = AgentSensitiveToolPolicy.isSensitive(toolCall.name),
-        )
+        ))
         if (result.sensitive) sensitiveToolCallIds += toolCall.id
         emitToolFinished(round, toolCall, result)
         return ToolOutcome(toolCall, result)
@@ -654,6 +658,10 @@ internal class AgentLoop(
         }
 
     private fun monotonicNowMs(): Long = System.nanoTime() / 1_000_000L
+
+    /** 工具内部异常带上类名，模型能分清是超时、IO 还是参数问题。 */
+    private fun Throwable.describe(): String =
+        javaClass.simpleName.ifBlank { "Exception" } + (message?.takeIf { it.isNotBlank() }?.let { ": $it" } ?: "")
 
     private class TurnMetricsAccumulator {
         private var stepCount: Int = 0
