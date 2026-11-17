@@ -22,11 +22,16 @@ class TaskScreenSessionTest {
             .put("observation_id", observed.getString("observation_id")).toString()))!!.content)
         assertTrue(result.getBoolean("ok"))
         // 按键后自动回看一次（等页面静下来 + 读树），模型不用再调 observe_screen。
-        assertEquals(listOf("screen_open", "screen_dump", "screen_dump", "screen_key", "screen_wait", "screen_dump"), backend.names())
+        // 启动后自动回看（等静 + 读树），observe_screen 读树，按键前核对，按键，按键后回看。
+        assertEquals(listOf("screen_open", "screen_wait", "screen_dump", "screen_dump", "screen_dump", "screen_key", "screen_wait", "screen_dump"),
+            backend.names())
         assertTrue(result.getJSONObject("after").getString("observation_id") != observed.getString("observation_id"))
         assertEquals(4, backend.calls.last { it.name == "screen_key" }.arguments.getInt("code"))
-        assertFalse(JSONObject(tools.execute(call("press_key", """{"button":"BACK","observation_id":"old"}"""))!!.content).getBoolean("ok"))
-        assertEquals(1, backend.names().count { it == "screen_key" })
+        // 2026111623：返回键不点任何元素，带了旧编号也不拦（只核对屏幕和应用没变）；回车带旧编号仍被拒。
+        assertTrue(JSONObject(tools.execute(call("press_key", """{"button":"BACK","observation_id":"old"}"""))!!.content).getBoolean("ok"))
+        assertEquals(2, backend.names().count { it == "screen_key" })
+        assertFalse(JSONObject(tools.execute(call("press_key", """{"button":"ENTER","observation_id":"old"}"""))!!.content).getBoolean("ok"))
+        assertEquals(2, backend.names().count { it == "screen_key" })
     }
 
     @Test fun backCannotUseAnotherTasksObservationOrFallThroughToTheMainScreen() {
@@ -280,7 +285,8 @@ class TaskScreenSessionTest {
         val tappedJson = JSONObject(tapped.content)
         assertTrue(tappedJson.getBoolean("ok"))
         assertEquals("background", tappedJson.getString("execution_location"))
-        assertEquals(listOf(10, 10, 10), backend.calls.filter { it.name == "screen_dump" }.map { it.arguments.getInt("limit") })
+        // 第一次是启动后的自动回看（默认上限）；之后都沿用观察时的 limit。
+        assertEquals(listOf(60, 10, 10, 10), backend.calls.filter { it.name == "screen_dump" }.map { it.arguments.getInt("limit") })
         val tapCall = backend.calls.last { it.name == "screen_tap" }
         assertEquals(10, tapCall.arguments.getInt("x"))
         assertEquals(20, tapCall.arguments.getInt("y"))
@@ -622,7 +628,7 @@ class TaskScreenSessionTest {
         ))!!
         assertTrue(JSONObject(tapped.content).getBoolean("ok"))
         // 动作前核对只读几何（limit 0）；动作后的回看另读一次树。
-        assertEquals(0, backend.calls.first { it.name == "screen_dump" }.arguments.getInt("limit"))
+        assertEquals(0, backend.calls.dropWhile { it.name != "screen_shot" }.first { it.name == "screen_dump" }.arguments.getInt("limit"))
         assertTrue(backend.calls.any { it.name == "screen_tap" })
     }
 

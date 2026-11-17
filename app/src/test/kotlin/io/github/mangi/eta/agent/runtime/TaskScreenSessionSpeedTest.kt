@@ -16,8 +16,15 @@ class TaskScreenSessionSpeedTest {
         val calls = CopyOnWriteArrayList<Pair<String, JSONObject>>()
         @Volatile var nodes: List<JSONObject> = listOf(button("确定", 0, 0, 200, 100), label("12:00", 0, 300, 200, 360))
         @Volatile var pkg = "app.one"
+        /** 不为空时，screen_tap 直接回这个（模拟防重试拦下）。 */
+        @Volatile var tapReply: String? = null
+        /** 每次读树前调用；参数是第几次读树（从 1 开始）。 */
+        @Volatile var beforeDump: ((Int) -> Unit)? = null
+        private var dumps = 0
         override fun execute(name: String, arguments: String): String {
             calls += name to JSONObject(arguments)
+            if (name == "screen_tap") tapReply?.let { return it }
+            if (name == "screen_dump") { dumps++; beforeDump?.invoke(dumps) }
             return when (name) {
                 "screen_open" -> """{"ok":true,"mode":"hidden","displayId":7,"display":7}"""
                 "screen_dump" -> JSONObject().put("ok", true).put("displayId", 7).put("package", pkg)
@@ -149,7 +156,7 @@ class TaskScreenSessionSpeedTest {
         val waited = tools.run("wait", JSONObject().put("duration_ms", 8000))
         assertTrue(waited.getBoolean("ok"))
         assertTrue(backend.last("screen_wait").getInt("timeout_ms") <= 1000)
-        assertEquals(1, backend.names().count { it == "screen_wait" }) // 页面一静就返回，不再等满 8 秒
+        assertEquals(2, backend.names().count { it == "screen_wait" }) // 启动后回看一次 + wait 一次：页面一静就返回，不再等满 8 秒
         assertTrue(waited.getJSONObject("after").has("observation_id"))
     }
 
@@ -158,6 +165,61 @@ class TaskScreenSessionSpeedTest {
         val tools = session(backend)
         val result = tools.run("wait_for_package", JSONObject().put("package_name", "app.one").put("timeout_ms", 1000))
         assertTrue(result.toString(), result.getBoolean("ok"))
+    }
+
+    /** 2026111623 真机反馈：点按被防重试拦下（没执行）后，刚才的观察仍然有效，接着按返回不用再观察。 */
+    @Test fun aBlockedTapKeepsTheObservationSoTheNextStepNeedsNoNewLook() {
+        val backend = Backend()
+        val tools = session(backend)
+        val id = tools.run("observe_screen").getString("observation_id")
+        backend.tapReply = """{"ok":false,"code":"NO_PROGRESS","operationMayHaveRun":false}"""
+        assertEquals("NO_PROGRESS", tools.run("tap_element", JSONObject().put("index", 0).put("observation_id", id)).getString("code"))
+        val back = tools.run("press_key", JSONObject().put("button", "BACK").put("observation_id", id))
+        assertTrue(back.toString(), back.getBoolean("ok"))
+        // 说不清有没有执行的仍然作废，要先重新观察。
+        val fresh = tools.run("observe_screen").getString("observation_id")
+        backend.tapReply = """{"ok":false,"code":"BACKGROUND_TOOL_UNAVAILABLE"}"""
+        tools.run("tap_element", JSONObject().put("index", 0).put("observation_id", fresh))
+        assertEquals("BACKGROUND_OBSERVATION_REQUIRED",
+            tools.run("tap_element", JSONObject().put("index", 0).put("observation_id", fresh)).getString("code"))
+    }
+
+    @Test fun launchLooksOnceAndBackWithoutAnyObservationLooksByItself() {
+        val backend = Backend()
+        val tools = TaskScreenSession(runId = "speed-launch", controller = AgentRunController(), backend = backend,
+            readScreenshot = { AgentModelClient.ToolResult("{}") })
+        // 启动后自动看一眼：after 里的编号下一步直接能用，不用先 observe_screen。
+        val launched = tools.run("launch_app", JSONObject().put("package_name", "app.one").put("execution_location", "background"))
+        val id = launched.getJSONObject("after").getString("observation_id")
+        assertFalse(launched.has("observation_required"))
+        assertTrue(tools.run("tap_element", JSONObject().put("index", 0).put("observation_id", id)).getBoolean("ok"))
+        // 手上没有观察（读树失败后）时按返回：程序自己读一次再按（读树 + 动作前核对 + 按键）。
+        backend.tapReply = """{"ok":false,"code":"BACKGROUND_TOOL_UNAVAILABLE"}"""
+        tools.run("tap_element", JSONObject().put("index", 0).put("observation_id",
+            tools.run("observe_screen").getString("observation_id")))
+        val start = backend.calls.size
+        val back = tools.run("press_key", JSONObject().put("button", "BACK"))
+        assertTrue(back.toString(), back.getBoolean("ok"))
+        assertEquals(listOf("screen_dump", "screen_dump", "screen_key"), backend.names().drop(start).take(3))
+    }
+
+    @Test fun aSlowPageAfterATapIsWaitedForBeforeSayingNothingChanged() {
+        val page = List(6) { label("第 $it 项", 0, 120 * it, 600, 120 * it + 100) } + button("确定", 0, 900, 200, 1000)
+        val backend = Backend().apply { nodes = page }
+        val tools = session(backend)
+        val id = tools.run("observe_screen").getString("observation_id")
+        val base = backend.names().count { it == "screen_dump" }
+        // 点按读两次树（动作前核对、动作后回看）：回看时还是旧页面，再看一次才读到详情页。
+        backend.beforeDump = { n -> if (n == base + 3) backend.nodes = listOf(label("详情", 0, 0, 600, 100)) + page.take(5) }
+        val tapped = tools.run("tap_element", JSONObject().put("index", 6).put("observation_id", id))
+        assertTrue(tapped.toString(), tapped.getJSONObject("after").getBoolean("screen_changed"))
+        assertEquals(1, tapped.getInt("late_change_checks"))
+        // 一直没变：最多再看两次，然后照实报告没变化。
+        backend.beforeDump = null
+        val next = tapped.getJSONObject("after").getString("observation_id")
+        val again = tools.run("tap_element", JSONObject().put("index", 0).put("observation_id", next))
+        assertFalse(again.getJSONObject("after").getBoolean("screen_changed"))
+        assertEquals(2, again.getInt("late_change_checks"))
     }
 
     @Test fun relocationAndSparsenessRules() {

@@ -224,12 +224,14 @@ internal class TaskScreenSession(
             location = TaskExecutionLocation.BACKGROUND
             observation = null
         }
-        return resultWithLocation(
-            JSONObject(result.toString())
-                .put("execution_location", TaskExecutionLocation.BACKGROUND.wireValue)
-                .put("observation_required", true),
-            "launch_app",
+        // 2026111623：启动后等页面静下来（最多 1.5 秒）顺带看一眼，after 里的编号下一步直接用，
+        // 不用再专门跑一轮 observe_screen。回看失败时照旧要求先观察。
+        val launched = withAfter(
+            JSONObject(result.toString()).put("execution_location", TaskExecutionLocation.BACKGROUND.wireValue),
+            null, "launch_app", settle = true, settleMs = LAUNCH_SETTLE_MS,
         )
+        if (runCatching { JSONObject(launched.content).has("after") }.getOrDefault(false)) return launched
+        return launched.copy(content = JSONObject(launched.content).put("observation_required", true).toString())
     }
 
     /** Status cannot acquire a display, publish an input observation, or change task location. */
@@ -729,16 +731,27 @@ internal class TaskScreenSession(
             )
             else -> return error("INVALID_ARGUMENT", "未知按键：$button", "press_key")
         }
-        // 按键不需要 observation_id（只核对屏幕和应用没变），连按两次返回、「输入 + 回车」可以同一轮发出；
-        // 带了就照旧核对是不是最近一次观察。
-        val snapshot = (if (args.optString("observation_id").isNotBlank()) requireObservation("press_key", args)
-            else currentObservation()) ?: return observationError("press_key", args)
+        // 返回、主页、最近任务不点任何元素：不看 observation_id（带了旧编号也不拦），只核对屏幕和应用没变；
+        // 手上没有观察时程序自己读一次，不再让模型多跑一轮。回车可能提交表单：带了编号仍核对是不是最近一次观察。
+        // 连按两次返回、「输入 + 回车」可以同一轮发出。
+        val snapshot = if (code == 66 && args.optString("observation_id").isNotBlank()) {
+            requireObservation("press_key", args) ?: return observationError("press_key", args)
+        } else currentObservation() ?: observeForKey() ?: return observationError("press_key", JSONObject())
         validateLiveSnapshot(snapshot, "press_key")?.let { return it }
         return mutateAndInvalidate(
             "screen_key",
             JSONObject().put("code", code),
             "press_key",
         )
+    }
+
+    /** 按键前没有可用观察时自动读一次树（暂停恢复后除外：那时必须由模型重新看过再继续）。 */
+    private fun observeForKey(): Observation? {
+        val stale = synchronized(lock) { observation }
+        if (stale != null && stale.generation != controller.resumeGeneration) return null
+        val outcome = capture(AgentScreenObservationContract.Options(includeScreenshot = false, includeUiTree = true,
+            maxNodes = AgentScreenObservationContract.DEFAULT_MAX_NODES), autoScreenshot = false)
+        return (outcome as? Capture.Done)?.snapshot
     }
 
     private fun finishBackground(): AgentModelClient.ToolResult {
@@ -915,18 +928,42 @@ internal class TaskScreenSession(
         }
         val dispatched = result.optBoolean("ok") || result.optBoolean("operationMayHaveRun") ||
             result.optString("code") == "ACTION_OUTCOME_UNKNOWN"
-        if (!dispatched) return resultWithLocation(result, toolName)
+        if (!dispatched) {
+            // 后端明确说没执行（例如防重试拦下的 NO_PROGRESS）：屏幕没动过，刚才的观察仍然有效，
+            // 下一步（比如按返回）不用再先 observe_screen。说不清有没有执行的不恢复。
+            if (before != null && result.has("operationMayHaveRun") && !result.optBoolean("operationMayHaveRun", true)) {
+                synchronized(lock) { if (observation == null) observation = before }
+            }
+            return resultWithLocation(result, toolName)
+        }
         return withAfter(result, before, toolName, settle = true)
     }
 
     /** 给结果附上 after（新的观察）；回看失败不影响结果本身，只是不带 after。 */
-    private fun withAfter(result: JSONObject, before: Observation?, toolName: String, settle: Boolean): AgentModelClient.ToolResult {
+    private fun withAfter(
+        result: JSONObject,
+        before: Observation?,
+        toolName: String,
+        settle: Boolean,
+        settleMs: Int = AFTER_SETTLE_MS,
+    ): AgentModelClient.ToolResult {
         var attachment: AgentModelClient.ToolResult? = null
         if (!controller.isCancelled) runCatching {
-            if (settle) backendResult("screen_wait", JSONObject().put("timeout_ms", AFTER_SETTLE_MS))
+            if (settle) backendResult("screen_wait", JSONObject().put("timeout_ms", settleMs))
             val limit = before?.takeIf { it.treeRead }?.limit ?: AgentScreenObservationContract.DEFAULT_MAX_NODES
-            val outcome = capture(AgentScreenObservationContract.Options(includeScreenshot = false, includeUiTree = true, maxNodes = limit),
-                autoScreenshot = true)
+            val options = AgentScreenObservationContract.Options(includeScreenshot = false, includeUiTree = true, maxNodes = limit)
+            var outcome = capture(options, autoScreenshot = !lateChangeExpected(toolName, before))
+            // 点完页面没变：多半是详情页、路线页还在加载。再看两次（各约 0.6 秒），
+            // 免得模型以为没点上、再点一次被防重试拦下。树读不出内容（画布、地图）时不等，判断不了。
+            var rechecks = 0
+            while (lateChangeExpected(toolName, before) && rechecks < LATE_CHANGE_CHECKS && !controller.isCancelled &&
+                (outcome as? Capture.Done)?.snapshot?.fingerprint == before?.fingerprint
+            ) {
+                controller.awaitRetryDelay(LATE_CHANGE_DELAY_MS)
+                rechecks++
+                outcome = capture(options, autoScreenshot = rechecks == LATE_CHANGE_CHECKS)
+            }
+            if (rechecks > 0) result.put("late_change_checks", rechecks)
             if (outcome is Capture.Done) {
                 attachment = outcome.attachment
                 val after = result.optJSONObject("after") ?: JSONObject()
@@ -942,6 +979,10 @@ internal class TaskScreenSession(
         val shot = attachment ?: return tool
         return tool.copy(images = tool.images + shot.images, sensitive = tool.sensitive || shot.sensitive)
     }
+
+    private fun lateChangeExpected(toolName: String, before: Observation?): Boolean =
+        toolName in LATE_CHANGE_TOOLS && before != null && before.treeRead &&
+            before.nodes.count { it.text.isNotBlank() || it.description.isNotBlank() } >= MIN_READABLE_FOR_RECHECK
 
     private fun findNode(snapshot: Observation, args: JSONObject): Node? {
         val index = args.optInt("index", -1)
@@ -1215,6 +1256,11 @@ internal class TaskScreenSession(
     private companion object {
         /** 动作后等页面静下来的上限；静了就提前继续。 */
         const val AFTER_SETTLE_MS = 800
+        const val LAUNCH_SETTLE_MS = 1_500
+        const val LATE_CHANGE_CHECKS = 2
+        const val LATE_CHANGE_DELAY_MS = 600L
+        private const val MIN_READABLE_FOR_RECHECK = 6
+        private val LATE_CHANGE_TOOLS = setOf("tap", "tap_element", "tap_area")
         val LOST_SESSION_CODES = setOf("NO_SESSION", "SESSION_CLOSED", "STALE_SCREEN", "SYSTEM_RESTARTED")
     }
 }

@@ -48,6 +48,7 @@ internal object CompletionGate {
                 val last = failures.lastOrNull()
                 append("最后一个界面操作（").append(last?.name.orEmpty()).append("）已经提交，但效果没有确认。")
                 append("先重新观察一次界面，核对最终结果再回答；发送、支付、删除这类已经提交的操作不要重复执行。")
+                append(ANSWER_STYLE)
                 return@buildString
             }
             append("这次运行里还有没解决的失败：\n")
@@ -57,8 +58,10 @@ internal object CompletionGate {
                 if (failure.message.isNotBlank()) append(" · ").append(failure.message.replace('\n', ' '))
                 append('\n')
             }
-            append("请先判断是不是参数、路径、转义、权限、拼写这类小问题；能修就修好后重试，并核对最终结果。")
+            append("先判断它影不影响用户要的结果：不影响的（收尾时的返回、关闭页面、多余的确认、观察编号过期这类没执行的动作）不用再操作，直接回答。")
+            append("影响结果的，再看是不是参数、路径、转义、权限、拼写这类小问题；能修就修好后重试，并核对最终结果。")
             append("不要重复已经成功的步骤。确实做不到时，在答复里写清楚试过什么、最后一条报错原文是什么。")
+            append(ANSWER_STYLE)
         }
     }
 
@@ -97,4 +100,7 @@ internal object CompletionGate {
     )
 
     private const val MAX_LISTED = 5
+
+    /** 复核是内部步骤：答复照常先给用户要的结果，不要以「复核完成」开头、不要讲内部报错的来龙去脉。 */
+    private const val ANSWER_STYLE = "答复照常先给用户要的结果，不提复核这件事；只有影响结果的失败才简短说明。"
 }
