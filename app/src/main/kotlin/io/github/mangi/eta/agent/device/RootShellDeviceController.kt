@@ -578,11 +578,14 @@ internal class RootShellDeviceController(
             attempts++
             val service = AgentAccessibilityService.current()
             if (service == null && !rootAvailable()) return accessibilityUnavailable()
-            val nodes = service
-                ?.queryNodes(120)
-                ?.map { it.toUiNode() }
-                ?.takeIf { it.isNotEmpty() }
-                ?: if (rootAvailable()) dumpUiNodes(120) else emptyList()
+            // 上游：无障碍在线时只用它的结果，读到空也不退回慢的 uiautomator dump（等待文字、虚拟滚动会因此卡住）。
+            val nodes = if (service != null) {
+                service.queryNodes(120).map { it.toUiNode() }
+            } else if (rootAvailable()) {
+                dumpUiNodes(120)
+            } else {
+                emptyList()
+            }
             val match = nodes.firstOrNull { node ->
                 val haystacks = if (includeDesc) listOf(node.text, node.desc) else listOf(node.text)
                 haystacks.any { value -> matches(value, needle, matchMode) }
