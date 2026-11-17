@@ -45,6 +45,7 @@ import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Slider
+import androidx.compose.runtime.collectAsState
 import top.yukonga.miuix.kmp.basic.SliderDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
@@ -54,6 +55,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 internal fun AppearanceSettingsScreen(onBack: () -> Unit, onOpenCameraRing: () -> Unit = {}) {
     val appearance = LocalAppearanceSettings.current
+    val context = androidx.compose.ui.platform.LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var scaleDraft by remember(appearance.interfaceScale) {
         mutableFloatStateOf(appearance.interfaceScale * 100f)
@@ -240,6 +242,21 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit, onOpenCameraRing: () -
                                 }
                             },
                         )
+                        // 电脑任务也亮流光（2026111620）：与「设置 → 电脑」里的开关是同一个；开了电脑同步才显示。
+                        val desktopPrefs by androidx.compose.runtime.remember {
+                            io.github.mangi.eta.agent.remote.DesktopLinkSettings.init(context)
+                        }.collectAsState()
+                        if (desktopPrefs.enabled) {
+                            EtaPreferenceDivider(hasLeading = false)
+                            EtaSwitchPreference(
+                                title = stringResource(R.string.desktop_link_glow),
+                                summary = stringResource(R.string.desktop_link_glow_summary),
+                                checked = desktopPrefs.glow,
+                                onCheckedChange = { on ->
+                                    io.github.mangi.eta.agent.remote.DesktopLinkSettings.update { it.copy(glow = on) }
+                                },
+                            )
+                        }
                         // 智能模式下后台干活亮的是摄像头小光圈：各家机型报的开孔不一定准，可以自己对齐。
                         if (appearance.runtimeGlowStyle == io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART) {
                             EtaPreferenceDivider(hasLeading = false)

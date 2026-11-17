@@ -29,19 +29,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/** 常驻通知的三档预设：安静（默认，低优先级）/ 标准 / 显眼（流体云 + 流光）。 */
+/**
+ * 常驻通知的三档预设：安静（默认，低优先级）/ 标准 / 显眼（流体云）。
+ * 2026111620 起屏幕流光是单独的开关（[DesktopLinkPrefs.glow]），不再跟着预设走。
+ */
 internal enum class DesktopNoticePreset { Quiet, Standard, Prominent }
 
 internal val DesktopLinkPrefs.noticePreset: DesktopNoticePreset get() = when {
-    fluidCloud || glow -> DesktopNoticePreset.Prominent
+    fluidCloud -> DesktopNoticePreset.Prominent
     !ongoingLowPriority -> DesktopNoticePreset.Standard
     else -> DesktopNoticePreset.Quiet
 }
 
 internal fun DesktopLinkPrefs.withNoticePreset(preset: DesktopNoticePreset): DesktopLinkPrefs = when (preset) {
-    DesktopNoticePreset.Quiet -> copy(ongoingLowPriority = true, fluidCloud = false, glow = false)
-    DesktopNoticePreset.Standard -> copy(ongoingLowPriority = false, fluidCloud = false, glow = false)
-    DesktopNoticePreset.Prominent -> copy(ongoingLowPriority = false, fluidCloud = true, glow = true)
+    DesktopNoticePreset.Quiet -> copy(ongoingLowPriority = true, fluidCloud = false)
+    DesktopNoticePreset.Standard -> copy(ongoingLowPriority = false, fluidCloud = false)
+    DesktopNoticePreset.Prominent -> copy(ongoingLowPriority = false, fluidCloud = true)
 }
 
 /** 「设置 → 电脑」里的同步开关、常驻通知样式与提醒。诊断信息在「高级」里。 */
@@ -84,6 +87,13 @@ internal fun LazyListScope.desktopLinkSections(prefs: DesktopLinkPrefs) {
                     color = EtaTheme.colors.textTertiary,
                 )
             }
+            EtaSwitchPreference(
+                title = stringResource(R.string.desktop_link_glow),
+                summary = stringResource(R.string.desktop_link_glow_summary),
+                checked = prefs.glow,
+                enabled = prefs.enabled,
+                onCheckedChange = { on -> DesktopLinkSettings.update { it.copy(glow = on) } },
+            )
             EtaSwitchPreference(
                 title = stringResource(R.string.desktop_link_sound),
                 summary = stringResource(R.string.desktop_link_sound_summary),

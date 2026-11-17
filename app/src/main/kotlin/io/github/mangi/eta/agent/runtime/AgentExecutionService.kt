@@ -124,8 +124,12 @@ internal class AgentExecutionService : Service() {
         if (intent?.action == ACTION_REPLY) {
             receiveReply(intent)
         } else if (intent?.action in RUN_ACTIONS) {
-            intent?.getStringExtra(EXTRA_RUN_ID)?.let {
-                AgentRuntimeService.dispatchNotificationAction(intent.action.orEmpty(), it)
+            intent?.getStringExtra(EXTRA_RUN_ID)?.let { runId ->
+                // 运行早已结束（或运行时服务已退出）却还挂着的卡片：暂停、停止都不会有人处理，
+                // 以前就一直卡在「运行中」。这种情况直接收掉这张卡片。
+                if (AgentRuntimeService.hasActiveRun(runId)) {
+                    AgentRuntimeService.dispatchNotificationAction(intent.action.orEmpty(), runId)
+                } else retireStaleCard(this, runId, intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0))
             }
             refreshNotification()
         } else if (intent?.action == ACTION_STOP) stopTasks()
@@ -194,7 +198,10 @@ internal class AgentExecutionService : Service() {
         if (leases.closeOwnerIfIdle(owner)) {
             if (foregroundActive) {
                 foregroundActive = false
-                stopForeground(STOP_FOREGROUND_DETACH)
+                // 前台卡片若是已完成的卡就留着；若还是「运行中」的卡（任务已结束、卡片没来得及换），
+                // 留下来就成了永远停在「生成回答中」的陈旧卡片，所以连通知一起撤掉。
+                val keep = posted[foregroundId]?.completed == true
+                stopForeground(if (keep) STOP_FOREGROUND_DETACH else STOP_FOREGROUND_REMOVE)
                 posted.remove(foregroundId)
             }
             publishCards(this, completedOnly = true)
@@ -269,8 +276,31 @@ internal class AgentExecutionService : Service() {
             if (Looper.myLooper() == Looper.getMainLooper()) block() else mainHandler.post(block)
         }
 
-        private fun idFor(runId: String): Int = notificationIds.getOrPut(runId) {
-            if (notificationIds.isEmpty()) NOTIFICATION_ID else nextId++
+        /** 任务卡片的编号；通用的「执行中」卡片固定用 [NOTIFICATION_ID]，任务卡片从不复用它。 */
+        private fun idFor(runId: String): Int = notificationIds.getOrPut(runId) { nextId++ }
+
+        /**
+         * 撤掉一张「运行中」卡片的编号（任务完成换新编号前调用）。不是前台卡片就直接取消；
+         * 是前台卡片时 Android 不让取消，交给接下来的 refreshNotification：换前台或停前台时一并撤掉。
+         */
+        private fun retireLiveId(context: Context, runId: String) {
+            val oldId = notificationIds.remove(runId) ?: return
+            posted.remove(oldId)
+            val service = instance
+            if (service == null || !service.foregroundActive || service.foregroundId != oldId) {
+                context.getSystemService(NotificationManager::class.java).cancel(oldId)
+            }
+        }
+
+        /** 通知上点了暂停 / 停止，但运行时已经没有这个任务：收掉它的卡片和那条通知。 */
+        private fun retireStaleCard(context: Context, runId: String, notificationId: Int) {
+            if (cards[runId]?.completed == false) removeCard(context, runId)
+            val service = instance
+            if (notificationId != 0 && notificationId !in notificationIds.values &&
+                (service == null || !service.foregroundActive || service.foregroundId != notificationId)) {
+                context.getSystemService(NotificationManager::class.java).cancel(notificationId)
+                posted.remove(notificationId)
+            }
         }
 
         private fun ensureChannel(context: Context) {
@@ -325,6 +355,9 @@ internal class AgentExecutionService : Service() {
             val firstCompletion = completedRuns.add(task.runId)
             while (completedRuns.size > 64) completedRuns.remove(completedRuns.first())
             val replyFailed = previous?.takeIf { it.conversationId == task.conversationId }?.replyFailed == true
+            // 完成卡换一个新编号发，运行卡片单独撤掉：同一条通知从「实况（流体云）」改回普通时，
+            // ColorOS 不一定收起胶囊，旧的「生成回答中」会一直挂着（电脑会话的流体云早就这么处理）。
+            if (previous?.completed != true) retireLiveId(context, task.runId)
             cards[task.runId] = task.copy(completed = true, paused = false, replyFailed = replyFailed)
             idFor(task.runId)
             cards.values.filter { it.completed }.dropLast(3).map { it.runId }.forEach { removeCard(context, it) }
@@ -500,11 +533,11 @@ internal class AgentExecutionService : Service() {
                         task.targetPackage.isNullOrBlank() -> destination(context, task, id)
                         else -> TaskPreviewActivity.pendingIntent(context, task, id)
                     }).build())
-                builder.addAction(runAction(context, task.runId,
+                builder.addAction(runAction(context, task.runId, id,
                     if (task.paused) ACTION_RESUME_RUN else ACTION_PAUSE_RUN,
                     if (task.paused) R.string.overlay_resume else R.string.overlay_pause,
                     if (task.paused) android.R.drawable.ic_media_play else android.R.drawable.ic_media_pause))
-                builder.addAction(runAction(context, task.runId, ACTION_STOP_RUN, R.string.overlay_stop_task, R.drawable.ic_assistant_stop))
+                builder.addAction(runAction(context, task.runId, id, ACTION_STOP_RUN, R.string.overlay_stop_task, R.drawable.ic_assistant_stop))
             } else if (completed) {
                 if (!task.conversationId.isNullOrBlank()) {
                     builder.addAction(Notification.Action.Builder(Icon.createWithResource(context, R.drawable.ic_notification),
@@ -542,10 +575,10 @@ internal class AgentExecutionService : Service() {
             return builder.build()
         }
 
-        private fun runAction(context: Context, runId: String, action: String, label: Int, icon: Int): Notification.Action {
+        private fun runAction(context: Context, runId: String, id: Int, action: String, label: Int, icon: Int): Notification.Action {
             val intent = Intent(context, AgentExecutionService::class.java).setAction(action)
                 .setData(Uri.Builder().scheme("eta-task").authority("control").appendPath(runId).appendPath(action).build())
-                .putExtra(EXTRA_RUN_ID, runId)
+                .putExtra(EXTRA_RUN_ID, runId).putExtra(EXTRA_NOTIFICATION_ID, id)
             val pending = PendingIntent.getService(context, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             return Notification.Action.Builder(Icon.createWithResource(context, icon), context.getString(label), pending).build()
         }

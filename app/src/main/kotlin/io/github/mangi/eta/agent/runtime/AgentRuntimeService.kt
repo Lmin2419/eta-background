@@ -1255,8 +1255,14 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             val cutout = io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(overlayContext())
             val sweep = runtimeGlowStyle == io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART
             val glow = createOverlayComposeView {
-                if (showGlow) AgentOverlayGlow(state = ambientState.value, corners = corners, intensity = runtimeGlowIntensity.value,
-                    presence = glowPresence.value, cameraCutout = cutout, startSweep = sweep, ringAdjust = cameraRingAdjust.value)
+                if (showGlow) {
+                    androidx.compose.runtime.DisposableEffect(Unit) {
+                        io.github.mangi.eta.agent.overlay.AmbientGlowRegistry.phoneGlowShowing.value = true
+                        onDispose { io.github.mangi.eta.agent.overlay.AmbientGlowRegistry.phoneGlowShowing.value = false }
+                    }
+                    AgentOverlayGlow(state = ambientState.value, corners = corners, intensity = runtimeGlowIntensity.value,
+                        presence = glowPresence.value, cameraCutout = cutout, startSweep = sweep, ringAdjust = cameraRingAdjust.value)
+                }
             }
             val glowLp = glowLayoutParams().apply {
                 // Keep the existing foreground-only screen-on behavior when visuals are off.
@@ -1769,6 +1775,12 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             pending: () -> Boolean, complete: (Boolean) -> Unit) {
             val owner = notificationOwner ?: run { complete(false); return }
             owner.prepareNotificationReply(sourceRunId, conversationId, text, pending, complete)
+        }
+
+        /** 运行时是否还有这个没结束的任务（通知按钮判断卡片是不是陈旧的）。主线程调用。 */
+        internal fun hasActiveRun(runId: String): Boolean {
+            val owner = notificationOwner ?: return false
+            return !owner.destroyed && owner.runs.get(runId)?.session?.isTerminal == false
         }
 
         internal fun dispatchNotificationAction(action: String, runId: String) {

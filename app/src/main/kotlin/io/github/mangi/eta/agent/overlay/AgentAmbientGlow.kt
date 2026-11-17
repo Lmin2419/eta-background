@@ -48,6 +48,11 @@ internal object CameraCutoutLocator {
     }
 }
 
+/** 手机任务的流光窗口正亮着时，电脑任务的流光让开，免得同一处画两个光圈。 */
+internal object AmbientGlowRegistry {
+    val phoneGlowShowing = kotlinx.coroutines.flow.MutableStateFlow(false)
+}
+
 /** 运行光效画在哪里（2026111618「智能」流光）。 */
 internal enum class GlowPresence { EDGE, CAMERA }
 

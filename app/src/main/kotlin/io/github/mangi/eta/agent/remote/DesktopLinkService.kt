@@ -15,6 +15,7 @@ import android.os.IBinder
 import android.provider.Settings
 import android.view.WindowManager
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -27,6 +28,7 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.accessibility.AgentAccessibilityService
 import io.github.mangi.eta.agent.overlay.AgentOverlayGlow
+import io.github.mangi.eta.agent.overlay.cameraRingAdjust
 import io.github.mangi.eta.agent.overlay.AgentOverlayState
 import io.github.mangi.eta.agent.overlay.ScreenCornerRadii
 import io.github.mangi.eta.ui.MainActivity
@@ -64,6 +66,10 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var glowView: ComposeView? = null
+    private var endPulseView: ComposeView? = null
+    // 电脑任务要不要亮流光（开关打开且电脑上有任务在跑）；真正显示还要看外观设置和手机流光。
+    private val glowWanted = MutableStateFlow(false)
+    private val glowLook = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.data.model.AppearanceSettings())
     private var reminders: DesktopReminders? = null
     private var started = false
 
@@ -89,7 +95,24 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
                 notificationManager().notify(ONGOING_ID, buildOngoing(summary.copy(fluidCloud = false)))
                 if (summary.fluidCloud) notificationManager().notify(LIVE_ID, buildLive(summary))
                 else notificationManager().cancel(LIVE_ID)
-                updateGlow(summary.glow)
+                glowWanted.value = summary.glow
+            }
+        }
+        scope.launch {
+            // 流光样式、亮度、光圈位置跟外观设置走；外观里关了流光就不亮；手机任务的流光亮着时让开。
+            var visible = false
+            combine(glowWanted, io.github.mangi.eta.data.repository.AppearanceSettingsRepository.settingsFlow(),
+                io.github.mangi.eta.agent.overlay.AmbientGlowRegistry.phoneGlowShowing) { wanted, look, phone ->
+                Triple(wanted, look, phone)
+            }.collect { (wanted, look, phone) ->
+                glowLook.value = look
+                val show = wanted && look.runtimeGlowEnabled && !phone
+                if (show != visible) {
+                    // 任务跑完（不是被手机流光顶掉、也不是关了开关）时亮一下「结束」提示。
+                    if (!show && !wanted && !phone && look.runtimeGlowEnabled && glowView != null) showEndPulse()
+                    updateGlow(show)
+                    visible = show
+                }
             }
         }
     }
@@ -109,6 +132,7 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         reminders?.stop()
         updateGlow(false)
+        removeEndPulse()
         notificationManager().cancel(LIVE_ID)
         scope.cancel()
         if (started) DesktopBridge.release()
@@ -229,29 +253,31 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
         if (glowView != null) return
         val accessibility = AgentAccessibilityService.current() != null
         if (!accessibility && !Settings.canDrawOverlays(this)) return
-        val view = ComposeView(context).apply {
-            setViewTreeLifecycleOwner(this@DesktopLinkService)
-            setViewTreeSavedStateRegistryOwner(this@DesktopLinkService)
-            setContent {
-                val dark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
-                    android.content.res.Configuration.UI_MODE_NIGHT_YES
-                val palette = if (dark) darkEtaColors() else lightEtaColors()
-                MiuixTheme(colors = palette.toMiuixColors(if (dark) darkColorScheme() else lightColorScheme())) {
-                    EtaTheme(palette) {
-                        CompositionLocalProvider(LocalSquircleEnabled provides false) {
-                            AgentOverlayGlow(state = AgentOverlayState.Initial, corners = cornerRadii(context))
-                        }
-                    }
-                }
-            }
+        val view = overlayView(context) {
+            val look = glowLook.value
+            val smart = look.runtimeGlowStyle == io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART
+            // 电脑任务对手机来说是「后台干活」：智能模式下只亮摄像头小光圈。
+            AgentOverlayGlow(
+                state = AgentOverlayState.Initial,
+                corners = cornerRadii(context),
+                intensity = look.runtimeGlowIntensity,
+                presence = if (smart) io.github.mangi.eta.agent.overlay.GlowPresence.CAMERA else io.github.mangi.eta.agent.overlay.GlowPresence.EDGE,
+                cameraCutout = remember { io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(context) },
+                startSweep = smart,
+                ringAdjust = look.cameraRingAdjust(),
+            )
         }
+        runCatching { wm.addView(view, glowParams(wm, accessibility)) }.onSuccess { glowView = view }
+    }
+
+    private fun glowParams(wm: WindowManager, accessibility: Boolean): WindowManager.LayoutParams {
         @Suppress("DEPRECATION")
         val realHeight = runCatching {
             val point = android.graphics.Point()
             wm.defaultDisplay.getRealSize(point)
             point.y
         }.getOrDefault(WindowManager.LayoutParams.MATCH_PARENT)
-        val params = WindowManager.LayoutParams(
+        return WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             realHeight,
             if (accessibility) WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY else WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -262,10 +288,47 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT,
         ).apply {
+            setFitInsetsTypes(0)
             layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
             windowAnimations = 0
         }
-        runCatching { wm.addView(view, params) }.onSuccess { glowView = view }
+    }
+
+    private fun overlayView(context: Context, content: @androidx.compose.runtime.Composable () -> Unit) = ComposeView(context).apply {
+        setViewTreeLifecycleOwner(this@DesktopLinkService)
+        setViewTreeSavedStateRegistryOwner(this@DesktopLinkService)
+        setContent {
+            val dark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                android.content.res.Configuration.UI_MODE_NIGHT_YES
+            val palette = if (dark) darkEtaColors() else lightEtaColors()
+            MiuixTheme(colors = palette.toMiuixColors(if (dark) darkColorScheme() else lightColorScheme())) {
+                EtaTheme(palette) {
+                    CompositionLocalProvider(LocalSquircleEnabled provides false) { content() }
+                }
+            }
+        }
+    }
+
+    /** 电脑任务跑完：四周细光呼吸一次，单独一个触摸穿透窗口，播完自己收起。 */
+    private fun showEndPulse() {
+        if (endPulseView != null) return
+        val context = AgentAccessibilityService.current() ?: this
+        val wm = context.getSystemService(WindowManager::class.java) ?: return
+        val accessibility = AgentAccessibilityService.current() != null
+        if (!accessibility && !Settings.canDrawOverlays(this)) return
+        val corners = cornerRadii(context)
+        val intensity = glowLook.value.runtimeGlowIntensity
+        val view = overlayView(context) {
+            io.github.mangi.eta.agent.overlay.AgentOverlayEndPulse(corners, intensity) { scope.launch { removeEndPulse() } }
+        }
+        runCatching { wm.addView(view, glowParams(wm, accessibility)) }.onSuccess { endPulseView = view }
+    }
+
+    private fun removeEndPulse() {
+        val view = endPulseView ?: return
+        endPulseView = null
+        val wm = (AgentAccessibilityService.current() ?: this).getSystemService(WindowManager::class.java)
+        runCatching { wm?.removeView(view) }
     }
 
     private fun cornerRadii(context: Context): ScreenCornerRadii {

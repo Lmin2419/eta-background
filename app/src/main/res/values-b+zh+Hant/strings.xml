@@ -1662,8 +1662,8 @@
     <string name="desktop_link_low_priority_summary">連線通知摺疊顯示，不彈出</string>
     <string name="desktop_link_fluid_cloud">流體雲 / 即時活動</string>
     <string name="desktop_link_fluid_cloud_summary">電腦有任務執行時顯示為膠囊（Android 16 以上）</string>
-    <string name="desktop_link_glow">螢幕流光</string>
-    <string name="desktop_link_glow_summary">電腦有任務執行時顯示胖小胖的螢幕流光</string>
+  <string name="desktop_link_glow">電腦任務也顯示流光</string>
+  <string name="desktop_link_glow_summary">電腦上有任務在跑時，手機螢幕也亮流光；樣式、亮度和光圈位置跟外觀設定裡的一樣。</string>
     <string name="desktop_link_sound">響鈴和震動</string>
     <string name="desktop_link_sound_summary">提醒響鈴並震動；關閉時靜默提醒</string>
     <string name="desktop_link_reminders_title">提醒</string>
@@ -1746,9 +1746,9 @@
     <string name="desktop_notice_quiet">安靜</string>
     <string name="desktop_notice_standard">標準</string>
     <string name="desktop_notice_prominent">顯眼</string>
-    <string name="desktop_notice_quiet_summary">低優先級，摺疊在通知欄裡；沒有流體雲和流光。</string>
-    <string name="desktop_notice_standard_summary">普通常駐通知；沒有流體雲和流光。</string>
-    <string name="desktop_notice_prominent_summary">電腦有任務在跑時顯示流體雲和螢幕流光。</string>
+    <string name="desktop_notice_quiet_summary">低優先級，摺疊在通知欄裡；沒有流體雲。</string>
+    <string name="desktop_notice_standard_summary">普通常駐通知；沒有流體雲。</string>
+    <string name="desktop_notice_prominent_summary">電腦有任務在跑時顯示流體雲。</string>
     <string name="desktop_remind_what">提醒哪些事</string>
     <string name="desktop_remind_which">提醒哪些會話</string>
     <string name="desktop_remind_scope_watched">我參與過的</string>

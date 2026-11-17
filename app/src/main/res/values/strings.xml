@@ -1789,8 +1789,8 @@
     <string name="desktop_link_low_priority_summary">Keep the connection notification collapsed and quiet</string>
     <string name="desktop_link_fluid_cloud">Live activity (fluid cloud)</string>
     <string name="desktop_link_fluid_cloud_summary">Show a capsule while computer tasks run (Android 16+)</string>
-    <string name="desktop_link_glow">Screen glow</string>
-    <string name="desktop_link_glow_summary">Show the running glow while computer tasks run</string>
+  <string name="desktop_link_glow">Glow for computer tasks too</string>
+  <string name="desktop_link_glow_summary">While a computer task runs, show the screen glow too. Style, brightness and ring position follow Appearance settings.</string>
     <string name="desktop_link_sound">Sound and vibration</string>
     <string name="desktop_link_sound_summary">Reminders ring and vibrate; off keeps them silent</string>
     <string name="desktop_link_reminders_title">Reminders</string>
@@ -1875,9 +1875,9 @@
     <string name="desktop_notice_quiet">Quiet</string>
     <string name="desktop_notice_standard">Standard</string>
     <string name="desktop_notice_prominent">Prominent</string>
-    <string name="desktop_notice_quiet_summary">Low priority, folded in the shade. No Fluid Cloud or glow.</string>
-    <string name="desktop_notice_standard_summary">Normal notification while the computer is linked. No Fluid Cloud or glow.</string>
-    <string name="desktop_notice_prominent_summary">Fluid Cloud and screen glow while a computer task runs.</string>
+    <string name="desktop_notice_quiet_summary">Low priority, folded in the shade. No Fluid Cloud.</string>
+    <string name="desktop_notice_standard_summary">Normal notification while the computer is linked. No Fluid Cloud.</string>
+    <string name="desktop_notice_prominent_summary">Fluid Cloud while a computer task runs.</string>
     <string name="desktop_remind_what">Remind me when</string>
     <string name="desktop_remind_which">For which sessions</string>
     <string name="desktop_remind_scope_watched">Ones I joined</string>
