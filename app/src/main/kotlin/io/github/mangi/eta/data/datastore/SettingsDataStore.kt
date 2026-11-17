@@ -198,6 +198,10 @@ internal object SettingsDataStore {
     private val APPEARANCE_RUNTIME_GLOW_ENABLED = booleanPreferencesKey("appearance_runtime_glow_enabled")
     private val APPEARANCE_RUNTIME_GLOW_INTENSITY = stringPreferencesKey("appearance_runtime_glow_intensity")
     private val APPEARANCE_RUNTIME_GLOW_STYLE = stringPreferencesKey("appearance_runtime_glow_style")
+    private val APPEARANCE_CAMERA_RING_X = floatPreferencesKey("appearance_camera_ring_offset_x_dp")
+    private val APPEARANCE_CAMERA_RING_Y = floatPreferencesKey("appearance_camera_ring_offset_y_dp")
+    private val APPEARANCE_CAMERA_RING_WIDTH = floatPreferencesKey("appearance_camera_ring_width_dp")
+    private val APPEARANCE_CAMERA_RING_HEIGHT = floatPreferencesKey("appearance_camera_ring_height_dp")
     private val APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED = booleanPreferencesKey("appearance_task_completion_alerts_enabled")
     private val AGENT_COMPLETION_REVIEW_ENABLED = booleanPreferencesKey("agent_completion_review_enabled")
     private val APPEARANCE_RENDER_DIAGNOSTICS = booleanPreferencesKey("appearance_render_diagnostics")
@@ -394,6 +398,10 @@ internal object SettingsDataStore {
             runtimeGlowEnabled = this[APPEARANCE_RUNTIME_GLOW_ENABLED] ?: true,
             runtimeGlowIntensity = io.github.mangi.eta.data.model.AppearanceGlowIntensity.fromPersistedValue(this[APPEARANCE_RUNTIME_GLOW_INTENSITY]),
             runtimeGlowStyle = io.github.mangi.eta.data.model.AppearanceGlowStyle.fromPersistedValue(this[APPEARANCE_RUNTIME_GLOW_STYLE]),
+            cameraRingOffsetXDp = this[APPEARANCE_CAMERA_RING_X] ?: 0f,
+            cameraRingOffsetYDp = this[APPEARANCE_CAMERA_RING_Y] ?: 0f,
+            cameraRingWidthDp = this[APPEARANCE_CAMERA_RING_WIDTH] ?: 0f,
+            cameraRingHeightDp = this[APPEARANCE_CAMERA_RING_HEIGHT] ?: 0f,
             taskCompletionAlertsEnabled = this[APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED] ?: true,
             completionReviewEnabled = this[AGENT_COMPLETION_REVIEW_ENABLED] ?: true,
             topBarBlurStyle = AppearanceTopBarBlurStyle.fromPersistedValue(
@@ -419,6 +427,10 @@ internal object SettingsDataStore {
         this[APPEARANCE_RUNTIME_GLOW_ENABLED] = settings.runtimeGlowEnabled
         this[APPEARANCE_RUNTIME_GLOW_INTENSITY] = settings.runtimeGlowIntensity.persistedValue
         this[APPEARANCE_RUNTIME_GLOW_STYLE] = settings.runtimeGlowStyle.persistedValue
+        this[APPEARANCE_CAMERA_RING_X] = settings.cameraRingOffsetXDp
+        this[APPEARANCE_CAMERA_RING_Y] = settings.cameraRingOffsetYDp
+        this[APPEARANCE_CAMERA_RING_WIDTH] = settings.cameraRingWidthDp
+        this[APPEARANCE_CAMERA_RING_HEIGHT] = settings.cameraRingHeightDp
         this[APPEARANCE_TASK_COMPLETION_ALERTS_ENABLED] = settings.taskCompletionAlertsEnabled
         this[AGENT_COMPLETION_REVIEW_ENABLED] = settings.completionReviewEnabled
         this[APPEARANCE_TOP_BAR_BLUR_STYLE] = settings.topBarBlurStyle.persistedValue

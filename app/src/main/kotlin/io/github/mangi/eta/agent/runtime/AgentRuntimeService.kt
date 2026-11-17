@@ -47,6 +47,7 @@ import io.github.mangi.eta.agent.model.AgentModelClient
 import io.github.mangi.eta.agent.overlay.AgentHapticFeedback
 import io.github.mangi.eta.agent.overlay.AgentOverlayGlow
 import io.github.mangi.eta.agent.overlay.AgentOverlayEndPulse
+import io.github.mangi.eta.agent.overlay.cameraRingAdjust
 import io.github.mangi.eta.agent.overlay.ScreenCornerRadii
 import io.github.mangi.eta.agent.overlay.AgentOverlayCapsule
 import io.github.mangi.eta.agent.overlay.AgentOverlayClearance
@@ -118,6 +119,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     // 当前光效窗口是真的在画流光（而不是只为保持亮屏的 1×1 空窗口）。
     private var glowWindowVisual = false
     private var endPulseView: ComposeView? = null
+    private val cameraRingAdjust = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.agent.overlay.CameraRingAdjust.AUTO)
     // Fail closed until the persisted preference is loaded; this controls only the legacy fallback.
     private var taskCompletionAlertsEnabled = false
     private var capsuleView: ComposeView? = null
@@ -183,6 +185,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             AppearanceSettingsRepository.settingsFlow().collect { appearance ->
                 taskCompletionAlertsEnabled = appearance.taskCompletionAlertsEnabled
                 runtimeGlowIntensity.value = appearance.runtimeGlowIntensity
+                cameraRingAdjust.value = appearance.cameraRingAdjust()
                 if (runtimeGlowStyle != appearance.runtimeGlowStyle) {
                     runtimeGlowStyle = appearance.runtimeGlowStyle
                     publishExecutionState()
@@ -1249,11 +1252,11 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         }
         if ((showGlow || keepScreenOn.value) && glowView == null) {
             val corners = screenCornerRadii()
-            val cutout = cameraCutoutBounds()
+            val cutout = io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(overlayContext())
             val sweep = runtimeGlowStyle == io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART
             val glow = createOverlayComposeView {
                 if (showGlow) AgentOverlayGlow(state = ambientState.value, corners = corners, intensity = runtimeGlowIntensity.value,
-                    presence = glowPresence.value, cameraCutout = cutout, startSweep = sweep)
+                    presence = glowPresence.value, cameraCutout = cutout, startSweep = sweep, ringAdjust = cameraRingAdjust.value)
             }
             val glowLp = glowLayoutParams().apply {
                 // Keep the existing foreground-only screen-on behavior when visuals are off.
@@ -1618,26 +1621,6 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private fun removeEndPulse() {
         endPulseView?.let { view -> runCatching { (windowManager ?: (overlayContext().getSystemService(Context.WINDOW_SERVICE) as? WindowManager))?.removeView(view) } }
         endPulseView = null
-    }
-
-    /**
-     * 摄像头开孔在屏幕上的位置（光效窗口与屏幕原点重合，坐标可直接用）。只取靠上的那个开孔；
-     * 没有开孔时返回 null，小光圈退到顶边正中。
-     */
-    private fun cameraCutoutBounds(): android.graphics.RectF? {
-        val display = (overlayContext().getSystemService(Context.DISPLAY_SERVICE) as? android.hardware.display.DisplayManager)
-            ?.getDisplay(android.view.Display.DEFAULT_DISPLAY) ?: return null
-        val cutout = runCatching { display.cutout }.getOrNull() ?: return null
-        val path = runCatching { cutout.cutoutPath }.getOrNull()
-        val bounds = android.graphics.RectF()
-        if (path != null && !path.isEmpty) {
-            path.computeBounds(bounds, true)
-        } else {
-            val rect = cutout.boundingRectTop.takeUnless { it.isEmpty }
-                ?: cutout.boundingRects.minByOrNull { it.top } ?: return null
-            bounds.set(rect)
-        }
-        return bounds.takeUnless { it.isEmpty }
     }
 
     /**

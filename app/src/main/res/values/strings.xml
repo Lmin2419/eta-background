@@ -2035,4 +2035,15 @@
   <string name="appearance_glow_brightness">Glow brightness</string>
   <string name="appearance_glow_summary_smart">A thin edge line only while the AI operates your screen; a small ring around the camera while it works in the background; a brief cue when tasks start and finish.</string>
   <string name="appearance_glow_summary_full">Edge light around the whole screen for as long as a task runs.</string>
+  <string name="camera_ring_title">Camera ring position</string>
+  <string name="camera_ring_entry_summary">If the ring doesn\'t sit around your camera, adjust its position and size here</string>
+  <string name="camera_ring_hint">The ring is drawn live around the camera at the top of the screen. Drag the sliders until it sits snugly around the camera. To wrap the whole island instead, make it wider and taller.</string>
+  <string name="camera_ring_hint_no_cutout">No camera cutout was reported, so the ring sits at the top centre of the screen. Drag the sliders to move and resize it.</string>
+  <string name="camera_ring_horizontal">Left / right</string>
+  <string name="camera_ring_vertical">Up / down</string>
+  <string name="camera_ring_width">Width</string>
+  <string name="camera_ring_height">Height</string>
+  <string name="camera_ring_auto">Auto</string>
+  <string name="camera_ring_reset">Restore automatic</string>
+  <string name="camera_ring_reset_summary">Use the camera position reported by the system again</string>
 </resources>

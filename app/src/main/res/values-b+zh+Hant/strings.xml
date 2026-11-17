@@ -1904,4 +1904,15 @@
   <string name="appearance_glow_brightness">流光亮度</string>
   <string name="appearance_glow_summary_smart">AI 操作你的螢幕時亮一圈細光；在背景工作時只在相機周圍亮個小光圈；開始和結束各提示一下。</string>
   <string name="appearance_glow_summary_full">任務執行期間螢幕四周一直亮著。</string>
+  <string name="camera_ring_title">相機光圈位置</string>
+  <string name="camera_ring_entry_summary">光圈沒套準相機時，在這裡調位置和大小</string>
+  <string name="camera_ring_hint">螢幕頂部相機那裡會即時畫出光圈。拖動下面的滑桿，讓它剛好套住相機；想套住整個流體雲，就把寬度和高度調大。</string>
+  <string name="camera_ring_hint_no_cutout">系統沒有回報相機開孔，光圈預設在螢幕頂邊正中。拖動下面的滑桿移動它、改大小。</string>
+  <string name="camera_ring_horizontal">左右</string>
+  <string name="camera_ring_vertical">上下</string>
+  <string name="camera_ring_width">寬度</string>
+  <string name="camera_ring_height">高度</string>
+  <string name="camera_ring_auto">自動</string>
+  <string name="camera_ring_reset">恢復自動</string>
+  <string name="camera_ring_reset_summary">按系統回報的相機位置重新算</string>
 </resources>

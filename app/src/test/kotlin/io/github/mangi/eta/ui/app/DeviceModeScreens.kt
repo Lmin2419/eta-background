@@ -273,4 +273,9 @@ internal object DeviceModeScreens {
     fun Appearance() {
         SettingsProviders { AppearanceSettingsScreen(onBack = {}) }
     }
+
+    @Composable
+    fun CameraRing() {
+        SettingsProviders { io.github.mangi.eta.ui.screens.settings.CameraRingSettingsScreen(onBack = {}) }
+    }
 }

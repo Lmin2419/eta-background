@@ -52,7 +52,7 @@ import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-internal fun AppearanceSettingsScreen(onBack: () -> Unit) {
+internal fun AppearanceSettingsScreen(onBack: () -> Unit, onOpenCameraRing: () -> Unit = {}) {
     val appearance = LocalAppearanceSettings.current
     val coroutineScope = rememberCoroutineScope()
     var scaleDraft by remember(appearance.interfaceScale) {
@@ -240,6 +240,15 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit) {
                                 }
                             },
                         )
+                        // 智能模式下后台干活亮的是摄像头小光圈：各家机型报的开孔不一定准，可以自己对齐。
+                        if (appearance.runtimeGlowStyle == io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART) {
+                            EtaPreferenceDivider(hasLeading = false)
+                            EtaArrowPreference(
+                                title = stringResource(R.string.camera_ring_title),
+                                summary = stringResource(R.string.camera_ring_entry_summary),
+                                onClick = onOpenCameraRing,
+                            )
+                        }
                     }
                 }
                 EtaPreferenceDivider(hasLeading = false)

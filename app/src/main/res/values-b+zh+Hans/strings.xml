@@ -2008,4 +2008,15 @@
   <string name="appearance_glow_brightness">流光亮度</string>
   <string name="appearance_glow_summary_smart">AI 操作你的屏幕时亮一圈细光；在后台干活时只在摄像头周围亮个小光圈；开始和结束各提示一下。</string>
   <string name="appearance_glow_summary_full">任务运行期间屏幕四周一直亮着。</string>
+  <string name="camera_ring_title">摄像头光圈位置</string>
+  <string name="camera_ring_entry_summary">光圈没套准摄像头时，在这里调位置和大小</string>
+  <string name="camera_ring_hint">屏幕顶部摄像头那里会实时画出光圈。拖动下面的滑块，让它正好套住摄像头；想套住整个流体云，就把宽度和高度调大。</string>
+  <string name="camera_ring_hint_no_cutout">系统没有报告摄像头开孔，光圈默认在屏幕顶边正中。拖动下面的滑块移动它、改大小。</string>
+  <string name="camera_ring_horizontal">左右</string>
+  <string name="camera_ring_vertical">上下</string>
+  <string name="camera_ring_width">宽度</string>
+  <string name="camera_ring_height">高度</string>
+  <string name="camera_ring_auto">自动</string>
+  <string name="camera_ring_reset">恢复自动</string>
+  <string name="camera_ring_reset_summary">按系统报告的摄像头位置重新算</string>
 </resources>

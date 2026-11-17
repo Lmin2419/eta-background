@@ -1023,7 +1023,10 @@ fun AgentAppRoot(
                 SpeechOssScreen(onBack = ::popRoute)
             }
             entry<AppRoute.AppearanceSettings>(swipeDismiss = swipeDismiss) {
-                AppearanceSettingsScreen(onBack = ::popRoute)
+                AppearanceSettingsScreen(onBack = ::popRoute, onOpenCameraRing = { pushRoute(AppRoute.CameraRingSettings) })
+            }
+            entry<AppRoute.CameraRingSettings>(swipeDismiss = swipeDismiss) {
+                io.github.mangi.eta.ui.screens.settings.CameraRingSettingsScreen(onBack = ::popRoute)
             }
             entry<AppRoute.DataBackup>(swipeDismiss = swipeDismiss) {
                 DataBackupScreen(

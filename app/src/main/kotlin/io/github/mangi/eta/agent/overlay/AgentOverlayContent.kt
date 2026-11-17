@@ -105,7 +105,7 @@ internal fun overlayPhaseAccent(phase: AgentOverlayPhase): Color = when (phase) 
 }
 
 // 与助手和状态环共用品牌流光；末尾回到蜂蜜色使环形渐变无接缝。
-private val EdgeLightColors = listOf(
+internal val EdgeLightColors = listOf(
     io.github.mangi.eta.ui.theme.EtaAurora.honey,
     io.github.mangi.eta.ui.theme.EtaAurora.peach,
     io.github.mangi.eta.ui.theme.EtaAurora.rose,
@@ -141,6 +141,8 @@ internal fun AgentOverlayGlow(
     cameraCutout: android.graphics.RectF? = null,
     /** 窗口出现时先跑一遍「开始」流光。 */
     startSweep: Boolean = false,
+    /** 用户在「摄像头光圈位置」里调的偏移和大小。 */
+    ringAdjust: CameraRingAdjust = CameraRingAdjust.AUTO,
 ) {
     val phase = state.phase
     if (phase != AgentOverlayPhase.RUNNING && phase != AgentOverlayPhase.PAUSED) return
@@ -178,7 +180,7 @@ internal fun AgentOverlayGlow(
             drawIntoCanvas { canvas ->
                 val native = canvas.nativeCanvas
                 native.drawStartSweep(edge, size.width, sweep.value, colors, intensity, density)
-                val ring = AmbientGlowPolicy.cameraRing(cameraCutout, size.width, density)
+                val ring = AmbientGlowPolicy.cameraRing(cameraCutout, size.width, density, ringAdjust)
                 if (!running) {
                     val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                         style = android.graphics.Paint.Style.STROKE

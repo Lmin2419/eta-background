@@ -19,6 +19,11 @@ data class AppearanceSettings(
     val runtimeGlowIntensity: AppearanceGlowIntensity = AppearanceGlowIntensity.SOFT,
     /** 流光样式：智能（操作屏幕时四周细光、后台只亮摄像头小光圈）/ 整圈。 */
     val runtimeGlowStyle: AppearanceGlowStyle = AppearanceGlowStyle.SMART,
+    /** 摄像头小光圈的微调（dp）：左右、上下偏移，宽、高（0 = 按开孔自动）。 */
+    val cameraRingOffsetXDp: Float = 0f,
+    val cameraRingOffsetYDp: Float = 0f,
+    val cameraRingWidthDp: Float = 0f,
+    val cameraRingHeightDp: Float = 0f,
     val taskCompletionAlertsEnabled: Boolean = true,
     /** 回答前自动复核（etax/design/10 第一期）：还有没解决的失败时，先让 Agent 复核一次再交卷。 */
     val completionReviewEnabled: Boolean = true,

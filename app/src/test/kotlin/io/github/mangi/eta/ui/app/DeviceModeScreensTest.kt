@@ -176,6 +176,8 @@ class DeviceModeScreensTest {
     @Test fun settings() = variants("settings", deviceMode = false) { DeviceModeScreens.Settings() }
 
     @Test fun appearanceSettings() = variants("appearance", deviceMode = false) { DeviceModeScreens.Appearance() }
+    /** 2026111619：摄像头光圈位置（本机测试没有开孔，光圈在顶边正中）。 */
+    @Test fun cameraRingSettings() = variants("camera-ring", deviceMode = false) { DeviceModeScreens.CameraRing() }
 
     /** 09 第三期 3.1：设置 › 模型预设（改名、删除在点一行弹出的菜单里）。 */
     @Test fun modelPresets() {

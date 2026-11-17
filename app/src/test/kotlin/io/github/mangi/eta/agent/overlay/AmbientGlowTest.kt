@@ -43,6 +43,27 @@ class AmbientGlowTest {
         assertTrue(fallback.top > 0f)
     }
 
+    @Test
+    fun tallReportedCutoutBecomesACircleAndUserAdjustmentsApply() {
+        val density = 3f
+        // ColorOS 一类：报给应用的范围比摄像头孔高出一大截。
+        val tall = RectF(500f, 0f, 580f, 140f)
+        val ring = AmbientGlowPolicy.cameraRing(tall, 1080f, density)
+        assertEquals(ring.width(), ring.height(), 0.01f)
+        assertEquals(540f, ring.centerX(), 0.01f)
+        assertEquals(70f, ring.centerY(), 0.01f)
+
+        val moved = AmbientGlowPolicy.cameraRing(tall, 1080f, density, CameraRingAdjust(offsetXDp = 2f, offsetYDp = -4f, widthDp = 120f, heightDp = 30f))
+        assertEquals(540f + 6f, moved.centerX(), 0.01f)
+        assertEquals(70f - 12f, moved.centerY(), 0.01f)
+        assertEquals(360f, moved.width(), 0.01f)
+        assertEquals(90f, moved.height(), 0.01f)
+        // 只改偏移、宽高留 0：大小仍按开孔自动算。
+        val shifted = AmbientGlowPolicy.cameraRing(tall, 1080f, density, CameraRingAdjust(offsetYDp = 5f))
+        assertEquals(ring.width(), shifted.width(), 0.01f)
+        assertEquals(ring.centerY() + 15f, shifted.centerY(), 0.01f)
+    }
+
     /** 画出几帧给人看：后台小光圈、操作时细边框、开始流光、结束呼吸、无开孔时的顶边小胶囊。 */
     @Test
     fun renderFrames() {

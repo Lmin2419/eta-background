@@ -9,6 +9,45 @@ import android.graphics.SweepGradient
 import io.github.mangi.eta.data.model.AppearanceGlowIntensity
 import io.github.mangi.eta.data.model.AppearanceGlowStyle
 
+/** 用户对小光圈的微调（dp）；宽高为 0 表示按开孔自动算。 */
+internal data class CameraRingAdjust(
+    val offsetXDp: Float = 0f,
+    val offsetYDp: Float = 0f,
+    val widthDp: Float = 0f,
+    val heightDp: Float = 0f,
+) {
+    companion object {
+        val AUTO = CameraRingAdjust()
+        const val OFFSET_X_RANGE = 60f
+        const val OFFSET_Y_RANGE = 40f
+        const val MIN_SIZE = 8f
+        const val MAX_WIDTH = 260f
+        const val MAX_HEIGHT = 90f
+    }
+}
+
+internal fun io.github.mangi.eta.data.model.AppearanceSettings.cameraRingAdjust() =
+    CameraRingAdjust(cameraRingOffsetXDp, cameraRingOffsetYDp, cameraRingWidthDp, cameraRingHeightDp)
+
+/** 摄像头开孔在屏幕上的位置（屏幕坐标）。只取靠上的那个开孔；没有开孔返回 null。 */
+internal object CameraCutoutLocator {
+    fun bounds(context: android.content.Context): RectF? {
+        val display = (context.getSystemService(android.content.Context.DISPLAY_SERVICE) as? android.hardware.display.DisplayManager)
+            ?.getDisplay(android.view.Display.DEFAULT_DISPLAY) ?: return null
+        val cutout = runCatching { display.cutout }.getOrNull() ?: return null
+        val path = runCatching { cutout.cutoutPath }.getOrNull()
+        val bounds = RectF()
+        if (path != null && !path.isEmpty) {
+            path.computeBounds(bounds, true)
+        } else {
+            val rect = cutout.boundingRectTop.takeUnless { it.isEmpty }
+                ?: cutout.boundingRects.minByOrNull { it.top } ?: return null
+            bounds.set(rect)
+        }
+        return bounds.takeUnless { it.isEmpty }
+    }
+}
+
 /** 运行光效画在哪里（2026111618「智能」流光）。 */
 internal enum class GlowPresence { EDGE, CAMERA }
 
@@ -24,17 +63,35 @@ internal object AmbientGlowPolicy {
         if (style == AppearanceGlowStyle.FULL || mainScreenOwned) GlowPresence.EDGE else GlowPresence.CAMERA
 
     /**
-     * 小光圈的位置（窗口坐标与屏幕坐标一致）：有开孔时套在开孔外面，留 [gapPx] 的空隙；
-     * 没有开孔（屏下摄像头等）时退到顶边正中，画成一枚小胶囊。
+     * 小光圈的位置（窗口坐标与屏幕坐标一致）。
+     * - 有开孔：以开孔中心为圆心。开孔一般是圆的，但不少机型（如 ColorOS）报给应用的范围比孔高出一大截，
+     *   所以竖长的范围按宽度当直径画成圆；横长的（双摄胶囊孔）照原样套住。外圈留 [RING_GAP_DP] 空隙。
+     * - 没有开孔（屏下摄像头等）：顶边正中一枚小胶囊。
+     * 用户在「摄像头光圈位置」里调过的偏移和宽高（[adjust]）最后叠上去；宽高为 0 表示自动。
      */
-    fun cameraRing(cutout: RectF?, screenWidth: Float, density: Float): RectF {
+    fun cameraRing(cutout: RectF?, screenWidth: Float, density: Float, adjust: CameraRingAdjust = CameraRingAdjust.AUTO): RectF {
         val gap = RING_GAP_DP * density
+        val centerX: Float
+        val centerY: Float
+        val autoWidth: Float
+        val autoHeight: Float
         if (cutout != null && !cutout.isEmpty) {
-            return RectF(cutout.left - gap, cutout.top - gap, cutout.right + gap, cutout.bottom + gap)
+            centerX = cutout.centerX()
+            centerY = cutout.centerY()
+            val tall = cutout.height() > cutout.width()
+            autoWidth = cutout.width() + gap * 2
+            autoHeight = (if (tall) cutout.width() else cutout.height()) + gap * 2
+        } else {
+            centerX = screenWidth / 2f
+            centerY = (FALLBACK_RING_TOP_DP + FALLBACK_RING_HEIGHT_DP / 2f) * density
+            autoWidth = FALLBACK_RING_WIDTH_DP * density
+            autoHeight = FALLBACK_RING_HEIGHT_DP * density
         }
-        val halfWidth = FALLBACK_RING_WIDTH_DP / 2f * density
-        val top = FALLBACK_RING_TOP_DP * density
-        return RectF(screenWidth / 2f - halfWidth, top, screenWidth / 2f + halfWidth, top + FALLBACK_RING_HEIGHT_DP * density)
+        val width = if (adjust.widthDp > 0f) adjust.widthDp * density else autoWidth
+        val height = if (adjust.heightDp > 0f) adjust.heightDp * density else autoHeight
+        val x = centerX + adjust.offsetXDp * density
+        val y = centerY + adjust.offsetYDp * density
+        return RectF(x - width / 2f, y - height / 2f, x + width / 2f, y + height / 2f)
     }
 
     const val RING_GAP_DP = 3.5f
