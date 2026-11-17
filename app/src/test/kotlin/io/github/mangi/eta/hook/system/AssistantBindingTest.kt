@@ -29,6 +29,27 @@ class AssistantBindingTest {
         assertEquals(ModuleConfig.GOOGLE_ASSISTANT_COMPONENT, gemini.componentName)
         assertEquals(ModuleConfig.ETA_PACKAGE, eta.packageName)
         assertEquals(ModuleConfig.ETA_VOICE_INTERACTION_COMPONENT, eta.componentName)
+        // etax: applicationId 与源码包名不同，短名只在类名落在应用包内时才省略前缀。
+        val serviceClass = "io.github.mangi.eta.agent.voice.EtaVoiceInteractionService"
+        val expectedShort = if (serviceClass.startsWith("${ModuleConfig.ETA_PACKAGE}.")) {
+            "${ModuleConfig.ETA_PACKAGE}/${serviceClass.removePrefix(ModuleConfig.ETA_PACKAGE)}"
+        } else {
+            "${ModuleConfig.ETA_PACKAGE}/$serviceClass"
+        }
+        assertEquals(expectedShort, eta.shortComponentName)
+        assertEquals(ModuleConfig.GOOGLE_ASSISTANT_COMPONENT, gemini.shortComponentName)
+        assertTrue(
+            isSameComponentName(
+                eta.componentName,
+                expectedShort,
+            ),
+        )
+        assertFalse(
+            isSameComponentName(
+                eta.componentName,
+                gemini.componentName,
+            ),
+        )
     }
 
     @Test
