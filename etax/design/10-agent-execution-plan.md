@@ -134,5 +134,5 @@
 | 一 交卷前自检 | 2026111614 | `CompletionGate` + `AgentEvent.CompletionReview`（界面一行「已自动复核」小胶囊）；复核提示带 `_eta_observation`，不进对话记录；`looksLikeGaveUp` 挪到 `agent/model/GiveUpHeuristic.kt`；`AgentModelClient.complete(completionReview)` 默认关，只有主对话按设置打开（子代理、改写回复不做）；不触发的错误码：TOOL_DISABLED、SUBAGENT_DISABLED、SUBAGENT_CANCELLED、NO_PROGRESS、APP_TAKEN_OVER、TOOL_NOT_AVAILABLE |
 | 二 工具报错讲人话 | 2026111615 | 统一在 `AgentLoop` 拿到结果处加（`ToolFailureAnnotator`），没有逐个工具改造；`retryable`/`hint` 工具自带的不覆盖；重复失败按「工具名 + 参数键排序后的 JSON」计数，只提醒不拦截；`*_UNAVAILABLE`、`*_DENIED`、`*INVALID*`、`*TIMEOUT` 用通配规则 |
 | 三 只读查询一起跑 | 2026111616 | 名单见 `ToolConcurrency.readOnly`（文件读、网页、memory_get、技能读、对话历史、search_apps）；个人数据查询走 Root 数据库，没核实并发安全，先不进；与子代理共用 `AgentLoop.executeParallel`（信号量限流） |
-| 四 界面操作少几轮 | 暂缓 | 按原写法做不了：`tap_element` 必须用最近一次观察的 `observation_id` 和节点 index，动作提交后旧观察作废，模型没法预先写好第二步以后的节点号。要做得先有「按可见文字定位」一类新的定位方式，有同名元素误点的风险。设备端固定等待也按守则先看第零期数据。等用户导出「最近 20 次运行」后再决定 |
-| 五 系统提示瘦身 | 暂缓 | 风险最高，要在真机上逐条前后对比（第 9 节的 12 个任务），等基线数据 |
+| 四 界面操作少几轮 | 暂缓 | 按原写法做不了：`tap_element` 必须用最近一次观察的 `observation_id` 和节点 index，动作提交后旧观察作废，模型没法预先写好第二步以后的节点号。要做得先有「按可见文字定位」一类新的定位方式，有同名元素误点的风险。设备端固定等待也按守则先看第零期数据。等用户导出「最近 20 次运行」后再决定。**2026111619 起由 11 号方案接手**（`11-background-speed-plan.md`：后台动作后自动回看、只核对目标元素） |
+| 五 系统提示瘦身 | 暂缓 | 风险最高，要在真机上逐条前后对比（第 9 节的 12 个任务），等基线数据。**2026111619 起由 11 号方案第四期接手** |
