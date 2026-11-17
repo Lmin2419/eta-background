@@ -34,6 +34,8 @@ internal interface FileToolBackend {
     fun checkActive() = Unit
     fun resolve(path: String): String
     fun stat(path: String): FileToolStat
+    /** 解析路径并取元数据；Shell 后端合成一次进程（11 号方案第五期），其余后端照旧分两步。 */
+    fun resolveStat(path: String): FileToolStat = stat(resolve(path))
     fun readBytes(path: String, offset: Long, limit: Int): ByteArray
 
     /** offset 为目录原始枚举位置，不能在分页前过滤。顺序由后端保持，变动通过 revision 检测。 */

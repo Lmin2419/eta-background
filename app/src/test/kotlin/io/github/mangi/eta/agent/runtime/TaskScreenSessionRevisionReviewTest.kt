@@ -19,7 +19,9 @@ class TaskScreenSessionRevisionReviewTest {
                     "geometry":{"displayId":7,"width":1080,"height":2400,"rotation":0,"density":420},
                     "nodes":[{"cls":"android.widget.EditText","pkg":"app.one","text":"same","desc":"",
                     "vid":"app.one:id/input","edit":true,"click":true,"scrollable":false,
-                    "actions":[16,2097152],"enabled":true,"bounds":[0,200,500,300]}]}"""
+                    "actions":[16,2097152],"enabled":true,"bounds":[0,200,500,300]},
+                    {"cls":"android.widget.TextView","pkg":"app.one","text":"标题","desc":"","vid":"",
+                    "edit":false,"click":false,"scrollable":false,"actions":[],"enabled":true,"bounds":[0,0,500,100]}]}"""
                 "screen_shot" -> if (!captureAvailable) """{"ok":false,"code":"NO_FRAME"}""" else
                     """{"ok":true,"displayId":7,"path":"/tmp/review.png","frameId":"$frame",
                     "dims":"540x1200","geometry":{"displayId":7,"width":1080,"height":2400,"rotation":0,"density":420},

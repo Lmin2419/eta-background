@@ -226,6 +226,8 @@ internal sealed interface AgentEvent {
         val command: String? = null,
         /** Bounded tool subphase durations; no result content or arbitrary metric names. */
         val timingMs: Map<String, Long> = emptyMap(),
+        /** 失败时的错误码（只记码，不记内容），供运行摘要统计失败原因（etax/design/11 第零期）。 */
+        val failureCode: String? = null,
     ) : AgentEvent {
         override fun toLogLine(): String =
             "tool_finished round=$round, name=${name.toSafeLogToken()}, " +

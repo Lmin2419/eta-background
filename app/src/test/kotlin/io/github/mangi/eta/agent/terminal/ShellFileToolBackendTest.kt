@@ -235,6 +235,28 @@ class ShellFileToolBackendTest {
         assertArrayEquals(replacement + replacement, file.readBytes())
     }
 
+    /** 11 号方案第五期：改一次小文件只起 3 次 Shell（解析+元数据、读、写+元数据），以前是 7 次。 */
+    @Test
+    fun editFileUsesThreeShellProcesses() {
+        val file = temporaryFolder.newFile("edit-me.txt").apply { writeText("hello world\n") }
+        var calls = 0
+        val backend = newBackend { command, input, _ -> calls++; runShell(command, input) }
+        val result = org.json.JSONObject(AgentFileOperations(backend).editFile(file.absolutePath, "world", "there"))
+        assertTrue(result.toString(), result.getBoolean("ok"))
+        assertEquals("hello there\n", file.readText())
+        assertEquals(3, calls)
+        // 写入期间文件被别人改了：哈希不一致，不写。
+        calls = 0
+        val racing = newBackend { command, input, _ ->
+            calls++
+            if (input != null) file.writeText("someone else\n")
+            runShell(command, input)
+        }
+        val raced = org.json.JSONObject(AgentFileOperations(racing).editFile(file.absolutePath, "there", "again"))
+        assertEquals("FILE_CHANGED", raced.getString("code"))
+        assertEquals("someone else\n", file.readText())
+    }
+
     @Test
     fun staleRevisionAndInvalidHashNeverSubmitWrite() {
         var calls = 0

@@ -59,7 +59,7 @@ class TaskScreenSessionReviewTest {
         val id = call(session, "observe_screen").getString("observation_id")
         val result = call(session, "type_text", """{"text":"hello","index":0,"observation_id":"$id"}""")
         assertTrue("Real editable node rejected: $result", result.getBoolean("ok"))
-        assertEquals("app.one:id/input", backend.calls.last().second.getString("view_id"))
+        assertEquals("app.one:id/input", backend.calls.last { it.first == "screen_text" }.second.getString("view_id"))
     }
 
     @Test fun screenshotContractUsesBitmapDimensions() {

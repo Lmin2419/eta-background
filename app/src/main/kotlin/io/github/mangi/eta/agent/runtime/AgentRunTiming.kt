@@ -32,6 +32,9 @@ internal class AgentRunTiming(
     private val toolTimingsMs = mutableMapOf<String, Long>()
     private var timedToolCalls = 0
     private var completionReviews = 0
+    // 11 号方案第零期：失败原因、用到界面的轮数、只看不动的轮数。
+    private val failureCodes = linkedMapOf<String, Int>()
+    private val roundTools = linkedMapOf<Int, MutableSet<String>>()
     private var finished: RunPerformanceSummary? = null
 
     @Synchronized fun preparationFinished(skillCount: Int) {
@@ -71,12 +74,17 @@ internal class AgentRunTiming(
             is AgentEvent.ToolStarted -> {
                 toolCalls++
                 inFlightTools++
+                if (roundTools.size < 512) roundTools.getOrPut(event.round) { linkedSetOf() } += safeName(event.name)
                 if (activeTools.size < 256) activeTools[event.round to event.toolCallId] = safeName(event.name) to lastAt
             }
             is AgentEvent.ToolFinished -> {
                 completedTools++
                 inFlightTools = (inFlightTools - 1).coerceAtLeast(0)
-                if (event.success == false) failedTools++
+                if (event.success == false) {
+                    failedTools++
+                    val code = event.failureCode?.takeIf { it.matches(Regex("[A-Z0-9_]{2,48}")) } ?: "UNKNOWN"
+                    if (code in failureCodes || failureCodes.size < 16) failureCodes[code] = (failureCodes[code] ?: 0) + 1
+                }
                 imageCount += event.imageCount.coerceAtLeast(0)
                 imageBytes += event.imageBytes.coerceAtLeast(0)
                 activeTools.remove(event.round to event.toolCallId)?.let { (name, start) ->
@@ -110,6 +118,11 @@ internal class AgentRunTiming(
             toolTimingsMs = toolTimingsMs.toMap(), timedToolCalls = timedToolCalls,
             firstDeltaIncludesTools = true,
             completionReviews = completionReviews,
+            failureCodes = failureCodes.toMap(),
+            guiRounds = roundTools.values.count { tools -> tools.any(GuiRounds::isScreenTool) },
+            observeOnlyRounds = roundTools.values.count { tools ->
+                tools.any(GuiRounds::isScreenTool) && tools.filter(GuiRounds::isScreenTool).all(GuiRounds::isLookOnly)
+            },
         ).also { finished = it; activeTools.clear() }
     }
 
@@ -133,4 +146,14 @@ internal class AgentRunTiming(
     }
 
     private fun safeName(name: String): String = name.takeIf { it.matches(Regex("[A-Za-z0-9_.:-]{1,64}")) } ?: "tool"
+}
+
+/** 屏幕类工具的划分（只用于运行摘要统计）。 */
+internal object GuiRounds {
+    private val lookOnly = setOf("observe_screen", "wait", "wait_for_text", "wait_for_package")
+    fun isScreenTool(name: String): Boolean =
+        name in lookOnly || io.github.mangi.eta.agent.tool.AgentToolRequirements.requiresGuiControl(name)
+    fun isLookOnly(name: String): Boolean = name in lookOnly
+    fun isStale(code: String): Boolean = code.startsWith("OBSERVATION_") || code.endsWith("_STALE") ||
+        code == "OBSERVE_AFTER_RESUME" || code == "BACKGROUND_OBSERVATION_REQUIRED" || code == "BACKGROUND_OBSERVATION_CHANGED"
 }

@@ -510,12 +510,29 @@ internal class AgentLocalTools(
         publishedObservation.set(PublishedObservation())
         val startedAt = SystemClock.elapsedRealtime()
         val options = AgentScreenObservationContract.resolve(args)
-        val observation = screenObservationProvider?.invoke(options)
+        var observation = screenObservationProvider?.invoke(options)
             ?: deviceController.observe(
                 includeScreenshot = options.includeScreenshot,
                 includeUiTree = options.includeUiTree,
                 maxNodes = options.maxNodes,
             )
+        // 程序自己决定要不要截图（11 号方案）：树里几乎读不出内容（网页、Flutter、游戏这类）时，
+        // 这一次就顺带截图，不再让模型先看空树、再自己要一次带图的观察。
+        if (!options.includeScreenshot && options.includeUiTree && observation.image == null) {
+            val elements = observation.elementObservation
+            val content = runCatching { JSONObject(observation.content) }.getOrNull()
+            if (content?.optBoolean("ok") == true && elements != null && sparseTree(elements, content)) {
+                val withShot = options.copy(includeScreenshot = true)
+                runCatching {
+                    screenObservationProvider?.invoke(withShot) ?: deviceController.observe(
+                        includeScreenshot = true, includeUiTree = true, maxNodes = options.maxNodes)
+                }.getOrNull()?.takeIf { it.image != null }?.let { second ->
+                    observation = second.copy(content = runCatching {
+                        JSONObject(second.content).put("screenshot_reason", "sparse_ui_tree").toString()
+                    }.getOrDefault(second.content))
+                }
+            }
+        }
         publishedObservation.set(
             PublishedObservation(
                 elements = observation.elementObservation,
@@ -536,6 +553,19 @@ internal class AgentLocalTools(
             content = observation.content,
             images = listOfNotNull(observation.image)
         )
+    }
+
+    private fun sparseTree(elements: RootShellDeviceController.ElementObservation, content: JSONObject): Boolean {
+        val screen = content.optJSONObject("screen")
+        val width = screen?.optInt("width") ?: 0
+        val height = screen?.optInt("height") ?: 0
+        val views = elements.nodes.map { node ->
+            io.github.mangi.eta.agent.runtime.ScreenSparseness.View(node.className,
+                node.text.isNotBlank() || node.desc.isNotBlank(), node.bounds.width().toLong() * node.bounds.height().toLong())
+        }
+        return io.github.mangi.eta.agent.runtime.ScreenSparseness.needsScreenshot(views,
+            width.takeIf { it > 0 } ?: elements.nodes.maxOfOrNull { it.bounds.right } ?: 0,
+            height.takeIf { it > 0 } ?: elements.nodes.maxOfOrNull { it.bounds.bottom } ?: 0)
     }
 
     private val feedbackOwner: String get() = browserRunId.ifBlank { "foreground-${hashCode()}" }

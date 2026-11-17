@@ -218,11 +218,13 @@ class TaskScreenSessionLeaseTest {
             .put("frame_id", observed.getString("frame_id")).toString(),
     )
 
+    /**
+     * 旧观察不能再用来输入。动作可能已经执行时会自动回看、登记新的观察，这时旧编号得到的是
+     * 「不是最近一次观察」（OBSERVATION_MISMATCH / BACKGROUND_FRAME_STALE）；没有回看时是「需要先观察」。
+     */
     private fun assertRequiresFreshObservation(routing: RoutingToolExecutor, observed: JSONObject) {
-        assertEquals(
-            "BACKGROUND_OBSERVATION_REQUIRED",
-            JSONObject(routing.execute(tapFrom(observed)).content).optString("code"),
-        )
+        val code = JSONObject(routing.execute(tapFrom(observed)).content).optString("code")
+        assertTrue(code, code in setOf("BACKGROUND_OBSERVATION_REQUIRED", "OBSERVATION_MISMATCH", "BACKGROUND_FRAME_STALE"))
     }
 
     private fun ok(result: AgentModelClient.ToolResult?): Boolean =

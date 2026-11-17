@@ -19,6 +19,34 @@ class RunDigestTest {
         completionReviews = 1,
     )
 
+    /** 11 号方案第零期：失败原因（只记码）、用到屏幕的轮数、只看不动的轮数、观察过期次数。 */
+    @Test fun timingCountsFailureCodesAndScreenRounds() {
+        var clock = 0L
+        val timing = AgentRunTiming(io.github.mangi.eta.core.AndroidAgentLogger) { clock }
+        fun tool(round: Int, id: String, name: String, ok: Boolean, code: String? = null) {
+            timing.accept(AgentEvent.ToolStarted(round, id, name, ""))
+            clock += 10
+            timing.accept(AgentEvent.ToolFinished(round, id, name, "", 0, 0, success = ok, failureCode = code))
+        }
+        tool(1, "a", "observe_screen", true)
+        tool(2, "b", "tap_element", false, "OBSERVATION_STALE")
+        tool(3, "c", "observe_screen", true)
+        tool(4, "d", "tap_element", true)
+        tool(5, "e", "read_file", false, "FILE_NOT_FOUND")
+        tool(6, "f", "wait", false, "secret text; not a code")
+        val finished = timing.finish()
+        assertEquals(mapOf("OBSERVATION_STALE" to 1, "FILE_NOT_FOUND" to 1, "UNKNOWN" to 1), finished.failureCodes)
+        assertEquals(5, finished.guiRounds)
+        assertEquals(3, finished.observeOnlyRounds)
+        assertEquals(1, finished.staleFailures)
+        val digest = RuntimeDiagnostics.runDigest(finished, "ok", gaveUp = false, atMillis = 0)
+        assertEquals(1, digest.getJSONObject("failure_codes").getInt("OBSERVATION_STALE"))
+        assertEquals(3, digest.getInt("observe_only_rounds"))
+        assertEquals(1, digest.getInt("stale"))
+        // 写进运行统计后还能读回来。
+        assertEquals(finished.failureCodes, RunPerformanceSummary.fromJson(finished.toJson())!!.failureCodes)
+    }
+
     @Test fun digestKeepsOnlyNumbersAndToolNames() {
         val digest = RuntimeDiagnostics.runDigest(summary, "ok", gaveUp = false, atMillis = 1_763_340_123_456)
         assertEquals(1_763_340_120_000, digest.getLong("at"))

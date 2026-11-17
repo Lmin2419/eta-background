@@ -93,7 +93,7 @@ internal object AgentContextAppToolCatalog {
             .put(
                 AgentToolSchema.function(
                     name = "observe_screen",
-                    description = "观察本任务所在屏幕并取得操作权，其他任务占用时排队。默认只读 UI 树；需视觉定位时 include_screenshot=true，并同时刷新树。节点语义有效但被截断时提高 max_nodes。返回 observation_id；节点/坐标不得跨观察、跨任务或跨屏复用。",
+                    description = "观察本任务所在屏幕并取得操作权，其他任务占用时排队。程序自己决定附不附截图：树里读不出内容时自动附图；只有要看清图片本身时才设 include_screenshot=true。节点语义有效但被截断时提高 max_nodes。返回 observation_id；动作结果的 after 也带新的 observation_id，可直接用；节点/坐标不得跨观察、跨任务或跨屏复用。",
                     parameters = JSONObject()
                         .put("type", "object")
                         .put(

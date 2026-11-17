@@ -330,7 +330,7 @@ class AgentLocalToolsPermissionTest {
         var received: AgentScreenObservationContract.Options? = null
         val tools = tools(
             screenObservationProvider = { options ->
-                received = options
+                if (received == null) received = options
                 observation(
                     observationId = "o-tree",
                     screenshotRequested = false,
@@ -353,6 +353,26 @@ class AgentLocalToolsPermissionTest {
         assertEquals("o-tree", content.getString("observation_id"))
         assertFalse(content.getJSONObject("screenshot").getBoolean("requested"))
         assertTrue(result.images.isEmpty())
+        tools.close()
+    }
+
+    /** 11 号方案：树里读不出内容时，程序自己顺带截图，不用模型再要一次。 */
+    @Test
+    fun sparseTreeTakesAScreenshotAutomatically() {
+        val requests = mutableListOf<AgentScreenObservationContract.Options>()
+        val image = AgentModelClient.ModelImage(reference = "data:image/webp;base64,AA==", mimeType = "image/webp",
+            bytes = 1, width = 1080, height = 2400, source = "screen")
+        val tools = tools(
+            screenObservationProvider = { options ->
+                requests += options
+                observation(observationId = "o-${requests.size}", screenshotRequested = options.includeScreenshot,
+                    image = image.takeIf { options.includeScreenshot })
+            },
+        )
+        val result = tools.execute(AgentModelClient.ToolCall(id = "observe-sparse", name = "observe_screen", argumentsJson = "{}"))
+        assertEquals(listOf(false, true), requests.map { it.includeScreenshot })
+        assertEquals(1, result.images.size)
+        assertEquals("sparse_ui_tree", JSONObject(result.content).getString("screenshot_reason"))
         tools.close()
     }
 

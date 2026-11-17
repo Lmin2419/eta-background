@@ -158,10 +158,11 @@ internal class AgentFileOperations(private val backend: FileToolBackend) {
         val estimatedChars = original.length.toLong() + count.toLong() * (newText.length - oldText.length)
         if (estimatedChars > MAX_EDIT_BYTES) throw FileToolException("CONTENT_TOO_LARGE", "替换后的文本超过编辑大小限制")
         val replacement = encodeBounded(original.replace(oldText, newText))
-        verifyUnchanged(stat)
         val sha256 = MessageDigest.getInstance("SHA-256").digest(originalBytes)
             .joinToString("") { "%02x".format(it.toInt() and 0xff) }
-        val result = backend.write(stat.path, replacement, append = false, expectedRevision = stat.revision, expectedSha256 = sha256)
+        // 写入前由后端在同一次写入里比对完整旧内容的哈希（不一致就不写、报 FILE_CHANGED），
+        // 不再另外起两次 stat 核对版本号（11 号方案第五期：改一次文件从 7 次 Shell 减到 3 次）。
+        val result = backend.write(stat.path, replacement, append = false, expectedSha256 = sha256)
         base("edit_file").put("path", result.stat.path).put("revision", result.stat.revision)
             .put("replacements", count).put("bytes_written", replacement.size).put("atomic", result.atomic)
             .put("change", editChangeSummary(original, oldText, newText, count))
@@ -182,7 +183,7 @@ internal class AgentFileOperations(private val backend: FileToolBackend) {
     ): String = FileToolSearch(backend).grep(path, query, glob, limit, cursor, includeHidden, caseSensitive)
 
     private fun regularFile(path: String, expectedRevision: String?): FileToolStat {
-        val stat = backend.stat(backend.resolve(path))
+        val stat = backend.resolveStat(path)
         if (stat.kind != FileToolKind.FILE) throw FileToolException("NOT_REGULAR_FILE", "目标不是普通文件")
         if (expectedRevision != null && stat.revision != expectedRevision) throw FileToolException("FILE_CHANGED", "文件已变化，请重新读取")
         return stat

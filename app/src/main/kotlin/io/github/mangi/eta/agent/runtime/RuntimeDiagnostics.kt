@@ -44,6 +44,10 @@ internal object RuntimeDiagnostics {
             .put("requests", summary.requests).put("retries", summary.retries)
             .put("tool_calls", summary.toolCalls).put("failed_tools", summary.failedTools)
             .put("completion_reviews", summary.completionReviews).put("gave_up", gaveUp)
+            .put("failure_codes", JSONObject(summary.failureCodes.entries.sortedByDescending { it.value }.take(5)
+                .associate { it.key to it.value }))
+            .put("gui_rounds", summary.guiRounds).put("observe_only_rounds", summary.observeOnlyRounds)
+            .put("stale", summary.staleFailures)
             .put("slow_tools", JSONArray().apply {
                 summary.slowTools.take(3).forEach { put(JSONObject().put("name", it.name).put("elapsed_ms", it.elapsedMs)) }
             })

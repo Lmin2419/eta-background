@@ -21,8 +21,10 @@ class TaskScreenSessionTest {
         val result = JSONObject(tools.execute(call("press_key", JSONObject().put("button", "BACK")
             .put("observation_id", observed.getString("observation_id")).toString()))!!.content)
         assertTrue(result.getBoolean("ok"))
-        assertEquals(listOf("screen_open", "screen_dump", "screen_dump", "screen_key"), backend.names())
-        assertEquals(4, backend.calls.last().arguments.getInt("code"))
+        // 按键后自动回看一次（等页面静下来 + 读树），模型不用再调 observe_screen。
+        assertEquals(listOf("screen_open", "screen_dump", "screen_dump", "screen_key", "screen_wait", "screen_dump"), backend.names())
+        assertTrue(result.getJSONObject("after").getString("observation_id") != observed.getString("observation_id"))
+        assertEquals(4, backend.calls.last { it.name == "screen_key" }.arguments.getInt("code"))
         assertFalse(JSONObject(tools.execute(call("press_key", """{"button":"BACK","observation_id":"old"}"""))!!.content).getBoolean("ok"))
         assertEquals(1, backend.names().count { it == "screen_key" })
     }
@@ -95,7 +97,7 @@ class TaskScreenSessionTest {
                 .put("coordinate_space", "display").put("hold_ms", hold)
                 .put("observation_id", observed.getString("observation_id"))
             assertTrue(JSONObject(task.execute(call("swipe", args.toString()))!!.content).getBoolean("ok"))
-            val gesture = backend.calls.last()
+            val gesture = backend.calls.last { it.name == "screen_swipe" || it.name == "screen_drag" }
             assertEquals(if (hold > 0) "screen_drag" else "screen_swipe", gesture.name)
             assertEquals(hold, gesture.arguments.optInt("hold_ms", 0))
             assertFalse(JSONObject(task.execute(call("swipe", args.toString()))!!.content).getBoolean("ok"))
@@ -278,7 +280,7 @@ class TaskScreenSessionTest {
         val tappedJson = JSONObject(tapped.content)
         assertTrue(tappedJson.getBoolean("ok"))
         assertEquals("background", tappedJson.getString("execution_location"))
-        assertEquals(listOf(10, 10), backend.calls.filter { it.name == "screen_dump" }.map { it.arguments.getInt("limit") })
+        assertEquals(listOf(10, 10, 10), backend.calls.filter { it.name == "screen_dump" }.map { it.arguments.getInt("limit") })
         val tapCall = backend.calls.last { it.name == "screen_tap" }
         assertEquals(10, tapCall.arguments.getInt("x"))
         assertEquals(20, tapCall.arguments.getInt("y"))
@@ -288,7 +290,8 @@ class TaskScreenSessionTest {
             "tap",
             """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$observationId"}""",
         ))!!
-        assertEquals("BACKGROUND_OBSERVATION_REQUIRED", JSONObject(repeated.content).getString("code"))
+        // 点完已自动登记了新的观察，旧编号被拒、不重放。
+        assertEquals("OBSERVATION_MISMATCH", JSONObject(repeated.content).getString("code"))
         assertFalse(backend.calls.count { it.name == "screen_tap" } > 1)
     }
 
@@ -364,7 +367,8 @@ class TaskScreenSessionTest {
             "tap",
             """{"x":1,"y":1,"coordinate_space":"display","observation_id":"$id"}""",
         ))!!
-        assertEquals("BACKGROUND_OBSERVATION_REQUIRED", JSONObject(second.content).getString("code"))
+        // 结果不明也会自动回看、登记新的观察：旧编号被拒（不重放），换成 OBSERVATION_MISMATCH。
+        assertEquals("OBSERVATION_MISMATCH", JSONObject(second.content).getString("code"))
         assertEquals(1, backend.calls.count { it.name == "screen_tap" })
     }
 
@@ -612,7 +616,8 @@ class TaskScreenSessionTest {
             """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
         ))!!
         assertTrue(JSONObject(tapped.content).getBoolean("ok"))
-        assertEquals(0, backend.calls.single { it.name == "screen_dump" }.arguments.getInt("limit"))
+        // 动作前核对只读几何（limit 0）；动作后的回看另读一次树。
+        assertEquals(0, backend.calls.first { it.name == "screen_dump" }.arguments.getInt("limit"))
         assertTrue(backend.calls.any { it.name == "screen_tap" })
     }
 
@@ -688,7 +693,7 @@ class TaskScreenSessionTest {
             "tap",
             """{"x":10,"y":20,"coordinate_space":"display","observation_id":"$id"}""",
         ))!!
-        assertEquals("BACKGROUND_OBSERVATION_REQUIRED", JSONObject(retry.content).getString("code"))
+        assertEquals("OBSERVATION_MISMATCH", JSONObject(retry.content).getString("code"))
         assertEquals(1, backend.calls.count { it.name == "screen_tap" })
     }
 

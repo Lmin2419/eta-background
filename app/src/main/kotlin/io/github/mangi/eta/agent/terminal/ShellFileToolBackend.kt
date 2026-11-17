@@ -14,16 +14,41 @@ internal class ShellFileToolBackend(
 ) : FileToolBackend {
     override fun checkActive() = ensureActive()
 
-    override fun resolve(path: String): String {
-        checkActive()
+    private fun absolutePath(path: String): String {
         if ('\u0000' in path || path.length > 4096) fail("INVALID_PATH", "文件路径无效或过长")
         val raw = path.ifEmpty { cwd }
-        val absolute = when {
+        return when {
             raw == "~" -> home
             raw.startsWith("~/") -> "$home/${raw.removePrefix("~/")}"
             raw.startsWith('/') -> raw
             else -> "$cwd/$raw"
         }
+    }
+
+    /**
+     * 解析链接和取元数据合成一次 Shell（以前是两次进程）。每次起 Root / Linux Shell 都要几百毫秒，
+     * 改一次文件以前要起 7 次。路径里有换行时退回分两步，免得输出分不清。
+     */
+    override fun resolveStat(path: String): FileToolStat {
+        checkActive()
+        val absolute = absolutePath(path)
+        if ('\n' in absolute) return stat(resolve(path))
+        val quoted = shellQuote(absolute)
+        val result = run(
+            "eta_p=${'$'}(readlink -f -- $quoted 2>/dev/null) && [ -n \"${'$'}eta_p\" ] || eta_p=$quoted\n" +
+                "printf '%s\\n' \"${'$'}eta_p\"\n" + statScript("\"${'$'}eta_p\""),
+            maxOutputBytes = MAX_STAT_BYTES + 8192,
+        )
+        val output = decode(result.output)
+        val newline = output.indexOf('\n')
+        val resolved = if (newline > 0) output.substring(0, newline) else ""
+        if (!resolved.startsWith('/')) fail("FILE_METADATA_INVALID", "系统返回的规范路径无效")
+        return parseStat(resolved, output.substring(newline + 1))
+    }
+
+    override fun resolve(path: String): String {
+        checkActive()
+        val absolute = absolutePath(path)
         // 先让目标命名空间解析链接；提前折叠 link/.. 会改变内核实际访问的目录。
         val result = run("readlink -f -- ${shellQuote(absolute)}", maxOutputBytes = 8192, allowFailure = true)
         return if (result.exitCode == 0) {
@@ -151,14 +176,15 @@ internal class ShellFileToolBackend(
                 "[ \"${'$'}{eta_hash%% *}\" = ${shellQuote(it)} ] || exit 44; "
         }.orEmpty()
         // 保留既有 inode 的属主、模式和 SELinux 标签；如实报告非原子写入。
-        run(
+        // 写完在同一个 Shell 里顺带取元数据，省一次单独的 stat 进程。
+        val result = run(
             "mkdir -p -- $parent || exit 43; " +
                 "if [ -e $quoted ] && [ ! -f $quoted ]; then exit 42; fi; " +
-                hashCheck + "cat ${if (append) ">>" else ">"} $quoted",
+                hashCheck + "cat ${if (append) ">>" else ">"} $quoted || exit ${'$'}?\n" + statScript(quoted),
             stdin = bytes,
-            maxOutputBytes = 8192,
+            maxOutputBytes = MAX_STAT_BYTES + 8192,
         )
-        return FileToolWriteResult(stat(path), atomic = false)
+        return FileToolWriteResult(parseStat(path, decode(result.output)), atomic = false)
     }
 
     private fun run(

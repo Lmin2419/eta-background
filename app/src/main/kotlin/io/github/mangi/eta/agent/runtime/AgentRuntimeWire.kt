@@ -829,6 +829,7 @@ internal object AgentRuntimeWire {
                 event.success?.let { putBoolean("success", it) }
                 event.command?.let { putString("command", it.boundedText(MAX_DRAIN_CONTENT_CHARS)) }
                 if (event.timingMs.isNotEmpty()) putString("timing_ms", ToolTimingMetadata.encode(event.timingMs))
+                event.failureCode?.let { putString("failure_code", it.take(64)) }
             }
 
             is AgentEvent.SubagentProgress -> {
@@ -1000,6 +1001,7 @@ internal object AgentRuntimeWire {
             success = if (bundle.containsKey("success")) bundle.getBoolean("success") else null,
             command = bundle.getString("command"),
             timingMs = ToolTimingMetadata.decode(bundle.getString("timing_ms")),
+            failureCode = bundle.getString("failure_code"),
         )
 
         "subagent_progress" -> AgentEvent.SubagentProgress(

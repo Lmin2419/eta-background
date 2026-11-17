@@ -28,7 +28,15 @@ internal data class RunPerformanceSummary(
     val firstDeltaIncludesTools: Boolean = false,
     /** 交卷前自检触发的次数（etax/design/10 第一期）；旧记录没有这一项时为 0。 */
     val completionReviews: Int = 0,
+    /** 失败工具的错误码与次数（etax/design/11 第零期）。 */
+    val failureCodes: Map<String, Int> = emptyMap(),
+    /** 用到屏幕工具的模型轮数，以及其中只观察 / 等待、没有动作的轮数。 */
+    val guiRounds: Int = 0,
+    val observeOnlyRounds: Int = 0,
 ) {
+    /** 观察过期一类的失败次数。 */
+    val staleFailures: Int get() = failureCodes.filterKeys(GuiRounds::isStale).values.sum()
+
     data class SlowTool(val name: String, val elapsedMs: Long)
 
     fun toJson(): String = JSONObject()
@@ -44,6 +52,8 @@ internal data class RunPerformanceSummary(
         .put("tool_timings_ms", JSONObject(ToolTimingMetadata.sanitize(toolTimingsMs, aggregate = true)))
         .put("timed_tool_calls", timedToolCalls.coerceAtLeast(0))
         .put("completion_reviews", completionReviews.coerceAtLeast(0))
+        .put("failure_codes", JSONObject(failureCodes))
+        .put("gui_rounds", guiRounds.coerceAtLeast(0)).put("observe_only_rounds", observeOnlyRounds.coerceAtLeast(0))
         .put("slow_tools", JSONArray().also { array ->
             slowTools.take(3).forEach { array.put(JSONObject().put("name", it.name).put("elapsed_ms", it.elapsedMs)) }
         }).toString()
@@ -114,6 +124,11 @@ internal data class RunPerformanceSummary(
                 timedToolCalls = json.optInt("timed_tool_calls", 0).also { require(it >= 0) },
                 firstDeltaIncludesTools = json.optBoolean("first_delta_includes_tools", false),
                 completionReviews = json.optInt("completion_reviews", 0).coerceAtLeast(0),
+                failureCodes = json.optJSONObject("failure_codes")?.let { codes ->
+                    codes.keys().asSequence().take(16).associateWith { codes.optInt(it).coerceAtLeast(0) }
+                }.orEmpty(),
+                guiRounds = json.optInt("gui_rounds", 0).coerceAtLeast(0),
+                observeOnlyRounds = json.optInt("observe_only_rounds", 0).coerceAtLeast(0),
             )
         }.getOrNull()
     }
