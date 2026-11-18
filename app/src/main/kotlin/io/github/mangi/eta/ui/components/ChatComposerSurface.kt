@@ -9,6 +9,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
+import io.github.mangi.eta.ui.layout.rememberFloatingBottomBarInsets
 import io.github.mangi.eta.ui.theme.EtaTheme
 
 /** The fade occupies layout space above every composer element, including task and queue strips. */
@@ -42,8 +43,13 @@ internal fun ChatComposerSurface(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (showFade) Spacer(Modifier.height(24.dp))
+        // 屏幕底部圆角较大时把输入胶囊抬离弧线，避免圆角裁掉胶囊两端。
+        val bottomInsets = rememberFloatingBottomBarInsets(
+            baseInsets = WindowInsets.navigationBars,
+            fixedBottomPadding = 8.dp,
+        )
         Column(
-            Modifier.widthIn(max = 720.dp).fillMaxWidth().navigationBarsPadding()
+            Modifier.widthIn(max = 720.dp).fillMaxWidth().windowInsetsPadding(bottomInsets)
                 .padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
             content = content,
         )
