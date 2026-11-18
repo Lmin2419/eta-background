@@ -190,11 +190,8 @@ private fun SettingsPageContent(
     }
     var accessibilityProtectionPending by remember { mutableStateOf(false) }
     // 关于组：版本信息与更新检查。结果对话框在列表外渲染，状态需要页面级 owner。
-    val appPackageInfo = remember {
-        context.packageManager.getPackageInfo(context.packageName, 0)
-    }
-    val appVersionName = appPackageInfo.versionName.orEmpty()
-    val appVersionSummary = "${appPackageInfo.versionName} (${appPackageInfo.longVersionCode})"
+    val appVersionName = io.github.mangi.eta.BuildConfig.VERSION_NAME
+    val appVersionSummary = "${io.github.mangi.eta.BuildConfig.VERSION_NAME} (${io.github.mangi.eta.BuildConfig.VERSION_CODE})"
     val openUrl: (String) -> Unit = { url ->
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
@@ -226,11 +223,15 @@ private fun SettingsPageContent(
     }
 
     // Provider / Model 选中状态展示
-    val providers by ProviderRepository.providersFlow().collectAsState(initial = emptyList())
+    // 首帧用进程内缓存，避免设置页打开时先闪「未配置」再跳到真实模型。
+    val initialProviders = remember { ProviderRepository.cachedProviders() }
+    val initialProviderId = remember { RuntimeConfigRepository.cachedSelectedProviderId() }
+    val initialModelId = remember { RuntimeConfigRepository.cachedSelectedModelId() }
+    val providers by ProviderRepository.providersFlow().collectAsState(initial = initialProviders)
     val selectedProviderId by RuntimeConfigRepository.selectedProviderIdFlow()
-        .collectAsState(initial = null)
+        .collectAsState(initial = initialProviderId)
     val selectedModelId by RuntimeConfigRepository.selectedModelIdFlow()
-        .collectAsState(initial = null)
+        .collectAsState(initial = initialModelId)
     val selectedProvider = remember(providers, selectedProviderId) {
         providers.find { it.id == selectedProviderId }
     }

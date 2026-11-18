@@ -43,8 +43,10 @@ internal fun LanguagePreference(iconTint: Color = MiuixTheme.colorScheme.onBackg
     }
 
     val locales = repository.supportedLocales
-    val labels = listOf(stringResource(R.string.settings_language_system)) +
-        locales.map { it.getDisplayName(it) }
+    val systemLabel = stringResource(R.string.settings_language_system)
+    val labels = remember(locales, systemLabel) {
+        listOf(systemLabel) + locales.map { it.getDisplayName(it) }
+    }
     val selectedIndex = selectedLocale?.let { selected ->
         locales.indexOfFirst { LocaleList.matchesLanguageAndScript(it, selected) } + 1
     } ?: 0

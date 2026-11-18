@@ -223,11 +223,16 @@ internal object SettingsDataStore {
     @Volatile
     private lateinit var dataStore: DataStore<Preferences>
 
+    @Volatile
+    private var cachedSettings: Settings? = null
+
     fun init(context: Context) {
         if (!::dataStore.isInitialized) {
             dataStore = context.applicationContext.dataStore
         }
     }
+
+    fun cachedSettingsOrNull(): Settings? = cachedSettings
 
     fun settingsFlow(): Flow<Settings> {
         ensureInitialized()
@@ -239,7 +244,7 @@ internal object SettingsDataStore {
                     throw cause
                 }
             }
-            .map { preferences -> preferences.toSettings() }
+            .map { preferences -> preferences.toSettings().also { cachedSettings = it } }
     }
 
     suspend fun settings(): Settings = settingsFlow().first()
