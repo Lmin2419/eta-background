@@ -1,7 +1,9 @@
 package io.github.mangi.eta.agent.model
 
+import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.runtime.AgentRunController
 import io.github.mangi.eta.agent.runtime.AgentTokenUsage
+import io.github.mangi.eta.core.AppStrings
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -46,13 +48,21 @@ internal class AgentContextCompactor(
         }
         // 最新用户请求及其后尚在进行的工具链必须可以继续；长任务允许压缩该请求之后的已完成批次。
         val end = (history.size downTo 1).firstOrNull { canSplit(history, it) }
-            ?: throw failure("CONTEXT_NOT_COMPACTABLE", "没有可安全压缩的完整历史批次。")
+            ?: throw failure(
+                "CONTEXT_NOT_COMPACTABLE",
+                AppStrings.get(R.string.compactor_err_no_complete_batch, "没有可安全压缩的完整历史批次。"),
+            )
         // 后台压缩只压较早的前缀，最近几轮本来就原样留在后面，不需要再保留「最新用户消息」。
         val protectedUser = if (protectLatestUser) history.getOrNull(latestUser)?.takeIf { latestUser < end } else null
         val foldedSlice = history.take(end)
         val source = JSONArray(foldedSlice.filterNot { it === protectedUser })
         val durable = AgentConversationCodec.transcript(source, 0, sensitiveIds)
-        if (durable.isEmpty()) throw failure("CONTEXT_NOT_COMPACTABLE", "没有可压缩的历史内容。")
+        if (durable.isEmpty()) {
+            throw failure(
+                "CONTEXT_NOT_COMPACTABLE",
+                AppStrings.get(R.string.compactor_err_no_history, "没有可压缩的历史内容。"),
+            )
+        }
         val safe = durable.map { message ->
             val content = AgentConversationCodec.toJsonObject(message).opt("content")
             val text = if (content is JSONArray) buildString {
@@ -147,7 +157,10 @@ internal class AgentContextCompactor(
             )
         }
         if (result.toString().length >= messages.toString().length) {
-            throw failure("CONTEXT_NO_REDUCTION", "摘要未能缩小上下文，原始上下文已保留。")
+            throw failure(
+                "CONTEXT_NO_REDUCTION",
+                AppStrings.get(R.string.compactor_err_no_reduction, "摘要未能缩小上下文，原始上下文已保留。"),
+            )
         }
         return CompactionOutcome(
             messages = result,

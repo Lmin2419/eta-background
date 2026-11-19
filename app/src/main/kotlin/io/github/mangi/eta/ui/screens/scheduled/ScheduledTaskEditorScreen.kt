@@ -88,6 +88,7 @@ internal fun ScheduledTaskEditorScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
     val scope = rememberCoroutineScope()
     val isEditing = !taskId.isNullOrBlank()
     val preset = remember(presetId) { ScheduledTaskPresets.find(presetId) }
@@ -99,8 +100,8 @@ internal fun ScheduledTaskEditorScreen(
     var loadedExisting by remember(taskId) { mutableStateOf<ScheduledTask?>(null) }
     var initialized by remember(taskId, presetId) { mutableStateOf(false) }
 
-    var name by remember { mutableStateOf(preset?.defaultName.orEmpty()) }
-    var prompt by remember { mutableStateOf(preset?.prompt.orEmpty()) }
+    var name by remember { mutableStateOf(preset?.let { resources.getString(it.defaultNameRes) }.orEmpty()) }
+    var prompt by remember { mutableStateOf(preset?.let { resources.getString(it.promptRes) }.orEmpty()) }
     var triggerKind by remember { mutableStateOf(preset?.schedule?.kind ?: ScheduledTaskTriggerKind.DAILY) }
     var hour by remember { mutableIntStateOf(preset?.schedule?.hour ?: 9) }
     var minute by remember { mutableIntStateOf(preset?.schedule?.minute ?: 0) }

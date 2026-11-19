@@ -155,8 +155,8 @@ internal fun ScheduledTasksScreen(
                 ScheduledTaskPresets.all.forEachIndexed { index, preset ->
                     if (index > 0) EtaPreferenceDivider()
                     EtaArrowPreference(
-                        title = preset.title,
-                        summary = "${ScheduledTaskScheduleCalculator.describeSchedule(preset.schedule)} · ${preset.subtitle}",
+                        title = stringResource(preset.titleRes),
+                        summary = "${ScheduledTaskScheduleCalculator.describeSchedule(preset.schedule)} · ${stringResource(preset.subtitleRes)}",
                         startAction = { EtaPreferenceIcon(Icons.Outlined.AutoAwesome, tint = EtaPreferenceColors.Violet) },
                         onClick = { onNavigate(AppRoute.ScheduledTaskEditor(presetId = preset.id)) },
                     )

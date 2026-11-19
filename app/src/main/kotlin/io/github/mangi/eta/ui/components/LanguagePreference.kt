@@ -42,10 +42,16 @@ internal fun LanguagePreference(iconTint: Color = MiuixTheme.colorScheme.onBackg
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    val locales = repository.supportedLocales
+    val locales = remember(repository) {
+        repository.supportedLocales.sortedBy { it.getDisplayName(it).lowercase(it) }
+    }
     val systemLabel = stringResource(R.string.settings_language_system)
     val labels = remember(locales, systemLabel) {
-        listOf(systemLabel) + locales.map { it.getDisplayName(it) }
+        listOf(systemLabel) + locales.map { locale ->
+            locale.getDisplayName(locale).replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(locale) else it.toString()
+            }
+        }
     }
     val selectedIndex = selectedLocale?.let { selected ->
         locales.indexOfFirst { LocaleList.matchesLanguageAndScript(it, selected) } + 1

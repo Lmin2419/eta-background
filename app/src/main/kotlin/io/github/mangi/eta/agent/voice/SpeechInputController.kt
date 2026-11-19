@@ -3,6 +3,7 @@ package io.github.mangi.eta.agent.voice
 import android.content.Context
 import io.github.mangi.eta.R
 import io.github.mangi.eta.core.AndroidAgentLogger
+import io.github.mangi.eta.core.AppStrings
 import io.github.mangi.eta.data.model.AsrProvider
 import io.github.mangi.eta.data.model.SpeechCredentials
 import io.github.mangi.eta.data.model.SpeechSettings
@@ -66,7 +67,11 @@ internal class SpeechInputController(
     fun start(settings: SpeechSettings? = null, credentials: SpeechCredentials? = null, holdToTalk: Boolean = false) {
         cancel()
         val session = generation
-        mutableState.value = SpeechInputState(phase = EtaSpeechPhase.STARTING, progress = "正在连接", holdToTalk = holdToTalk)
+        mutableState.value = SpeechInputState(
+            phase = EtaSpeechPhase.STARTING,
+            progress = AppStrings.get(R.string.voice_i18n_progress_connecting, "正在连接"),
+            holdToTalk = holdToTalk,
+        )
         job = scope.launch(Dispatchers.Main.immediate) {
             try {
                 val rawConfig = settings ?: SpeechSettingsRepository.settings()
@@ -176,7 +181,10 @@ internal class SpeechInputController(
     private suspend fun refined(session: Long, text: String): String {
         if (!refineTranscript || generation != session) return text
         mutableState.value = mutableState.value.copy(
-            phase = EtaSpeechPhase.RECOGNIZING, preview = text, progress = "正在校对", level = 0f,
+            phase = EtaSpeechPhase.RECOGNIZING,
+            preview = text,
+            progress = AppStrings.get(R.string.voice_i18n_progress_refining, "正在校对"),
+            level = 0f,
         )
         return try {
             refiner.refine(text)
