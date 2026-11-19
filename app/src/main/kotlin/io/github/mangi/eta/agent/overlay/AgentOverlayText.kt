@@ -126,6 +126,8 @@ internal fun toolDisplayNameResource(name: String): Int? = when (name) {
     "memory_get" -> R.string.tool_memory_get
     "memory_write" -> R.string.tool_memory_write
     "common_task" -> R.string.common_tasks_title
+    "subagent" -> R.string.tool_subagent
+    "subagent_profile" -> R.string.tool_subagent_profile
     "set_alarm" -> R.string.tool_set_alarm
     "set_timer" -> R.string.tool_set_timer
     "device_status" -> R.string.tool_device_status

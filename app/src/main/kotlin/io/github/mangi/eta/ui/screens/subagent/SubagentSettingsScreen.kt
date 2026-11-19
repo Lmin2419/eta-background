@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
@@ -102,6 +103,10 @@ private data class CustomSubagentDraft(
     val description: String = "",
     val toolsText: String = "",
     val prompt: String = "",
+    // 编辑时原样带回 whenToUse / disallowedTools / override，避免保存后丢失（上游 c643b55d）。
+    val whenToUse: String = "",
+    val disallowedTools: List<String> = emptyList(),
+    val overrideBuiltin: Boolean = false,
 )
 
 @Composable
@@ -178,6 +183,8 @@ internal fun SubagentSettingsScreen(
     var inspectedProfile by remember { mutableStateOf<SubagentProfile?>(null) }
     var editorDraft by remember { mutableStateOf<CustomSubagentDraft?>(null) }
     var editorError by remember { mutableStateOf<String?>(null) }
+    var deleteTargetProfile by remember { mutableStateOf<SubagentProfile?>(null) }
+    val resources = LocalResources.current
 
     MiuixScaffoldPage(
         title = "Subagent",
@@ -212,9 +219,22 @@ internal fun SubagentSettingsScreen(
                         scope.launch {
                             RuntimeConfigRepository.updateSubagentSettings { current ->
                                 val name = modelRoleName
-                                if (name == null) current.copy(modelId = modelId)
-                                else current.copy(profiles = current.profiles + (name to
-                                    (current.profiles[name] ?: SubagentProfileModel()).copy(modelId = modelId)))
+                                if (name == null) {
+                                    // 换默认模型后，新模型不支持的思考强度退回「跟随模型默认」。
+                                    val target = modelId?.takeIf { it.isNotBlank() }?.let { providers.enabledModel(it) }
+                                        ?: providers.enabledModel(primaryModelId)
+                                    val newCapabilities = target?.let { (provider, model) ->
+                                        RuntimeConfigRepository.reasoningCapabilities(provider, model)
+                                    }
+                                    val currentEffort = current.resolvedReasoningEffort
+                                    val compatibleEffort = currentEffort
+                                        ?.takeIf { newCapabilities?.selectableEfforts?.contains(it) == true }
+                                        ?.wireValue
+                                    current.copy(modelId = modelId, reasoningEffort = compatibleEffort)
+                                } else {
+                                    current.copy(profiles = current.profiles + (name to
+                                        (current.profiles[name] ?: SubagentProfileModel()).copy(modelId = modelId)))
+                                }
                             }
                         }
                     },
@@ -271,6 +291,9 @@ internal fun SubagentSettingsScreen(
                                     description = currentProfile.summary,
                                     toolsText = toolsText,
                                     prompt = currentProfile.roleInstruction,
+                                    whenToUse = currentProfile.whenToUse.takeUnless { it == currentProfile.summary }.orEmpty(),
+                                    disallowedTools = currentProfile.disallowedTools.toList(),
+                                    overrideBuiltin = currentProfile.override,
                                 )
                             }
                         } else {
@@ -278,20 +301,39 @@ internal fun SubagentSettingsScreen(
                         },
                         onDelete = if (!currentProfile.builtin) {
                             {
-                                val targetName = currentProfile.name
                                 inspectedProfile = null
-                                scope.launch {
-                                    withContext(Dispatchers.IO) {
-                                        SubagentProfileCatalog.deleteCustomProfile(targetName)
-                                    }
-                                    reloadCustomProfiles()
-                                }
+                                deleteTargetProfile = currentProfile
                             }
                         } else {
                             null
                         },
                     )
                 }
+            }
+
+            val deleteTarget = deleteTargetProfile
+            EtaWindowDialog(
+                show = deleteTarget != null,
+                title = stringResource(R.string.action_delete),
+                summary = deleteTarget?.let { stringResource(R.string.subagent_settings_delete_confirm, it.name) },
+                onDismissRequest = { deleteTargetProfile = null },
+            ) {
+                MiuixDialogActions(
+                    confirmText = stringResource(R.string.action_delete),
+                    onCancel = { deleteTargetProfile = null },
+                    onConfirm = {
+                        val targetName = deleteTarget?.name
+                        deleteTargetProfile = null
+                        if (targetName != null) {
+                            scope.launch {
+                                withContext(Dispatchers.IO) {
+                                    SubagentProfileCatalog.deleteCustomProfile(targetName)
+                                }
+                                reloadCustomProfiles()
+                            }
+                        }
+                    },
+                )
             }
 
             val activeDraft = editorDraft
@@ -358,14 +400,26 @@ internal fun SubagentSettingsScreen(
                                         .filter { it.isNotEmpty() }
                                     val result = withContext(Dispatchers.IO) {
                                         runCatching {
-                                            val saved = SubagentProfileCatalog.saveCustomProfile(
+                                            val normalizedNewName = activeDraft.name.trim().lowercase()
+                                            if (
+                                                normalizedNewName != activeDraft.originalName &&
+                                                SubagentProfileCatalog.existsCustomProfile(normalizedNewName)
+                                            ) {
+                                                // 改名或新建撞上已有模板时不静默覆盖。
+                                                throw IllegalArgumentException(
+                                                    resources.getString(R.string.subagent_settings_name_exists, normalizedNewName),
+                                                )
+                                            }
+                                            SubagentProfileCatalog.saveCustomProfile(
                                                 name = activeDraft.name,
                                                 description = activeDraft.description,
+                                                whenToUse = activeDraft.whenToUse,
                                                 tools = tools,
+                                                disallowedTools = activeDraft.disallowedTools,
+                                                overrideBuiltin = activeDraft.overrideBuiltin,
                                                 prompt = activeDraft.prompt,
                                                 originalName = activeDraft.originalName,
                                             )
-                                            saved
                                         }
                                     }
                                     result.fold(
