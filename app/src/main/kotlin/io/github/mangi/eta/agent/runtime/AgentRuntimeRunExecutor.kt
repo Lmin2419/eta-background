@@ -343,7 +343,7 @@ internal class AgentRuntimeRunExecutor(
                 includeHistoryTool = historyTool != null,
                 includeCharacterMemoryTools = characterMemoryTools != null && memoryEnabled,
                 includeScheduledManageTool = scheduledRunContext == null &&
-                    request.operation == AgentRuntimeWire.OP_CHAT,
+                    supportsHistoryTool(request.operation),
                 includeScheduledSelfRunTools = scheduledRunContext != null,
             )
             val scheduledToolFilter: ((JSONArray) -> JSONArray)? =
