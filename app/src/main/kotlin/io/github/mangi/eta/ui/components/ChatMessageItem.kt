@@ -577,8 +577,6 @@ private fun AgentMessageBlock(
         }
     }
 
-    val character = LocalRoleplayChat.current.takeUnless { assistantOverlay }
-    val isGreeting = character != null && message.id.startsWith(GreetingMessagePrefix)
     val couiAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
     val selection = LocalMessageSelection.current
     val selecting = selection?.active == true
@@ -600,9 +598,6 @@ private fun AgentMessageBlock(
                 vertical = if (assistantOverlay) 8.dp else 0.dp,
             ),
     ) {
-        if (character != null) {
-            CharacterReplyHeader(character = character, isGreeting = isGreeting)
-        }
         when {
             message.content.isBlank() && message.isStreaming -> {
                 AITypingIndicator(
@@ -717,50 +712,6 @@ private fun AgentMessageBlock(
             enabled = messageActionsEnabled, onClick = { menu = false; selection.start(message.id) })
         EtaMenuItem(stringResource(R.string.action_export), icon = Icons.Outlined.IosShare, onClick = { menu = false; export() })
         EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
-    }
-}
-
-/** 开场白消息由开始对话时写入，标识前缀与写入方保持一致。 */
-private const val GreetingMessagePrefix = "greeting-"
-
-/**
- * 角色回复的署名行：小头像加角色名，开场白额外标注“故事开始”。
- * 正文保持与普通回答同宽，避免为头像缩进后长段落在窄屏上过于拥挤。
- */
-@Composable
-private fun CharacterReplyHeader(character: RoleplayChatUi, isGreeting: Boolean) {
-    Row(
-        modifier = Modifier.padding(bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CharacterAvatar(
-            name = character.characterName,
-            avatarPath = character.avatarPath,
-            size = 28.dp,
-            shape = CircleShape,
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = character.characterName,
-            style = MiuixTheme.textStyles.body2,
-            fontWeight = FontWeight.Medium,
-            color = MiuixTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false),
-        )
-        if (isGreeting) {
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = stringResource(R.string.chat_character_story_start),
-                style = MiuixTheme.textStyles.footnote2,
-                color = MiuixTheme.colorScheme.primary,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(percent = 50))
-                    .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.1f))
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-            )
-        }
     }
 }
 
