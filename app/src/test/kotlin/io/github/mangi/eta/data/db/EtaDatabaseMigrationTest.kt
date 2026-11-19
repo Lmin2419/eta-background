@@ -61,6 +61,7 @@ class EtaDatabaseMigrationTest {
                 EtaDatabase.MIGRATION_24_25,
                 EtaDatabase.MIGRATION_25_26,
                 EtaDatabase.MIGRATION_26_27,
+                EtaDatabase.MIGRATION_27_28,
             )
             .build()
         try {
@@ -193,7 +194,7 @@ class EtaDatabaseMigrationTest {
             }
             return tables.associateWith { table ->
                 db.query("SELECT * FROM $table ORDER BY rowid").use { cursor ->
-                    val columns = cursor.columnNames.indices.filter { cursor.columnNames[it] !in setOf("archived_at", "pinned_at", "group_id", "step_count", "llm_ms", "tool_ms", "ttft_ms", "ttft_steps", "decode_ms", "decode_tokens", "cache_write_tokens", "compaction_archive_id") }
+                    val columns = cursor.columnNames.indices.filter { cursor.columnNames[it] !in setOf("archived_at", "pinned_at", "group_id", "step_count", "llm_ms", "tool_ms", "ttft_ms", "ttft_steps", "decode_ms", "decode_tokens", "cache_write_tokens", "compaction_archive_id", "vertex_project", "vertex_location") }
                     buildList { while (cursor.moveToNext()) add(columns.map { if (cursor.isNull(it)) null else cursor.getString(it) }) }
                 }
             }
@@ -207,11 +208,12 @@ class EtaDatabaseMigrationTest {
         }
         val db = Room.databaseBuilder(context, EtaDatabase::class.java, name)
             .addMigrations(EtaDatabase.MIGRATION_23_24, EtaDatabase.MIGRATION_24_25, EtaDatabase.MIGRATION_25_26,
-                EtaDatabase.MIGRATION_26_27).build()
+                EtaDatabase.MIGRATION_26_27, EtaDatabase.MIGRATION_27_28).build()
         try {
             val migrated = db.openHelper.writableDatabase // Room validates the entire current schema.
             assertEquals(LATEST_DB_VERSION, migrated.version)
-            assertEquals(before, snapshot(migrated))
+            // 之后版本新建的空表不参与比较，只核对迁移前已有的表。
+            assertEquals(before, snapshot(migrated).filterKeys { it in before.keys })
             runBlocking(Dispatchers.IO) {
                 val dao = db.conversationDao()
                 dao.conversationEntities().forEach { assertEquals(null, it.archivedAt) }
@@ -245,7 +247,7 @@ class EtaDatabaseMigrationTest {
                 buildList { while (cursor.moveToNext()) add(cursor.getString(0)) }
             }
             return tables.associateWith { table -> db.query("SELECT * FROM $table ORDER BY rowid").use { cursor ->
-                val columns = cursor.columnNames.indices.filter { cursor.columnNames[it] !in setOf("pinned_at", "group_id", "step_count", "llm_ms", "tool_ms", "ttft_ms", "ttft_steps", "decode_ms", "decode_tokens", "cache_write_tokens", "compaction_archive_id") }
+                val columns = cursor.columnNames.indices.filter { cursor.columnNames[it] !in setOf("pinned_at", "group_id", "step_count", "llm_ms", "tool_ms", "ttft_ms", "ttft_steps", "decode_ms", "decode_tokens", "cache_write_tokens", "compaction_archive_id", "vertex_project", "vertex_location") }
                 buildList { while (cursor.moveToNext()) add(columns.map { if (cursor.isNull(it)) null else cursor.getString(it) }) }
             } }
         }
@@ -269,7 +271,7 @@ class EtaDatabaseMigrationTest {
             // Exercise production registration AND its existing destructive fallback, not a hand-built migration list.
             val db = EtaDatabase.get(context).openHelper.writableDatabase
             assertEquals(LATEST_DB_VERSION, db.version)
-            assertEquals("Missing production migration must never erase existing rows", before, snapshot(db))
+            assertEquals("Missing production migration must never erase existing rows", before, snapshot(db).filterKeys { it in before.keys })
             db.query("SELECT archived_at, pinned_at, group_id, model_id FROM conversations WHERE id='conv-1'").use {
                 org.junit.Assert.assertTrue(it.moveToFirst()); assertEquals(1234L, it.getLong(0))
                 org.junit.Assert.assertTrue(it.isNull(1)); org.junit.Assert.assertTrue(it.isNull(2))
@@ -406,4 +408,4 @@ class EtaDatabaseMigrationTest {
 }
 
 /** 跟随 [EtaDatabase] 的 `version`；合入新的迁移时一起改。 */
-private const val LATEST_DB_VERSION = 27
+private const val LATEST_DB_VERSION = 28
