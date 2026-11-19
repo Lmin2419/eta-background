@@ -61,6 +61,8 @@ import io.github.mangi.eta.agent.overlay.AgentOverlayState
 import io.github.mangi.eta.agent.overlay.AgentOverlayStatus
 import io.github.mangi.eta.agent.overlay.AgentOverlayVisibilityPolicy
 import io.github.mangi.eta.agent.overlay.applyEvent
+import io.github.mangi.eta.agent.scheduler.ScheduledTaskRunContext
+import io.github.mangi.eta.agent.scheduler.ScheduledTaskRunner
 import io.github.mangi.eta.config.Prefs
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.core.safeLogType
@@ -558,13 +560,19 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
             }
         }
         // Root 入口保留原有绑定服务生命周期；新增 FGS 不能成为厂商后台入口的新前置权限。
-        val allowBoundFallback = RootAccess.isGranted
-        val executionHeld = AgentExecutionService.acquire(
-            this, "run:${request.runId}", allowBoundFallback = allowBoundFallback,
-        ) { mainHandler.post { cancelRun(request.runId) } }
-        if (!executionHeld && !allowBoundFallback) {
-            failBeforeExecution(run, "无法启动后台执行服务，请返回胖小胖后重试")
-            return null
+        // 定时任务显式关闭运行进度通知且设备具备后台豁免时，同样跳过 FGS，做到运行时 0 通知。
+        val silentScheduledRun = isSilentScheduledRun(request)
+        val skipForegroundLease = silentScheduledRun &&
+            ScheduledTaskRunner.canRunSilentlyWithoutForegroundService(this)
+        if (!skipForegroundLease) {
+            val allowBoundFallback = RootAccess.isGranted
+            val executionHeld = AgentExecutionService.acquire(
+                this, "run:${request.runId}", allowBoundFallback = allowBoundFallback,
+            ) { mainHandler.post { cancelRun(request.runId) } }
+            if (!executionHeld && !allowBoundFallback) {
+                failBeforeExecution(run, "无法启动后台执行服务，请返回胖小胖后重试")
+                return null
+            }
         }
         admission.replacedRuns.forEach { cancelRun(it.runId) }
         runCatching {
@@ -1282,7 +1290,8 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                 if (displayedRun?.hasExecutedForegroundTool != true) displayedRun = null
             }
         }
-        val snapshots = active.map(::notificationState)
+        // 定时任务关了「运行时显示进度通知」时不出任务通知（上游 90d21919），只在完成时按任务设置推结果。
+        val snapshots = active.filterNot { isSilentScheduledRun(it.request) }.map(::notificationState)
         taskStates.value = snapshots
         AgentExecutionService.updateTasks(this, snapshots)
         if (!capsuleExpanded.value) setCapsuleWindowHeight(CAPSULE_COLLAPSED_HEIGHT_DP)
@@ -1308,6 +1317,16 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         capsuleExpanded.value = expanded
         publishExecutionState()
         if (expanded) setCapsuleWindowHeight(CAPSULE_CONTROLS_HEIGHT_DP)
+    }
+
+    private fun isSilentScheduledRun(request: AgentRuntimeWire.RunRequest): Boolean {
+        val handoff = request.handoff ?: return false
+        if (handoff.source != AgentRuntimeWire.SCHEDULED_TASK_HANDOFF_SOURCE) return false
+        val scheduled = AgentExternalArchivePayload.from(handoff.payload)
+            ?.adapterPayload
+            ?.let(ScheduledTaskRunContext::fromAdapterPayload)
+            ?: return false
+        return !scheduled.showRunningNotification
     }
 
     @SuppressLint("WakelockTimeout")

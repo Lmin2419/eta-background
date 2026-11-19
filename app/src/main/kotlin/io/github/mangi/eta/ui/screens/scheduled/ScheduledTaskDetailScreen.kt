@@ -232,6 +232,7 @@ internal fun ScheduledTaskDetailScreen(
                 EtaPreference(
                     title = "通知与会话",
                     summary = ScheduledTaskUiFormatting.deliveryBadge(currentTask.deliveryMode) + " · " +
+                        (if (currentTask.showRunningNotification) "显示运行进度" else "静默运行") + " · " +
                         ScheduledTaskUiFormatting.sessionModeLabel(currentTask.sessionMode),
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Notifications, tint = EtaPreferenceColors.Orange) },
                 )

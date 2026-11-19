@@ -63,6 +63,7 @@ class EtaDatabaseMigrationTest {
                 EtaDatabase.MIGRATION_26_27,
                 EtaDatabase.MIGRATION_27_28,
                 EtaDatabase.MIGRATION_28_29,
+                EtaDatabase.MIGRATION_29_30,
             )
             .build()
         try {
@@ -209,7 +210,8 @@ class EtaDatabaseMigrationTest {
         }
         val db = Room.databaseBuilder(context, EtaDatabase::class.java, name)
             .addMigrations(EtaDatabase.MIGRATION_23_24, EtaDatabase.MIGRATION_24_25, EtaDatabase.MIGRATION_25_26,
-                EtaDatabase.MIGRATION_26_27, EtaDatabase.MIGRATION_27_28, EtaDatabase.MIGRATION_28_29).build()
+                EtaDatabase.MIGRATION_26_27, EtaDatabase.MIGRATION_27_28, EtaDatabase.MIGRATION_28_29,
+                EtaDatabase.MIGRATION_29_30).build()
         try {
             val migrated = db.openHelper.writableDatabase // Room validates the entire current schema.
             assertEquals(LATEST_DB_VERSION, migrated.version)
@@ -409,4 +411,4 @@ class EtaDatabaseMigrationTest {
 }
 
 /** 跟随 [EtaDatabase] 的 `version`；合入新的迁移时一起改。 */
-private const val LATEST_DB_VERSION = 29
+private const val LATEST_DB_VERSION = 30
