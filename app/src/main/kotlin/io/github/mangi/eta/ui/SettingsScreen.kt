@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.NotificationsActive
@@ -674,6 +675,17 @@ private fun SettingsPageContent(
                             )
                         },
                         onClick = { onNavigate(AppRoute.McpServers) },
+                    )
+                    EtaPreferenceDivider()
+                    EtaArrowPreference(
+                        title = stringResource(R.string.route_scheduled_tasks),
+                        startAction = {
+                            EtaPreferenceIcon(
+                                icon = Icons.Outlined.Schedule,
+                                tint = EtaPreferenceColors.Blue,
+                            )
+                        },
+                        onClick = { onNavigate(AppRoute.ScheduledTasks) },
                     )
                     EtaPreferenceDivider()
                     EtaArrowPreference(

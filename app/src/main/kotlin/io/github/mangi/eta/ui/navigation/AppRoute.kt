@@ -31,6 +31,18 @@ sealed interface AppRoute : NavKey {
     data class Tasks(val tab: Int = -1) : AppRoute
 
     @Serializable
+    data object ScheduledTasks : AppRoute
+
+    @Serializable
+    data class ScheduledTaskDetail(val taskId: String) : AppRoute
+
+    @Serializable
+    data class ScheduledTaskEditor(
+        val taskId: String? = null,
+        val presetId: String? = null,
+    ) : AppRoute
+
+    @Serializable
     data object Subagents : AppRoute
 
     @Serializable

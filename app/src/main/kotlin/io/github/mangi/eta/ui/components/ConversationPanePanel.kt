@@ -3,6 +3,7 @@ package io.github.mangi.eta.ui.components
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.foundation.border
 import androidx.compose.animation.*
@@ -106,6 +107,7 @@ internal fun ConversationPanePanel(
     onOpenModelProviders: () -> Unit, onOpenTools: () -> Unit, onOpenSkills: () -> Unit,
     onOpenCharacters: () -> Unit, onOpenPermissions: () -> Unit, modifier: Modifier = Modifier, active: Boolean = true,
     floating: Boolean = false,
+    onOpenScheduledTasks: () -> Unit = {},
 ) {
     val workspace = LocalPaneWorkspace.current
     val management = LocalPaneManagement.current
@@ -173,11 +175,12 @@ internal fun ConversationPanePanel(
             // 功能入口是列表顶部的几行（图标 + 文字），随列表一起滚走；终端入口移到「设置」。
             if (!selecting && !archived && state.searchQuery.isBlank()) {
                 // 功能入口：一排实色白色方块，图标在上、文字在下。09 第一期 1.5：加「终端」（原来只能从设置里进）；
-                // 顺序按常用程度：任务、电脑、终端、浏览器、角色。
+                // 顺序按常用程度：任务、电脑、定时任务、终端、浏览器、角色。
                 item(key = "nav-grid") {
                     val tiles = buildList {
                         add(PaneTile(Icons.Outlined.TaskAlt, stringResource(R.string.eta_tasks), workspace.onTasks, workspace.runningCount))
                         workspace.onDesktop?.let { add(PaneTile(Icons.Outlined.Computer, stringResource(R.string.desktop_entry), it, workspace.desktopRunning)) }
+                        add(PaneTile(Icons.Outlined.Schedule, stringResource(R.string.route_scheduled_tasks), onOpenScheduledTasks))
                         add(PaneTile(Icons.Outlined.Terminal, stringResource(R.string.route_terminal), workspace.onTerminal))
                         add(PaneTile(Icons.Outlined.Language, stringResource(R.string.eta_browser), workspace.onBrowser))
                         add(PaneTile(Icons.Outlined.PeopleAlt, stringResource(R.string.eta_characters), onOpenCharacters))

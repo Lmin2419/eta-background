@@ -51,6 +51,10 @@ import io.github.mangi.eta.agent.device.BoundedRootCommandExecutor
 import io.github.mangi.eta.agent.device.DeviceLocationProvider
 import io.github.mangi.eta.agent.device.RootAccess
 import io.github.mangi.eta.agent.runtime.AgentRuntimeService
+import io.github.mangi.eta.agent.runtime.AgentRuntimeWire
+import io.github.mangi.eta.ui.screens.scheduled.ScheduledTaskDetailScreen
+import io.github.mangi.eta.ui.screens.scheduled.ScheduledTaskEditorScreen
+import io.github.mangi.eta.ui.screens.scheduled.ScheduledTasksScreen
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.data.repository.RuntimeConfigRepository
 import io.github.mangi.eta.ui.AppearanceSettingsScreen
@@ -144,6 +148,8 @@ fun AgentAppRoot(
     onRequestedConversationOpened: () -> Unit = {},
     requestedArchivedConversation: ArchivedConversationRequest? = null,
     onArchivedConversationOpened: () -> Unit = {},
+    requestedScheduledTaskId: String? = null,
+    onScheduledTaskOpened: () -> Unit = {},
     sharedContent: IncomingShareRequest? = null,
     onSharedContentAccepted: () -> Unit = {},
     openSpeechSettings: Boolean = false,
@@ -355,6 +361,13 @@ fun AgentAppRoot(
         onArchivedConversationOpened()
     }
 
+    LaunchedEffect(requestedScheduledTaskId) {
+        val taskId = requestedScheduledTaskId ?: return@LaunchedEffect
+        conversationPaneOpen = false
+        navigator.push(AppRoute.ScheduledTaskDetail(taskId))
+        onScheduledTaskOpened()
+    }
+
     LaunchedEffect(assistantConversationKey) {
         val conversationKey = assistantConversationKey ?: return@LaunchedEffect
         val opened = agentState.openAssistantConversation(conversationKey)
@@ -513,6 +526,7 @@ fun AgentAppRoot(
             },
             onOpenTools = { pushRoute(AppRoute.Tools) },
             onOpenSkills = { pushRoute(AppRoute.Skills) },
+            onOpenScheduledTasks = { pushRoute(AppRoute.ScheduledTasks) },
             onOpenCharacters = { pushRoute(AppRoute.Characters) },
             onOpenPermissions = { pushRoute(AppRoute.Permissions) },
             onOpenSettings = { pushRoute(AppRoute.Settings) },
@@ -812,6 +826,48 @@ fun AgentAppRoot(
                 TasksScreen(commonTasks, ::popRoute, ::runHomeTask, { id -> selectConversation(id); navigator.popToHome() },
                     initialTab = route.tab, visible = navigator.current() == route, onArchivedConversation = ::openArchivedTask,
                     onOpenDesktopSession = { id -> pushRoute(AppRoute.DesktopChat(id)) })
+            }
+            entry<AppRoute.ScheduledTasks>(swipeDismiss = swipeDismiss) {
+                ScheduledTasksScreen(onNavigate = { route -> pushRoute(route) }, onBack = ::popRoute)
+            }
+            entry<AppRoute.ScheduledTaskDetail>(swipeDismiss = swipeDismiss) { route ->
+                ScheduledTaskDetailScreen(
+                    taskId = route.taskId,
+                    onNavigate = { target -> pushRoute(target) },
+                    onOpenRun = { run, task, isLive ->
+                        val archiveKey = run.archiveConversationKey?.takeIf { it.isNotBlank() }
+                            ?: return@ScheduledTaskDetailScreen
+                        uiScope.launch {
+                            val opened = agentState.openScheduledTaskRun(
+                                runId = run.id,
+                                archiveConversationKey = archiveKey,
+                                taskTitle = task.name,
+                                taskPrompt = task.prompt,
+                                isRunning = isLive,
+                            )
+                            if (opened) {
+                                focusManager.clearFocus()
+                                conversationPaneOpen = false
+                                navigator.popToHome()
+                            } else {
+                                io.github.mangi.eta.ui.components.EtaToastCenter.show(
+                                    context, context.getString(R.string.scheduled_run_no_conversation), android.widget.Toast.LENGTH_SHORT,
+                                )
+                            }
+                        }
+                    },
+                    onBack = ::popRoute,
+                )
+            }
+            entry<AppRoute.ScheduledTaskEditor>(swipeDismiss = swipeDismiss) { route ->
+                ScheduledTaskEditorScreen(
+                    taskId = route.taskId,
+                    presetId = route.presetId,
+                    onSaved = { savedId ->
+                        if (route.taskId.isNullOrBlank()) navigator.replace(AppRoute.ScheduledTaskDetail(savedId)) else popRoute()
+                    },
+                    onBack = ::popRoute,
+                )
             }
             entry<AppRoute.Characters>(swipeDismiss = swipeDismiss) {
                 LaunchedEffect(navigator.current() == AppRoute.Characters) {

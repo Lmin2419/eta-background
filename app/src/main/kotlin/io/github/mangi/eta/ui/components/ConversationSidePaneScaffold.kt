@@ -87,6 +87,7 @@ fun ConversationSidePaneScaffold(
     onOpenCharacters: () -> Unit,
     onOpenPermissions: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenScheduledTasks: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val sceneLifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
@@ -103,7 +104,7 @@ fun ConversationSidePaneScaffold(
                         drawContent()
                         drawLine(outline, androidx.compose.ui.geometry.Offset(size.width - 0.25.dp.toPx(), 0f),
                             androidx.compose.ui.geometry.Offset(size.width - 0.25.dp.toPx(), size.height), 0.5.dp.toPx())
-                    })
+                    }, onOpenScheduledTasks = onOpenScheduledTasks)
                 Box(Modifier.weight(1f)) { content() }
             }
             return@BoxWithConstraints
@@ -255,6 +256,7 @@ fun ConversationSidePaneScaffold(
                         onOpenModelProviders = onOpenModelProviders,
                         onOpenTools = onOpenTools,
                         onOpenSkills = onOpenSkills,
+                        onOpenScheduledTasks = onOpenScheduledTasks,
                         onOpenCharacters = onOpenCharacters,
                         onOpenPermissions = onOpenPermissions,
                         modifier = Modifier

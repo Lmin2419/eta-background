@@ -18,6 +18,7 @@ import io.github.mangi.eta.data.repository.AppearanceSettingsRepository
 import io.github.mangi.eta.data.repository.McpServerRepository
 import io.github.mangi.eta.data.repository.LinuxEnvironmentSettingsRepository
 import io.github.mangi.eta.data.repository.ProviderRepository
+import io.github.mangi.eta.data.repository.ScheduledTaskRepository
 import io.github.mangi.eta.ui.app.PredictiveBackController
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
@@ -61,6 +62,20 @@ class EtaApp : Application(), XposedServiceHelper.OnServiceListener {
         AgentMemoryRepository.init(this)
         ProviderRepository.init(this)
         McpServerRepository.init(this)
+        ScheduledTaskRepository.init(this)
+        applicationScope.launch {
+            runCatching {
+                ScheduledTaskRepository.reconcileAfterRestartOrClockChange(
+                    recomputeAllSchedules = false,
+                    rescheduleAlarm = true,
+                    context = this@EtaApp,
+                )
+            }.onFailure { throwable ->
+                AndroidAgentLogger.warn(
+                    "Scheduled task reconcile failed: type=${throwable.safeLogType()}"
+                )
+            }
+        }
         XposedServiceHelper.registerListener(this)
         // 电脑同步打开且已配对时恢复常驻连接（独立于胖小胖本机任务）。
         applicationScope.launch { io.github.mangi.eta.agent.remote.DesktopLinkController.sync(this@EtaApp) }

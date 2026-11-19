@@ -20,6 +20,7 @@ internal data class MainActivityLaunchRequests(
     val conversationId: String? = null,
     val composeReply: Boolean = false,
     val archivedConversation: ArchivedConversationRequest? = null,
+    val scheduledTaskId: String? = null,
     val sharedContent: IncomingShareRequest? = null,
     val speechSettings: Boolean = false,
     val terminal: Boolean = false,
@@ -40,6 +41,9 @@ internal data class MainActivityLaunchRequests(
             conversationId = intent.nonBlankExtra(MainActivity.EXTRA_CONVERSATION_ID),
             composeReply = intent.nonBlankExtra(MainActivity.EXTRA_CONVERSATION_ID) != null &&
                 intent.getBooleanExtra(MainActivity.EXTRA_COMPOSE_REPLY, false),
+        )
+        MainActivity.ACTION_OPEN_SCHEDULED_TASK_DETAIL -> copy(
+            scheduledTaskId = intent.nonBlankExtra(MainActivity.EXTRA_SCHEDULED_TASK_ID),
         )
         MainActivity.ACTION_OPEN_ARCHIVED_CONVERSATION -> {
             val source = intent.nonBlankExtra(MainActivity.EXTRA_HANDOFF_SOURCE)
@@ -73,6 +77,7 @@ internal data class MainActivityLaunchRequests(
             putBoolean("compose_reply", composeReply)
             putString("archive_source", archivedConversation?.source)
             putString("archive_conversation_key", archivedConversation?.conversationKey)
+            putString("scheduled_task_id", scheduledTaskId)
             sharedContent?.let { share ->
                 putStringArrayList("share_uris", ArrayList(share.uris))
                 putString("share_mime_type", share.mimeType)
@@ -111,6 +116,7 @@ internal data class MainActivityLaunchRequests(
                 archivedConversation = if (source != null && key != null) {
                     ArchivedConversationRequest(source, key)
                 } else null,
+                scheduledTaskId = saved.getString("scheduled_task_id"),
                 sharedContent = if (shareUris.isNotEmpty() || shareText != null) {
                     IncomingShareRequest(
                         uris = shareUris,

@@ -112,6 +112,7 @@ internal fun AgentAppShell(
     onConversationDelete: (ConversationSummaryUi) -> Unit,
     onOpenTools: () -> Unit,
     onOpenSkills: () -> Unit,
+    onOpenScheduledTasks: () -> Unit = {},
     onOpenCharacters: () -> Unit,
     onOpenPermissions: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -215,6 +216,7 @@ internal fun AgentAppShell(
                 onOpenModelProviders = onOpenModelProviders,
                 onOpenTools = onOpenTools,
                 onOpenSkills = onOpenSkills,
+                onOpenScheduledTasks = onOpenScheduledTasks,
                 onOpenCharacters = onOpenCharacters,
                 onOpenPermissions = onOpenPermissions,
             ) {
