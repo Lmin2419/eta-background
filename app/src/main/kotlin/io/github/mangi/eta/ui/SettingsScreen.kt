@@ -94,6 +94,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.github.mangi.eta.EtaApp
 import io.github.mangi.eta.R
+import io.github.mangi.eta.data.repository.ImageGenSettingsRepository
+import io.github.mangi.eta.data.model.ImageGenSettings
+import androidx.compose.material.icons.outlined.Image
 import io.github.mangi.eta.agent.accessibility.AccessibilityProtectionClient
 import io.github.mangi.eta.agent.accessibility.AgentAccessibilityService
 import io.github.mangi.eta.agent.runtime.AgentExecutionService
@@ -122,6 +125,7 @@ import io.github.mangi.eta.ui.components.LanguagePreference
 import io.github.mangi.eta.ui.components.MiuixDialogActions
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import io.github.mangi.eta.ui.navigation.AppRoute
+import io.github.mangi.eta.ui.screens.imagegen.shortName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -686,6 +690,15 @@ private fun SettingsPageContent(
                             )
                         },
                         onClick = { onNavigate(AppRoute.ScheduledTasks) },
+                    )
+                    EtaPreferenceDivider()
+                    val imageGenSettings by remember { ImageGenSettingsRepository.settingsFlow() }
+                        .collectAsState(initial = ImageGenSettings())
+                    EtaArrowPreference(
+                        title = stringResource(R.string.image_gen_settings_title),
+                        summary = if (imageGenSettings.enabled) "已开启 · ${imageGenSettings.backend.shortName()}" else "未开启",
+                        startAction = { EtaPreferenceIcon(icon = Icons.Outlined.Image, tint = EtaPreferenceColors.Orange) },
+                        onClick = { onNavigate(AppRoute.ImageGenSettings) },
                     )
                     EtaPreferenceDivider()
                     EtaArrowPreference(

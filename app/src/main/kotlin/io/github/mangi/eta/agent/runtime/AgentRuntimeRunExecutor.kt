@@ -12,6 +12,8 @@ import io.github.mangi.eta.agent.model.AgentModelClient
 import io.github.mangi.eta.agent.model.AgentModelExecutionException
 import io.github.mangi.eta.agent.model.AgentModelFailure
 import io.github.mangi.eta.agent.model.AgentHttpClient
+import io.github.mangi.eta.agent.imagegen.ImageGenToolCatalog
+import io.github.mangi.eta.agent.imagegen.ImageGenToolExecutor
 import io.github.mangi.eta.agent.memory.AgentMemoryContext
 import io.github.mangi.eta.agent.memory.AgentMemoryContextBuilder
 import io.github.mangi.eta.agent.memory.ConversationMemoryPins
@@ -40,6 +42,7 @@ import io.github.mangi.eta.config.Prefs
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.core.safeLogType
 import io.github.mangi.eta.data.repository.AgentMemoryRepository
+import io.github.mangi.eta.data.repository.ImageGenSettingsRepository
 import io.github.mangi.eta.data.repository.RuntimeConfigRepository
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
@@ -337,6 +340,22 @@ internal class AgentRuntimeRunExecutor(
                 context = appContext,
                 activeRunContext = scheduledRunContext,
             )
+            val imageGenEnabled = runBlocking {
+                runCatching { ImageGenSettingsRepository.settings().enabled }.getOrDefault(false)
+            } && Prefs.isToolEnabled(ImageGenToolCatalog.TOOL_NAME) &&
+                request.operation == AgentRuntimeWire.OP_CHAT
+            val isVoiceOverlay = request.handoff?.source == AgentRuntimeWire.ETA_VOICE_HANDOFF_SOURCE
+            val imageGenToolExecutor = ImageGenToolExecutor(
+                context = appContext,
+                conversationId = conversationId,
+                sessionKey = conversationId ?: request.effectiveModelSessionId,
+                currentTurnUserImages = {
+                    // 助手浮层自动采集的屏幕截图不属于用户授权附件，避免误传给第三方生图服务。
+                    if (isVoiceOverlay) emptyList()
+                    else request.images.filterNot { it.preserveOriginal }
+                },
+                runController = runController,
+            )
             val runTools = buildRunTools(
                 mcpTools = mcpTools,
                 subagentAllowed = subagentAllowed(),
@@ -345,6 +364,7 @@ internal class AgentRuntimeRunExecutor(
                 includeScheduledManageTool = scheduledRunContext == null &&
                     supportsHistoryTool(request.operation),
                 includeScheduledSelfRunTools = scheduledRunContext != null,
+                includeImageGenTool = imageGenEnabled,
             )
             val scheduledToolFilter: ((JSONArray) -> JSONArray)? =
                 if (scheduledRunContext != null && !scheduledRunContext.capabilities.guiTools) {
@@ -363,7 +383,19 @@ internal class AgentRuntimeRunExecutor(
                     null
                 }
             val runToolExecutor = AgentModelClient.ToolExecutor { call ->
-                if (call.name in ScheduledTaskToolCatalog.manageNames) {
+                if (call.name in ImageGenToolCatalog.names) {
+                    if (!Prefs.isToolEnabled(call.name)) {
+                        AgentModelClient.ToolResult(
+                            JSONObject()
+                                .put("ok", false)
+                                .put("code", "TOOL_DISABLED")
+                                .put("message", "工具 ${call.name} 已在工具列表中关闭，本次未执行")
+                                .toString(),
+                        )
+                    } else {
+                        imageGenToolExecutor.execute(call)
+                    }
+                } else if (call.name in ScheduledTaskToolCatalog.manageNames) {
                     scheduledToolExecutor.executeManage(call)
                 } else if (call.name in ScheduledTaskToolCatalog.selfRunNames) {
                     scheduledToolExecutor.executeSelfRun(call)
@@ -650,11 +682,13 @@ internal class AgentRuntimeRunExecutor(
             isToolEnabled: (String) -> Boolean = Prefs::isToolEnabled,
             includeScheduledManageTool: Boolean = false,
             includeScheduledSelfRunTools: Boolean = false,
+            includeImageGenTool: Boolean = false,
         ): JSONArray = JSONArray(mcpTools.toString()).also { tools ->
             if (subagentAllowed) AgentSubagentToolCatalog.appendSchemas(tools)
             if (includeHistoryTool) tools.put(AgentConversationToolCatalog.schema())
             if (includeScheduledManageTool) ScheduledTaskToolCatalog.appendManageTool(tools)
             if (includeScheduledSelfRunTools) ScheduledTaskToolCatalog.appendSelfRunTools(tools)
+            if (includeImageGenTool) ImageGenToolCatalog.appendTo(tools)
             if (includeCharacterMemoryTools) {
                 val temp = JSONArray().also(CharacterMemoryTools::appendSchemas)
                 for (index in 0 until temp.length()) {

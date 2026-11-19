@@ -96,7 +96,7 @@ internal fun iconForTool(toolId: String): ImageVector = when (toolId) {
     "file_search", "file_search_call", "文件搜索" -> Icons.AutoMirrored.Outlined.ManageSearch
     "code_interpreter", "code_interpreter_call", "代码执行" -> Icons.Outlined.Terminal
     "computer", "computer_call", "计算机操作" -> Icons.Outlined.Computer
-    "image_generation", "image_generation_call", "图像生成" -> Icons.Outlined.Image
+    "image_generation", "image_generation_call", "generate_image", "图像生成" -> Icons.Outlined.Image
     "mcp_call", "MCP 工具" -> Icons.Outlined.Extension
     "memory_get", "memory_write", "character_memory_get", "character_memory_write" ->
         Icons.Outlined.Psychology

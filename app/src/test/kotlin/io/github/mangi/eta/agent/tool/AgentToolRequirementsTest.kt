@@ -1,5 +1,6 @@
 package io.github.mangi.eta.agent.tool
 
+import io.github.mangi.eta.agent.imagegen.ImageGenToolCatalog
 import io.github.mangi.eta.agent.model.AgentToolCatalog
 import io.github.mangi.eta.agent.roleplay.CharacterMemoryTools
 import org.json.JSONArray
@@ -23,7 +24,7 @@ class AgentToolRequirementsTest {
     }
     @Test
     fun everyRegisteredToolHasExactlyOneRequirement() {
-        val tools = catalog(root = true).also { CharacterMemoryTools.appendSchemas(it) }
+        val tools = catalog(root = true).also { CharacterMemoryTools.appendSchemas(it) }.also { ImageGenToolCatalog.appendTo(it) }
         assertEquals(AgentToolRequirements.toolNames, tools.names())
         setOf("input_text", "replace_text", "clear_text", "paste_text").forEach { name ->
             assertFalse("$name 不再注册", name in AgentToolRequirements.toolNames)
@@ -35,6 +36,7 @@ class AgentToolRequirementsTest {
     @Test
     fun ordinaryCatalogDoesNotExposeCharacterMemoryTools() {
         assertTrue(catalog(root = true).names().none { it in CharacterMemoryTools.NAMES })
+        assertTrue(catalog(root = true).names().none { it in ImageGenToolCatalog.names })
     }
 
     @Test

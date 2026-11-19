@@ -2102,4 +2102,9 @@
   <string name="scheduled_quick_start">Quick start</string>
   <string name="scheduled_untitled">Untitled task</string>
   <string name="scheduled_run_no_conversation">This run has no conversation to show yet</string>
+  <string name="image_gen_settings_title">AI image generation</string>
+  <string name="image_gen_gallery_title">Generated images</string>
+  <string name="image_gen_configure_action">Set up image generation</string>
+  <string name="tool_generate_image">AI image generation</string>
+  <string name="tool_generate_image_description">Create images from a text description with the configured image model, or edit a reference image and transfer its style.</string>
 </resources>

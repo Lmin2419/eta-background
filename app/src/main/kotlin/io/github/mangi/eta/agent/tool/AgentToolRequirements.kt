@@ -44,6 +44,7 @@ internal object AgentToolRequirements {
             "common_task",
             "skills_list", "skills_read", "skills_read_resource", "skills_list_curated",
             "skills_inspect_github", "skills_install_from_github",
+            "generate_image",
         )
         register(
             RootRequirement.PARTIAL,

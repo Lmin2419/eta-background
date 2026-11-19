@@ -18,6 +18,7 @@ import io.github.mangi.eta.data.model.AppearanceThemeMode
 import io.github.mangi.eta.data.model.AppearanceTopBarBlurStyle
 import io.github.mangi.eta.data.model.AssistantOverlaySettings
 import io.github.mangi.eta.data.model.ConversationTitleSettings
+import io.github.mangi.eta.data.model.ImageGenSettings
 import io.github.mangi.eta.data.model.SpeechSettings
 import io.github.mangi.eta.data.model.SubagentSettings
 import io.github.mangi.eta.data.model.WebToolsSettings
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.map
 internal object SettingsDataStore {
     private val SPEECH_SETTINGS = stringPreferencesKey("speech_settings_v1")
     private val WEB_TOOLS_SETTINGS = stringPreferencesKey("web_tools_settings_v1")
+    private val IMAGE_GEN_SETTINGS = stringPreferencesKey("image_gen_settings_v1")
     private val SUBAGENT_SETTINGS = stringPreferencesKey("subagent_settings_v1")
     private val CONVERSATION_TITLE_SETTINGS = stringPreferencesKey("conversation_title_settings_v1")
     private val CONTEXT_COMPACTION_SETTINGS = stringPreferencesKey("context_compaction_settings_v1")
@@ -76,6 +78,26 @@ internal object SettingsDataStore {
     suspend fun setWebToolsSettings(settings: WebToolsSettings) {
         ensureInitialized()
         dataStore.edit { it[WEB_TOOLS_SETTINGS] = speechJson.encodeToString(settings) }
+    }
+
+    fun imageGenSettingsFlow(): Flow<ImageGenSettings> {
+        ensureInitialized()
+        return dataStore.data
+            .catch { cause ->
+                if (cause is IOException) emit(emptyPreferences()) else throw cause
+            }
+            .map { prefs ->
+                prefs[IMAGE_GEN_SETTINGS]?.let { raw ->
+                    runCatching { speechJson.decodeFromString<ImageGenSettings>(raw) }.getOrNull()
+                } ?: ImageGenSettings()
+            }
+    }
+
+    suspend fun imageGenSettings(): ImageGenSettings = imageGenSettingsFlow().first()
+
+    suspend fun setImageGenSettings(settings: ImageGenSettings) {
+        ensureInitialized()
+        dataStore.edit { it[IMAGE_GEN_SETTINGS] = speechJson.encodeToString(settings) }
     }
 
     fun subagentSettingsFlow(): Flow<SubagentSettings> {

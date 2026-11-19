@@ -116,6 +116,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.foundation.layout.BoxWithConstraints
+import io.github.mangi.eta.agent.imagegen.ImageGenToolCatalog
 import io.github.mangi.eta.agent.model.AgentFileReferencePromptCodec
 import io.github.mangi.eta.agent.runtime.RunPerformanceSummary
 import io.github.mangi.eta.agent.overlay.toolDisplayName
@@ -135,7 +136,10 @@ import io.github.mangi.eta.ui.model.ToolActivityMessageUi
 import io.github.mangi.eta.ui.model.ToolSummaryMessageUi
 import io.github.mangi.eta.ui.model.UserMessageUi
 import io.github.mangi.eta.ui.voice.SpeechReadAloudButton
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import java.io.File
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.RichTooltip
@@ -151,7 +155,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 internal fun rememberDataUrlBitmap(dataUrl: String): ImageBitmap? {
     val loader = LocalRemoteImageLoader.current
-    if (loader == null || !dataUrl.startsWith("dsh-image:")) return remember(dataUrl) { decodeDataUrlBitmap(dataUrl) }
+    if (loader == null || !dataUrl.startsWith("dsh-image:")) return rememberChatImageBitmap(source = dataUrl, maxDimensionPx = 1600)
     // 电脑会话的图片：按需向电脑取图，在后台线程解码。
     val bitmap by produceState<ImageBitmap?>(null, dataUrl) {
         value = loader(dataUrl)?.let { url -> kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { decodeDataUrlBitmap(url) } }
@@ -159,8 +163,44 @@ internal fun rememberDataUrlBitmap(dataUrl: String): ImageBitmap? {
     return bitmap
 }
 
+/** 聊天图片解码缓存：同一张图（按采样尺寸区分）只解码一次。 */
+private val chatImageBitmapCache = android.util.LruCache<String, ImageBitmap>(48)
+
 /** 电脑会话提供的取图函数：把 `dsh-image:` 地址换成 data URL。本机会话为空。 */
 internal val LocalRemoteImageLoader = androidx.compose.runtime.staticCompositionLocalOf<(suspend (String) -> String?)?> { null }
+
+/**
+ * 统一聊天图片解码器：
+ * - `data:image/...;base64,...` 同步命中/写入 LRU 缓存，保持现有用户预览图零首帧闪烁；
+ * - 本地原图文件（含 AI 生图 1K~4K 高清图）在 IO 线程按 [maxDimensionPx] 采样解码，避免主线程卡顿与 OOM。
+ */
+@Composable
+internal fun rememberChatImageBitmap(
+    source: String,
+    maxDimensionPx: Int = 1600,
+): ImageBitmap? {
+    val cacheKey = remember(source, maxDimensionPx) { "$maxDimensionPx|$source" }
+    val cached = remember(cacheKey) {
+        chatImageBitmapCache.get(cacheKey)
+            ?: if (source.startsWith("data:", ignoreCase = true)) {
+                decodeDataUrlBitmap(source)?.also { chatImageBitmapCache.put(cacheKey, it) }
+            } else {
+                null
+            }
+    }
+    var asyncBitmap by remember(cacheKey) { mutableStateOf(cached) }
+    LaunchedEffect(cacheKey) {
+        if (asyncBitmap != null || source.isBlank() || source.startsWith("data:", ignoreCase = true)) return@LaunchedEffect
+        val decoded = withContext(Dispatchers.IO) {
+            decodeLocalFileBitmap(source, maxDimensionPx)
+        }
+        if (decoded != null) {
+            chatImageBitmapCache.put(cacheKey, decoded)
+            asyncBitmap = decoded
+        }
+    }
+    return asyncBitmap
+}
 
 internal fun decodeDataUrlBitmap(dataUrl: String): ImageBitmap? {
     val base64 = dataUrl.substringAfter("base64,", "")
@@ -168,6 +208,27 @@ internal fun decodeDataUrlBitmap(dataUrl: String): ImageBitmap? {
     return runCatching {
         val bytes = Base64.decode(base64, Base64.NO_WRAP)
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+    }.getOrNull()
+}
+
+private fun decodeLocalFileBitmap(source: String, maxDimensionPx: Int): ImageBitmap? {
+    val file = File(source.removePrefix("file://").trim())
+    if (!file.isFile) return null
+    return runCatching {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        val w = bounds.outWidth
+        val h = bounds.outHeight
+        if (w <= 0 || h <= 0) return null
+        var sample = 1
+        val limit = maxDimensionPx.coerceAtLeast(256)
+        while ((w / sample) > limit || (h / sample) > limit) {
+            sample *= 2
+        }
+        BitmapFactory.decodeFile(
+            file.absolutePath,
+            BitmapFactory.Options().apply { inSampleSize = sample },
+        )?.asImageBitmap()
     }.getOrNull()
 }
 
@@ -224,6 +285,7 @@ internal fun ChatMessageItem(
     onRegenerateMessage: (String) -> Unit = {},
     onBranchMessage: (String) -> Unit = {},
     onSelectReplyCandidate: (String, Int) -> Unit = { _, _ -> },
+    onEditGeneratedImage: ((String) -> Unit)? = null,
 ) {
     when (message) {
         is UserMessageUi -> UserMessageBubble(
@@ -299,13 +361,22 @@ internal fun ChatMessageItem(
             compact = compact,
         )
         is RunTraceMessageUi -> RunTraceRow(message = message, onClick = onRunTraceClick, modifier = modifier)
-        is ToolActivityMessageUi -> ToolActivityInline(
-            message = message,
-            onOpenBrowser = onOpenBrowser,
-            showBrowserShortcut = showBrowserShortcut,
-            modifier = modifier,
-            compact = compact,
-        )
+        is ToolActivityMessageUi -> if (message.toolName == ImageGenToolCatalog.TOOL_NAME) {
+            GeneratedImageMessageCard(
+                message = message,
+                assistantOverlay = assistantOverlay,
+                onEditImage = onEditGeneratedImage,
+                modifier = modifier,
+            )
+        } else {
+            ToolActivityInline(
+                message = message,
+                onOpenBrowser = onOpenBrowser,
+                showBrowserShortcut = showBrowserShortcut,
+                modifier = modifier,
+                compact = compact,
+            )
+        }
         is ToolSummaryMessageUi -> ToolSummaryInline(message = message, modifier = modifier, compact = compact)
         is SuggestionChipsMessageUi -> SuggestionChipsRow(message = message, onSuggestionClick = onSuggestionClick, modifier = modifier)
     }
