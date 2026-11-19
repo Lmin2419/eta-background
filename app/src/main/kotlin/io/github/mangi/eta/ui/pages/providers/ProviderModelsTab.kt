@@ -497,6 +497,7 @@ internal fun ProviderModelsTab(
     editingModel?.let { model ->
         ModelEditDialog(
             nativeGemini = provider is GeminiProviderSetting,
+            vertexGemini = (provider as? GeminiProviderSetting)?.isVertexAi == true,
             model = model,
             isNew = isCreatingModel,
             isSaving = isMutatingModel,
@@ -875,6 +876,7 @@ private fun ModelListItem(
 @Composable
 private fun ModelEditDialog(
     nativeGemini: Boolean,
+    vertexGemini: Boolean,
     model: Model,
     isNew: Boolean,
     isSaving: Boolean,
@@ -884,8 +886,18 @@ private fun ModelEditDialog(
     onDelete: (() -> Unit)?,
 ) {
     val context = LocalContext.current
+    val initialCapabilities = when {
+        vertexGemini -> GeminiModelCapabilities.resolveVertexReasoning(model)
+        nativeGemini -> GeminiModelCapabilities.resolveReasoning(model)
+        else -> model.effectiveReasoningCapabilities
+    }
     var displayName by remember(model.id, isNew) { mutableStateOf(model.displayName) }
     var modelId by remember(model.id, isNew) { mutableStateOf(model.modelId) }
+    val availableEfforts = when {
+        vertexGemini -> GeminiModelCapabilities.requestReasoningCapabilities(modelId).supportedEfforts
+        nativeGemini -> GeminiModelCapabilities.configurableEfforts
+        else -> editableReasoningEfforts
+    }
     var contextWindowOverrideText by remember(model.id, isNew) {
         // 早先拉取、未写入窗口的模型也带着远端标注，打开编辑时直接预填。
         mutableStateOf((model.contextWindowOverride ?: model.contextWindow)?.toString().orEmpty())
@@ -895,10 +907,7 @@ private fun ModelEditDialog(
             model.reasoningOverride != null || model.reasoningCapabilitiesOverride != null
         )
     }
-    // 上游 3.4.2：Gemini 原生连接也可手动开关并选择思考档位，是否支持交给服务端校验。
-    val initialCapabilities = if (nativeGemini) GeminiModelCapabilities.resolveReasoning(model)
-        else model.effectiveReasoningCapabilities
-    val availableEfforts = if (nativeGemini) GeminiModelCapabilities.configurableEfforts else editableReasoningEfforts
+    // 上游 3.4.2：Gemini 原生连接也可手动开关并选择思考档位，是否支持交给服务端校验；Vertex 按 Gemini 4 档位（a8ad5a5d）。
     var reasoningEnabled by remember(model.id, isNew) {
         mutableStateOf(
             if (nativeGemini) model.reasoningOverride ?: initialCapabilities?.supportedEfforts.orEmpty().isNotEmpty()
@@ -914,6 +923,9 @@ private fun ModelEditDialog(
         )
     }
     val contextError = contextWindowInputError(contextWindowOverrideText)
+    val modelIdError = if (vertexGemini && modelId.isNotBlank() && !GeminiModelCapabilities.isGemini4(modelId)) {
+        "Vertex AI 对话仅支持 Gemini 4 系列模型。"
+    } else null
 
     fun resetAutomaticReasoning() {
         reasoningOverrideActive = false
@@ -1105,13 +1117,16 @@ private fun ModelEditDialog(
                     }
                 }
                 Text(
-                    text = if (nativeGemini) "可手动选择档位，是否支持由服务端校验。Default 始终可用。"
-                        else stringResource(R.string.ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d),
+                    text = when {
+                        vertexGemini -> "档位按 Gemini 4 模型提供，Default 始终可用。"
+                        nativeGemini -> "可手动选择档位，是否支持由服务端校验。Default 始终可用。"
+                        else -> stringResource(R.string.ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d)
+                    },
                     style = MiuixTheme.textStyles.footnote2,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     modifier = Modifier.padding(start = 4.dp, top = 8.dp),
                 )
-                error?.let { message ->
+                (modelIdError ?: error)?.let { message ->
                     Text(
                         text = message,
                         style = MiuixTheme.textStyles.footnote2,
@@ -1160,6 +1175,7 @@ private fun ModelEditDialog(
             confirmEnabled = !isSaving &&
                 displayName.isNotBlank() &&
                 modelId.isNotBlank() &&
+                modelIdError == null &&
                 contextError == null,
             cancelEnabled = !isSaving,
             onCancel = onDismiss,

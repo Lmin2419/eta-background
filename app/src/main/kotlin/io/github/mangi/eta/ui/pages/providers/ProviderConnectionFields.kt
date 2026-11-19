@@ -75,7 +75,7 @@ internal fun ProviderConnectionFields(
             selectedIndex = if (isGeminiVertex) 1 else 0,
             enabled = enabled,
             summary = if (isGeminiVertex) {
-                "streamGenerateContent 端点（Vertex AI API Key）"
+                "标准 Vertex AI 接入（Gemini 4）"
             } else {
                 "原生 Interactions API（AI Studio API Key）"
             },
@@ -157,7 +157,7 @@ internal fun ProviderConnectionFields(
                 TextField(
                     value = draft.vertexProject,
                     onValueChange = { onDraftChange(draft.copy(vertexProject = it)) },
-                    label = "Project ID / Number（选填，留空用 Express 端点）",
+                    label = "Project ID / Number（官方端点需要 Google Cloud 项目）",
                     singleLine = true,
                     enabled = enabled,
                     modifier = Modifier.fillMaxWidth(),
@@ -190,7 +190,7 @@ internal fun ProviderConnectionFields(
             )
         }
     }
-    if (provider is GeminiProviderSetting || (draft.endpointMode == OpenAiEndpointMode.RESPONSES && provider !is AnthropicProviderSetting)) {
+    if ((provider is GeminiProviderSetting && !isGeminiVertex) || (draft.endpointMode == OpenAiEndpointMode.RESPONSES && provider !is AnthropicProviderSetting)) {
         EtaPreferenceDivider(hasLeading = false)
         EtaSwitchPreference(
             title = if (provider is GeminiProviderSetting) "Google Search" else stringResource(R.string.ui_server_side_web_search_ddb8e0),

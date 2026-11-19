@@ -35,10 +35,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.EtaApp
 import io.github.mangi.eta.R
-import io.github.mangi.eta.data.model.GeminiEndpointMode
-import io.github.mangi.eta.data.model.GeminiProviderSetting
+import io.github.mangi.eta.data.datastore.SettingsDataStore
 import io.github.mangi.eta.data.model.AnthropicProviderSetting
 import io.github.mangi.eta.data.model.CustomProviderSetting
+import io.github.mangi.eta.data.model.GeminiEndpointMode
+import io.github.mangi.eta.data.model.GeminiProviderSetting
 import io.github.mangi.eta.data.model.OpenAiEndpointMode
 import io.github.mangi.eta.data.model.ProviderSetting
 import io.github.mangi.eta.data.model.withId
@@ -543,14 +544,11 @@ private suspend fun testConnection(
     provider: ProviderSetting,
 ): String {
     if (provider is GeminiProviderSetting && provider.isVertexAi) {
-        return RemoteModelFetcher.testVertexConnection(provider)
-            .map { result ->
-                if (result.usedGlobalFallback) {
-                    "连接成功（已自动回退至 global 端点，验证模型：${result.modelId}）"
-                } else {
-                    "连接成功（已验证模型：${result.modelId}）"
-                }
-            }
+        val selectedModelId = RuntimeConfigRepository.cachedSelectedModelId()
+            ?.takeIf { selected -> provider.models.any { it.id == selected && it.isEnabled } }
+            ?: provider.id.takeIf(String::isNotBlank)?.let { SettingsDataStore.selectedModelIdForProvider(it) }
+        return RemoteModelFetcher.testVertexConnection(provider, preferredModelId = selectedModelId)
+            .map { modelId -> "连接成功（已验证模型：$modelId）" }
             .getOrElse { throwable ->
                 context.getString(
                     R.string.provider_error,
