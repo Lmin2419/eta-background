@@ -1355,6 +1355,7 @@ internal class AgentAppState(
             pendingConversationDeletes.removeAll(batch.ids)
             if (ids.isEmpty()) { batch.onComplete(0); return@forEach }
             ids.forEach(BrowserSessionRegistry::requestRemove)
+            ids.forEach(io.github.mangi.eta.agent.subagent.SubagentSessionStore::clearConversation)
             ids.forEach { id ->
                 titleGenerationJobs.remove(id)?.cancel()
                 pendingAutoTitleFallbacks.remove(id)
