@@ -257,14 +257,34 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit, onOpenCameraRing: () -
                                 },
                             )
                         }
-                        // 智能模式下后台干活亮的是摄像头小光圈：各家机型报的开孔不一定准，可以自己对齐。
                         if (appearance.runtimeGlowStyle == io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART) {
+                            // 2026111624：后台干活时的提示可选摄像头小光圈或顶部流动光条。
                             EtaPreferenceDivider(hasLeading = false)
-                            EtaArrowPreference(
-                                title = stringResource(R.string.camera_ring_title),
-                                summary = stringResource(R.string.camera_ring_entry_summary),
-                                onClick = onOpenCameraRing,
+                            val mark = appearance.runtimeGlowBackgroundMark
+                            EtaOverlayDropdownPreference(
+                                title = stringResource(R.string.appearance_glow_mark),
+                                summary = stringResource(if (mark == io.github.mangi.eta.data.model.AppearanceGlowMark.TOP_BAR)
+                                    R.string.appearance_glow_mark_summary_top_bar else R.string.appearance_glow_mark_summary_camera),
+                                items = listOf(
+                                    stringResource(R.string.appearance_glow_mark_camera),
+                                    stringResource(R.string.appearance_glow_mark_top_bar),
+                                ),
+                                selectedIndex = mark.ordinal,
+                                onSelectedIndexChange = { index ->
+                                    io.github.mangi.eta.data.model.AppearanceGlowMark.entries.getOrNull(index)?.let { picked ->
+                                        update { current -> current.copy(runtimeGlowBackgroundMark = picked) }
+                                    }
+                                },
                             )
+                            // 摄像头小光圈：各家机型报的开孔不一定准，可以自己对齐。
+                            if (mark == io.github.mangi.eta.data.model.AppearanceGlowMark.CAMERA) {
+                                EtaPreferenceDivider(hasLeading = false)
+                                EtaArrowPreference(
+                                    title = stringResource(R.string.camera_ring_title),
+                                    summary = stringResource(R.string.camera_ring_entry_summary),
+                                    onClick = onOpenCameraRing,
+                                )
+                            }
                         }
                     }
                 }

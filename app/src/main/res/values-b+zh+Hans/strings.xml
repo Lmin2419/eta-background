@@ -2006,7 +2006,7 @@
   <string name="appearance_glow_smart">智能</string>
   <string name="appearance_glow_full">整圈</string>
   <string name="appearance_glow_brightness">流光亮度</string>
-  <string name="appearance_glow_summary_smart">AI 操作你的屏幕时亮一圈细光；在后台干活时只在摄像头周围亮个小光圈；开始和结束各提示一下。</string>
+  <string name="appearance_glow_summary_smart">AI 操作你的屏幕时亮一圈细光；在后台干活时只亮摄像头小光圈或顶部光条（下面选）；开始和结束各提示一下。</string>
   <string name="appearance_glow_summary_full">任务运行期间屏幕四周一直亮着。</string>
   <string name="camera_ring_title">摄像头光圈位置</string>
   <string name="camera_ring_entry_summary">光圈没套准摄像头时，在这里调位置和大小</string>
@@ -2021,4 +2021,9 @@
   <string name="camera_ring_reset_summary">按系统报告的摄像头位置重新算</string>
   <string name="light_gui_round_effort_setting">界面操作后少想一点（实验）</string>
   <string name="light_gui_round_effort_setting_summary">上一轮只是看屏幕、点按或等待时，下一轮改用较低的思考强度，出字更快。只对能选思考档位的模型生效，默认关闭</string>
+  <string name="appearance_glow_mark">后台干活时</string>
+  <string name="appearance_glow_mark_camera">摄像头光圈</string>
+  <string name="appearance_glow_mark_top_bar">顶部光条</string>
+  <string name="appearance_glow_mark_summary_camera">摄像头外圈亮一个小光圈。没开胖小胖的无障碍时，流体云展开会把它挡住</string>
+  <string name="appearance_glow_mark_summary_top_bar">屏幕最上沿一道流动细光，两端顺着圆角淡出；在流体云上方，不会被挡住</string>
 </resources>

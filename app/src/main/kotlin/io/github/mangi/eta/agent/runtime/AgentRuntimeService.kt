@@ -114,6 +114,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private var runtimeGlowEnabled = true
     private val runtimeGlowIntensity = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.data.model.AppearanceGlowIntensity.SOFT)
     private var runtimeGlowStyle = io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART
+    private var runtimeGlowMark = io.github.mangi.eta.data.model.AppearanceGlowMark.CAMERA
     // 智能流光：AI 在操作屏幕时四周细光，后台干活时摄像头小光圈（AmbientGlowPolicy）。
     private val glowPresence = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.agent.overlay.GlowPresence.CAMERA)
     // 当前光效窗口是真的在画流光（而不是只为保持亮屏的 1×1 空窗口）。
@@ -186,8 +187,9 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                 taskCompletionAlertsEnabled = appearance.taskCompletionAlertsEnabled
                 runtimeGlowIntensity.value = appearance.runtimeGlowIntensity
                 cameraRingAdjust.value = appearance.cameraRingAdjust()
-                if (runtimeGlowStyle != appearance.runtimeGlowStyle) {
+                if (runtimeGlowStyle != appearance.runtimeGlowStyle || runtimeGlowMark != appearance.runtimeGlowBackgroundMark) {
                     runtimeGlowStyle = appearance.runtimeGlowStyle
+                    runtimeGlowMark = appearance.runtimeGlowBackgroundMark
                     publishExecutionState()
                 }
                 if (runtimeGlowEnabled != appearance.runtimeGlowEnabled) {
@@ -1163,7 +1165,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         val guiNow = guiControl.state.value
         val operatingScreen = !guiNow.userPaused && guiNow.ownerRunId?.let(runs::get)?.session
             ?.let { !it.isTerminal && !it.controller.isPaused && !it.controller.isCancelled } == true
-        glowPresence.value = io.github.mangi.eta.agent.overlay.AmbientGlowPolicy.presence(runtimeGlowStyle, operatingScreen)
+        glowPresence.value = io.github.mangi.eta.agent.overlay.AmbientGlowPolicy.presence(runtimeGlowStyle, operatingScreen, runtimeGlowMark)
         if (selected != null) {
             if (displayedRun !== selected) bindDisplayedRun(selected)
             state.value = selected.overlayState.copy(status = taskStatus(selected),

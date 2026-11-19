@@ -19,6 +19,8 @@ data class AppearanceSettings(
     val runtimeGlowIntensity: AppearanceGlowIntensity = AppearanceGlowIntensity.SOFT,
     /** 流光样式：智能（操作屏幕时四周细光、后台只亮摄像头小光圈）/ 整圈。 */
     val runtimeGlowStyle: AppearanceGlowStyle = AppearanceGlowStyle.SMART,
+    /** 「智能」流光在后台干活时的提示：摄像头外圈小光圈，或屏幕最上沿的流动光条（2026111624）。 */
+    val runtimeGlowBackgroundMark: AppearanceGlowMark = AppearanceGlowMark.CAMERA,
     /** 摄像头小光圈的微调（dp）：左右、上下偏移，宽、高（0 = 按开孔自动）。 */
     val cameraRingOffsetXDp: Float = 0f,
     val cameraRingOffsetYDp: Float = 0f,
@@ -49,6 +51,18 @@ data class AppearanceSettings(
 
 /** 屏幕流光的样式（2026111618）。 */
 @Serializable
+enum class AppearanceGlowMark(val persistedValue: String) {
+    /** 摄像头开孔外圈的小光圈；流体云展开时可能被它挡住。 */
+    CAMERA("camera"),
+    /** 屏幕最上沿一道流动细光，两端顺着屏幕圆角淡出；在流体云上方，不会被挡住。 */
+    TOP_BAR("top_bar");
+
+    companion object {
+        fun fromPersistedValue(value: String?): AppearanceGlowMark =
+            entries.firstOrNull { it.persistedValue == value } ?: CAMERA
+    }
+}
+
 enum class AppearanceGlowStyle(val persistedValue: String) {
     /** AI 操作你的屏幕时四周一圈细光；后台干活时只在摄像头外圈亮小光圈；开始、结束各提示一下。 */
     SMART("smart"),

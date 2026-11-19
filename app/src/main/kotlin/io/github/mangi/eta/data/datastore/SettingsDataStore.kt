@@ -198,6 +198,7 @@ internal object SettingsDataStore {
     private val APPEARANCE_RUNTIME_GLOW_ENABLED = booleanPreferencesKey("appearance_runtime_glow_enabled")
     private val APPEARANCE_RUNTIME_GLOW_INTENSITY = stringPreferencesKey("appearance_runtime_glow_intensity")
     private val APPEARANCE_RUNTIME_GLOW_STYLE = stringPreferencesKey("appearance_runtime_glow_style")
+    private val APPEARANCE_RUNTIME_GLOW_MARK = stringPreferencesKey("appearance_runtime_glow_mark")
     private val APPEARANCE_CAMERA_RING_X = floatPreferencesKey("appearance_camera_ring_offset_x_dp")
     private val APPEARANCE_CAMERA_RING_Y = floatPreferencesKey("appearance_camera_ring_offset_y_dp")
     private val APPEARANCE_CAMERA_RING_WIDTH = floatPreferencesKey("appearance_camera_ring_width_dp")
@@ -399,6 +400,7 @@ internal object SettingsDataStore {
             runtimeGlowEnabled = this[APPEARANCE_RUNTIME_GLOW_ENABLED] ?: true,
             runtimeGlowIntensity = io.github.mangi.eta.data.model.AppearanceGlowIntensity.fromPersistedValue(this[APPEARANCE_RUNTIME_GLOW_INTENSITY]),
             runtimeGlowStyle = io.github.mangi.eta.data.model.AppearanceGlowStyle.fromPersistedValue(this[APPEARANCE_RUNTIME_GLOW_STYLE]),
+            runtimeGlowBackgroundMark = io.github.mangi.eta.data.model.AppearanceGlowMark.fromPersistedValue(this[APPEARANCE_RUNTIME_GLOW_MARK]),
             cameraRingOffsetXDp = this[APPEARANCE_CAMERA_RING_X] ?: 0f,
             cameraRingOffsetYDp = this[APPEARANCE_CAMERA_RING_Y] ?: 0f,
             cameraRingWidthDp = this[APPEARANCE_CAMERA_RING_WIDTH] ?: 0f,
@@ -429,6 +431,7 @@ internal object SettingsDataStore {
         this[APPEARANCE_RUNTIME_GLOW_ENABLED] = settings.runtimeGlowEnabled
         this[APPEARANCE_RUNTIME_GLOW_INTENSITY] = settings.runtimeGlowIntensity.persistedValue
         this[APPEARANCE_RUNTIME_GLOW_STYLE] = settings.runtimeGlowStyle.persistedValue
+        this[APPEARANCE_RUNTIME_GLOW_MARK] = settings.runtimeGlowBackgroundMark.persistedValue
         this[APPEARANCE_CAMERA_RING_X] = settings.cameraRingOffsetXDp
         this[APPEARANCE_CAMERA_RING_Y] = settings.cameraRingOffsetYDp
         this[APPEARANCE_CAMERA_RING_WIDTH] = settings.cameraRingWidthDp

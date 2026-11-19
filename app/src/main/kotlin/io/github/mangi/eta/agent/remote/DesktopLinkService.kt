@@ -256,12 +256,13 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
         val view = overlayView(context) {
             val look = glowLook.value
             val smart = look.runtimeGlowStyle == io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART
-            // 电脑任务对手机来说是「后台干活」：智能模式下只亮摄像头小光圈。
+            // 电脑任务对手机来说是「后台干活」：智能模式下只亮摄像头小光圈或顶部光条（跟外观设置走）。
             AgentOverlayGlow(
                 state = AgentOverlayState.Initial,
                 corners = cornerRadii(context),
                 intensity = look.runtimeGlowIntensity,
-                presence = if (smart) io.github.mangi.eta.agent.overlay.GlowPresence.CAMERA else io.github.mangi.eta.agent.overlay.GlowPresence.EDGE,
+                presence = io.github.mangi.eta.agent.overlay.AmbientGlowPolicy.presence(
+                    look.runtimeGlowStyle, mainScreenOwned = false, mark = look.runtimeGlowBackgroundMark),
                 cameraCutout = remember { io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(context) },
                 startSweep = smart,
                 ringAdjust = look.cameraRingAdjust(),

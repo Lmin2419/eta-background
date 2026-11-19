@@ -135,7 +135,7 @@ internal fun AgentOverlayGlow(
     state: AgentOverlayState,
     corners: ScreenCornerRadii,
     intensity: io.github.mangi.eta.data.model.AppearanceGlowIntensity = io.github.mangi.eta.data.model.AppearanceGlowIntensity.STANDARD,
-    /** 智能流光：EDGE = 屏幕四周细光（AI 在操作屏幕），CAMERA = 摄像头外圈小光圈（后台干活）。 */
+    /** 智能流光：EDGE = 屏幕四周细光（AI 在操作屏幕）；后台干活时 CAMERA = 摄像头外圈小光圈，TOP_BAR = 顶部流动光条。 */
     presence: GlowPresence = GlowPresence.EDGE,
     /** 摄像头开孔在屏幕上的位置；null 时小光圈退到顶边正中。 */
     cameraCutout: android.graphics.RectF? = null,
@@ -158,6 +158,8 @@ internal fun AgentOverlayGlow(
     val reveal by animateFloatAsState(if (shown) 1f else 0f, tween(motion.long, easing = motion.emphasizedDecelerate), label = "edge_reveal")
     // 边框与小光圈之间淡入淡出地切换（AI 开始 / 停止操作屏幕时）。
     val edgeWeight by animateFloatAsState(if (presence == GlowPresence.EDGE) 1f else 0f, tween(motion.medium, easing = motion.standard), label = "edge_weight")
+    val ringWeight by animateFloatAsState(if (presence == GlowPresence.CAMERA) 1f else 0f, tween(motion.medium, easing = motion.standard), label = "ring_weight")
+    val barWeight by animateFloatAsState(if (presence == GlowPresence.TOP_BAR) 1f else 0f, tween(motion.medium, easing = motion.standard), label = "bar_weight")
 
     val rotation = if (running && !motion.reduceMotion) {
         val transition = rememberInfiniteTransition(label = "edge_light")
@@ -168,12 +170,23 @@ internal fun AgentOverlayGlow(
             label = "edge_rotation",
         )
     } else null
+    // 顶部光条的亮光从正中流向两侧，一次 2.4 秒；只在用到光条时才跑这个动画。
+    val flow = if (running && !motion.reduceMotion && presence == GlowPresence.TOP_BAR) {
+        val transition = rememberInfiniteTransition(label = "top_bar")
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(TopBarGeometry.FLOW_MS, easing = LinearEasing), RepeatMode.Restart),
+            label = "top_bar_flow",
+        )
+    } else null
     val colors = remember { EdgeLightColors.map { it.toArgb() }.toIntArray() }
 
     Box(
         modifier = Modifier.fillMaxSize().drawBehind {
             val density = this.density
             val edge = screenEdgePath(size.width, size.height, corners, density)
+            val cornerRadius = corners.radius
             val angle = rotation?.value ?: 0f
             // 开始流光跑的时候，常驻光效跟着它慢慢亮起来，不抢它的风头。
             val settle = reveal * (0.25f + 0.75f * sweep.value)
@@ -188,7 +201,9 @@ internal fun AgentOverlayGlow(
                         color = pausedAccent.copy(alpha = 0.58f * intensity.lineAlpha * reveal * edgeWeight).toArgb()
                     }
                     if (edgeWeight > 0f) native.drawPath(edge, paint)
-                    native.drawCameraRing(ring, colors, 0f, intensity, density, reveal * (1f - edgeWeight),
+                    native.drawCameraRing(ring, colors, 0f, intensity, density, reveal * ringWeight,
+                        pausedColor = pausedAccent.toArgb())
+                    native.drawTopBar(edge, size.width, cornerRadius, colors, 0f, intensity, density, reveal * barWeight,
                         pausedColor = pausedAccent.toArgb())
                     return@drawIntoCanvas
                 }
@@ -197,7 +212,10 @@ internal fun AgentOverlayGlow(
                     native.drawPath(edge, halo)
                     native.drawPath(edge, line)
                 }
-                if (edgeWeight < 1f) native.drawCameraRing(ring, colors, angle * 2f, intensity, density, settle * (1f - edgeWeight))
+                if (ringWeight > 0f) native.drawCameraRing(ring, colors, angle * 2f, intensity, density, settle * ringWeight)
+                // 减弱动效时光条不流动，停在两团亮光刚分开的位置。
+                if (barWeight > 0f) native.drawTopBar(edge, size.width, cornerRadius, colors, flow?.value ?: 0.35f,
+                    intensity, density, settle * barWeight)
             }
         }
     )

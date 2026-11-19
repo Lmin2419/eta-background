@@ -2033,7 +2033,7 @@
   <string name="appearance_glow_smart">Smart</string>
   <string name="appearance_glow_full">Full edge</string>
   <string name="appearance_glow_brightness">Glow brightness</string>
-  <string name="appearance_glow_summary_smart">A thin edge line only while the AI operates your screen; a small ring around the camera while it works in the background; a brief cue when tasks start and finish.</string>
+  <string name="appearance_glow_summary_smart">A thin edge line only while the AI operates your screen; a camera ring or a top light bar (pick below) while it works in the background; a brief cue when tasks start and finish.</string>
   <string name="appearance_glow_summary_full">Edge light around the whole screen for as long as a task runs.</string>
   <string name="camera_ring_title">Camera ring position</string>
   <string name="camera_ring_entry_summary">If the ring doesn\'t sit around your camera, adjust its position and size here</string>
@@ -2048,4 +2048,9 @@
   <string name="camera_ring_reset_summary">Use the camera position reported by the system again</string>
   <string name="light_gui_round_effort_setting">Lighter thinking after screen steps (experiment)</string>
   <string name="light_gui_round_effort_setting_summary">After a round that only looked at, tapped or waited on the screen, the next round uses a lower reasoning level so it answers sooner. Only models with selectable levels are affected. Off by default</string>
+  <string name="appearance_glow_mark">While working in the background</string>
+  <string name="appearance_glow_mark_camera">Camera ring</string>
+  <string name="appearance_glow_mark_top_bar">Top light bar</string>
+  <string name="appearance_glow_mark_summary_camera">A small ring around the front camera. An expanded live capsule may cover it unless 胖小胖\'s accessibility service is on</string>
+  <string name="appearance_glow_mark_summary_top_bar">A thin flowing light along the very top edge; it follows the rounded corners and fades out there, and stays above the live capsule</string>
 </resources>
