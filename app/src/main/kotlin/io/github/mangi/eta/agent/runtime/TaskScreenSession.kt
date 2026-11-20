@@ -734,10 +734,12 @@ internal class TaskScreenSession(
         // 返回、主页、最近任务不点任何元素：不看 observation_id（带了旧编号也不拦），只核对屏幕和应用没变；
         // 手上没有观察时程序自己读一次，不再让模型多跑一轮。回车可能提交表单：带了编号仍核对是不是最近一次观察。
         // 连按两次返回、「输入 + 回车」可以同一轮发出。
-        val snapshot = if (code == 66 && args.optString("observation_id").isNotBlank()) {
+        val held = if (code == 66 && args.optString("observation_id").isNotBlank()) {
             requireObservation("press_key", args) ?: return observationError("press_key", args)
-        } else currentObservation() ?: observeForKey() ?: return observationError("press_key", JSONObject())
-        validateLiveSnapshot(snapshot, "press_key")?.let { return it }
+        } else currentObservation()
+        if (held != null) validateLiveSnapshot(held, "press_key")?.let { return it }
+        // 刚自己读的画面就是现在的画面，不用再核对一遍。
+        else observeForKey() ?: return observationError("press_key", JSONObject())
         return mutateAndInvalidate(
             "screen_key",
             JSONObject().put("code", code),
@@ -920,14 +922,21 @@ internal class TaskScreenSession(
         val before = synchronized(lock) { observation }
         invalidateObservation()
         var result = JSONObject()
+        var completed = 0
         for ((index, step) in steps.withIndex()) {
             if (index > 0) controller.throwIfCancelled()
             result = backendResult(step.first, step.second)
             if (!result.optBoolean("ok")) break
+            completed++
             if (index > 0) result.put("submitted", true)
         }
+        // 多步动作（写字 + 回车）前面的步骤已经做了、后面的失败：屏幕已经变了，照样回看，并写明做到第几步。
+        if (completed in 1 until steps.size) {
+            result.put("completed_steps", completed)
+                .put("note", "前 $completed 步已经执行（如文字已写入），第 ${completed + 1} 步没有成功；按 after 里的新画面决定下一步")
+        }
         val dispatched = result.optBoolean("ok") || result.optBoolean("operationMayHaveRun") ||
-            result.optString("code") == "ACTION_OUTCOME_UNKNOWN"
+            result.optString("code") == "ACTION_OUTCOME_UNKNOWN" || completed > 0
         if (!dispatched) {
             // 后端明确说没执行（例如防重试拦下的 NO_PROGRESS）：屏幕没动过，刚才的观察仍然有效，
             // 下一步（比如按返回）不用再先 observe_screen。说不清有没有执行的不恢复。
@@ -952,18 +961,26 @@ internal class TaskScreenSession(
             if (settle) backendResult("screen_wait", JSONObject().put("timeout_ms", settleMs))
             val limit = before?.takeIf { it.treeRead }?.limit ?: AgentScreenObservationContract.DEFAULT_MAX_NODES
             val options = AgentScreenObservationContract.Options(includeScreenshot = false, includeUiTree = true, maxNodes = limit)
-            var outcome = capture(options, autoScreenshot = !lateChangeExpected(toolName, before))
+            val recheck = lateChangeExpected(toolName, before)
+            // 可能还要再看的时候先只读树（省掉一次截图），定下最终画面后再按需补截图。
+            var outcome = capture(options, autoScreenshot = !recheck)
             // 点完页面没变：多半是详情页、路线页还在加载。再看两次（各约 0.6 秒），
             // 免得模型以为没点上、再点一次被防重试拦下。树读不出内容（画布、地图）时不等，判断不了。
             var rechecks = 0
-            while (lateChangeExpected(toolName, before) && rechecks < LATE_CHANGE_CHECKS && !controller.isCancelled &&
+            while (recheck && rechecks < LATE_CHANGE_CHECKS && !controller.isCancelled &&
                 (outcome as? Capture.Done)?.snapshot?.fingerprint == before?.fingerprint
             ) {
                 controller.awaitRetryDelay(LATE_CHANGE_DELAY_MS)
                 rechecks++
-                outcome = capture(options, autoScreenshot = rechecks == LATE_CHANGE_CHECKS)
+                outcome = capture(options, autoScreenshot = false)
             }
             if (rechecks > 0) result.put("late_change_checks", rechecks)
+            // 新页面的树读不出内容（网页、Flutter 这类）：和平时一样顺带截图，不让模型再要一轮。
+            val final = outcome
+            if (recheck && final is Capture.Done && !final.snapshot.screenshotRead && final.snapshot.displayWidth != null &&
+                final.snapshot.displayHeight != null && ScreenSparseness.needsScreenshot(final.snapshot.nodes.map { it.sparseView() },
+                    final.snapshot.displayWidth, final.snapshot.displayHeight)
+            ) outcome = capture(options, autoScreenshot = true)
             // 回看没读成（页面正在切换时读树、截图偶尔失败）：隔 0.3 秒再读一次。还是不行就在结果里写明，
             // 让模型先 observe_screen，而不是拿旧截图的坐标去点、被「必须先观察」拒掉。
             if (outcome is Capture.Failed && !controller.isCancelled) {

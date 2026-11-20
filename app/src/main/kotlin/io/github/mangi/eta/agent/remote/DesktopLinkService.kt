@@ -67,7 +67,7 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var glowView: ComposeView? = null
     private var endPulseView: ComposeView? = null
-    private var glowParams: WindowManager.LayoutParams? = null
+    private var glowWindowParams: WindowManager.LayoutParams? = null
     private var endPulseParams: WindowManager.LayoutParams? = null
     /** 摄像头开孔位置；横竖屏切换后重新取（2026111625）。 */
     private val glowCutout = androidx.compose.runtime.mutableStateOf<android.graphics.RectF?>(null)
@@ -76,7 +76,7 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
             val context = AgentAccessibilityService.current() ?: this
             val wm = context.getSystemService(WindowManager::class.java) ?: return@DisplayRotationWatcher
             glowCutout.value = io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(context)
-            io.github.mangi.eta.agent.overlay.DisplayRotationWatcher.refit(wm, glowView, glowParams)
+            io.github.mangi.eta.agent.overlay.DisplayRotationWatcher.refit(wm, glowView, glowWindowParams)
             io.github.mangi.eta.agent.overlay.DisplayRotationWatcher.refit(wm, endPulseView, endPulseParams)
         }
     }
@@ -285,7 +285,7 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
         glowCutout.value = io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(context)
         rotationWatcher.start()
         val params = glowParams(wm, accessibility)
-        runCatching { wm.addView(view, params) }.onSuccess { glowView = view; glowParams = params }
+        runCatching { wm.addView(view, params) }.onSuccess { glowView = view; glowWindowParams = params }
     }
 
     private fun glowParams(wm: WindowManager, accessibility: Boolean): WindowManager.LayoutParams {

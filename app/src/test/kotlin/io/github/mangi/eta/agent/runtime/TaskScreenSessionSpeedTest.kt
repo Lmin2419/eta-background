@@ -193,14 +193,49 @@ class TaskScreenSessionSpeedTest {
         val id = launched.getJSONObject("after").getString("observation_id")
         assertFalse(launched.has("observation_required"))
         assertTrue(tools.run("tap_element", JSONObject().put("index", 0).put("observation_id", id)).getBoolean("ok"))
-        // 手上没有观察（读树失败后）时按返回：程序自己读一次再按（读树 + 动作前核对 + 按键）。
+        // 手上没有观察（读树失败后）时按返回：程序自己读一次就按（刚读的就是现在的画面，不再核对一遍）。
         backend.tapReply = """{"ok":false,"code":"BACKGROUND_TOOL_UNAVAILABLE"}"""
         tools.run("tap_element", JSONObject().put("index", 0).put("observation_id",
             tools.run("observe_screen").getString("observation_id")))
         val start = backend.calls.size
         val back = tools.run("press_key", JSONObject().put("button", "BACK"))
         assertTrue(back.toString(), back.getBoolean("ok"))
-        assertEquals(listOf("screen_dump", "screen_dump", "screen_key"), backend.names().drop(start).take(3))
+        assertEquals(listOf("screen_dump", "screen_key"), backend.names().drop(start).take(2))
+    }
+
+    /** 写字成功、回车失败：文字已经写进去了，不能把旧画面当成没动过，要回看并写明做到第几步。 */
+    @Test fun aHalfDoneTypeAndSubmitStillLooksAgainAndSaysHowFarItGot() {
+        val backend = object : ScreenToolBackend {
+            val inner = Backend().apply { nodes = listOf(input("", focused = true), label("搜索", 0, 0, 200, 80)) }
+            override fun execute(name: String, arguments: String): String =
+                if (name == "screen_key") """{"ok":false,"code":"KEY_FAILED","operationMayHaveRun":false}""" else inner.execute(name, arguments)
+        }
+        val tools = TaskScreenSession(runId = "speed-partial", controller = AgentRunController(), backend = backend,
+            readScreenshot = { AgentModelClient.ToolResult("{}") })
+        tools.run("launch_app", JSONObject().put("package_name", "app.one").put("execution_location", "background"))
+        val old = tools.run("observe_screen").getString("observation_id")
+        val typed = tools.run("type_text", JSONObject().put("text", "高德").put("submit", true))
+        assertFalse(typed.getBoolean("ok"))
+        assertEquals(1, typed.getInt("completed_steps"))
+        val fresh = typed.getJSONObject("after").getString("observation_id")
+        assertNotEquals(old, fresh)
+        // 旧编号不能再用来点（画面已经变了）。
+        assertEquals("OBSERVATION_MISMATCH", tools.run("tap_element", JSONObject().put("index", 1).put("observation_id", old)).getString("code"))
+    }
+
+    /** 点完先只读树看有没有变；变成读不出内容的页面时照样顺带截图。 */
+    @Test fun aTapIntoASparsePageStillGetsItsScreenshot() {
+        val page = List(6) { label("第 $it 项", 0, 120 * it, 600, 120 * it + 100) } + button("确定", 0, 900, 200, 1000)
+        val backend = Backend().apply { nodes = page }
+        val tools = session(backend)
+        val id = tools.run("observe_screen").getString("observation_id")
+        // 第 1 次读树是启动后回看，第 2 次是 observe_screen，第 3 次动作前核对，第 4 次起是点完之后。
+        backend.beforeDump = { n -> if (n >= 4) backend.nodes = listOf(view("android.webkit.WebView", 0, 0, 1080, 2400)) }
+        val tapped = tools.execute(call("tap_element", JSONObject().put("index", 6).put("observation_id", id).toString()))!!
+        val after = JSONObject(tapped.content).getJSONObject("after")
+        assertTrue(after.getBoolean("screen_changed"))
+        assertEquals("sparse_ui_tree", after.getString("screenshot_reason"))
+        assertEquals(1, tapped.images.size)
     }
 
     @Test fun aSlowPageAfterATapIsWaitedForBeforeSayingNothingChanged() {
