@@ -62,13 +62,43 @@ class BackgroundScreenRecoveryTest {
 
     @Test fun cleanupPendingRetriesAreBoundedAndDoNotForceStopOrCreateAnotherBinding() {
         val connection = Connection().apply { pendingLaunches = 100 }
-        val tools = BackgroundScreenTools("bounded-cleanup", AgentRunController(), registry = ScreenLeaseRegistry(), connectionFactory = { connection })
+        val tools = BackgroundScreenTools("bounded-cleanup", AgentRunController(), registry = ScreenLeaseRegistry(),
+            connectionFactory = { connection }, cleanupWaitMs = 300)
         try {
             val result = org.json.JSONObject(tools.execute("screen_open", """{"package":"app.one"}""")!!)
             assertEquals("RELEASING", result.getJSONObject("recovery").getString("state"))
-            assertEquals(4, connection.calls.size)
+            assertTrue(connection.calls.size.toString(), connection.calls.size in 2..5)
             assertTrue(connection.calls.all { it == "screen_open" })
         } finally { tools.close() }
+    }
+
+    /** 2026111625：应用被切到主屏后，引擎要等一两秒才收掉旧屏；以前只等 0.75 秒就放弃，看起来就是「拉不回去」。 */
+    @Test fun reclaimWaitsLongEnoughForTheEngineToRetireTheOldScreen() {
+        val connection = Connection().apply { pendingLaunches = 4 }
+        val tools = BackgroundScreenTools("slow-cleanup", AgentRunController(), registry = ScreenLeaseRegistry(),
+            connectionFactory = { connection }, cleanupWaitMs = 5_000)
+        try {
+            assertEquals("{\"ok\":true}", tools.execute("screen_open", """{"package":"app.one"}"""))
+            assertEquals(5, connection.calls.count { it == "screen_open" })
+        } finally { tools.close() }
+    }
+
+    /** 用户点「继续」后的第一次 launch_app 直接去接回应用，不再先被旧的「已被接管」拦下。 */
+    @Test fun afterResumingFromATakeoverTheNextLaunchReclaimsTheApp() {
+        val connections = CopyOnWriteArrayList<Connection>()
+        val controller = AgentRunController()
+        val tools = BackgroundScreenTools("reclaim", controller, registry = ScreenLeaseRegistry(),
+            connectionFactory = { Connection().also(connections::add) })
+        try {
+            tools.execute("screen_open", "{\"package\":\"app.one\"}")
+            connections.single().onTakeover!!.invoke()
+            assertTrue(controller.pausedForAppTakeover)
+            controller.resume()
+            val reopened = org.json.JSONObject(tools.execute("screen_open", "{\"package\":\"app.one\"}")!!)
+            assertTrue(reopened.toString(), reopened.getBoolean("ok"))
+            assertEquals(2, connections.size)
+            assertEquals(listOf("screen_open"), connections.last().calls.toList())
+        } finally { controller.cancel(); tools.close() }
     }
 
     @Test fun resumedTaskMustObserveBeforeApplyingOldCoordinates() {

@@ -16,8 +16,12 @@ internal object BackgroundRecoveryPolicy {
                 message = "未静止不等于卡死。观察目标按钮或等待指定文字，不重复等待整页静止。"
             }
             code == "APP_TAKEN_OVER" -> {
-                state = "USER_TAKEOVER"; action = "WAIT_FOR_USER"
-                message = "应用已移出后台，等待用户决定；不要拉回、强停或重开。"
+                // 应用被切到主屏时任务会暂停，模型读到这条结果时用户已经点了「继续」（2026111625）。
+                state = "USER_TAKEOVER"; action = "RECLAIM_TO_BACKGROUND"
+                message = "应用被切到了主屏，任务已暂停；你看到这条时用户已选择继续。要接着在后台操作，先用 launch_app" +
+                    "（execution_location=background）把应用接回后台屏（会保留页面状态），再 observe_screen；" +
+                    "不要重放旧输入，不要强停，也不要改走前台操作。"
+                result.put("message", message).put("error", message)
             }
             code == "CLEANUP_PENDING" -> {
                 state = "RELEASING"; action = "CHECK_STATE"

@@ -77,6 +77,8 @@ internal class BackgroundScreenTools(
     private val registry: ScreenLeaseRegistry = sharedLeases,
     private val connectionFactory: (String) -> ScreenToolConnection = ::ShadowScreenConnection,
     private val retryDelayMs: Long = 150,
+    /** 等引擎收掉旧屏最多多久（测试里调小）。 */
+    private val cleanupWaitMs: Long = CLEANUP_WAIT_MS,
 ) : AutoCloseable, ScreenToolBackend {
     private class Binding(val id: String, val app: String, val tools: ScreenToolConnection) {
         val closing = java.util.concurrent.atomic.AtomicBoolean()
@@ -91,12 +93,15 @@ internal class BackgroundScreenTools(
     @Volatile private var phase: BackgroundScreenPhase? = null
     private var observedGeneration = controller.resumeGeneration
     private val takeoverPending = java.util.concurrent.atomic.AtomicBoolean()
+    /** 应用被切到主屏、任务因此暂停时的恢复代数；用户点「继续」后代数变了，旧的「已被接管」就不再拦。 */
+    @Volatile private var takeoverGeneration = -1L
 
     private fun pauseForTakeover(value: Binding) {
         synchronized(lock) {
             if (binding !== value || closed || value.closing.get() || controller.isCancelled ||
                 !value.takenOver.compareAndSet(false, true)) return
             takeoverPending.set(true)
+            takeoverGeneration = controller.resumeGeneration
             controller.pause(forAppTakeover = true)
         }
         // Publish the existing paused status even when no opening/closing phase was active.
@@ -151,7 +156,10 @@ internal class BackgroundScreenTools(
     private fun executeInternal(name: String, arguments: String): String? {
         if (!name.startsWith("screen_") && name != "terminal") return null
         controller.throwIfCancelled()
-        if (takeoverPending.getAndSet(false)) return """{"ok":false,"code":"APP_TAKEN_OVER","error":"应用已离开后台屏，原后台操作已暂停。用户恢复后请重新观察并取得后台屏，不能重放旧输入或自动切换到前台操作。"}"""
+        // 2026111625：用户点了「继续」之后的 launch_app 就是要把应用接回后台屏。以前这里还会先回一次 APP_TAKEN_OVER
+        // （附带「不要拉回」），接回动作根本没发出去。其他工具仍照旧补报一次，让模型知道应用被切走过。
+        val reclaiming = name == "screen_open" && controller.resumeGeneration != takeoverGeneration
+        if (takeoverPending.getAndSet(false) && !reclaiming) return """{"ok":false,"code":"APP_TAKEN_OVER","error":"应用已离开后台屏，原后台操作已暂停。用户恢复后请重新观察并取得后台屏，不能重放旧输入或自动切换到前台操作。"}"""
         if (binding != null && controller.resumeGeneration != observedGeneration && name in MUTATING_TOOLS) {
             return """{"ok":false,"code":"OBSERVE_AFTER_RESUME","error":"暂停后页面可能已经变化，请先调用 observe_screen 重新观察，再决定下一步。此操作尚未执行。"}"""
         }
@@ -194,15 +202,15 @@ internal class BackgroundScreenTools(
             val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30)
             controller.throwIfCancelled()
             var result = controller.withScreenOperation { next.tools.execute(name, arguments) }
-            var cleanupRetries = 0
             // A parked screen may need asynchronous engine cleanup after the app lease
             // has been returned. Retry only the explicit pre-launch rejection, never a timeout.
+            // 2026111625：应用被切到主屏后，引擎要等它在主屏的窗口稳定（或最多约 4 秒）才收掉旧屏，
+            // 以前只等 3×0.25 秒就把 CLEANUP_PENDING 交给模型，看起来就是「拉不回去」。现在最多等 [CLEANUP_WAIT_MS]。
+            val cleanupDeadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(cleanupWaitMs)
             while (runCatching { JSONObject(result.orEmpty()).optString("code") == "CLEANUP_PENDING" }.getOrDefault(false)
-                && cleanupRetries < 3 && System.nanoTime() < deadline) {
-                cleanupRetries++
+                && System.nanoTime() < minOf(deadline, cleanupDeadline)) {
                 phase(BackgroundScreenPhase.ReleasingScreen)
-                Thread.sleep(250)
-                controller.throwIfCancelled()
+                controller.awaitRetryDelay(minOf(CLEANUP_RETRY_MS, cleanupWaitMs))
                 result = controller.withScreenOperation { next.tools.execute(name, arguments) }
             }
             if (runCatching { JSONObject(result.orEmpty()).optBoolean("ok") }.getOrDefault(false)) {
@@ -298,6 +306,9 @@ internal class BackgroundScreenTools(
     }
 
     companion object {
+        /** 等引擎收掉旧屏（应用被切到主屏后的交还）最多多久；引擎那边最多约 4 秒，再留出巡检间隔。 */
+        internal const val CLEANUP_WAIT_MS = 10_000L
+        internal const val CLEANUP_RETRY_MS = 400L
         private val LOST_SESSION_CODES = setOf("NO_SESSION", "SESSION_CLOSED", "STALE_SCREEN", "SYSTEM_RESTARTED")
         internal val MUTATING_TOOLS = setOf("screen_tap", "screen_click", "screen_press", "screen_swipe", "screen_drag", "screen_scroll", "screen_text", "screen_key")
         private val OBSERVATION_TOOLS = setOf("screen_dump", "screen_list", "screen_shot")

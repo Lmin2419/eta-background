@@ -119,6 +119,12 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private val glowPresence = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.agent.overlay.GlowPresence.CAMERA)
     // 当前光效窗口是真的在画流光（而不是只为保持亮屏的 1×1 空窗口）。
     private var glowWindowVisual = false
+    /** 摄像头开孔位置；横竖屏切换后重新取（2026111625）。 */
+    private val glowCutout = androidx.compose.runtime.mutableStateOf<android.graphics.RectF?>(null)
+    private var endPulseParams: WindowManager.LayoutParams? = null
+    private val rotationWatcher by lazy {
+        io.github.mangi.eta.agent.overlay.DisplayRotationWatcher(this) { refitGlowWindows() }
+    }
     private var endPulseView: ComposeView? = null
     private val cameraRingAdjust = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.agent.overlay.CameraRingAdjust.AUTO)
     // Fail closed until the persisted preference is loaded; this controls only the legacy fallback.
@@ -225,6 +231,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     }
 
     override fun onDestroy() {
+        rotationWatcher.stop()
         destroyed = true
         pendingStarts.clear()
         taskStates.value = emptyList()
@@ -1254,7 +1261,8 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         }
         if ((showGlow || keepScreenOn.value) && glowView == null) {
             val corners = screenCornerRadii()
-            val cutout = io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(overlayContext())
+            glowCutout.value = io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(overlayContext())
+            rotationWatcher.start()
             val sweep = runtimeGlowStyle == io.github.mangi.eta.data.model.AppearanceGlowStyle.SMART
             val glow = createOverlayComposeView {
                 if (showGlow) {
@@ -1263,7 +1271,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
                         onDispose { io.github.mangi.eta.agent.overlay.AmbientGlowRegistry.phoneGlowShowing.value = false }
                     }
                     AgentOverlayGlow(state = ambientState.value, corners = corners, intensity = runtimeGlowIntensity.value,
-                        presence = glowPresence.value, cameraCutout = cutout, startSweep = sweep, ringAdjust = cameraRingAdjust.value)
+                        presence = glowPresence.value, cameraCutout = glowCutout.value, startSweep = sweep, ringAdjust = cameraRingAdjust.value)
                 }
             }
             val glowLp = glowLayoutParams().apply {
@@ -1576,6 +1584,14 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     private fun overlayContext(): Context =
         AgentAccessibilityService.current() ?: this
 
+    /** 横竖屏切换后：光效窗口按新的屏幕大小铺满，开孔位置重新取。 */
+    private fun refitGlowWindows() {
+        val wm = windowManager ?: return
+        glowCutout.value = io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(overlayContext())
+        io.github.mangi.eta.agent.overlay.DisplayRotationWatcher.refit(wm, glowView, glowParams)
+        io.github.mangi.eta.agent.overlay.DisplayRotationWatcher.refit(wm, endPulseView, endPulseParams)
+    }
+
     @Suppress("DEPRECATION")
     private fun glowLayoutParams(): WindowManager.LayoutParams {
         // 真实屏幕高度（含状态栏 + 导航栏），MATCH_PARENT 在部分设备不含系统栏
@@ -1617,8 +1633,9 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         val view = createOverlayComposeView {
             AgentOverlayEndPulse(corners, intensity) { mainHandler.post { removeEndPulse() } }
         }
-        runCatching { wm.addView(view, glowLayoutParams()) }
-            .onSuccess { endPulseView = view }
+        val params = glowLayoutParams()
+        runCatching { wm.addView(view, params) }
+            .onSuccess { endPulseView = view; endPulseParams = params }
             .onFailure { throwable ->
                 AndroidAgentLogger.warnThrottled("runtime_end_pulse_add_view_failed") {
                     "Agent runtime end pulse addView failed: type=${throwable.safeLogType()}"

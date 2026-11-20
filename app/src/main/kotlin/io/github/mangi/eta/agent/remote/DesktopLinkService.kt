@@ -67,6 +67,19 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var glowView: ComposeView? = null
     private var endPulseView: ComposeView? = null
+    private var glowParams: WindowManager.LayoutParams? = null
+    private var endPulseParams: WindowManager.LayoutParams? = null
+    /** 摄像头开孔位置；横竖屏切换后重新取（2026111625）。 */
+    private val glowCutout = androidx.compose.runtime.mutableStateOf<android.graphics.RectF?>(null)
+    private val rotationWatcher by lazy {
+        io.github.mangi.eta.agent.overlay.DisplayRotationWatcher(this) {
+            val context = AgentAccessibilityService.current() ?: this
+            val wm = context.getSystemService(WindowManager::class.java) ?: return@DisplayRotationWatcher
+            glowCutout.value = io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(context)
+            io.github.mangi.eta.agent.overlay.DisplayRotationWatcher.refit(wm, glowView, glowParams)
+            io.github.mangi.eta.agent.overlay.DisplayRotationWatcher.refit(wm, endPulseView, endPulseParams)
+        }
+    }
     // 电脑任务要不要亮流光（开关打开且电脑上有任务在跑）；真正显示还要看外观设置和手机流光。
     private val glowWanted = MutableStateFlow(false)
     private val glowLook = androidx.compose.runtime.mutableStateOf(io.github.mangi.eta.data.model.AppearanceSettings())
@@ -129,6 +142,7 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        rotationWatcher.stop()
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         reminders?.stop()
         updateGlow(false)
@@ -263,12 +277,15 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
                 intensity = look.runtimeGlowIntensity,
                 presence = io.github.mangi.eta.agent.overlay.AmbientGlowPolicy.presence(
                     look.runtimeGlowStyle, mainScreenOwned = false, mark = look.runtimeGlowBackgroundMark),
-                cameraCutout = remember { io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(context) },
+                cameraCutout = glowCutout.value,
                 startSweep = smart,
                 ringAdjust = look.cameraRingAdjust(),
             )
         }
-        runCatching { wm.addView(view, glowParams(wm, accessibility)) }.onSuccess { glowView = view }
+        glowCutout.value = io.github.mangi.eta.agent.overlay.CameraCutoutLocator.bounds(context)
+        rotationWatcher.start()
+        val params = glowParams(wm, accessibility)
+        runCatching { wm.addView(view, params) }.onSuccess { glowView = view; glowParams = params }
     }
 
     private fun glowParams(wm: WindowManager, accessibility: Boolean): WindowManager.LayoutParams {
@@ -322,7 +339,8 @@ internal class DesktopLinkService : Service(), LifecycleOwner, SavedStateRegistr
         val view = overlayView(context) {
             io.github.mangi.eta.agent.overlay.AgentOverlayEndPulse(corners, intensity) { scope.launch { removeEndPulse() } }
         }
-        runCatching { wm.addView(view, glowParams(wm, accessibility)) }.onSuccess { endPulseView = view }
+        val params = glowParams(wm, accessibility)
+        runCatching { wm.addView(view, params) }.onSuccess { endPulseView = view; endPulseParams = params }
     }
 
     private fun removeEndPulse() {

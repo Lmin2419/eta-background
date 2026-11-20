@@ -303,6 +303,28 @@ public class VDriveLifecycleTest {
         assertEquals(0, worker.moves); // Recents already moved it; never move/relaunch it again.
     }
 
+    /** 2026111625: the user switched the app to the front and then left it before its window settled. */
+    @Test public void handoffFinishesWhenTheUserLeftTheAppBeforeItsWindowSettled() throws Exception {
+        worker = new Worker(RuntimeEnvironment.getApplication());
+        worker.realPatrol = true;
+        worker.tasks = java.util.Collections.singletonList(new RootTask());
+        VDriveWorker.Session session = worker.new Session("audit.left");
+        session.reader = ImageReader.newInstance(32, 64, PixelFormat.RGBA_8888, 3);
+        session.vd = worker.dm.createVirtualDisplay("left", 32, 64, 160, session.reader.getSurface(), 0);
+        session.displayId = session.vd.getDisplay().getDisplayId(); session.taskId = 71;
+        worker.sessions.put(session.pkg, session); worker.load(session);
+        worker.windowReady = false; // the app is no longer the focused window anywhere
+        worker.tickSession(session, 1000);
+        assertTrue(worker.isTakenOver());
+        worker.tickSession(session, 3000);
+        assertNotNull("Within the give-up window the surface is still kept", session.reader);
+        worker.tickSession(session, 1000 + VDriveWorker.HANDOFF_GIVE_UP_MS);
+        assertNull(session.reader);
+        assertNull(session.vd);
+        assertFalse(worker.sessions.containsKey(session.pkg));
+        assertEquals(0, worker.moves); // never moved or relaunched by the engine
+    }
+
     @Test public void readyWindowIdentityOrBoundsChangesRestartTheHandoffQuietInterval() throws Exception {
         worker = new Worker(RuntimeEnvironment.getApplication()); worker.realPatrol = true;
         worker.tasks = java.util.Collections.singletonList(new RootTask());

@@ -31,9 +31,11 @@ class HomeBackgroundItemsTest {
 
     private fun turn(session: String, reason: String) = DesktopTurnEvent(session, 3, reason, null, "", 0L)
 
-    @Test fun chatTasksOpenTheirConversationAndOnlyBackgroundAppTasksOpenThePreview() {
+    /** 2026111625：后台屏任务也先打开它的对话；只有找不到对话时才退回画面预览。 */
+    @Test fun tasksOpenTheirConversationAndOnlyOrphanBackgroundAppTasksOpenThePreview() {
         assertFalse(TaskNotificationState("r1", "c1", "整理纪要", AgentOverlayStatus.Reasoning).opensPreview())
-        assertTrue(TaskNotificationState("r2", "c2", "点外卖", AgentOverlayStatus.Reasoning, targetPackage = "com.sankuai.meituan").opensPreview())
+        assertFalse(TaskNotificationState("r2", "c2", "点外卖", AgentOverlayStatus.Reasoning, targetPackage = "com.sankuai.meituan").opensPreview())
+        assertTrue(TaskNotificationState("r3", null, "点外卖", AgentOverlayStatus.Reasoning, targetPackage = "com.sankuai.meituan").opensPreview())
     }
 
     @Test fun runningDesktopSessionsAreShownOnlyWhileConnectedAndFresh() {

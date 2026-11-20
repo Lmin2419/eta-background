@@ -47,6 +47,7 @@ class VDriveWorker implements VDrive.Worker {
     /** Build stamp: lets status() prove which dex is actually running. */
     final String BUILD = VDrive.BUILD;
     final long ORPHAN_EMPTY_MS = 20_000;   // task left the display -> release it
+    static final long HANDOFF_GIVE_UP_MS = 4_000; // task moved away but its new window never settled
     final long IDLE_MS = 300_000;    // screen exists but no commands at all
     final long EMPTY_MS = 20_000;    // display held but no session and no task
     final long EXIT_MS = 0;           // 0 = resident: never exit on idle
@@ -503,7 +504,12 @@ class VDriveWorker implements VDrive.Worker {
             // toggles the old display before the destination has a ready window.
             // Retire only after the same destination window/layout has settled.
             if (x.handoffAt <= 0) x.handoffAt = now;
-            if (!confirmHandoffWindow(x, movedTo, now)) return;
+            // The user may leave the app (back to Home or Eta) before its new window settles;
+            // that window then never becomes focused again and the old display would be kept
+            // forever, so every later background launch of this app got CLEANUP_PENDING.
+            // The task has demonstrably left and the old display is empty: stop waiting after
+            // HANDOFF_GIVE_UP_MS. Never move, resize or restart the App here.
+            if (!confirmHandoffWindow(x, movedTo, now) && now - x.handoffAt < HANDOFF_GIVE_UP_MS) return;
             // The actual tracked task left; its old display can go without touching its new window.
             retireFromPatrol(x);
             return;

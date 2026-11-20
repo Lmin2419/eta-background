@@ -62,10 +62,12 @@ internal sealed interface HomeBackgroundItem {
 }
 
 /**
- * 点胶囊菜单里的本机任务：后台屏上的 App 任务打开画面预览；普通对话任务直接打开它的对话
- * （预览窗只给后台屏任务用，对话任务没有画面，打开会立刻关掉，看起来就是「点了没反应」）。
+ * 点胶囊菜单里的本机任务：打开它的对话（2026111625 起，后台屏任务也一样）。以前后台屏任务弹出画面预览小窗，
+ * 再点小窗就进了那块虚拟屏，用户想去的其实是那个会话；画面在对话里和「任务」页仍然能看。
+ * 只有找不到对话的后台屏任务才退回画面预览。
  */
-internal fun io.github.mangi.eta.agent.runtime.TaskNotificationState.opensPreview(): Boolean = !targetPackage.isNullOrBlank()
+internal fun io.github.mangi.eta.agent.runtime.TaskNotificationState.opensPreview(): Boolean =
+    conversationId.isNullOrBlank() && !targetPackage.isNullOrBlank()
 
 /** 正在电脑上跑的会话（不含子代理、已归档）；只在连着电脑、列表是最新的时候算，断线时不显示过时的「运行中」。 */
 internal fun desktopRunningSessions(state: io.github.mangi.eta.agent.remote.DesktopSessionsState, connected: Boolean):
