@@ -206,10 +206,11 @@ class EtaDatabaseMigrationTest {
             snapshot(db)
         }
         val db = Room.databaseBuilder(context, EtaDatabase::class.java, name)
-            .addMigrations(EtaDatabase.MIGRATION_23_24, EtaDatabase.MIGRATION_24_25, EtaDatabase.MIGRATION_25_26).build()
+            .addMigrations(EtaDatabase.MIGRATION_23_24, EtaDatabase.MIGRATION_24_25, EtaDatabase.MIGRATION_25_26,
+                EtaDatabase.MIGRATION_26_27).build()
         try {
             val migrated = db.openHelper.writableDatabase // Room validates the entire current schema.
-            assertEquals(26, migrated.version)
+            assertEquals(LATEST_DB_VERSION, migrated.version)
             assertEquals(before, snapshot(migrated))
             runBlocking(Dispatchers.IO) {
                 val dao = db.conversationDao()
@@ -267,7 +268,7 @@ class EtaDatabaseMigrationTest {
         try {
             // Exercise production registration AND its existing destructive fallback, not a hand-built migration list.
             val db = EtaDatabase.get(context).openHelper.writableDatabase
-            assertEquals(26, db.version)
+            assertEquals(LATEST_DB_VERSION, db.version)
             assertEquals("Missing production migration must never erase existing rows", before, snapshot(db))
             db.query("SELECT archived_at, pinned_at, group_id, model_id FROM conversations WHERE id='conv-1'").use {
                 org.junit.Assert.assertTrue(it.moveToFirst()); assertEquals(1234L, it.getLong(0))
@@ -403,3 +404,6 @@ class EtaDatabaseMigrationTest {
         )
     }
 }
+
+/** 跟随 [EtaDatabase] 的 `version`；合入新的迁移时一起改。 */
+private const val LATEST_DB_VERSION = 27

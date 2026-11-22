@@ -303,7 +303,8 @@ class AgentRuntimeScreenOnTest {
             service.invoke("requestResume")
             assertFalse(first.session.controller.isPaused)
             service.invoke("updateKeepScreenOn")
-            assertFalse(AgentRuntimeService.keepScreenOn.value)
+            // 上游 95b4060a 起：开着「运行期间保持屏幕常亮」时，任何未暂停的任务（含后台任务）都常亮。
+            assertTrue(AgentRuntimeService.keepScreenOn.value)
         } finally {
             serviceController.destroy()
         }
@@ -567,7 +568,8 @@ class AgentRuntimeScreenOnTest {
             guiControl.release()
             service.assertTaskStatuses(mapOf(background.runId to background.overlayState.status, guiRun.runId to guiRun.overlayState.status))
             assertNull(guiCoordinator.state.value.ownerRunId)
-            assertFalse(AgentRuntimeService.keepScreenOn.value)
+            // 上游 95b4060a 起：开着「运行期间保持屏幕常亮」时，任何未暂停的任务（含后台任务）都常亮。
+            assertTrue(AgentRuntimeService.keepScreenOn.value)
         } finally {
             serviceController.destroy()
         }
@@ -592,7 +594,8 @@ class AgentRuntimeScreenOnTest {
             assertTrue(guiCoordinator.state.value.userPaused)
             assertNull(guiCoordinator.state.value.ownerRunId)
             assertFalse(background.session.controller.isPaused)
-            assertFalse(AgentRuntimeService.keepScreenOn.value)
+            // 上游 95b4060a 起：开着「运行期间保持屏幕常亮」时，任何未暂停的任务（含后台任务）都常亮。
+            assertTrue(AgentRuntimeService.keepScreenOn.value)
 
             background.session.complete(AgentRuntimeWire.RunResult(background.runId, true, "完成"))
             service.assertTaskStatuses(emptyMap())

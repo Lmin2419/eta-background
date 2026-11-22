@@ -47,6 +47,11 @@
 - **最低系统升到 Android 14**（29804218）：我们现在是 Android 13，没有需要 14 的功能。
 - 去掉侧栏拖拽震动（ad1117e7，我们侧栏是自己做的）、CouiChipTabs 换 SegmentedControl（9a793595）、HyperOS 电源键（0b709534，你用的是 ColorOS）、README（a97ac700）、主聊天插话改成运行内注入（9ea2153e、9c1cdac7，我们早就是运行内插话）。
 
+## 进度
+
+- **2026111626**：第一批合完（上表第一类 3–7、9，第二类除 36b1c77f、8db9a54c 外全部，第三类的删 Kimi、删小布 / 超级小爱、去掉 Gemini 语音选项）。没合的和原因写在 [更新记录](../README.md#release-2026111626)。
+- 接下来：Vertex AI / xhigh（v28）→ 定时任务（v29，加后台屏执行）→ AI 生图 → AppStrings 三语 → COUI 2.1.0 → 36b1c77f 等收尾。
+
 ## 建议顺序
 
 | 期 | 内容 |
