@@ -612,6 +612,12 @@ fun AgentAppRoot(
     // 对话页顶部按钮随消息滚动收缩/还原的共享进度（消息列表写、顶栏读）。
     val chatChrome = remember { io.github.mangi.eta.ui.components.EtaChromeState() }
     EtaAppOverlayHost {
+    // 上游 ec9bfb67：换页面（或回到首页重置导航）时立刻收起全屏看图，避免预览留在新页面上面。
+    val imagePreviewer = io.github.mangi.eta.ui.components.LocalChatImagePreviewer.current
+    val currentRouteForPreview = navigator.current()
+    LaunchedEffect(currentRouteForPreview, navigationResetKey) {
+        if (imagePreviewer?.request != null) imagePreviewer.closeImmediately()
+    }
     androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.LocalEtaChrome provides chatChrome,
         io.github.mangi.eta.ui.components.LocalMessageSelection provides messageSelection) {
     // 所有路由的页面内容只定义一次：整页导航与玻璃窗口里的导航共用。
