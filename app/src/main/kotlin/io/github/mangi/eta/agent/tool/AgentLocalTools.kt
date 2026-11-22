@@ -110,6 +110,9 @@ internal class AgentLocalTools(
         Prefs.isToolEnabled(it)
     },
     private val guiControl: GuiControlCoordinator.RunControl? = null,
+    private val imageBudgetProvider: () -> io.github.mangi.eta.agent.media.ModelImageBudget = {
+        io.github.mangi.eta.agent.media.ModelImageBudget.DEFAULT
+    },
     browserSession: AgentBrowserSession? = null,
 ) : AgentModelClient.ToolExecutor, AutoCloseable {
 
@@ -124,7 +127,7 @@ internal class AgentLocalTools(
         rootAvailable = rootAvailable,
         foregroundAction = ::executeForegroundIntent,
     )
-    private val imageTools = AgentImageTools(context, rootCommandExecutor, rootAvailable)
+    private val imageTools = AgentImageTools(context, rootCommandExecutor, rootAvailable, imageBudgetProvider)
     private val commonTaskTools by lazy { AgentCommonTaskTools(context, commonTasksWritable) }
     private val webTools = AgentWebTools(
         transport = WebHttpTransport(AgentHttpClient.client),
