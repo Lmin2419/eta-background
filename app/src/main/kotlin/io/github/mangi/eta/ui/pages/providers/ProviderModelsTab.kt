@@ -131,7 +131,7 @@ private val editableReasoningEfforts = listOf(
  * 常见上下文窗口档位。取十进制整数：标称 262,144、1,048,576 的模型按 256K、1M 填写只会略早压缩，
  * 不会越过真实上限。
  */
-internal val contextWindowPresets = listOf(128_000, 200_000, 256_000, 1_000_000)
+internal val contextWindowPresets = listOf(128_000, 200_000, 256_000, 512_000, 1_000_000)
 
 private val modelDialogBodyMaxHeight = 520.dp
 private val modelDialogChromeHeight = 112.dp
