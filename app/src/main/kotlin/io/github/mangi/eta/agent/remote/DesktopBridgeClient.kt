@@ -1,5 +1,7 @@
 package io.github.mangi.eta.agent.remote
 
+import io.github.mangi.eta.R
+import io.github.mangi.eta.core.AppStrings
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -116,7 +118,7 @@ internal class DesktopBridgeClient(
     fun start(config: DesktopBridgeConfig) {
         stop()
         val url = config.webSocketUrl ?: run {
-            _state.value = State.Unauthorized("电脑地址无效")
+            _state.value = State.Unauthorized(AppStrings.get(R.string.desktop_err_bad_address, "电脑地址无效"))
             return
         }
         val http = baseHttp.newBuilder().pinnedTo(config.pin).build()
@@ -173,7 +175,7 @@ internal class DesktopBridgeClient(
             if (!finished.compareAndSet(false, true)) return
             ready = false
             socket = null
-            failPending("与电脑的连接已断开")
+            failPending(AppStrings.get(R.string.desktop_err_disconnected, "与电脑的连接已断开"))
             if (cont.isActive) cont.resume(outcome)
         }
         val request = Request.Builder()
@@ -203,10 +205,10 @@ internal class DesktopBridgeClient(
                 val code = response?.code
                 val mismatch = t.findPinMismatch()
                 when {
-                    mismatch != null -> finish(Outcome.Unauthorized(mismatch.message ?: "服务器证书指纹不符"))
-                    code == 401 || code == 403 -> finish(Outcome.Unauthorized("Token 不正确（HTTP $code）"))
+                    mismatch != null -> finish(Outcome.Unauthorized(mismatch.message ?: AppStrings.get(R.string.desktop_err_cert_mismatch_short, "服务器证书指纹不符")))
+                    code == 401 || code == 403 -> finish(Outcome.Unauthorized(AppStrings.get(R.string.desktop_err_bad_token, "Token 不正确（HTTP %1\$d）", code)))
                     // nginx 连不上 frps 映射的端口：电脑上的 frpc 没运行，或电脑离线/休眠。
-                    code == 502 || code == 504 -> finish(Outcome.Closed("电脑不在线（frpc 未连接到中转服务器）"))
+                    code == 502 || code == 504 -> finish(Outcome.Closed(AppStrings.get(R.string.desktop_err_relay_offline, "电脑不在线（frpc 未连接到中转服务器）")))
                     else -> finish(Outcome.Closed(code?.let { "HTTP $it" } ?: t.message ?: t.javaClass.simpleName))
                 }
             }
@@ -225,7 +227,7 @@ internal class DesktopBridgeClient(
             val latency = (System.nanoTime() - startedAt) / 1_000_000
             val protocol = hello.int("protocol") ?: 0
             if (protocol != DesktopBridgeProtocol.VERSION) {
-                fatal = "电脑端插件协议版本 $protocol 与 App（${DesktopBridgeProtocol.VERSION}）不一致，请同时升级"
+                fatal = AppStrings.get(R.string.desktop_err_protocol_mismatch, "电脑端插件协议版本 %1\$s 与 App（%2\$s）不一致，请同时升级", protocol.toString(), DesktopBridgeProtocol.VERSION.toString())
                 webSocket.close(1000, "protocol mismatch")
                 return
             }
@@ -253,7 +255,7 @@ internal class DesktopBridgeClient(
 
     /** 发起一个请求并等待结果；未连接或超时会抛 [DesktopBridgeException]。 */
     suspend fun call(op: String, params: Map<String, JsonElement> = emptyMap(), timeoutMs: Long = CALL_TIMEOUT_MS): JsonElement {
-        val ws = socket?.takeIf { ready } ?: throw DesktopBridgeException("offline", "未连接到电脑")
+        val ws = socket?.takeIf { ready } ?: throw DesktopBridgeException("offline", AppStrings.get(R.string.desktop_error_offline, "未连接到电脑"))
         return request(ws, op, params, timeoutMs)
     }
 
@@ -263,15 +265,15 @@ internal class DesktopBridgeClient(
         pending[id] = deferred
         try {
             val payload = JsonObject(params + mapOf("id" to JsonPrimitive(id), "op" to JsonPrimitive(op)))
-            if (!ws.send(payload.toString())) throw DesktopBridgeException("offline", "未连接到电脑")
+            if (!ws.send(payload.toString())) throw DesktopBridgeException("offline", AppStrings.get(R.string.desktop_error_offline, "未连接到电脑"))
             val response = try {
                 withTimeout(timeoutMs) { deferred.await() }
             } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
-                throw DesktopBridgeException("timeout", "电脑响应超时")
+                throw DesktopBridgeException("timeout", AppStrings.get(R.string.desktop_err_timeout, "电脑响应超时"))
             }
             if (response.bool("ok") == true) return response["data"] ?: JsonNull
             val error = response["error"] as? JsonObject
-            throw DesktopBridgeException(error?.string("code") ?: "error", error?.string("message") ?: "请求失败")
+            throw DesktopBridgeException(error?.string("code") ?: "error", error?.string("message") ?: AppStrings.get(R.string.desktop_err_request_failed, "请求失败"))
         } finally {
             pending.remove(id)
         }

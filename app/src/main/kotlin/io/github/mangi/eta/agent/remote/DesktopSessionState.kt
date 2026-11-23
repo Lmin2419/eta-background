@@ -1,5 +1,7 @@
 package io.github.mangi.eta.agent.remote
 
+import io.github.mangi.eta.R
+import io.github.mangi.eta.core.AppStrings
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -223,7 +225,7 @@ internal data class DesktopSessionState(
             "status" -> copy(running = push.bool("running") == true).let {
                 if (!it.running) it.copy(live = null, pendingCommitSeq = null, handoff = emptyList()) else it
             }
-            "follow-error" -> copy(error = (push["error"] as? JsonObject)?.string("message") ?: "订阅失败")
+            "follow-error" -> copy(error = (push["error"] as? JsonObject)?.string("message") ?: AppStrings.get(R.string.desktop_err_follow_failed, "订阅失败"))
             else -> this
         }
         // 插队后又在电脑上被取消的消息不会写进记录：交接区按时间清掉，不留假气泡。

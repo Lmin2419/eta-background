@@ -1,5 +1,7 @@
 package io.github.mangi.eta.agent.runtime
 
+import io.github.mangi.eta.R
+import io.github.mangi.eta.core.AppStrings
 import io.github.mangi.eta.core.toSafeLogToken
 
 internal sealed interface AgentEvent {
@@ -30,14 +32,17 @@ internal sealed interface AgentEvent {
         val archiveId: String = "",
     ) : AgentEvent {
         val displayMessage: String get() = when (phase) {
-            PHASE_STARTED -> RUNNING_DETAIL
-            PHASE_BACKGROUND_STARTED -> "正在后台整理较早的对话。"
-            PHASE_BACKGROUND_DISCARDED -> "后台整理结果已作废，原始上下文已保留。"
+            PHASE_STARTED -> AppStrings.get(R.string.compaction_notice_running, "正在压缩上下文…")
+            PHASE_BACKGROUND_STARTED -> AppStrings.get(R.string.compaction_notice_background_started, "正在后台整理较早的对话。")
+            PHASE_BACKGROUND_DISCARDED -> AppStrings.get(R.string.compaction_notice_background_discarded, "后台整理结果已作废，原始上下文已保留。")
             PHASE_COMPLETED -> {
-                val archiveTag = archiveId.takeIf { it.isNotBlank() }?.let { "（$it）" }.orEmpty()
-                "上下文已压缩$archiveTag，用量将在下一次模型响应后更新。"
+                if (archiveId.isNotBlank()) {
+                    AppStrings.get(R.string.compaction_notice_done_with_id, "上下文已压缩（%1\$s），用量将在下一次模型响应后更新。", archiveId)
+                } else {
+                    AppStrings.get(R.string.compaction_notice_done, "上下文已压缩，用量将在下一次模型响应后更新。")
+                }
             }
-            else -> "上下文压缩失败，原始上下文已保留。"
+            else -> AppStrings.get(R.string.compaction_notice_failed, "上下文压缩失败，原始上下文已保留。")
         }
         override fun toLogLine(): String = buildString {
             append("context_compaction phase=").append(phase.toSafeLogToken())
@@ -92,7 +97,7 @@ internal sealed interface AgentEvent {
         val reasonCode: String,
     ) : AgentEvent {
         val displayMessage: String
-            get() = "模型请求暂时中断，${delayMs / 1000} 秒后重试（$attempt/$maxAttempts）；此前工具结果已保留。"
+            get() = AppStrings.get(R.string.model_retry_notice, "模型请求暂时中断，%1\$d 秒后重试（%2\$d/%3\$d）；此前工具结果已保留。", delayMs / 1000, attempt, maxAttempts)
 
         override fun toLogLine(): String =
             "model_retry_scheduled round=$round, attempt=$attempt, delay_ms=$delayMs, code=${reasonCode.toSafeLogToken()}"

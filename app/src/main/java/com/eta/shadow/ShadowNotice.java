@@ -86,9 +86,11 @@ public final class ShadowNotice {
         if (ok && lines.isEmpty()) return;          // 成功但没有可展示的文字
         if (!ok && !didSomething && error == null) return;
 
-        String status = ok ? "已完成" : "出错";
+        String status = ok ? "已完成" : "出错"; // 状态是和 AgentExecutionService 约定的标记，不翻译
         if (!ok) {
-            String reason = error == null || error.trim().isEmpty() ? "任务未完成" : error.trim();
+            String reason = error == null || error.trim().isEmpty()
+                ? io.github.mangi.eta.core.AppStrings.INSTANCE.get(io.github.mangi.eta.R.string.shadow_notice_task_unfinished, "任务未完成")
+                : error.trim();
             lines.add(clip("❗ " + reason));
         }
         post(ctx, status, lines);

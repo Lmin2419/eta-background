@@ -1,5 +1,7 @@
 package io.github.mangi.eta.agent.remote
 
+import io.github.mangi.eta.R
+import io.github.mangi.eta.core.AppStrings
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -289,7 +291,7 @@ internal object DesktopBridge {
             if (workspaceId == null) cwd?.let { put("cwd", JsonPrimitive(it)) }
         }
         return client.call("sessions.create", params).jsonObject.string("sessionId")
-            ?: throw DesktopBridgeException("bad-response", "电脑没有返回会话")
+            ?: throw DesktopBridgeException("bad-response", AppStrings.get(R.string.desktop_err_no_session, "电脑没有返回会话"))
     }
 
     /**
@@ -309,7 +311,7 @@ internal object DesktopBridge {
         val flow = stateFlow(sessionId)
         val running = flow.value.running
         if (targets[sessionId]?.parentId == null) DesktopLinkSettings.markWatched(sessionId)
-        val echoText = (listOf(text) + files.map { "[文件] ${it.name}" }).filter { it.isNotBlank() }.joinToString("\n")
+        val echoText = (listOf(text) + files.map { AppStrings.get(R.string.desktop_echo_file, "[文件] %1\$s", it.name) }).filter { it.isNotBlank() }.joinToString("\n")
         flow.update { it.addEcho(DesktopEcho(requestId, echoText, queued = running && !interrupt && !steer, images = previews)) }
         try {
             if (interrupt && running) runCatching { cancel(sessionId) }

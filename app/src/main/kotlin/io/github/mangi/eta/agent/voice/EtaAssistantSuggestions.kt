@@ -21,7 +21,11 @@ internal fun EtaAssistantSuggestions(onSuggestionClick: (String) -> Unit, colors
     modifier: Modifier = Modifier, visible: Boolean = true) {
     val labels = listOf(stringResource(R.string.voice_suggestion_summary), stringResource(R.string.voice_suggestion_help),
         stringResource(R.string.voice_suggestion_highlights))
-    val prompts = listOf("帮我总结当前屏幕内容", "这个页面怎么操作", "屏幕上有什么值得注意的信息")
+    val prompts = listOf(
+        stringResource(R.string.voice_suggestion_summary_prompt),
+        stringResource(R.string.voice_suggestion_help_prompt),
+        stringResource(R.string.voice_suggestion_highlights_prompt),
+    )
     AnimatedVisibility(visible, modifier, enter = fadeIn(), exit = fadeOut()) {
         LazyRow(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {

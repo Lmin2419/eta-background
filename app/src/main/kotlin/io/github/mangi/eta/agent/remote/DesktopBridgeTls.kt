@@ -1,5 +1,7 @@
 package io.github.mangi.eta.agent.remote
 
+import io.github.mangi.eta.R
+import io.github.mangi.eta.core.AppStrings
 import okhttp3.OkHttpClient
 import java.security.MessageDigest
 import java.security.cert.CertificateException
@@ -10,7 +12,9 @@ import javax.net.ssl.X509TrustManager
 
 /** 服务器出示的公钥与配对码里的指纹不一致：可能被中间人劫持，或服务器重新生成了证书。 */
 internal class DesktopBridgePinMismatch(val expected: String, val actual: String) :
-    CertificateException("服务器证书指纹与配对码不一致（期望 ${expected.take(8)}…，实际 ${actual.take(8)}…）")
+    CertificateException(
+        AppStrings.get(R.string.desktop_err_cert_mismatch, "服务器证书指纹与配对码不一致（期望 %1\$s…，实际 %2\$s…）", expected.take(8), actual.take(8)),
+    )
 
 /**
  * 只信任指纹匹配的那一把公钥。中转服务器用的是自签证书且只有 IP，
@@ -18,14 +22,14 @@ internal class DesktopBridgePinMismatch(val expected: String, val actual: String
  */
 internal class DesktopBridgePinnedTrustManager(private val pin: String) : X509TrustManager {
     override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
-        val leaf = chain?.firstOrNull() ?: throw CertificateException("服务器没有出示证书")
+        val leaf = chain?.firstOrNull() ?: throw CertificateException(AppStrings.get(R.string.desktop_err_no_cert, "服务器没有出示证书"))
         val actual = spkiSha256(leaf)
         if (!MessageDigest.isEqual(actual.toByteArray(), pin.toByteArray())) throw DesktopBridgePinMismatch(pin, actual)
         leaf.checkValidity()
     }
 
     override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
-        throw CertificateException("不接受客户端证书")
+        throw CertificateException(AppStrings.get(R.string.desktop_err_client_cert, "不接受客户端证书"))
     }
 
     override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()

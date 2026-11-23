@@ -106,14 +106,14 @@ internal class SpeechInputController(
                                     try {
                                         audio.record(
                                             onReady = { update { it.copy(phase = EtaSpeechPhase.LISTENING,
-                                                progress = if (it.holdToTalk) "松开发送，移出取消" else "正在聆听，点击完成结束") } },
+                                                progress = if (it.holdToTalk) AppStrings.get(R.string.voice_i18n_progress_hold_to_talk, "松开发送，移出取消") else AppStrings.get(R.string.voice_i18n_progress_listening_tap_done, "正在聆听，点击完成结束")) } },
                                             onLevel = { level -> update { it.copy(level = level) } },
                                         )
                                     } finally {
                                         if (generation == session) releaseCapture()
                                     }
                                     update { it.copy(phase = EtaSpeechPhase.RECOGNIZING, level = 0f,
-                                        progress = if (it.holdToTalk) "正在识别并发送" else "正在识别") }
+                                        progress = if (it.holdToTalk) AppStrings.get(R.string.voice_i18n_progress_recognizing_and_sending, "正在识别并发送") else AppStrings.get(R.string.voice_i18n_progress_recognizing, "正在识别")) }
                                 }
                             }
                             Unit
@@ -135,7 +135,7 @@ internal class SpeechInputController(
                             recording?.cancel()
                         }
                     }
-                    if (text.isBlank()) throw SpeechFailure(SpeechErrorCode.NO_SPEECH, "没有识别到语音，请重试")
+                    if (text.isBlank()) throw SpeechFailure(SpeechErrorCode.NO_SPEECH, AppStrings.get(R.string.voice_i18n_no_speech_recognized, "没有识别到语音，请重试"))
                     val final = refined(session, text)
                     if (generation == session) complete(final)
                 }
@@ -201,8 +201,8 @@ internal class SpeechInputController(
             if (generation == session) mutableState.value = transform(mutableState.value)
         }
         system = EtaSpeechInput(context,
-            onListening = { update { it.copy(phase = EtaSpeechPhase.LISTENING, progress = "正在聆听") } },
-            onRecognizing = { update { it.copy(phase = EtaSpeechPhase.RECOGNIZING, progress = "正在识别") } },
+            onListening = { update { it.copy(phase = EtaSpeechPhase.LISTENING, progress = AppStrings.get(R.string.voice_progress_listening, "正在聆听")) } },
+            onRecognizing = { update { it.copy(phase = EtaSpeechPhase.RECOGNIZING, progress = AppStrings.get(R.string.voice_i18n_progress_recognizing, "正在识别")) } },
             onLevel = { level -> update { it.copy(level = level) } },
             onPartial = { text -> update { it.copy(preview = text) } },
             onResult = { text ->
@@ -211,7 +211,7 @@ internal class SpeechInputController(
                     else {
                         pendingSystemResult = text
                         lease?.close(); lease = null
-                        update { it.copy(phase = EtaSpeechPhase.LISTENING, preview = text, progress = "识别完成，点击完成插入", level = 0f) }
+                        update { it.copy(phase = EtaSpeechPhase.LISTENING, preview = text, progress = AppStrings.get(R.string.voice_progress_done_tap_insert, "识别完成，点击完成插入"), level = 0f) }
                     }
                 }
             },
@@ -240,7 +240,11 @@ internal class SpeechInputController(
         if (mutableState.value.phase == EtaSpeechPhase.STARTING) { cancel(); return }
         // stopListening may synchronously deliver an error/result. Publish the waiting
         // state first so a terminal callback cannot be overwritten with a phantom busy state.
-        val progressText = if (mutableState.value.holdToTalk) "正在识别并发送" else "正在识别"
+        val progressText = if (mutableState.value.holdToTalk) {
+            AppStrings.get(R.string.voice_i18n_progress_recognizing_and_sending, "正在识别并发送")
+        } else {
+            AppStrings.get(R.string.voice_i18n_progress_recognizing, "正在识别")
+        }
         mutableState.value = mutableState.value.copy(phase = EtaSpeechPhase.RECOGNIZING, progress = progressText, level = 0f)
         recorder?.finish()
         system?.finish()
