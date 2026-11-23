@@ -697,7 +697,11 @@ private fun SettingsPageContent(
                         .collectAsState(initial = ImageGenSettings())
                     EtaArrowPreference(
                         title = stringResource(R.string.image_gen_settings_title),
-                        summary = if (imageGenSettings.enabled) "已开启 · ${imageGenSettings.backend.shortName()}" else "未开启",
+                        summary = if (imageGenSettings.enabled) {
+                            stringResource(R.string.image_gen_enabled_with_backend, imageGenSettings.backend.shortName())
+                        } else {
+                            stringResource(R.string.ui_misc_not_enabled)
+                        },
                         startAction = { EtaPreferenceIcon(icon = Icons.Outlined.Image, tint = EtaPreferenceColors.Orange) },
                         onClick = { onNavigate(AppRoute.ImageGenSettings) },
                     )

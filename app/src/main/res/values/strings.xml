@@ -2163,4 +2163,25 @@
   <string name="subagent_default_reasoning">Default thinking effort</string>
   <string name="subagent_search_models">Search models or providers</string>
   <string name="subagent_role_model_summary">Model: %1$s</string>
+  <string name="image_gen_enabled_with_backend">On · %1$s</string>
+  <string name="trace_bg_open">Open app in background</string>
+  <string name="trace_bg_state">Check background state</string>
+  <string name="trace_bg_tap">Tap in background</string>
+  <string name="trace_bg_scroll">Scroll in background</string>
+  <string name="trace_bg_press">Long-press in background</string>
+  <string name="trace_bg_drag">Drag in background</string>
+  <string name="trace_bg_text">Type in background</string>
+  <string name="trace_bg_wait">Wait for background screen</string>
+  <string name="trace_bg_back">Back in background</string>
+  <string name="trace_bg_finish">Wrap up background work</string>
+  <string name="trace_bg_res_no_change">Submitted; no change seen on the target</string>
+  <string name="trace_bg_res_changed">Target area changed; content needs checking</string>
+  <string name="trace_bg_res_verified">Text entered and verified</string>
+  <string name="trace_bg_res_window_ready">Background app window is ready</string>
+  <string name="trace_bg_res_window_pending">App opened; waiting for its window</string>
+  <string name="trace_res_common_task_saved">Saved common task (not run)</string>
+  <string name="trace_res_common_task_deleted">Deleted common task</string>
+  <string name="trace_res_common_task_read">Read task steps (not run)</string>
+  <string name="trace_res_common_task_listed">Listed common tasks</string>
+  <string name="trace_res_opened_app">Opened · %1$s</string>
 </resources>

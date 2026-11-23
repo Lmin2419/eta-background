@@ -2032,4 +2032,25 @@
   <string name="subagent_default_reasoning">預設思考強度</string>
   <string name="subagent_search_models">搜尋模型或服務商</string>
   <string name="subagent_role_model_summary">模型：%1$s</string>
+  <string name="image_gen_enabled_with_backend">已開啟 · %1$s</string>
+  <string name="trace_bg_open">背景開啟應用</string>
+  <string name="trace_bg_state">檢查背景狀態</string>
+  <string name="trace_bg_tap">背景點按</string>
+  <string name="trace_bg_scroll">背景捲動</string>
+  <string name="trace_bg_press">背景長按</string>
+  <string name="trace_bg_drag">背景拖曳</string>
+  <string name="trace_bg_text">背景輸入</string>
+  <string name="trace_bg_wait">等待背景畫面</string>
+  <string name="trace_bg_back">背景返回</string>
+  <string name="trace_bg_finish">背景操作收尾</string>
+  <string name="trace_bg_res_no_change">操作已提交，目標未觀察到變化</string>
+  <string name="trace_bg_res_changed">目標區域已變化，需核對內容</string>
+  <string name="trace_bg_res_verified">已輸入並核對文字</string>
+  <string name="trace_bg_res_window_ready">背景應用視窗已就緒</string>
+  <string name="trace_bg_res_window_pending">應用已開啟，等待視窗就緒</string>
+  <string name="trace_res_common_task_saved">已儲存常用任務（未執行）</string>
+  <string name="trace_res_common_task_deleted">已刪除常用任務</string>
+  <string name="trace_res_common_task_read">已讀取任務流程（未執行）</string>
+  <string name="trace_res_common_task_listed">已讀取常用任務列表</string>
+  <string name="trace_res_opened_app">已開啟 · %1$s</string>
 </resources>

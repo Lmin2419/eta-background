@@ -16,18 +16,18 @@ import org.json.JSONObject
 internal class AgentTraceFormatter {
     fun summarizeArguments(toolCall: AgentModelClient.ToolCall): String =
         when (toolCall.name) {
-            "screen_open" -> "后台打开应用"
-            "screen_state", "screen_diag" -> "检查后台状态"
-            "screen_tap", "screen_click" -> "后台点击"
-            "screen_swipe", "screen_scroll" -> "后台滚动"
-            "screen_press" -> "后台长按"
-            "screen_drag" -> "后台拖动"
-            "screen_text" -> summarizeTextLength("后台输入", toolCall.argumentsJson, "text")
-            "screen_list", "screen_dump" -> "读取后台界面"
-            "screen_shot" -> "截取后台画面"
-            "screen_wait" -> "等待后台界面"
-            "screen_back" -> "后台返回"
-            "screen_finish" -> "后台操作收尾"
+            "screen_open" -> AppStrings.get(R.string.trace_bg_open, "后台打开应用")
+            "screen_state", "screen_diag" -> AppStrings.get(R.string.trace_bg_state, "检查后台状态")
+            "screen_tap", "screen_click" -> AppStrings.get(R.string.trace_bg_tap, "后台点击")
+            "screen_swipe", "screen_scroll" -> AppStrings.get(R.string.trace_bg_scroll, "后台滚动")
+            "screen_press" -> AppStrings.get(R.string.trace_bg_press, "后台长按")
+            "screen_drag" -> AppStrings.get(R.string.trace_bg_drag, "后台拖动")
+            "screen_text" -> summarizeTextLength(AppStrings.get(R.string.trace_bg_text, "后台输入"), toolCall.argumentsJson, "text")
+            "screen_list", "screen_dump" -> AppStrings.get(R.string.tool_background_read, "读取后台界面")
+            "screen_shot" -> AppStrings.get(R.string.tool_background_shot, "截取后台画面")
+            "screen_wait" -> AppStrings.get(R.string.trace_bg_wait, "等待后台界面")
+            "screen_back" -> AppStrings.get(R.string.trace_bg_back, "后台返回")
+            "screen_finish" -> AppStrings.get(R.string.trace_bg_finish, "后台操作收尾")
             BROWSER_TOOL_NAME -> summarizeBrowserArguments(toolCall.argumentsJson)
             "web_search" -> AppStrings.get(R.string.trace_arg_web_search, "搜索网页")
             "fetch_url" -> summarizeFetchArguments(toolCall.argumentsJson)
@@ -50,12 +50,12 @@ internal class AgentTraceFormatter {
             "input_text" -> summarizeTextLength("输入文本", toolCall.argumentsJson, "text")
             "replace_text" -> summarizeTextLength("替换文本", toolCall.argumentsJson, "text")
             "paste_text", "set_clipboard" ->
-                summarizeTextLength("粘贴文本", toolCall.argumentsJson, "text")
-            "clear_text" -> "清空文本"
-            "get_clipboard" -> "读取剪贴板"
-            "search_apps" -> summarizeQueryArguments("搜索应用", toolCall.argumentsJson)
-            "launch_app" -> "打开应用"
-            "get_current_context" -> "读取时间与位置"
+                summarizeTextLength(AppStrings.get(R.string.trace_arg_paste_text, "粘贴文本"), toolCall.argumentsJson, "text")
+            "clear_text" -> AppStrings.get(R.string.trace_arg_clear_text, "清空文本")
+            "get_clipboard" -> AppStrings.get(R.string.trace_arg_get_clipboard, "读取剪贴板")
+            "search_apps" -> summarizeQueryArguments(AppStrings.get(R.string.trace_arg_search_apps, "搜索应用"), toolCall.argumentsJson)
+            "launch_app" -> AppStrings.get(R.string.trace_arg_launch_app, "打开应用")
+            "get_current_context" -> AppStrings.get(R.string.trace_arg_get_current_context, "读取时间与位置")
             "observe_screen" -> summarizeObservationArguments(toolCall.argumentsJson)
             "tap" -> summarizePointArguments(
                 AppStrings.get(R.string.trace_arg_tap, "点击屏幕"),
@@ -98,12 +98,12 @@ internal class AgentTraceFormatter {
             "memory_get", "character_memory_get", "memory_write", "character_memory_write" ->
                 AgentPersonalResultFormatter.summarizeArguments(toolCall.name, toolCall.argumentsJson) ?: "记忆"
             "common_task" -> "管理常用任务"
-            "skills_list" -> "查看技能列表"
-            "skills_read" -> "读取技能"
-            "skills_read_resource" -> "读取技能资源"
-            "skills_list_curated" -> "浏览精选技能"
-            "skills_inspect_github" -> "查看技能详情"
-            "skills_install_from_github" -> "安装技能"
+            "skills_list" -> AppStrings.get(R.string.trace_arg_skills_list, "查看技能列表")
+            "skills_read" -> AppStrings.get(R.string.trace_arg_skills_read, "读取技能")
+            "skills_read_resource" -> AppStrings.get(R.string.trace_arg_skills_read_resource, "读取技能资源")
+            "skills_list_curated" -> AppStrings.get(R.string.trace_arg_skills_list_curated, "浏览精选技能")
+            "skills_inspect_github" -> AppStrings.get(R.string.trace_arg_skills_inspect_github, "查看技能详情")
+            "skills_install_from_github" -> AppStrings.get(R.string.trace_arg_skills_install_from_github, "安装技能")
             else -> {
                 val label = DEVICE_ACTION_LABELS[toolCall.name]?.resolve()
                     ?: AgentPhoneToolCatalog.entries.firstOrNull { it.name == toolCall.name }?.title
@@ -370,13 +370,17 @@ internal class AgentTraceFormatter {
         if (!isSuccessResult(result)) return summarizeFailure(json)
         if (toolName in com.eta.shadow.ShadowSchema.NAMES && json != null) {
             when (json.optString("outcome")) {
-                "UNKNOWN" -> return "操作已提交，效果未确认"
-                "NO_OBSERVED_CHANGE" -> return "操作已提交，目标未观察到变化"
-                "CHANGED" -> return "目标区域已变化，需核对内容"
-                "VERIFIED" -> return "已输入并核对文本"
+                "UNKNOWN" -> return AppStrings.get(R.string.trace_res_unconfirmed, "操作已提交，效果未确认")
+                "NO_OBSERVED_CHANGE" -> return AppStrings.get(R.string.trace_bg_res_no_change, "操作已提交，目标未观察到变化")
+                "CHANGED" -> return AppStrings.get(R.string.trace_bg_res_changed, "目标区域已变化，需核对内容")
+                "VERIFIED" -> return AppStrings.get(R.string.trace_bg_res_verified, "已输入并核对文本")
             }
             if (toolName == "screen_open" && json.has("inputReady")) {
-                return if (json.optBoolean("inputReady")) "后台应用窗口已就绪" else "应用已打开，等待窗口就绪"
+                return if (json.optBoolean("inputReady")) {
+                    AppStrings.get(R.string.trace_bg_res_window_ready, "后台应用窗口已就绪")
+                } else {
+                    AppStrings.get(R.string.trace_bg_res_window_pending, "应用已打开，等待窗口就绪")
+                }
             }
         }
         if (json != null) {
@@ -405,30 +409,30 @@ internal class AgentTraceFormatter {
                 }
             }
             AgentSubagentToolCatalog.TOOL_NAME -> json?.let(::summarizeSubagentResult) ?: "完成"
-            AgentSubagentToolCatalog.PROFILE_TOOL_NAME -> json?.let(::summarizeSubagentProfileResult) ?: "完成"
-            AgentConversationToolCatalog.READ_HISTORY -> "已读取历史分页"
-            "observe_screen" -> if (result.images.isNotEmpty()) "已截取当前屏幕" else "已获取当前界面"
-            "tap", "tap_element", "tap_area" -> "已点击"
-            "long_press", "long_press_element" -> "已长按"
-            "swipe" -> "已滑动"
-            "scroll", "scroll_element" -> "已滚动"
-            "type_text", "input_text", "paste_text" -> "已输入文本"
-            "clear_text" -> "已清空文本"
-            "press_key" -> "已按键"
-            "wait" -> "等待完成"
-            "wait_for_text" -> "已出现目标文本"
-            "wait_for_package" -> "应用已就绪"
-            "inspect_app" -> "已获取应用信息"
-            "get_clipboard" -> "已读取剪贴板"
-            "set_clipboard" -> "已复制到剪贴板"
-            "search_apps" -> json?.let(::summarizeSearchAppsResult) ?: "完成"
+            AgentSubagentToolCatalog.PROFILE_TOOL_NAME -> json?.let(::summarizeSubagentProfileResult) ?: AppStrings.get(R.string.trace_res_done, "完成")
+            AgentConversationToolCatalog.READ_HISTORY -> AppStrings.get(R.string.trace_res_history_read, "已读取历史分页")
+            "observe_screen" -> if (result.images.isNotEmpty()) AppStrings.get(R.string.trace_res_screen_captured, "已截取当前屏幕") else AppStrings.get(R.string.trace_res_ui_captured, "已获取当前界面")
+            "tap", "tap_element", "tap_area" -> AppStrings.get(R.string.trace_res_tapped, "已点击")
+            "long_press", "long_press_element" -> AppStrings.get(R.string.trace_res_long_pressed, "已长按")
+            "swipe" -> AppStrings.get(R.string.trace_res_swiped, "已滑动")
+            "scroll", "scroll_element" -> AppStrings.get(R.string.trace_res_scrolled, "已滚动")
+            "type_text", "input_text", "paste_text" -> AppStrings.get(R.string.trace_res_text_entered, "已输入文本")
+            "clear_text" -> AppStrings.get(R.string.trace_res_text_cleared, "已清空文本")
+            "press_key" -> AppStrings.get(R.string.trace_res_key_pressed, "已按键")
+            "wait" -> AppStrings.get(R.string.trace_res_wait_done, "等待完成")
+            "wait_for_text" -> AppStrings.get(R.string.trace_res_text_appeared, "已出现目标文本")
+            "wait_for_package" -> AppStrings.get(R.string.trace_res_app_ready, "应用已就绪")
+            "inspect_app" -> AppStrings.get(R.string.trace_res_app_inspected, "已获取应用信息")
+            "get_clipboard" -> AppStrings.get(R.string.trace_res_clipboard_read, "已读取剪贴板")
+            "set_clipboard" -> AppStrings.get(R.string.trace_res_clipboard_copied, "已复制到剪贴板")
+            "search_apps" -> json?.let(::summarizeSearchAppsResult) ?: AppStrings.get(R.string.trace_res_done, "完成")
             "common_task" -> when (json?.optString("action")) {
-                "save" -> "已保存常用任务（未执行）"
-                "delete" -> "已删除常用任务"
-                "get" -> "已读取任务流程（未执行）"
-                else -> "已读取常用任务列表"
+                "save" -> AppStrings.get(R.string.trace_res_common_task_saved, "已保存常用任务（未执行）")
+                "delete" -> AppStrings.get(R.string.trace_res_common_task_deleted, "已删除常用任务")
+                "get" -> AppStrings.get(R.string.trace_res_common_task_read, "已读取任务流程（未执行）")
+                else -> AppStrings.get(R.string.trace_res_common_task_listed, "已读取常用任务列表")
             }
-            "launch_app" -> json?.let(::summarizeLaunchAppResult) ?: "已打开"
+            "launch_app" -> json?.let(::summarizeLaunchAppResult) ?: AppStrings.get(R.string.trace_res_opened, "已打开")
             "skills_list", "skills_list_curated", "skills_inspect_github", "skills_install_from_github" -> json?.let {
                 summarizeSkillResult(toolName, it) ?: summarizeGenericResult(it, result)
             } ?: done
@@ -766,7 +770,7 @@ internal class AgentTraceFormatter {
 
     private fun summarizeLaunchAppResult(json: JSONObject): String {
         val appName = sanitizeSummaryValue(json.optString("app_name"))
-        return if (appName.isNotBlank()) "已打开 · $appName" else "已打开"
+        return if (appName.isNotBlank()) AppStrings.get(R.string.trace_res_opened_app, "已打开 · %1\$s", appName) else AppStrings.get(R.string.trace_res_opened, "已打开")
     }
 
     /**

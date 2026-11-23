@@ -1185,7 +1185,7 @@ fun AgentAppRoot(
     characterStore.notice?.let { notice ->
         io.github.mangi.eta.ui.components.EtaWindowDialog(
             show = true,
-            title = "角色",
+            title = stringResource(R.string.character_library_title),
             summary = notice,
             onDismissRequest = characterStore::dismissNotice,
         ) {}
