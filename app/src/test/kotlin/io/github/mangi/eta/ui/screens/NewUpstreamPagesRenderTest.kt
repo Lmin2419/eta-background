@@ -41,28 +41,43 @@ import org.robolectric.annotation.GraphicsMode
 class NewUpstreamPagesRenderTest {
 
     @Test
-    fun scheduledAndImageGenPagesRenderInLightAndDark() {
+    fun scheduledAndImageGenPagesRenderInLightAndDark() = renderAll(tag = "", modes = listOf(false, true))
+
+    /** 14.2：这些页面的文案改走三语资源后，简体中文界面要和改之前一致。 */
+    @Test
+    @Config(qualifiers = "b+zh+Hans-w411dp-h896dp-xhdpi")
+    fun scheduledAndImageGenPagesRenderInSimplifiedChinese() {
+        val context = RuntimeEnvironment.getApplication()
+        assertTrue(context.getString(io.github.mangi.eta.R.string.scheduled_editor_section_schedule) == "运行时间")
+        renderAll(tag = "zh-", modes = listOf(false))
+    }
+
+    private fun renderAll(tag: String, modes: List<Boolean>) {
         val context = RuntimeEnvironment.getApplication()
         AppStrings.init(context)
         SettingsDataStore.init(context)
         Prefs.initLocal(context)
         ProviderRepository.init(context)
         ScheduledTaskRepository.init(context)
+        fun text(id: Int) = context.getString(id)
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         try {
-            for (dark in listOf(false, true)) {
-                val suffix = if (dark) "dark" else "light"
-                render(activity.get(), dark, "scheduled-list-$suffix", context.getString(io.github.mangi.eta.R.string.scheduled_quick_start)) {
+            for (dark in modes) {
+                val suffix = tag + if (dark) "dark" else "light"
+                render(activity.get(), dark, "scheduled-list-$suffix", text(io.github.mangi.eta.R.string.scheduled_quick_start)) {
                     ScheduledTasksScreen(onNavigate = {}, onBack = {})
                 }
-                render(activity.get(), dark, "scheduled-editor-$suffix", "运行时间", tapAfter = "触发时间",
-                    expectAfterTap = "触发时间") {
+                render(
+                    activity.get(), dark, "scheduled-editor-$suffix", text(io.github.mangi.eta.R.string.scheduled_editor_section_schedule),
+                    tapAfter = text(io.github.mangi.eta.R.string.scheduled_editor_trigger_time),
+                    expectAfterTap = text(io.github.mangi.eta.R.string.scheduled_editor_trigger_time),
+                ) {
                     ScheduledTaskEditorScreen(taskId = null, presetId = "evening_briefing", onSaved = {}, onBack = {})
                 }
-                render(activity.get(), dark, "imagegen-settings-$suffix", "启用 AI 生图") {
+                render(activity.get(), dark, "imagegen-settings-$suffix", text(io.github.mangi.eta.R.string.imagegen_enable_title)) {
                     ImageGenSettingsScreen(onBack = {}, onOpenGallery = {})
                 }
-                render(activity.get(), dark, "imagegen-gallery-$suffix", "还没有生成过图片") {
+                render(activity.get(), dark, "imagegen-gallery-$suffix", text(io.github.mangi.eta.R.string.imagegen_gallery_empty_title)) {
                     ImageGenGalleryScreen(onBack = {})
                 }
             }

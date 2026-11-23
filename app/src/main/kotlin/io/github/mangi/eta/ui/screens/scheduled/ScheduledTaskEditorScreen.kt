@@ -168,16 +168,19 @@ internal fun ScheduledTaskEditorScreen(
     val scheduleError = remember(currentSchedule, previewNowMs) {
         ScheduledTaskScheduleCalculator.validateSchedule(currentSchedule, previewNowMs)
     }
-    val nextRunPreview = remember(currentSchedule, previewNowMs, quietHoursEnabled, scheduleError) {
-        scheduleError ?: run {
+    val nextRunLabel = remember(currentSchedule, previewNowMs, quietHoursEnabled, scheduleError) {
+        if (scheduleError != null) {
+            null
+        } else {
             val next = ScheduledTaskScheduleCalculator.computeNextRunAt(
                 schedule = currentSchedule,
                 afterMs = previewNowMs,
                 quietHours = ScheduledTaskQuietHours(enabled = quietHoursEnabled),
             )
-            "下次运行：${ScheduledTaskScheduleCalculator.formatNextRunLabel(next, previewNowMs)}"
+            ScheduledTaskScheduleCalculator.formatNextRunLabel(next, previewNowMs)
         }
     }
+    val nextRunPreview = scheduleError ?: stringResource(R.string.scheduled_next_run_prefix, nextRunLabel.orEmpty())
 
     val pickerState = remember(providers, primaryProviderId, primaryModelId) {
         AgentModelPickerProjector.project(providers, primaryProviderId, primaryModelId)
@@ -188,8 +191,8 @@ internal fun ScheduledTaskEditorScreen(
     val primaryModelName = pickerState.selectedModel?.displayName
     val modelSummary = when {
         resolvedCustom != null -> "${resolvedCustom.provider.name} / ${resolvedCustom.model.displayName}"
-        !primaryModelName.isNullOrBlank() -> "跟随默认（$primaryModelName）"
-        else -> "跟随全局默认模型"
+        !primaryModelName.isNullOrBlank() -> stringResource(R.string.scheduled_model_follow_default_named, primaryModelName)
+        else -> stringResource(R.string.scheduled_model_follow_default)
     }
     val effectiveCapabilities = remember(providers, resolvedCustom, primaryModelId) {
         val target = resolvedCustom ?: providers.enabledModel(primaryModelId)
@@ -198,11 +201,13 @@ internal fun ScheduledTaskEditorScreen(
     val effortOptions = remember(effectiveCapabilities) {
         listOf<ReasoningEffort?>(null) + effectiveCapabilities?.selectableEfforts.orEmpty()
     }
-    val effortLabels = remember(effortOptions) {
+    val effortFollowLabel = stringResource(R.string.scheduled_effort_follow_default)
+    val effortModelDefaultLabel = stringResource(R.string.scheduled_effort_model_default)
+    val effortLabels = remember(effortOptions, effortFollowLabel, effortModelDefaultLabel) {
         effortOptions.map { effort ->
             when (effort) {
-                null -> "跟随全局默认"
-                ReasoningEffort.DEFAULT -> "模型默认"
+                null -> effortFollowLabel
+                ReasoningEffort.DEFAULT -> effortModelDefaultLabel
                 else -> effort.displayName
             }
         }
@@ -230,6 +235,7 @@ internal fun ScheduledTaskEditorScreen(
         }, current.year, current.monthValue - 1, current.dayOfMonth).show()
     }
 
+    val saveFailedText = stringResource(R.string.scheduled_toast_save_failed)
     val canSave = initialized && !saving && name.isNotBlank() && prompt.isNotBlank() && scheduleError == null
     val onSaveClick: () -> Unit = {
         if (canSave) {
@@ -261,40 +267,56 @@ internal fun ScheduledTaskEditorScreen(
                 result.fold(
                     onSuccess = { saved -> onSaved(saved.id) },
                     onFailure = { failure ->
-                        EtaToastCenter.show(context, failure.message ?: "保存定时任务失败", Toast.LENGTH_SHORT)
+                        EtaToastCenter.show(
+                            context,
+                            failure.message ?: saveFailedText,
+                            Toast.LENGTH_SHORT,
+                        )
                     },
                 )
             }
         }
     }
 
-    val triggerTabs = remember {
-        listOf(
-            ScheduledTaskTriggerKind.DAILY to "每天",
-            ScheduledTaskTriggerKind.WEEKDAYS to "工作日",
-            ScheduledTaskTriggerKind.WEEKLY to "每周",
-            ScheduledTaskTriggerKind.INTERVAL to "间隔",
-            ScheduledTaskTriggerKind.ONCE to "一次性",
-            ScheduledTaskTriggerKind.CRON to "Cron",
-        )
-    }
+    val triggerTabs = listOf(
+        ScheduledTaskTriggerKind.DAILY to stringResource(R.string.scheduled_trigger_daily),
+        ScheduledTaskTriggerKind.WEEKDAYS to stringResource(R.string.scheduled_trigger_weekdays),
+        ScheduledTaskTriggerKind.WEEKLY to stringResource(R.string.scheduled_trigger_weekly),
+        ScheduledTaskTriggerKind.INTERVAL to stringResource(R.string.scheduled_trigger_interval),
+        ScheduledTaskTriggerKind.ONCE to stringResource(R.string.scheduled_trigger_once),
+        ScheduledTaskTriggerKind.CRON to stringResource(R.string.scheduled_trigger_cron),
+    )
     val deliveryOptions = listOf(
-        ScheduledTaskDeliveryMode.ALWAYS to "每次完成后通知",
-        ScheduledTaskDeliveryMode.ON_CHANGE to "仅发现变化时通知",
-        ScheduledTaskDeliveryMode.SILENT to "静默归档不通知",
+        ScheduledTaskDeliveryMode.ALWAYS to stringResource(R.string.scheduled_delivery_option_always),
+        ScheduledTaskDeliveryMode.ON_CHANGE to stringResource(R.string.scheduled_delivery_option_on_change),
+        ScheduledTaskDeliveryMode.SILENT to stringResource(R.string.scheduled_delivery_option_silent),
     )
     val sessionOptions = listOf(
-        ScheduledTaskSessionMode.ISOLATED to "每次独立归档（主聊天保持干净）",
-        ScheduledTaskSessionMode.DEDICATED to "固定专属对话（按时间续写）",
+        ScheduledTaskSessionMode.ISOLATED to stringResource(R.string.scheduled_session_option_isolated),
+        ScheduledTaskSessionMode.DEDICATED to stringResource(R.string.scheduled_ed_session_dedicated),
     )
     val misfireOptions = listOf(
-        ScheduledTaskMisfirePolicy.RUN_ONCE_WITHIN_WINDOW to "3 小时内最多补跑最近 1 次",
-        ScheduledTaskMisfirePolicy.SKIP to "错过即跳过",
+        ScheduledTaskMisfirePolicy.RUN_ONCE_WITHIN_WINDOW to stringResource(R.string.scheduled_misfire_option_catchup),
+        ScheduledTaskMisfirePolicy.SKIP to stringResource(R.string.scheduled_misfire_option_skip),
     )
     val timeoutChoices = listOf(120, 300, 600, 900, 1800)
-    val timeoutLabels = listOf("2 分钟", "5 分钟（推荐）", "10 分钟", "15 分钟", "30 分钟")
+    val timeoutLabels = listOf(
+        stringResource(R.string.scheduled_timeout_2m),
+        stringResource(R.string.scheduled_timeout_5m_recommended),
+        stringResource(R.string.scheduled_timeout_10m),
+        stringResource(R.string.scheduled_timeout_15m),
+        stringResource(R.string.scheduled_ed_timeout_30m),
+    )
     val intervalChoices = listOf(15, 30, 60, 120, 240, 360, 720)
-    val weekDayLabels = listOf("一", "二", "三", "四", "五", "六", "日")
+    val weekDayLabels = listOf(
+        stringResource(R.string.scheduled_weekday_short_mon),
+        stringResource(R.string.scheduled_weekday_short_tue),
+        stringResource(R.string.scheduled_weekday_short_wed),
+        stringResource(R.string.scheduled_weekday_short_thu),
+        stringResource(R.string.scheduled_weekday_short_fri),
+        stringResource(R.string.scheduled_weekday_short_sat),
+        stringResource(R.string.scheduled_weekday_short_sun),
+    )
 
     MiuixScaffoldPage(
         title = stringResource(if (isEditing) R.string.route_scheduled_task_edit else R.string.route_scheduled_task_new),
@@ -311,7 +333,7 @@ internal fun ScheduledTaskEditorScreen(
         overlay = {
             EtaWindowDialog(
                 show = pickerTarget != null,
-                title = "触发时间",
+                title = stringResource(R.string.scheduled_editor_trigger_time),
                 onDismissRequest = { pickerTarget = null },
             ) {
                 // 新库的颜色默认是浅色，跟着胖小胖当前的深浅色切换，深色下数字才看得清。
@@ -345,7 +367,7 @@ internal fun ScheduledTaskEditorScreen(
             }
             EtaSheet(
                 show = showModelSheet,
-                title = "执行模型",
+                title = stringResource(R.string.scheduled_field_model),
                 onDismissRequest = { showModelSheet = false },
                 insideMargin = DpSize(0.dp, 0.dp),
             ) {
@@ -353,7 +375,7 @@ internal fun ScheduledTaskEditorScreen(
                     pickerState = pickerState,
                     selectedSecondaryModelId = selectedModelId,
                     primaryModelName = primaryModelName,
-                    inheritLabel = "跟随全局默认模型",
+                    inheritLabel = stringResource(R.string.scheduled_model_follow_default),
                     onSelectModel = { id ->
                         showModelSheet = false
                         selectedModelId = id
@@ -363,19 +385,19 @@ internal fun ScheduledTaskEditorScreen(
         },
     ) {
         item(key = "content") {
-            EtaListGroup(title = "任务内容") {
+            EtaListGroup(title = stringResource(R.string.scheduled_editor_section_content)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     TextField(
                         value = name,
                         onValueChange = { name = it.take(80) },
-                        label = "任务名称（例如：每日晚间简报）",
+                        label = stringResource(R.string.scheduled_editor_name_label_with_example),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     TextField(
                         value = prompt,
                         onValueChange = { prompt = it.take(8000) },
-                        label = "要胖小胖做什么：目标、数据来源、想要的输出",
+                        label = stringResource(R.string.scheduled_ed_prompt_label),
                         minLines = 4,
                         maxLines = 10,
                         modifier = Modifier.fillMaxWidth(),
@@ -384,7 +406,7 @@ internal fun ScheduledTaskEditorScreen(
             }
         }
         item(key = "schedule") {
-            EtaListGroup(title = "运行时间") {
+            EtaListGroup(title = stringResource(R.string.scheduled_editor_section_schedule)) {
                 FlowRow(
                     Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -410,7 +432,7 @@ internal fun ScheduledTaskEditorScreen(
                             ) {
                                 (1..7).forEach { day ->
                                     val selected = day in daysOfWeek
-                                    EtaChoiceChip("周${weekDayLabels[day - 1]}", selected = selected, onClick = {
+                                    EtaChoiceChip(weekDayLabels[day - 1], selected = selected, onClick = {
                                         val next = if (selected) daysOfWeek - day else daysOfWeek + day
                                         if (next.isNotEmpty()) daysOfWeek = next
                                     })
@@ -419,7 +441,7 @@ internal fun ScheduledTaskEditorScreen(
                             EtaPreferenceDivider(hasLeading = false)
                         }
                         EtaArrowPreference(
-                            title = "触发时间",
+                            title = stringResource(R.string.scheduled_editor_trigger_time),
                             startAction = { EtaPreferenceIcon(Icons.Outlined.AccessTime, tint = EtaPreferenceColors.Blue) },
                             endActions = {
                                 Text(
@@ -433,7 +455,7 @@ internal fun ScheduledTaskEditorScreen(
                     }
                     ScheduledTaskTriggerKind.INTERVAL -> {
                         EtaOverlayDropdownPreference(
-                            title = "间隔",
+                            title = stringResource(R.string.scheduled_trigger_interval),
                             items = intervalChoices.map { ScheduledTaskScheduleCalculator.formatInterval(it) },
                             selectedIndex = intervalChoices.indexOf(intervalMinutes).takeIf { it >= 0 } ?: 3,
                             startAction = { EtaPreferenceIcon(Icons.Outlined.AccessTime, tint = EtaPreferenceColors.Blue) },
@@ -442,7 +464,7 @@ internal fun ScheduledTaskEditorScreen(
                     }
                     ScheduledTaskTriggerKind.ONCE -> {
                         EtaArrowPreference(
-                            title = "运行时间",
+                            title = stringResource(R.string.scheduled_editor_section_schedule),
                             startAction = { EtaPreferenceIcon(Icons.Outlined.Event, tint = EtaPreferenceColors.Blue) },
                             endActions = {
                                 Text(
@@ -459,7 +481,7 @@ internal fun ScheduledTaskEditorScreen(
                             TextField(
                                 value = cronExpression,
                                 onValueChange = { cronExpression = it.take(120) },
-                                label = "Cron：分 时 日 月 周（例如 0 9 * * 1-5）",
+                                label = stringResource(R.string.scheduled_ed_cron_label),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -478,9 +500,9 @@ internal fun ScheduledTaskEditorScreen(
             }
         }
         item(key = "delivery") {
-            EtaListGroup(title = "结果怎么给你") {
+            EtaListGroup(title = stringResource(R.string.scheduled_ed_section_delivery)) {
                 EtaOverlayDropdownPreference(
-                    title = "通知",
+                    title = stringResource(R.string.scheduled_ed_field_notify),
                     items = deliveryOptions.map { it.second },
                     selectedIndex = deliveryOptions.indexOfFirst { it.first == deliveryMode }.coerceAtLeast(0),
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Notifications, tint = EtaPreferenceColors.Orange) },
@@ -488,7 +510,7 @@ internal fun ScheduledTaskEditorScreen(
                 )
                 EtaPreferenceDivider()
                 EtaOverlayDropdownPreference(
-                    title = "对话",
+                    title = stringResource(R.string.scheduled_ed_field_conversation),
                     items = sessionOptions.map { it.second },
                     selectedIndex = sessionOptions.indexOfFirst { it.first == sessionMode }.coerceAtLeast(0),
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Event, tint = EtaPreferenceColors.Teal) },
@@ -496,17 +518,17 @@ internal fun ScheduledTaskEditorScreen(
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
-                    title = "运行时显示进度通知",
-                    summary = "关掉后在后台静默执行，不出运行中的通知，只在完成时按上面的设置推结果",
+                    title = stringResource(R.string.scheduled_editor_show_progress_title),
+                    summary = stringResource(R.string.scheduled_ed_show_progress_summary),
                     checked = showRunningNotification,
                     onCheckedChange = { showRunningNotification = it },
                 )
             }
         }
         item(key = "model") {
-            EtaListGroup(title = "模型") {
+            EtaListGroup(title = stringResource(R.string.scheduled_ed_section_model)) {
                 EtaArrowPreference(
-                    title = "执行模型",
+                    title = stringResource(R.string.scheduled_field_model),
                     summary = modelSummary,
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Cloud, tint = EtaPreferenceColors.Blue) },
                     onClick = { showModelSheet = true },
@@ -514,7 +536,7 @@ internal fun ScheduledTaskEditorScreen(
                 if (effortOptions.size > 1) {
                     EtaPreferenceDivider()
                     EtaOverlayDropdownPreference(
-                        title = "思考强度",
+                        title = stringResource(R.string.scheduled_ed_reasoning_effort),
                         items = effortLabels,
                         selectedIndex = selectedEffortIndex,
                         startAction = { EtaPreferenceIcon(Icons.Outlined.Psychology, tint = EtaPreferenceColors.Violet) },
@@ -524,54 +546,53 @@ internal fun ScheduledTaskEditorScreen(
             }
         }
         item(key = "capabilities") {
-            EtaListGroup(title = "能用哪些工具（再和全局开关取交集）") {
+            EtaListGroup(title = stringResource(R.string.scheduled_ed_section_tools)) {
                 EtaSwitchPreference(
-                    title = "网页与浏览器",
+                    title = stringResource(R.string.scheduled_cap_short_browser),
                     checked = capabilities.browserTools,
                     onCheckedChange = { capabilities = capabilities.copy(browserTools = it) },
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
-                    title = "读取设备信息",
-                    summary = "通知、日历、使用时长等",
+                    title = stringResource(R.string.scheduled_ed_cap_device_read),
+                    summary = stringResource(R.string.scheduled_ed_cap_device_read_summary),
                     checked = capabilities.deviceReadTools,
                     onCheckedChange = { capabilities = capabilities.copy(deviceReadTools = it) },
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
-                    title = "控制设备状态",
-                    summary = "闹钟、亮度、开关等会改设置的操作",
+                    title = stringResource(R.string.scheduled_ed_cap_device_action),
+                    summary = stringResource(R.string.scheduled_ed_cap_device_action_summary),
                     checked = capabilities.deviceActionTools,
                     onCheckedChange = { capabilities = capabilities.copy(deviceActionTools = it) },
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
-                    title = "终端与文件",
+                    title = stringResource(R.string.scheduled_cap_short_terminal),
                     checked = capabilities.terminalTools,
                     onCheckedChange = { capabilities = capabilities.copy(terminalTools = it) },
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
-                    title = "MCP 工具",
+                    title = stringResource(R.string.scheduled_ed_cap_mcp),
                     checked = capabilities.mcpTools,
                     onCheckedChange = { capabilities = capabilities.copy(mcpTools = it) },
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
-                    title = "操作应用界面",
-                    summary = "打开第三方应用、点按、输入",
+                    title = stringResource(R.string.scheduled_ed_cap_gui),
+                    summary = stringResource(R.string.scheduled_ed_cap_gui_summary),
                     checked = capabilities.guiTools,
                     onCheckedChange = { capabilities = capabilities.copy(guiTools = it) },
                 )
                 if (capabilities.guiTools) {
                     EtaPreferenceDivider(hasLeading = false)
                     EtaSwitchPreference(
-                        title = "在后台虚拟屏操作",
-                        summary = if (capabilities.backgroundScreen) {
-                            "界面操作放到后台虚拟屏，不占用你的屏幕；锁屏、熄屏也能执行（需要 Root）"
-                        } else {
-                            "在前台屏幕上操作；锁屏时不执行，改发提醒，解锁后点通知再跑"
-                        },
+                        title = stringResource(R.string.scheduled_ed_background_screen),
+                        summary = stringResource(
+                            if (capabilities.backgroundScreen) R.string.scheduled_ed_background_screen_on_summary
+                            else R.string.scheduled_ed_background_screen_off_summary,
+                        ),
                         checked = capabilities.backgroundScreen,
                         onCheckedChange = { capabilities = capabilities.copy(backgroundScreen = it) },
                     )
@@ -579,23 +600,23 @@ internal fun ScheduledTaskEditorScreen(
             }
         }
         item(key = "advanced") {
-            EtaListGroup(title = "高级") {
+            EtaListGroup(title = stringResource(R.string.scheduled_ed_section_advanced)) {
                 EtaOverlayDropdownPreference(
-                    title = "错过时间时",
+                    title = stringResource(R.string.scheduled_ed_misfire),
                     items = misfireOptions.map { it.second },
                     selectedIndex = misfireOptions.indexOfFirst { it.first == misfirePolicy }.coerceAtLeast(0),
                     onSelectedIndexChange = { misfirePolicy = misfireOptions[it].first },
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaSwitchPreference(
-                    title = "夜间免打扰",
-                    summary = "23:00–07:30 之间的周期触发自动跳过",
+                    title = stringResource(R.string.scheduled_ed_quiet_hours),
+                    summary = stringResource(R.string.scheduled_ed_quiet_hours_summary),
                     checked = quietHoursEnabled,
                     onCheckedChange = { quietHoursEnabled = it },
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaOverlayDropdownPreference(
-                    title = "单次最长运行",
+                    title = stringResource(R.string.scheduled_ed_timeout),
                     items = timeoutLabels,
                     selectedIndex = timeoutChoices.indexOf(timeoutSeconds).takeIf { it >= 0 } ?: 1,
                     onSelectedIndexChange = { timeoutSeconds = timeoutChoices[it] },

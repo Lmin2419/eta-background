@@ -34,6 +34,7 @@ import io.github.mangi.eta.agent.scheduler.ScheduledTaskHealthChecker
 import io.github.mangi.eta.agent.scheduler.ScheduledTaskHealthSnapshot
 import io.github.mangi.eta.agent.scheduler.ScheduledTaskRunner
 import io.github.mangi.eta.agent.scheduler.ScheduledTaskScheduleCalculator
+import io.github.mangi.eta.core.AppStrings
 import io.github.mangi.eta.data.model.ScheduledTask
 import io.github.mangi.eta.data.model.ScheduledTaskPresets
 import io.github.mangi.eta.data.repository.ScheduledTaskRepository
@@ -205,15 +206,25 @@ internal fun buildScheduleMetaLine(task: ScheduledTask, nowMs: Long): String {
     val scheduleText = ScheduledTaskScheduleCalculator.describeSchedule(task.schedule)
     val deliveryText = ScheduledTaskUiFormatting.deliveryBadge(task.deliveryMode)
     val nextText = if (task.enabled && task.nextRunAt != null) {
-        " · 下次 ${ScheduledTaskScheduleCalculator.formatNextRunLabel(task.nextRunAt, nowMs)}"
+        " · " + AppStrings.get(
+            R.string.scheduled_meta_next_run,
+            "下次 %1\$s",
+            ScheduledTaskScheduleCalculator.formatNextRunLabel(task.nextRunAt, nowMs),
+        )
     } else ""
     return "$scheduleText · $deliveryText$nextText"
 }
 
 internal fun buildStatusMetaLine(task: ScheduledTask, isRunning: Boolean, nowMs: Long): String {
-    if (isRunning) return "正在后台运行…"
+    if (isRunning) return AppStrings.get(R.string.scheduled_status_running_background, "正在后台运行…")
     if (!task.autoDisabledReason.isNullOrBlank()) return task.autoDisabledReason
-    if (task.lastStatus == null) return if (task.enabled) "等待首次触发" else "已暂停"
+    if (task.lastStatus == null) {
+        return if (task.enabled) {
+            AppStrings.get(R.string.scheduled_status_awaiting_first_run, "等待首次触发")
+        } else {
+            AppStrings.get(R.string.scheduled_status_paused, "已暂停")
+        }
+    }
     val statusText = ScheduledTaskUiFormatting.statusLabel(task.lastStatus, runningNow = false)
     val timeText = ScheduledTaskUiFormatting.formatTimestamp(task.lastRunAt, nowMs)
     val summarySnippet = task.lastSummary.trim().take(36)
@@ -224,21 +235,22 @@ internal fun buildStatusMetaLine(task: ScheduledTask, isRunning: Boolean, nowMs:
     }
 }
 
+@Composable
 private fun healthGuidance(health: ScheduledTaskHealthSnapshot): Triple<String, String, String> = when {
     !health.ignoringBatteryOptimizations -> Triple(
-        "建议允许后台无限制耗电",
-        "深度休眠时受限应用约 10 秒后会被切断后台网络，开启「电池无限制」定时任务才能稳定跑完。",
-        "前往开启",
+        stringResource(R.string.scheduled_health_battery_title),
+        stringResource(R.string.scheduled_ed_health_battery_summary),
+        stringResource(R.string.scheduled_health_battery_action),
     )
     !health.canScheduleExactAlarms -> Triple(
-        "精确闹钟权限未开启",
-        "没开时定时任务可能晚几分钟触发；开启后可以准点唤醒执行。",
-        "去授权",
+        stringResource(R.string.scheduled_health_exact_alarm_title),
+        stringResource(R.string.scheduled_ed_health_exact_alarm_summary),
+        stringResource(R.string.scheduled_ed_health_exact_alarm_action),
     )
     else -> Triple(
-        "系统通知未开启",
-        "定时任务照常在后台执行，但收不到结果摘要和失败提醒。",
-        "开启通知",
+        stringResource(R.string.scheduled_health_notification_title),
+        stringResource(R.string.scheduled_ed_health_notification_summary),
+        stringResource(R.string.scheduled_health_notification_action),
     )
 }
 

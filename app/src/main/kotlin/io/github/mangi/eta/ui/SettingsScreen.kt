@@ -105,6 +105,7 @@ import io.github.mangi.eta.core.ModuleConfig
 import io.github.mangi.eta.agent.voice.DefaultAssistantOwner
 import io.github.mangi.eta.agent.voice.AssistantRoleStatus
 import io.github.mangi.eta.agent.runtime.RuntimeDiagnostics
+import io.github.mangi.eta.config.KeepScreenOnMode
 import io.github.mangi.eta.config.PowerAssistantTarget
 import io.github.mangi.eta.config.Prefs
 import io.github.mangi.eta.data.repository.ProviderRepository
@@ -732,16 +733,8 @@ private fun SettingsPageContent(
                             AppearanceSettingsRepository.update { it.copy(taskCompletionAlertsEnabled = enabled) }
                         } })
                     EtaPreferenceDivider()
-                    // 上游：任务执行期间保持屏幕常亮（默认开）。
-                    SwitchPref(
-                        context = context,
-                        prefs = agentPrefs,
-                        title = stringResource(R.string.settings_keep_screen_on),
-                        summary = stringResource(R.string.settings_keep_screen_on_summary),
-                        key = Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED,
-                        icon = Icons.Outlined.LightMode,
-                        iconTint = EtaPreferenceColors.Indigo,
-                    )
+                    // 14.1：上游的常亮开关拆成三档，默认「前台操作和对话时」。
+                    KeepScreenOnModePreference(context = context, prefs = agentPrefs)
                     EtaPreferenceDivider()
                     // 10 号方案第一期：回答前还有没解决的失败时，先让 Agent 复核一次再交卷。
                     EtaSwitchPreference(title = stringResource(R.string.completion_review_setting),
@@ -1134,6 +1127,57 @@ private fun AssistantRoleStatus.displayValue(): String = when (owner) {
     DefaultAssistantOwner.GEMINI -> "Gemini"
     DefaultAssistantOwner.OTHER -> ownerLabel ?: stringResource(R.string.assistant_role_status_other)
     DefaultAssistantOwner.NONE -> stringResource(R.string.assistant_role_status_unset)
+}
+
+// ── 运行期间保持屏幕常亮（三档） ─────────────────────────────────────────────
+
+/** 14.1：关 / 前台操作和对话时 / 所有任务。写入失败时回滚并提示，和 [SwitchPref] 一致。 */
+@Composable
+private fun KeepScreenOnModePreference(context: Context, prefs: SharedPreferences?) {
+    val modes = KeepScreenOnMode.entries
+    var mode by remember(prefs) { mutableStateOf(Prefs.keepScreenOnMode(prefs)) }
+    DisposableEffect(prefs) {
+        val target = prefs ?: return@DisposableEffect onDispose {}
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { changed, key ->
+            if (key == Prefs.Keys.AGENT_KEEP_SCREEN_ON_MODE || key == Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED) {
+                mode = Prefs.keepScreenOnMode(changed)
+            }
+        }
+        target.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { target.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+    EtaOverlayDropdownPreference(
+        title = stringResource(R.string.settings_keep_screen_on),
+        summary = stringResource(mode.summaryRes()),
+        items = modes.map { stringResource(it.labelRes()) },
+        selectedIndex = modes.indexOf(mode),
+        enabled = prefs != null,
+        startAction = { EtaPreferenceIcon(Icons.Outlined.LightMode, enabled = prefs != null, tint = EtaPreferenceColors.Indigo) },
+        onSelectedIndexChange = { index ->
+            val selected = modes.getOrNull(index) ?: return@EtaOverlayDropdownPreference
+            if (Prefs.setKeepScreenOnMode(selected, prefs)) {
+                mode = selected
+            } else {
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(
+                    context.applicationContext,
+                    R.string.settings_write_failed,
+                    Toast.LENGTH_SHORT,
+                )
+            }
+        },
+    )
+}
+
+private fun KeepScreenOnMode.labelRes(): Int = when (this) {
+    KeepScreenOnMode.OFF -> R.string.keep_screen_on_mode_off
+    KeepScreenOnMode.FOREGROUND -> R.string.keep_screen_on_mode_foreground
+    KeepScreenOnMode.ALL -> R.string.keep_screen_on_mode_all
+}
+
+private fun KeepScreenOnMode.summaryRes(): Int = when (this) {
+    KeepScreenOnMode.OFF -> R.string.keep_screen_on_mode_off_summary
+    KeepScreenOnMode.FOREGROUND -> R.string.keep_screen_on_mode_foreground_summary
+    KeepScreenOnMode.ALL -> R.string.keep_screen_on_mode_all_summary
 }
 
 // ── 带图标的布尔开关 ─────────────────────────────────────────────────────────

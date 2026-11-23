@@ -63,6 +63,7 @@ import io.github.mangi.eta.agent.overlay.AgentOverlayVisibilityPolicy
 import io.github.mangi.eta.agent.overlay.applyEvent
 import io.github.mangi.eta.agent.scheduler.ScheduledTaskRunContext
 import io.github.mangi.eta.agent.scheduler.ScheduledTaskRunner
+import io.github.mangi.eta.config.KeepScreenOnPolicy
 import io.github.mangi.eta.config.Prefs
 import io.github.mangi.eta.core.AndroidAgentLogger
 import io.github.mangi.eta.core.AppStrings
@@ -196,7 +197,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         AgentOverlayClearance.attach(clearanceHost)
         Prefs.localAgentPreferences()?.let { prefs ->
             val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-                if (key == Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED) {
+                if (key == Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED || key == Prefs.Keys.AGENT_KEEP_SCREEN_ON_MODE) {
                     mainHandler.post(::updateKeepScreenOn)
                 }
             }
@@ -1235,6 +1236,8 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
 
     private fun handleEtaUiVisibilityChanged() {
         if (destroyed) return
+        // 「前台」档：你正看着胖小胖时，用后台虚拟屏的对话也常亮；离开界面就恢复按系统息屏。
+        updateKeepScreenOn()
         val run = displayedRun ?: return
         val suppress = AgentOverlayVisibilityPolicy.shouldSuppressOverlayInEtaUi(
             handoffSource = run.request.handoff?.source,
@@ -1257,15 +1260,24 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
         }
     }
 
+    /** 14.1 常亮三档：关 / 前台操作和对话时（默认）/ 所有任务。判定规则见 [KeepScreenOnPolicy]。 */
     private fun updateKeepScreenOn() {
-        val enabled = !destroyed &&
-            Prefs.isEnabled(Prefs.Keys.AGENT_KEEP_SCREEN_ON_ENABLED) &&
-            runs.all().any { run ->
-                !run.session.isTerminal &&
+        if (destroyed) {
+            setKeepScreenOn(false)
+            return
+        }
+        val ownerRunId = guiControl.state.value.ownerRunId
+        val facts = runs.all().map { run ->
+            KeepScreenOnPolicy.RunFacts(
+                active = !run.session.isTerminal &&
                     !run.session.controller.isCancelled &&
-                    !run.session.controller.isPaused
-            }
-        setKeepScreenOn(enabled)
+                    !run.session.controller.isPaused,
+                ownsGui = run.runId == ownerRunId,
+                scheduled = run.request.handoff?.source == AgentRuntimeWire.SCHEDULED_TASK_HANDOFF_SOURCE,
+                usesBackgroundScreen = run.backgroundScreenPhase != null || run.lastBackgroundApp != null,
+            )
+        }
+        setKeepScreenOn(KeepScreenOnPolicy.shouldKeepOn(Prefs.keepScreenOnMode(), facts, MainActivity.isInForeground))
     }
 
     private fun applyGuiControlState(guiState: GuiControlCoordinator.State) {

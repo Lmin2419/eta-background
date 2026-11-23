@@ -47,7 +47,10 @@ internal object Prefs {
         const val AGENT_DEFAULT_REASONING_EFFORT = "agent_default_reasoning_effort"
         const val AGENT_AUTO_COMPACTION_ENABLED = "agent_auto_compaction_enabled"
         const val AGENT_SUBAGENT_ENABLED = "agent_subagent_enabled"
+        // 旧布尔开关：只在还没选过三档时用来推断档位（关 → 关，开 → 前台）。
         const val AGENT_KEEP_SCREEN_ON_ENABLED = "agent_keep_screen_on_enabled"
+        /** 常亮三档，值见 [KeepScreenOnMode.wireValue]。 */
+        const val AGENT_KEEP_SCREEN_ON_MODE = "agent_keep_screen_on_mode"
         const val AGENT_RUNTIME_CONFIG_JSON = "agent_runtime_config_json"
         const val AGENT_DISABLED_TOOLS_JSON = "agent_disabled_tools_json"
 
@@ -137,6 +140,26 @@ internal object Prefs {
         }.getOrNull()
         val parsed = ReasoningEffort.fromWireValue(raw)
         return if (parsed != null && parsed != ReasoningEffort.OFF) parsed else ReasoningEffort.DEFAULT
+    }
+
+    fun keepScreenOnMode(preferences: SharedPreferences? = localAgent ?: remote): KeepScreenOnMode {
+        val raw = runCatching { preferences?.getString(Keys.AGENT_KEEP_SCREEN_ON_MODE, null) }.getOrNull()
+        val legacy = runCatching {
+            preferences?.takeIf { it.contains(Keys.AGENT_KEEP_SCREEN_ON_ENABLED) }
+                ?.getBoolean(Keys.AGENT_KEEP_SCREEN_ON_ENABLED, true)
+        }.getOrNull()
+        return KeepScreenOnMode.resolve(raw, legacy)
+    }
+
+    /** 写入三档；旧布尔开关同步成「是否会常亮」，备份和旧版本读到的含义不变。 */
+    fun setKeepScreenOnMode(mode: KeepScreenOnMode, preferences: SharedPreferences? = localAgent): Boolean {
+        val target = preferences ?: return false
+        return runCatching {
+            target.edit()
+                .putString(Keys.AGENT_KEEP_SCREEN_ON_MODE, mode.wireValue)
+                .putBoolean(Keys.AGENT_KEEP_SCREEN_ON_ENABLED, mode != KeepScreenOnMode.OFF)
+                .commit()
+        }.getOrDefault(false)
     }
 
     fun powerAssistantTarget(): PowerAssistantTarget = powerAssistantTarget(remote)

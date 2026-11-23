@@ -132,7 +132,8 @@ class AgentRuntimeScreenOnTest {
             assertNull(service.field<ComposeView?>("capsuleView"))
             assertNull(service.field<ComposeView?>("glowView"))
             assertEquals(listOf("eta-ui-background"), AgentRuntimeService.tasks.value.map { it.runId })
-            assertFalse(AgentRuntimeService.keepScreenOn.value)
+            // 14.1「前台」档：你正看着胖小胖、对话还在跑时常亮（App 窗口只在对话流式输出时套用）。
+            assertTrue(AgentRuntimeService.keepScreenOn.value)
         } finally {
             foreground.setBoolean(null, previous)
             controller.destroy()
@@ -624,6 +625,40 @@ class AgentRuntimeScreenOnTest {
             assertEquals("fixture.background", card.targetPackage)
             assertTrue("A later publication must not resume a manual pause", background.session.controller.isPaused)
         } finally { host.destroy() }
+    }
+
+    @Test
+    fun defaultForegroundModeLetsBackgroundScreenAndScheduledRunsSleep() {
+        val host = Robolectric.buildService(AgentRuntimeService::class.java).create()
+        val foreground = io.github.mangi.eta.ui.MainActivity::class.java.getDeclaredField("isInForeground").apply {
+            isAccessible = true
+        }
+        val previous = foreground.getBoolean(null)
+        try {
+            val service = host.get()
+            foreground.setBoolean(null, false)
+            val background = service.registerRun("bg-screen", ownsGui = false).apply { lastBackgroundApp = "fixture.app" }
+            service.registerRun("scheduled", ownsGui = false, handoffSource = AgentRuntimeWire.SCHEDULED_TASK_HANDOFF_SOURCE)
+            service.invoke("updateKeepScreenOn")
+            assertFalse("background screen and scheduled work run fine with the screen off", AgentRuntimeService.keepScreenOn.value)
+
+            foreground.setBoolean(null, true)
+            AgentRuntimeService.onEtaUiVisibilityChanged()
+            shadowOf(Looper.getMainLooper()).idle()
+            assertTrue("watching the conversation keeps it awake", AgentRuntimeService.keepScreenOn.value)
+
+            foreground.setBoolean(null, false)
+            AgentRuntimeService.onEtaUiVisibilityChanged()
+            shadowOf(Looper.getMainLooper()).idle()
+            assertFalse(AgentRuntimeService.keepScreenOn.value)
+
+            background.lastBackgroundApp = null
+            service.registerRun("gui-owner")
+            assertTrue("a foreground phone operation keeps the screen on", AgentRuntimeService.keepScreenOn.value)
+        } finally {
+            foreground.setBoolean(null, previous)
+            host.destroy()
+        }
     }
 
     private fun AgentRuntimeService.assertTaskStatuses(expected: Map<String, AgentOverlayStatus>) {

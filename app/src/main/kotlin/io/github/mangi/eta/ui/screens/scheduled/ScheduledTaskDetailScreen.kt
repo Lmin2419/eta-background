@@ -86,27 +86,29 @@ internal fun ScheduledTaskDetailScreen(
     val currentTask = task
     val nowMs = System.currentTimeMillis()
 
-    val modelDisplay = remember(providers, currentTask?.modelId) {
+    val followDefaultLabel = stringResource(R.string.scheduled_model_follow_default)
+    val unavailableLabel = stringResource(R.string.scheduled_model_unavailable_fallback)
+    val modelDisplay = remember(providers, currentTask?.modelId, followDefaultLabel, unavailableLabel) {
         val id = currentTask?.modelId?.takeIf { it.isNotBlank() }
         if (id == null) {
-            "跟随全局默认模型"
+            followDefaultLabel
         } else {
             providers.enabledModel(id)?.let { "${it.provider.name} / ${it.model.displayName}" }
-                ?: "模型已失效（将回退默认）"
+                ?: unavailableLabel
         }
     }
 
     val onRunOrStop: () -> Unit = {
         if (isRunning) {
             ScheduledTaskRunner.cancelRunningTask(context, taskId)
-            EtaToastCenter.show(context, "正在停止当前运行…", Toast.LENGTH_SHORT)
+            EtaToastCenter.show(context, R.string.scheduled_toast_stopping, Toast.LENGTH_SHORT)
         } else {
             scope.launch {
                 val res = withContext(Dispatchers.IO) { ScheduledTaskRunner.triggerManualRun(context, taskId) }
                 val text = when (res) {
-                    ScheduledTaskRunner.ManualTriggerResult.Started -> "已开始后台试跑"
-                    ScheduledTaskRunner.ManualTriggerResult.AlreadyRunning -> "这个任务正在运行"
-                    ScheduledTaskRunner.ManualTriggerResult.NotFound -> "任务不存在"
+                    ScheduledTaskRunner.ManualTriggerResult.Started -> R.string.scheduled_toast_manual_started
+                    ScheduledTaskRunner.ManualTriggerResult.AlreadyRunning -> R.string.scheduled_toast_already_running
+                    ScheduledTaskRunner.ManualTriggerResult.NotFound -> R.string.scheduled_toast_task_not_found
                 }
                 EtaToastCenter.show(context, text, Toast.LENGTH_SHORT)
             }
@@ -136,8 +138,8 @@ internal fun ScheduledTaskDetailScreen(
         overlay = {
             EtaWindowDialog(
                 show = showDeleteConfirm,
-                title = "删除定时任务",
-                summary = "确定删除「${currentTask?.name.orEmpty()}」？后续排期会取消、运行时间线会清除，已导入的对话保留。",
+                title = stringResource(R.string.scheduled_action_delete_task),
+                summary = stringResource(R.string.scheduled_delete_dialog_message, currentTask?.name.orEmpty()),
                 onDismissRequest = { showDeleteConfirm = false },
             ) {
                 MiuixDialogActions(
@@ -157,18 +159,18 @@ internal fun ScheduledTaskDetailScreen(
             }
             EtaWindowDialog(
                 show = showClearMemoConfirm,
-                title = "清空任务小记事本",
-                summary = "清空后，下一次运行不再参考上次记下的状态或游标。",
+                title = stringResource(R.string.scheduled_clear_memo_dialog_title),
+                summary = stringResource(R.string.scheduled_clear_memo_dialog_message),
                 onDismissRequest = { showClearMemoConfirm = false },
             ) {
                 MiuixDialogActions(
-                    confirmText = "清空",
+                    confirmText = stringResource(R.string.scheduled_action_clear),
                     onCancel = { showClearMemoConfirm = false },
                     onConfirm = {
                         showClearMemoConfirm = false
                         scope.launch {
                             withContext(Dispatchers.IO) { ScheduledTaskRepository.updateMemo(taskId, "", context = context) }
-                            EtaToastCenter.show(context, "已清空任务小记事本", Toast.LENGTH_SHORT)
+                            EtaToastCenter.show(context, R.string.scheduled_toast_memo_cleared, Toast.LENGTH_SHORT)
                         }
                     },
                 )
@@ -178,7 +180,7 @@ internal fun ScheduledTaskDetailScreen(
         if (currentTask == null) {
             item(key = "missing") {
                 Text(
-                    "这个定时任务已不存在或已被删除。",
+                    stringResource(R.string.scheduled_detail_missing),
                     style = EtaTheme.type.subhead,
                     color = EtaTheme.colors.textSecondary,
                     modifier = Modifier.padding(24.dp),
@@ -189,9 +191,12 @@ internal fun ScheduledTaskDetailScreen(
         item(key = "control") {
             val scheduleText = ScheduledTaskScheduleCalculator.describeSchedule(currentTask.schedule)
             val nextText = when {
-                isRunning -> "正在后台运行…"
-                currentTask.enabled -> "下次运行：${ScheduledTaskScheduleCalculator.formatNextRunLabel(currentTask.nextRunAt, nowMs)}"
-                else -> "已暂停"
+                isRunning -> stringResource(R.string.scheduled_status_running_background)
+                currentTask.enabled -> stringResource(
+                    R.string.scheduled_next_run_prefix,
+                    ScheduledTaskScheduleCalculator.formatNextRunLabel(currentTask.nextRunAt, nowMs),
+                )
+                else -> stringResource(R.string.scheduled_status_paused)
             }
             EtaListGroup {
                 EtaSwitchPreference(
@@ -203,12 +208,14 @@ internal fun ScheduledTaskDetailScreen(
                 )
                 currentTask.autoDisabledReason?.takeIf { it.isNotBlank() }?.let { reason ->
                     EtaPreferenceDivider()
-                    EtaPreference(title = "已自动暂停", summary = reason, titleColor = errorTitleColor())
+                    EtaPreference(title = stringResource(R.string.scheduled_auto_paused_title), summary = reason, titleColor = errorTitleColor())
                 }
                 EtaPreferenceDivider()
                 EtaArrowPreference(
                     title = if (isRunning) stringResource(R.string.scheduled_action_stop) else stringResource(R.string.scheduled_action_run_now),
-                    summary = if (isRunning) "停止这次运行" else "不改排期、不受免打扰限制，马上在后台跑一次",
+                    summary = stringResource(
+                        if (isRunning) R.string.scheduled_action_stop_summary else R.string.scheduled_action_run_now_summary,
+                    ),
                     startAction = {
                         EtaPreferenceIcon(
                             if (isRunning) Icons.Outlined.Stop else Icons.Outlined.PlayArrow,
@@ -220,25 +227,28 @@ internal fun ScheduledTaskDetailScreen(
             }
         }
         item(key = "config") {
-            EtaListGroup(title = "任务指令与配置") {
-                EtaPreference(title = "指令", summary = currentTask.prompt)
+            EtaListGroup(title = stringResource(R.string.scheduled_detail_section_config)) {
+                EtaPreference(title = stringResource(R.string.scheduled_field_prompt), summary = currentTask.prompt)
                 EtaPreferenceDivider()
                 EtaPreference(
-                    title = "执行模型",
+                    title = stringResource(R.string.scheduled_field_model),
                     summary = modelDisplay,
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Cloud, tint = EtaPreferenceColors.Blue) },
                 )
                 EtaPreferenceDivider()
                 EtaPreference(
-                    title = "通知与会话",
+                    title = stringResource(R.string.scheduled_detail_field_notify_session),
                     summary = ScheduledTaskUiFormatting.deliveryBadge(currentTask.deliveryMode) + " · " +
-                        (if (currentTask.showRunningNotification) "显示运行进度" else "静默运行") + " · " +
+                        stringResource(
+                            if (currentTask.showRunningNotification) R.string.scheduled_progress_badge_show_full
+                            else R.string.scheduled_progress_badge_silent,
+                        ) + " · " +
                         ScheduledTaskUiFormatting.sessionModeLabel(currentTask.sessionMode),
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Notifications, tint = EtaPreferenceColors.Orange) },
                 )
                 EtaPreferenceDivider()
                 EtaPreference(
-                    title = "能力范围",
+                    title = stringResource(R.string.scheduled_detail_field_capabilities),
                     summary = buildCapabilitiesSummary(currentTask),
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Tune, tint = EtaPreferenceColors.Violet) },
                 )
@@ -246,17 +256,17 @@ internal fun ScheduledTaskDetailScreen(
         }
         if (currentTask.memo.isNotBlank()) {
             item(key = "memo") {
-                EtaListGroup(title = "任务小记事本（供下次运行对比）") {
+                EtaListGroup(title = stringResource(R.string.scheduled_detail_memo_title_with_hint)) {
                     EtaPreference(summary = currentTask.memo.take(1200))
                     EtaPreferenceDivider()
-                    EtaArrowPreference(title = "清空记事本", onClick = { showClearMemoConfirm = true })
+                    EtaArrowPreference(title = stringResource(R.string.scheduled_action_clear_memo), onClick = { showClearMemoConfirm = true })
                 }
             }
         }
         item(key = "timeline") {
-            EtaListGroup(title = "运行时间线") {
+            EtaListGroup(title = stringResource(R.string.scheduled_detail_section_timeline)) {
                 if (runs.isEmpty()) {
-                    EtaPreference(summary = "还没有运行记录，点上面的「立即试跑」看看实际效果。")
+                    EtaPreference(summary = stringResource(R.string.scheduled_detail_timeline_empty))
                 } else {
                     runs.forEachIndexed { index, run ->
                         if (index > 0) EtaPreferenceDivider()
@@ -269,7 +279,7 @@ internal fun ScheduledTaskDetailScreen(
         item(key = "delete") {
             EtaListGroup {
                 EtaArrowPreference(
-                    title = "删除定时任务",
+                    title = stringResource(R.string.scheduled_action_delete_task),
                     titleColor = errorTitleColor(),
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Delete, tint = EtaPreferenceColors.Pink) },
                     onClick = { showDeleteConfirm = true },
@@ -298,8 +308,8 @@ private fun RunTimelineRow(run: ScheduledTaskRun, isLive: Boolean, nowMs: Long, 
         title = headline,
         summary = run.summary.ifBlank {
             when {
-                isLive -> "点按实时查看运行过程"
-                canOpen -> "点按查看完整对话并继续追问"
+                isLive -> stringResource(R.string.scheduled_timeline_tap_live)
+                canOpen -> stringResource(R.string.scheduled_timeline_tap_conversation)
                 else -> null
             }
         },
@@ -320,15 +330,18 @@ private fun RunTimelineRow(run: ScheduledTaskRun, isLive: Boolean, nowMs: Long, 
     )
 }
 
+@Composable
 private fun buildCapabilitiesSummary(task: ScheduledTask): String {
     val caps = task.capabilities
     val list = buildList {
-        if (caps.browserTools) add("网页与浏览器")
-        if (caps.deviceReadTools) add("设备信息读取")
-        if (caps.deviceActionTools) add("设备状态控制")
-        if (caps.terminalTools) add("终端与文件")
+        if (caps.browserTools) add(stringResource(R.string.scheduled_cap_short_browser))
+        if (caps.deviceReadTools) add(stringResource(R.string.scheduled_cap_device_read_title))
+        if (caps.deviceActionTools) add(stringResource(R.string.scheduled_cap_device_action_title))
+        if (caps.terminalTools) add(stringResource(R.string.scheduled_cap_short_terminal))
         if (caps.mcpTools) add("MCP")
-        if (caps.guiTools) add(if (caps.backgroundScreen) "应用界面操作（后台虚拟屏）" else "应用界面操作（前台）")
+        if (caps.guiTools) {
+            add(stringResource(if (caps.backgroundScreen) R.string.scheduled_cap_short_gui_background else R.string.scheduled_cap_short_gui_foreground))
+        }
     }
-    return if (list.isEmpty()) "只用对话推理" else list.joinToString(" · ")
+    return if (list.isEmpty()) stringResource(R.string.scheduled_cap_none) else list.joinToString(" · ")
 }

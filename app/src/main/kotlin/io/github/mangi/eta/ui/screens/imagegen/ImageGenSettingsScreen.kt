@@ -31,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -99,11 +101,16 @@ internal fun ImageGenSettingsScreen(
             add(ImageGenSettings.STANDALONE_LINK_ID)
         }
     }
-    val linkChoiceLabels = remember(linkedOptions, backend) {
+    val autoMatchLabel = stringResource(R.string.imagegen_link_auto_match)
+    val standaloneLabel = stringResource(R.string.imagegen_link_standalone)
+    val resources = LocalResources.current
+    val linkChoiceLabels = remember(linkedOptions, backend, autoMatchLabel, standaloneLabel, resources) {
         buildList {
-            if (backend != ImageGenBackend.DOUBAO) add("自动匹配已有服务商")
-            linkedOptions.forEach { opt -> add(opt.name + if (opt.hasApiKey) "" else "（未填 Key）") }
-            add("独立填写 API Key")
+            if (backend != ImageGenBackend.DOUBAO) add(autoMatchLabel)
+            linkedOptions.forEach { opt ->
+                add(if (opt.hasApiKey) opt.name else resources.getString(R.string.imagegen_link_provider_no_key, opt.name))
+            }
+            add(standaloneLabel)
         }
     }
     val selectedLinkIndex = linkChoiceIds.indexOf(store.currentLinkId(backend)).let { if (it >= 0) it else 0 }
@@ -124,9 +131,11 @@ internal fun ImageGenSettingsScreen(
     }
     val supportedResolutions = capability.supportedResolutions
     val effectiveResolution = capability.clampResolution(settings.defaultResolution)
-    val resolutionLabels = remember(supportedResolutions, capability.resolutionIsQualityTier) {
+    val qualityStandardLabel = stringResource(R.string.imagegen_quality_standard_auto)
+    val qualityHighLabel = stringResource(R.string.imagegen_quality_high)
+    val resolutionLabels = remember(supportedResolutions, capability.resolutionIsQualityTier, qualityStandardLabel, qualityHighLabel) {
         if (capability.resolutionIsQualityTier) {
-            supportedResolutions.map { if (it == ImageGenResolution.R_1K) "标准画质（自动）" else "高清画质（High）" }
+            supportedResolutions.map { if (it == ImageGenResolution.R_1K) qualityStandardLabel else qualityHighLabel }
         } else {
             supportedResolutions.map { it.displayLabel }
         }
@@ -135,12 +144,18 @@ internal fun ImageGenSettingsScreen(
         val nextCap = ImageGenModelCapability.resolve(backend, value, effectiveBaseUrlForCapability)
         store.edit(settings.withModel(backend, value).copy(defaultResolution = nextCap.clampResolution(settings.defaultResolution)))
     }
-    val presetLabels = remember(presets) { presets.map { it.label } + "自定义模型 ID" }
+    val customModelLabel = stringResource(R.string.imagegen_preset_custom_model)
+    val presetLabels = remember(presets, customModelLabel) { presets.map { it.label } + customModelLabel }
     val selectedPresetIndex = presets.indexOfFirst { it.id == currentModel.trim() }.let { if (it >= 0) it else presets.size }
     val gallerySummary = if (store.galleryCount > 0) {
-        "${store.galleryCount} 张 · ${formatImageStorageSize(store.galleryBytes)}"
+        pluralStringResource(
+            R.plurals.imagegen_gallery_summary_count,
+            store.galleryCount,
+            store.galleryCount,
+            formatImageStorageSize(store.galleryBytes),
+        )
     } else {
-        "暂无本地图片"
+        stringResource(R.string.imagegen_gallery_summary_empty)
     }
 
     MiuixScaffoldPage(
@@ -150,7 +165,7 @@ internal fun ImageGenSettingsScreen(
     ) {
         if (store.loading) {
             item(key = "loading") {
-                Text("加载中…", style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary,
+                Text(stringResource(R.string.imagegen_loading), style = EtaTheme.type.subhead, color = EtaTheme.colors.textSecondary,
                     modifier = Modifier.padding(24.dp))
             }
             return@MiuixScaffoldPage
@@ -158,8 +173,8 @@ internal fun ImageGenSettingsScreen(
         item(key = "enable") {
             EtaListGroup {
                 EtaSwitchPreference(
-                    title = "启用 AI 生图",
-                    summary = "开启后任何对话模型都能调用生图和改图工具，成图直接显示在对话里",
+                    title = stringResource(R.string.imagegen_enable_title),
+                    summary = stringResource(R.string.imagegen_enable_summary),
                     checked = settings.enabled,
                     onCheckedChange = { store.edit(settings.copy(enabled = it)) },
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Image, tint = EtaPreferenceColors.Orange) },
@@ -167,9 +182,9 @@ internal fun ImageGenSettingsScreen(
             }
         }
         item(key = "service") {
-            EtaListGroup(title = "生图服务") {
+            EtaListGroup(title = stringResource(R.string.imagegen_section_service)) {
                 EtaOverlayDropdownPreference(
-                    title = "服务商渠道",
+                    title = stringResource(R.string.imagegen_provider_channel),
                     items = backendList.map { it.displayName() },
                     selectedIndex = backendList.indexOf(backend).coerceAtLeast(0),
                     onSelectedIndexChange = { idx ->
@@ -180,14 +195,14 @@ internal fun ImageGenSettingsScreen(
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaOverlayDropdownPreference(
-                    title = "凭据来源",
+                    title = stringResource(R.string.imagegen_credential_source),
                     items = linkChoiceLabels,
                     selectedIndex = selectedLinkIndex,
                     onSelectedIndexChange = onSelectLink,
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaOverlayDropdownPreference(
-                    title = "常用模型预设",
+                    title = stringResource(R.string.imagegen_model_presets),
                     items = presetLabels,
                     selectedIndex = selectedPresetIndex,
                     onSelectedIndexChange = { idx -> presets.getOrNull(idx)?.let { onModelChange(it.id) } },
@@ -195,8 +210,11 @@ internal fun ImageGenSettingsScreen(
                 if (usingLinkedProvider) {
                     EtaPreferenceDivider(hasLeading = false)
                     EtaPreference(
-                        summary = "当前直接用「${resolvedLink!!.name}」的 API Key 和连接地址（${resolvedLink.baseUrl.ifBlank { "官方默认" }}）。" +
-                            "要换地址或地域，把「凭据来源」切到「独立填写 API Key」。",
+                        summary = stringResource(
+                            R.string.imagegen_linked_provider_footer_with_url,
+                            resolvedLink!!.name,
+                            resolvedLink.baseUrl.ifBlank { stringResource(R.string.imagegen_official_default) },
+                        ),
                     )
                 }
                 capability.deprecationNotice?.let { notice ->
@@ -206,12 +224,14 @@ internal fun ImageGenSettingsScreen(
             }
         }
         item(key = "connection") {
-            EtaListGroup(title = "连接与模型参数") {
+            EtaListGroup(title = stringResource(R.string.imagegen_section_connection)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     TextField(
                         value = currentModel,
                         onValueChange = onModelChange,
-                        label = if (backend == ImageGenBackend.DOUBAO) "模型 ID 或 Endpoint ID" else "模型 ID",
+                        label = stringResource(
+                            if (backend == ImageGenBackend.DOUBAO) R.string.imagegen_field_model_or_endpoint_id else R.string.imagegen_field_model_id,
+                        ),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -223,7 +243,7 @@ internal fun ImageGenSettingsScreen(
                                 TextField(
                                     value = settings.gemini.baseUrl,
                                     onValueChange = { store.edit(settings.copy(gemini = settings.gemini.copy(baseUrl = it))) },
-                                    label = "接口地址（留空用官方默认）",
+                                    label = stringResource(R.string.imagegen_field_base_url_optional),
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth(),
                                 )
@@ -231,14 +251,14 @@ internal fun ImageGenSettingsScreen(
                                     TextField(
                                         value = settings.gemini.vertexProject,
                                         onValueChange = { store.edit(settings.copy(gemini = settings.gemini.copy(vertexProject = it))) },
-                                        label = "Vertex Project（留空走 global Express 端点）",
+                                        label = stringResource(R.string.imagegen_field_vertex_project),
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                     )
                                     TextField(
                                         value = settings.gemini.vertexLocation,
                                         onValueChange = { store.edit(settings.copy(gemini = settings.gemini.copy(vertexLocation = it))) },
-                                        label = "Vertex Location（默认 global）",
+                                        label = stringResource(R.string.imagegen_field_vertex_location_default),
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth(),
                                     )
@@ -247,7 +267,7 @@ internal fun ImageGenSettingsScreen(
                             ImageGenBackend.OPENAI_COMPATIBLE -> TextField(
                                 value = settings.openAi.baseUrl,
                                 onValueChange = { store.edit(settings.copy(openAi = settings.openAi.copy(baseUrl = it))) },
-                                label = "Base URL（OpenAI 或兼容中转）",
+                                label = stringResource(R.string.imagegen_field_openai_base_url),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -261,21 +281,21 @@ internal fun ImageGenSettingsScreen(
                             ImageGenBackend.DOUBAO -> TextField(
                                 value = settings.doubao.baseUrl,
                                 onValueChange = { store.edit(settings.copy(doubao = settings.doubao.copy(baseUrl = it))) },
-                                label = "火山方舟 Base URL",
+                                label = stringResource(R.string.imagegen_field_doubao_base_url),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             ImageGenBackend.QWEN -> TextField(
                                 value = settings.qwen.baseUrl,
                                 onValueChange = { store.edit(settings.copy(qwen = settings.qwen.copy(baseUrl = it))) },
-                                label = "专属业务空间域名（可选，留空用所选地域）",
+                                label = stringResource(R.string.imagegen_field_qwen_base_url),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             ImageGenBackend.SILICONFLOW -> TextField(
                                 value = settings.siliconFlow.baseUrl,
                                 onValueChange = { store.edit(settings.copy(siliconFlow = settings.siliconFlow.copy(baseUrl = it))) },
-                                label = "硅基流动 Base URL",
+                                label = stringResource(R.string.imagegen_field_siliconflow_base_url),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -283,14 +303,14 @@ internal fun ImageGenSettingsScreen(
                         TextField(
                             value = currentApiKey,
                             onValueChange = { store.editCredentials(store.credentials.withKey(backend, it)) },
-                            label = "API Key（只存在本机，加密保存）",
+                            label = stringResource(R.string.imagegen_field_api_key_local),
                             singleLine = true,
                             visualTransformation = if (apiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 EtaIconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
                                     Icon(
                                         if (apiKeyVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                                        contentDescription = "切换 API Key 可见性",
+                                        contentDescription = stringResource(R.string.imagegen_toggle_api_key_visibility),
                                         tint = EtaTheme.colors.textSecondary,
                                     )
                                 }
@@ -303,7 +323,7 @@ internal fun ImageGenSettingsScreen(
                     val modes = listOf(GeminiEndpointMode.AI_STUDIO, GeminiEndpointMode.VERTEX_AI)
                     EtaPreferenceDivider(hasLeading = false)
                     EtaOverlayDropdownPreference(
-                        title = "接入平台",
+                        title = stringResource(R.string.imagegen_gemini_platform),
                         items = listOf("Google AI Studio", "Google Cloud Vertex AI"),
                         selectedIndex = modes.indexOf(GeminiEndpointMode.normalize(settings.gemini.endpointMode)).coerceAtLeast(0),
                         onSelectedIndexChange = { store.edit(settings.copy(gemini = settings.gemini.copy(endpointMode = modes[it]))) },
@@ -313,8 +333,11 @@ internal fun ImageGenSettingsScreen(
                     val regions = listOf(SpeechRegion.BEIJING, SpeechRegion.SINGAPORE)
                     EtaPreferenceDivider(hasLeading = false)
                     EtaOverlayDropdownPreference(
-                        title = "百炼地域",
-                        items = listOf("华北2（北京）", "新加坡（国际站）"),
+                        title = stringResource(R.string.imagegen_qwen_region),
+                        items = listOf(
+                            stringResource(R.string.imagegen_qwen_region_beijing),
+                            stringResource(R.string.imagegen_qwen_region_singapore),
+                        ),
                         selectedIndex = regions.indexOf(settings.qwen.region).coerceAtLeast(0),
                         onSelectedIndexChange = { store.edit(settings.copy(qwen = settings.qwen.copy(region = regions[it]))) },
                     )
@@ -322,9 +345,9 @@ internal fun ImageGenSettingsScreen(
             }
         }
         item(key = "defaults") {
-            EtaListGroup(title = "生成默认偏好") {
+            EtaListGroup(title = stringResource(R.string.imagegen_section_defaults)) {
                 EtaOverlayDropdownPreference(
-                    title = "默认画面比例",
+                    title = stringResource(R.string.imagegen_default_aspect_ratio),
                     items = ratioList.map { it.displayLabel },
                     selectedIndex = ratioList.indexOf(settings.defaultAspectRatio).coerceAtLeast(0),
                     onSelectedIndexChange = { store.edit(settings.copy(defaultAspectRatio = ratioList[it])) },
@@ -332,19 +355,24 @@ internal fun ImageGenSettingsScreen(
                 EtaPreferenceDivider(hasLeading = false)
                 if (supportedResolutions.size > 1) {
                     EtaOverlayDropdownPreference(
-                        title = if (capability.resolutionIsQualityTier) "默认画质档位" else "默认清晰度",
+                        title = stringResource(
+                            if (capability.resolutionIsQualityTier) R.string.imagegen_default_quality_tier else R.string.imagegen_default_resolution,
+                        ),
                         items = resolutionLabels,
                         selectedIndex = supportedResolutions.indexOf(effectiveResolution).coerceAtLeast(0),
                         onSelectedIndexChange = { store.edit(settings.copy(defaultResolution = supportedResolutions[it])) },
                     )
                 } else {
-                    EtaPreference(title = "默认清晰度", summary = "${resolutionLabels.firstOrNull().orEmpty()}（当前模型固定）")
+                    EtaPreference(
+                        title = stringResource(R.string.imagegen_default_resolution),
+                        summary = stringResource(R.string.imagegen_resolution_fixed_by_model, resolutionLabels.firstOrNull().orEmpty()),
+                    )
                 }
                 if (backend == ImageGenBackend.DOUBAO) {
                     EtaPreferenceDivider(hasLeading = false)
                     EtaSwitchPreference(
-                        title = "添加 AI 生成水印",
-                        summary = "默认关闭，开启后图片右下角显示火山方舟水印",
+                        title = stringResource(R.string.imagegen_doubao_watermark_title),
+                        summary = stringResource(R.string.imagegen_doubao_watermark_summary),
                         checked = settings.doubao.watermark,
                         onCheckedChange = { store.edit(settings.copy(doubao = settings.doubao.copy(watermark = it))) },
                     )
@@ -352,14 +380,14 @@ internal fun ImageGenSettingsScreen(
                 if (backend == ImageGenBackend.QWEN) {
                     EtaPreferenceDivider(hasLeading = false)
                     EtaSwitchPreference(
-                        title = "提示词智能润色",
-                        summary = "由千问自动补充画面细节（推荐开启）",
+                        title = stringResource(R.string.imagegen_qwen_prompt_extend_title),
+                        summary = stringResource(R.string.imagegen_qwen_prompt_extend_summary),
                         checked = settings.qwen.promptExtend,
                         onCheckedChange = { store.edit(settings.copy(qwen = settings.qwen.copy(promptExtend = it))) },
                     )
                     EtaPreferenceDivider(hasLeading = false)
                     EtaSwitchPreference(
-                        title = "添加 AI 生成水印",
+                        title = stringResource(R.string.imagegen_qwen_watermark_title),
                         checked = settings.qwen.watermark,
                         onCheckedChange = { store.edit(settings.copy(qwen = settings.qwen.copy(watermark = it))) },
                     )
@@ -372,13 +400,13 @@ internal fun ImageGenSettingsScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 EtaButton(
-                    text = if (store.testing) "试画中…" else "试画测试",
+                    text = stringResource(if (store.testing) R.string.imagegen_action_testing else R.string.imagegen_action_test),
                     onClick = store::testGenerate,
                     enabled = !store.testing,
                     modifier = Modifier.weight(1f),
                 )
                 EtaButton(
-                    text = if (store.saving) "保存中…" else "保存配置",
+                    text = stringResource(if (store.saving) R.string.imagegen_action_saving else R.string.imagegen_action_save_config),
                     onClick = store::save,
                     enabled = !store.saving,
                     modifier = Modifier.weight(1f),
@@ -423,10 +451,10 @@ private fun ImageGenFeedback(store: ImageGenSettingsStore, onPreview: (String) -
             ) {
                 Box(Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)).background(EtaTheme.colors.surfaceSunken)) {
                     if (bitmap != null) {
-                        Image(bitmap, contentDescription = "试画预览", contentScale = ContentScale.Crop, modifier = Modifier.size(64.dp))
+                        Image(bitmap, contentDescription = stringResource(R.string.imagegen_test_preview_desc), contentScale = ContentScale.Crop, modifier = Modifier.size(64.dp))
                     }
                 }
-                Text("试画成功，点开看大图", style = EtaTheme.type.subhead, color = EtaTheme.colors.textPrimary)
+                Text(stringResource(R.string.imagegen_test_preview_title), style = EtaTheme.type.subhead, color = EtaTheme.colors.textPrimary)
             }
         }
     }
