@@ -73,6 +73,11 @@
 - 新库的 `COUITheme` 会改全局的按压效果、滚动回弹和选字颜色，所以现在只包住新组件；等页面骨架迁移时再整体换。
 - 基线截图 143 张，对比脚本逐像素比较；只有时间文字、数据状态和动画时机造成的无关差异。
 
+14.4b 准备（菜单、对话框）：
+- 旧库菜单是独立窗口，背后整窗模糊（`ProvideCouiMenuBackdrop`）。新库 `OverlayListPopup` 画在组合树里，默认挂在 COUI 根 `Scaffold` 上（`renderInRootScaffold = true`），我们还没有用它的根骨架，迁移时要么先放一个根宿主，要么传 `false`。
+- 按住滑动选中仍然有：新库 `ListPopup` 自带拖动选择和按压高光滑动；从按住的位置弹出用 `PreciseClickState` + `Modifier.preciseClickAnchor`，对应我们现在的 `EtaMenuAnchor`。
+- 模糊改用新库的材质模糊（`materialBlur`），和现在整窗模糊的观感会有差别，这一段要真机对比。
+
 ## 进度
 
 - [x] 14.1 常亮三档（2026111629）
