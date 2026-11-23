@@ -105,9 +105,9 @@ class LocaleResourcesTest {
         assertEquals("搜索网页", localizedString("zh-CN", R.string.trace_arg_web_search))
         assertEquals("搜尋網頁", localizedString("zh-TW", R.string.trace_arg_web_search))
 
-        assertEquals("Eta is listening", localizedString("en-US", R.string.voice_i18n_fg_listening))
-        assertEquals("Eta 正在聆听", localizedString("zh-CN", R.string.voice_i18n_fg_listening))
-        assertEquals("Eta 正在聆聽", localizedString("zh-TW", R.string.voice_i18n_fg_listening))
+        assertEquals("胖小胖 is listening", localizedString("en-US", R.string.voice_i18n_fg_listening))
+        assertEquals("胖小胖正在聆听", localizedString("zh-CN", R.string.voice_i18n_fg_listening))
+        assertEquals("胖小胖正在聆聽", localizedString("zh-TW", R.string.voice_i18n_fg_listening))
 
         assertEquals("Background command completed", localizedString("en-US", R.string.execution_bg_cmd_completed))
         assertEquals("后台命令已完成", localizedString("zh-CN", R.string.execution_bg_cmd_completed))
