@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaMenuAnchor
+import io.github.mangi.eta.ui.components.coui.etaMenuAnchor
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -33,7 +35,6 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.background
-import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.material.icons.outlined.Close
@@ -121,8 +122,8 @@ internal fun AgentAttachmentPickerButton(
         if (uri != null) onAttachFolder(uri.toString())
     }
 
-    val anchor = com.itos.coui.menu.rememberCouiMenuAnchor()
-    Box(modifier = modifier.couiMenuAnchor(anchor)) {
+    val anchor = rememberEtaMenuAnchor()
+    Box(modifier = modifier.etaMenuAnchor(anchor)) {
         IconButton(
             onClick = { anchor.open { showPopup = true } },
             minWidth = ChatInputActionSize,

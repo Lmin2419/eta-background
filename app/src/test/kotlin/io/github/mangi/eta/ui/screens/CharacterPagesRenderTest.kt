@@ -67,7 +67,7 @@ class CharacterPagesRenderTest {
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().visible()
         try {
             store.loadLibrary()
-            render(activity.get(), "character-library-$tag", text(R.string.character_persona_title)) {
+            render(activity.get(), "character-library-$tag", text(R.string.character_action_new)) {
                 CharacterLibraryScreen(store = store, onNavigate = {}, onBack = {})
             }
             store.loadEditor(null)

@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaBackdrop
+import io.github.mangi.eta.ui.components.coui.etaBackdrop
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +35,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.itos.coui.backdrop.couiBackdrop
 import io.github.mangi.eta.R
 import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.Text
@@ -71,11 +72,11 @@ internal fun GlassPageTopBar(
 ) {
     val own = if (ownBackdrop) trackRenderSource(sourceName,
         if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && EtaCouiSupport.shaders)
-            com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = sourceName) else null) else null
+            rememberEtaBackdrop(diagnosticName = sourceName) else null) else null
     val source = if (ownBackdrop) own else io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop.current
     CappedFontScale {
         Box(Modifier.fillMaxWidth()) {
-            if (own != null) Box(Modifier.matchParentSize().couiBackdrop(own).background(EtaTheme.colors.canvas))
+            if (own != null) Box(Modifier.matchParentSize().etaBackdrop(own).background(EtaTheme.colors.canvas))
             CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides source) {
                 Row(
                     Modifier.fillMaxWidth()

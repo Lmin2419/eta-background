@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaBackdrop
+import io.github.mangi.eta.ui.components.coui.etaBackdrop
 import io.github.mangi.eta.ui.theme.EtaMotion
 
 import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
@@ -13,7 +15,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import com.itos.coui.backdrop.couiBackdrop
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.clickable
@@ -419,7 +420,7 @@ private fun AgentChatScaffold(
     // 首页由外壳创建并传入，顶部控件共用；其他页面用自己的。
     val sharedSource = io.github.mangi.eta.ui.components.coui.LocalChatCouiSource.current
     val ownSource = trackRenderSource("消息区(COUI)", if (sharedSource == null && LocalBlurEnabled.current)
-        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-messages") else null)
+        rememberEtaBackdrop(diagnosticName = "chat-messages") else null)
     val messageCouiBackdrop = sharedSource ?: ownSource
     // 07 第四期·采样源精简：Android 14+ 走 COUI 液态玻璃时，输入框和顶部控件都从 COUI 源采样，
     // 消息区不再额外录一份 Miuix 模糊层（只给 Android 13 及以下的旧玻璃用）。
@@ -483,7 +484,7 @@ private fun AgentChatScaffold(
         val bottomPadding = innerPadding.calculateBottomPadding()
         // 发出第一条消息时问候语与建议淡出上移，消息随后升起，不再硬切。
         Box(Modifier.fillMaxSize().then(if (glassBackdrop != null) Modifier.layerBackdrop(glassBackdrop) else Modifier)
-            .then(if (messageCouiBackdrop != null) Modifier.couiBackdrop(messageCouiBackdrop) else Modifier)
+            .then(if (messageCouiBackdrop != null) Modifier.etaBackdrop(messageCouiBackdrop) else Modifier)
             .background(EtaTheme.colors.canvas)) {
         AnimatedVisibility(
             visible = !hasMessages,

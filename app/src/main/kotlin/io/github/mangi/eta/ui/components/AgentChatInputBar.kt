@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaMenuAnchor
+import io.github.mangi.eta.ui.components.coui.etaMenuAnchor
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.animation.animateContentSize
@@ -86,7 +88,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.ui.layout.positionInWindow
@@ -625,7 +626,7 @@ private fun ThinkingEffortChip(
     modifier: Modifier = Modifier,
 ) {
     var showPopup by remember { mutableStateOf(false) }
-    val anchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    val anchor = rememberEtaMenuAnchor()
     val menuEnabled = enabled && options.size > 1
     LaunchedEffect(menuEnabled) {
         if (!menuEnabled) showPopup = false
@@ -635,7 +636,7 @@ private fun ThinkingEffortChip(
     Row(
         modifier
             .heightIn(min = ChatInputActionSize)
-            .couiMenuAnchor(anchor)
+            .etaMenuAnchor(anchor)
             .clip(EtaTheme.shapes.radiusFull)
             .clickable(enabled = menuEnabled, role = androidx.compose.ui.semantics.Role.Button) { anchor.open { showPopup = true } }
             .padding(horizontal = 8.dp),

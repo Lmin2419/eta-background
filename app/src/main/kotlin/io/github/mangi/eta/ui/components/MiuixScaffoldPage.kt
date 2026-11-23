@@ -59,7 +59,7 @@ fun MiuixScaffoldPage(
 
         // 与上游 3.4.x 一致的 COUI 二级页：大标题随滚动收缩成顶栏小标题，返回键是浮动的液态玻璃圆钮，
         // 顶栏是 COUI 的模糊渐隐材质；内容是分组卡片列表。宽屏或页面自带主视觉时用紧凑标题。
-        val dark = com.itos.coui.theme.CouiTheme.isDark
+        val dark = EtaTheme.colors.isDark
         val useCompact = compactTitle || rememberIsWideScreen()
         val behavior = if (useCompact) null else com.itos.coui.topappbar.CouiTopAppBarDefaults.exitUntilCollapsedScrollBehavior(
             canScroll = { listState.canScrollForward || listState.canScrollBackward },
@@ -146,7 +146,7 @@ fun MiuixScaffold(
         // 内容仍会把这个 Miuix 滚动行为挂到列表上，但 COUI 顶栏不量它的折叠范围：不关掉的话它会吞掉所有往上推的手势，
         // 列表滑不动（2026111603 服务商详情页、记忆页）。所以传一个不折叠的（canScroll = false）。
         val scrollBehavior = MiuixScrollBehavior(canScroll = { false })
-        val dark = com.itos.coui.theme.CouiTheme.isDark
+        val dark = EtaTheme.colors.isDark
         val barColors = com.itos.coui.topappbar.CouiTopAppBarDefaults.colors(titleColor = EtaTheme.colors.textPrimary, dark = dark)
         com.itos.coui.layout.Scaffold(
             modifier = modifier.fillMaxSize(),

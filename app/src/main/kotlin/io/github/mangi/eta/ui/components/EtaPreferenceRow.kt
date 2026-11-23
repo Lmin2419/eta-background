@@ -136,7 +136,7 @@ internal fun EtaPreferenceRow(
                         if (summary != null) Text(
                             text = summary,
                             // 与 COUI 列表副标题一致：13sp，与标题间隔 2dp。
-                            modifier = Modifier.padding(top = com.itos.coui.layout.CouiPageDefaults.summarySpacing),
+                            modifier = Modifier.padding(top = 2.dp),
                             style = EtaTheme.type.footnote,
                             color = if (enabled) summaryColor.color else summaryColor.disabledColor,
                         )

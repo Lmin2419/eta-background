@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaMenuAnchor
+import io.github.mangi.eta.ui.components.coui.etaMenuAnchor
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -21,7 +23,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -397,7 +398,7 @@ private fun UserMessageBubble(
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     var menu by remember(message.id) { mutableStateOf(false) }
-    val couiAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    val couiAnchor = rememberEtaMenuAnchor()
     // 菜单打开时被按的气泡轻轻放大，提示「操作的是这一条」。
     val pressScale = androidx.compose.animation.core.animateFloatAsState(if (menu) 1.03f else 1f,
         androidx.compose.animation.core.spring(dampingRatio = 0.7f, stiffness = 500f), label = "userBubbleMenu")
@@ -430,7 +431,7 @@ private fun UserMessageBubble(
                         }, contentScale = ContentScale.Crop)
                 } }
             }
-            Column(Modifier.couiMenuAnchor(couiAnchor)
+            Column(Modifier.etaMenuAnchor(couiAnchor)
                 .graphicsLayer { val s = pressScale.value; scaleX = s; scaleY = s }
                 .background(EtaTheme.colors.surfaceSunken, shape)
                 .then(if (isEditing) Modifier.border(1.dp, EtaTheme.colors.accent, shape) else Modifier)
@@ -648,7 +649,7 @@ private fun AgentMessageBlock(
         }
     }
 
-    val couiAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    val couiAnchor = rememberEtaMenuAnchor()
     val selection = LocalMessageSelection.current
     val selecting = selection?.active == true
     val isSelected = selection?.selected?.contains(message.id) == true
@@ -658,7 +659,7 @@ private fun AgentMessageBlock(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .couiMenuAnchor(couiAnchor)
+            .etaMenuAnchor(couiAnchor)
             .graphicsLayer { val s = lift.value; scaleX = s; scaleY = s }
             .selectionHighlight(isSelected)
             .then(if (selecting && selection != null) Modifier.clickable { selection.toggle(message.id) }

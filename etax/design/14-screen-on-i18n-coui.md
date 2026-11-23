@@ -59,12 +59,19 @@
 
 | 段 | 内容 |
 | --- | --- |
-| a | 基础控件：开关、文字、主题、页面边距 |
+| a | 适配层收拢（页面只通过 `coui` 包用旧库）；开关换新库；页面边距改成自有常量 |
 | b | 菜单（锚在按钮上的弹出菜单）、对话框 |
 | c | 液态玻璃（顶栏、输入框）、搜索栏、页面骨架 |
 | d | 去掉旧库依赖 |
 
 每段前后都用同一组截图（设置、侧栏、对话、菜单、深色、大字体）对比，加上 CI 的真机模式截图；液态玻璃这段视觉风险最大，放最后，需要你在真机上看一眼再继续。
+
+14.4a 记录（2026111633）：
+- 新增 `ui/components/coui/EtaCouiAdapters.kt`：`EtaMenuAnchor` / `rememberEtaMenuAnchor` / `Modifier.etaMenuAnchor`、`EtaBackdrop` / `rememberEtaBackdrop` / `Modifier.etaBackdrop`、`etaFloatingGlassAvailable`、`EtaCouiSwitch`、`EtaCouiMenu`、`etaCouiPageColors`。深浅色改读 `EtaTheme.colors.isDark`（和旧库主题同源）。
+- 还直接用旧库的：`AgentAppTheme`（主题入口）、`ConversationPanePanel`（侧栏搜索栏）、`MiuixScaffoldPage`（设置页骨架），以及 `coui` 包本身。
+- 新库的坑：圆角（squircle）遮罩用 RuntimeShader，软件绘制会抛异常，没有着色器时用 `LocalSquircleEnabled` 关掉；新库开关本身只有 44×24，要自己补 48×48 触控区，否则行高变矮。
+- 新库的 `COUITheme` 会改全局的按压效果、滚动回弹和选字颜色，所以现在只包住新组件；等页面骨架迁移时再整体换。
+- 基线截图 143 张，对比脚本逐像素比较；只有时间文字、数据状态和动画时机造成的无关差异。
 
 ## 进度
 
@@ -75,4 +82,7 @@
 - [x] 14.2d 其余界面（2026111631）
 - [x] 14.2e 工具步骤短标签（2026111631）
 - [x] 14.3 Agent 层用户可见文字（2026111632）
-- [ ] 14.4a–d COUI 2.1.0 整体迁移
+- [x] 14.4a 适配层收拢、开关换新库（2026111633）
+- [ ] 14.4b 菜单、对话框
+- [ ] 14.4c 液态玻璃、顶栏、搜索栏、页面骨架（需要真机看一眼再继续）
+- [ ] 14.4d 去掉旧库

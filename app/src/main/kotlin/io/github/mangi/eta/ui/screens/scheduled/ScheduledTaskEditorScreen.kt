@@ -337,7 +337,7 @@ internal fun ScheduledTaskEditorScreen(
                 onDismissRequest = { pickerTarget = null },
             ) {
                 // 新库的颜色默认是浅色，跟着胖小胖当前的深浅色切换，深色下数字才看得清。
-                val dark = com.itos.coui.theme.CouiTheme.isDark
+                val dark = EtaTheme.colors.isDark
                 io.github.suqi8.coui.kmp.theme.COUITheme(
                     colors = if (dark) io.github.suqi8.coui.kmp.theme.darkColorScheme() else io.github.suqi8.coui.kmp.theme.lightColorScheme(),
                 ) {

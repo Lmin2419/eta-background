@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaMenuAnchor
+import io.github.mangi.eta.ui.components.coui.etaMenuAnchor
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -18,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
@@ -51,7 +52,7 @@ internal fun EtaDropdownPreference(
     val color = if (available) EtaTheme.colors.textSecondary
         else MiuixTheme.colorScheme.disabledOnSurface
     // 与上游设置页一致：选项用 COUI 菜单从这一行展开，当前项打勾。
-    val anchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    val anchor = rememberEtaMenuAnchor()
     var bounds by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
     @Suppress("UNUSED_VARIABLE") val unusedWindowChoice = useWindow
     EtaPreferenceRow(
@@ -60,7 +61,7 @@ internal fun EtaDropdownPreference(
         summary = summary?.takeUnless { it == items.getOrNull(selectedIndex)?.text },
         modifier = modifier
             .onGloballyPositioned { bounds = it.boundsInWindow() }
-            .couiMenuAnchor(anchor),
+            .etaMenuAnchor(anchor),
         bottomAction = bottomAction,
         startAction = startAction,
         enabled = available,

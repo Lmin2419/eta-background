@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.theme.EtaTheme
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -66,8 +67,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.itos.coui.layout.CouiPageDefaults
-import com.itos.coui.theme.CouiTheme
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.imagegen.GeneratedImageActivityPayload
 import io.github.mangi.eta.agent.imagegen.GeneratedImageStore
@@ -181,15 +180,15 @@ private fun GeneratingPlaceholderCard(
     )
 
     val aspectRatio = remember(payload?.aspectRatio) { parsePlaceholderRatio(payload?.aspectRatio) }
-    val couiDark = if (isCoui) CouiTheme.isDark else false
+    val couiDark = if (isCoui) EtaTheme.colors.isDark else false
     val surfaceBg = if (isCoui) {
         if (couiDark) Color(0xFF1F2229) else Color(0xFFF2F4F8)
     } else {
         MiuixTheme.colorScheme.surfaceContainerHigh
     }
-    val accent = if (isCoui) CouiPageDefaults.themeColors(couiDark).accent else MiuixTheme.colorScheme.primary
-    val titleColor = if (isCoui) CouiPageDefaults.themeColors(couiDark).title else MiuixTheme.colorScheme.onSurface
-    val summaryColor = if (isCoui) CouiPageDefaults.themeColors(couiDark).summary else MiuixTheme.colorScheme.onSurfaceVariantSummary
+    val accent = if (isCoui) io.github.mangi.eta.ui.components.coui.etaCouiPageColors(couiDark).accent else MiuixTheme.colorScheme.primary
+    val titleColor = if (isCoui) io.github.mangi.eta.ui.components.coui.etaCouiPageColors(couiDark).title else MiuixTheme.colorScheme.onSurface
+    val summaryColor = if (isCoui) io.github.mangi.eta.ui.components.coui.etaCouiPageColors(couiDark).summary else MiuixTheme.colorScheme.onSurfaceVariantSummary
     val maxCardWidth = if (assistantOverlay) 260.dp else 300.dp
     val cornerShape = RoundedCornerShape(18.dp)
 
@@ -302,14 +301,14 @@ private fun GeneratedImagesGalleryCard(
     var promptExpanded by rememberSaveable(messageId) { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
 
-    val couiDark = if (isCoui) CouiTheme.isDark else false
+    val couiDark = if (isCoui) EtaTheme.colors.isDark else false
     val surfaceBg = if (isCoui) {
         if (couiDark) Color(0xFF1F2229) else Color(0xFFF4F6FA)
     } else {
         MiuixTheme.colorScheme.surfaceContainerHigh
     }
-    val titleColor = if (isCoui) CouiPageDefaults.themeColors(couiDark).title else MiuixTheme.colorScheme.onSurface
-    val summaryColor = if (isCoui) CouiPageDefaults.themeColors(couiDark).summary else MiuixTheme.colorScheme.onSurfaceVariantSummary
+    val titleColor = if (isCoui) io.github.mangi.eta.ui.components.coui.etaCouiPageColors(couiDark).title else MiuixTheme.colorScheme.onSurface
+    val summaryColor = if (isCoui) io.github.mangi.eta.ui.components.coui.etaCouiPageColors(couiDark).summary else MiuixTheme.colorScheme.onSurfaceVariantSummary
     val borderColor = if (isCoui) {
         if (couiDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.06f)
     } else {
@@ -652,7 +651,7 @@ private fun GeneratedImageStatusNotice(
     detail: String?,
     isCoui: Boolean,
 ) {
-    val couiDark = if (isCoui) CouiTheme.isDark else false
+    val couiDark = if (isCoui) EtaTheme.colors.isDark else false
     val bg = if (isError) {
         StatusError.copy(alpha = if (couiDark) 0.16f else 0.09f)
     } else if (isCoui) {
@@ -661,8 +660,8 @@ private fun GeneratedImageStatusNotice(
         MiuixTheme.colorScheme.surfaceContainerHigh
     }
     val tint = if (isError) StatusError else MiuixTheme.colorScheme.primary
-    val titleColor = if (isCoui) CouiPageDefaults.themeColors(couiDark).title else MiuixTheme.colorScheme.onSurface
-    val summaryColor = if (isCoui) CouiPageDefaults.themeColors(couiDark).summary else MiuixTheme.colorScheme.onSurfaceVariantSummary
+    val titleColor = if (isCoui) io.github.mangi.eta.ui.components.coui.etaCouiPageColors(couiDark).title else MiuixTheme.colorScheme.onSurface
+    val summaryColor = if (isCoui) io.github.mangi.eta.ui.components.coui.etaCouiPageColors(couiDark).summary else MiuixTheme.colorScheme.onSurfaceVariantSummary
 
     Row(
         modifier = Modifier

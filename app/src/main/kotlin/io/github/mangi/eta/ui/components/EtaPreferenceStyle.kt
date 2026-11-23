@@ -33,14 +33,14 @@ internal object EtaPreferenceColors {
 
 /** 与上游 COUI 设置页一致的尺寸（CouiPageDefaults）：组间 16、图标格 24 + 间距 16、行高 48、分隔线 0.33。 */
 internal object EtaPreferenceDefaults {
-    val SidePadding = com.itos.coui.layout.CouiPageDefaults.rowPadding
-    val GroupSpacing = com.itos.coui.layout.CouiPageDefaults.groupSpacing
-    val IconSize = com.itos.coui.layout.CouiPageDefaults.iconSize
-    val IconTextGap = com.itos.coui.layout.CouiPageDefaults.iconSpacing
+    val SidePadding = 16.dp
+    val GroupSpacing = 16.dp
+    val IconSize = 24.dp
+    val IconTextGap = 16.dp
     val ContentStart = SidePadding + IconSize + IconTextGap
     fun contentStart(hasLeading: Boolean) = if (hasLeading) ContentStart else SidePadding
-    val RowMinHeight = com.itos.coui.layout.CouiPageDefaults.rowMinHeight
-    val RowVerticalPadding = com.itos.coui.layout.CouiPageDefaults.contentPadding
+    val RowMinHeight = 48.dp
+    val RowVerticalPadding = 10.dp
 }
 
 @Composable
@@ -100,7 +100,7 @@ internal fun EtaPreferenceIcon(
 internal fun EtaPreferenceDivider(hasLeading: Boolean = true, modifier: Modifier = Modifier) {
     HorizontalDivider(
         modifier = modifier.padding(start = EtaPreferenceDefaults.contentStart(hasLeading), end = EtaPreferenceDefaults.SidePadding),
-        thickness = com.itos.coui.layout.CouiPageDefaults.dividerHeight,
+        thickness = 0.33.dp,
         color = EtaTheme.colors.outline,
     )
 }

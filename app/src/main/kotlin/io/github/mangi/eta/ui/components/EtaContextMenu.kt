@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.EtaMenuAnchor
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -90,7 +91,7 @@ internal fun EtaContextMenu(
     anchor: Rect = Rect.Zero,
     onDismiss: () -> Unit,
     alignEnd: Boolean = false,
-    couiAnchor: com.itos.coui.menu.CouiMenuAnchor? = null,
+    couiAnchor: EtaMenuAnchor? = null,
     header: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -106,26 +107,23 @@ internal fun EtaContextMenu(
         EtaMenuCollectScope.content()
     }
     val entries = collector.entries.toList()
-    val dark = com.itos.coui.theme.CouiTheme.isDark
-    val destructive = com.itos.coui.dialog.CouiDialogDefaults.themeColors(dark).destructive
-    val items = entries.mapIndexed { index, entry ->
-        com.itos.coui.menu.CouiMenuItem(
-            value = index,
-            text = entry.text,
-            icon = entry.icon,
-            selected = entry.selected,
-            enabled = entry.enabled,
-            dividerBefore = entry.dividerBefore,
-            iconTint = if (entry.destructive) destructive else null,
-        )
-    }
-    com.itos.coui.menu.Menu(
-        expanded = show && items.isNotEmpty(),
-        onDismissRequest = onDismiss,
-        items = items,
-        onItemClick = { item -> entries.getOrNull(item.value)?.onClick?.invoke() },
+    io.github.mangi.eta.ui.components.coui.EtaCouiMenu(
+        show = show,
+        entries = entries.map { entry ->
+            io.github.mangi.eta.ui.components.coui.EtaCouiMenuEntry(
+                text = entry.text,
+                icon = entry.icon,
+                enabled = entry.enabled,
+                destructive = entry.destructive,
+                selected = entry.selected,
+                dividerBefore = entry.dividerBefore,
+                onClick = entry.onClick,
+            )
+        },
+        onDismiss = onDismiss,
         anchor = couiAnchor,
-        headerText = header,
+        header = header,
+        dark = EtaTheme.colors.isDark,
     )
 }
 

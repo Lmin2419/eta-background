@@ -85,16 +85,16 @@ internal fun EtaSwitch(
     enabled: Boolean = true,
 ) {
     // 与上游一致的 COUI 开关（拖动、回弹和触感都由它处理）。打开时轨道用正文色：浅色是黑、深色是浅色，不再满屏珊瑚橘。
-    val dark = com.itos.coui.theme.CouiTheme.isDark
-    com.itos.coui.switch.Switch(
-        modifier = modifier,
+    val dark = EtaTheme.colors.isDark
+    io.github.mangi.eta.ui.components.coui.EtaCouiSwitch(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        dark = dark,
-        // 圆点用页面底色：浅色模式白点配黑轨道，深色模式深色圆点配浅色轨道，两种状态都看得清。
-        colors = com.itos.coui.switch.CouiSwitchDefaults.colors(EtaTheme.colors.textPrimary, dark)
-            .copy(thumb = if (dark) EtaTheme.colors.canvas else Color.White),
+        modifier = modifier,
         enabled = enabled,
+        dark = dark,
+        trackOn = EtaTheme.colors.textPrimary,
+        // 圆点用页面底色：浅色模式白点配黑轨道，深色模式深色圆点配浅色轨道，两种状态都看得清。
+        thumb = if (dark) EtaTheme.colors.canvas else Color.White,
     )
 }
 

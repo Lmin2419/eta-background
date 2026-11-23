@@ -1,5 +1,8 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaMenuAnchor
+import io.github.mangi.eta.ui.components.coui.etaMenuAnchor
+import io.github.mangi.eta.ui.components.coui.EtaMenuAnchor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +15,6 @@ import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInWindow
 import io.github.mangi.eta.ui.theme.EtaElevation
-import com.itos.coui.menu.couiMenuAnchor
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import io.github.mangi.eta.agent.overlay.localizedText
@@ -79,7 +81,7 @@ internal fun HomeConversationTopBar(
     var settings by remember { mutableStateOf(false) }
     var savingPreset by remember { mutableStateOf(false) }
     var presetName by remember { mutableStateOf("") }
-    val pillAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    val pillAnchor = rememberEtaMenuAnchor()
     var pendingModel by remember { mutableStateOf<String?>(null) }
     val toast = LocalChatToast.current
     val lockedText = stringResource(R.string.eta_model_locked)
@@ -117,7 +119,7 @@ internal fun HomeConversationTopBar(
                 }
             }
             Box((if (character == null) Modifier.weight(1f) else Modifier).etaChromeScale(0.88f)
-                .couiMenuAnchor(pillAnchor), contentAlignment = Alignment.Center) {
+                .etaMenuAnchor(pillAnchor), contentAlignment = Alignment.Center) {
                 // 回复进行中也能选模型：这一轮回复完后才换（AgentAppState.selectModel）；压缩和切换中仍锁住。
                 val locked = isCompacting || models.isChanging
                 val openModels = { if (locked) toast(lockedText) else pillAnchor.open { settings = true } }
@@ -239,7 +241,7 @@ internal fun ModelPill(state: AgentModelPickerUiState, locked: Boolean, iconOnly
  */
 @Composable
 private fun ModelPopover(
-    show: Boolean, anchor: com.itos.coui.menu.CouiMenuAnchor, models: AgentModelPickerUiState, busy: Boolean,
+    show: Boolean, anchor: EtaMenuAnchor, models: AgentModelPickerUiState, busy: Boolean,
     conversation: ConversationMenuActions,
     presets: PresetMenuState?,
     onDismiss: () -> Unit, onModel: (String) -> Unit, onManageModels: () -> Unit,

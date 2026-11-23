@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.screens.desktop
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaBackdrop
 import androidx.compose.material.icons.automirrored.outlined.ArrowBackIos
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.width
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.windowInsetsPadding
-import com.itos.coui.backdrop.couiBackdrop
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -528,7 +528,7 @@ internal fun DesktopChatFrame(
         io.github.mangi.eta.ui.components.rememberTopBarBackdrop())
     val pageSource = io.github.mangi.eta.ui.components.trackRenderSource("电脑会话页(COUI)",
         if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && io.github.mangi.eta.ui.components.EtaCouiSupport.shaders)
-            com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "desktop-page") else null)
+            rememberEtaBackdrop(diagnosticName = "desktop-page") else null)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = EtaTheme.colors.canvas,

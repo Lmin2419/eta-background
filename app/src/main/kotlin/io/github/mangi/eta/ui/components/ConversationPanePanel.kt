@@ -1,5 +1,11 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaMenuAnchor
+import io.github.mangi.eta.ui.components.coui.rememberEtaBackdrop
+import io.github.mangi.eta.ui.components.coui.etaMenuAnchor
+import io.github.mangi.eta.ui.components.coui.etaFloatingGlassAvailable
+import io.github.mangi.eta.ui.components.coui.etaBackdrop
+import io.github.mangi.eta.ui.components.coui.EtaBackdrop
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
@@ -17,8 +23,6 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.compose.foundation.layout.*
-import com.itos.coui.menu.couiMenuAnchor
-import com.itos.coui.backdrop.couiBackdrop
 import io.github.mangi.eta.ui.theme.EtaTypography
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -123,10 +127,10 @@ internal fun ConversationPanePanel(
     var desktopCollapsed by remember { mutableStateOf(false) }
     var menuTarget by remember { mutableStateOf<ConversationSummaryUi?>(null) }
     // 长按对话的菜单从按住的位置展开（上游 COUI 菜单）。
-    val paneMenuAnchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    val paneMenuAnchor = rememberEtaMenuAnchor()
     // 底部玻璃栏采样的列表画面（上游侧栏的 COUI 背景采样）；关闭模糊或本机测试时不采样。
     val paneBackdrop = trackRenderSource("侧栏(COUI)", if (io.github.mangi.eta.ui.app.LocalBlurEnabled.current && EtaCouiSupport.shaders)
-        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "conversation-pane") else null)
+        rememberEtaBackdrop(diagnosticName = "conversation-pane") else null)
     val selecting = selectedIds.isNotEmpty()
     val motion = EtaTheme.motion
     val visibleConversations = remember(state.conversations, state.searchQuery, archived) {
@@ -164,9 +168,9 @@ internal fun ConversationPanePanel(
         val showDock = !selecting
         Box(Modifier.weight(1f).fillMaxWidth()) {
         // 列表从底部玻璃栏下面穿过：玻璃栏采样这块列表做液态玻璃折射。
-        Box(Modifier.fillMaxSize().then(if (paneBackdrop != null) Modifier.couiBackdrop(paneBackdrop)
+        Box(Modifier.fillMaxSize().then(if (paneBackdrop != null) Modifier.etaBackdrop(paneBackdrop)
             .background(EtaTheme.colors.surfaceSunken) else Modifier)) {
-        LazyColumn(state = listState, modifier = Modifier.fillMaxSize().couiMenuAnchor(paneMenuAnchor),
+        LazyColumn(state = listState, modifier = Modifier.fillMaxSize().etaMenuAnchor(paneMenuAnchor),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = if (showDock) PaneDockHeight + 8.dp else 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (visibleConversations.isEmpty() && (state.groups.isEmpty() || archived || state.searchQuery.isNotBlank())) item {
@@ -456,12 +460,12 @@ private val PaneDockHeight = 72.dp
 @Composable
 private fun PaneBottomDock(
     query: String, onSearchChange: (String) -> Unit, permissionsAttention: Boolean,
-    onOpenPermissions: () -> Unit, onOpenSettings: () -> Unit, backdrop: com.itos.coui.backdrop.CouiBackdrop?,
+    onOpenPermissions: () -> Unit, onOpenSettings: () -> Unit, backdrop: EtaBackdrop?,
 ) {
     // 有液态玻璃时用上游 3.4.4 的 COUI 原生搜索栏：点开后右边两枚圆钮滑走、出现「取消」；否则用玻璃胶囊里的输入框。
     val nativeSearch = remember(backdrop) {
         backdrop != null && android.os.Build.VERSION.SDK_INT >= 34 &&
-            runCatching { com.itos.coui.effect.CouiFloatingRenderer.pair() }.isSuccess
+            etaFloatingGlassAvailable()
     }
     androidx.compose.runtime.CompositionLocalProvider(io.github.mangi.eta.ui.components.coui.LocalEtaCouiBackdrop provides backdrop) {
         if (nativeSearch && backdrop != null) {
@@ -493,7 +497,7 @@ private fun PaneBottomDock(
 @Composable
 private fun PaneNativeSearchDock(
     query: String, onSearchChange: (String) -> Unit, permissionsAttention: Boolean,
-    onOpenPermissions: () -> Unit, onOpenSettings: () -> Unit, backdrop: com.itos.coui.backdrop.CouiBackdrop,
+    onOpenPermissions: () -> Unit, onOpenSettings: () -> Unit, backdrop: EtaBackdrop,
 ) {
     var expanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val searchState = com.itos.coui.search.rememberCouiSearchBarState(expanded)

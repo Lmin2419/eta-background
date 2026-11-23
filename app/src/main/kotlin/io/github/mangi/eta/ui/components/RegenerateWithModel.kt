@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.components
 
+import io.github.mangi.eta.ui.components.coui.EtaMenuAnchor
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -39,7 +40,7 @@ internal val LocalRegenerateWithModel = staticCompositionLocalOf<RegenerateWithM
 @Composable
 internal fun RegenerateModelChooser(
     show: Boolean,
-    anchor: com.itos.coui.menu.CouiMenuAnchor?,
+    anchor: EtaMenuAnchor?,
     models: AgentModelPickerUiState,
     onPick: (String) -> Unit,
     onDismiss: () -> Unit,

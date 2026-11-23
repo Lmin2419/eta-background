@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.app
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaBackdrop
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -44,7 +45,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.itos.coui.backdrop.couiBackdrop
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -136,7 +136,7 @@ internal fun AgentAppShell(
     val backdrop = io.github.mangi.eta.ui.components.trackRenderSource("顶栏(Miuix)", rememberTopBarBackdrop())
     // 对话页唯一的 COUI 背景源：挂在消息区上（AgentChatBody），顶部液态玻璃控件与输入框都从这里采样。
     val chatCouiSource = if (currentRoute is AppRoute.Home && homeTopBar != null && LocalBlurEnabled.current)
-        com.itos.coui.backdrop.rememberCouiBackdrop(diagnosticName = "chat-page") else null
+        rememberEtaBackdrop(diagnosticName = "chat-page") else null
     io.github.mangi.eta.ui.components.trackRenderSource("对话页(COUI)", chatCouiSource)
     val pageContent: @Composable () -> Unit = {
         Scaffold(

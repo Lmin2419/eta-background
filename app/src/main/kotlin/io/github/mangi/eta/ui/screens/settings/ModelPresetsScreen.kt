@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.settings
 
+import io.github.mangi.eta.ui.components.coui.rememberEtaMenuAnchor
+import io.github.mangi.eta.ui.components.coui.etaMenuAnchor
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.itos.coui.menu.couiMenuAnchor
 import io.github.mangi.eta.R
 import io.github.mangi.eta.data.model.ModelPreset
 import io.github.mangi.eta.data.model.enabledModel
@@ -90,12 +91,12 @@ internal fun ModelPresetsScreen(onBack: () -> Unit) {
 
 @Composable
 private fun PresetRow(preset: ModelPreset, summary: String, onRename: () -> Unit, onDelete: () -> Unit) {
-    val anchor = com.itos.coui.menu.rememberCouiMenuAnchor()
+    val anchor = rememberEtaMenuAnchor()
     var menu by remember { mutableStateOf(false) }
     EtaArrowPreference(
         title = preset.name,
         summary = summary,
-        modifier = Modifier.couiMenuAnchor(anchor),
+        modifier = Modifier.etaMenuAnchor(anchor),
         onClick = { anchor.open { menu = true } },
     )
     EtaContextMenu(menu, onDismiss = { menu = false }, couiAnchor = anchor) {
