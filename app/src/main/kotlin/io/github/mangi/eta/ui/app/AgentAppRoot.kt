@@ -851,7 +851,7 @@ fun AgentAppRoot(
                                 navigator.popToHome()
                             } else {
                                 io.github.mangi.eta.ui.components.EtaToastCenter.show(
-                                    context, context.getString(R.string.scheduled_run_no_conversation), android.widget.Toast.LENGTH_SHORT,
+                                    context, R.string.scheduled_run_no_conversation, android.widget.Toast.LENGTH_SHORT,
                                 )
                             }
                         }

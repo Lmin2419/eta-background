@@ -89,7 +89,7 @@ internal fun ScheduledTasksScreen(
             runCatching {
                 withContext(Dispatchers.IO) { ScheduledTaskRepository.setEnabled(task.id, enabled, context = context) }
             }.onFailure {
-                EtaToastCenter.show(context, context.getString(R.string.scheduled_toggle_failed), Toast.LENGTH_SHORT)
+                EtaToastCenter.show(context, R.string.scheduled_toggle_failed, Toast.LENGTH_SHORT)
             }
         }
     }
