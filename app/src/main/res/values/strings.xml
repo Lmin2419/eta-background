@@ -2151,4 +2151,16 @@
   <string name="scheduled_ed_health_exact_alarm_summary">Without it, tasks may start a few minutes late; with it they wake up on time.</string>
   <string name="scheduled_ed_health_exact_alarm_action">Allow</string>
   <string name="scheduled_ed_health_notification_summary">Tasks still run in the background, but you won\'t get result summaries or failure alerts.</string>
+  <string name="catalog_add_from_catalog">Add from catalog</string>
+  <string name="catalog_add_from_catalog_summary">Browse available providers and pick models</string>
+  <string name="catalog_selected_of_total">%1$d of %2$d models selected</string>
+  <string name="catalog_import_hint">After importing, add an API key and enable it; model requests go to the Base URL above</string>
+  <string name="catalog_select_all_results">Select all results</string>
+  <string name="catalog_clear_selection">Clear selection</string>
+  <string name="provider_vertex_project_label">Project ID / number (the official endpoint needs a Google Cloud project)</string>
+  <string name="subagent_default_model">Default model</string>
+  <string name="subagent_follow_default_model">Follow default model</string>
+  <string name="subagent_default_reasoning">Default thinking effort</string>
+  <string name="subagent_search_models">Search models or providers</string>
+  <string name="subagent_role_model_summary">Model: %1$s</string>
 </resources>

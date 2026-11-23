@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.characters
 
+import io.github.mangi.eta.R
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -58,14 +60,14 @@ internal fun CharacterLibraryScreen(
         onNavigate(AppRoute.CharacterEditor())
     }
     MiuixScaffoldPage(
-        title = "角色",
+        title = stringResource(R.string.character_library_title),
         onBack = onBack,
         actions = {
             EtaIconButton(onClick = importCard, enabled = !store.busy) {
-                Icon(Icons.Outlined.FileUpload, contentDescription = "导入角色卡")
+                Icon(Icons.Outlined.FileUpload, contentDescription = stringResource(R.string.character_action_import_card))
             }
             EtaIconButton(onClick = createCharacter, enabled = !store.busy) {
-                Icon(Icons.Outlined.Add, contentDescription = "创建角色")
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.character_action_create))
             }
         },
     ) {
@@ -74,7 +76,7 @@ internal fun CharacterLibraryScreen(
                 value = store.query,
                 onValueChange = { store.query = it },
                 onSearch = { store.query = it },
-                placeholder = "搜索名称或标签",
+                placeholder = stringResource(R.string.character_library_search_hint),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = CharacterCardPadding)
                     .padding(top = 4.dp, bottom = 12.dp),
             )
@@ -93,18 +95,18 @@ internal fun CharacterLibraryScreen(
             store.characters.isEmpty() -> {
                 item(key = "empty-library") {
                     ListEmptyState(
-                        title = "还没有角色",
-                        summary = "创建一个角色，或导入 PNG、JSON 角色卡开始对话",
+                        title = stringResource(R.string.character_library_empty_title),
+                        summary = stringResource(R.string.character_library_empty_summary),
                         icon = Icons.Outlined.TheaterComedy,
                         action = {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 EtaButton(
-                                    text = "恢复默认角色",
+                                    text = stringResource(R.string.character_action_restore_default),
                                     onClick = { store.restoreDefaultCharacter() },
                                     enabled = !store.busy,
                                 )
                                 EtaButton(
-                                    text = "创建角色",
+                                    text = stringResource(R.string.character_action_create),
                                     onClick = createCharacter,
                                     colors = ButtonDefaults.textButtonColorsPrimary(),
                                 )
@@ -116,8 +118,8 @@ internal fun CharacterLibraryScreen(
             store.filteredCharacters.isEmpty() -> {
                 item(key = "empty-search") {
                     ListEmptyState(
-                        title = "没有找到匹配的角色",
-                        summary = "换个关键词试试，搜索会匹配名称与标签",
+                        title = stringResource(R.string.character_library_no_results_title),
+                        summary = stringResource(R.string.character_library_no_results_summary),
                         icon = Icons.Outlined.SearchOff,
                     )
                 }
@@ -156,13 +158,13 @@ internal fun CharacterLibraryScreen(
                 if (row.size == 1) Spacer(Modifier.weight(1f))
             }
         }
-        item(key = "persona-title") { EtaPreferenceGroupTitle("我的") }
+        item(key = "persona-title") { EtaPreferenceGroupTitle(stringResource(R.string.character_library_section_mine)) }
         item(key = "persona") {
             EtaPreferenceGroup {
                 EtaArrowPreference(
-                    title = "我的人设",
+                    title = stringResource(R.string.character_persona_title),
                     startAction = { EtaPreferenceIcon(Icons.Outlined.Face, tint = EtaPreferenceColors.Pink) },
-                    summary = "角色对你的称呼与你在故事中的身份",
+                    summary = stringResource(R.string.character_persona_entry_summary),
                     onClick = { onNavigate(AppRoute.CharacterPersona) },
                 )
             }

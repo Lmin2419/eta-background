@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.characters
 
+import io.github.mangi.eta.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,12 +17,12 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults
 
 @Composable
 internal fun CharacterPersonaScreen(store: CharacterLibraryStore, onBack: () -> Unit) {
-    MiuixScaffoldPage(title = "我的人设", onBack = onBack, modifier = Modifier.imePadding()) {
-        item { CharacterPageMessage("设置你在故事中的身份。开始对话时可以选择是否使用；已开始的故事保留当时的人设。") }
-        item(key = "name") { CharacterTextField("称呼", store.personaDraft.name, { store.updatePersona(name = it) }, !store.busy, singleLine = true) }
-        item(key = "persona") { CharacterTextField("身份与关系", store.personaDraft.description, { store.updatePersona(description = it) }, !store.busy, minLines = 6) }
+    MiuixScaffoldPage(title = stringResource(R.string.character_persona_title), onBack = onBack, modifier = Modifier.imePadding()) {
+        item { CharacterPageMessage(stringResource(R.string.character_persona_description_hint)) }
+        item(key = "name") { CharacterTextField(stringResource(R.string.character_persona_name_label), store.personaDraft.name, { store.updatePersona(name = it) }, !store.busy, singleLine = true) }
+        item(key = "persona") { CharacterTextField(stringResource(R.string.character_persona_identity_label), store.personaDraft.description, { store.updatePersona(description = it) }, !store.busy, minLines = 6) }
         item(key = "save") {
-            EtaButton("保存人设", onClick = { store.savePersona(onBack) }, enabled = !store.busy,
+            EtaButton(stringResource(R.string.character_persona_save), onClick = { store.savePersona(onBack) }, enabled = !store.busy,
                 modifier = Modifier.fillMaxWidth().padding(16.dp), colors = ButtonDefaults.textButtonColorsPrimary())
         }
     }
@@ -28,15 +30,15 @@ internal fun CharacterPersonaScreen(store: CharacterLibraryStore, onBack: () -> 
 
 @Composable
 internal fun CharacterMemoryScreen(id: String, store: CharacterLibraryStore, onBack: () -> Unit) {
-    MiuixScaffoldPage(title = "剧情记忆", onBack = onBack, modifier = Modifier.imePadding()) {
-        item { CharacterPageMessage("记录这个角色的重要经历、关系与约定。它由此角色的各次对话共享，受记忆总开关控制。") }
+    MiuixScaffoldPage(title = stringResource(R.string.character_memory_title), onBack = onBack, modifier = Modifier.imePadding()) {
+        item { CharacterPageMessage(stringResource(R.string.character_memory_description_hint)) }
         item(key = "memory") {
-            CharacterTextField("剧情与关系", store.memoryDraft, store::updateMemory, !store.busy, minLines = 10)
+            CharacterTextField(stringResource(R.string.character_memory_content_label), store.memoryDraft, store::updateMemory, !store.busy, minLines = 10)
         }
         item(key = "actions") {
             Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                EtaButton("重新载入", onClick = { store.loadMemory(id, force = true) }, enabled = !store.busy, modifier = Modifier.weight(1f))
-                EtaButton("保存记忆", onClick = { store.saveMemory(id) }, enabled = !store.busy, modifier = Modifier.weight(1f), colors = ButtonDefaults.textButtonColorsPrimary())
+                EtaButton(stringResource(R.string.character_memory_reload), onClick = { store.loadMemory(id, force = true) }, enabled = !store.busy, modifier = Modifier.weight(1f))
+                EtaButton(stringResource(R.string.character_memory_save), onClick = { store.saveMemory(id) }, enabled = !store.busy, modifier = Modifier.weight(1f), colors = ButtonDefaults.textButtonColorsPrimary())
             }
         }
     }

@@ -70,14 +70,14 @@ internal fun ProviderConnectionFields(
     if (provider is GeminiProviderSetting) {
         EtaPreferenceDivider(hasLeading = false)
         EtaWindowSpinnerPreference(
-            title = "接入平台",
+            title = stringResource(R.string.provider_i18n_gemini_platform),
             items = listOf(DropdownItem(text = "Google AI Studio"), DropdownItem(text = "Google Cloud Vertex AI")),
             selectedIndex = if (isGeminiVertex) 1 else 0,
             enabled = enabled,
             summary = if (isGeminiVertex) {
-                "标准 Vertex AI 接入（Gemini 4）"
+                stringResource(R.string.provider_i18n_gemini_vertex_summary)
             } else {
-                "原生 Interactions API（AI Studio API Key）"
+                stringResource(R.string.provider_i18n_gemini_ai_studio_summary)
             },
             onSelectedIndexChange = { index ->
                 onDraftChange(
@@ -91,8 +91,8 @@ internal fun ProviderConnectionFields(
     if (accountMode != null) {
         EtaPreferenceDivider(hasLeading = false)
         EtaWindowSpinnerPreference(
-            title = "认证方式",
-            items = listOf(DropdownItem(text = "API Key"), DropdownItem(text = "账号登录")),
+            title = stringResource(R.string.provider_i18n_auth_method),
+            items = listOf(DropdownItem(text = "API Key"), DropdownItem(text = stringResource(R.string.provider_i18n_auth_account_login))),
             selectedIndex = if (oauth) 1 else 0,
             enabled = enabled,
             onSelectedIndexChange = { index ->
@@ -157,7 +157,7 @@ internal fun ProviderConnectionFields(
                 TextField(
                     value = draft.vertexProject,
                     onValueChange = { onDraftChange(draft.copy(vertexProject = it)) },
-                    label = "Project ID / Number（官方端点需要 Google Cloud 项目）",
+                    label = stringResource(R.string.provider_vertex_project_label),
                     singleLine = true,
                     enabled = enabled,
                     modifier = Modifier.fillMaxWidth(),

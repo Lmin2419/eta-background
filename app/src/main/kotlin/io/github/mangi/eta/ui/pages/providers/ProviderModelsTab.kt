@@ -2,6 +2,7 @@
 
 package io.github.mangi.eta.ui.pages.providers
 
+import io.github.mangi.eta.core.AppStrings
 import io.github.mangi.eta.ui.theme.EtaMotion
 
 import io.github.mangi.eta.ui.components.EtaAnimatedVisibility as AnimatedVisibility
@@ -296,7 +297,13 @@ internal fun ProviderModelsTab(
                                         if (ProviderAuthModes.isOAuth(provider.authMode)) {
                                             val sync = ModelRepository.syncRemoteCatalog(catalog)
                                             RuntimeConfigRepository.syncToRemotePreferences(EtaApp.serviceInstance)
-                                            message = "已同步 ${sync.fetchedCount} 个远端模型"
+                                            message = AppStrings.quantity(
+                                                R.plurals.provider_i18n_synced_remote_models,
+                                                sync.fetchedCount,
+                                                "已同步 %d 个远端模型",
+                                                "已同步 %d 个远端模型",
+                                                sync.fetchedCount,
+                                            )
                                             return@launch
                                         }
                                         val candidates = ModelRepository.newRemoteModels(provider.id, catalog.models)
@@ -924,7 +931,7 @@ private fun ModelEditDialog(
     }
     val contextError = contextWindowInputError(contextWindowOverrideText)
     val modelIdError = if (vertexGemini && modelId.isNotBlank() && !GeminiModelCapabilities.isGemini4(modelId)) {
-        "Vertex AI 对话仅支持 Gemini 4 系列模型。"
+        stringResource(R.string.provider_i18n_vertex_gemini4_only)
     } else null
 
     fun resetAutomaticReasoning() {
@@ -1058,13 +1065,13 @@ private fun ModelEditDialog(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (nativeGemini) "配置思考档位" else stringResource(R.string.ui_support_thinking_5b9e4c),
+                            text = if (nativeGemini) stringResource(R.string.provider_i18n_gemini_thinking_levels) else stringResource(R.string.ui_support_thinking_5b9e4c),
                             style = MiuixTheme.textStyles.body1,
                             color = MiuixTheme.colorScheme.onSurface,
                         )
                         Text(
                             text = if (nativeGemini) {
-                                "关闭时仅使用 Default，不发送档位参数；不会关闭模型自身的思考。"
+                                stringResource(R.string.provider_i18n_gemini_thinking_summary)
                             } else if (reasoningOverrideActive) {
                                 stringResource(R.string.page_covered_model_automatic_capabilities_3fa7d4)
                             } else {
@@ -1118,8 +1125,8 @@ private fun ModelEditDialog(
                 }
                 Text(
                     text = when {
-                        vertexGemini -> "档位按 Gemini 4 模型提供，Default 始终可用。"
-                        nativeGemini -> "可手动选择档位，是否支持由服务端校验。Default 始终可用。"
+                        vertexGemini -> stringResource(R.string.provider_i18n_vertex_effort_help)
+                        nativeGemini -> stringResource(R.string.provider_i18n_gemini_effort_help)
                         else -> stringResource(R.string.ui_only_check_the_ranges_actually_supported_by_the_mode_2c343d)
                     },
                     style = MiuixTheme.textStyles.footnote2,

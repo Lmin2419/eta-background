@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.screens.subagent
 
+import io.github.mangi.eta.core.AppStrings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -150,8 +151,8 @@ internal fun SubagentSettingsScreen(
     val secondaryUnavailable = !subagentSettings.modelId.isNullOrBlank() && resolvedSecondary == null
     val secondarySummary = when {
         resolvedSecondary != null -> "${resolvedSecondary.provider.name} / ${resolvedSecondary.model.displayName}"
-        !primaryModelName.isNullOrBlank() -> "跟随主模型 ($primaryModelName)"
-        else -> "跟随主模型"
+        !primaryModelName.isNullOrBlank() -> stringResource(R.string.subagent_settings_follow_primary_named, primaryModelName)
+        else -> stringResource(R.string.subagent_settings_follow_primary)
     }
 
     val effectiveCapabilities = remember(providers, resolvedSecondary, primaryProviderId, primaryModelId) {
@@ -164,10 +165,11 @@ internal fun SubagentSettingsScreen(
         val efforts = effectiveCapabilities?.selectableEfforts.orEmpty()
         listOf<ReasoningEffort?>(null) + efforts
     }
-    val effortLabels = remember(effortOptions) {
+    val effortFollowLabel = stringResource(R.string.subagent_settings_reasoning_follow_default)
+    val effortLabels = remember(effortOptions, effortFollowLabel) {
         effortOptions.map { effort ->
             when (effort) {
-                null -> "跟随模型默认"
+                null -> effortFollowLabel
                 ReasoningEffort.DEFAULT -> "Auto"
                 else -> effort.displayName
             }
@@ -198,14 +200,14 @@ internal fun SubagentSettingsScreen(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Add,
-                    contentDescription = "新建 Subagent",
+                    contentDescription = stringResource(R.string.subagent_settings_create),
                 )
             }
         },
         overlay = {
             EtaSheet(
                 show = showModelSheet,
-                title = if (modelRoleName == null) "默认模型" else "模型",
+                title = stringResource(if (modelRoleName == null) R.string.subagent_default_model else R.string.page_model_98fd0c),
                 onDismissRequest = { showModelSheet = false },
                 insideMargin = DpSize(0.dp, 0.dp),
             ) {
@@ -213,7 +215,9 @@ internal fun SubagentSettingsScreen(
                     pickerState = pickerState,
                     selectedSecondaryModelId = if (modelRoleName == null) subagentSettings.modelId else subagentSettings.profiles[modelRoleName]?.modelId,
                     primaryModelName = if (modelRoleName == null) primaryModelName else resolvedSecondary?.model?.displayName ?: primaryModelName,
-                    inheritLabel = if (modelRoleName == null) "跟随主模型" else "跟随默认模型",
+                    inheritLabel = stringResource(
+                        if (modelRoleName == null) R.string.subagent_settings_follow_primary else R.string.subagent_follow_default_model,
+                    ),
                     onSelectModel = { modelId ->
                         showModelSheet = false
                         scope.launch {
@@ -258,14 +262,15 @@ internal fun SubagentSettingsScreen(
                             val capabilities = effective?.let { (provider, model) -> RuntimeConfigRepository.reasoningCapabilities(provider, model) }
                             val options = listOf<ReasoningEffort?>(null) + capabilities?.selectableEfforts.orEmpty()
                             EtaPreferenceGroup {
-                                EtaArrowPreference(title = "模型",
-                                    summary = if (unavailable) null else chosen?.let { "${it.provider.name} / ${it.model.displayName}" } ?: "跟随默认模型",
+                                EtaArrowPreference(title = stringResource(R.string.page_model_98fd0c),
+                                    summary = if (unavailable) null else chosen?.let { "${it.provider.name} / ${it.model.displayName}" }
+                                        ?: stringResource(R.string.subagent_follow_default_model),
                                     bottomAction = if (unavailable) ({ Text(stringResource(R.string.subagent_model_unavailable),
                                         color = EtaTheme.colors.attentionText, style = EtaTheme.type.footnote) }) else null,
                                     onClick = { modelRoleName = currentProfile.name; showModelSheet = true })
                                 EtaPreferenceDivider()
-                                EtaOverlayDropdownPreference(title = "思考强度",
-                                    items = options.map { it?.displayName ?: "跟随默认" },
+                                EtaOverlayDropdownPreference(title = stringResource(R.string.subagent_settings_reasoning),
+                                    items = options.map { it?.displayName ?: stringResource(R.string.assistant_overlay_settings_reasoning_follow_default) },
                                     selectedIndex = options.indexOf(ReasoningEffort.fromWireValue(role.reasoningEffort)).coerceAtLeast(0),
                                     onSelectedIndexChange = { index ->
                                         scope.launch {
@@ -339,7 +344,7 @@ internal fun SubagentSettingsScreen(
             val activeDraft = editorDraft
             EtaWindowDialog(
                 show = activeDraft != null,
-                title = if (activeDraft?.originalName != null) "编辑 Subagent" else "新建 Subagent",
+                title = stringResource(if (activeDraft?.originalName != null) R.string.subagent_settings_edit else R.string.subagent_settings_create),
                 onDismissRequest = { editorDraft = null },
             ) {
                 if (activeDraft != null) {
@@ -354,28 +359,28 @@ internal fun SubagentSettingsScreen(
                             TextField(
                                 value = activeDraft.name,
                                 onValueChange = { editorDraft = activeDraft.copy(name = it) },
-                                label = "名称 (kebab-case，如 bill-analyzer)",
+                                label = stringResource(R.string.subagent_settings_field_name),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             TextField(
                                 value = activeDraft.description,
                                 onValueChange = { editorDraft = activeDraft.copy(description = it) },
-                                label = "简介 (Description)",
+                                label = stringResource(R.string.subagent_settings_field_description),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             TextField(
                                 value = activeDraft.toolsText,
                                 onValueChange = { editorDraft = activeDraft.copy(toolsText = it) },
-                                label = "可用工具 (逗号分隔，留空默认允许全部非 GUI 工具)",
+                                label = stringResource(R.string.subagent_settings_field_tools),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             TextField(
                                 value = activeDraft.prompt,
                                 onValueChange = { editorDraft = activeDraft.copy(prompt = it) },
-                                label = "角色指令 (System Prompt)",
+                                label = stringResource(R.string.subagent_settings_field_prompt),
                                 minLines = 4,
                                 maxLines = 8,
                                 modifier = Modifier.fillMaxWidth(),
@@ -390,7 +395,7 @@ internal fun SubagentSettingsScreen(
                         }
                         Spacer(modifier = Modifier.height(14.dp))
                         MiuixDialogActions(
-                            confirmText = "保存",
+                            confirmText = stringResource(R.string.action_save),
                             onCancel = { editorDraft = null },
                             onConfirm = {
                                 scope.launch {
@@ -429,7 +434,7 @@ internal fun SubagentSettingsScreen(
                                             reloadCustomProfiles()
                                         },
                                         onFailure = { error ->
-                                            editorError = error.message ?: "保存失败"
+                                            editorError = error.message ?: AppStrings.get(R.string.subagent_settings_save_failed, "保存失败")
                                         },
                                     )
                                 }
@@ -441,12 +446,12 @@ internal fun SubagentSettingsScreen(
         },
     ) {
         item(key = "config_title") {
-            EtaPreferenceGroupTitle("通用与模型")
+            EtaPreferenceGroupTitle(stringResource(R.string.subagent_settings_group_general))
         }
         item(key = "config_group") {
             EtaPreferenceGroup {
                 EtaSwitchPreference(
-                    title = "启用 Subagent",
+                    title = stringResource(R.string.subagent_settings_enable),
                     checked = subagentEnabled,
                     enabled = agentPrefs != null,
                     startAction = {
@@ -468,7 +473,7 @@ internal fun SubagentSettingsScreen(
                 )
                 EtaPreferenceDivider()
                 EtaArrowPreference(
-                    title = "默认模型",
+                    title = stringResource(R.string.subagent_default_model),
                     summary = secondarySummary.takeUnless { secondaryUnavailable },
                     bottomAction = if (secondaryUnavailable) ({
                         Text(stringResource(R.string.subagent_model_unavailable), color = EtaTheme.colors.attentionText,
@@ -486,7 +491,7 @@ internal fun SubagentSettingsScreen(
                 if (effortOptions.size > 1) {
                     EtaPreferenceDivider()
                     EtaOverlayDropdownPreference(
-                        title = "默认思考强度",
+                        title = stringResource(R.string.subagent_default_reasoning),
                         items = effortLabels,
                         selectedIndex = selectedEffortIndex,
                         enabled = subagentEnabled,
@@ -537,12 +542,12 @@ internal fun SubagentSettingsScreen(
             EtaPreferenceGroup {
                 if (customProfiles.isEmpty()) {
                     ListEmptyState(
-                        title = "暂无自定义 Subagent",
-                        summary = "可在对话中直接让胖小胖创建专属 Subagent（保存在 agents/<name>.md），或点击右上角 + 手动新建",
+                        title = stringResource(R.string.subagent_settings_empty_title),
+                        summary = stringResource(R.string.subagent_settings_empty_summary),
                         icon = Icons.Outlined.Extension,
                         action = {
                             EtaButton(
-                                text = "新建 Subagent",
+                                text = stringResource(R.string.subagent_settings_create),
                                 onClick = {
                                     editorError = null
                                     editorDraft = CustomSubagentDraft()
@@ -592,7 +597,7 @@ internal fun SubagentModelPickerContent(
     pickerState: io.github.mangi.eta.ui.model.AgentModelPickerUiState,
     selectedSecondaryModelId: String?,
     primaryModelName: String?,
-    inheritLabel: String = "跟随主模型",
+    inheritLabel: String = stringResource(R.string.subagent_settings_follow_primary),
     onSelectModel: (String?) -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
@@ -614,7 +619,7 @@ internal fun SubagentModelPickerContent(
             value = query,
             onValueChange = { query = it },
             onSearch = {},
-            placeholder = "搜索模型或服务商",
+            placeholder = stringResource(R.string.subagent_search_models),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -626,7 +631,7 @@ internal fun SubagentModelPickerContent(
             ) {
                 item(key = "filter:all") {
                     EtaChoiceChip(
-                        text = "全部",
+                        text = stringResource(R.string.model_picker_filter_all),
                         selected = providerFilter == null,
                         onClick = { providerFilter = null },
                     )
@@ -654,7 +659,8 @@ internal fun SubagentModelPickerContent(
                 item(key = "inherit_primary") {
                     SubagentModelRow(
                         title = inheritLabel,
-                        subtitle = primaryModelName?.let { "当前：$it" } ?: "默认继承会话正在使用的主模型",
+                        subtitle = primaryModelName?.let { stringResource(R.string.subagent_settings_follow_primary_current, it) }
+                            ?: stringResource(R.string.subagent_settings_follow_primary_hint),
                         modelId = pickerState.selectedModel?.modelId,
                         sourceType = pickerState.selectedModel?.providerSourceType,
                         selected = selectedSecondaryModelId == null,
@@ -828,7 +834,7 @@ private fun SubagentProfileDetailContent(
             ) {
                 if (onDelete != null) {
                     EtaButton(
-                        text = "删除",
+                        text = stringResource(R.string.action_delete),
                         onClick = onDelete,
                         colors = ButtonDefaults.textButtonColors(
                             textColor = StatusError,
@@ -838,7 +844,7 @@ private fun SubagentProfileDetailContent(
                 }
                 if (onEdit != null) {
                     EtaButton(
-                        text = "编辑",
+                        text = stringResource(R.string.action_edit),
                         onClick = onEdit,
                         colors = ButtonDefaults.textButtonColorsPrimary(),
                         modifier = Modifier.weight(1f),
@@ -856,7 +862,11 @@ private fun SubagentRoleModelSummary(name: String, settings: SubagentSettings, p
     val unavailable = !id.isNullOrBlank() && model == null
     Text(
         text = if (unavailable) stringResource(R.string.subagent_model_unavailable)
-            else "模型：" + (model?.let { "${it.provider.name} / ${it.model.displayName}" } ?: "跟随默认"),
+            else stringResource(
+                R.string.subagent_role_model_summary,
+                model?.let { "${it.provider.name} / ${it.model.displayName}" }
+                    ?: stringResource(R.string.assistant_overlay_settings_reasoning_follow_default),
+            ),
         color = if (unavailable) EtaTheme.colors.attentionText else EtaTheme.colors.textSecondary,
         style = EtaTheme.type.footnote,
     )

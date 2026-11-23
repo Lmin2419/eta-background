@@ -1,5 +1,9 @@
 package io.github.mangi.eta.ui.pages.providers
 
+import io.github.mangi.eta.R
+import io.github.mangi.eta.core.AppStrings
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,14 +79,14 @@ internal fun CommunityCatalogScreen(
     LaunchedEffect(Unit) { store.openCatalog() }
 
     MiuixScaffoldPage(
-        title = "从目录添加",
+        title = stringResource(R.string.catalog_add_from_catalog),
         onBack = onBack,
         actions = {
             EtaIconButton(
                 onClick = store::refresh,
                 enabled = !store.loading && !store.refreshing,
             ) {
-                Icon(Icons.Outlined.Refresh, contentDescription = "刷新模型目录")
+                Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.catalog_i18n_refresh))
             }
         },
     ) {
@@ -91,7 +95,7 @@ internal fun CommunityCatalogScreen(
                 value = query,
                 onValueChange = { query = it },
                 onSearch = {},
-                placeholder = "搜索提供商",
+                placeholder = stringResource(R.string.catalog_i18n_search_providers),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -99,49 +103,52 @@ internal fun CommunityCatalogScreen(
         }
 
         item(key = "catalog_status") {
-            ProviderSection(title = "目录状态") {
+            ProviderSection(title = stringResource(R.string.catalog_i18n_status_section)) {
                 EtaPreference(
-                    title = "models.dev 社区目录",
-                    summary = "读取目录不会上传胖小胖的 API Key",
+                    title = stringResource(R.string.catalog_i18n_community_title),
+                    summary = stringResource(R.string.catalog_i18n_community_privacy),
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaPreference(
-                    title = "模型是社区候选条目",
-                    summary = "能否调用以服务商账号权限和实际接口为准",
+                    title = stringResource(R.string.catalog_i18n_candidate_title),
+                    summary = stringResource(R.string.catalog_i18n_candidate_summary),
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaPreference(
-                    title = catalog?.sourceLabel() ?: if (store.loading) "正在读取本地目录" else "目录暂不可用",
+                    title = catalog?.sourceLabel()
+                        ?: stringResource(if (store.loading) R.string.catalog_i18n_loading_local else R.string.catalog_i18n_unavailable),
                     summary = catalog?.let(::catalogSummary),
                 )
                 if (store.refreshing) {
                     EtaPreferenceDivider(hasLeading = false)
-                    EtaPreference(title = "正在更新在线目录")
+                    EtaPreference(title = stringResource(R.string.catalog_i18n_updating_online))
                 }
                 store.refreshError?.let { error ->
                     EtaPreferenceDivider(hasLeading = false)
                     EtaPreference(
-                        title = "在线更新失败",
-                        summary = if (catalog != null) "$error；仍可使用当前目录" else error,
+                        title = stringResource(R.string.catalog_i18n_update_failed),
+                        summary = if (catalog != null) stringResource(R.string.catalog_i18n_update_failed_fallback, error) else error,
                     )
                 }
                 if (store.loadError && catalog == null) {
                     EtaPreferenceDivider(hasLeading = false)
-                    EtaPreference(title = "本地目录读取失败", summary = "请重试或检查应用安装包")
+                    EtaPreference(title = stringResource(R.string.catalog_i18n_local_load_failed), summary = stringResource(R.string.catalog_i18n_local_load_failed_summary))
                 }
             }
         }
 
         item(key = "results_title") {
-            EtaPreferenceGroupTitle("可导入提供商（${providers.size}）")
+            EtaPreferenceGroupTitle(stringResource(R.string.catalog_i18n_importable_providers, providers.size))
         }
         if (catalog == null && store.loading) {
             item(key = "loading") { CatalogLoadingState() }
         } else if (providers.isEmpty()) {
             item(key = "empty") {
                 ListEmptyState(
-                    title = if (catalog == null) "没有可用的目录" else "没有找到匹配的提供商",
-                    summary = if (catalog == null) "点击右上角刷新后重试" else "试试其他名称或地址",
+                    title = stringResource(if (catalog == null) R.string.catalog_i18n_empty_no_catalog else R.string.catalog_i18n_empty_no_match),
+                    summary = stringResource(
+                        if (catalog == null) R.string.catalog_i18n_empty_no_catalog_summary else R.string.catalog_i18n_empty_no_match_summary,
+                    ),
                     icon = if (catalog == null) Icons.Outlined.CloudOff else Icons.Outlined.SearchOff,
                 )
             }
@@ -170,7 +177,7 @@ internal fun CommunityCatalogScreen(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = "${provider.models.size} 个可导入模型",
+                        text = pluralStringResource(R.plurals.catalog_i18n_importable_models_count, provider.models.size, provider.models.size),
                         style = MiuixTheme.textStyles.footnote1,
                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
@@ -209,11 +216,11 @@ internal fun CommunityCatalogProviderScreen(
     }
 
     MiuixScaffoldPage(
-        title = provider?.name ?: "选择模型",
+        title = provider?.name ?: stringResource(R.string.catalog_i18n_select_models),
         onBack = onBack,
         actions = {
             EtaButton(
-                text = "导入（${selectedIds.size}）",
+                text = stringResource(R.string.catalog_i18n_import_count, selectedIds.size),
                 enabled = provider != null && selectedIds.isNotEmpty() && !importInFlight && !store.importing,
                 onClick = {
                     val chosen = provider ?: return@EtaButton
@@ -227,9 +234,9 @@ internal fun CommunityCatalogProviderScreen(
                         } catch (cancelled: CancellationException) {
                             throw cancelled
                         } catch (_: IllegalArgumentException) {
-                            importError = "模型选择已失效，请重新选择"
+                            importError = AppStrings.get(R.string.catalog_i18n_selection_expired, "模型选择已失效，请重新选择")
                         } catch (_: Throwable) {
-                            importError = "保存提供商失败，请重试"
+                            importError = AppStrings.get(R.string.catalog_i18n_save_provider_failed, "保存提供商失败，请重试")
                         } finally {
                             importInFlight = false
                         }
@@ -245,8 +252,8 @@ internal fun CommunityCatalogProviderScreen(
                     CatalogLoadingState()
                 } else {
                     ListEmptyState(
-                        title = "目录中没有这个提供商",
-                        summary = "目录可能已更新，请返回列表重新选择",
+                        title = stringResource(R.string.catalog_i18n_provider_not_found),
+                        summary = stringResource(R.string.catalog_i18n_provider_not_found_summary),
                     )
                 }
             }
@@ -254,8 +261,8 @@ internal fun CommunityCatalogProviderScreen(
         }
 
         item(key = "provider") {
-            ProviderSection(title = "提供商") {
-                EtaPreference(title = "名称", summary = provider.name)
+            ProviderSection(title = stringResource(R.string.catalog_i18n_provider_section)) {
+                EtaPreference(title = stringResource(R.string.catalog_i18n_field_name), summary = provider.name)
                 EtaPreferenceDivider(hasLeading = false)
                 EtaPreference(title = null) {
                     Text(
@@ -277,12 +284,12 @@ internal fun CommunityCatalogProviderScreen(
         item(key = "selection_status") {
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp)) {
                 Text(
-                    text = "已选 ${selectedIds.size} / ${provider.models.size} 个模型",
+                    text = stringResource(R.string.catalog_selected_of_total, selectedIds.size, provider.models.size),
                     style = MiuixTheme.textStyles.body2,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
                 Text(
-                    text = "导入后需填写 API Key 并启用；模型请求将发送到上方 Base URL",
+                    text = stringResource(R.string.catalog_import_hint),
                     style = MiuixTheme.textStyles.footnote1,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
@@ -300,7 +307,7 @@ internal fun CommunityCatalogProviderScreen(
                 value = query,
                 onValueChange = { query = it },
                 onSearch = {},
-                placeholder = "搜索模型名称或 ID",
+                placeholder = stringResource(R.string.catalog_i18n_search_models),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -312,25 +319,25 @@ internal fun CommunityCatalogProviderScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 EtaButton(
-                    text = "全选当前结果",
+                    text = stringResource(R.string.catalog_select_all_results),
                     enabled = filteredModels.isNotEmpty() && !store.importing,
                     onClick = {
                         selectedIds = ArrayList((selectedIds + filteredModels.map { it.modelId }).distinct())
                     },
                 )
                 EtaButton(
-                    text = "清空已选",
+                    text = stringResource(R.string.catalog_clear_selection),
                     enabled = selectedIds.isNotEmpty() && !store.importing,
                     onClick = { selectedIds = arrayListOf() },
                 )
             }
         }
         item(key = "models_title") {
-            EtaPreferenceGroupTitle("模型（${filteredModels.size}）")
+            EtaPreferenceGroupTitle(stringResource(R.string.catalog_i18n_models_count, filteredModels.size))
         }
         if (filteredModels.isEmpty()) {
             item(key = "empty_models") {
-                ListEmptyState(title = "没有找到匹配的模型")
+                ListEmptyState(title = stringResource(R.string.catalog_i18n_no_matching_models))
             }
         } else {
             // 与提供商自己的模型页一致：逐项组合，画成一个连续分组。
@@ -344,8 +351,7 @@ internal fun CommunityCatalogProviderScreen(
                         summary = buildString {
                             append(model.modelId)
                             append(" · ")
-                            append(formatCompactTokenCount(model.contextWindow))
-                            append(" tokens 上下文")
+                            append(stringResource(R.string.catalog_i18n_context_tokens, formatCompactTokenCount(model.contextWindow)))
                             model.releaseDate?.let { append(" · "); append(it) }
                         },
                         checked = model.modelId in selectedIds,
@@ -375,15 +381,22 @@ private fun CatalogLoadingState() {
 }
 
 private fun CommunityCatalog.sourceLabel(): String = when (source) {
-    CommunityCatalogSource.SNAPSHOT -> "内置目录快照"
-    CommunityCatalogSource.CACHE -> "本地缓存目录"
-    CommunityCatalogSource.ONLINE -> "在线目录"
+    CommunityCatalogSource.SNAPSHOT -> AppStrings.get(R.string.catalog_i18n_source_snapshot, "内置目录快照")
+    CommunityCatalogSource.CACHE -> AppStrings.get(R.string.catalog_i18n_source_cache, "本地缓存目录")
+    CommunityCatalogSource.ONLINE -> AppStrings.get(R.string.catalog_i18n_source_online, "在线目录")
 }
 
 private fun catalogSummary(catalog: CommunityCatalog): String {
     val updated = catalog.fetchedAt?.let { timestamp ->
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(timestamp))
     }
-    return listOfNotNull("${catalog.providers.size} 家可导入提供商", updated?.let { "更新于 $it" })
+    val count = AppStrings.quantity(
+        R.plurals.catalog_i18n_providers_count,
+        catalog.providers.size,
+        "%d 家可导入提供商",
+        "%d 家可导入提供商",
+        catalog.providers.size,
+    )
+    return listOfNotNull(count, updated?.let { AppStrings.get(R.string.catalog_i18n_updated_at, "更新于 %1\$s", it) })
         .joinToString(" · ")
 }

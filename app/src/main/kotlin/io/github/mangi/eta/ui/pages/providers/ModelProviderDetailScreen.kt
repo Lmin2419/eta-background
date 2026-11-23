@@ -548,7 +548,7 @@ private suspend fun testConnection(
             ?.takeIf { selected -> provider.models.any { it.id == selected && it.isEnabled } }
             ?: provider.id.takeIf(String::isNotBlank)?.let { SettingsDataStore.selectedModelIdForProvider(it) }
         return RemoteModelFetcher.testVertexConnection(provider, preferredModelId = selectedModelId)
-            .map { modelId -> "连接成功（已验证模型：$modelId）" }
+            .map { modelId -> context.getString(R.string.provider_i18n_vertex_test_ok, modelId) }
             .getOrElse { throwable ->
                 context.getString(
                     R.string.provider_error,

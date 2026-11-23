@@ -2124,4 +2124,16 @@
   <string name="scheduled_ed_health_exact_alarm_summary">没开时定时任务可能晚几分钟触发；开启后可以准点唤醒执行。</string>
   <string name="scheduled_ed_health_exact_alarm_action">去授权</string>
   <string name="scheduled_ed_health_notification_summary">定时任务照常在后台执行，但收不到结果摘要和失败提醒。</string>
+  <string name="catalog_add_from_catalog">从目录添加</string>
+  <string name="catalog_add_from_catalog_summary">浏览可用提供商并选择模型</string>
+  <string name="catalog_selected_of_total">已选 %1$d / %2$d 个模型</string>
+  <string name="catalog_import_hint">导入后需填写 API Key 并启用；模型请求将发送到上方 Base URL</string>
+  <string name="catalog_select_all_results">全选当前结果</string>
+  <string name="catalog_clear_selection">清空已选</string>
+  <string name="provider_vertex_project_label">Project ID / Number（官方端点需要 Google Cloud 项目）</string>
+  <string name="subagent_default_model">默认模型</string>
+  <string name="subagent_follow_default_model">跟随默认模型</string>
+  <string name="subagent_default_reasoning">默认思考强度</string>
+  <string name="subagent_search_models">搜索模型或服务商</string>
+  <string name="subagent_role_model_summary">模型：%1$s</string>
 </resources>

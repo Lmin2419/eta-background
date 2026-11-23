@@ -1,5 +1,9 @@
 package io.github.mangi.eta.ui.screens.characters
 
+import io.github.mangi.eta.R
+import io.github.mangi.eta.core.AppStrings
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
@@ -30,7 +34,11 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
-internal fun greetingTitle(index: Int) = if (index == 0) "默认开场白" else "开场白 ${index + 1}"
+internal fun greetingTitle(index: Int) = if (index == 0) {
+    AppStrings.get(R.string.character_greeting_default, "默认开场白")
+} else {
+    AppStrings.get(R.string.character_greeting_numbered, "开场白 %1\$d", index + 1)
+}
 
 private data class CharacterTextPreview(val title: String, val text: String)
 
@@ -55,12 +63,18 @@ internal fun CharacterDetailScreen(
         if (uri != null) store.changeAvatar(id, uri)
     }
     val profile = store.selected?.takeIf { it.id == id }
+    val defaultUserName = stringResource(R.string.character_default_user_name)
+    val descriptionTitle = stringResource(R.string.character_section_description)
     MiuixScaffoldPage(title = "", onBack = onBack, compactTitle = true) {
         if (profile == null) {
-            item { CharacterPageMessage(if (store.busy) "正在读取角色…" else "无法读取角色，请返回后重试") }
+            item {
+                CharacterPageMessage(
+                    stringResource(if (store.busy) R.string.character_detail_loading else R.string.character_detail_load_failed),
+                )
+            }
             return@MiuixScaffoldPage
         }
-        val userName = if (store.usePersona) store.persona.name.ifBlank { "用户" } else "用户"
+        val userName = if (store.usePersona) store.persona.name.ifBlank { defaultUserName } else defaultUserName
         item(key = "hero") {
             CharacterHero(
                 profile = profile,
@@ -70,7 +84,7 @@ internal fun CharacterDetailScreen(
                 onStart = { store.startConversation(id, onStart) },
                 onReadDescription = {
                     preview = CharacterTextPreview(
-                        "角色设定",
+                        descriptionTitle,
                         CharacterMacros.expand(profile.card.description, profile.card, userName),
                     )
                 },
@@ -80,16 +94,16 @@ internal fun CharacterDetailScreen(
         item(key = "persona") {
             EtaPreferenceGroup {
                 EtaSwitchPreference(
-                    title = "使用我的人设",
-                    summary = store.persona.name.ifBlank { "未设置称呼" },
+                    title = stringResource(R.string.character_detail_use_persona),
+                    summary = store.persona.name.ifBlank { stringResource(R.string.character_persona_name_unset) },
                     checked = store.usePersona,
                     onCheckedChange = { store.usePersona = it },
                 )
                 EtaPreferenceDivider(hasLeading = false)
-                EtaArrowPreference(title = "编辑我的人设", onClick = { onNavigate(AppRoute.CharacterPersona) })
+                EtaArrowPreference(title = stringResource(R.string.character_detail_edit_persona), onClick = { onNavigate(AppRoute.CharacterPersona) })
             }
         }
-        item(key = "greetings-title") { EtaPreferenceGroupTitle("开场白") }
+        item(key = "greetings-title") { EtaPreferenceGroupTitle(stringResource(R.string.character_section_greetings)) }
         item(key = "greetings") {
             // 预览与开始对话后看到的文本一致：宏按当前是否使用人设展开。
             val greetings = remember(profile.card, userName) {
@@ -103,30 +117,30 @@ internal fun CharacterDetailScreen(
                 onRead = { index -> preview = CharacterTextPreview(greetingTitle(index), greetings[index]) },
             )
         }
-        item(key = "management-title") { EtaPreferenceGroupTitle("管理") }
+        item(key = "management-title") { EtaPreferenceGroupTitle(stringResource(R.string.character_detail_section_manage)) }
         item(key = "management") {
             EtaPreferenceGroup {
-                EtaArrowPreference(title = "编辑角色", enabled = !store.busy, onClick = {
+                EtaArrowPreference(title = stringResource(R.string.character_action_edit), enabled = !store.busy, onClick = {
                     store.discardEditor()
                     onNavigate(AppRoute.CharacterEditor(id))
                 })
                 EtaPreferenceDivider(hasLeading = false)
-                EtaArrowPreference(title = "剧情记忆", summary = "此角色各次对话共享的故事与关系记录", onClick = {
+                EtaArrowPreference(title = stringResource(R.string.character_memory_title), summary = stringResource(R.string.character_detail_memory_summary), onClick = {
                     onNavigate(AppRoute.CharacterMemory(id))
                 })
                 EtaPreferenceDivider(hasLeading = false)
-                EtaArrowPreference(title = "复制角色", enabled = !store.busy, onClick = {
+                EtaArrowPreference(title = stringResource(R.string.character_action_duplicate), enabled = !store.busy, onClick = {
                     store.duplicate(id) { onNavigate(AppRoute.CharacterDetail(it)) }
                 })
                 EtaPreferenceDivider(hasLeading = false)
                 EtaArrowPreference(
-                    title = "导出 PNG 角色卡",
+                    title = stringResource(R.string.character_action_export_png),
                     enabled = !store.busy,
                     onClick = { pngExporter.launch(characterExportName(profile.card.name, "png")) },
                 )
                 EtaPreferenceDivider(hasLeading = false)
                 EtaArrowPreference(
-                    title = "导出 JSON 角色卡",
+                    title = stringResource(R.string.character_action_export_json),
                     enabled = !store.busy,
                     onClick = { jsonExporter.launch(characterExportName(profile.card.name, "json")) },
                 )
@@ -136,8 +150,12 @@ internal fun CharacterDetailScreen(
             item(key = "compatibility") {
                 EtaPreferenceGroup {
                     EtaArrowPreference(
-                        title = "兼容说明",
-                        summary = "${store.compatibilityWarnings.size} 项内容按兼容范围处理",
+                        title = stringResource(R.string.character_detail_compatibility_title),
+                        summary = pluralStringResource(
+                            R.plurals.character_detail_compatibility_summary,
+                            store.compatibilityWarnings.size,
+                            store.compatibilityWarnings.size,
+                        ),
                         onClick = { showCompatibility = !showCompatibility },
                     )
                     if (showCompatibility) {
@@ -157,7 +175,7 @@ internal fun CharacterDetailScreen(
         item(key = "danger") {
             EtaPreferenceGroup {
                 EtaArrowPreference(
-                    title = "删除角色",
+                    title = stringResource(R.string.character_action_delete),
                     titleColor = BasicComponentColors(
                         color = MiuixTheme.colorScheme.error,
                         disabledColor = MiuixTheme.colorScheme.disabledOnSurface,
@@ -172,12 +190,12 @@ internal fun CharacterDetailScreen(
     if (showDeleteConfirm && profile != null) {
         EtaWindowDialog(
             show = true,
-            title = "删除角色",
-            summary = "「${profile.card.name}」将从角色库移除，角色图片与剧情记忆一并删除；已有对话保留。此操作无法撤销。",
+            title = stringResource(R.string.character_action_delete),
+            summary = stringResource(R.string.character_delete_confirm_message, profile.card.name),
             onDismissRequest = { showDeleteConfirm = false },
         ) {
             MiuixDialogActions(
-                confirmText = "删除",
+                confirmText = stringResource(R.string.action_delete),
                 destructive = true,
                 confirmEnabled = !store.busy,
                 onCancel = { showDeleteConfirm = false },
@@ -200,6 +218,6 @@ internal fun CharacterDetailScreen(
 
 private fun characterExportName(name: String, extension: String): String {
     val basename = name.map { if (it.isISOControl() || it in "\\/:*?\"<>|") '_' else it }
-        .joinToString("").trim().trimEnd('.').take(64).ifBlank { "角色" }
+        .joinToString("").trim().trimEnd('.').take(64).ifBlank { AppStrings.get(R.string.character_export_default_basename, "角色") }
     return "$basename.$extension"
 }

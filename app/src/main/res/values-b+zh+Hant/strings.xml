@@ -2020,4 +2020,16 @@
   <string name="scheduled_ed_health_exact_alarm_summary">沒開時排程任務可能晚幾分鐘觸發；開啟後可以準點喚醒執行。</string>
   <string name="scheduled_ed_health_exact_alarm_action">去授權</string>
   <string name="scheduled_ed_health_notification_summary">排程任務照常在背景執行，但收不到結果摘要和失敗提醒。</string>
+  <string name="catalog_add_from_catalog">從目錄新增</string>
+  <string name="catalog_add_from_catalog_summary">瀏覽可用供應商並選擇模型</string>
+  <string name="catalog_selected_of_total">已選 %1$d / %2$d 個模型</string>
+  <string name="catalog_import_hint">匯入後需填寫 API Key 並啟用；模型請求將傳送到上方 Base URL</string>
+  <string name="catalog_select_all_results">全選目前結果</string>
+  <string name="catalog_clear_selection">清空已選</string>
+  <string name="provider_vertex_project_label">Project ID / Number（官方端點需要 Google Cloud 專案）</string>
+  <string name="subagent_default_model">預設模型</string>
+  <string name="subagent_follow_default_model">跟隨預設模型</string>
+  <string name="subagent_default_reasoning">預設思考強度</string>
+  <string name="subagent_search_models">搜尋模型或服務商</string>
+  <string name="subagent_role_model_summary">模型：%1$s</string>
 </resources>

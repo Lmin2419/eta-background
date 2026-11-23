@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.characters
 
+import io.github.mangi.eta.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -136,7 +138,7 @@ internal fun CharacterHero(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.PhotoCamera,
-                        contentDescription = "更换头像",
+                        contentDescription = stringResource(R.string.character_action_change_avatar),
                         modifier = Modifier.size(18.dp),
                         tint = colors.onSurface,
                     )
@@ -157,14 +159,14 @@ internal fun CharacterHero(
                 EtaIconButton(onClick = onToggleFavorite, enabled = !busy, minWidth = 36.dp, minHeight = 36.dp) {
                     Icon(
                         imageVector = if (card.favorite) Icons.Outlined.Star else Icons.Outlined.StarOutline,
-                        contentDescription = if (card.favorite) "取消收藏" else "收藏",
+                        contentDescription = stringResource(if (card.favorite) R.string.character_action_unfavorite else R.string.character_action_favorite),
                         modifier = Modifier.size(20.dp),
                         tint = if (card.favorite) FavoriteColor else colors.onSurfaceVariantSummary,
                     )
                 }
             }
             val byline = listOfNotNull(
-                card.creator.takeIf(String::isNotBlank)?.let { "作者 $it" },
+                card.creator.takeIf(String::isNotBlank)?.let { stringResource(R.string.character_detail_creator_byline, it) },
                 card.version.takeIf(String::isNotBlank)?.let { "v$it" },
             ).joinToString(" · ")
             if (byline.isNotEmpty()) {
@@ -213,7 +215,7 @@ internal fun CharacterHero(
             }
             Spacer(Modifier.height(20.dp))
             EtaButton(
-                text = "开始对话",
+                text = stringResource(R.string.character_action_start_chat),
                 enabled = !busy,
                 onClick = onStart,
                 modifier = Modifier.fillMaxWidth(),
@@ -277,7 +279,7 @@ internal fun GreetingPager(
                             if (page == pagerState.settledPage) {
                                 Icon(
                                     imageVector = Icons.Outlined.Check,
-                                    contentDescription = "已选择",
+                                    contentDescription = stringResource(R.string.character_greeting_selected),
                                     modifier = Modifier.size(12.dp),
                                     tint = colors.onPrimary,
                                 )
@@ -287,7 +289,7 @@ internal fun GreetingPager(
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = text.ifBlank { "没有预设开场白，由你先开口" },
+                    text = text.ifBlank { stringResource(R.string.character_greeting_empty) },
                     style = MiuixTheme.textStyles.body2,
                     color = if (text.isBlank()) colors.onSurfaceVariantSummary else colors.onSurface,
                     maxLines = 6,
@@ -296,7 +298,7 @@ internal fun GreetingPager(
                 )
                 if (text.isNotBlank()) {
                     Text(
-                        text = "阅读全文",
+                        text = stringResource(R.string.character_greeting_read_full),
                         style = MiuixTheme.textStyles.footnote1,
                         color = colors.primary,
                     )
