@@ -56,6 +56,7 @@ internal class EtaMenuCollector {
         val selected: Boolean,
         val dividerBefore: Boolean,
         val onClick: () -> Unit,
+        val summary: String? = null,
     )
     val entries = mutableListOf<Entry>()
     var dividerPending = false
@@ -72,8 +73,8 @@ private object EtaMenuCollectScope : ColumnScope {
 }
 
 /**
- * COUI 菜单与对话框依赖平台着色器（Android 14+ 的 Mesh 阴影、AGSL）。本机测试环境（Robolectric）
- * 实现不了这些着色器，组合会直接报错；这时退回旧的小窗与面板，保证测试仍能检查菜单内容。
+ * COUI 的圆角遮罩（squircle）、材质光效和液态玻璃依赖平台着色器（AGSL）。本机测试环境（Robolectric）
+ * 编译不了这些着色器，这时关掉它们，组件退回普通圆角和实色。
  */
 internal object EtaCouiSupport {
     @Volatile
@@ -81,10 +82,11 @@ internal object EtaCouiSupport {
 }
 
 /**
- * 弹出菜单（小窗）：与上游 3.4.x 一致，使用 COUI 菜单——从按住的位置展开，背后的页面被模糊，
- * 手指不松开滑到某一项松手即可选中。[couiAnchor] 挂在被长按的元素上（`couiMenuAnchor`），
- * 打开时用 `couiAnchor.open { ... }` 记录触点。没有锚点时跟随父布局定位。
+ * 弹出菜单（小窗）：COUI 2.1.0 菜单——从按住的位置展开，背后的页面被模糊，
+ * 手指不松开滑到某一项松手即可选中。[couiAnchor] 挂在被点或被长按的元素上（`etaMenuAnchor`），
+ * 打开时用 `couiAnchor.open { ... }` 记下元素位置。[anchor]、[alignEnd] 是旧小窗的参数，已不再使用。
  */
+@Suppress("UNUSED_PARAMETER")
 @Composable
 internal fun EtaContextMenu(
     show: Boolean,
@@ -95,10 +97,7 @@ internal fun EtaContextMenu(
     header: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    if (!EtaCouiSupport.shaders) {
-        EtaPopover(show, anchor, onDismiss, align = if (alignEnd) EtaPopoverAlign.End else EtaPopoverAlign.Start, title = header, content = content)
-        return
-    }
+    // 14.4b 起菜单画在同一棵组合树里，单测（没有着色器）也走 COUI 菜单，只是关掉圆角遮罩和材质光效。
     val collector = EtaMenuCollector()
     // 只收集菜单项，不往父布局里放任何节点：以前这里放了一个 0 尺寸的 Column，
     // 侧栏（按子节点顺序摆放「侧栏、对话页」的自定义布局）把它当成了对话页，真正的对话页没有被测量和摆放，
@@ -118,6 +117,7 @@ internal fun EtaContextMenu(
                 selected = entry.selected,
                 dividerBefore = entry.dividerBefore,
                 onClick = entry.onClick,
+                summary = entry.summary,
             )
         },
         onDismiss = onDismiss,
@@ -142,7 +142,7 @@ internal fun EtaMenuItem(
     summary: String? = null,
 ) {
     LocalEtaMenuCollector.current?.let { collector ->
-        collector.entries += EtaMenuCollector.Entry(text, icon, enabled, destructive, selected, collector.dividerPending, onClick)
+        collector.entries += EtaMenuCollector.Entry(text, icon, enabled, destructive, selected, collector.dividerPending, onClick, summary)
         collector.dividerPending = false
         return
     }

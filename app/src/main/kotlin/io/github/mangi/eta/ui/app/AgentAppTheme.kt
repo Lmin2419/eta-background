@@ -29,6 +29,11 @@ fun AgentAppTheme(
     appearance: AppearanceSettings,
     applyInterfaceScale: Boolean,
     onResolvedDarkModeChange: (Boolean) -> Unit = {},
+    /**
+     * 是否放 COUI 2.1.0 的弹层宿主（菜单、对话框、半窗画在它上面，14.4b）。整页的 Activity 要放；
+     * 悬浮窗、任务预览这类自己定尺寸、不弹菜单和对话框的小窗口不放（宿主会撑满窗口）。
+     */
+    couiOverlayHost: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val systemDark = isSystemInDarkTheme()
@@ -92,8 +97,8 @@ fun AgentAppTheme(
             LocalPlatformDensity provides platformDensity,
             LocalDensity provides appDensity,
         ) {
-            // 上游 3.4.x 的 COUI 组件（小窗菜单、半窗、按钮）在同一主题下工作：强调色沿用胖小胖的珊瑚色。
-            // ProvideCouiMenuBackdrop 记录整窗内容，菜单与半窗即使是独立窗口也能模糊背后的页面。
+            // 旧 COUI 库（按钮、顶栏、液态玻璃）的主题：强调色沿用胖小胖的珊瑚色。
+            // 菜单、对话框、半窗从 14.4b 起换成 COUI 2.1.0，画在下面 EtaCouiOverlayRoot 的弹层宿主上。
             val blurOn = appearance.blurEnabled && top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported()
             val couiScheme = remember(isDark, etaColors) {
                 (if (isDark) com.itos.coui.theme.CouiPresets.Dark else com.itos.coui.theme.CouiPresets.Light).copy(
@@ -110,11 +115,11 @@ fun AgentAppTheme(
             ) {
                 com.itos.coui.theme.CouiTheme(darkTheme = isDark, colorScheme = couiScheme) {
                     EtaTheme(colors = etaColors) {
-                        if (blurOn) {
-                            com.itos.coui.menu.ProvideCouiMenuBackdrop(isolateContent = false) { windowSource ->
-                                io.github.mangi.eta.ui.components.trackRenderSource("整窗(COUI 菜单)", windowSource)
+                        if (couiOverlayHost) {
+                            // 整窗内容被记录下来，供 COUI 菜单、对话框、半窗做材质模糊（不含这些弹层自己）。
+                            io.github.mangi.eta.ui.components.coui.EtaCouiOverlayRoot(LocalBlurEnabled.current) { pageRecording ->
                                 androidx.compose.foundation.layout.Box(
-                                    androidx.compose.ui.Modifier.fillMaxSize().then(windowSource),
+                                    androidx.compose.ui.Modifier.fillMaxSize().then(pageRecording),
                                 ) { content() }
                             }
                         } else {

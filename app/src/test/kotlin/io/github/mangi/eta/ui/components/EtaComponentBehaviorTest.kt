@@ -248,11 +248,17 @@ class EtaComponentBehaviorTest {
                     onDismissFinished = { finished++ }) { EtaButton("Import", {}) }
             }
         }) { panel ->
-            // 不允许关闭时，「关闭」按钮不可用。
-            assertTrue(panel.clickableFor("Close").config.contains(SemanticsProperties.Disabled))
+            panel.advance(60)
+            // COUI 2.1.0 半窗（14.4b）：拖动条、拖下或点外面关闭，没有「关闭」按钮。
+            assertTrue(panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == "Import" } == true })
+            assertTrue(panel.nodes().none { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == "Close" } == true })
+            // 不允许关闭时，点外面没有反应。
+            panel.tapAt(100f, 60f)
+            panel.advance(30)
+            assertEquals(0, requests)
             allow.value = true
             panel.advance()
-            panel.clickText("Close")
+            panel.tapAt(100f, 60f)
             panel.advance(90)
             assertEquals(1, requests)
             assertEquals(1, finished)
@@ -297,10 +303,11 @@ class EtaComponentBehaviorTest {
             // COUI 底部对话框：左右各留至少 8dp，不贴屏幕边。
             assertTrue(dialog.boundsInRoot.width <= (320f - 16f) * 2f + 1f)
             assertTrue(dialog.boundsInRoot.left >= 16f - 1f)
-            assertTrue(panel.nodes().any {
-                it.config.getOrNull(SemanticsProperties.Heading) != null &&
-                    it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == "Remove selected models?" } == true
-            })
+            // 标题完整显示在对话框里（COUI 标题自带样式，不再单独标成 heading；读屏靠 paneTitle）。
+            val title = panel.nodes().first {
+                it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == "Remove selected models?" } == true
+            }
+            assertTrue(title.boundsInRoot.width > 0f && title.boundsInRoot.left >= dialog.boundsInRoot.left - 1f)
             val buttons = panel.nodes().filter { it.config.getOrNull(SemanticsProperties.Role) == Role.Button }
             assertEquals(2, buttons.size)
             assertFalse(buttons[0].boundsInRoot.overlaps(buttons[1].boundsInRoot))
@@ -376,6 +383,15 @@ class EtaComponentBehaviorTest {
             val now = SystemClock.uptimeMillis()
             listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP).forEachIndexed { i, action ->
                 val event = MotionEvent.obtain(now, now + i * 20L, action, x, bounds.center.y, 0)
+                (root() as View).dispatchTouchEvent(event)
+                event.recycle()
+            }
+            advance()
+        }
+        fun tapAt(x: Float, y: Float) {
+            val now = SystemClock.uptimeMillis()
+            listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP).forEachIndexed { i, action ->
+                val event = MotionEvent.obtain(now, now + i * 20L, action, x, y, 0)
                 (root() as View).dispatchTouchEvent(event)
                 event.recycle()
             }

@@ -35,13 +35,16 @@ internal class Stage3TestPanel(activity: ComponentActivity, dark: Boolean = fals
         scope.launch { recomposer.runRecomposeAndApplyChanges() }
         view.setParentCompositionContext(recomposer)
         view.setContent {
+            // 字体缩放放在最外层（和真机的系统字体设置一样），COUI 弹层宿主也跟着放大。
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides
+                androidx.compose.ui.unit.Density(androidx.compose.ui.platform.LocalDensity.current.density, fontScale)) {
             AgentAppTheme(AppearanceSettings(themeMode = if (dark) io.github.mangi.eta.data.model.AppearanceThemeMode.DARK else io.github.mangi.eta.data.model.AppearanceThemeMode.LIGHT, blurEnabled = blur), false) {
                 EtaTheme(colors = EtaTheme.colors, motion = EtaMotion(reduceMotion)) {
-                    CompositionLocalProvider(LocalSquircleEnabled provides false,
-                        androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(androidx.compose.ui.platform.LocalDensity.current.density, fontScale)) {
+                    CompositionLocalProvider(LocalSquircleEnabled provides false) {
                         Box(Modifier.fillMaxSize()) { content() }
                     }
                 }
+            }
             }
         }
         activity.setContentView(view)

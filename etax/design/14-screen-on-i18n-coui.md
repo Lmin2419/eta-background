@@ -78,6 +78,16 @@
 - 按住滑动选中仍然有：新库 `ListPopup` 自带拖动选择和按压高光滑动；从按住的位置弹出用 `PreciseClickState` + `Modifier.preciseClickAnchor`，对应我们现在的 `EtaMenuAnchor`。
 - 模糊改用新库的材质模糊（`materialBlur`），和现在整窗模糊的观感会有差别，这一段要真机对比。
 
+14.4b 记录（2026111635）：
+- 新增 `ui/components/coui/EtaCouiOverlays.kt`：`EtaCouiOverlayRoot`（弹层宿主 + 整窗记录 + 菜单层）、`EtaMenuAnchor`（`PreciseClickState` + 元素位置）、`EtaCouiMenu`（`OverlayListPopup` + `ListPopupColumn` + `DropdownImpl`）、`EtaCouiDialog`（`OverlayDialog` + `DialogButtonBar`）、`EtaCouiSheet`（`OverlayBottomSheet`）、`EtaCouiInputDialog`（`OverlayInputDialog`）。页面调用的名字不变，调用处一行没改。
+- 宿主放在 `AgentAppTheme` 里（参数 `couiOverlayHost`，默认开；悬浮窗、任务预览关）。一开始放在 `EtaAppOverlayHost` 里，发现 `AgentAppRoot` 的重命名、删除对话框写在它外面，新库没有宿主时弹层会静默不显示，所以挪到最外层；没有宿主时记一条日志。
+- 新库菜单会在调用处放一个占位节点拿父布局位置，这会重现 2026111407 的整页空白（侧栏按子节点顺序摆放），所以菜单改为调用处只登记、由宿主上的菜单层在锚点元素的位置画出来。
+- 弹层内容在宿主里组合，看到的是宿主处的环境；对话框和半窗的内容用 `currentCompositionLocalContext` 换回调用处的环境，再把模糊源清空（嵌套弹层用实色）。
+- 半窗去掉了底部「关闭」，改为拖动条 + 下拖 / 点外面 / 返回关闭（上游做法）；只有「关闭」的提示框按钮用灰色次要样式（和换库前一致）。
+- 新库 Scaffold 用子组合摆放内容，页面第一次读系统栏边距发生在子组合里，那时才注册边距监听要等窗口再派发一次（本机测试里不会再派发，页面上移一个状态栏高度）。宿主外层先读一次 `WindowInsets.systemBars`，监听在第一次组合就注册好，真机第一帧也就有边距。
+- 新库圆角遮罩的着色器本机渲染器编译不了（`layout(color)`），截图测试关掉着色器跑；测试面板的字体缩放提到最外层，弹层宿主也跟着放大（真机上字体缩放来自系统，本来就是这样）。
+- 剩下直接用旧库的：`AgentAppTheme`（旧主题，供按钮、顶栏、液态玻璃）、`MiuixScaffoldPage`、侧栏搜索栏、`EtaCoui.kt` 的浮动玻璃和胶囊按钮——都在 14.4c。
+
 ## 进度
 
 - [x] 14.1 常亮三档（2026111629）
@@ -88,6 +98,6 @@
 - [x] 14.2e 工具步骤短标签（2026111631）
 - [x] 14.3 Agent 层用户可见文字（2026111632）
 - [x] 14.4a 适配层收拢、开关换新库（2026111633）
-- [ ] 14.4b 菜单、对话框
+- [x] 14.4b 菜单、对话框、半窗、输入框（2026111635）
 - [ ] 14.4c 液态玻璃、顶栏、搜索栏、页面骨架（需要真机看一眼再继续）
 - [ ] 14.4d 去掉旧库

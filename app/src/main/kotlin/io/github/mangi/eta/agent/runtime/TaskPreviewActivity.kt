@@ -103,7 +103,7 @@ internal class TaskPreviewActivity : ComponentActivity() {
         previewUi.appName = appInfo?.let { packageManager.getApplicationLabel(it).toString() } ?: pkg
         previewUi.appIcon = appInfo?.let { packageManager.getApplicationIcon(it) }
         setContent {
-            AgentAppTheme(AppearanceSettings(themeMode = AppearanceThemeMode.DARK), applyInterfaceScale = false) {
+            AgentAppTheme(AppearanceSettings(themeMode = AppearanceThemeMode.DARK), applyInterfaceScale = false, couiOverlayHost = false) {
                 EtaPreviewWindow(previewUi, picture, onAction = ::performPreviewAction,
                     onZoom = ::toggleSize, onClose = ::finish)
             }

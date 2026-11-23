@@ -326,15 +326,15 @@ internal class PresetMenuState(
 @Composable
 private fun PresetMenuItems(state: PresetMenuState, models: AgentModelPickerUiState, busy: Boolean) {
     val unavailable = stringResource(R.string.model_presets_unavailable)
-    val oneLine = LocalEtaMenuCollector.current != null
     state.presets.forEach { preset ->
         val model = models.providerGroups.firstNotNullOfOrNull { group -> group.models.firstOrNull { it.id == preset.modelId } }
         val summary = (model?.displayName ?: unavailable) + " · " + reasoningEffortLevelText(preset.effort)
-        EtaMenuItem(if (oneLine) "${preset.name} · $summary" else preset.name,
+        // COUI 2.1.0 菜单和半窗一样：预设名一行，模型和思考强度一行小字。
+        EtaMenuItem(preset.name,
             onClick = { state.onApply(preset) },
             enabled = model != null && !busy && !models.isChanging,
             selected = io.github.mangi.eta.data.model.presetMatches(preset, models.selectedModel?.id, state.effort),
-            summary = if (oneLine) null else summary)
+            summary = summary)
     }
     state.onSaveRequest?.let { save ->
         EtaMenuItem(stringResource(R.string.model_presets_save), onClick = save, enabled = models.selectedModel != null && !busy)

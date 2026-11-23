@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.backdrop.ProvideCouiBackdrop
 import com.itos.coui.dialog.CouiDialogDefaults
-import com.itos.coui.dialog.CouiDialogMaterial
 import com.itos.coui.effect.CouiContour
 import com.itos.coui.effect.CouiContourStyle
 import com.itos.coui.effect.CouiFloatingRenderer
@@ -63,7 +62,6 @@ import com.itos.coui.effect.couiButtonFeedback
 import com.itos.coui.effect.couiFloatingSurface
 import com.itos.coui.effect.couiToolbarFeedback
 import com.itos.coui.effect.rememberCouiSpotlight
-import com.itos.coui.menu.rememberCouiWindowBackdrop
 import com.itos.coui.motion.couiPressMotion
 import com.itos.coui.motion.couiTouchMotion
 import com.itos.coui.motion.rememberCouiPressMotion
@@ -335,13 +333,6 @@ internal fun EtaApi34FloatingSurface(
     }
 }
 
-/** 半窗、对话框的 COUI 材质：有窗口背景源且设备支持时启用（背后的页面被模糊），否则为实色。 */
-@Composable
-internal fun rememberEtaDialogMaterial(dark: Boolean = CouiTheme.isDark): CouiDialogMaterial? {
-    val backdrop = rememberCouiWindowBackdrop()
-    return if (CouiDialogDefaults.isMaterialSupported() && backdrop != null) CouiDialogDefaults.material(dark) else null
-}
-
 internal enum class EtaCouiButtonRole { Primary, Secondary, Destructive, DestructiveFilled }
 
 /**
@@ -443,138 +434,6 @@ internal fun EtaCouiButton(
     ) {
         Text(text = text, kind = CouiTextKind.ItemTitle, color = textColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
-}
-
-/** 主操作（填充强调色；危险操作红色）。 */
-@Composable
-internal fun etaPrimaryDialogAction(
-    text: String,
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-    destructive: Boolean = false,
-    dark: Boolean = CouiTheme.isDark,
-): com.itos.coui.dialog.CouiDialogAction {
-    val accent = if (destructive) CouiDialogDefaults.themeColors(dark).destructive else CouiTheme.colorSchemeFor(dark).accent
-    return com.itos.coui.dialog.CouiDialogAction(
-        text = text, onClick = onClick, enabled = enabled,
-        style = com.itos.coui.dialog.CouiDialogActionStyle.Primary,
-        colors = CouiDialogDefaults.primaryActionColors(accent),
-    )
-}
-
-/**
- * 对话框里 [io.github.mangi.eta.ui.components.MiuixDialogActions] 声明的按钮，交给 COUI 对话框底部的按钮栏绘制
- * （与上游一致的并排 / 竖排规则）。只把可比较的文案与开关放进状态，点击回调走普通字段，避免反复重组。
- */
-internal class EtaDialogActionSink {
-    data class Spec(
-        val confirmText: String,
-        val confirmEnabled: Boolean,
-        val destructive: Boolean,
-        val cancelText: String,
-        val cancelEnabled: Boolean,
-    )
-    var spec by mutableStateOf<Spec?>(null)
-    var onConfirm: () -> Unit = {}
-    var onCancel: () -> Unit = {}
-}
-
-internal val LocalEtaDialogActionSink = staticCompositionLocalOf<EtaDialogActionSink?> { null }
-
-/**
- * 上游样式的弹窗（半窗）：从底部升起的 COUI 对话框，材质模糊背后的页面；标题、说明、内容，底部按钮栏。
- * 内容里的 MiuixDialogActions 会变成底部按钮；没有声明按钮时底部是「关闭」。
- */
-@Composable
-internal fun EtaCouiDialog(
-    show: Boolean,
-    title: String?,
-    message: String?,
-    onDismissRequest: () -> Unit,
-    closeText: String,
-    modifier: Modifier = Modifier,
-    placement: com.itos.coui.dialog.CouiDialogPlacement = com.itos.coui.dialog.CouiDialogPlacement.Bottom,
-    contentPadding: Dp = CouiDialogDefaults.contentPadding,
-    maxContentHeight: Dp = Dp.Unspecified,
-    dismissible: Boolean = true,
-    content: @Composable () -> Unit,
-) {
-    val dark = CouiTheme.isDark
-    val sink = remember { EtaDialogActionSink() }
-    val spec = sink.spec
-    val confirm = if (spec != null) etaPrimaryDialogAction(spec.confirmText, { sink.onConfirm() }, spec.confirmEnabled, spec.destructive, dark)
-        else com.itos.coui.dialog.CouiDialogAction(closeText, onDismissRequest, enabled = dismissible)
-    val dismiss = spec?.let { com.itos.coui.dialog.CouiDialogAction(it.cancelText, { sink.onCancel() }, it.cancelEnabled) }
-    com.itos.coui.dialog.Dialog(
-        modifier = modifier.semantics { title?.let { paneTitle = it } },
-        visible = show,
-        onDismissRequest = { if (dismissible) onDismissRequest() },
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false,
-            dismissOnBackPress = dismissible, dismissOnClickOutside = dismissible),
-        dark = dark,
-        title = title,
-        message = message,
-        confirmAction = confirm,
-        dismissAction = dismiss,
-        placement = placement,
-        material = rememberEtaDialogMaterial(dark),
-        backdrop = rememberCouiWindowBackdrop(),
-    ) {
-        androidx.compose.runtime.CompositionLocalProvider(LocalEtaDialogActionSink provides sink) {
-            // 内容按列排布（与原来的对话框一致）；限制最大高度，里面的列表可以自己滚动。
-            androidx.compose.foundation.layout.Column(
-                Modifier.fillMaxWidth()
-                    .then(if (maxContentHeight != Dp.Unspecified) Modifier.heightIn(max = maxContentHeight) else Modifier)
-                    .padding(horizontal = contentPadding)
-                    .padding(top = 4.dp, bottom = 8.dp),
-            ) { content() }
-        }
-    }
-}
-
-/**
- * 上游的 COUI 输入对话框（CouiInputDialog）：标题、输入框（带清除钮）、底部「取消 / 确定」，材质模糊背后页面。
- * [error] 不为空时显示在输入框下方（红色）。
- */
-@Composable
-internal fun EtaCouiInputDialog(
-    visible: Boolean,
-    title: String?,
-    value: String,
-    onValueChange: (String) -> Unit,
-    confirmText: String,
-    onConfirm: () -> Unit,
-    onDismissRequest: () -> Unit,
-    message: String? = null,
-    placeholder: String? = null,
-    confirmEnabled: Boolean = true,
-    error: String? = null,
-    cancelText: String = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_cancel),
-) {
-    val dark = CouiTheme.isDark
-    var fieldValue by remember {
-        mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(value, androidx.compose.ui.text.TextRange(value.length)))
-    }
-    if (fieldValue.text != value) {
-        fieldValue = fieldValue.copy(text = value, selection = androidx.compose.ui.text.TextRange(value.length))
-    }
-    com.itos.coui.dialog.InputDialog(
-        visible = visible,
-        title = title,
-        message = message,
-        value = fieldValue,
-        onValueChange = { next -> fieldValue = next; if (next.text != value) onValueChange(next.text) },
-        placeholder = placeholder,
-        counter = error,
-        counterIsError = error != null,
-        clearContentDescription = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.page_clear_84fcd7),
-        confirmAction = etaPrimaryDialogAction(confirmText, onConfirm, confirmEnabled, false, dark),
-        dismissAction = com.itos.coui.dialog.CouiDialogAction(cancelText, onDismissRequest),
-        onDismissRequest = onDismissRequest,
-        dark = dark,
-        material = rememberEtaDialogMaterial(dark),
-        backdrop = rememberCouiWindowBackdrop(),
-    )
 }
 
 /** 上游的系统顶栏按钮样式：流体材质、阴影与轮廓光（Android 14+）。 */

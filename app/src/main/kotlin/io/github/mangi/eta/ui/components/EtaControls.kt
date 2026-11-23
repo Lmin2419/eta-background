@@ -37,7 +37,7 @@ internal fun EtaWindowDialog(
     onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    // 与上游一致：COUI 对话框（从底部升起，材质模糊背后的页面），按钮在底部按钮栏。
+    // 与上游一致：COUI 2.1.0 对话框（手机上从底部升起，材质模糊背后的页面），按钮在底部按钮栏。
     io.github.mangi.eta.ui.components.coui.EtaCouiDialog(
         show = show,
         title = title,
@@ -45,10 +45,8 @@ internal fun EtaWindowDialog(
         onDismissRequest = { onDismissRequest?.invoke() },
         closeText = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_close),
         modifier = modifier,
+        onDismissFinished = onDismissFinished,
     ) { content() }
-    if (onDismissFinished != null) androidx.compose.runtime.LaunchedEffect(show) {
-        if (!show) { kotlinx.coroutines.delay(320); onDismissFinished() }
-    }
 }
 
 
@@ -62,7 +60,7 @@ internal fun EtaOverlayDialog(
     onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    // 与上游一致：COUI 对话框（从底部升起，材质模糊背后的页面），按钮在底部按钮栏。
+    // 与上游一致：COUI 2.1.0 对话框（手机上从底部升起，材质模糊背后的页面），按钮在底部按钮栏。
     io.github.mangi.eta.ui.components.coui.EtaCouiDialog(
         show = show,
         title = title,
@@ -70,10 +68,8 @@ internal fun EtaOverlayDialog(
         onDismissRequest = { onDismissRequest?.invoke() },
         closeText = androidx.compose.ui.res.stringResource(io.github.mangi.eta.R.string.action_close),
         modifier = modifier,
+        onDismissFinished = onDismissFinished,
     ) { content() }
-    if (onDismissFinished != null) androidx.compose.runtime.LaunchedEffect(show) {
-        if (!show) { kotlinx.coroutines.delay(320); onDismissFinished() }
-    }
 }
 
 

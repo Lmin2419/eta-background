@@ -41,7 +41,7 @@ android {
         minSdk = 33
         targetSdk = 37
         // versionCode 规则：yyyyMMdd + 两位当日序号（01 起），发版时随 versionName 一起手动递增。
-        versionCode = 2026111634
+        versionCode = 2026111635
         versionName = "3.3.5"
 
         ndk {
@@ -174,6 +174,7 @@ dependencies {
     implementation(libs.dexkit)
     implementation(libs.coui)
     implementation(libs.coui.kmp.ui)
+    implementation(libs.coui.kmp.blur)
     implementation(libs.miuix.ui)
     implementation(libs.miuix.blur)
     implementation(libs.miuix.nav)

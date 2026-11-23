@@ -7,24 +7,16 @@ import androidx.compose.ui.unit.dp
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.effect.CouiFloatingRenderer
-import com.itos.coui.menu.couiMenuAnchor
-import com.itos.coui.menu.rememberCouiMenuAnchor
 
 /*
  * 14 号方案 14.4a：COUI 组件库迁移的适配层。
  *
  * 胖小胖的界面外壳建在旧库 io.github.itoseo:coui 上。迁移到 io.github.suqi8.coui.kmp 2.1.0 时，
  * 先让 coui 包以外的页面只通过这里的名字使用「菜单锚点」「采样源」等能力，之后逐段把这里的实现换成新库，
- * 页面代码不用再动。这一段只是改名转发，界面和行为完全不变。
+ * 页面代码不用再动。
  */
 
-/** 弹出菜单的锚点：菜单从这个位置弹出。 */
-internal typealias EtaMenuAnchor = com.itos.coui.menu.CouiMenuAnchor
-
-@Composable
-internal fun rememberEtaMenuAnchor(): EtaMenuAnchor = rememberCouiMenuAnchor()
-
-internal fun Modifier.etaMenuAnchor(anchor: EtaMenuAnchor): Modifier = couiMenuAnchor(anchor)
+/* 菜单锚点、菜单、对话框、半窗在 EtaCouiOverlays.kt（14.4b 起用 COUI 2.1.0）。 */
 
 /** 液态玻璃的采样源：被它包住的内容会被上层的玻璃控件模糊、折射。 */
 internal typealias EtaBackdrop = com.itos.coui.backdrop.CouiBackdrop
@@ -84,49 +76,6 @@ internal fun EtaCouiSwitch(
         }
         }
     }
-}
-
-/** COUI 弹出菜单的一项（与 [io.github.mangi.eta.ui.components.EtaMenuCollector.Entry] 一一对应）。 */
-internal class EtaCouiMenuEntry(
-    val text: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector?,
-    val enabled: Boolean,
-    val destructive: Boolean,
-    val selected: Boolean,
-    val dividerBefore: Boolean,
-    val onClick: () -> Unit,
-)
-
-/** COUI 弹出菜单：从 [anchor] 处弹出，危险项用对话框的警示色。 */
-@Composable
-internal fun EtaCouiMenu(
-    show: Boolean,
-    entries: List<EtaCouiMenuEntry>,
-    onDismiss: () -> Unit,
-    anchor: EtaMenuAnchor?,
-    header: String?,
-    dark: Boolean,
-) {
-    val destructive = com.itos.coui.dialog.CouiDialogDefaults.themeColors(dark).destructive
-    val items = entries.mapIndexed { index, entry ->
-        com.itos.coui.menu.CouiMenuItem(
-            value = index,
-            text = entry.text,
-            icon = entry.icon,
-            selected = entry.selected,
-            enabled = entry.enabled,
-            dividerBefore = entry.dividerBefore,
-            iconTint = if (entry.destructive) destructive else null,
-        )
-    }
-    com.itos.coui.menu.Menu(
-        expanded = show && items.isNotEmpty(),
-        onDismissRequest = onDismiss,
-        items = items,
-        onItemClick = { item -> entries.getOrNull(item.value)?.onClick?.invoke() },
-        anchor = anchor,
-        headerText = header,
-    )
 }
 
 /** COUI 页面配色里的强调色、标题色、说明色（上游生图卡片的 COUI 分支用）。 */
