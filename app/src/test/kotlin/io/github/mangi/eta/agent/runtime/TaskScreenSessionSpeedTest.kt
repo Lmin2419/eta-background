@@ -20,11 +20,17 @@ class TaskScreenSessionSpeedTest {
         @Volatile var tapReply: String? = null
         /** 每次读树前调用；参数是第几次读树（从 1 开始）。 */
         @Volatile var beforeDump: ((Int) -> Unit)? = null
+        /** 接下来这么多次读树回 WINDOW_NOT_READY（刚打开的应用还没交出窗口）。 */
+        @Volatile var windowNotReadyRemaining = 0
         private var dumps = 0
         override fun execute(name: String, arguments: String): String {
             calls += name to JSONObject(arguments)
             if (name == "screen_tap") tapReply?.let { return it }
             if (name == "screen_dump") { dumps++; beforeDump?.invoke(dumps) }
+            if (name == "screen_dump" && windowNotReadyRemaining > 0) {
+                windowNotReadyRemaining--
+                return """{"ok":false,"code":"WINDOW_NOT_READY","reason":"OBSERVER_WINDOW_UNAVAILABLE","displayId":7,"retryable":true}"""
+            }
             return when (name) {
                 "screen_open" -> """{"ok":true,"mode":"hidden","displayId":7,"display":7}"""
                 "screen_dump" -> JSONObject().put("ok", true).put("displayId", 7).put("package", pkg)
@@ -52,6 +58,30 @@ class TaskScreenSessionSpeedTest {
 
     private fun TaskScreenSession.run(name: String, args: JSONObject = JSONObject()): JSONObject =
         JSONObject(execute(call(name, args.toString()))!!.content)
+
+    /** 刚打开的应用还没交出窗口：程序自己等一会儿再读，不把 WINDOW_NOT_READY 交给模型来回重试。 */
+    @Test fun observationWaitsBrieflyForAJustLaunchedWindow() {
+        val backend = Backend()
+        val tools = session(backend)
+        val dumpsBefore = backend.names().count { it == "screen_dump" }
+        backend.windowNotReadyRemaining = 2
+        val observed = tools.run("observe_screen")
+        assertTrue(observed.toString(), observed.optBoolean("ok"))
+        assertTrue(observed.has("observation_id"))
+        assertEquals(3, backend.names().count { it == "screen_dump" } - dumpsBefore)
+    }
+
+    @Test fun aWindowThatNeverAppearsIsStillReportedAfterTheBoundedWait() {
+        val backend = Backend()
+        val tools = session(backend)
+        backend.windowNotReadyRemaining = Int.MAX_VALUE
+        val startedAt = System.nanoTime()
+        val observed = tools.run("observe_screen")
+        val waitedMs = (System.nanoTime() - startedAt) / 1_000_000L
+        assertFalse(observed.optBoolean("ok"))
+        assertEquals("WINDOW_NOT_READY", observed.optString("code"))
+        assertTrue("waited $waitedMs ms", waitedMs in 3_500L..8_000L)
+    }
 
     @Test fun actionResultCarriesAFreshObservationTheNextStepCanUse() {
         val backend = Backend()
@@ -264,7 +294,9 @@ class TaskScreenSessionSpeedTest {
             var dumps = 0
             val flaky = object : ScreenToolBackend {
                 override fun execute(name: String, arguments: String): String {
-                    if (name == "screen_dump" && ++dumps in failures) return """{"ok":false,"code":"WINDOW_NOT_READY"}"""
+                    // WINDOW_NOT_READY 现在由读树自己短暂等待（见 observationWaitsBrieflyForAJustLaunchedWindow），
+                    // 这里用别的读树失败来覆盖「回看失败重试一次」。
+                    if (name == "screen_dump" && ++dumps in failures) return """{"ok":false,"code":"OBSERVER_UNAVAILABLE"}"""
                     return backend.execute(name, arguments)
                 }
             }
@@ -281,7 +313,7 @@ class TaskScreenSessionSpeedTest {
             } else {
                 assertFalse(tapped.has("after"))
                 assertTrue(tapped.getBoolean("after_unavailable"))
-                assertEquals("WINDOW_NOT_READY", tapped.getString("after_error"))
+                assertEquals("OBSERVER_UNAVAILABLE", tapped.getString("after_error"))
             }
         }
     }

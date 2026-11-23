@@ -113,8 +113,13 @@ internal class AgentExecutionService : Service() {
             if (task != null) posted[id] = task
             // Refresh the detached card in place with its final state.
             if (oldId != id) {
-                posted.remove(oldId)
-                if (oldId != 0 && oldId !in notificationIds.values) getSystemService(NotificationManager::class.java).cancel(oldId)
+                val oldPosted = posted.remove(oldId)
+                val oldOwner = cards.values.firstOrNull { notificationIds[it.runId] == oldId }
+                // 没有卡片认领的旧编号直接撤掉；认领它的卡片已经完成而旧通知还是实况（流体云）时也先撤掉，
+                // 由下面的 publishCards 重新发一条普通的「已完成」（见 [mustRepostFresh]）。
+                if (oldId != 0 && (oldOwner == null || mustRepostFresh(oldPosted, oldOwner))) {
+                    getSystemService(NotificationManager::class.java).cancel(oldId)
+                }
             }
         }
         publishCards(this, exceptId = id)
@@ -200,7 +205,10 @@ internal class AgentExecutionService : Service() {
                 foregroundActive = false
                 // 前台这条通知现在属于一张已完成的卡就留着；没有卡片认领它（任务已结束、卡片被撤掉），
                 // 留下来就成了永远停在「生成回答中」的陈旧卡片，所以连通知一起撤掉。
-                val keep = cards.values.firstOrNull { notificationIds[it.runId] == foregroundId }?.completed == true
+                // 认领它的卡片已完成、但前台这条还是实况（流体云）时也撤掉，随后 publishCards 重新发「已完成」：
+                // ColorOS 不会收起被原地改回普通的实况通知，旧的「生成回答中」会一直挂着，要手动点停止。
+                val owner = cards.values.firstOrNull { notificationIds[it.runId] == foregroundId }
+                val keep = owner?.completed == true && !mustRepostFresh(posted[foregroundId], owner)
                 stopForeground(if (keep) STOP_FOREGROUND_DETACH else STOP_FOREGROUND_REMOVE)
                 posted.remove(foregroundId)
             }
@@ -287,6 +295,19 @@ internal class AgentExecutionService : Service() {
             tombstones.remove(runId)
                 ?: if (notificationIds.isEmpty() && NOTIFICATION_ID !in tombstones.values) NOTIFICATION_ID else nextId++
         }
+
+        /** 这条通知上次发出时是不是实况卡片（Android 16 起请求提升为流体云 / 实况通知）。 */
+        internal fun wasLive(posted: TaskNotificationState?): Boolean =
+            posted != null && !posted.completed && !posted.paused && posted.status != AgentOverlayStatus.Queued
+
+        /**
+         * 同一条通知从实况（运行中）变成已完成时，要先撤掉再重新发，而不是原地更新：
+         * ColorOS 不会收起被原地改回普通的实况通知，流体云和通知栏里会一直留着旧的「运行中」，
+         * 只有手动点「停止」才消失（2026111620 修过一次，后来为了让「已完成」落回同一条通知改回了原地更新）。
+         * 编号不变，所以一个任务仍然只有一条通知。
+         */
+        internal fun mustRepostFresh(previous: TaskNotificationState?, next: TaskNotificationState): Boolean =
+            next.completed && wasLive(previous)
 
         /** 通知上点了暂停 / 停止，但运行时已经没有这个任务：收掉它的卡片和那条通知。 */
         private fun retireStaleCard(context: Context, runId: String, notificationId: Int) {
@@ -438,6 +459,7 @@ internal class AgentExecutionService : Service() {
             cards.values.forEach { task ->
                 val id = idFor(task.runId)
                 if (id != exceptId && (!completedOnly || task.completed) && posted[id] != task) {
+                    if (mustRepostFresh(posted[id], task)) manager.cancel(id)
                     manager.notify(id, notification(context, task, id))
                     posted[id] = task
                 }

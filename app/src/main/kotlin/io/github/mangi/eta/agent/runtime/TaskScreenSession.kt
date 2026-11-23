@@ -295,8 +295,11 @@ internal class TaskScreenSession(
         val concurrent = if (options.includeUiTree && options.includeScreenshot) {
             backendResults(listOf("screen_dump" to dumpArgs, "screen_shot" to shotArgs))
         } else null
+        var treeWaitedForWindow = false
         if (options.includeUiTree) {
-            dump = concurrent?.get(0) ?: backendResult("screen_dump", dumpArgs)
+            val firstDump = concurrent?.get(0) ?: backendResult("screen_dump", dumpArgs)
+            dump = dumpWhenWindowReady(dumpArgs, firstDump)
+            treeWaitedForWindow = dump !== firstDump
             if (!dump.optBoolean("ok", false)) {
                 invalidateObservation()
                 return failed(resultWithLocation(requireNotNull(dump), "observe_screen"))
@@ -324,7 +327,8 @@ internal class TaskScreenSession(
             displayGeometry != null && ScreenSparseness.needsScreenshot(parseNodes(dump).map { it.sparseView() },
                 displayGeometry.width, displayGeometry.height))
         if (wantShot) {
-            shot = concurrent?.get(1) ?: backendResult("screen_shot", shotArgs)
+            // 节点树等过窗口的话，一起截的那张图可能还是启动画面，重新截一张。
+            shot = concurrent?.get(1)?.takeUnless { treeWaitedForWindow } ?: backendResult("screen_shot", shotArgs)
             if (!shot.optBoolean("ok", false)) {
                 val backendFailure = shot
                 screenshotError = shot.optString("error").ifBlank { shot.optString("code", "SCREENSHOT_FAILED") }
@@ -701,7 +705,8 @@ internal class TaskScreenSession(
         while (true) {
             controller.throwIfCancelled()
             val dump = backendResult("screen_dump", JSONObject().put("limit", 1))
-            if (!dump.optBoolean("ok")) return resultWithLocation(dump, "wait_for_package")
+            val windowPending = !dump.optBoolean("ok") && dump.optString("code") == WINDOW_NOT_READY
+            if (!dump.optBoolean("ok") && !windowPending) return resultWithLocation(dump, "wait_for_package")
             val current = packageOf(dump)
             val elapsed = ((System.nanoTime() - startedAt) / 1_000_000L).toInt()
             if (current == target) {
@@ -1083,6 +1088,24 @@ internal class TaskScreenSession(
 
     private fun backendResult(name: String, args: JSONObject): JSONObject = parseBackend(backend.execute(name, args.toString()))
 
+    /**
+     * 刚在后台屏打开的应用还没把窗口交给观察服务时，引擎返回 WINDOW_NOT_READY。以前直接报给模型，
+     * 模型要「等待 3 秒 → 再观察」来回几轮（真机上一次任务里白白多了 2 次失败、1 次等待）。
+     * 现在程序自己短暂等窗口出来再读；超过 [WINDOW_READY_WAIT_MS] 仍没有才把原来的结果交回去。
+     */
+    private fun dumpWhenWindowReady(args: JSONObject, first: JSONObject): JSONObject {
+        var dump = first
+        val startedAt = System.nanoTime()
+        while (!dump.optBoolean("ok", false) && dump.optString("code") == WINDOW_NOT_READY &&
+            (System.nanoTime() - startedAt) / 1_000_000L < WINDOW_READY_WAIT_MS
+        ) {
+            controller.awaitRetryDelay(WINDOW_READY_POLL_MS)
+            controller.throwIfCancelled()
+            dump = backendResult("screen_dump", args)
+        }
+        return dump
+    }
+
     private fun backendResults(calls: List<Pair<String, JSONObject>>): List<JSONObject> =
         backend.executeConcurrently(calls.map { (name, args) -> name to args.toString() }).map(::parseBackend)
 
@@ -1292,5 +1315,9 @@ internal class TaskScreenSession(
         private const val MIN_READABLE_FOR_RECHECK = 6
         private val LATE_CHANGE_TOOLS = setOf("tap", "tap_element", "tap_area")
         val LOST_SESSION_CODES = setOf("NO_SESSION", "SESSION_CLOSED", "STALE_SCREEN", "SYSTEM_RESTARTED")
+        const val WINDOW_NOT_READY = "WINDOW_NOT_READY"
+        /** 刚打开的应用交出窗口通常不到 2 秒；最多替模型等这么久。 */
+        const val WINDOW_READY_WAIT_MS = 4_000L
+        const val WINDOW_READY_POLL_MS = 250L
     }
 }

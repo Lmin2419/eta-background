@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Root transport. Mutable display/input/capture state lives in independent workers. */
 public final class VDrive {
-    static final String BUILD = "20261120-e50-handoff-giveup";
+    static final String BUILD = "20261123-e51-tap-touch-fallback";
     static java.util.function.BooleanSupplier health = () -> true;
     static volatile boolean systemInvalid;
     // Installed only by the resident process entrypoint, never by embedded tests.

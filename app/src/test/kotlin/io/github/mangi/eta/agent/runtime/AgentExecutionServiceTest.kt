@@ -172,6 +172,20 @@ class AgentExecutionServiceTest {
         shadowOf(Looper.getMainLooper()).idle()
     }
 
+    /** 实况（流体云）卡片变成已完成时撤掉重发，不原地更新：ColorOS 不收起被改回普通的实况通知。 */
+    @Test
+    fun liveCardsAreRepostedWhenTheyComplete() {
+        val running = TaskNotificationState(runId = "r", conversationId = "c", title = "t", status = AgentOverlayStatus.GeneratingAnswer)
+        val done = running.copy(status = AgentOverlayStatus.ResultReady, completed = true)
+        assertTrue(AgentExecutionService.mustRepostFresh(running, done))
+        assertTrue(AgentExecutionService.mustRepostFresh(running.copy(status = AgentOverlayStatus.RunningTool("tap")), done))
+        assertFalse("paused cards are not promoted", AgentExecutionService.mustRepostFresh(running.copy(paused = true), done))
+        assertFalse("queued cards are not promoted", AgentExecutionService.mustRepostFresh(running.copy(status = AgentOverlayStatus.Queued), done))
+        assertFalse(AgentExecutionService.mustRepostFresh(done, done.copy(streamPreview = "x")))
+        assertFalse(AgentExecutionService.mustRepostFresh(null, done))
+        assertFalse(AgentExecutionService.mustRepostFresh(running, running.copy(step = 3)))
+    }
+
     @Test
     fun foregroundExecutionUsesOnlyServiceTypesSupportedByThePlatform() {
         val controller = Robolectric.buildService(AgentExecutionService::class.java).create()

@@ -575,7 +575,10 @@ public final class Boot {
                 ? AccessibilityNodeInfo.ACTION_LONG_CLICK
                 : AccessibilityNodeInfo.ACTION_CLICK);
         boolean changed = false;
-        long deadline = System.nanoTime() + 250_000_000L;
+        // 500 ms: the engine follows an unchanged node click with a real touch (self-drawn
+        // controls such as map route panels accept ACTION_CLICK but ignore it), so give a
+        // working click enough time to show its effect before that fallback.
+        long deadline = System.nanoTime() + 500_000_000L;
         while (ok && System.nanoTime() < deadline) {
             Thread.sleep(20);
             if (!signature(did).equals(before)) { changed = true; break; }
@@ -593,6 +596,7 @@ public final class Boot {
         Rect r = new Rect();
         target.getBoundsInScreen(r);
         return new JSONObject().put("ok", ok).put("changed", changed)
+                .put("editable", target.isEditable())
                 .put("target", textOf(target))
                 .put("viewId", target.getViewIdResourceName() == null ? "" : target.getViewIdResourceName())
                 .put("bounds", new JSONArray().put(r.left).put(r.top).put(r.right).put(r.bottom));

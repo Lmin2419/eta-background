@@ -1785,6 +1785,15 @@ class VDriveWorker implements VDrive.Worker {
                 .put("expectedGeometry", req.optJSONObject("expectedGeometry"))
                 .put("holdMs", 0)); // A short injected hold is still a tap, not ACTION_LONG_CLICK.
         if (a != null && a.optBoolean("ok")) {
+            if (nodeClickIgnored(a)) {
+                // Self-drawn controls (map route panels, canvas lists) accept ACTION_CLICK and
+                // do nothing. Follow up with a real touch at the same point; text fields stay
+                // node-only so the user's keyboard is not pulled to the hidden display.
+                injectTouch(did, x, y, x, y, hold, 0);
+                return new JSONObject().put("ok", true).put("via", "a11y+inject").put("nodeClickIgnored", true)
+                        .put("target", a.optString("target", ""))
+                        .put("viewId", a.optString("viewId", ""));
+            }
             return new JSONObject().put("ok", true).put("via", "a11y")
                     .put("changed", a.optBoolean("changed", false))
                     .put("target", a.optString("target", ""))
@@ -1794,6 +1803,15 @@ class VDriveWorker implements VDrive.Worker {
         if (stale != null) return stale;
         injectTouch(did, x, y, x, y, hold, 0);
         return new JSONObject().put("ok", true).put("via", "inject");
+    }
+
+    /**
+     * The observer clicked a node but the scene did not change within its window. Older
+     * observers do not report "editable"; without it, keep the node-only behaviour.
+     */
+    static boolean nodeClickIgnored(JSONObject nodeClick) {
+        return nodeClick.optBoolean("ok") && !nodeClick.optBoolean("changed", true)
+                && nodeClick.has("editable") && !nodeClick.optBoolean("editable");
     }
 
     /** Long press: hold the finger down for real, then release. */
@@ -1809,6 +1827,11 @@ class VDriveWorker implements VDrive.Worker {
                 .put("expectedGeometry", req.optJSONObject("expectedGeometry"))
                 .put("holdMs", hold));
         if (a != null && a.optBoolean("ok")) {
+            if (nodeClickIgnored(a)) {
+                injectTouch(did, x, y, x, y, hold, 0);
+                return new JSONObject().put("ok", true).put("via", "a11y+inject").put("nodeClickIgnored", true)
+                        .put("holdMs", hold).put("target", a.optString("target", ""));
+            }
             return new JSONObject().put("ok", true).put("via", "a11y").put("holdMs", hold)
                     .put("changed", a.optBoolean("changed", false))
                     .put("target", a.optString("target", ""));
