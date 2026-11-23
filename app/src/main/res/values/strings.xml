@@ -2097,7 +2097,7 @@
   <string name="scheduled_action_run_now">Run now</string>
   <string name="scheduled_action_stop">Stop</string>
   <string name="scheduled_toggle_failed">Couldn\'t update the scheduled task</string>
-  <string name="scheduled_intro">Scheduled tasks run quietly in the background and only notify you when something needs your attention. You can also just tell 胖小胖 in chat, e.g. "Every night at 10, summarise today\'s important notifications".</string>
+  <string name="scheduled_intro">Scheduled tasks run quietly in the background and only notify you when something needs your attention. You can also just tell 胖小胖 in chat, e.g. “Every night at 10, summarise today\'s important notifications”.</string>
   <string name="scheduled_all_tasks">All tasks · %1$d/%2$d on</string>
   <string name="scheduled_quick_start">Quick start</string>
   <string name="scheduled_untitled">Untitled task</string>

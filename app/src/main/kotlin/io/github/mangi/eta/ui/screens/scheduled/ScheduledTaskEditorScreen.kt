@@ -1,7 +1,6 @@
 package io.github.mangi.eta.ui.screens.scheduled
 
 import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,11 +59,15 @@ import io.github.mangi.eta.ui.components.EtaPreferenceIcon
 import io.github.mangi.eta.ui.components.EtaSheet
 import io.github.mangi.eta.ui.components.EtaSwitchPreference
 import io.github.mangi.eta.ui.components.EtaToastCenter
+import io.github.mangi.eta.ui.components.EtaWindowDialog
+import io.github.mangi.eta.ui.components.MiuixDialogActions
 import io.github.mangi.eta.ui.components.MiuixScaffoldPage
 import io.github.mangi.eta.ui.components.StatusError
 import io.github.mangi.eta.ui.model.AgentModelPickerProjector
 import io.github.mangi.eta.ui.screens.subagent.SubagentModelPickerContent
 import io.github.mangi.eta.ui.theme.EtaTheme
+import io.github.suqi8.coui.kmp.basic.TimePicker as CouiTimePicker
+import io.github.suqi8.coui.kmp.basic.TimeValue as CouiTimeValue
 import java.time.Instant
 import java.time.ZoneId
 import java.util.UUID
@@ -209,17 +212,21 @@ internal fun ScheduledTaskEditorScreen(
         effortOptions.indexOf(current).takeIf { it >= 0 } ?: 0
     }
 
+    // 时间用 COUI 2.1.0 的原生时间滚轮（上游 05086d3a）；一次性任务先用系统日期选择，再选时间。
+    // pickerTarget：null 不显示；"daily" 改每天/每周的触发时间；其余是一次性任务选好的日期（epoch ms，时间待定）。
+    var pickerTarget by remember { mutableStateOf<String?>(null) }
+    var pickerTime by remember { mutableStateOf(CouiTimeValue(hour = hour, minute = minute)) }
     val openTimePicker: () -> Unit = {
-        TimePickerDialog(context, { _, h, m -> hour = h; minute = m }, hour, minute, true).show()
+        pickerTime = CouiTimeValue(hour = hour, minute = minute)
+        pickerTarget = "daily"
     }
     val openOncePicker: () -> Unit = {
         val zone = ZoneId.systemDefault()
         val current = Instant.ofEpochMilli(onceTriggerAtMs).atZone(zone)
         DatePickerDialog(context, { _, y, mon, d ->
-            TimePickerDialog(context, { _, h, m ->
-                onceTriggerAtMs = current.withYear(y).withMonth(mon + 1).withDayOfMonth(d)
-                    .withHour(h).withMinute(m).withSecond(0).withNano(0).toInstant().toEpochMilli()
-            }, current.hour, current.minute, true).show()
+            val day = current.withYear(y).withMonth(mon + 1).withDayOfMonth(d)
+            pickerTime = CouiTimeValue(hour = current.hour, minute = current.minute)
+            pickerTarget = day.toInstant().toEpochMilli().toString()
         }, current.year, current.monthValue - 1, current.dayOfMonth).show()
     }
 
@@ -302,6 +309,40 @@ internal fun ScheduledTaskEditorScreen(
             }
         },
         overlay = {
+            EtaWindowDialog(
+                show = pickerTarget != null,
+                title = "触发时间",
+                onDismissRequest = { pickerTarget = null },
+            ) {
+                // 新库的颜色默认是浅色，跟着胖小胖当前的深浅色切换，深色下数字才看得清。
+                val dark = com.itos.coui.theme.CouiTheme.isDark
+                io.github.suqi8.coui.kmp.theme.COUITheme(
+                    colors = if (dark) io.github.suqi8.coui.kmp.theme.darkColorScheme() else io.github.suqi8.coui.kmp.theme.lightColorScheme(),
+                ) {
+                    CouiTimePicker(
+                        value = pickerTime,
+                        onValueChange = { pickerTime = it },
+                        is24Hour = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                MiuixDialogActions(
+                    confirmText = stringResource(R.string.action_confirm),
+                    onCancel = { pickerTarget = null },
+                    onConfirm = {
+                        val target = pickerTarget
+                        if (target == "daily") {
+                            hour = pickerTime.hour
+                            minute = pickerTime.minute
+                        } else if (target != null) {
+                            val day = Instant.ofEpochMilli(target.toLong()).atZone(ZoneId.systemDefault())
+                            onceTriggerAtMs = day.withHour(pickerTime.hour).withMinute(pickerTime.minute)
+                                .withSecond(0).withNano(0).toInstant().toEpochMilli()
+                        }
+                        pickerTarget = null
+                    },
+                )
+            }
             EtaSheet(
                 show = showModelSheet,
                 title = "执行模型",

@@ -37,19 +37,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.imagegen.ImageGenModelCapability
-import io.github.mangi.eta.data.model.DoubaoImageConfig
 import io.github.mangi.eta.data.model.GeminiEndpointMode
-import io.github.mangi.eta.data.model.GeminiProviderSetting
 import io.github.mangi.eta.data.model.ImageGenAspectRatio
 import io.github.mangi.eta.data.model.ImageGenBackend
 import io.github.mangi.eta.data.model.ImageGenCredentials
 import io.github.mangi.eta.data.model.ImageGenModelPresets
 import io.github.mangi.eta.data.model.ImageGenResolution
 import io.github.mangi.eta.data.model.ImageGenSettings
-import io.github.mangi.eta.data.model.OpenAiImageConfig
-import io.github.mangi.eta.data.model.SiliconFlowImageConfig
 import io.github.mangi.eta.data.model.SpeechRegion
-import io.github.mangi.eta.data.model.XaiImageConfig
 import io.github.mangi.eta.ui.components.EtaArrowPreference
 import io.github.mangi.eta.ui.components.EtaButton
 import io.github.mangi.eta.ui.components.EtaIconButton
@@ -140,7 +135,7 @@ internal fun ImageGenSettingsScreen(
         val nextCap = ImageGenModelCapability.resolve(backend, value, effectiveBaseUrlForCapability)
         store.edit(settings.withModel(backend, value).copy(defaultResolution = nextCap.clampResolution(settings.defaultResolution)))
     }
-    val presetLabels = remember(presets) { presets.map { "${it.label} · ${it.note}" } + "自定义模型 ID" }
+    val presetLabels = remember(presets) { presets.map { it.label } + "自定义模型 ID" }
     val selectedPresetIndex = presets.indexOfFirst { it.id == currentModel.trim() }.let { if (it >= 0) it else presets.size }
     val gallerySummary = if (store.galleryCount > 0) {
         "${store.galleryCount} 张 · ${formatImageStorageSize(store.galleryBytes)}"
@@ -228,7 +223,7 @@ internal fun ImageGenSettingsScreen(
                                 TextField(
                                     value = settings.gemini.baseUrl,
                                     onValueChange = { store.edit(settings.copy(gemini = settings.gemini.copy(baseUrl = it))) },
-                                    label = "接口地址（留空用官方默认 ${if (vertex) GeminiProviderSetting.DEFAULT_VERTEX_BASE_URL else GeminiProviderSetting.DEFAULT_BASE_URL}）",
+                                    label = "接口地址（留空用官方默认）",
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth(),
                                 )
@@ -252,35 +247,35 @@ internal fun ImageGenSettingsScreen(
                             ImageGenBackend.OPENAI_COMPATIBLE -> TextField(
                                 value = settings.openAi.baseUrl,
                                 onValueChange = { store.edit(settings.copy(openAi = settings.openAi.copy(baseUrl = it))) },
-                                label = "Base URL（OpenAI 或兼容中转，默认 ${OpenAiImageConfig.DEFAULT_BASE_URL}）",
+                                label = "Base URL（OpenAI 或兼容中转）",
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             ImageGenBackend.XAI -> TextField(
                                 value = settings.xai.baseUrl,
                                 onValueChange = { store.edit(settings.copy(xai = settings.xai.copy(baseUrl = it))) },
-                                label = "xAI Base URL（默认 ${XaiImageConfig.DEFAULT_BASE_URL}）",
+                                label = "xAI Base URL",
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             ImageGenBackend.DOUBAO -> TextField(
                                 value = settings.doubao.baseUrl,
                                 onValueChange = { store.edit(settings.copy(doubao = settings.doubao.copy(baseUrl = it))) },
-                                label = "火山方舟 Base URL（默认 ${DoubaoImageConfig.DEFAULT_BASE_URL}）",
+                                label = "火山方舟 Base URL",
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             ImageGenBackend.QWEN -> TextField(
                                 value = settings.qwen.baseUrl,
                                 onValueChange = { store.edit(settings.copy(qwen = settings.qwen.copy(baseUrl = it))) },
-                                label = "专属业务空间域名（可选，留空用 ${settings.qwen.defaultEndpoint()}）",
+                                label = "专属业务空间域名（可选，留空用所选地域）",
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             ImageGenBackend.SILICONFLOW -> TextField(
                                 value = settings.siliconFlow.baseUrl,
                                 onValueChange = { store.edit(settings.copy(siliconFlow = settings.siliconFlow.copy(baseUrl = it))) },
-                                label = "硅基流动 Base URL（默认 ${SiliconFlowImageConfig.DEFAULT_BASE_URL}）",
+                                label = "硅基流动 Base URL",
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )

@@ -173,6 +173,7 @@ dependencies {
     implementation(libs.libxposed.service)
     implementation(libs.dexkit)
     implementation(libs.coui)
+    implementation(libs.coui.kmp.ui)
     implementation(libs.miuix.ui)
     implementation(libs.miuix.blur)
     implementation(libs.miuix.nav)
