@@ -363,6 +363,28 @@ internal fun AppearanceSettingsScreen(onBack: () -> Unit, onOpenCameraRing: () -
                                 }
                             },
                         )
+                        // 14.4c：浮动控件的材质，液态玻璃和 COUI 17 磨砂对比试用。
+                        EtaPreferenceDivider(hasLeading = false)
+                        val materials = io.github.mangi.eta.data.model.AppearanceControlMaterial.entries
+                        val materialLabels = listOf(
+                            stringResource(R.string.appearance_control_material_glass),
+                            stringResource(R.string.appearance_control_material_frost),
+                        )
+                        val materialSummaries = listOf(
+                            stringResource(R.string.appearance_control_material_glass_summary),
+                            stringResource(R.string.appearance_control_material_frost_summary),
+                        )
+                        EtaOverlayDropdownPreference(
+                            title = stringResource(R.string.appearance_control_material),
+                            summary = materialSummaries[appearance.controlMaterial.ordinal],
+                            items = materialLabels,
+                            selectedIndex = appearance.controlMaterial.ordinal,
+                            onSelectedIndexChange = { index ->
+                                materials.getOrNull(index)?.let { material ->
+                                    update { current -> current.copy(controlMaterial = material) }
+                                }
+                            },
+                        )
                     }
                 }
                 EtaPreferenceDivider(hasLeading = false)

@@ -2211,4 +2211,9 @@
   <string name="voice_suggestion_help_prompt">How do I use this page?</string>
   <string name="voice_suggestion_highlights_prompt">Is there anything on screen worth noticing?</string>
   <string name="shadow_notice_task_unfinished">Task didn\'t finish</string>
+  <string name="appearance_control_material">Control material</string>
+  <string name="appearance_control_material_glass">Liquid glass</string>
+  <string name="appearance_control_material_glass_summary">Chat top buttons, composer and side pane dock use fluid liquid glass (edge refraction, inner glow)</string>
+  <string name="appearance_control_material_frost">COUI 17 frosted</string>
+  <string name="appearance_control_material_frost_summary">The frosted material upstream uses (layered blur, thin edge). Trial for comparison</string>
 </resources>

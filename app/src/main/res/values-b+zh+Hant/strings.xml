@@ -2080,4 +2080,9 @@
   <string name="voice_suggestion_help_prompt">這個頁面怎麼操作</string>
   <string name="voice_suggestion_highlights_prompt">螢幕上有什麼值得注意的資訊</string>
   <string name="shadow_notice_task_unfinished">任務未完成</string>
+  <string name="appearance_control_material">控制項材質</string>
+  <string name="appearance_control_material_glass">液態玻璃</string>
+  <string name="appearance_control_material_glass_summary">對話頁頂部按鈕、輸入框、側欄底部欄用流體液態玻璃（邊緣折射、內發光）</string>
+  <string name="appearance_control_material_frost">COUI 17 磨砂</string>
+  <string name="appearance_control_material_frost_summary">和上游一致的磨砂材質（分層模糊、細描邊），對比試用中</string>
 </resources>

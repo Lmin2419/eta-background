@@ -97,6 +97,14 @@
 - 列表用新库的 `overScrollVertical` + `rememberCOUIFlingBehavior` + `scrollEndHaptic`。新库惯性更长，两处「拖动后立刻点」的测试要等列表停稳。
 - 去掉了 `!EtaCouiSupport.shaders` 时的旧骨架分支（新库关掉圆角遮罩后单测里能画），删掉旧库的 `EtaCouiTopBarIconButton`、`EtaCouiBackButton`、`rememberEtaToolbarStyle`。
 
+14.4c-2 记录（2026111637，对比版）：
+- 新库没有液态玻璃（只有 COUI 17 的视图模糊材质和按钮的边缘光、触点聚光），上游最新版对话页改成固定顶栏 + 凝光模糊 + 普通图标按钮、输入框底栏磨砂。旧库是 MPL-2.0，可以把液态玻璃的渲染器（约 5000 行）搬进仓库保留。问了你，选的是先做一版两种都能切的，真机对比后再定。
+- 外观设置加「控件材质」（`AppearanceControlMaterial`：`LIQUID_GLASS` 默认 / `COUI_FROST`），`LocalControlMaterial` 在 `AgentAppTheme` 里提供。
+- `EtaBackdrop` 从旧库的类型别名改成胖小胖自己的包装（`legacy` / `coui` 只有一个非空），`rememberEtaBackdrop` 按设置记录一种，`Modifier.etaBackdrop` 挂对应的记录。页面代码只改了侧栏搜索栏一处。
+- `EtaFloatingSurface` 看到 `coui` 采样源就走 `EtaFrostSurface`：`couiViewBlur`（圆钮、胶囊 `contentSecondaryButton`，圆角矩形输入框 `frameworkBottomBar`）+ 细亮边 + 浅阴影 + 按下缩小；输入框按上游不再铺 78% 底色。
+- 磨砂模式下侧栏底部走「胶囊输入框 + 圆钮」那套（控件自动是磨砂），旧库原生搜索栏只在液态玻璃模式下用；定下磨砂的话再换新库的 `SearchBar` + `InputField`（上游同款，点开右边圆钮滑走）。
+- 本机渲染器编译不了两种模糊的着色器（`cannot swizzle value of type 'shader'`），截图测试做不了，改成单测检查采样源切换。
+
 ## 进度
 
 - [x] 14.1 常亮三档（2026111629）
@@ -109,5 +117,6 @@
 - [x] 14.4a 适配层收拢、开关换新库（2026111633）
 - [x] 14.4b 菜单、对话框、半窗、输入框（2026111635）
 - [x] 14.4c-1 设置类页面骨架（2026111636）
-- [ ] 14.4c-2 液态玻璃（对话页顶部、输入框、侧栏底部栏）、侧栏搜索栏（需要真机看一眼再继续）
+- [x] 14.4c-2 对比版：液态玻璃 / COUI 17 磨砂可切换（2026111637）
+- [ ] 14.4c-3 按真机对比结果定下一种，去掉另一种
 - [ ] 14.4d 去掉旧库

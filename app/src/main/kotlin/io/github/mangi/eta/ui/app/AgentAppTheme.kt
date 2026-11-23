@@ -94,6 +94,7 @@ fun AgentAppTheme(
             // 系统省电模式下真模糊自动降为磨砂底色。
             LocalBlurEnabled provides (appearance.blurEnabled && !rememberPowerSaveMode()),
             LocalTopBarBlurStyle provides appearance.topBarBlurStyle,
+            LocalControlMaterial provides appearance.controlMaterial,
             LocalPlatformDensity provides platformDensity,
             LocalDensity provides appDensity,
         ) {

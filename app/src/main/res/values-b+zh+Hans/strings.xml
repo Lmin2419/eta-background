@@ -2184,4 +2184,9 @@
   <string name="voice_suggestion_help_prompt">这个页面怎么操作</string>
   <string name="voice_suggestion_highlights_prompt">屏幕上有什么值得注意的信息</string>
   <string name="shadow_notice_task_unfinished">任务未完成</string>
+  <string name="appearance_control_material">控件材质</string>
+  <string name="appearance_control_material_glass">液态玻璃</string>
+  <string name="appearance_control_material_glass_summary">对话页顶部按钮、输入框、侧栏底部栏用流体液态玻璃（边缘折射、内发光）</string>
+  <string name="appearance_control_material_frost">COUI 17 磨砂</string>
+  <string name="appearance_control_material_frost_summary">和上游一致的磨砂材质（分层模糊、细描边），对比试用中</string>
 </resources>

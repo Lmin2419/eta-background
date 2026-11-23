@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,6 +51,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.itos.coui.backdrop.CouiBackdrop
+import io.github.suqi8.coui.kmp.blur.couiViewBlur
+import androidx.compose.ui.draw.dropShadow
 import com.itos.coui.backdrop.ProvideCouiBackdrop
 import com.itos.coui.dialog.CouiDialogDefaults
 import com.itos.coui.effect.CouiContour
@@ -86,9 +89,9 @@ import io.github.mangi.eta.ui.theme.EtaElevation
  * 对话页唯一的 COUI 背景源（与上游 COUI Scaffold 同一结构）：源挂在消息区上并带不透明底色，
  * 顶部控件和输入框作为它的兄弟节点采样；不再在整页外面再套一层源。
  */
-internal val LocalChatCouiSource = androidx.compose.runtime.staticCompositionLocalOf<CouiBackdrop?> { null }
+internal val LocalChatCouiSource = androidx.compose.runtime.staticCompositionLocalOf<EtaBackdrop?> { null }
 
-internal val LocalEtaCouiBackdrop = staticCompositionLocalOf<CouiBackdrop?> { null }
+internal val LocalEtaCouiBackdrop = staticCompositionLocalOf<EtaBackdrop?> { null }
 
 /**
  * 浮在内容上的液态玻璃控件（圆钮或胶囊）。[capsule] 为真时是胶囊形（宽大于高）。
@@ -101,7 +104,7 @@ internal fun EtaFloatingSurface(
     contentDescription: String? = null,
     onClick: (() -> Unit)?,
     focused: Boolean = false,
-    backdrop: CouiBackdrop? = LocalEtaCouiBackdrop.current,
+    backdrop: EtaBackdrop? = LocalEtaCouiBackdrop.current,
     wrapContent: Boolean = false,
     /** 圆角半径；不传时是胶囊（短边的一半）。输入框这类圆角矩形必须传。 */
     cornerRadius: Dp? = null,
@@ -111,6 +114,15 @@ internal fun EtaFloatingSurface(
 ) {
     val dark = CouiTheme.isDark
     val fill = io.github.mangi.eta.ui.theme.EtaTheme.colors.surfaceRaised.copy(alpha = fillAlpha)
+    // 14.4c：外观设置选了 COUI 17 磨砂时，采样源是新库的图层记录，画磨砂材质（上游同款）。
+    val frostSource = backdrop?.coui
+    if (frostSource != null) {
+        EtaFrostSurface(modifier, shape, capsule, frostSource, dark, focused,
+            io.github.mangi.eta.ui.theme.EtaTheme.colors.accent, contentDescription, onClick,
+            wrapContent, cornerRadius, fillAlpha, fill, content)
+        return
+    }
+    val legacySource = backdrop?.legacy
     val filledContent: @Composable () -> Unit = if (fillAlpha > 0f) ({
         Box(Modifier.then(if (wrapContent) Modifier.fillMaxWidth() else Modifier.fillMaxSize()).background(fill, shape),
             contentAlignment = Alignment.Center) { content() }
@@ -122,9 +134,9 @@ internal fun EtaFloatingSurface(
     val hasDisplay = rememberViewHasDisplay(view)
     val renderer = rememberFloatingRenderer()
     val accent = io.github.mangi.eta.ui.theme.EtaTheme.colors.accent
-    if (Build.VERSION.SDK_INT >= 34 && backdrop != null && renderer != null && hasDisplay) {
-        ProvideCouiBackdrop(backdrop) {
-            EtaApi34FloatingSurface(modifier, shape, capsule, backdrop, renderer, dark, focused, accent,
+    if (Build.VERSION.SDK_INT >= 34 && legacySource != null && renderer != null && hasDisplay) {
+        ProvideCouiBackdrop(legacySource) {
+            EtaApi34FloatingSurface(modifier, shape, capsule, legacySource, renderer, dark, focused, accent,
                 contentDescription, onClick, filledContent, wrapContent, cornerRadius)
         }
     } else {
@@ -139,6 +151,78 @@ internal fun EtaFloatingSurface(
             contentAlignment = Alignment.Center,
         ) { filledContent() }
     }
+}
+
+/**
+ * COUI 17 磨砂材质的浮动控件（14.4c 对比试用）：背后用新库的视图模糊（圆钮、胶囊是次要按钮的磨砂，
+ * 输入框这类圆角矩形是底栏磨砂，和上游一样），加一圈细亮边、浅阴影，按下轻微缩小。
+ */
+@Composable
+private fun EtaFrostSurface(
+    modifier: Modifier,
+    shape: Shape,
+    capsule: Boolean,
+    backdrop: io.github.suqi8.coui.kmp.blur.LayerBackdrop,
+    dark: Boolean,
+    focused: Boolean,
+    accent: Color,
+    contentDescription: String?,
+    onClick: (() -> Unit)?,
+    wrapContent: Boolean,
+    cornerRadius: Dp?,
+    fillAlpha: Float,
+    fill: Color,
+    content: @Composable () -> Unit,
+) {
+    val panel = cornerRadius != null
+    val style = if (panel) io.github.suqi8.coui.kmp.blur.ViewBlurDefaults.frameworkBottomBar(dark)
+        else io.github.suqi8.coui.kmp.blur.ViewBlurDefaults.contentSecondaryButton(dark)
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (pressed && onClick != null) (if (capsule || panel) 0.97f else 0.92f) else 1f,
+        animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "frostPress",
+    )
+    val edge = if (dark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.75f)
+    val pressTint = if (dark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
+    Box(
+        modifier
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .dropShadow(shape, androidx.compose.ui.graphics.shadow.Shadow(
+                radius = if (panel) 16.dp else 10.dp,
+                color = Color.Black,
+                alpha = if (dark) 0.22f else if (panel) 0.045f else 0.07f,
+            ))
+            .clip(shape)
+            .then(frostBlur(backdrop, style, shape))
+            // 输入框（圆角矩形）按上游只用底栏磨砂，不再铺一层底色；胶囊类保留调用方要的底色。
+            .then(if (fillAlpha > 0f && !panel) Modifier.background(fill, shape) else Modifier)
+            .border(if (focused) 1.dp else 0.6.dp, if (focused) accent.copy(alpha = 0.55f) else edge, shape)
+            .drawWithContent {
+                drawContent()
+                if (pressed && onClick != null) drawRect(pressTint)
+            }
+            .then(if (onClick != null) Modifier.clickable(source, indication = null, role = Role.Button, onClick = onClick) else Modifier)
+            .then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier.then(if (wrapContent) Modifier.fillMaxWidth() else Modifier.fillMaxSize()),
+            contentAlignment = Alignment.Center,
+        ) { content() }
+    }
+}
+
+/** 新库的视图模糊；没有着色器（单测、软件绘制）时不画，控件只剩细边和底色。 */
+internal fun frostBlur(
+    backdrop: io.github.suqi8.coui.kmp.blur.LayerBackdrop,
+    style: io.github.suqi8.coui.kmp.blur.ViewBlurStyle,
+    shape: Shape,
+): Modifier = if (io.github.mangi.eta.ui.components.EtaCouiSupport.shaders) {
+    Modifier.couiViewBlur(backdrop = backdrop, style = style, shape = shape)
+} else {
+    Modifier
 }
 
 /** 视图是否已挂到某个屏幕上；挂上之后会触发重组。 */
