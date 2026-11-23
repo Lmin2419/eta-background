@@ -199,10 +199,15 @@ class Stage5PermissionHealthTest {
 
     private fun scrollToText(panel: Stage3TestPanel, text: String): SemanticsNode? {
         repeat(20) {
-            findNode(text, panel)?.let { return it }
+            if (findNode(text, panel) != null) {
+                // COUI 2.1.0 的惯性滚动停稳后再取位置，否则点下去只会让列表停住。
+                panel.advance(180)
+                findNode(text, panel)?.let { return it }
+            }
             panel.dragFinger(810f, 1300f, 810f, 700f, 30)
             panel.advance(1)
         }
+        panel.advance(180)
         return findNode(text, panel)
     }
 

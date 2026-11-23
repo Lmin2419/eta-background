@@ -443,7 +443,8 @@ private fun Stage3TestPanel.scrollDownUntil(
     if (predicate()) return true
     repeat(maxSteps) {
         dragFinger(fromX = 411f, fromY = 1300f, toY = 700f, settleFrames = 60)
-        if (predicate()) return true
+        // COUI 2.1.0 的惯性滚动比旧骨架长：停稳再点，否则这一下只会让列表停住（真机也是这样）。
+        if (predicate()) { advance(180); return predicate() || scrollDownUntil(predicate, maxSteps - 1) }
     }
     return predicate()
 }

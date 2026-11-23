@@ -88,6 +88,15 @@
 - 新库圆角遮罩的着色器本机渲染器编译不了（`layout(color)`），截图测试关掉着色器跑；测试面板的字体缩放提到最外层，弹层宿主也跟着放大（真机上字体缩放来自系统，本来就是这样）。
 - 剩下直接用旧库的：`AgentAppTheme`（旧主题，供按钮、顶栏、液态玻璃）、`MiuixScaffoldPage`、侧栏搜索栏、`EtaCoui.kt` 的浮动玻璃和胶囊按钮——都在 14.4c。
 
+14.4c-1 记录（2026111636）：
+- 14.4c 拆成两段。侧栏搜索栏挂在底部液态玻璃栏上、采样源是旧库的玻璃背景，和液态玻璃一起换（14.4c-2）。
+- 新增 `ui/components/coui/EtaCouiPage.kt`：`EtaCouiScaffold`、`EtaCouiLazyPage`，结构照上游 `CouiScaffold`：新库 `Scaffold` + `TopAppBar`（大标题收缩）/ `SmallTopAppBar`（宽屏、`compactTitle`）+ `COUIScrollBehavior` + `TopAppBarGlow`（内容记录在 `layerBackdrop` 里，顶栏透明）。
+- 返回键用新库 `IconButton` + 原来的箭头图标（新库的图标在单独的 `coui-icons` 包里，没为一个箭头引入）。
+- 新库主题包住骨架，内容用 `ProvideEtaContentLocals` 换回胖小胖的按压效果、滚动回弹、选字颜色。
+- `MiuixScaffold`（自带内容的页面）：内容仍挂一个不折叠的 Miuix 滚动行为（2026111603 的滑不动问题），外面再包一层新库滚动行为的嵌套滚动，只用来让顶栏凝光跟着滚动量出现。
+- 列表用新库的 `overScrollVertical` + `rememberCOUIFlingBehavior` + `scrollEndHaptic`。新库惯性更长，两处「拖动后立刻点」的测试要等列表停稳。
+- 去掉了 `!EtaCouiSupport.shaders` 时的旧骨架分支（新库关掉圆角遮罩后单测里能画），删掉旧库的 `EtaCouiTopBarIconButton`、`EtaCouiBackButton`、`rememberEtaToolbarStyle`。
+
 ## 进度
 
 - [x] 14.1 常亮三档（2026111629）
@@ -99,5 +108,6 @@
 - [x] 14.3 Agent 层用户可见文字（2026111632）
 - [x] 14.4a 适配层收拢、开关换新库（2026111633）
 - [x] 14.4b 菜单、对话框、半窗、输入框（2026111635）
-- [ ] 14.4c 液态玻璃、顶栏、搜索栏、页面骨架（需要真机看一眼再继续）
+- [x] 14.4c-1 设置类页面骨架（2026111636）
+- [ ] 14.4c-2 液态玻璃（对话页顶部、输入框、侧栏底部栏）、侧栏搜索栏（需要真机看一眼再继续）
 - [ ] 14.4d 去掉旧库
