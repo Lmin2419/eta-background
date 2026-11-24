@@ -740,6 +740,9 @@ private fun SettingsPageContent(
                     // 14.1：上游的常亮开关拆成三档，默认「前台操作和对话时」。
                     KeepScreenOnModePreference(context = context, prefs = agentPrefs)
                     EtaPreferenceDivider()
+                    // e52：息屏时后台屏醒不过来，能不能点亮主屏（默认只对定时任务）。
+                    BgScreenMainWakePreference(context = context, prefs = agentPrefs)
+                    EtaPreferenceDivider()
                     // 10 号方案第一期：回答前还有没解决的失败时，先让 Agent 复核一次再交卷。
                     EtaSwitchPreference(title = stringResource(R.string.completion_review_setting),
                         summary = stringResource(R.string.completion_review_setting_summary),
@@ -1160,6 +1163,40 @@ private fun KeepScreenOnModePreference(context: Context, prefs: SharedPreference
         onSelectedIndexChange = { index ->
             val selected = modes.getOrNull(index) ?: return@EtaOverlayDropdownPreference
             if (Prefs.setKeepScreenOnMode(selected, prefs)) {
+                mode = selected
+            } else {
+                io.github.mangi.eta.ui.components.EtaToastCenter.show(
+                    context.applicationContext,
+                    R.string.settings_write_failed,
+                    Toast.LENGTH_SHORT,
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun BgScreenMainWakePreference(context: Context, prefs: SharedPreferences?) {
+    val modes = io.github.mangi.eta.config.BgScreenMainWake.entries
+    var mode by remember(prefs) { mutableStateOf(Prefs.bgScreenMainWake(prefs)) }
+    EtaOverlayDropdownPreference(
+        title = stringResource(R.string.bg_screen_main_wake_title),
+        summary = stringResource(when (mode) {
+            io.github.mangi.eta.config.BgScreenMainWake.NEVER -> R.string.bg_screen_main_wake_never_summary
+            io.github.mangi.eta.config.BgScreenMainWake.SCHEDULED -> R.string.bg_screen_main_wake_scheduled_summary
+            io.github.mangi.eta.config.BgScreenMainWake.ALWAYS -> R.string.bg_screen_main_wake_always_summary
+        }),
+        items = listOf(
+            stringResource(R.string.bg_screen_main_wake_never),
+            stringResource(R.string.bg_screen_main_wake_scheduled),
+            stringResource(R.string.bg_screen_main_wake_always),
+        ),
+        selectedIndex = modes.indexOf(mode),
+        enabled = prefs != null,
+        startAction = { EtaPreferenceIcon(Icons.Outlined.LightMode, enabled = prefs != null, tint = EtaPreferenceColors.Indigo) },
+        onSelectedIndexChange = { index ->
+            val selected = modes.getOrNull(index) ?: return@EtaOverlayDropdownPreference
+            if (Prefs.setBgScreenMainWake(selected, prefs)) {
                 mode = selected
             } else {
                 io.github.mangi.eta.ui.components.EtaToastCenter.show(

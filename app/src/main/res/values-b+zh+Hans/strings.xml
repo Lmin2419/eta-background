@@ -2189,4 +2189,11 @@
   <string name="appearance_control_material_glass_summary">对话页顶部按钮、输入框、侧栏底部栏用流体液态玻璃（边缘折射、内发光）</string>
   <string name="appearance_control_material_frost">COUI 17 磨砂</string>
   <string name="appearance_control_material_frost_summary">和上游一致的磨砂材质（分层模糊、细描边），对比试用中</string>
+  <string name="bg_screen_main_wake_title">息屏时后台屏醒不过来</string>
+  <string name="bg_screen_main_wake_never">不点亮屏幕</string>
+  <string name="bg_screen_main_wake_scheduled">只对定时任务点亮</string>
+  <string name="bg_screen_main_wake_always">所有任务都点亮</string>
+  <string name="bg_screen_main_wake_never_summary">任务会停下来告诉你，亮屏后再试</string>
+  <string name="bg_screen_main_wake_scheduled_summary">定时任务会在执行时点亮屏幕，结束后按系统设置自己熄屏</string>
+  <string name="bg_screen_main_wake_always_summary">任何任务都会在执行时点亮屏幕，结束后按系统设置自己熄屏</string>
 </resources>

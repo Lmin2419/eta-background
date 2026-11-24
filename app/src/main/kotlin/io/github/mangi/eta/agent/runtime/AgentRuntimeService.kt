@@ -187,6 +187,12 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     override fun onCreate() {
         super.onCreate()
         notificationOwner = this
+        // e52：后台屏在息屏时醒不过来，能不能点亮主屏——按设置和这次运行是不是定时任务决定。
+        com.eta.shadow.ShadowTools.mainWakePolicy = java.util.function.Predicate { sessionId ->
+            val run = runs.get(io.github.mangi.eta.config.BgScreenMainWake.runIdOf(sessionId))
+            val scheduled = run?.request?.handoff?.source == AgentRuntimeWire.SCHEDULED_TASK_HANDOFF_SOURCE
+            Prefs.bgScreenMainWake().allows(scheduled)
+        }
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
@@ -248,6 +254,7 @@ internal class AgentRuntimeService : Service(), LifecycleOwner, SavedStateRegist
     }
 
     override fun onDestroy() {
+        com.eta.shadow.ShadowTools.mainWakePolicy = java.util.function.Predicate { false }
         rotationWatcher.stop()
         destroyed = true
         pendingStarts.clear()

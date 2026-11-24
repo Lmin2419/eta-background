@@ -346,6 +346,13 @@ public final class ShadowTools {
         observedGeometry = null;
         rememberGeometry(launched);
         // Engine reports window readiness for both adoption and cold launch; a nonempty tree alone is insufficient.
+        JSONObject asleep = launched.optJSONObject("bgScreenAsleep");
+        if (asleep != null) {
+            // 息屏时后台屏没能唤醒：直接告诉模型原因，别反复观察（e52）。
+            return launched.put("display", display)
+                    .put("hint", asleep.optString("message", "手机息屏，后台屏没能唤醒") + "。不要反复观察或重试，把情况告诉用户。")
+                    .toString();
+        }
         return launched.put("display", display)
                 .put("hint", "hidden".equals(mode)
                         ? "app is on a hidden display; call release_gui when the screen stage is done"
@@ -662,8 +669,16 @@ public final class ShadowTools {
         return response;
     }
 
+    /**
+     * 这次运行能不能在后台屏醒不过来时点亮主屏（e52）。由运行时服务按设置和「是不是定时任务」提供，
+     * 参数是本会话编号（运行编号:随机串）。默认不允许。
+     */
+    public static volatile java.util.function.Predicate<String> mainWakePolicy = id -> false;
+
     private String engine(String json) throws Exception {
-        JSONObject request = new JSONObject(json).put("sessionId", sessionId);
+        boolean wakeMain = false;
+        try { wakeMain = mainWakePolicy.test(sessionId); } catch (Throwable ignored) { }
+        JSONObject request = new JSONObject(json).put("sessionId", sessionId).put("wakeMain", wakeMain);
         return received(send(ENGINE_PORT, request.toString(), 35000));
     }
 

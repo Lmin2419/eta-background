@@ -2216,4 +2216,11 @@
   <string name="appearance_control_material_glass_summary">Chat top buttons, composer and side pane dock use fluid liquid glass (edge refraction, inner glow)</string>
   <string name="appearance_control_material_frost">COUI 17 frosted</string>
   <string name="appearance_control_material_frost_summary">The frosted material upstream uses (layered blur, thin edge). Trial for comparison</string>
+  <string name="bg_screen_main_wake_title">When the background screen won\'t wake</string>
+  <string name="bg_screen_main_wake_never">Don\'t light the screen</string>
+  <string name="bg_screen_main_wake_scheduled">Light it for scheduled tasks</string>
+  <string name="bg_screen_main_wake_always">Light it for all tasks</string>
+  <string name="bg_screen_main_wake_never_summary">The task stops and tells you; turn the screen on and retry</string>
+  <string name="bg_screen_main_wake_scheduled_summary">Scheduled tasks may turn the screen on while they run; it turns off by itself afterwards</string>
+  <string name="bg_screen_main_wake_always_summary">Any task may turn the screen on while it runs; it turns off by itself afterwards</string>
 </resources>

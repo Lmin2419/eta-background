@@ -55,6 +55,10 @@ class VDriveWorker implements VDrive.Worker {
     long emptySince = 0;   // when the current display first became empty (attached-display state)
 
     Context ctx;
+    /** 息屏时后台屏的电源处理（e52），见 BgPower。 */
+    final BgPower bgPower;
+    /** 这条命令里 App 是否允许在后台屏醒不过来时点亮主屏（请求里的 wakeMain）。 */
+    boolean requestWakeMain;
     Handler work;
     DisplayManager dm;
     VirtualDisplay vd;
@@ -290,6 +294,7 @@ class VDriveWorker implements VDrive.Worker {
 
     VDriveWorker(Context systemContext) throws Exception {
         ctx = systemContext;
+        bgPower = new BgPower(ctx, this::injectMotion, this::log);
         dm = ctx.getSystemService(DisplayManager.class);
 
         Class<?> imc = Class.forName("android.hardware.input.InputManager");
@@ -951,9 +956,14 @@ class VDriveWorker implements VDrive.Worker {
             return dispatch(cmd0, req);
         }
         lastCmdAt = SystemClock.elapsedRealtime();
+        requestWakeMain = req.optBoolean("wakeMain", false);
         if (target != null) {
             load(target);
             target.lastCmdAt = lastCmdAt;
+            // 任务进行中屏幕熄了：后台屏有画面时先确认它醒着（醒着时只记一次「有操作」）（e52）。
+            if (!"launch".equals(cmd0) && !"finish".equals(cmd0) && target.displayId > 0 && target.reader != null) {
+                bgPower.ensureAwake(target.vd, target.displayId, requestWakeMain, cmd0, false);
+            }
             // A command aimed at a parked session brings it back into use. "launch" is
             // excluded: it picks its own package and must not revive (or clear the parked
             // flag of) whatever happens to be the cursor.
@@ -997,6 +1007,15 @@ class VDriveWorker implements VDrive.Worker {
                 String component = req.optString("component");
                 String pkg = component.contains("/") ? component.substring(0, component.indexOf('/')) : component;
                 JSONObject readiness = awaitInputReady(out.getInt("displayId"), pkg, new JSONObject(), 2500);
+                if (!readiness.optBoolean("ready") && !bgPower.deviceInteractive()) {
+                    // 息屏：窗口在但没有画面（应用被系统按睡眠停住）。叫醒后台屏再看一次（e52）。
+                    int did = out.getInt("displayId");
+                    JSONObject asleep = bgPower.ensureAwake(current != null ? current.vd : vd, did, requestWakeMain, "launch-not-ready", true);
+                    if (asleep == null) readiness = awaitInputReady(did, pkg, new JSONObject(), 2500);
+                    out.put("screenOff", true).put("bgPower", bgPower.snapshot(did));
+                    if (asleep != null) out.put("bgScreenAsleep", asleep);
+                    else out.put("bgWake", bgPower.lastMethod);
+                }
                 out.put("inputReady", readiness.optBoolean("ready")).put("inputState", readiness);
                 inputLog("launch input_state via=" + out.optString("via", out.optBoolean("reused") ? "reused" : "unknown") + " " + readiness);
             }
@@ -1502,6 +1521,8 @@ class VDriveWorker implements VDrive.Worker {
         if (existing != null && existing.vd != null && existing.displayId >= 0) {
             existing.orphanAt = 0;
             resumeCapture(existing);
+            // 息屏时后台屏可能睡着：先把它叫醒再复用（e52）。
+            bgPower.ensureAwake(existing.vd, existing.displayId, requestWakeMain, "launch-reuse", false);
             return reuseSession(existing, comp);
         }
         if (existing != null) {
@@ -1632,6 +1653,8 @@ class VDriveWorker implements VDrive.Worker {
             if (!front.isEmpty() && !front.startsWith(pkg)) homeFront = front;
         }
         int did = displayId;
+        // 新建的后台屏在息屏时可能一出生就睡着：先叫醒再启动应用（e52）。
+        bgPower.ensureAwake(vd, did, requestWakeMain, "launch-new", false);
         Integer beforeTask = taskOfPackage(pkg);
         int beforeDisplay = beforeTask != null ? displayOfTask(beforeTask) : -1;
         // From here on the fresh display must not leak: every failure path below cleans
@@ -1733,7 +1756,15 @@ class VDriveWorker implements VDrive.Worker {
             if (optSetLaunchDisplay == null) throw new IllegalStateException("NO_ACTIVITY_OPTIONS");
             ActivityOptions o = ActivityOptions.makeBasic();
             optSetLaunchDisplay.invoke(o, did);
-            ctx.startActivity(i, o.toBundle());
+            try {
+                ctx.startActivity(i, o.toBundle());
+            } catch (SecurityException refused) {
+                // 息屏时系统不让应用在睡着的后台屏上启动：叫醒后台屏后再试一次（e52）。
+                if (did <= 0 || bgPower.deviceInteractive()) throw refused;
+                log("atms launch refused while screen off (" + refused.getMessage() + "), waking bg screen and retrying");
+                if (bgPower.ensureAwake(vd, did, requestWakeMain, "atms-refused", true) != null) throw refused;
+                ctx.startActivity(i, o.toBundle());
+            }
         } catch (Throwable direct) {
             log("atms launch failed (" + direct + "), trying am start --display");
             via = "am";
@@ -2355,6 +2386,7 @@ class VDriveWorker implements VDrive.Worker {
      * keep working.
      */
     JSONObject finish(JSONObject req) throws Exception {
+        bgPower.releaseMain();
         String mode = req.optString("mode", "notify");
         if ("background".equals(mode)) mode = "handover";   // old name kept working
         if (!"notify".equals(mode) && !"handover".equals(mode) && !"destroy".equals(mode)) {

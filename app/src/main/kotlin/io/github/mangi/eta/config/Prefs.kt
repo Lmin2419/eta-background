@@ -51,6 +51,7 @@ internal object Prefs {
         const val AGENT_KEEP_SCREEN_ON_ENABLED = "agent_keep_screen_on_enabled"
         /** 常亮三档，值见 [KeepScreenOnMode.wireValue]。 */
         const val AGENT_KEEP_SCREEN_ON_MODE = "agent_keep_screen_on_mode"
+        const val BG_SCREEN_MAIN_WAKE = "bg_screen_main_wake"
         const val AGENT_RUNTIME_CONFIG_JSON = "agent_runtime_config_json"
         const val AGENT_DISABLED_TOOLS_JSON = "agent_disabled_tools_json"
 
@@ -160,6 +161,14 @@ internal object Prefs {
                 .putBoolean(Keys.AGENT_KEEP_SCREEN_ON_ENABLED, mode != KeepScreenOnMode.OFF)
                 .commit()
         }.getOrDefault(false)
+    }
+
+    fun bgScreenMainWake(preferences: SharedPreferences? = localAgent ?: remote): BgScreenMainWake =
+        BgScreenMainWake.fromWireValue(runCatching { preferences?.getString(Keys.BG_SCREEN_MAIN_WAKE, null) }.getOrNull())
+
+    fun setBgScreenMainWake(mode: BgScreenMainWake, preferences: SharedPreferences? = localAgent): Boolean {
+        val target = preferences ?: return false
+        return runCatching { target.edit().putString(Keys.BG_SCREEN_MAIN_WAKE, mode.wireValue).commit() }.getOrDefault(false)
     }
 
     fun powerAssistantTarget(): PowerAssistantTarget = powerAssistantTarget(remote)

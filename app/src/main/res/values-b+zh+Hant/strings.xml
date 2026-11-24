@@ -2085,4 +2085,11 @@
   <string name="appearance_control_material_glass_summary">對話頁頂部按鈕、輸入框、側欄底部欄用流體液態玻璃（邊緣折射、內發光）</string>
   <string name="appearance_control_material_frost">COUI 17 磨砂</string>
   <string name="appearance_control_material_frost_summary">和上游一致的磨砂材質（分層模糊、細描邊），對比試用中</string>
+  <string name="bg_screen_main_wake_title">熄屏時背景屏醒不過來</string>
+  <string name="bg_screen_main_wake_never">不點亮螢幕</string>
+  <string name="bg_screen_main_wake_scheduled">只對排程任務點亮</string>
+  <string name="bg_screen_main_wake_always">所有任務都點亮</string>
+  <string name="bg_screen_main_wake_never_summary">任務會停下來告訴你，亮屏後再試</string>
+  <string name="bg_screen_main_wake_scheduled_summary">排程任務會在執行時點亮螢幕，結束後依系統設定自行熄屏</string>
+  <string name="bg_screen_main_wake_always_summary">任何任務都會在執行時點亮螢幕，結束後依系統設定自行熄屏</string>
 </resources>
