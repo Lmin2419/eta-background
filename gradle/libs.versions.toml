@@ -6,8 +6,7 @@ ksp = "2.3.12"
 libxposedApi = "102.0.0"
 libxposedService = "102.0.0"
 dexkit = "2.3.0"
-coui = "0.0.1-alpha11"
-# 上游 aec537db 换成的新 COUI 组件库（suqi8/coui KMP）。胖小胖的界面仍建在旧库上，新库与之并存，按需使用。
+# COUI 组件库（suqi8/coui KMP，上游同款）。旧库 io.github.itoseo:coui 已去掉，液态玻璃部分搬进 thirdparty/coui（14.4d）。
 couiKmp = "2.1.0"
 miuix = "0.9.4"
 materialIcons = "1.7.8"
@@ -38,9 +37,13 @@ xz = { group = "org.tukaani", name = "xz", version.ref = "xz" }
 libxposed-api = { group = "io.github.libxposed", name = "api", version.ref = "libxposedApi" }
 libxposed-service = { group = "io.github.libxposed", name = "service", version.ref = "libxposedService" }
 dexkit = { group = "org.luckypray", name = "dexkit", version.ref = "dexkit" }
-coui = { group = "io.github.itoseo", name = "coui", version.ref = "coui" }
 coui-kmp-ui = { group = "io.github.suqi8.coui.kmp", name = "coui-ui-android", version.ref = "couiKmp" }
 coui-kmp-blur = { group = "io.github.suqi8.coui.kmp", name = "coui-blur-android", version.ref = "couiKmp" }
+# 14.4d：旧库 io.github.itoseo:coui 去掉后，它原先带进来的依赖由这里显式声明，版本保持不变：
+# Compose BOM（解析到 Compose 1.13.0-alpha02）、androidx.core 1.19.1 和液态玻璃聚光动画用的 dynamicanimation。
+compose-bom-alpha = { group = "androidx.compose", name = "compose-bom-alpha", version = "2026.08.01" }
+androidx-dynamicanimation = { group = "androidx.dynamicanimation", name = "dynamicanimation", version = "1.1.0" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version = "1.19.1" }
 miuix-ui = { group = "top.yukonga.miuix.kmp", name = "miuix-ui-android", version.ref = "miuix" }
 miuix-blur = { group = "top.yukonga.miuix.kmp", name = "miuix-blur-android", version.ref = "miuix" }
 miuix-nav = { group = "top.yukonga.miuix.kmp", name = "miuix-nav-android", version.ref = "miuix" }

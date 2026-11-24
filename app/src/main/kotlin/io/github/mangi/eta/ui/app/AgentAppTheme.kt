@@ -102,7 +102,7 @@ fun AgentAppTheme(
             // 菜单、对话框、半窗从 14.4b 起换成 COUI 2.1.0，画在下面 EtaCouiOverlayRoot 的弹层宿主上。
             val blurOn = appearance.blurEnabled && top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported()
             val couiScheme = remember(isDark, etaColors) {
-                (if (isDark) com.itos.coui.theme.CouiPresets.Dark else com.itos.coui.theme.CouiPresets.Light).copy(
+                (if (isDark) io.github.mangi.eta.thirdparty.coui.theme.CouiPresets.Dark else io.github.mangi.eta.thirdparty.coui.theme.CouiPresets.Light).copy(
                     accent = etaColors.accent,
                     accentOnSurface = etaColors.accent,
                     checkboxAccent = etaColors.accent,
@@ -111,10 +111,10 @@ fun AgentAppTheme(
                 )
             }
             CompositionLocalProvider(
-                com.itos.coui.theme.LocalCouiDarkTheme provides isDark,
-                com.itos.coui.effect.LocalCouiContourGlowEnabled provides blurOn,
+                io.github.mangi.eta.thirdparty.coui.theme.LocalCouiDarkTheme provides isDark,
+                io.github.mangi.eta.thirdparty.coui.effect.LocalCouiContourGlowEnabled provides blurOn,
             ) {
-                com.itos.coui.theme.CouiTheme(darkTheme = isDark, colorScheme = couiScheme) {
+                io.github.mangi.eta.thirdparty.coui.theme.CouiTheme(darkTheme = isDark, colorScheme = couiScheme) {
                     EtaTheme(colors = etaColors) {
                         if (couiOverlayHost) {
                             // 整窗内容被记录下来，供 COUI 菜单、对话框、半窗做材质模糊（不含这些弹层自己）。

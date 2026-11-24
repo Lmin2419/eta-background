@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.itos.coui.backdrop.couiBackdrop
+import io.github.mangi.eta.thirdparty.coui.backdrop.couiBackdrop
 import io.github.suqi8.coui.kmp.blur.layerBackdrop
-import com.itos.coui.backdrop.rememberCouiBackdrop
-import com.itos.coui.effect.CouiFloatingRenderer
+import io.github.mangi.eta.thirdparty.coui.backdrop.rememberCouiBackdrop
+import io.github.mangi.eta.thirdparty.coui.effect.CouiFloatingRenderer
 
 /*
  * 14 号方案 14.4a：COUI 组件库迁移的适配层。
@@ -25,7 +25,7 @@ import com.itos.coui.effect.CouiFloatingRenderer
  */
 @androidx.compose.runtime.Stable
 internal class EtaBackdrop internal constructor(
-    internal val legacy: com.itos.coui.backdrop.CouiBackdrop?,
+    internal val legacy: io.github.mangi.eta.thirdparty.coui.backdrop.CouiBackdrop?,
     internal val coui: io.github.suqi8.coui.kmp.blur.LayerBackdrop?,
 )
 
@@ -114,6 +114,7 @@ internal data class EtaCouiPageColors(
 
 @Composable
 internal fun etaCouiPageColors(dark: Boolean): EtaCouiPageColors {
-    val colors = com.itos.coui.layout.CouiPageDefaults.themeColors(dark)
-    return EtaCouiPageColors(accent = colors.accent, title = colors.title, summary = colors.summary)
+    // 14.4d：旧库去掉后用新库 COUI 2.1.0 的配色（强调色是胖小胖的珊瑚色）。
+    val colors = etaCouiColors(dark)
+    return EtaCouiPageColors(accent = colors.primary, title = colors.labelPrimary, summary = colors.labelSecondary)
 }

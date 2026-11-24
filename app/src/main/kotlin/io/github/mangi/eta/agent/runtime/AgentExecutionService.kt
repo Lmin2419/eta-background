@@ -111,6 +111,7 @@ internal class AgentExecutionService : Service() {
             foregroundActive = true
             foregroundId = id
             if (task != null) posted[id] = task
+            if (task != null) checkLiveUpdate(this, task, id)
             // Refresh the detached card in place with its final state.
             if (oldId != id) {
                 val oldPosted = posted.remove(oldId)
@@ -296,6 +297,42 @@ internal class AgentExecutionService : Service() {
                 ?: if (notificationIds.isEmpty() && NOTIFICATION_ID !in tombstones.values) NOTIFICATION_ID else nextId++
         }
 
+        /** 每个任务只查一次实况提升结果，避免诊断记录刷屏。 */
+        private val liveUpdateChecked = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+
+        /**
+         * 运行中的卡片发出约 1 秒后看一眼系统有没有把它提升成实况通知（流体云），记进诊断：
+         * 申请了没有、卡片本身合不合格（Android 16 的 hasPromotableCharacteristics）、系统实际提升了没有、
+         * 系统设置里是否允许本应用发实况通知。只在 Android 16 起、每个任务第一次运行中时记一次。
+         */
+        private fun checkLiveUpdate(context: Context, task: TaskNotificationState, id: Int) {
+            if (!usesSystemTaskSurface() || !wasLive(task) || !liveUpdateChecked.add(task.runId)) return
+            val app = context.applicationContext
+            mainHandler.postDelayed({
+                runCatching {
+                    val info = liveUpdateState(app, id) ?: "id=$id not_active"
+                    RuntimeDiagnostics.record("live_update", info)
+                    io.github.mangi.eta.core.AndroidAgentLogger.info("Live update check: $info")
+                }
+            }, 1_000L)
+        }
+
+        /** 当前这条通知的实况状态（诊断用）；通知已不在时返回 null。 */
+        internal fun liveUpdateState(context: Context, id: Int): String? {
+            if (Build.VERSION.SDK_INT < 36) return null
+            val manager = context.getSystemService(NotificationManager::class.java)
+            val active = manager.activeNotifications.firstOrNull { it.id == id } ?: return null
+            val n = active.notification
+            val requested = n.extras.getBoolean("android.requestPromotedOngoing", false)
+            val promotable = runCatching { n.hasPromotableCharacteristics() }.getOrNull()
+            val promoted = n.flags and Notification.FLAG_PROMOTED_ONGOING != 0
+            val allowed = runCatching { manager.canPostPromotedNotifications() }.getOrNull()
+            val importance = manager.getNotificationChannel(n.channelId)?.importance
+            return "id=$id requested=$requested promotable=$promotable promoted=$promoted allowed=$allowed " +
+                "ongoing=${n.flags and Notification.FLAG_ONGOING_EVENT != 0} fgs=${n.flags and Notification.FLAG_FOREGROUND_SERVICE != 0} " +
+                "channel=${n.channelId} importance=$importance"
+        }
+
         /** 这条通知上次发出时是不是实况卡片（Android 16 起请求提升为流体云 / 实况通知）。 */
         internal fun wasLive(posted: TaskNotificationState?): Boolean =
             posted != null && !posted.completed && !posted.paused && posted.status != AgentOverlayStatus.Queued
@@ -462,6 +499,7 @@ internal class AgentExecutionService : Service() {
                     if (mustRepostFresh(posted[id], task)) manager.cancel(id)
                     manager.notify(id, notification(context, task, id))
                     posted[id] = task
+                    checkLiveUpdate(context, task, id)
                 }
             }
         }

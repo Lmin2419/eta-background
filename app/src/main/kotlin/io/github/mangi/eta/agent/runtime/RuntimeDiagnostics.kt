@@ -82,6 +82,14 @@ internal object RuntimeDiagnostics {
             .put("notificationsEnabled", AgentExecutionService.taskNotificationsEnabled(context))
             .put("liveUpdatesAllowed", if (AgentExecutionService.usesSystemTaskSurface())
                 runCatching { manager.canPostPromotedNotifications() }.getOrDefault(false) else false)
+            .put("liveUpdateCards", JSONArray().apply {
+                // 每条胖小胖通知的实况状态：申请了没有、合不合格、系统实际提升了没有（流体云排查用）。
+                if (Build.VERSION.SDK_INT >= 36) runCatching {
+                    manager.activeNotifications.forEach { active ->
+                        AgentExecutionService.liveUpdateState(context, active.id)?.let { put(it) }
+                    }
+                }
+            })
             .put("engine", engineSnapshot())
             .put("engineHistory", com.eta.shadow.EngineJournal.snapshot(context))
             .put("recentRuns", recentRuns(context))

@@ -501,7 +501,7 @@ private fun PaneNativeSearchDock(
     onOpenPermissions: () -> Unit, onOpenSettings: () -> Unit, backdrop: EtaBackdrop,
 ) {
     var expanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    val searchState = com.itos.coui.search.rememberCouiSearchBarState(expanded)
+    val searchState = io.github.mangi.eta.thirdparty.coui.search.rememberCouiSearchBarState(expanded)
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     LaunchedEffect(query) { if (query.isNotEmpty() && !expanded) expanded = true }
     NavigationBackHandler(rememberNavigationEventState(NavigationEventInfo.None), isBackEnabled = expanded,
@@ -518,7 +518,7 @@ private fun PaneNativeSearchDock(
         content = {
             // 按下标取子节点的布局：每个子项各包一层，内部多出节点也不会错位。
             Box(Modifier.fillMaxWidth()) {
-                com.itos.coui.search.SearchBar(
+                io.github.mangi.eta.thirdparty.coui.search.SearchBar(
                     modifier = Modifier.fillMaxWidth(),
                     state = searchState,
                     query = query,

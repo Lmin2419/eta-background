@@ -50,30 +50,29 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.itos.coui.backdrop.CouiBackdrop
+import io.github.mangi.eta.thirdparty.coui.backdrop.CouiBackdrop
 import io.github.suqi8.coui.kmp.blur.couiViewBlur
 import androidx.compose.ui.draw.dropShadow
-import com.itos.coui.backdrop.ProvideCouiBackdrop
-import com.itos.coui.dialog.CouiDialogDefaults
-import com.itos.coui.effect.CouiContour
-import com.itos.coui.effect.CouiContourStyle
-import com.itos.coui.effect.CouiFloatingRenderer
-import com.itos.coui.effect.CouiFloatingSurface
-import com.itos.coui.effect.LocalCouiContourGlowEnabled
-import com.itos.coui.effect.SpotlightPreset
-import com.itos.coui.effect.couiButtonFeedback
-import com.itos.coui.effect.couiFloatingSurface
-import com.itos.coui.effect.couiToolbarFeedback
-import com.itos.coui.effect.rememberCouiSpotlight
-import com.itos.coui.motion.couiPressMotion
-import com.itos.coui.motion.couiTouchMotion
-import com.itos.coui.motion.rememberCouiPressMotion
-import com.itos.coui.motion.rememberCouiTouchMotion
-import com.itos.coui.shape.CouiCapsuleShape
-import com.itos.coui.text.CouiTextKind
-import com.itos.coui.text.Text
-import com.itos.coui.theme.CouiTheme
-import com.itos.coui.topappbar.CouiTopAppBarButtonDefaults
+import io.github.mangi.eta.thirdparty.coui.backdrop.ProvideCouiBackdrop
+import io.github.mangi.eta.thirdparty.coui.effect.CouiContour
+import io.github.mangi.eta.thirdparty.coui.effect.CouiContourStyle
+import io.github.mangi.eta.thirdparty.coui.effect.CouiFloatingRenderer
+import io.github.mangi.eta.thirdparty.coui.effect.CouiFloatingSurface
+import io.github.mangi.eta.thirdparty.coui.effect.LocalCouiContourGlowEnabled
+import io.github.mangi.eta.thirdparty.coui.effect.SpotlightPreset
+import io.github.mangi.eta.thirdparty.coui.effect.couiButtonFeedback
+import io.github.mangi.eta.thirdparty.coui.effect.couiFloatingSurface
+import io.github.mangi.eta.thirdparty.coui.effect.couiToolbarFeedback
+import io.github.mangi.eta.thirdparty.coui.effect.rememberCouiSpotlight
+import io.github.mangi.eta.thirdparty.coui.motion.couiPressMotion
+import io.github.mangi.eta.thirdparty.coui.motion.couiTouchMotion
+import io.github.mangi.eta.thirdparty.coui.motion.rememberCouiPressMotion
+import io.github.mangi.eta.thirdparty.coui.motion.rememberCouiTouchMotion
+import io.github.mangi.eta.thirdparty.coui.shape.CouiCapsuleShape
+import io.github.mangi.eta.thirdparty.coui.text.CouiTextKind
+import io.github.mangi.eta.thirdparty.coui.text.Text
+import io.github.mangi.eta.thirdparty.coui.theme.CouiTheme
+import io.github.mangi.eta.thirdparty.coui.topappbar.CouiTopAppBarButtonDefaults
 import io.github.mangi.eta.ui.components.etaGlass
 import io.github.mangi.eta.ui.theme.EtaElevation
 
@@ -417,6 +416,8 @@ internal fun EtaApi34FloatingSurface(
     }
 }
 
+private class EtaCouiButtonColors(val destructive: Color, val disabledAction: Color)
+
 internal enum class EtaCouiButtonRole { Primary, Secondary, Destructive, DestructiveFilled }
 
 /**
@@ -430,12 +431,16 @@ internal fun EtaCouiButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     role: EtaCouiButtonRole = EtaCouiButtonRole.Secondary,
-    minHeight: Dp = CouiDialogDefaults.buttonHeight,
+    minHeight: Dp = 44.dp,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
 ) {
     val dark = CouiTheme.isDark
     val scheme = CouiTheme.colorSchemeFor(dark)
-    val dialogColors = CouiDialogDefaults.themeColors(dark)
+    // 原 COUI 对话框配色里的警示色和不可用文字色（旧库去掉后写成常量，数值不变）。
+    val dialogColors = EtaCouiButtonColors(
+        destructive = if (dark) Color(0xFFFF6C61) else Color(0xFFDB382C),
+        disabledAction = if (dark) Color(0x28FFFFFF) else Color(0x42000000),
+    )
     val isPrimaryLike = role == EtaCouiButtonRole.Primary || role == EtaCouiButtonRole.DestructiveFilled
     val fillColor = when (role) {
         EtaCouiButtonRole.Primary -> if (enabled) scheme.accent else scheme.accent.copy(alpha = 0.3f)
