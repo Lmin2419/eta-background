@@ -76,6 +76,7 @@ export function apply(ctx, config = {}) {
     workspaces: ctx.workspaceRegistry,
     subagents: undefined,
     userQuestions: undefined,
+    commands: undefined,
     agentOf: (sessionId) => {
       const agents = typeof ctx.get === 'function' ? ctx.get('agents') : ctx.agents
       return agents?.get?.(sessionId)
@@ -105,6 +106,11 @@ export function apply(ctx, config = {}) {
     ctx.inject(['fileUploads'], (child) => {
       services.fileUploads = child.fileUploads
       child.effect(() => () => { services.fileUploads = undefined }, 'dsh-bridge: fileUploads')
+    })
+    // Optional: slash commands (/compact and the profile's own) run through the command runtime.
+    ctx.inject(['commands'], (child) => {
+      services.commands = child.commands
+      child.effect(() => () => { services.commands = undefined }, 'dsh-bridge: commands')
     })
     ctx.inject(['attachments'], (child) => {
       services.attachments = child.attachments

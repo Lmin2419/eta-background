@@ -1654,27 +1654,7 @@ internal class AgentAppState(
         return withContext(Dispatchers.IO) { ConversationMarkdownExporter.export(
             title = title,
             messages = AgentConversationStore.loadAllMessages(appContext, conversationId),
-            labels = ConversationMarkdownExporter.Labels(
-                user = appContext.getString(R.string.conversation_export_user),
-                assistant = appContext.getString(R.string.conversation_export_assistant),
-                thinking = appContext.getString(R.string.conversation_export_thinking),
-                toolLineFormat = appContext.getString(R.string.conversation_export_tool_line),
-                toolsLineFormat = appContext.getString(R.string.conversation_export_tools_line),
-                argumentsFormat = appContext.getString(R.string.conversation_export_tool_arguments),
-                resultFormat = appContext.getString(R.string.conversation_export_tool_result),
-                imagesFormat = appContext.getString(R.string.conversation_export_images),
-                toolStatusRunning = appContext.getString(R.string.tool_status_running),
-                toolStatusSuccess = appContext.getString(R.string.tool_status_success),
-                toolStatusFailed = appContext.getString(R.string.tool_status_failed),
-                toolStatusUnknown = appContext.getString(R.string.tool_status_unknown),
-                noticeStopped = noticeText(SystemNoticeCode.Stopped),
-                noticeEmptyResult = noticeText(SystemNoticeCode.EmptyResult),
-                noticeModelRetry = noticeText(SystemNoticeCode.ModelRetry),
-                noticeContextCompaction = noticeText(SystemNoticeCode.ContextCompaction),
-                noticeRuntimeFailed = noticeText(SystemNoticeCode.RuntimeFailed),
-                noticeInterrupted = noticeText(SystemNoticeCode.Interrupted),
-                noticeRunPerformance = noticeText(SystemNoticeCode.RunPerformance),
-            ),
+            labels = ConversationMarkdownExporter.labels(appContext),
         ) }
     }
 

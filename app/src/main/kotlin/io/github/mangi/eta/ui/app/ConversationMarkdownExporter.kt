@@ -1,5 +1,6 @@
 package io.github.mangi.eta.ui.app
 
+import io.github.mangi.eta.R
 import io.github.mangi.eta.agent.model.AgentFileReferencePromptCodec
 import io.github.mangi.eta.agent.runtime.RunPerformanceSummary
 import io.github.mangi.eta.ui.model.AgentChatMessageUi
@@ -72,6 +73,41 @@ internal object ConversationMarkdownExporter {
                 append('\n').append(block).append('\n')
             }
         }
+    }
+
+    /** 界面语言的导出文案（手机对话、电脑会话共用）。 */
+    fun labels(context: android.content.Context): Labels {
+        fun text(id: Int) = context.getString(id)
+        fun notice(code: SystemNoticeCode) = text(when (code) {
+            SystemNoticeCode.Stopped -> R.string.system_notice_stopped
+            SystemNoticeCode.EmptyResult -> R.string.system_notice_empty_result
+            SystemNoticeCode.ContextCompaction -> R.string.context_compaction
+            SystemNoticeCode.ModelRetry -> R.string.system_notice_model_retry
+            SystemNoticeCode.RuntimeFailed -> R.string.system_notice_runtime_failed
+            SystemNoticeCode.Interrupted -> R.string.system_notice_interrupted
+            SystemNoticeCode.RunPerformance, SystemNoticeCode.Marker -> R.string.system_notice_run_performance
+        })
+        return Labels(
+            user = text(R.string.conversation_export_user),
+            assistant = text(R.string.conversation_export_assistant),
+            thinking = text(R.string.conversation_export_thinking),
+            toolLineFormat = text(R.string.conversation_export_tool_line),
+            toolsLineFormat = text(R.string.conversation_export_tools_line),
+            argumentsFormat = text(R.string.conversation_export_tool_arguments),
+            resultFormat = text(R.string.conversation_export_tool_result),
+            imagesFormat = text(R.string.conversation_export_images),
+            toolStatusRunning = text(R.string.tool_status_running),
+            toolStatusSuccess = text(R.string.tool_status_success),
+            toolStatusFailed = text(R.string.tool_status_failed),
+            toolStatusUnknown = text(R.string.tool_status_unknown),
+            noticeStopped = notice(SystemNoticeCode.Stopped),
+            noticeEmptyResult = notice(SystemNoticeCode.EmptyResult),
+            noticeModelRetry = notice(SystemNoticeCode.ModelRetry),
+            noticeContextCompaction = notice(SystemNoticeCode.ContextCompaction),
+            noticeRuntimeFailed = notice(SystemNoticeCode.RuntimeFailed),
+            noticeInterrupted = notice(SystemNoticeCode.Interrupted),
+            noticeRunPerformance = notice(SystemNoticeCode.RunPerformance),
+        )
     }
 
     fun defaultFileName(

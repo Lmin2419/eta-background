@@ -217,6 +217,24 @@ export function translateEvent(event) {
       return { k: 'notice', ...base, code: 'compaction', text: clip(textOf(data.summary), TOOL_RESULT_LIMIT).text }
     case 'session/title':
       return typeof data.title === 'string' ? { k: 'title', ...base, title: data.title } : null
+    // Slash commands (run on the desktop or from the phone): the line, then its outcome.
+    case 'command/run':
+      return {
+        k: 'notice',
+        ...base,
+        code: 'command',
+        id: String(data.commandId ?? ''),
+        text: `/${String(data.name ?? '')}${typeof data.args === 'string' && data.args.trim().length > 0 ? ` ${clip(data.args.trim(), 400).text}` : ''}`,
+      }
+    case 'command/done':
+      return {
+        k: 'notice',
+        ...base,
+        code: 'command_done',
+        id: String(data.commandId ?? ''),
+        kind: data.kind === 'error' ? 'error' : 'success',
+        text: typeof data.text === 'string' ? clip(data.text, 2000).text : '',
+      }
     default:
       return null
   }

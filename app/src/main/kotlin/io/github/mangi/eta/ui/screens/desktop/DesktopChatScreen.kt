@@ -159,6 +159,26 @@ internal fun DesktopChatScreen(
     var pendingFiles by remember(sessionId) { mutableStateOf(emptyList<PendingFileReferenceUi>()) }
     val server by DesktopBridge.server.collectAsState()
     val filesSupported = server?.supports("files") == true
+    // 分支、重新回答、编辑重发都按 DSH 事件序号切分支（插件 0.6.0 起）；子代理会话不能分支。
+    val canFork = !isChild && server?.supports("fork") == true
+    val points = remember(state.items) { DesktopChatProjector.branchPoints(state.items) }
+    var branching by remember(sessionId) { mutableStateOf(false) }
+    var retrying by remember(sessionId) { mutableStateOf(false) }
+    var editing by remember(sessionId) { mutableStateOf<io.github.mangi.eta.ui.model.MessageEditUiState?>(null) }
+    var draftText by remember(sessionId) { mutableStateOf(input) }
+    var commands by remember(sessionId) { mutableStateOf(emptyList<io.github.mangi.eta.agent.remote.DesktopCommand>()) }
+    val commandsSupported = !isChild && server?.supports("commands") == true
+    LaunchedEffect(sessionId, commandsSupported, connection is DesktopBridgeClient.State.Connected) {
+        if (commandsSupported && connection is DesktopBridgeClient.State.Connected) {
+            commands = try { DesktopBridge.commands(sessionId) } catch (_: DesktopBridgeException) { emptyList() }
+        }
+    }
+    val pluginUpdate = stringResource(R.string.desktop_plugin_update_needed)
+    val branchedText = stringResource(R.string.desktop_branched)
+    val filesNotResent = stringResource(R.string.desktop_branch_files_not_resent)
+    val reaskUnavailable = stringResource(R.string.desktop_reask_unavailable)
+    val retryResent = stringResource(R.string.desktop_retry_resent)
+    val commandFailed = stringResource(R.string.desktop_command_failed)
     val unsupported = stringResource(R.string.desktop_action_unsupported)
     val readOnlyText = stringResource(R.string.desktop_subagent_readonly)
     var showSettings by remember(sessionId) { mutableStateOf(false) }
@@ -181,6 +201,34 @@ internal fun DesktopChatScreen(
     }
     val attachmentsUnsupported = stringResource(R.string.desktop_attachments_unsupported)
 
+    // 导出：先把电脑上更早的记录都取回来（最多 30 页），再按手机对话的格式写成 Markdown。
+    val latestTitle = rememberUpdatedState(state.title?.takeIf { it.isNotBlank() } ?: listTitle?.takeIf { it.isNotBlank() }
+        ?: stringResource(R.string.desktop_untitled))
+    val exportLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("text/markdown"),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val ok = runCatching {
+                repeat(30) {
+                    if (!DesktopBridge.sessionState(sessionId).value.hasMore) return@repeat
+                    DesktopBridge.loadOlder(sessionId)
+                }
+                val all = DesktopChatProjector.messages(DesktopBridge.sessionState(sessionId).value, labels)
+                val markdown = io.github.mangi.eta.ui.app.ConversationMarkdownExporter.export(latestTitle.value, all,
+                    io.github.mangi.eta.ui.app.ConversationMarkdownExporter.labels(context))
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri)?.use { it.write(markdown.toByteArray(Charsets.UTF_8)) } ?: error("no output")
+                }
+            }.isSuccess
+            context.toast(resources.getString(if (ok) R.string.conversation_exported else R.string.conversation_export_failed))
+        }
+    }
+    val exportDefaultName = stringResource(R.string.conversation_export_default_name)
+    fun exportConversation() {
+        exportLauncher.launch(io.github.mangi.eta.ui.app.ConversationMarkdownExporter.defaultFileName(latestTitle.value, exportDefaultName))
+    }
+
     fun run(block: suspend () -> Unit) {
         scope.launch {
             try {
@@ -193,16 +241,99 @@ internal fun DesktopChatScreen(
 
     fun setInput(text: String) {
         input = text
+        draftText = text
         inputSync++
     }
 
-    /** 发送。[steer] 为插队：不停下当前工作，这一步结束就送达；[interrupt] 为先停止再发送。 */
-    fun submit(text: String, interrupt: Boolean = false, steer: Boolean = false) {
-        if (readOnly) {
-            context.toast(readOnlyText)
-            setInput(text)
-            return
+    /** 电脑上存好的图片附件：取回原图，重发时原样带上。 */
+    suspend fun imagesOf(refs: List<kotlinx.serialization.json.JsonObject>): List<DesktopImage> =
+        refs.mapNotNull { ref -> DesktopBridge.image(DesktopBridge.imageAddress(ref))?.let(::desktopImageOf) }
+
+    /**
+     * 切出分支并打开它：[atSeq] 是切点（为空时切在最近一轮结束处），[fresh] 时不切而是在同一工作区新建会话
+     * （前面没有可保留的内容）。[text] 不为空时在新分支里把这段内容（连同原来的图片）发出去。
+     */
+    fun branchFrom(
+        atSeq: Long?,
+        fresh: Boolean = false,
+        text: String? = null,
+        imageRefs: List<kotlinx.serialization.json.JsonObject> = emptyList(),
+        files: List<String> = emptyList(),
+    ) {
+        if (branching) return
+        if (!canFork) { context.toast(pluginUpdate); return }
+        branching = true
+        scope.launch {
+            try {
+                val row = DesktopBridge.sessions.value.rows.firstOrNull { it.id == sessionId }
+                val newId = if (fresh) DesktopBridge.createSession(row?.workspaceId, row?.cwd) else DesktopBridge.fork(sessionId, atSeq)
+                if (text != null) {
+                    val images = imagesOf(imageRefs)
+                    if (text.isNotBlank() || images.isNotEmpty()) {
+                        DesktopBridge.prompt(newId, text, images = images, previews = imageRefs.map(DesktopBridge::imageAddress))
+                    } else {
+                        DesktopBridge.setDraft(newId, text)
+                    }
+                    if (files.isNotEmpty()) context.toast(filesNotResent)
+                } else {
+                    context.toast(branchedText)
+                }
+                onOpenDesktopSession(newId)
+            } catch (error: DesktopBridgeException) {
+                context.toast(error.display(resources))
+            } finally {
+                branching = false
+            }
         }
+    }
+
+    fun reask(rewind: DesktopRewind?) {
+        if (rewind == null) { context.toast(reaskUnavailable); return }
+        branchFrom(rewind.atSeq, fresh = rewind.atSeq == null, text = rewind.prompt.text, imageRefs = rewind.prompt.imageRefs, files = rewind.prompt.files)
+    }
+
+    /** 上一轮出错：先请电脑原地重试；它的 DSH 不支持时重发开启这一轮的消息。 */
+    fun retryFailed(prompt: DesktopPrompt) {
+        if (retrying) return
+        retrying = true
+        scope.launch {
+            try {
+                try {
+                    DesktopBridge.retryTurn(sessionId)
+                } catch (error: DesktopBridgeException) {
+                    if (error.code != "unsupported" && error.code != "unknown-op") throw error
+                    DesktopBridge.prompt(sessionId, prompt.text, images = imagesOf(prompt.imageRefs), previews = prompt.imageRefs.map(DesktopBridge::imageAddress))
+                    context.toast(retryResent)
+                }
+            } catch (error: DesktopBridgeException) {
+                context.toast(error.display(resources))
+            } finally {
+                retrying = false
+            }
+        }
+    }
+
+    /**
+     * 在电脑上执行斜杠命令；命令不存在时（[fallback] 不为空）把原文当普通消息发出。
+     * 没执行成（断线等）时把 [restore] 放回输入框，不让用户重打一遍。
+     */
+    fun runSlash(line: String, restore: String? = null, fallback: (() -> Unit)? = null) {
+        scope.launch {
+            try {
+                val result = DesktopBridge.runCommand(sessionId, line)
+                if (!result.success) context.toast(commandFailed.format(result.text.orEmpty().take(160)))
+            } catch (error: DesktopBridgeException) {
+                if (error.code == "unknown-command" && fallback != null) fallback()
+                else {
+                    context.toast(error.display(resources))
+                    if (restore != null && DesktopBridge.draft(sessionId).isEmpty()) setInput(restore)
+                }
+            }
+        }
+    }
+
+    /** 把消息（连同待发送的图片、文件）发给电脑。 */
+    fun sendPrompt(text: String, interrupt: Boolean, steer: Boolean) {
         val images = pendingImages
         val files = pendingFiles
         pendingImages = emptyList()
@@ -226,6 +357,36 @@ internal fun DesktopChatScreen(
         }
     }
 
+    /** 发送。[steer] 为插队：不停下当前工作，这一步结束就送达；[interrupt] 为先停止再发送。 */
+    fun submit(text: String, interrupt: Boolean = false, steer: Boolean = false) {
+        if (readOnly) {
+            context.toast(readOnlyText)
+            setInput(text)
+            return
+        }
+        // 编辑历史消息：电脑的记录不能改写，改为从这条消息之前切出分支，在分支里发改好的内容。
+        editing?.let { edit ->
+            editing = null
+            setInput(edit.previousInput)
+            DesktopBridge.setDraft(sessionId, edit.previousInput)
+            val rewind = points.edit[edit.targetMessageId] ?: return
+            branchFrom(rewind.atSeq, fresh = rewind.atSeq == null, text = text, imageRefs = rewind.prompt.imageRefs, files = rewind.prompt.files)
+            return
+        }
+        // 「/命令」在电脑上执行（和桌面输入框一样不发给模型）；电脑没有这个命令时按普通消息发。
+        val line = text.trim()
+        val commandName = line.removePrefix("/").substringBefore(' ').substringBefore('\n').lowercase()
+        if (commandsSupported && line.startsWith("/") && commandName.isNotEmpty() && pendingImages.isEmpty() && pendingFiles.isEmpty() &&
+            (commands.isEmpty() || commands.any { it.name == commandName })) {
+            input = ""
+            draftText = ""
+            DesktopBridge.setDraft(sessionId, "")
+            runSlash(line, restore = text) { sendPrompt(text, interrupt, steer) }
+            return
+        }
+        sendPrompt(text, interrupt, steer)
+    }
+
     fun openSubagents() {
         showSubagents = true
         subagentDirectory = null
@@ -244,6 +405,16 @@ internal fun DesktopChatScreen(
     // 输入框上方：运行状态条、审批卡、提问卡。用最新状态绘制（RemoteComposer 本身只创建一次）。
     val aboveInput = rememberUpdatedState<@Composable () -> Unit> {
         Column {
+            // 输入「/」：列出电脑上这个会话能用的命令。
+            val slash = draftText.takeIf { it.startsWith("/") && ' ' !in it && '\n' !in it }?.drop(1)?.lowercase()
+            val matches = if (slash != null) commands.filter { it.name.startsWith(slash) }.take(6) else emptyList()
+            AnimatedVisibility(
+                visible = matches.isNotEmpty(),
+                enter = fadeIn(tween(EtaTheme.motion.short)) + expandVertically(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate)),
+                exit = fadeOut(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.short))) + shrinkVertically(tween(EtaTheme.motion.exitDuration(EtaTheme.motion.medium))),
+            ) {
+                DesktopCommandSuggestions(matches) { command -> setInput("/${command.name} ") }
+            }
             AnimatedVisibility(
                 visible = state.running && !readOnly,
                 enter = fadeIn(tween(EtaTheme.motion.short)) + expandVertically(tween(EtaTheme.motion.medium, easing = EtaTheme.motion.emphasizedDecelerate)),
@@ -256,6 +427,11 @@ internal fun DesktopChatScreen(
             }
             if (asks.isNotEmpty()) {
                 DesktopAskCard(asks.size, plan = asks.first().isPlanReview) { openAsk = asks.first().key }
+            }
+            val failed = points.failedPrompt
+            if (!isChild && failed != null && !state.running && state.echoes.isEmpty() && state.queue.isEmpty() && editing == null) {
+                val lastError = (state.items.lastOrNull { it is DesktopItem.TurnEnd } as? DesktopItem.TurnEnd)?.message
+                DesktopRetryCard(lastError, busy = retrying) { retryFailed(failed) }
             }
         }
     }
@@ -337,18 +513,23 @@ internal fun DesktopChatScreen(
                 RemoteComposer(
                     workingHint = resources.getString(R.string.desktop_working_hint),
                     idleHint = resources.getString(R.string.desktop_idle_hint),
-                    onDraftChange = { text -> DesktopBridge.setDraft(sessionId, text) },
+                    onDraftChange = { text -> draftText = text; DesktopBridge.setDraft(sessionId, text) },
                     aboveInput = { aboveInput.value() },
                 )
             }
             // 电脑会话的多选是自己的一份，不和首页对话共用（09 第五期 5.1）。
             val desktopSelection = androidx.compose.runtime.remember(sessionId) { io.github.mangi.eta.ui.components.MessageSelectionState() }
             CompositionLocalProvider(LocalRemoteComposer provides remoteComposer, LocalRemoteImageLoader provides DesktopBridge::image,
-                io.github.mangi.eta.ui.components.LocalMessageSelection provides desktopSelection) {
+                io.github.mangi.eta.ui.components.LocalMessageSelection provides desktopSelection,
+                // 分支按钮只出现在桌面也能分支的回复上；历史不能删；「导出」导出这个电脑会话。
+                io.github.mangi.eta.ui.components.LocalBranchableMessageIds provides (if (canFork) points.branchAt.keys else emptySet()),
+                io.github.mangi.eta.ui.components.LocalMessageDeleteSupported provides false,
+                io.github.mangi.eta.ui.components.LocalChatHomeShortcuts provides
+                    io.github.mangi.eta.ui.components.LocalChatHomeShortcuts.current.copy(onExportConversation = { exportConversation() })) {
             io.github.mangi.eta.ui.components.ChatImagePreviewHost {
             AgentChatBody(
-                isBranching = false,
-                onBranchMessage = {},  // 电脑会话不支持分支
+                isBranching = branching,
+                onBranchMessage = { id -> points.branchAt[id]?.let { seq -> branchFrom(seq) } },
                 messages = messages,
                 modelPickerState = picker,
                 isCompacting = false,
@@ -360,14 +541,14 @@ internal fun DesktopChatScreen(
                 pendingFileReferences = pendingFiles,
                 queuedMessages = queued,
                 inputSyncVersion = inputSync,
-                messageEdit = null,
+                messageEdit = editing,
                 onReasoningEffortChange = { effort ->
                     (state.model ?: catalog?.default)?.let { selection ->
                         run { DesktopBridge.selectModel(sessionId, selection.provider, selection.model, effort.wireValue) }
                     }
                 },
-                onCompactContext = {},
-                canCompactContext = false,
+                onCompactContext = { runSlash("/compact") },
+                canCompactContext = !state.running && commands.any { it.name == "compact" },
                 onModelSelected = { id ->
                     DesktopChatProjector.parseOptionId(id)?.let { (provider, model) ->
                         run { DesktopBridge.selectModel(sessionId, provider, model, null) }
@@ -407,13 +588,26 @@ internal fun DesktopChatScreen(
                 onAttachFilePath = { context.toast(attachmentsUnsupported) },
                 onRemoveFileReference = { id -> pendingFiles = pendingFiles.filterNot { it.id == id } },
                 onEditMessage = { id ->
-                    // 桌面历史不可改写：把原文放回输入框，改完作为新消息发送。
-                    (messages.firstOrNull { it.id == id } as? UserMessageUi)?.let { setInput(it.content) }
-                        ?: (messages.firstOrNull { it.id == id } as? AgentMessageUi)?.let { setInput(it.content) }
+                    val rewind = points.edit[id]
+                    if (canFork && rewind != null) {
+                        // 和手机对话一样就地编辑；点「编辑重发」时从这条消息之前切出分支，在分支里发改好的内容。
+                        editing = io.github.mangi.eta.ui.model.MessageEditUiState(
+                            targetMessageId = id, previousInput = input, previousImages = emptyList(),
+                            previousFileReferences = emptyList(), hasLaterTurns = true,
+                        )
+                        setInput(rewind.prompt.text)
+                    } else {
+                        // 插件太旧不能分支：把原文放回输入框，改完作为新消息发送。
+                        (messages.firstOrNull { it.id == id } as? UserMessageUi)?.let { setInput(it.content) }
+                            ?: (messages.firstOrNull { it.id == id } as? AgentMessageUi)?.let { setInput(it.content) }
+                    }
                 },
-                onCancelMessageEdit = {},
+                onCancelMessageEdit = {
+                    editing?.let { setInput(it.previousInput) }
+                    editing = null
+                },
                 onDeleteMessage = { context.toast(unsupported) },
-                onRegenerateMessage = { context.toast(unsupported) },
+                onRegenerateMessage = { id -> if (canFork) reask(points.reask[id]) else context.toast(pluginUpdate) },
                 onSelectReplyCandidate = { _, _ -> },
                 onSuggestionClick = {},
                 onRunTraceClick = {},
@@ -452,6 +646,9 @@ internal fun DesktopChatScreen(
                 run { DesktopBridge.selectModel(sessionId, selection.provider, selection.model, effort.wireValue) }
             }
         },
+        onBranch = if (canFork) ({ showSettings = false; branchFrom(null) }) else null,
+        onCompact = if (commands.any { it.name == "compact" }) ({ showSettings = false; runSlash("/compact") }) else null,
+        onExport = if (!isChild) ({ showSettings = false; exportConversation() }) else null,
     )
     DesktopSubagentSheet(
         show = showSubagents,
@@ -563,4 +760,12 @@ internal fun DesktopChatFrame(
             ) { content() }
         }
     }
+}
+
+/** data URL → 发给电脑的图片（重发电脑上已有的图片时用）。 */
+private fun desktopImageOf(dataUrl: String): DesktopImage? {
+    val header = dataUrl.substringBefore(",")
+    val base64 = dataUrl.substringAfter("base64,", "")
+    if (!dataUrl.startsWith("data:") || base64.isEmpty()) return null
+    return DesktopImage(header.removePrefix("data:").substringBefore(";").ifBlank { "image/png" }, base64)
 }

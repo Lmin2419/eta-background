@@ -65,6 +65,13 @@ internal object DesktopChatProjector {
         },
         val duration: (Long) -> String = ::defaultDuration,
         val clock: (Long) -> String = ::defaultClock,
+        val command: (line: String, outcome: Boolean?) -> String = { line, outcome ->
+            when (outcome) {
+                null -> "$line · 执行中"
+                true -> "$line · 已完成"
+                false -> "$line · 失败"
+            }
+        },
     )
 
     fun messages(state: DesktopSessionState, labels: Labels = Labels()): List<AgentChatMessageUi> =
@@ -83,6 +90,8 @@ internal object DesktopChatProjector {
         var currentTurn: TurnAccumulator? = null
         val toolStarts = HashMap<String, Long>()
         val out = ArrayList<AgentChatMessageUi>(items.size + 8)
+        // 斜杠命令：命令行一条、结果一条，合成同一个小胶囊（结果到了就地替换）。
+        val commandRows = HashMap<String, Pair<Int, String>>()
         for (item in items) {
             when (item) {
                 is DesktopItem.User -> out += userMessage(item, labels)
@@ -105,7 +114,20 @@ internal object DesktopChatProjector {
                         turnUsageMarker(turn, item.seq, labels)?.let(out::add)
                     }
                 }
-                is DesktopItem.Notice -> noticeMessage(item)?.let(out::add)
+                is DesktopItem.Notice -> when (item.code) {
+                    "command" -> {
+                        val id = item.id ?: "${item.seq}"
+                        commandRows[id] = out.size to item.text
+                        out += marker("cmd-$id", MARKER_COMMAND, labels.command(item.text, null), "")
+                    }
+                    "command_done" -> {
+                        val id = item.id ?: "${item.seq}"
+                        val (index, line) = commandRows[id] ?: (-1 to "")
+                        val row = marker("cmd-$id", MARKER_COMMAND, labels.command(line.ifBlank { "/" }, item.kind != "error"), item.text)
+                        if (index >= 0) out[index] = row else out += row
+                    }
+                    else -> noticeMessage(item)?.let(out::add)
+                }
                 is DesktopItem.Title -> Unit
             }
         }
@@ -221,6 +243,73 @@ internal object DesktopChatProjector {
     const val MARKER_SUBAGENT = "subagent"
     const val MARKER_SCHEDULE = "schedule"
     const val MARKER_TRIGGER = "trigger"
+    const val MARKER_COMMAND = "command"
+
+    /**
+     * 电脑会话里能做「分支 / 重新回答 / 编辑重发」的位置，按 DSH 的事件序号算切点（与桌面一致）：
+     * - 分支：每个已结束、没出错的轮次里最后一段有字的回复，切在该轮 `turn_end`；
+     * - 重新回答：轮次里任一段回复，切在这一轮开始之前，重发开启这一轮的那条（几条）消息；
+     * - 编辑重发：用户消息，切在它所在轮次开始之前（中途插入的消息切在它自己前面）。
+     * 切点为空表示前面没有可保留的内容，改为新建会话。
+     */
+    fun branchPoints(items: List<DesktopItem>): DesktopBranchPoints {
+        val branchAt = HashMap<String, Long>()
+        val reask = HashMap<String, DesktopRewind>()
+        val edit = HashMap<String, DesktopRewind>()
+        var turn: Int? = null
+        var turnStartSeq: Long? = null
+        var opening = false
+        var candidate: String? = null
+        val openers = ArrayList<DesktopItem.User>()
+        val replies = ArrayList<String>()
+        var failed: DesktopPrompt? = null
+        fun cut(seq: Long?): Long? = seq?.takeIf { it >= 0 }
+        for (item in items) {
+            when (item) {
+                is DesktopItem.TurnStart -> {
+                    turn = item.turn; turnStartSeq = item.seq; opening = true
+                    candidate = null; openers.clear(); replies.clear()
+                }
+                is DesktopItem.User -> {
+                    val prompt = DesktopPrompt(item.text, item.imageRefs, item.files)
+                    val inOpening = turn != null && opening
+                    if (inOpening) openers += item
+                    edit["u-${item.seq}"] = DesktopRewind(cut(if (inOpening) turnStartSeq?.minus(1) else item.seq - 1), prompt)
+                    failed = null
+                }
+                is DesktopItem.Assistant -> {
+                    opening = false
+                    val lastText = item.blocks.indexOfLast { it is DesktopBlock.Text && it.text.isNotBlank() }
+                    item.blocks.forEachIndexed { index, block -> if (block is DesktopBlock.Text && block.text.isNotBlank()) replies += "a-${item.seq}-$index" }
+                    if (lastText >= 0) {
+                        // 这一段回复之后又调了工具：它不是这一轮的收尾，不能从这里分支。
+                        candidate = if (item.blocks.drop(lastText + 1).any { it is DesktopBlock.Tool }) null else "a-${item.seq}-$lastText"
+                    } else if (item.blocks.any { it is DesktopBlock.Tool }) candidate = null
+                }
+                is DesktopItem.ToolCall, is DesktopItem.ToolResult -> candidate = null
+                is DesktopItem.TurnEnd -> {
+                    if (item.reason != "error") candidate?.let { branchAt[it] = item.seq }
+                    val prompt = openers.takeIf { it.isNotEmpty() }?.let { users ->
+                        DesktopPrompt(
+                            text = users.map { it.text }.filter { it.isNotBlank() }.joinToString("\n\n"),
+                            imageRefs = users.flatMap { it.imageRefs }.take(6),
+                            files = users.flatMap { it.files },
+                        )
+                    }
+                    val start = turnStartSeq
+                    if (prompt != null && start != null) {
+                        val rewind = DesktopRewind(cut(start - 1), prompt)
+                        replies.forEach { reask[it] = rewind }
+                    }
+                    failed = prompt.takeIf { item.reason == "error" }
+                    turn = null; turnStartSeq = null; opening = false; candidate = null
+                    openers.clear(); replies.clear()
+                }
+                else -> Unit
+            }
+        }
+        return DesktopBranchPoints(branchAt, reask, edit, failed)
+    }
 
     fun compactTokens(value: Long): String = when {
         value >= 1_000_000 -> trimDecimal(value / 1_000_000.0) + "M"
@@ -439,3 +528,20 @@ internal object DesktopChatProjector {
         }
     }
 }
+
+/** 一条（或开启同一轮的几条）用户消息的原样内容：文字、电脑上的图片附件引用、文件名。 */
+internal data class DesktopPrompt(val text: String, val imageRefs: List<JsonObject>, val files: List<String>)
+
+/** 回到某一处重新来：[atSeq] 是分支切点（含），为空时新建会话；[prompt] 是要重发（或放进编辑框）的内容。 */
+internal data class DesktopRewind(val atSeq: Long?, val prompt: DesktopPrompt)
+
+internal class DesktopBranchPoints(
+    /** 回复 id → 分支切点（该轮 `turn_end` 的序号）。 */
+    val branchAt: Map<String, Long>,
+    /** 回复 id → 重新回答。 */
+    val reask: Map<String, DesktopRewind>,
+    /** 用户消息 id → 编辑重发。 */
+    val edit: Map<String, DesktopRewind>,
+    /** 最后一轮出错时，开启它的那条消息（用来「重试」）；没出错为空。 */
+    val failedPrompt: DesktopPrompt?,
+)

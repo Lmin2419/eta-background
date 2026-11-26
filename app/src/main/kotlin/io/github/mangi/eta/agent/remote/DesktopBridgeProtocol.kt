@@ -82,7 +82,8 @@ internal object DesktopBridgeProtocol {
                 message = json.string("message"),
                 cause = json.string("cause"),
             )
-            "notice" -> DesktopItem.Notice(seq, time, json.string("code").orEmpty(), json.string("text").orEmpty())
+            "notice" -> DesktopItem.Notice(seq, time, json.string("code").orEmpty(), json.string("text").orEmpty(),
+                id = json.string("id"), kind = json.string("kind"))
             "title" -> DesktopItem.Title(seq, time, json.string("title").orEmpty())
             else -> null
         }
@@ -425,7 +426,15 @@ internal sealed interface DesktopItem {
         val cause: String?,
     ) : DesktopItem
 
-    data class Notice(override val seq: Long, override val time: Long, val code: String, val text: String) : DesktopItem
+    /** 提示行：模型重试、上下文压缩、斜杠命令（`command` 是命令行，`command_done` 是结果，[id] 把两条配成一对）。 */
+    data class Notice(
+        override val seq: Long,
+        override val time: Long,
+        val code: String,
+        val text: String,
+        val id: String? = null,
+        val kind: String? = null,
+    ) : DesktopItem
 
     data class Title(override val seq: Long, override val time: Long, val title: String) : DesktopItem
 }
@@ -656,3 +665,9 @@ internal fun JsonObject.int(key: String): Int? = long(key)?.toInt()
 internal fun JsonObject.bool(key: String): Boolean? = (this[key] as? JsonPrimitive)?.booleanOrNull
 
 internal fun JsonObject.array(key: String): JsonArray? = this[key] as? JsonArray
+
+/** 电脑会话可用的斜杠命令（桌面输入框里的同一份列表）。 */
+internal data class DesktopCommand(val name: String, val description: String, val hint: String? = null)
+
+/** 一次斜杠命令的结果。 */
+internal data class DesktopCommandResult(val success: Boolean, val text: String?)

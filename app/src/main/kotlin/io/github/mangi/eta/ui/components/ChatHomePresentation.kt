@@ -28,3 +28,11 @@ internal val LocalChatHomeShortcuts = staticCompositionLocalOf { ChatHomeShortcu
 internal data class ChatInlineEditor(val messageId: String, val initialText: String,
     val preserveFollowing: Boolean, val onSubmit: (String) -> Unit, val onCancel: () -> Unit)
 internal val LocalChatInlineEditor = staticCompositionLocalOf<ChatInlineEditor?> { null }
+
+/**
+ * 能「分支」的回复由外部给定时用这里的集合（电脑会话按桌面的切点算），为空时按手机对话的规则自己算。
+ */
+internal val LocalBranchableMessageIds = androidx.compose.runtime.compositionLocalOf<Set<String>?> { null }
+
+/** 消息菜单里是否有「删除」；电脑会话的历史不能改写，不显示。 */
+internal val LocalMessageDeleteSupported = androidx.compose.runtime.compositionLocalOf { true }

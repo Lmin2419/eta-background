@@ -173,6 +173,40 @@ class Stage5PermissionHealthTest {
         p.capture("stage5_permission_dark_200")
     }
 
+    @Test
+    fun engineButton_startsTheEngineWithRoot_orOpensRootFirst() {
+        val probe = EngineReadinessProbe { false }
+        var starts = 0
+        val starter = EngineStarter { starts++; EngineStartResult.Failed to "NO_ROOT" }
+        val owner = activity
+        var state by mutableStateOf(allIdsState(setOf("root")))
+        panel = Stage3TestPanel(activity) {
+            CompositionLocalProvider(LocalLifecycleOwner provides owner, LocalEngineReadinessProbe provides probe,
+                LocalEngineStarter provides starter) {
+                PermissionHealthScreen(state, onAction = { actions.add(it) })
+            }
+        }
+        val p = panel!!
+        p.advance(30)
+        // 没有 Root：引擎按钮先带你去开 Root，不去启动。
+        val openRoot = scrollToText(p, activity.getString(R.string.eta_engine_open_root)) ?: error("no open-root button")
+        p.tapFinger(openRoot.boundsInRoot.center.x, openRoot.boundsInRoot.center.y)
+        p.advance(3)
+        assertEquals(listOf("root"), actions.filterIsInstance<PermissionHealthAction.OpenItemAction>().map { it.itemId })
+        assertEquals(0, starts)
+
+        // 有 Root：点「启动引擎」真的去启动，并重新检查。
+        actions.clear()
+        state = allIdsState(emptySet())
+        p.advance(30)
+        val start = scrollToText(p, activity.getString(R.string.eta_engine_start)) ?: error("no start button")
+        assertNotNull(findNode(activity.getString(R.string.eta_engine_stopped_summary), p))
+        p.tapFinger(start.boundsInRoot.center.x, start.boundsInRoot.center.y)
+        p.advance(30)
+        assertEquals(1, starts)
+        assertTrue(actions.isEmpty())
+    }
+
     private fun allIdsState(missing: Set<String>): PermissionHealthUiState {
         val ids = listOf("background", "overlay", "app_list", "local_network", "calendar", "notification_policy", "location", "notification_history", "usage_access", "accessibility", "notifications", "root")
         return PermissionHealthUiState(ids.map { id ->

@@ -657,3 +657,90 @@ test('tunnel is absent without frpc, supervised and stopped with it', async () =
   assert.equal(spawned[0].killed, true)
   assert.deepEqual(seen, ['starting', 'connected', 'stopped'])
 })
+
+// --- 0.6.0: branch, retry and slash commands ---------------------------------------------
+import { increasedForkTitle } from '../lib/bridge.js'
+import { translateEvent as translate6 } from '../lib/translate.js'
+
+test('branch titles count up like the desktop', () => {
+  assert.equal(increasedForkTitle('Plan', new Set()), 'Plan (1)')
+  assert.equal(increasedForkTitle('Plan (1)', new Set(['Plan (2)'])), 'Plan (3)')
+  assert.equal(increasedForkTitle('计划（2）', new Set()), '计划（3）')
+})
+
+test('fork cuts at the given seq, titles the branch and keeps the model', async () => {
+  const { fake, handle, url } = await setup()
+  const forks = []
+  const renames = []
+  const models = []
+  fake.controller.fork = async (request) => { forks.push(request); return { sessionId: 's9' } }
+  fake.controller.rename = async (request) => { renames.push(request); return { title: request.title, seq: 1 } }
+  fake.controller.selectModel = async (request) => { models.push(request); return { selected: true } }
+  const projections = fake.controller.projections
+  fake.controller.projections = async (request) => {
+    const value = await projections(request)
+    return request.sessionId === 's1' ? { ...value, values: { ...value.values, modelSelection: { provider: 'deepseek', model: 'chat', reasoningEffort: 'high' } } } : value
+  }
+  const c = await connect(url)
+  assert.ok((await c.call('hello')).features.includes('fork'))
+  const res = await c.call('sessions.fork', { sessionId: 's1', atSeq: 12 })
+  assert.deepEqual(res, { sessionId: 's9', title: 'One (1)', model: { provider: 'deepseek', model: 'chat', reasoningEffort: 'high' } })
+  assert.deepEqual(forks, [{ sessionId: 's1', atSeq: 12 }])
+  assert.deepEqual(renames, [{ sessionId: 's9', title: 'One (1)' }])
+  assert.deepEqual(models, [{ sessionId: 's9', provider: 'deepseek', model: 'chat', reasoningEffort: 'high' }])
+  await assert.rejects(c.call('sessions.fork', { sessionId: 's1', atSeq: -1 }), /non-negative/)
+  fake.controller.fork = async () => { throw Object.assign(new Error('no turn'), { code: 'session/fork-unavailable' }) }
+  await assert.rejects(c.call('sessions.fork', { sessionId: 's1' }), (error) => error.code === 'fork-unavailable')
+  c.ws.close()
+  await handle.close()
+})
+
+test('retry sends the empty continuation and explains a refusal', async () => {
+  const { fake, handle, url } = await setup()
+  const c = await connect(url)
+  const res = await c.call('sessions.retry', { sessionId: 's1', requestId: 'r7' })
+  assert.deepEqual(res, { accepted: true, requestId: 'r7' })
+  assert.deepEqual(fake.calls.find(call => call[0] === 'prompt')[1], { requestId: 'r7', sessionId: 's1', mode: 'queue', content: [] })
+  fake.controller.prompt = async () => { throw Object.assign(new Error('busy'), { code: 'session/agent-busy' }) }
+  await assert.rejects(c.call('sessions.retry', { sessionId: 's1' }), (error) => error.code === 'not-retryable')
+  fake.controller.prompt = async () => { throw Object.assign(new Error('empty'), { code: 'gateway/bad-request' }) }
+  await assert.rejects(c.call('sessions.retry', { sessionId: 's1' }), (error) => error.code === 'unsupported')
+  c.ws.close()
+  await handle.close()
+})
+
+test('slash commands are listed and run on the session agent', async () => {
+  const agent = { id: 'agent-s1' }
+  const runs = []
+  const commands = {
+    list: (target) => { assert.equal(target, agent); return [{ name: 'compact', description: 'Compact history' }, { name: 'goal', description: 'Set a goal', input: { hint: '<text>' } }] },
+    async execute(target, line, attachments, signal) {
+      assert.equal(target, agent)
+      assert.deepEqual(attachments, [])
+      assert.ok(signal instanceof AbortSignal)
+      runs.push(line)
+      return line.startsWith('/compact') ? { commandId: 'cmd-1', result: { kind: 'success', text: 'Compacted 3 history items' } } : undefined
+    },
+  }
+  const { fake, handle, url } = await setup({ commands })
+  fake.controller.resolveAgent = async (sessionId) => sessionId === 's1' ? { agent } : { error: { code: 'session/not-found' } }
+  const c = await connect(url)
+  assert.ok((await c.call('hello')).features.includes('commands'))
+  assert.deepEqual(await c.call('commands.list', { sessionId: 's1' }), { commands: [
+    { name: 'compact', description: 'Compact history' }, { name: 'goal', description: 'Set a goal', hint: '<text>' },
+  ] })
+  assert.deepEqual(await c.call('commands.run', { sessionId: 's1', line: ' /compact ' }), { commandId: 'cmd-1', kind: 'success', text: 'Compacted 3 history items' })
+  await assert.rejects(c.call('commands.run', { sessionId: 's1', line: '/nope' }), (error) => error.code === 'unknown-command')
+  await assert.rejects(c.call('commands.run', { sessionId: 's1', line: 'hello' }), (error) => error.code === 'bad-request')
+  await assert.rejects(c.call('commands.list', { sessionId: 'zz' }), (error) => error.code === 'not-found')
+  assert.deepEqual(runs, ['/compact', '/nope'])
+  c.ws.close()
+  await handle.close()
+})
+
+test('command events become notices', () => {
+  assert.deepEqual(translate6({ type: 'command/run', seq: 4, time: 9, data: { commandId: 'c1', name: 'goal', args: ' ship it ', source: { kind: 'user' } } }),
+    { k: 'notice', seq: 4, time: 9, code: 'command', id: 'c1', text: '/goal ship it' })
+  assert.deepEqual(translate6({ type: 'command/done', seq: 5, time: 10, data: { commandId: 'c1', kind: 'error', text: 'busy' } }),
+    { k: 'notice', seq: 5, time: 10, code: 'command_done', id: 'c1', kind: 'error', text: 'busy' })
+})

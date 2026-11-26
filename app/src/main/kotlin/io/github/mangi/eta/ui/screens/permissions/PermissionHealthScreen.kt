@@ -15,15 +15,50 @@ import io.github.mangi.eta.ui.components.*
 import io.github.mangi.eta.ui.model.*
 import io.github.mangi.eta.ui.theme.EtaTheme
 import top.yukonga.miuix.kmp.basic.Text
+import kotlinx.coroutines.launch
 
 @Composable
 fun PermissionHealthScreen(state: PermissionHealthUiState, onAction: (PermissionHealthAction) -> Unit, modifier: Modifier = Modifier) {
     var refreshEngine by remember { mutableIntStateOf(0) }
     val engineReady = rememberEngineReadiness(state, refreshEngine)
+    val rootReady = state.items.firstOrNull { it.id == "root" }?.status == PermissionStatusUi.Available
+    // 引擎没就绪时按钮要真的做事：没有 Root 先去开 Root；有 Root 就直接用 Root 启动引擎，并告诉你结果。
+    var startingEngine by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
+    val starter = LocalEngineStarter.current
     val engine = PermissionHealthItemUi("engine", stringResource(R.string.eta_ready_engine),
-        stringResource(if (engineReady == true) R.string.eta_engine_ready_summary else R.string.eta_engine_unavailable_summary),
+        stringResource(when {
+            engineReady == true -> R.string.eta_engine_ready_summary
+            !rootReady -> R.string.eta_engine_need_root_summary
+            else -> R.string.eta_engine_stopped_summary
+        }),
         if (engineReady == true) PermissionStatusUi.Available else PermissionStatusUi.Missing,
-        stringResource(R.string.eta_engine_check))
+        stringResource(if (!rootReady) R.string.eta_engine_open_root else R.string.eta_engine_start))
+    fun onEngine() {
+        when {
+            engineReady == true -> refreshEngine++
+            !rootReady -> onAction(PermissionHealthAction.OpenItemAction("root"))
+            startingEngine -> Unit
+            else -> {
+                startingEngine = true
+                scope.launch {
+                    val (result, hint) = try { starter.start(context) }
+                        catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+                        catch (error: Exception) { EngineStartResult.Failed to error.message }
+                    startingEngine = false
+                    refreshEngine++
+                    val message = when (result) {
+                        EngineStartResult.Ready -> resources.getString(R.string.eta_engine_started_toast)
+                        EngineStartResult.Starting -> resources.getString(R.string.eta_engine_still_starting_toast)
+                        EngineStartResult.Failed -> resources.getString(R.string.eta_engine_start_failed_toast, hint.orEmpty().take(200))
+                    }
+                    EtaToastCenter.show(context, message, android.widget.Toast.LENGTH_LONG)
+                }
+            }
+        }
+    }
     // Stable priority sorting retains all original permission IDs and action routing.
     val rows = (state.items.filterNot { it.id == "engine" } + engine).sortedBy { if (it.status == PermissionStatusUi.Available) 1 else 0 }
     MiuixScaffoldPage(title = stringResource(R.string.ui_permission_health_3048bb),
@@ -31,16 +66,17 @@ fun PermissionHealthScreen(state: PermissionHealthUiState, onAction: (Permission
         containerColor = EtaTheme.colors.canvas) {
         item(key = "readiness") { PermissionHealthCard(state, null, engineReady = engineReady) }
         items(rows, key = { it.id }) { item ->
-            PermissionItemCard(item, checking = item.id == "engine" && engineReady == null, onActionClick = {
-                if (item.id == "engine") refreshEngine++ else onAction(PermissionHealthAction.OpenItemAction(item.id))
-            })
+            val engineRow = item.id == "engine"
+            PermissionItemCard(item, checking = engineRow && (engineReady == null || startingEngine),
+                busyLabel = if (engineRow && startingEngine) stringResource(R.string.eta_engine_starting) else null,
+                onActionClick = { if (engineRow) onEngine() else onAction(PermissionHealthAction.OpenItemAction(item.id)) })
         }
         item(key = "permission_bottom_space") { Spacer(Modifier.height(8.dp)) }
     }
 }
 
 @Composable
-private fun PermissionItemCard(item: PermissionHealthItemUi, checking: Boolean, onActionClick: () -> Unit) {
+private fun PermissionItemCard(item: PermissionHealthItemUi, checking: Boolean, busyLabel: String? = null, onActionClick: () -> Unit) {
     val icon = when (item.id) {
         "accessibility" -> Icons.Outlined.AccessibilityNew
         "overlay" -> Icons.Outlined.Layers
@@ -76,6 +112,7 @@ private fun PermissionItemCard(item: PermissionHealthItemUi, checking: Boolean, 
     }
     val available = item.status == PermissionStatusUi.Available
     val statusLabel = when {
+        busyLabel != null -> busyLabel
         checking -> stringResource(R.string.eta_ready_checking)
         available -> stringResource(R.string.status_enabled)
         item.id == "engine" -> stringResource(R.string.eta_engine_not_ready)

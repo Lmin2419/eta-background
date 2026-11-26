@@ -59,6 +59,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.FactCheck
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.TextFields
@@ -456,7 +457,7 @@ private fun UserMessageBubble(
         EtaMenuItem(stringResource(R.string.ui_edit_a7f814), icon = Icons.Outlined.Edit, onClick = { menu = false; onEdit() })
         if (selection != null) EtaMenuItem(stringResource(R.string.message_selection_menu), icon = Icons.Outlined.Checklist,
             onClick = { menu = false; selection.start(message.id) })
-        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
+        if (LocalMessageDeleteSupported.current) EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
     }
 }
 
@@ -569,6 +570,7 @@ private fun InfoMarker(message: SystemNoticeMessageUi, modifier: Modifier = Modi
         "subagent" -> Icons.Outlined.Hub
         "schedule" -> Icons.Outlined.Schedule
         "review" -> Icons.Outlined.FactCheck
+        "command" -> Icons.Outlined.Terminal
         else -> Icons.Outlined.Bolt
     }
     var expanded by rememberSaveable(message.id) { mutableStateOf(false) }
@@ -783,7 +785,7 @@ private fun AgentMessageBlock(
         if (selection != null) EtaMenuItem(stringResource(R.string.message_selection_menu), icon = Icons.Outlined.Checklist,
             enabled = messageActionsEnabled, onClick = { menu = false; selection.start(message.id) })
         EtaMenuItem(stringResource(R.string.action_export), icon = Icons.Outlined.IosShare, onClick = { menu = false; export() })
-        EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
+        if (LocalMessageDeleteSupported.current) EtaMenuItem(stringResource(R.string.ui_delete_3755f5), icon = Icons.Outlined.Delete, onClick = { menu = false; onDelete() }, destructive = true)
     }
 }
 

@@ -603,7 +603,8 @@ internal fun AgentConversationMessages(
     val latestAnswerId = remember(visibleMessages, finalResultMessageIds) {
         visibleMessages.lastOrNull { it is AgentMessageUi && (it.characterEditable || it.id in finalResultMessageIds) }?.id
     }
-    val branchMessageIds = remember(visibleMessages, isStreaming) {
+    val branchOverride = LocalBranchableMessageIds.current
+    val branchMessageIds = branchOverride ?: remember(visibleMessages, isStreaming) {
         ConversationBranchBoundary.eligibleMessageIds(visibleMessages.branchMessageOutline(), running = isStreaming)
     }
     // 流式消息的渲染会话按 id 提升到列表层持有：item 滚出视口被 LazyColumn 销毁后，

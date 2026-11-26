@@ -107,6 +107,13 @@ internal fun rememberDesktopLabels(): DesktopChatProjector.Labels {
                 if (summary.isNullOrBlank()) base else "$base · $summary"
             },
             duration = duration,
+            command = { line, outcome ->
+                res.getString(when (outcome) {
+                    null -> R.string.desktop_command_running
+                    true -> R.string.desktop_command_done
+                    false -> R.string.desktop_command_error
+                }, line)
+            },
             clock = { epoch ->
                 val zone = ZoneId.systemDefault()
                 val time = Instant.ofEpochMilli(epoch).atZone(zone)
@@ -141,6 +148,10 @@ internal fun DesktopSessionSheet(
     onRemind: (Boolean) -> Unit = {},
     onModel: (String) -> Unit,
     onEffort: (ReasoningEffort) -> Unit,
+    /** 会话操作；为空的不显示（插件太旧或子代理）。 */
+    onBranch: (() -> Unit)? = null,
+    onCompact: (() -> Unit)? = null,
+    onExport: (() -> Unit)? = null,
 ) {
     val res = LocalResources.current
     val maxHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() * 0.8f }
@@ -198,6 +209,33 @@ internal fun DesktopSessionSheet(
                             checked = remindOn,
                             onCheckedChange = onRemind,
                         )
+                    }
+                }
+            }
+            if (onBranch != null || onCompact != null || onExport != null) {
+                item(key = "actions") {
+                    io.github.mangi.eta.ui.components.EtaPreferenceGroup(modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)) {
+                        onBranch?.let { action ->
+                            io.github.mangi.eta.ui.components.EtaArrowPreference(
+                                title = stringResource(R.string.desktop_action_branch_latest),
+                                summary = stringResource(R.string.desktop_action_branch_latest_summary),
+                                enabled = !busy, onClick = action,
+                            )
+                        }
+                        onCompact?.let { action ->
+                            io.github.mangi.eta.ui.components.EtaArrowPreference(
+                                title = stringResource(R.string.desktop_action_compact),
+                                summary = stringResource(R.string.desktop_action_compact_summary),
+                                enabled = !busy, onClick = action,
+                            )
+                        }
+                        onExport?.let { action ->
+                            io.github.mangi.eta.ui.components.EtaArrowPreference(
+                                title = stringResource(R.string.desktop_action_export),
+                                summary = stringResource(R.string.desktop_action_export_summary),
+                                onClick = action,
+                            )
+                        }
                     }
                 }
             }

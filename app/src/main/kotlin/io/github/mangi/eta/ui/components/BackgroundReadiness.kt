@@ -37,6 +37,22 @@ internal val LocalEngineReadinessProbe = staticCompositionLocalOf<EngineReadines
     }
 }
 
+internal enum class EngineStartResult { Ready, Starting, Failed }
+
+/** 用户在权限健康页点「启动引擎」：用 Root 部署并启动后台引擎，最多等 15 秒。失败时带上可读原因。 */
+internal fun interface EngineStarter { suspend fun start(context: Context): Pair<EngineStartResult, String?> }
+internal val LocalEngineStarter = staticCompositionLocalOf<EngineStarter> {
+    EngineStarter { context ->
+        withContext(Dispatchers.IO) {
+            when (com.eta.shadow.Engine.ensureRunningBounded(context.applicationContext, 15_000)) {
+                com.eta.shadow.Engine.UP -> EngineStartResult.Ready to null
+                com.eta.shadow.Engine.STARTING -> EngineStartResult.Starting to null
+                else -> EngineStartResult.Failed to com.eta.shadow.Engine.reasonHint()
+            }
+        }
+    }
+}
+
 /** Check once on entry/resume or explicit refresh. Retained/stopped pages do not poll. */
 @Composable
 internal fun rememberEngineReadiness(state: PermissionHealthUiState, refresh: Int = 0): Boolean? {

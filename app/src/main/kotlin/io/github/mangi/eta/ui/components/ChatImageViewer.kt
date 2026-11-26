@@ -234,6 +234,23 @@ private fun ChatImageViewerOverlay(
 
     var zoomedPage by remember { mutableIntStateOf(-1) }
     val sourceCornerPx = with(LocalDensity.current) { request.sourceCornerRadius.toPx() }
+    // 电脑会话的图片地址是 `dsh-image:`：先向电脑取回原图（data URL）再显示，保存、分享也用取回的原图。
+    val remoteLoader = LocalRemoteImageLoader.current
+    val resolved = remember(request.id) { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    val failed = remember(request.id) { androidx.compose.runtime.mutableStateMapOf<String, Boolean>() }
+    fun viewSource(source: String): String = if (source.startsWith(REMOTE_IMAGE_SCHEME)) resolved[source].orEmpty() else source
+    if (remoteLoader != null) {
+        val page = previewer.activePage
+        LaunchedEffect(request.id, page) {
+            // 当前页和左右各一页，翻页时不再等。
+            for (index in listOf(page, page + 1, page - 1)) {
+                val source = request.images.getOrNull(index) ?: continue
+                if (!source.startsWith(REMOTE_IMAGE_SCHEME) || source in resolved) continue
+                val url = runCatching { remoteLoader(source) }.getOrNull()
+                if (url != null) resolved[source] = url else if (index == page) failed[source] = true
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -243,7 +260,7 @@ private fun ChatImageViewerOverlay(
             },
     ) {
         if (request.images.size == 1) {
-            val bitmap = rememberChatImageBitmap(request.images[0], maxDimensionPx = 2560)
+            val bitmap = rememberChatImageBitmap(viewSource(request.images[0]), maxDimensionPx = 2560)
             val sourceRect = request.sourceBoundsProvider?.invoke(0)?.translate(
                 translateX = -hostWindowOffset.x,
                 translateY = -hostWindowOffset.y,
@@ -276,7 +293,7 @@ private fun ChatImageViewerOverlay(
                 userScrollEnabled = pagerScrollEnabled,
                 modifier = Modifier.fillMaxSize(),
             ) { page ->
-                val bitmap = rememberChatImageBitmap(request.images[page], maxDimensionPx = 2560)
+                val bitmap = rememberChatImageBitmap(viewSource(request.images[page]), maxDimensionPx = 2560)
                 val sourceRect = if (pagerState.currentPage == page) {
                     request.sourceBoundsProvider?.invoke(page)?.translate(
                         translateX = -hostWindowOffset.x,
@@ -328,7 +345,17 @@ private fun ChatImageViewerOverlay(
             }
         }
 
-        val currentSource = request.images.getOrNull(previewer.activePage)
+        val rawSource = request.images.getOrNull(previewer.activePage)
+        if (rawSource != null && failed[rawSource] == true && rawSource !in resolved) {
+            Text(
+                text = stringResource(R.string.chat_image_remote_failed),
+                style = MiuixTheme.textStyles.footnote1,
+                color = Color.White.copy(alpha = 0.8f),
+                modifier = Modifier.align(Alignment.Center).padding(horizontal = 32.dp)
+                    .graphicsLayer { alpha = progress.value.coerceIn(0f, 1f) },
+            )
+        }
+        val currentSource = rawSource?.let(::viewSource)
         if (!currentSource.isNullOrBlank()) {
             val viewerContext = LocalContext.current
             val viewerResources = LocalResources.current
@@ -688,3 +715,6 @@ private const val ZOOM_SPRING_STIFFNESS = 520f
 private const val DOUBLE_TAP_ZOOM_SCALE = 2.5f
 private const val MIN_PINCH_SCALE = 0.85f
 private const val MAX_ZOOM_SCALE = 4f
+
+/** 电脑会话图片地址的前缀（与 DesktopBridge.IMAGE_SCHEME 相同）；组件层不依赖电脑同步模块。 */
+private const val REMOTE_IMAGE_SCHEME = "dsh-image:"

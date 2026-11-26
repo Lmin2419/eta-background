@@ -1,5 +1,7 @@
 package io.github.mangi.eta.ui.screens.desktop
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import android.app.Application
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -236,7 +238,18 @@ class DesktopScreensRenderTest {
         val (efforts, effort) = DesktopChatProjector.reasoningEfforts(catalog, state)
         assertTrue(efforts.size == 4)
         renderSheet("desktop-session-sheet-light") { show ->
-            DesktopSessionSheet(show, state, picker, efforts, effort, allowModelChange = true, busy = false, onDismiss = {}, onModel = {}, onEffort = {})
+            DesktopSessionSheet(show, state, picker, efforts, effort, allowModelChange = true, busy = false, onDismiss = {}, onModel = {}, onEffort = {},
+                onBranch = {}, onCompact = {}, onExport = {})
+        }
+    }
+
+    @Test fun inputCardsLight() = renderSheet("desktop-input-cards-light") { _ ->
+        androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(top = 120.dp)) {
+            DesktopCommandSuggestions(listOf(
+                io.github.mangi.eta.agent.remote.DesktopCommand("compact", "Compact the conversation history"),
+                io.github.mangi.eta.agent.remote.DesktopCommand("goal", "Set or manage the session goal", "[<objective>|clear]"),
+            )) {}
+            DesktopRetryCard("rate limited: try again later", busy = false) {}
         }
     }
 
@@ -293,3 +306,4 @@ class DesktopScreensRenderTest {
 
     @Test fun chatDark() = renderChat("desktop-chat-dark", dark = true)
 }
+

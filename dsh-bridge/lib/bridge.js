@@ -11,6 +11,9 @@ import {
 
 const MAX_FILES = 8
 const MAX_PREVIEW_BYTES = 8 * 1024 * 1024
+// Slash commands can run long (a manual /compact summarises the whole history).
+const COMMAND_TIMEOUT_MS = 5 * 60_000
+const MAX_COMMANDS = 200
 
 /** @param {string} path */
 function mediaTypeOf(path) {
@@ -42,6 +45,7 @@ export const RUNTIME = typeof process.versions.electron === 'string' ? 'desktop'
  * @property {any} [workspaces] - DSH `workspaceRegistry` service.
  * @property {any} [subagents] - DSH `subagents` runtime (optional).
  * @property {any} [userQuestions] - DSH `userQuestions` service (optional).
+ * @property {any} [commands] - DSH `commands` runtime (optional): slash commands from the phone.
  * @property {(sessionId: string) => any} [agentOf] - live root Agent of a Session, when one exists.
  * @property {(sessionId: string) => any} [sessionOf] - live Session, when one is loaded.
  * @property {string | null} [dshVersion] - version of the DSH runtime hosting the plugin, when it can be read.
@@ -613,7 +617,9 @@ class Client {
           dsh: { version: this.host.dshVersion ?? null, api: this.bridge.hostApi() },
           approvals: this.bridge.pendingApprovals(),
           questions: this.bridge.pendingQuestions(),
-          features: ['archive', 'pin', 'questions', 'turns', 'heartbeat', 'titles', 'workspaces', 'queue-by-request', 'image-preview', 'files', 'tunnel'],
+          features: ['archive', 'pin', 'questions', 'turns', 'heartbeat', 'titles', 'workspaces', 'queue-by-request', 'image-preview', 'files', 'tunnel',
+            ...(typeof controller.fork === 'function' ? ['fork'] : []), 'retry',
+            ...(this.host.commands === undefined ? [] : ['commands'])],
           tunnel: this.host.tunnel?.() ?? null,
         }
       case 'client.heartbeat': {
@@ -638,6 +644,14 @@ class Client {
       }
       case 'sessions.prompt':
         return this.prompt(m)
+      case 'sessions.fork':
+        return this.fork(m)
+      case 'sessions.retry':
+        return this.retry(m)
+      case 'commands.list':
+        return this.listCommands(requireString(m.sessionId, 'sessionId'))
+      case 'commands.run':
+        return this.runCommand(requireString(m.sessionId, 'sessionId'), requireString(m.line, 'line'))
       case 'attachments.image':
         return this.attachmentImage(m)
       case 'sessions.cancel':
@@ -829,6 +843,145 @@ class Client {
     if (info.size > MAX_PREVIEW_BYTES) throw new BridgeError('too-large', 'image is too large to preview')
     const data = (await readFile(path)).toString('base64')
     return { mediaType: typeof ref.mediaType === 'string' ? ref.mediaType : mediaTypeOf(path), data }
+  }
+
+  /**
+   * Branch a Session the way the desktop's branch button does: an exact event
+   * cut (`atSeq`, inclusive; omitted = the latest completed turn), the child
+   * titled "<title> (n)", and the source's model kept so the branch answers
+   * with the same model.
+   * @param {any} m
+   */
+  async fork(m) {
+    const controller = this.host.controller
+    if (typeof controller.fork !== 'function') throw new BridgeError('unsupported', 'this DSH cannot branch sessions')
+    const sessionId = requireString(m.sessionId, 'sessionId')
+    const request = { sessionId }
+    if (m.atSeq !== undefined) {
+      if (!Number.isSafeInteger(m.atSeq) || m.atSeq < 0) throw new BridgeError('bad-request', 'atSeq must be a non-negative integer')
+      request.atSeq = m.atSeq
+    }
+    let created
+    try {
+      created = await controller.fork(request)
+    } catch (error) {
+      const code = String(error?.code ?? '')
+      if (code === 'session/fork-unavailable') throw new BridgeError('fork-unavailable', String(error?.message ?? 'nothing to branch from'))
+      if (code === 'session/not-found') throw new BridgeError('not-found', 'the session no longer exists')
+      throw error
+    }
+    const childId = String(created.sessionId)
+    const signal = this.opSignal()
+    let title
+    if (m.increaseTitle !== false) {
+      try {
+        const { items } = await controller.list({}, signal)
+        const titleOf = item => item?.projections?.values?.title
+        const source = titleOf(items.find(item => String(item.sessionId) === sessionId))
+        if (typeof source === 'string' && source.trim().length > 0) {
+          const taken = new Set(items.map(titleOf).filter(value => typeof value === 'string'))
+          title = increasedForkTitle(source, taken)
+          await controller.rename({ sessionId: childId, title })
+        }
+      } catch (error) {
+        this.host.logger.warn(`dsh-bridge: branch title failed: ${error}`)
+        title = undefined
+      }
+    }
+    let model
+    if (m.keepModel !== false && typeof controller.projections === 'function' && typeof controller.selectModel === 'function') {
+      try {
+        const selection = (await controller.projections({ sessionId }, signal))?.values?.modelSelection
+        if (typeof selection?.provider === 'string' && typeof selection?.model === 'string') {
+          await controller.selectModel({
+            sessionId: childId,
+            provider: selection.provider,
+            model: selection.model,
+            ...(typeof selection.reasoningEffort === 'string' ? { reasoningEffort: selection.reasoningEffort } : {}),
+          })
+          model = selection
+        }
+      } catch (error) {
+        this.host.logger.warn(`dsh-bridge: branch model failed: ${error}`)
+      }
+    }
+    return { sessionId: childId, ...(title === undefined ? {} : { title }), ...(model === undefined ? {} : { model }) }
+  }
+
+  /**
+   * Continue a Session whose last turn failed, the desktop's own retry: an
+   * empty prompt that DSH accepts only for a failed, idle Session.
+   * @param {any} m
+   */
+  async retry(m) {
+    const request = {
+      requestId: typeof m.requestId === 'string' && m.requestId.length > 0 ? m.requestId : randomUUID(),
+      sessionId: requireString(m.sessionId, 'sessionId'),
+      mode: 'queue',
+      content: [],
+    }
+    try {
+      await this.host.controller.prompt(request, this.opSignal())
+    } catch (error) {
+      const code = String(error?.code ?? '')
+      if (code === 'session/agent-busy') throw new BridgeError('not-retryable', 'there is no failed turn to retry, or new input is waiting')
+      // DSH before the continuation command (0.2.2-rc.1 and earlier) rejects an empty prompt.
+      if (code === 'gateway/bad-request') throw new BridgeError('unsupported', 'this DSH cannot continue a failed turn; send the message again')
+      throw error
+    }
+    return { accepted: true, requestId: request.requestId }
+  }
+
+  /**
+   * The live root Agent of an ordinary Session, resuming it when needed.
+   * @param {string} sessionId
+   */
+  async agentFor(sessionId) {
+    const controller = this.host.controller
+    if (typeof controller.resolveAgent === 'function') {
+      const resolved = await controller.resolveAgent(sessionId)
+      if (resolved?.agent) return resolved.agent
+      const reason = resolved?.error?.code ?? resolved?.error?.kind ?? 'unavailable'
+      throw new BridgeError('not-found', `session ${sessionId} cannot be opened (${reason})`)
+    }
+    const agent = this.host.agentOf?.(sessionId)
+    if (agent === undefined || agent === null) throw new BridgeError('not-live', 'open the session on the computer once, then try again')
+    return agent
+  }
+
+  /** Slash commands the Session's Agent offers (the desktop composer's list). @param {string} sessionId */
+  async listCommands(sessionId) {
+    const runtime = this.host.commands
+    if (runtime === undefined) throw new BridgeError('unavailable', 'commands are not available in this DSH profile')
+    const agent = await this.agentFor(sessionId)
+    const commands = [...(runtime.list(agent) ?? [])].slice(0, MAX_COMMANDS).map(command => ({
+      name: String(command.name),
+      description: String(command.description ?? ''),
+      ...(typeof command.input?.hint === 'string' ? { hint: command.input.hint } : {}),
+    }))
+    return { commands }
+  }
+
+  /**
+   * Run one slash-command line without sending it to the model, as the
+   * desktop composer does. Its `command/run` and `command/done` events reach
+   * followers as notices.
+   * @param {string} sessionId @param {string} line
+   */
+  async runCommand(sessionId, line) {
+    const runtime = this.host.commands
+    if (runtime === undefined) throw new BridgeError('unavailable', 'commands are not available in this DSH profile')
+    if (!line.trimStart().startsWith('/')) throw new BridgeError('bad-request', 'a command line starts with /')
+    const agent = await this.agentFor(sessionId)
+    const signal = AbortSignal.any([this.lifetime.signal, AbortSignal.timeout(COMMAND_TIMEOUT_MS)])
+    const execution = await runtime.execute(agent, line.trim(), [], signal)
+    if (execution === undefined || execution === null) throw new BridgeError('unknown-command', `unknown command ${line.trim().split(/\s+/)[0]}`)
+    const result = execution.result ?? {}
+    return {
+      commandId: String(execution.commandId ?? ''),
+      kind: result.kind === 'error' ? 'error' : 'success',
+      ...(typeof result.text === 'string' ? { text: clip(result.text, 4000).text } : {}),
+    }
   }
 
   /** @param {any} m */
@@ -1236,4 +1389,24 @@ function modelCatalog(catalog) {
     })),
     failures: catalog.failures ?? [],
   }
+}
+
+/**
+ * The desktop's branch title: a trailing "(n)" / "（n）" counts up, an
+ * unnumbered title gets " (1)", skipping titles already in the list.
+ * @param {string} title @param {ReadonlySet<string>} taken
+ */
+export function increasedForkTitle(title, taken) {
+  let next = incrementedTitle(title)
+  while (taken.has(next)) next = incrementedTitle(next)
+  return next
+}
+
+/** @param {string} title */
+function incrementedTitle(title) {
+  const ascii = /^(.*?)\((\d+)\)$/u.exec(title)
+  if (ascii !== null) return `${ascii[1]}(${BigInt(ascii[2]) + 1n})`
+  const full = /^(.*?)（(\d+)）$/u.exec(title)
+  if (full !== null) return `${full[1]}（${BigInt(full[2]) + 1n}）`
+  return `${title} (1)`
 }

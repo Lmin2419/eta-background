@@ -112,3 +112,16 @@ DSH 注入给模型的上下文消息（`runtime-context`、`time-context` 等�
 - 用户消息条目可带 `imageRefs:[ref]`（最多 6 个），手机用 `attachments.image` 按需取图。
 - `hello` 与 `/v1/health` 增加 `tunnel:{state, message?, since}`；状态变化推送 `{t:"tunnel", state, message?, since}`。
 - `features` 增加 `image-preview`、`files`、`tunnel`。
+
+## 0.6.0 增补
+
+| op | 参数 | data |
+|---|---|---|
+| `sessions.fork` | `sessionId`、`atSeq?`（含这一条的事件序号；省略时切在最近一轮结束处）、`increaseTitle?`（默认 true）、`keepModel?`（默认 true） | `{sessionId, title?, model?}`：新会话 id；标题按桌面规则改成「原标题 (n)」，模型沿用原会话。错误码：`fork-unavailable`（切点不存在或还没有完成的轮次）、`not-found`、`unsupported` |
+| `sessions.retry` | `sessionId`、`requestId?` | `{accepted, requestId}`：上一轮出错时让 DSH 接着做（空消息续跑）。错误码：`not-retryable`（没有出错的轮次或已有新输入）、`unsupported`（DSH 不接受空消息，0.2.2-rc.1 及更早） |
+| `commands.list` | `sessionId` | `{commands:[{name, description, hint?}]}`：桌面输入框里的斜杠命令（最多 200 个）。没有命令服务时 `unavailable` |
+| `commands.run` | `sessionId`、`line`（以 `/` 开头的整行） | `{commandId, kind:"success"\|"error", text?}`：在电脑上执行，不发给模型，最多等 5 分钟。未知命令 `unknown-command` |
+
+- 分支切点与桌面「分支」按钮相同：一轮的 `turn_end` 序号。手机的「重新回答」「编辑重发」切在那一轮的 `turn_start` 之前（`turn_start.seq - 1`），再在新会话里发消息。
+- 新增推送条目：`command/run` → `{k:"notice", code:"command", id, text:"/name args"}`；`command/done` → `{k:"notice", code:"command_done", id, kind, text}`，两条用 `id` 配对。
+- `hello.features` 增加 `fork`（DSH 有 `sessionController.fork` 时）、`retry`、`commands`（DSH 有命令服务时）。

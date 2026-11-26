@@ -125,3 +125,64 @@ internal fun DesktopAskCard(count: Int, plan: Boolean, onOpen: () -> Unit) {
         )
     }
 }
+
+/** 上一轮出错：一键让电脑接着做（旧版 DSH 不能原地重试时改为重发上一条消息）。 */
+@Composable
+internal fun DesktopRetryCard(message: String?, busy: Boolean, onRetry: () -> Unit) {
+    AttentionCard(
+        title = stringResource(R.string.desktop_retry_title),
+        body = message?.takeIf { it.isNotBlank() }?.let { text ->
+            {
+                Text(text, style = EtaTheme.type.caption, color = EtaTheme.colors.textSecondary, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            }
+        },
+    ) {
+        EtaButton(stringResource(R.string.desktop_retry_action), onRetry, kind = EtaButtonKind.Primary, enabled = !busy, modifier = Modifier.weight(1f))
+    }
+}
+
+/** 输入「/」时的命令列表（电脑上这个会话能用的斜杠命令），点一条填进输入框。 */
+@Composable
+internal fun DesktopCommandSuggestions(
+    commands: List<io.github.mangi.eta.agent.remote.DesktopCommand>,
+    onPick: (io.github.mangi.eta.agent.remote.DesktopCommand) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .padding(bottom = 8.dp)
+            .etaElevation(io.github.mangi.eta.ui.theme.EtaElevation.E1, EtaTheme.shapes.radiusLg)
+            .background(EtaTheme.colors.surfaceRaised, EtaTheme.shapes.radiusLg)
+            .clip(EtaTheme.shapes.radiusLg)
+            .padding(vertical = 6.dp),
+    ) {
+        Text(
+            stringResource(R.string.desktop_commands_title),
+            style = EtaTheme.type.caption,
+            color = EtaTheme.colors.textTertiary,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp),
+        )
+        commands.forEach { command ->
+            Column(
+                Modifier.fillMaxWidth().clickable { onPick(command) }.padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    listOfNotNull("/${command.name}", command.hint).joinToString(" "),
+                    style = EtaTheme.type.body,
+                    color = EtaTheme.colors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (command.description.isNotBlank()) Text(
+                    command.description,
+                    style = EtaTheme.type.caption,
+                    color = EtaTheme.colors.textSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}

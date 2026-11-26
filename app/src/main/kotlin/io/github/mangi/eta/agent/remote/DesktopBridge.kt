@@ -353,6 +353,57 @@ internal object DesktopBridge {
         }
     }
 
+    /**
+     * 分支：在 [atSeq]（含这一条）处把会话切成一个新会话，和桌面「分支」按钮同一个切点；
+     * 为空时切在最近一轮结束处。新会话沿用原会话的模型，标题是「原标题 (n)」。返回新会话 id。
+     */
+    suspend fun fork(sessionId: String, atSeq: Long?): String {
+        val params = buildMap<String, JsonElement> {
+            put("sessionId", JsonPrimitive(sessionId))
+            atSeq?.let { put("atSeq", JsonPrimitive(it)) }
+        }
+        val data = client.call("sessions.fork", params, timeoutMs = 60_000).jsonObject
+        val childId = data.string("sessionId")
+            ?: throw DesktopBridgeException("bad-response", AppStrings.get(R.string.desktop_err_no_session, "电脑没有返回会话"))
+        val title = data.string("title")
+        val source = _sessions.value.rows.firstOrNull { it.id == sessionId }
+        // 新会话的推送随后就到；先放进列表和会话状态，打开时标题、工作区不会先空着。
+        upsertRow((_sessions.value.rows.firstOrNull { it.id == childId } ?: DesktopSessionRow(
+            id = childId, title = title, updatedAt = System.currentTimeMillis(), running = false, blank = false, live = true,
+            cwd = source?.cwd, parentId = null, subagent = false, workspaceId = source?.workspaceId, pinned = false,
+        )).let { row -> if (title != null) row.copy(title = title) else row })
+        if (title != null) stateFlow(childId).update { it.copy(title = title) }
+        return childId
+    }
+
+    /** 上一轮出错时让电脑接着做（桌面的「重试」）。旧版 DSH 不支持时抛 `unsupported`，由界面改为重发。 */
+    suspend fun retryTurn(sessionId: String) {
+        client.call("sessions.retry", mapOf("sessionId" to JsonPrimitive(sessionId), "requestId" to JsonPrimitive(UUID.randomUUID().toString())))
+    }
+
+    private val commandCache = ConcurrentHashMap<String, List<DesktopCommand>>()
+
+    /** 会话可用的斜杠命令；插件不支持时为空。同一会话只问一次电脑。 */
+    suspend fun commands(sessionId: String): List<DesktopCommand> {
+        commandCache[sessionId]?.let { return it }
+        if (_server.value?.supports("commands") != true) return emptyList()
+        val data = client.call("commands.list", mapOf("sessionId" to JsonPrimitive(sessionId))).jsonObject
+        val list = (data["commands"] as? JsonArray).orEmpty().mapNotNull { element ->
+            val item = element as? JsonObject ?: return@mapNotNull null
+            val name = item.string("name")?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            DesktopCommand(name, item.string("description").orEmpty(), item.string("hint"))
+        }
+        commandCache[sessionId] = list
+        return list
+    }
+
+    /** 在电脑上执行一行斜杠命令（不发给模型）；结果同时作为提示行出现在对话里。 */
+    suspend fun runCommand(sessionId: String, line: String): DesktopCommandResult {
+        val data = client.call("commands.run", mapOf("sessionId" to JsonPrimitive(sessionId), "line" to JsonPrimitive(line)),
+            timeoutMs = 5 * 60_000).jsonObject
+        return DesktopCommandResult(success = data.string("kind") != "error", text = data.string("text"))
+    }
+
     private val imageCache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > 40
     }
