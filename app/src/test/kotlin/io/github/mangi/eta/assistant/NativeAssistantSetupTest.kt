@@ -193,6 +193,33 @@ class NativeAssistantSetupTest {
         assertEquals(0, device.writes)
     }
 
+    @Test fun hyperProfileTurnsOffAospLongPressAndPinsXiaomiRecognizer() {
+        val xiaomi = HyperPowerContract.XIAOMI_RECOGNIZER
+        val hyperSetup = NativeAssistantSetup(eta, 0, device, store, AssistantProfile.hyper(xiaomi), "Xiaomi|17 Max|x") { time }
+        device.snapshot = original.copy(settings = original.settings + (AssistantSetting.LONG_PRESS to "1"))
+        val before = device.snapshot
+        hyperSetup.enable()
+        assertEquals("0", device.snapshot.settings[AssistantSetting.LONG_PRESS])
+        assertEquals(xiaomi, device.snapshot.settings[AssistantSetting.RECOGNIZER])
+        assertTrue(hyperSetup.configured(device.snapshot))
+        assertEquals("HYPEROS", store.backup!!.profile.name)
+        assertEquals("Xiaomi|17 Max|x", store.backup!!.device)
+        // 识别服务被系统改走时不算配置好（HyperOS 会据此重置语音助手）。
+        assertFalse(hyperSetup.configured(device.snapshot.copy(settings = device.snapshot.settings +
+            (AssistantSetting.RECOGNIZER to "com.other.recognizer/.Service"))))
+        hyperSetup.restore()
+        assertEquals(before, device.snapshot)
+    }
+
+    @Test fun anExistingBackupIsCheckedWithTheProfileItWasMadeWith() {
+        setup.enable()
+        // 之后用户把适配方式换成 HyperOS：已有配置仍按当时的 AOSP 目标值核对和恢复。
+        val later = NativeAssistantSetup(eta, 0, device, store, AssistantProfile.hyper(null)) { time }
+        assertTrue(later.configured(device.snapshot))
+        later.restore()
+        assertEquals(original, device.snapshot)
+    }
+
     private fun expectCode(code: String, action: () -> Unit) {
         try { action(); fail("Expected $code") } catch (e: AssistantSetupFailure) { assertEquals(code, e.code) }
     }

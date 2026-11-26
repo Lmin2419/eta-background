@@ -29,6 +29,8 @@ internal class TaskScreenSession(
     private val backend: ScreenToolBackend,
     private val readScreenshot: (String) -> AgentModelClient.ToolResult,
     private val rootAvailable: () -> Boolean = { true },
+    /** 主屏关闭或锁定（前台操作会被拒绝）。 */
+    private val mainDisplayLocked: () -> Boolean = { false },
 ) {
     private data class Bounds(val left: Int, val top: Int, val right: Int, val bottom: Int) {
         val width: Int get() = (right - left).coerceAtLeast(0)
@@ -158,6 +160,13 @@ internal class TaskScreenSession(
         if (toolCall.name == "observe_screen" && args.optBoolean("status_only", false) &&
             target == TaskExecutionLocation.BACKGROUND) return backgroundStatus()
 
+        // 主屏锁着时前台打不开应用：有 Root、给了包名就直接改在后台屏打开，任务不用等解锁（锁屏也能执行）。
+        if (target == TaskExecutionLocation.FOREGROUND && toolCall.name == "launch_app" &&
+            currentLocation() == TaskExecutionLocation.FOREGROUND && args.optString("package_name").isNotBlank() &&
+            mainDisplayLocked() && rootAvailable()) {
+            return lockedLaunch(args)
+        }
+
         if (target == TaskExecutionLocation.FOREGROUND) {
             if (currentLocation() == TaskExecutionLocation.BACKGROUND) {
                 // release_gui is the explicit, documented way out of a background screen.
@@ -189,6 +198,21 @@ internal class TaskScreenSession(
         } catch (failure: IllegalArgumentException) {
             error("INVALID_COORDINATE", failure.message ?: "后台坐标或参数无效", toolCall.name)
         }
+    }
+
+    private fun lockedLaunch(args: JSONObject): AgentModelClient.ToolResult {
+        markBackgroundIntent()
+        val result = backgroundLaunch(args)
+        val json = runCatching { JSONObject(result.content) }.getOrNull() ?: return result
+        if (json.optBoolean("ok", false)) {
+            json.put("moved_to_background", true).put("note",
+                "主屏已锁，已改在后台虚拟屏打开；之后的界面操作都在后台执行（不用等用户解锁，也不要唤醒主屏），做完用 release_gui 结束后台屏。")
+        } else {
+            // 后台也没打开：回到前台位置，别让后续调用卡在「后台会话进行中」。
+            synchronized(lock) { location = TaskExecutionLocation.FOREGROUND; observation = null }
+            json.put("note", "主屏已锁，试着改在后台虚拟屏打开也没成功（见 code/message）；前台要等用户解锁。")
+        }
+        return result.copy(content = json.toString())
     }
 
     private fun backgroundLaunch(args: JSONObject): AgentModelClient.ToolResult {

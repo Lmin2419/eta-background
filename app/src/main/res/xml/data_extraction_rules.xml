@@ -7,6 +7,12 @@
     <cloud-backup>
         <exclude domain="sharedpref" path="eta_speech_secrets.xml" />
         <exclude domain="sharedpref" path="eta_speech_oss_cleanup.xml" />
+        <!-- 电源键配置备份记的是这台手机的系统原值，换机或云恢复到别的手机上会写错，不随迁。 -->
+        <exclude domain="file" path="native_assistant_backup.json" />
+        <exclude domain="file" path="native_assistant_wake.json" />
+        <exclude domain="file" path="native_oplus_power_backup.json" />
+        <exclude domain="file" path="native_oplus_power_event.json" />
+        <exclude domain="file" path="native_hyper_power_backup.json" />
         <!-- TODO: Use <include> and <exclude> to control what is backed up.
         <include .../>
         <exclude .../>
@@ -15,6 +21,12 @@
     <device-transfer>
         <exclude domain="sharedpref" path="eta_speech_secrets.xml" />
         <exclude domain="sharedpref" path="eta_speech_oss_cleanup.xml" />
+        <!-- 电源键配置备份记的是这台手机的系统原值，换机或云恢复到别的手机上会写错，不随迁。 -->
+        <exclude domain="file" path="native_assistant_backup.json" />
+        <exclude domain="file" path="native_assistant_wake.json" />
+        <exclude domain="file" path="native_oplus_power_backup.json" />
+        <exclude domain="file" path="native_oplus_power_event.json" />
+        <exclude domain="file" path="native_hyper_power_backup.json" />
     </device-transfer>
     <!--
     <device-transfer>

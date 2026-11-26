@@ -8,6 +8,11 @@
 <full-backup-content>
     <exclude domain="sharedpref" path="eta_speech_secrets.xml" />
     <exclude domain="sharedpref" path="eta_speech_oss_cleanup.xml" />
+    <exclude domain="file" path="native_assistant_backup.json" />
+    <exclude domain="file" path="native_assistant_wake.json" />
+    <exclude domain="file" path="native_oplus_power_backup.json" />
+    <exclude domain="file" path="native_oplus_power_event.json" />
+    <exclude domain="file" path="native_hyper_power_backup.json" />
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>

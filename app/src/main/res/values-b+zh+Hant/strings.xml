@@ -2121,4 +2121,19 @@
   <string name="eta_engine_started_toast">背景引擎已就緒</string>
   <string name="eta_engine_still_starting_toast">引擎還在啟動，稍後再檢查一次。</string>
   <string name="eta_engine_start_failed_toast">引擎沒有啟動起來：%1$s</string>
+  <string name="native_assistant_adapter_title">適配方式</string>
+  <string name="native_assistant_adapter_auto">自動</string>
+  <string name="native_assistant_adapter_coloros">ColorOS</string>
+  <string name="native_assistant_adapter_hyperos">HyperOS</string>
+  <string name="native_assistant_adapter_generic">通用</string>
+  <string name="native_assistant_adapter_name_coloros">ColorOS（OPPO、一加、realme）</string>
+  <string name="native_assistant_adapter_name_hyperos">HyperOS（小米、紅米、POCO）</string>
+  <string name="native_assistant_adapter_name_generic">通用（系統預設助理）</string>
+  <string name="native_assistant_adapter_auto_summary">自動識別為 %1$s。認錯了可以手動選。</string>
+  <string name="native_assistant_adapter_manual_summary">按你的選擇使用 %1$s（這台手機識別為 %2$s）。</string>
+  <string name="native_assistant_adapter_locked">已經設定過，先還原原設定才能切換。</string>
+  <string name="native_assistant_hyperos_reverted">HyperOS 把長按電源鍵改回了它自己的動作（常見於重新啟動後）。點「重新套用」再設定一次。</string>
+  <string name="native_assistant_reapply">重新套用</string>
+  <string name="native_assistant_reapply_summary">先還原原設定，再按目前適配方式重新設定，需要 Root。</string>
+  <string name="native_assistant_foreign_cleared">發現從別的手機帶過來的電源鍵設定備份，已作廢（那些設定在這台手機上從沒生效過）。</string>
 </resources>

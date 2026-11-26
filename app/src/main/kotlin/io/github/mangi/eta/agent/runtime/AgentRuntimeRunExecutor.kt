@@ -240,7 +240,13 @@ internal class AgentRuntimeRunExecutor(
                             AgentOverlayVisibilityPolicy.requiresEntrySurfaceDismissal(toolName)) &&
                         !TaskPreviewRegistry.mainDisplayAvailable(appContext)) {
                         return@before ToolExecutionDecision.Reject("SCREEN_LOCKED",
-                            "主屏已关闭或锁定；前台操作未执行。后台虚拟屏可继续，不能唤醒主屏或重放输入。")
+                            if (io.github.mangi.eta.agent.device.RootAccess.isGranted) {
+                                "主屏已关闭或锁定，前台操作没有执行。要继续这件事，改用后台虚拟屏：launch_app 传 " +
+                                    "execution_location=\"background\" 和精确 package_name 打开应用，再 observe_screen 重新观察，" +
+                                    "之后的界面操作都在后台执行；不用等用户解锁，不要唤醒主屏，也不要重放已执行的输入。"
+                            } else {
+                                "主屏已关闭或锁定，前台操作没有执行。后台虚拟屏需要 Root，现在用不了；请告诉用户解锁后再继续，不要重放已执行的输入。"
+                            })
                     }
                     val requiresAccessibility =
                         AgentToolRequirements.requiresAccessibility(toolName)
@@ -290,6 +296,7 @@ internal class AgentRuntimeRunExecutor(
                 backend = backgroundScreen,
                 readScreenshot = executor::readBackgroundScreenshot,
                 rootAvailable = executor::isRootAvailable,
+                mainDisplayLocked = { !TaskPreviewRegistry.mainDisplayAvailable(appContext) },
             )
             TaskPreviewRegistry.register(request.runId, runController, taskScreen)
             val routingExecutor = RoutingToolExecutor(

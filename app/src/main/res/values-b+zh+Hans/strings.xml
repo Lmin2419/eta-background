@@ -2225,4 +2225,19 @@
   <string name="eta_engine_started_toast">后台引擎已就绪</string>
   <string name="eta_engine_still_starting_toast">引擎还在启动，稍后再检查一次。</string>
   <string name="eta_engine_start_failed_toast">引擎没有启动起来：%1$s</string>
+  <string name="native_assistant_adapter_title">适配方式</string>
+  <string name="native_assistant_adapter_auto">自动</string>
+  <string name="native_assistant_adapter_coloros">ColorOS</string>
+  <string name="native_assistant_adapter_hyperos">HyperOS</string>
+  <string name="native_assistant_adapter_generic">通用</string>
+  <string name="native_assistant_adapter_name_coloros">ColorOS（OPPO、一加、realme）</string>
+  <string name="native_assistant_adapter_name_hyperos">HyperOS（小米、红米、POCO）</string>
+  <string name="native_assistant_adapter_name_generic">通用（系统默认助手）</string>
+  <string name="native_assistant_adapter_auto_summary">自动识别为 %1$s。认错了可以手动选。</string>
+  <string name="native_assistant_adapter_manual_summary">按你的选择使用 %1$s（这台手机识别为 %2$s）。</string>
+  <string name="native_assistant_adapter_locked">已经配置过，先恢复原配置才能切换。</string>
+  <string name="native_assistant_hyperos_reverted">HyperOS 把长按电源键改回了它自己的动作（常见于重启后）。点「重新应用」再配置一次。</string>
+  <string name="native_assistant_reapply">重新应用</string>
+  <string name="native_assistant_reapply_summary">先恢复原配置，再按当前适配方式重新配置，需要 Root。</string>
+  <string name="native_assistant_foreign_cleared">发现从别的手机带过来的电源键配置备份，已作废（那些设置在这台手机上从没生效过）。</string>
 </resources>

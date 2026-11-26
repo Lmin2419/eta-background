@@ -37,6 +37,24 @@ internal object NativeAssistantRootMain {
             val result = when (operation) {
                 "read" -> readSnapshot(user).toJson()
                 "oplus_read" -> OplusPowerRoot.read(user)
+                // HyperOS：只读写系统设置 long_press_power_key 这一项（值限定为字母数字下划线）。
+                "hyper_read" -> JSONObject().put("user", user).put("action", readHyperAction(user) ?: JSONObject.NULL)
+                "hyper_action" -> {
+                    val expected = request.nullableString("expected")
+                    val target = request.nullableString("target")
+                    if (!HyperPowerContract.validValue(expected) || !HyperPowerContract.validValue(target)) {
+                        throw AssistantSetupFailure("UNSUPPORTED_SETTING_VALUE")
+                    }
+                    if (readHyperAction(user) != expected) throw AssistantSetupFailure("CONFIGURATION_CHANGED")
+                    checkUser(user)
+                    val args = mutableListOf("/system/bin/settings", "--user", "$user",
+                        if (target == null) "delete" else "put", HyperPowerContract.NAMESPACE, HyperPowerContract.KEY)
+                    if (target != null) args.add(target)
+                    runCommand(args.toTypedArray(), 4)
+                    checkUser(user)
+                    if (readHyperAction(user) != target) throw AssistantSetupFailure("CONFIGURATION_NOT_APPLIED")
+                    JSONObject()
+                }
                 "oplus_property" -> {
                     OplusPowerRoot.changeProperty(user, request.getString("expected"), request.getString("target"))
                     checkUser(user)
@@ -156,6 +174,14 @@ internal object NativeAssistantRootMain {
         val output = runCommand(arrayOf("/system/bin/settings", "--user", "$user", "get", setting.namespace, setting.key), 4)
             .trimEnd('\r', '\n')
         return output.takeUnless { it == "null" }.also { validateValue(setting, it) }
+    }
+
+    private fun readHyperAction(user: Int): String? {
+        val output = runCommand(arrayOf("/system/bin/settings", "--user", "$user", "get",
+            HyperPowerContract.NAMESPACE, HyperPowerContract.KEY), 4).trimEnd('\r', '\n')
+        return output.takeUnless { it == "null" }?.also {
+            if (!HyperPowerContract.validValue(it)) throw AssistantSetupFailure("UNSUPPORTED_SETTING_VALUE")
+        }
     }
 
     private fun validateValue(setting: AssistantSetting, value: String?) {

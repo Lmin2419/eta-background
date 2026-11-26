@@ -32,7 +32,11 @@ internal class NativeAssistantBackupFile(context: Context) : AssistantBackupStor
         AssistantBackup(assistantSnapshotFromJson(json.getJSONObject("original")),
             json.getBoolean("roleAttempted"),
             (0 until attempted.length()).map { AssistantSetting.valueOf(attempted.getString(it)) }.toSet(),
-            json.tick("appliedAt"), json.tick("confirmedAt"))
+            json.tick("appliedAt"), json.tick("confirmedAt"),
+            profile = json.optJSONObject("profile")?.let {
+                AssistantProfile(it.getString("name"), it.getString("longPress"), it.nullableString("recognizer"))
+            } ?: AssistantProfile.STANDARD,
+            device = if (json.isNull("device") || !json.has("device")) null else json.getString("device"))
     } catch (_: FileNotFoundException) {
         if (file.baseFile.exists() || File(file.baseFile.path + ".bak").exists()) {
             throw AssistantSetupFailure("BACKUP_UNAVAILABLE")
@@ -48,6 +52,9 @@ internal class NativeAssistantBackupFile(context: Context) : AssistantBackupStor
             .put("attempted", JSONArray(backup.attempted.map { it.name }))
             .put("appliedAt", backup.appliedAt?.toJson() ?: JSONObject.NULL)
             .put("confirmedAt", backup.confirmedAt?.toJson() ?: JSONObject.NULL)
+            .put("profile", JSONObject().put("name", backup.profile.name).put("longPress", backup.profile.longPress)
+                .put("recognizer", backup.profile.recognizer ?: JSONObject.NULL))
+            .put("device", backup.device ?: JSONObject.NULL)
         writeAtomic(file, json)
     }
 
@@ -151,6 +158,14 @@ internal data class NativeAssistantUiState(
     val configured: Boolean = false,
     val canEnable: Boolean = true,
     val error: String? = null,
+    /** 用户的选择（自动 / 指定）、按机型识别的结果、实际采用的适配。 */
+    val choice: PowerKeyAdapter = PowerKeyAdapter.AUTO,
+    val detected: PowerKeyAdapter = PowerKeyAdapter.GENERIC,
+    val adapter: PowerKeyAdapter = PowerKeyAdapter.GENERIC,
+    /** 配置被系统改掉了，可以「重新应用」。 */
+    val canReapply: Boolean = false,
+    /** 这次检查清掉了从别的手机带过来的备份。 */
+    val foreignCleared: Boolean = false,
 )
 
 /** App-owned work survives closing the settings dialog; at most one transaction runs. */
@@ -164,57 +179,117 @@ internal object NativeAssistantSettings {
     fun enable(context: Context) = run(context, "enable")
     fun restore(context: Context) = run(context, "restore")
     fun confirmWake(context: Context) = run(context, "confirm")
+    /** 系统把配置改回去了（HyperOS 重启后常见）：恢复原配置再重新配置一次。 */
+    fun reapply(context: Context) = run(context, "reapply")
+
+    /** 换适配方式只在没有配置时生效；配置过的要先恢复原配置（备份按当时的方式恢复）。 */
+    fun setAdapter(context: Context, choice: PowerKeyAdapter) {
+        PowerKeyAdapterSettings.setChoice(context.applicationContext, choice)
+        refresh(context)
+    }
+
+    /**
+     * 换机（系统换机工具、云备份）会把 filesDir 里的备份一起搬过来，但那些原值属于旧手机，
+     * 在这台手机上从没生效过，拿来「恢复」只会写错。识别出来就作废，返回是否清过。
+     */
+    internal fun discardForeignBackups(app: Context, deviceId: String): Boolean {
+        var cleared = false
+        fun drop(vararg names: String) {
+            names.forEach { name -> File(app.filesDir, name).delete(); File(app.filesDir, "$name.bak").delete() }
+            cleared = true
+        }
+        val oplus = runCatching { OplusPowerBackupFile(app).load() }.getOrNull()
+        val oplusForeign = oplus != null && !OplusPowerContract.sameDevice(oplus.original.fingerprint, Build.DEVICE, Build.MODEL)
+        if (oplusForeign) drop(OplusPowerBackupFile.FILE_NAME, "native_oplus_power_event.json")
+        val hyper = runCatching { HyperPowerBackupFile(app).load() }.getOrNull()
+        if (hyper?.device != null && hyper.device != deviceId) drop(HyperPowerBackupFile.FILE_NAME)
+        val base = runCatching { NativeAssistantBackupFile(app).load() }.getOrNull()
+        // 旧备份没记手机；和它一起建的 ColorOS 备份是别的手机的，它也是。
+        if (base != null && ((base.device != null && base.device != deviceId) || (base.device == null && oplusForeign))) {
+            drop("native_assistant_backup.json", "native_assistant_wake.json")
+        }
+        return cleared
+    }
 
     private fun run(context: Context, action: String) {
         if (!working.compareAndSet(false, true)) return
         val app = context.applicationContext
         mutableState.value = mutableState.value.copy(busy = true, error = null)
         scope.launch {
+            val choice = PowerKeyAdapterSettings.choice(app)
+            val detected = PowerKeyAdapterSettings.detected()
+            val adapter = PowerKeyVendor.resolve(choice, detected)
+            val deviceId = PowerKeyAdapterSettings.deviceId()
+            val foreignCleared = runCatching { discardForeignBackups(app, deviceId) }.getOrDefault(false)
             val store = NativeAssistantBackupFile(app)
             val device = NativeAssistantRootDevice(app)
             val oplusStore = OplusPowerBackupFile(app)
             val oplusDevice = OplusPowerRootDevice(app)
             val oplus = OplusPowerRoute(oplusDevice, oplusStore) { NativeAssistantWakeEvidence.tick(app) }
-            val needsOplus = OplusPowerContract.isCandidate(Build.MODEL, Build.VERSION.SDK_INT) || OplusPowerBackupFile.exists(app)
-            val setup = NativeAssistantSetup(app.packageName, DeviceToolContract.appUserId(app), device, store) {
+            // ColorOS 的长按广播通道只在核对过的机型上有；其他 ColorOS 手机走通用的默认助手。
+            val needsOplus = (adapter == PowerKeyAdapter.COLOROS && OplusPowerContract.isCandidate(Build.MODEL, Build.VERSION.SDK_INT)) ||
+                OplusPowerBackupFile.exists(app)
+            val hyperStore = HyperPowerBackupFile(app)
+            val hyperDevice = HyperPowerRootDevice(app)
+            val hyper = HyperPowerRoute(hyperDevice, hyperStore, deviceId) { NativeAssistantWakeEvidence.tick(app) }
+            val needsHyper = adapter == PowerKeyAdapter.HYPEROS || HyperPowerBackupFile.exists(app)
+            val profile = if (adapter == PowerKeyAdapter.HYPEROS) AssistantProfile.hyper(PowerKeyAdapterSettings.xiaomiRecognizer(app))
+                else AssistantProfile.STANDARD
+            val setup = NativeAssistantSetup(app.packageName, DeviceToolContract.appUserId(app), device, store, profile, deviceId) {
                 NativeAssistantWakeEvidence.tick(app)
+            }
+            fun restoreAll() {
+                if (HyperPowerBackupFile.exists(app)) hyper.restore()
+                if (OplusPowerBackupFile.exists(app)) oplus.restore()
+                setup.restore()
+            }
+            fun enableAll() {
+                if (needsOplus) {
+                    val probe = oplusDevice.read()
+                    if (!probe.supported) throw AssistantSetupFailure("COLOROS_FIRMWARE_UNSUPPORTED")
+                    if (probe.gate !in setOf(null, "", "0")) throw AssistantSetupFailure("COLOROS_POLICY_OWNED")
+                }
+                val existing = store.load()
+                val upgrading = needsOplus && existing?.appliedAt != null && setup.configured(device.read())
+                if (!upgrading) setup.enable()
+                // Only undo our newly created AOSP setup after the OEM rollback completed.
+                // Keep a pre-existing setup and its original backup when upgrading it.
+                if (needsOplus) {
+                    try {
+                        oplus.enable()
+                    } catch (failure: Exception) {
+                        if (!upgrading && oplusStore.load() == null) runCatching { setup.restore() }
+                        throw failure
+                    }
+                }
+                if (needsHyper) {
+                    try {
+                        hyper.enable()
+                    } catch (failure: Exception) {
+                        if (hyperStore.load() == null) runCatching { setup.restore() }
+                        throw failure
+                    }
+                }
             }
             var failure: String? = null
             try {
                 if (action != "refresh") RootAccess.request(app).join()
                 if (!RootAccess.isGranted) throw AssistantSetupFailure("ROOT_REQUIRED")
                 // Connected != proven active hook, but a connected framework prevents a clean test.
-                if (action in setOf("enable", "confirm") && EtaApp.serviceInstance != null) {
+                if (action in setOf("enable", "reapply", "confirm") && EtaApp.serviceInstance != null) {
                     throw AssistantSetupFailure("FRAMEWORK_CONNECTED")
                 }
-                if (action == "enable" && !Settings.canDrawOverlays(app)) throw AssistantSetupFailure("OVERLAY_REQUIRED")
+                if (action in setOf("enable", "reapply") && !Settings.canDrawOverlays(app)) throw AssistantSetupFailure("OVERLAY_REQUIRED")
                 when (action) {
-                    "enable" -> {
-                        if (needsOplus) {
-                            val probe = oplusDevice.read()
-                            if (!probe.supported) throw AssistantSetupFailure("COLOROS_FIRMWARE_UNSUPPORTED")
-                            if (probe.gate !in setOf(null, "", "0")) throw AssistantSetupFailure("COLOROS_POLICY_OWNED")
-                        }
-                        val existing = store.load()
-                        val upgrading = needsOplus && existing?.appliedAt != null && setup.configured(device.read())
-                        if (!upgrading) setup.enable()
-                        if (needsOplus) {
-                            try {
-                                oplus.enable()
-                            } catch (failure: Exception) {
-                                // Only undo our newly created AOSP setup after OEM rollback completed.
-                                // Keep a pre-existing setup and its original backup when upgrading it.
-                                if (!upgrading && oplusStore.load() == null) runCatching { setup.restore() }
-                                throw failure
-                            }
-                        }
-                    }
-                    "restore" -> {
-                        if (OplusPowerBackupFile.exists(app)) oplus.restore()
-                        setup.restore()
+                    "enable" -> enableAll()
+                    "restore" -> restoreAll()
+                    "reapply" -> {
+                        restoreAll()
+                        enableAll()
                     }
                     "confirm" -> {
                         val visible = NativeAssistantWakeEvidence.read(app)
+                        if (needsHyper && !hyper.configured(hyperDevice.read())) throw AssistantSetupFailure("HYPEROS_REVERTED")
                         if (needsOplus) {
                             if (!oplus.configured(oplusDevice.read())) throw AssistantSetupFailure("CONFIGURATION_CHANGED")
                             val applied = oplusStore.load()?.appliedAt ?: throw AssistantSetupFailure("NOT_CONFIGURED")
@@ -233,35 +308,47 @@ internal object NativeAssistantSettings {
                 val snapshot = if (RootAccess.isGranted) device.read() else null
                 val oplusBackup = oplusStore.load()
                 val oplusSnapshot = if (needsOplus && RootAccess.isGranted) oplusDevice.read() else null
+                val hyperBackup = hyperStore.load()
+                val hyperSnapshot = if (needsHyper && RootAccess.isGranted) hyperDevice.read() else null
                 val baseConfigured = backup?.appliedAt != null && snapshot?.let(setup::configured) == true
-                val configured = baseConfigured && (!needsOplus || oplusSnapshot?.let(oplus::configured) == true)
+                val configured = baseConfigured && (!needsOplus || oplusSnapshot?.let(oplus::configured) == true) &&
+                    (!needsHyper || hyperSnapshot?.let(hyper::configured) == true)
                 val confirmed = configured && backup.confirmedAt?.let {
                     val applied = oplusBackup?.appliedAt
                     it.boot >= 0 && it.boot == NativeAssistantWakeEvidence.tick(app).boot &&
                         (!needsOplus || (applied != null && (it.follows(applied) || it.boot > applied.boot)))
                 } == true
+                val anyBackup = backup != null || oplusBackup != null || hyperBackup != null
+                val status = when {
+                    !anyBackup -> "OFF"
+                    snapshot == null -> "ROOT_REQUIRED"
+                    backup?.appliedAt == null -> "RESTORE_FIRST"
+                    needsOplus && oplusSnapshot?.supported != true -> "COLOROS_FIRMWARE_UNSUPPORTED"
+                    needsOplus && baseConfigured && oplusBackup == null -> "COLOROS_ADAPTER_REQUIRED"
+                    oplusBackup != null && oplusBackup.appliedAt == null -> "RESTORE_FIRST"
+                    hyperBackup != null && hyperBackup.appliedAt == null -> "RESTORE_FIRST"
+                    needsHyper && hyperBackup == null -> "CONFIGURATION_CHANGED"
+                    hyperSnapshot != null && hyper.reverted(hyperSnapshot) -> "HYPEROS_REVERTED"
+                    !configured -> "CONFIGURATION_CHANGED"
+                    EtaApp.serviceInstance != null -> "FRAMEWORK_CONNECTED"
+                    confirmed -> "CONFIRMED_BY_USER"
+                    else -> "AWAITING_KEY_TEST"
+                }
                 mutableState.value = NativeAssistantUiState(
-                    status = when {
-                        backup == null && oplusBackup == null -> "OFF"
-                        snapshot == null -> "ROOT_REQUIRED"
-                        backup?.appliedAt == null -> "RESTORE_FIRST"
-                        needsOplus && oplusSnapshot?.supported != true -> "COLOROS_FIRMWARE_UNSUPPORTED"
-                        needsOplus && baseConfigured && oplusBackup == null -> "COLOROS_ADAPTER_REQUIRED"
-                        oplusBackup != null && oplusBackup.appliedAt == null -> "RESTORE_FIRST"
-                        !configured -> "CONFIGURATION_CHANGED"
-                        EtaApp.serviceInstance != null -> "FRAMEWORK_CONNECTED"
-                        confirmed -> "CONFIRMED_BY_USER"
-                        else -> "AWAITING_KEY_TEST"
-                    },
-                    backupExists = backup != null || oplusBackup != null, configured = configured,
-                    canEnable = (backup == null && oplusBackup == null) ||
+                    status = status,
+                    backupExists = anyBackup, configured = configured,
+                    canEnable = !anyBackup ||
                         (baseConfigured && needsOplus && oplusBackup == null && oplusSnapshot?.supported == true),
                     error = failure ?: if (configured && needsOplus) OplusPowerWake.lastFailure(app) else null,
+                    choice = choice, detected = detected, adapter = adapter,
+                    canReapply = status in setOf("HYPEROS_REVERTED", "CONFIGURATION_CHANGED") && backup?.appliedAt != null,
+                    foreignCleared = foreignCleared,
                 )
             } catch (error: Exception) {
                 mutableState.value = mutableState.value.copy(busy = false, configured = false,
-                    canEnable = false,
-                    backupExists = File(app.filesDir, "native_assistant_backup.json").exists() || OplusPowerBackupFile.exists(app),
+                    canEnable = false, canReapply = false, choice = choice, detected = detected, adapter = adapter,
+                    backupExists = File(app.filesDir, "native_assistant_backup.json").exists() || OplusPowerBackupFile.exists(app) ||
+                        HyperPowerBackupFile.exists(app),
                     status = "CHECK_UNAVAILABLE", error = failure ?: (error as? AssistantSetupFailure)?.code ?: "NATIVE_ROUTE_UNAVAILABLE")
             } finally {
                 working.set(false)

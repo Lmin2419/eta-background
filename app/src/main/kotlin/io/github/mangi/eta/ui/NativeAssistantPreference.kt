@@ -22,6 +22,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.github.mangi.eta.R
 import io.github.mangi.eta.assistant.NativeAssistantSettings
+import io.github.mangi.eta.assistant.PowerKeyAdapter
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import io.github.mangi.eta.ui.app.OverlayPermissionSettings
 import io.github.mangi.eta.ui.components.EtaArrowPreference
 import io.github.mangi.eta.ui.components.EtaPreference
@@ -54,6 +57,8 @@ internal fun NativeAssistantPreference(context: Context) {
         onDismissRequest = { show = false }) {
         Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState())) {
             EtaPreference(summary = stringResource(R.string.native_assistant_explanation))
+            if (state.foreignCleared) EtaPreference(summary = stringResource(R.string.native_assistant_foreign_cleared))
+            PowerKeyAdapterPicker(state, onPick = { NativeAssistantSettings.setAdapter(context, it) })
             EtaSwitchPreference(
                 title = stringResource(R.string.native_assistant_enable),
                 checked = state.configured,
@@ -65,6 +70,11 @@ internal fun NativeAssistantPreference(context: Context) {
             if (state.error == "OVERLAY_REQUIRED") {
                 EtaArrowPreference(title = stringResource(R.string.native_assistant_overlay),
                     onClick = { OverlayPermissionSettings.open(context) })
+            }
+            if (state.canReapply) {
+                EtaArrowPreference(title = stringResource(R.string.native_assistant_reapply),
+                    summary = stringResource(R.string.native_assistant_reapply_summary), enabled = !state.busy,
+                    onClick = { NativeAssistantSettings.reapply(context) })
             }
             if (state.configured) {
                 EtaPreferenceDivider()
@@ -84,7 +94,44 @@ internal fun NativeAssistantPreference(context: Context) {
     }
 }
 
+/** 适配方式：自动（按机型识别）或手动指定 ColorOS / HyperOS / 通用。配置过的要先恢复原配置才能换。 */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun PowerKeyAdapterPicker(state: io.github.mangi.eta.assistant.NativeAssistantUiState, onPick: (PowerKeyAdapter) -> Unit) {
+    val locked = state.backupExists || state.busy
+    val summary = when {
+        state.backupExists -> stringResource(R.string.native_assistant_adapter_locked)
+        state.choice == PowerKeyAdapter.AUTO ->
+            stringResource(R.string.native_assistant_adapter_auto_summary, adapterName(state.detected))
+        else -> stringResource(R.string.native_assistant_adapter_manual_summary, adapterName(state.adapter), adapterName(state.detected))
+    }
+    EtaPreference(title = stringResource(R.string.native_assistant_adapter_title), summary = summary)
+    androidx.compose.foundation.layout.FlowRow(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+    ) {
+        listOf(
+            PowerKeyAdapter.AUTO to R.string.native_assistant_adapter_auto,
+            PowerKeyAdapter.COLOROS to R.string.native_assistant_adapter_coloros,
+            PowerKeyAdapter.HYPEROS to R.string.native_assistant_adapter_hyperos,
+            PowerKeyAdapter.GENERIC to R.string.native_assistant_adapter_generic,
+        ).forEach { (adapter, label) ->
+            io.github.mangi.eta.ui.components.EtaChoiceChip(stringResource(label), state.choice == adapter,
+                { if (state.choice != adapter) onPick(adapter) }, enabled = !locked)
+        }
+    }
+}
+
+@Composable
+private fun adapterName(adapter: PowerKeyAdapter): String = stringResource(when (adapter) {
+    PowerKeyAdapter.COLOROS -> R.string.native_assistant_adapter_name_coloros
+    PowerKeyAdapter.HYPEROS -> R.string.native_assistant_adapter_name_hyperos
+    else -> R.string.native_assistant_adapter_name_generic
+})
+
 private fun nativeAssistantMessage(context: Context, code: String): String = context.getString(when (code) {
+    "HYPEROS_REVERTED" -> R.string.native_assistant_hyperos_reverted
     "OFF" -> R.string.native_assistant_off
     "BUSY" -> R.string.native_assistant_busy
     "AWAITING_KEY_TEST" -> R.string.native_assistant_pending

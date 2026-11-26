@@ -1,7 +1,7 @@
 <resources>
     <string name="native_assistant_title">长按电源键唤起（Root）</string>
     <string name="native_assistant_entry_summary">内置配置，支持备份与恢复原助手</string>
-    <string name="native_assistant_explanation">无需 Vector 或 LSPosed。PMA110 的 ColorOS 固件（同一 Android 大版本内的系统小更新照常可用）由胖小胖接收系统长按事件，并关闭小布的电源键入口；其他设备使用默认助手通道。配置后仍需实际长按确认。卸载胖小胖或更换助手前，请在此恢复原配置；恢复需要 Root。</string>
+    <string name="native_assistant_explanation">无需 Vector 或 LSPosed，按手机分别适配：ColorOS（一加 PMA110）由胖小胖接收系统长按事件，并关闭小布的电源键入口；HyperOS（小米、红米、POCO）把「长按电源键」改为呼出默认数字助理，并把胖小胖设为默认助理；其他手机使用系统默认助手通道。配置后仍需实际长按确认。卸载胖小胖或更换助手前，请在此恢复原配置；配置和恢复都需要 Root。</string>
     <string name="native_assistant_enable">启用原生唤起</string>
     <string name="native_assistant_off">尚未启用；开启时申请 Root 并保存当前配置。</string>
     <string name="native_assistant_busy">正在检查或更新配置…</string>

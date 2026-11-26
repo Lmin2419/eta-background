@@ -2252,4 +2252,19 @@
   <string name="eta_engine_started_toast">The background engine is ready</string>
   <string name="eta_engine_still_starting_toast">The engine is still starting. Check again in a moment.</string>
   <string name="eta_engine_start_failed_toast">The engine didn\'t start: %1$s</string>
+  <string name="native_assistant_adapter_title">Phone adaptation</string>
+  <string name="native_assistant_adapter_auto">Auto</string>
+  <string name="native_assistant_adapter_coloros">ColorOS</string>
+  <string name="native_assistant_adapter_hyperos">HyperOS</string>
+  <string name="native_assistant_adapter_generic">Generic</string>
+  <string name="native_assistant_adapter_name_coloros">ColorOS (OPPO, OnePlus, realme)</string>
+  <string name="native_assistant_adapter_name_hyperos">HyperOS (Xiaomi, Redmi, POCO)</string>
+  <string name="native_assistant_adapter_name_generic">Generic (system default assistant)</string>
+  <string name="native_assistant_adapter_auto_summary">Detected: %1$s. Pick another one if this phone was recognized wrongly.</string>
+  <string name="native_assistant_adapter_manual_summary">Using %1$s (chosen by you; this phone looks like %2$s).</string>
+  <string name="native_assistant_adapter_locked">Restore the original configuration before switching.</string>
+  <string name="native_assistant_hyperos_reverted">HyperOS put the power-button long press back to its own action (common after a restart). Tap Re-apply to configure it again.</string>
+  <string name="native_assistant_reapply">Re-apply</string>
+  <string name="native_assistant_reapply_summary">Restore the original configuration, then set it up again for the current phone. Requires Root.</string>
+  <string name="native_assistant_foreign_cleared">A power-key backup copied over from another phone was discarded; those settings never applied to this phone.</string>
 </resources>

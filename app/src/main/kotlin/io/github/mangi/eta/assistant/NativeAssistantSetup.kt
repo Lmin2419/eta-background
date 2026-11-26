@@ -18,12 +18,28 @@ internal data class AssistantTick(val boot: Int, val elapsed: Long) {
     fun follows(other: AssistantTick): Boolean = boot >= 0 && boot == other.boot && elapsed > other.elapsed
 }
 
+/**
+ * 各机型的目标值。AOSP：`power_button_long_press = 5`（长按呼出助手），识别服务保持原样。
+ * HyperOS 自己处理电源键长按（由 [HyperPowerRoute] 改小米的长按动作），AOSP 这一项要设成 0，
+ * 免得两边都响应；识别服务固定为小米自带引擎，否则开机时系统会把语音助手重置回小爱。
+ */
+internal data class AssistantProfile(val name: String, val longPress: String, val recognizer: String? = null) {
+    companion object {
+        val STANDARD = AssistantProfile("STANDARD", "5")
+        fun hyper(xiaomiRecognizer: String?) = AssistantProfile("HYPEROS", "0", xiaomiRecognizer)
+    }
+}
+
 internal data class AssistantBackup(
     val original: AssistantSnapshot,
     val roleAttempted: Boolean = false,
     val attempted: Set<AssistantSetting> = emptySet(),
     val appliedAt: AssistantTick? = null,
     val confirmedAt: AssistantTick? = null,
+    /** 配置时用的目标值；旧备份没有这一项，按 AOSP 处理。 */
+    val profile: AssistantProfile = AssistantProfile.STANDARD,
+    /** 在哪台手机上配置的（厂商|型号|设备名）；换机带过来的备份据此作废。旧备份为空。 */
+    val device: String? = null,
 )
 
 internal class AssistantSetupFailure(val code: String) : Exception(code)
@@ -47,23 +63,33 @@ internal class NativeAssistantSetup(
     private val userId: Int,
     private val device: AssistantSetupDevice,
     private val store: AssistantBackupStore,
+    private val selectedProfile: AssistantProfile = AssistantProfile.STANDARD,
+    private val deviceId: String? = null,
     private val now: () -> AssistantTick,
 ) {
+    /** 已经配置过就按当时的目标值核对和恢复；还没配置时用现在选的机型。 */
+    private fun profile(backup: AssistantBackup? = store.load()): AssistantProfile = backup?.profile ?: selectedProfile
+
     private val voice = "$packageName/io.github.mangi.eta.agent.voice.EtaVoiceInteractionService"
     private val recognizer = "$packageName/io.github.mangi.eta.agent.voice.EtaRecognitionService"
 
-    fun configured(snapshot: AssistantSnapshot): Boolean = snapshot.userId == userId &&
-        snapshot.holders == listOf(packageName) &&
-        snapshot.settings[AssistantSetting.ASSISTANT] == voice &&
-        snapshot.settings[AssistantSetting.VOICE] == voice &&
-        snapshot.settings[AssistantSetting.LONG_PRESS] == "5"
+    fun configured(snapshot: AssistantSnapshot): Boolean {
+        val profile = profile()
+        return snapshot.userId == userId &&
+            snapshot.holders == listOf(packageName) &&
+            snapshot.settings[AssistantSetting.ASSISTANT] == voice &&
+            snapshot.settings[AssistantSetting.VOICE] == voice &&
+            snapshot.settings[AssistantSetting.LONG_PRESS] == profile.longPress &&
+            (profile.recognizer == null || snapshot.settings[AssistantSetting.RECOGNIZER] == profile.recognizer)
+    }
 
     fun enable() {
         // A pending/previous backup must never be overwritten by a second enable attempt.
         if (store.load() != null) throw AssistantSetupFailure("RESTORE_FIRST")
         val original = readCurrentUser()
         if (original.holders.size > 1) throw AssistantSetupFailure("UNSUPPORTED_ROLE_STATE")
-        var backup = AssistantBackup(original)
+        val profile = selectedProfile
+        var backup = AssistantBackup(original, profile = profile, device = deviceId)
         store.save(backup)
         try {
             if (original.holders != listOf(packageName)) {
@@ -77,9 +103,10 @@ internal class NativeAssistantSetup(
             val targets = linkedMapOf(
                 AssistantSetting.ASSISTANT to voice,
                 AssistantSetting.VOICE to voice,
-                // RoleController can change this as a side effect. Keep the previous recognizer.
-                AssistantSetting.RECOGNIZER to original.settings[AssistantSetting.RECOGNIZER],
-                AssistantSetting.LONG_PRESS to "5",
+                // RoleController can change this as a side effect. Keep the previous recognizer
+                // unless the vendor profile pins one (HyperOS resets the assistant without it).
+                AssistantSetting.RECOGNIZER to (profile.recognizer ?: original.settings[AssistantSetting.RECOGNIZER]),
+                AssistantSetting.LONG_PRESS to profile.longPress,
             )
             for ((setting, target) in targets) {
                 if (live.settings[setting] == target) continue
@@ -155,8 +182,11 @@ internal class NativeAssistantSetup(
             if (setting in backup.attempted || (backup.roleAttempted && setting != AssistantSetting.LONG_PRESS)) {
                 when (setting) {
                     AssistantSetting.ASSISTANT, AssistantSetting.VOICE -> allowed.add(voice)
-                    AssistantSetting.RECOGNIZER -> allowed.add(recognizer)
-                    AssistantSetting.LONG_PRESS -> allowed.add("5")
+                    AssistantSetting.RECOGNIZER -> {
+                        allowed.add(recognizer)
+                        backup.profile.recognizer?.let(allowed::add)
+                    }
+                    AssistantSetting.LONG_PRESS -> allowed.add(backup.profile.longPress)
                 }
                 // RoleController can clear the assistant values while changing holders.
                 if (backup.roleAttempted && setting != AssistantSetting.LONG_PRESS) {

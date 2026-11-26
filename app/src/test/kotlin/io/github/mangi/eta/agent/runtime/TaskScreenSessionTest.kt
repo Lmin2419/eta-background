@@ -194,6 +194,7 @@ class TaskScreenSessionTest {
         backend: FakeBackend,
         controller: AgentRunController = AgentRunController(),
         rootAvailable: Boolean = true,
+        locked: () -> Boolean = { false },
     ): TaskScreenSession = TaskScreenSession(
         runId = "run-${System.nanoTime()}",
         controller = controller,
@@ -211,6 +212,7 @@ class TaskScreenSessionTest {
             )
         },
         rootAvailable = { rootAvailable },
+        mainDisplayLocked = locked,
     )
 
     @Test
@@ -405,6 +407,42 @@ class TaskScreenSessionTest {
         assertEquals("BACKGROUND_SESSION_ACTIVE", JSONObject(result.content).getString("code"))
         assertEquals(TaskExecutionLocation.BACKGROUND, tools.currentLocation())
         assertFalse(backend.calls.any { it.name == "screen_open" && it.arguments.optString("package") == "app.two" })
+    }
+
+    @Test
+    fun lockedMainScreenMovesAForegroundLaunchToTheBackgroundScreen() {
+        val backend = FakeBackend()
+        var locked = true
+        val tools = session(backend, locked = { locked })
+        val result = JSONObject(tools.execute(call("launch_app", """{"package_name":"com.tencent.mm"}"""))!!.content)
+        assertTrue(result.getBoolean("ok"))
+        assertTrue(result.getBoolean("moved_to_background"))
+        assertEquals(TaskExecutionLocation.BACKGROUND, tools.currentLocation())
+        assertEquals("com.tencent.mm", backend.calls.first { it.name == "screen_open" }.arguments.getString("package"))
+        // 解锁后不会自己跑回主屏：同一任务继续在后台。
+        locked = false
+        assertEquals(TaskExecutionLocation.BACKGROUND, tools.currentLocation())
+    }
+
+    @Test
+    fun lockedLaunchThatAlsoFailsInTheBackgroundStaysInTheForeground() {
+        val backend = FakeBackend().apply { openResult = """{"ok":false,"code":"ENGINE_DOWN","error":"engine"}""" }
+        val tools = session(backend, locked = { true })
+        val result = JSONObject(tools.execute(call("launch_app", """{"package_name":"com.tencent.mm"}"""))!!.content)
+        assertEquals("ENGINE_DOWN", result.getString("code"))
+        assertTrue(result.getString("note").contains("前台要等用户解锁"))
+        assertEquals(TaskExecutionLocation.FOREGROUND, tools.currentLocation())
+    }
+
+    @Test
+    fun unlockedOrRootlessLaunchesStayOnTheMainScreen() {
+        val backend = FakeBackend()
+        assertNull(session(backend, locked = { false }).execute(call("launch_app", """{"package_name":"com.tencent.mm"}""")))
+        assertNull(session(backend, rootAvailable = false, locked = { true })
+            .execute(call("launch_app", """{"package_name":"com.tencent.mm"}""")))
+        // 没给包名时没法在后台打开，交给前台（会按锁屏拒绝并说明怎么改后台）。
+        assertNull(session(backend, locked = { true }).execute(call("launch_app", """{"app_name":"微信"}""")))
+        assertTrue(backend.calls.isEmpty())
     }
 
     @Test

@@ -11,6 +11,15 @@ internal object OplusPowerContract {
     fun isCandidate(model: String, sdk: Int) = model == "PMA110" && sdk == 37
 
     /**
+     * 备份是不是在这台手机上建的：比较构建指纹里的设备名（brand / product / device:release 里的 device 段），
+     * 系统大小版本更新都不变；指纹读不出时退回比较型号。换机带过来的备份返回 false。
+     */
+    fun sameDevice(fingerprint: String, device: String, model: String): Boolean {
+        val recorded = fingerprint.split('/').getOrNull(2)?.substringBefore(':')?.takeIf { it.isNotBlank() }
+        return if (recorded != null) recorded == device else model == "PMA110"
+    }
+
+    /**
      * 同一机型、同一 Android 大版本（SDK）就认。以前还要求 oplus-services.jar 的 SHA-256 与核对过的那一版完全一致，
      * 系统小版本更新（框架 jar 必然变）后就判成「固件不匹配」、电源键失效（2026111608 真机反馈）。
      * 现在改查框架里还有没有这条长按通道：[frameworkHasRoute] 为 false（读得到框架代码、却找不到长按广播）才拒绝；

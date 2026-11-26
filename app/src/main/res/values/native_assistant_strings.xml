@@ -1,7 +1,7 @@
 <resources>
     <string name="native_assistant_title">Power-key assistant (Root)</string>
     <string name="native_assistant_entry_summary">Built-in setup, original settings backup and restore</string>
-    <string name="native_assistant_explanation">No Vector or LSPosed required. On PMA110 ColorOS (minor system updates within the same Android version keep working), 胖小胖 receives the system long-press event while the vendor power-key assistant route is suppressed. Other devices use the default assistant route. Configuration still needs a physical-key check. Restore here before uninstalling 胖小胖 or changing assistants; restoration requires Root.</string>
+    <string name="native_assistant_explanation">No Vector or LSPosed required. Adapted per phone: on ColorOS (OnePlus PMA110) 胖小胖 receives the system long-press event and the vendor power-key assistant is turned off; on HyperOS (Xiaomi, Redmi, POCO) the power-button long press is switched to open the default digital assistant and 胖小胖 becomes the default assistant; other phones use the system default-assistant route. Configuration still needs a physical-key check. Restore here before uninstalling 胖小胖 or changing assistants; setup and restore require Root.</string>
     <string name="native_assistant_enable">Enable native assistant route</string>
     <string name="native_assistant_off">Not enabled. Enabling requests Root and saves the current configuration.</string>
     <string name="native_assistant_busy">Checking or updating configuration…</string>
