@@ -231,6 +231,7 @@ internal object SettingsDataStore {
     private val APPEARANCE_RENDER_DIAGNOSTICS = booleanPreferencesKey("appearance_render_diagnostics")
     private val APPEARANCE_TOP_BAR_BLUR_STYLE = stringPreferencesKey("appearance_top_bar_blur_style")
     private val APPEARANCE_CONTROL_MATERIAL = stringPreferencesKey("appearance_control_material")
+    private val APPEARANCE_HIGH_REFRESH_RATE = stringPreferencesKey("appearance_high_refresh_rate")
     private val APPEARANCE_SWIPE_DISMISS_ENABLED =
         booleanPreferencesKey("appearance_swipe_dismiss_enabled")
     private val APPEARANCE_PREDICTIVE_BACK_ENABLED =
@@ -439,10 +440,8 @@ internal object SettingsDataStore {
             topBarBlurStyle = AppearanceTopBarBlurStyle.fromPersistedValue(
                 this[APPEARANCE_TOP_BAR_BLUR_STYLE],
             ),
-            controlMaterial = io.github.mangi.eta.data.model.AppearanceControlMaterial.fromPersistedValue(
-                this[APPEARANCE_CONTROL_MATERIAL],
-            ),
             swipeDismissEnabled = this[APPEARANCE_SWIPE_DISMISS_ENABLED] ?: true,
+            highRefreshRate = when (this[APPEARANCE_HIGH_REFRESH_RATE]) { "on" -> true; "off" -> false; else -> null },
             predictiveBackEnabled = this[APPEARANCE_PREDICTIVE_BACK_ENABLED] ?: true,
             interfaceScale = this[APPEARANCE_INTERFACE_SCALE] ?: 1f,
             glassStrength = io.github.mangi.eta.data.model.AppearanceGlassStrength.fromPersistedValue(this[APPEARANCE_GLASS_STRENGTH]),
@@ -471,8 +470,13 @@ internal object SettingsDataStore {
         this[AGENT_COMPLETION_REVIEW_ENABLED] = settings.completionReviewEnabled
         this[AGENT_LIGHT_GUI_ROUND_EFFORT] = settings.lightGuiRoundEffort
         this[APPEARANCE_TOP_BAR_BLUR_STYLE] = settings.topBarBlurStyle.persistedValue
-        this[APPEARANCE_CONTROL_MATERIAL] = settings.controlMaterial.persistedValue
+        // 2026111642 去掉了 COUI 17 磨砂：旧版本存下的「控件材质」顺手清掉。
+        remove(APPEARANCE_CONTROL_MATERIAL)
         this[APPEARANCE_SWIPE_DISMISS_ENABLED] = settings.swipeDismissEnabled
+        when (settings.highRefreshRate) {
+            null -> remove(APPEARANCE_HIGH_REFRESH_RATE)
+            else -> this[APPEARANCE_HIGH_REFRESH_RATE] = if (settings.highRefreshRate) "on" else "off"
+        }
         this[APPEARANCE_PREDICTIVE_BACK_ENABLED] = settings.predictiveBackEnabled
         this[APPEARANCE_INTERFACE_SCALE] = settings.interfaceScale
         this[APPEARANCE_GLASS_STRENGTH] = settings.glassStrength.persistedValue

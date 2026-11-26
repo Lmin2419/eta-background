@@ -32,9 +32,12 @@ data class AppearanceSettings(
     /** 11 号方案实验：紧跟在纯界面操作之后的一轮用较低思考强度。默认关。 */
     val lightGuiRoundEffort: Boolean = false,
     val topBarBlurStyle: AppearanceTopBarBlurStyle = AppearanceTopBarBlurStyle.GAUSSIAN,
-    /** 14.4c：对话页顶部按钮、输入框、侧栏底部栏的材质（液态玻璃 / COUI 17 磨砂），对比试用中。 */
-    val controlMaterial: AppearanceControlMaterial = AppearanceControlMaterial.LIQUID_GLASS,
     val swipeDismissEnabled: Boolean = true,
+    /**
+     * 界面固定用屏幕最高刷新率。为空表示「自动」：小米 HyperOS 上打开（它默认把应用压在低刷新率、
+     * 点开时才临时提速，过渡会顿一下），其他手机交给系统。
+     */
+    val highRefreshRate: Boolean? = null,
     val predictiveBackEnabled: Boolean = true,
     val interfaceScale: Float = DEFAULT_INTERFACE_SCALE,
     /** 浮层玻璃的通透程度；「关闭」由 [blurEnabled] = false 表示。 */
@@ -147,17 +150,6 @@ enum class AppearanceAccentColor(val persistedValue: String) {
     }
 }
 
-/** 浮动控件的材质：旧库的流体液态玻璃，或新库 COUI 2.1.0 的 COUI 17 磨砂材质（上游同款）。 */
-@Serializable
-enum class AppearanceControlMaterial(val persistedValue: String) {
-    LIQUID_GLASS("liquid_glass"),
-    COUI_FROST("coui_frost");
-
-    companion object {
-        fun fromPersistedValue(value: String?): AppearanceControlMaterial =
-            entries.firstOrNull { it.persistedValue == value } ?: LIQUID_GLASS
-    }
-}
 
 @Serializable
 enum class AppearanceTopBarBlurStyle(val persistedValue: String) {

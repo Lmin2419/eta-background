@@ -1,5 +1,9 @@
 package io.github.mangi.eta.ui.components.coui
 
+import androidx.compose.ui.composed
+
+import androidx.compose.runtime.mutableIntStateOf
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -124,6 +128,7 @@ internal val LocalEtaCouiMenuHost = staticCompositionLocalOf<EtaCouiMenuHost?> {
 internal fun EtaCouiOverlayRoot(blurEnabled: Boolean, content: @Composable (pageRecording: Modifier) -> Unit) {
     val dark = EtaTheme.colors.isDark
     val canvas = EtaTheme.colors.canvas
+    val demand = remember { EtaPageRecordingDemand() }
     val backdrop = io.github.mangi.eta.ui.components.trackRenderSource(
         "应用弹层(COUI 菜单与对话框)",
         if (blurEnabled && EtaCouiSupport.shaders && isRuntimeShaderSupported()) {
@@ -138,7 +143,7 @@ internal fun EtaCouiOverlayRoot(blurEnabled: Boolean, content: @Composable (page
     val popupBlur = remember(backdrop) {
         backdrop?.let {
             MaterialBlurProvider { spec, shape ->
-                Modifier.couiMaterialBlur(
+                Modifier.demandPageRecording(demand).couiMaterialBlur(
                     backdrop = it,
                     style = MaterialBlurStyle(
                         blurRadiusPx = spec.blurRadiusPx,
@@ -164,11 +169,12 @@ internal fun EtaCouiOverlayRoot(blurEnabled: Boolean, content: @Composable (page
     ) {
         CompositionLocalProvider(
             LocalEtaCouiPageBackdrop provides backdrop,
+            LocalEtaPageRecordingDemand provides demand,
             LocalPopupMaterialBlur provides popupBlur,
             LocalEtaCouiMenuHost provides menuHost,
         ) {
             Box(Modifier.fillMaxSize()) {
-                content(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
+                content(if (backdrop != null) Modifier.recordWhenDemanded(backdrop, demand) else Modifier)
                 EtaCouiMenuLayer(menuHost, dark)
             }
         }
@@ -202,8 +208,50 @@ private fun WarnIfNoHost(show: Boolean, what: String) {
 @Composable
 private fun etaPanelBlur(style: (Boolean) -> MaterialBlurStyle, dark: Boolean): Modifier? {
     val backdrop = LocalEtaCouiPageBackdrop.current ?: return null
-    return Modifier.couiMaterialBlur(backdrop = backdrop, style = style(dark))
+    val demand = LocalEtaPageRecordingDemand.current
+    return (if (demand != null) Modifier.demandPageRecording(demand) else Modifier)
+        .couiMaterialBlur(backdrop = backdrop, style = style(dark))
 }
+
+/**
+ * 整页记录（弹层背后的模糊用）按需开启：以前只要开着模糊，整个界面每一帧都要多录一遍，
+ * 点开页面、过渡动画时这份开销一直在（高分辨率屏上尤其明显）。现在只有画着整页模糊的弹层
+ * （对话框、小窗、菜单、下拉列表）挂在界面上时才录，收起（退场动画结束、节点移除）后停止。
+ */
+@Stable
+internal class EtaPageRecordingDemand {
+    var users by mutableIntStateOf(0)
+        internal set
+}
+
+internal val LocalEtaPageRecordingDemand = staticCompositionLocalOf<EtaPageRecordingDemand?> { null }
+
+/** 挂在用到整页模糊的弹层背景上：挂上时登记，移除时撤销。 */
+internal fun Modifier.demandPageRecording(demand: EtaPageRecordingDemand): Modifier = this then RecordingDemandElement(demand)
+
+private class RecordingDemandElement(private val demand: EtaPageRecordingDemand) :
+    androidx.compose.ui.node.ModifierNodeElement<RecordingDemandNode>() {
+    override fun create() = RecordingDemandNode(demand)
+    override fun update(node: RecordingDemandNode) = node.retarget(demand)
+    override fun equals(other: Any?) = other is RecordingDemandElement && other.demand === demand
+    override fun hashCode() = System.identityHashCode(demand)
+}
+
+private class RecordingDemandNode(private var demand: EtaPageRecordingDemand) : Modifier.Node() {
+    private var held = false
+    override fun onAttach() = acquire()
+    override fun onDetach() = release()
+    fun retarget(next: EtaPageRecordingDemand) {
+        if (next === demand) return
+        release(); demand = next; if (isAttached) acquire()
+    }
+    private fun acquire() { if (!held) { held = true; demand.users++ } }
+    private fun release() { if (held) { held = false; demand.users-- } }
+}
+
+/** 只在有弹层要用时记录整页；读计数的只是这一个修饰符，不会让整页重组。 */
+private fun Modifier.recordWhenDemanded(backdrop: io.github.suqi8.coui.kmp.blur.LayerBackdrop, demand: EtaPageRecordingDemand): Modifier =
+    composed { if (demand.users > 0) Modifier.layerBackdrop(backdrop) else Modifier }
 
 // ---------------------------------------------------------------------------------------------
 // 菜单

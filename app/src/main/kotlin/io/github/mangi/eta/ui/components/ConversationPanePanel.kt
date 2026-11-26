@@ -463,7 +463,6 @@ private fun PaneBottomDock(
     onOpenPermissions: () -> Unit, onOpenSettings: () -> Unit, backdrop: EtaBackdrop?,
 ) {
     // 有液态玻璃时用上游 3.4.4 的 COUI 原生搜索栏：点开后右边两枚圆钮滑走、出现「取消」；否则用玻璃胶囊里的输入框。
-    // COUI 17 磨砂（14.4c 对比试用）时走下面的胶囊输入框 + 圆钮，控件自己画成磨砂。
     val nativeSearch = remember(backdrop) {
         backdrop?.legacy != null && android.os.Build.VERSION.SDK_INT >= 34 &&
             etaFloatingGlassAvailable()

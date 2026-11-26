@@ -2078,11 +2078,6 @@
   <string name="voice_suggestion_help_prompt">這個頁面怎麼操作</string>
   <string name="voice_suggestion_highlights_prompt">螢幕上有什麼值得注意的資訊</string>
   <string name="shadow_notice_task_unfinished">任務未完成</string>
-  <string name="appearance_control_material">控制項材質</string>
-  <string name="appearance_control_material_glass">液態玻璃</string>
-  <string name="appearance_control_material_glass_summary">對話頁頂部按鈕、輸入框、側欄底部欄用流體液態玻璃（邊緣折射、內發光）</string>
-  <string name="appearance_control_material_frost">COUI 17 磨砂</string>
-  <string name="appearance_control_material_frost_summary">和上游一致的磨砂材質（分層模糊、細描邊），對比試用中</string>
   <string name="bg_screen_main_wake_title">熄屏時背景屏醒不過來</string>
   <string name="bg_screen_main_wake_never">不點亮螢幕</string>
   <string name="bg_screen_main_wake_scheduled">只對排程任務點亮</string>
@@ -2136,4 +2131,6 @@
   <string name="native_assistant_reapply">重新套用</string>
   <string name="native_assistant_reapply_summary">先還原原設定，再按目前適配方式重新設定，需要 Root。</string>
   <string name="native_assistant_foreign_cleared">發現從別的手機帶過來的電源鍵設定備份，已作廢（那些設定在這台手機上從沒生效過）。</string>
+  <string name="appearance_high_refresh_rate">介面始終用最高更新率</string>
+  <string name="appearance_high_refresh_rate_summary">胖小胖的介面固定用螢幕最高更新率，過渡動畫更順，耗電略增。小米 HyperOS 預設把應用程式壓在低更新率、點了才臨時提速，所以在小米上預設開啟。</string>
 </resources>

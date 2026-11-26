@@ -2209,11 +2209,6 @@
   <string name="voice_suggestion_help_prompt">How do I use this page?</string>
   <string name="voice_suggestion_highlights_prompt">Is there anything on screen worth noticing?</string>
   <string name="shadow_notice_task_unfinished">Task didn\'t finish</string>
-  <string name="appearance_control_material">Control material</string>
-  <string name="appearance_control_material_glass">Liquid glass</string>
-  <string name="appearance_control_material_glass_summary">Chat top buttons, composer and side pane dock use fluid liquid glass (edge refraction, inner glow)</string>
-  <string name="appearance_control_material_frost">COUI 17 frosted</string>
-  <string name="appearance_control_material_frost_summary">The frosted material upstream uses (layered blur, thin edge). Trial for comparison</string>
   <string name="bg_screen_main_wake_title">When the background screen won\'t wake</string>
   <string name="bg_screen_main_wake_never">Don\'t light the screen</string>
   <string name="bg_screen_main_wake_scheduled">Light it for scheduled tasks</string>
@@ -2267,4 +2262,6 @@
   <string name="native_assistant_reapply">Re-apply</string>
   <string name="native_assistant_reapply_summary">Restore the original configuration, then set it up again for the current phone. Requires Root.</string>
   <string name="native_assistant_foreign_cleared">A power-key backup copied over from another phone was discarded; those settings never applied to this phone.</string>
+  <string name="appearance_high_refresh_rate">Always use the highest refresh rate</string>
+  <string name="appearance_high_refresh_rate_summary">Keeps 胖小胖 at the screen\'s highest refresh rate so transitions stay smooth; uses a little more battery. On by default on Xiaomi HyperOS, which otherwise holds apps at a low rate and only speeds up after a tap.</string>
 </resources>

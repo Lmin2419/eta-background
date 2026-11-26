@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.mangi.eta.thirdparty.coui.backdrop.couiBackdrop
-import io.github.suqi8.coui.kmp.blur.layerBackdrop
 import io.github.mangi.eta.thirdparty.coui.backdrop.rememberCouiBackdrop
 import io.github.mangi.eta.thirdparty.coui.effect.CouiFloatingRenderer
 
@@ -20,38 +19,22 @@ import io.github.mangi.eta.thirdparty.coui.effect.CouiFloatingRenderer
 /* 菜单锚点、菜单、对话框、半窗在 EtaCouiOverlays.kt（14.4b 起用 COUI 2.1.0）。 */
 
 /**
- * 浮动控件的采样源：被它包住的内容会被上层的控件模糊。14.4c 起按外观设置里的「控件材质」记录：
- * 液态玻璃用旧库的采样源（[legacy]），COUI 17 磨砂用新库 coui-blur 的图层记录（[coui]），两者只记一份。
+ * 浮动控件（液态玻璃）的采样源：被它包住的内容会被上层的玻璃控件折射、模糊。
+ * 14.4c 试用过的 COUI 17 磨砂已经去掉（2026111642），只留液态玻璃。
  */
 @androidx.compose.runtime.Stable
 internal class EtaBackdrop internal constructor(
     internal val legacy: io.github.mangi.eta.thirdparty.coui.backdrop.CouiBackdrop?,
-    internal val coui: io.github.suqi8.coui.kmp.blur.LayerBackdrop?,
 )
 
 @Composable
 internal fun rememberEtaBackdrop(diagnosticName: String): EtaBackdrop {
-    val frost = io.github.mangi.eta.ui.app.LocalControlMaterial.current ==
-        io.github.mangi.eta.data.model.AppearanceControlMaterial.COUI_FROST
-    return if (frost) {
-        // 记录时先铺一层页面底色：内容里透明的地方模糊出来不会发灰。
-        val base = io.github.mangi.eta.ui.theme.EtaTheme.colors.canvas
-        val layer = io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop {
-            drawRect(base)
-            drawContent()
-        }
-        androidx.compose.runtime.remember(layer) { EtaBackdrop(null, layer) }
-    } else {
-        val legacy = rememberCouiBackdrop(diagnosticName = diagnosticName)
-        androidx.compose.runtime.remember(legacy) { EtaBackdrop(legacy, null) }
-    }
+    val legacy = rememberCouiBackdrop(diagnosticName = diagnosticName)
+    return androidx.compose.runtime.remember(legacy) { EtaBackdrop(legacy) }
 }
 
-internal fun Modifier.etaBackdrop(backdrop: EtaBackdrop): Modifier = when {
-    backdrop.legacy != null -> couiBackdrop(backdrop.legacy)
-    backdrop.coui != null -> layerBackdrop(backdrop.coui)
-    else -> this
-}
+internal fun Modifier.etaBackdrop(backdrop: EtaBackdrop): Modifier =
+    if (backdrop.legacy != null) couiBackdrop(backdrop.legacy) else this
 
 /** 当前设备能不能画浮动液态玻璃（Android 14 起、着色器可用）。 */
 internal fun etaFloatingGlassAvailable(): Boolean =

@@ -249,9 +249,9 @@ class EtaComponentBehaviorTest {
             }
         }) { panel ->
             panel.advance(60)
-            // COUI 2.1.0 半窗（14.4b）：拖动条、拖下或点外面关闭，没有「关闭」按钮。
+            // 2026111642 起半窗回到小窗：居中卡片、底部一个「关闭」，点外面或返回键也能关。
             assertTrue(panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == "Import" } == true })
-            assertTrue(panel.nodes().none { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == "Close" } == true })
+            assertTrue(panel.nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == "Close" } == true })
             // 不允许关闭时，点外面没有反应。
             panel.tapAt(100f, 60f)
             panel.advance(30)
